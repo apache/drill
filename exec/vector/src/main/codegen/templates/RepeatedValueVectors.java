@@ -18,6 +18,9 @@
 
 import java.lang.Override;
 
+import org.apache.drill.common.types.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
 import org.mortbay.jetty.servlet.Holder;
@@ -55,7 +58,10 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
 
   public Repeated${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    addOrGetVector(VectorDescriptor.create(Types.required(field.getType().getMinorType())));
+    MajorType majorType = field.getType();
+    addOrGetVector(VectorDescriptor.create(Types.withScaleAndPrecision(
+        majorType.getMinorType(), DataMode.REQUIRED,
+        majorType.getScale(), majorType.getPrecision())));
   }
 
   @Override

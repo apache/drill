@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -130,6 +130,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       create = true;
     }
     if (create) {
+      @SuppressWarnings("unchecked")
       final T vector = (T) BasicTypeHelper.getNewVector(name, allocator, type, callBack);
       putChild(name, vector);
       if (callBack!=null) {
@@ -175,7 +176,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    *
    * Note that this method does not enforce any vector type check nor throws a schema change exception.
    */
-  protected void putChild(String name, ValueVector vector) {
+  public void putChild(String name, ValueVector vector) {
     putVector(name, vector);
     field.addChild(vector.getField());
   }

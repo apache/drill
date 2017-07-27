@@ -548,6 +548,22 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     return this;
   }
 
+  /**
+   * Set an integer, with integrated bounds checking.
+   * @param index location to set
+   * @param value value to set
+   * @return true if the value fit into the buffer, false if the buffer
+   * does not contain sufficient space
+   */
+
+  public boolean putInt(int index, int value) {
+    if (index + 4 > length) {
+      return false;
+    }
+    PlatformDependent.putInt(addr(index), value);
+    return true;
+  }
+
   @Override
   public ByteBuf setLong(int index, long value) {
     chk(index, 8);

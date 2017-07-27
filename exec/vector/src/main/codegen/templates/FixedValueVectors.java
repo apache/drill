@@ -890,16 +890,30 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       data.set${(minor.javaType!type.javaType)?cap_first}(index * VALUE_WIDTH, value);
     }
 
+    /**
+     * Set the value of a required or nullable vector. Grows the vector as needed.
+     * Does not enforce size limits; scalar fixed-width types can never overflow
+     * a vector.
+     * @param index item to write
+     */
+
     public void setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
+    <#-- optimization for int types; slightly faster than original Version.class -->
+    <#if (minor.javaType!type.javaType) == "int">
+      while (! data.putInt(index * VALUE_WIDTH, value)) {
+        reAlloc();
+      }
+    <#else>
       while(index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, value);
+    </#if>
     }
 
     /**
-     * Set the value of a required or nullable vector. Enforces the value
-     * and size limits.
+     * Set the value of a required or nullable vector. Since a scalar vector cannot overflow,
+     * no overflow check is done.
      * @param index item to write
      * @param value value to set
      * @throws VectorOverflowException if the item was written, false if the index would
@@ -907,14 +921,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      */
 
     public void setScalar(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
       setSafe(index, value);
     }
 
     /**
-     * Set the value of a repeated vector. Enforces only the size limit.
+     * Set the value of a repeated vector. Enforces the size limit, since an array
+     * may, conceivably, contain enough values to overfill a vector.
      * @param index item to write
      * @param value value to set
      * @throws VectorOverflowException if the item was written, false if the index would
