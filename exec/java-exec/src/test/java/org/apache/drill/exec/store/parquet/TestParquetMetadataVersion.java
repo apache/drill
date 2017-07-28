@@ -63,8 +63,8 @@ public class TestParquetMetadataVersion {
       new MetadataVersion(versionWithoutFirstLetter);
     } catch (DrillRuntimeException e) {
       assertTrue("Not expected exception is obtained while parsing parquet metadata version",
-          e.getMessage().contains("Could not parse metadata"));
-      throw new DrillRuntimeException(e);
+          e.getMessage().contains(String.format("Could not parse metadata version '%s'", versionWithoutFirstLetter)));
+      throw e;
     }
   }
 
@@ -75,8 +75,8 @@ public class TestParquetMetadataVersion {
       new MetadataVersion(versionWithFirstLetterInUpperCase);
     } catch (DrillRuntimeException e) {
       assertTrue("Not expected exception is obtained while parsing parquet metadata version",
-          e.getMessage().contains("Could not parse metadata"));
-      throw new DrillRuntimeException(e);
+          e.getMessage().contains(String.format("Could not parse metadata version '%s'", versionWithFirstLetterInUpperCase)));
+      throw e;
     }
   }
 
@@ -87,8 +87,8 @@ public class TestParquetMetadataVersion {
       new MetadataVersion(versionWithWrongDelimiter);
     } catch (DrillRuntimeException e) {
       assertTrue("Not expected exception is obtained while parsing parquet metadata version",
-          e.getMessage().contains("Could not parse metadata"));
-      throw new DrillRuntimeException(e);
+          e.getMessage().contains(String.format("Could not parse metadata version '%s'", versionWithWrongDelimiter)));
+      throw e;
     }
   }
 
@@ -99,8 +99,8 @@ public class TestParquetMetadataVersion {
       new MetadataVersion(zeroMajorVersion);
     } catch (DrillRuntimeException e) {
       assertTrue("Not expected exception is obtained while parsing parquet metadata version",
-          e.getMessage().contains("Could not parse metadata"));
-      throw new DrillRuntimeException(e);
+          e.getMessage().contains(String.format("Could not parse metadata version '%s'", zeroMajorVersion)));
+      throw e;
     }
   }
 
@@ -111,8 +111,8 @@ public class TestParquetMetadataVersion {
       new MetadataVersion(zeroMinorVersion);
     } catch (DrillRuntimeException e) {
       assertTrue("Not expected exception is obtained while parsing parquet metadata version",
-          e.getMessage().contains("Could not parse metadata"));
-      throw new DrillRuntimeException(e);
+          e.getMessage().contains(String.format("Could not parse metadata version '%s'", zeroMinorVersion)));
+      throw e;
     }
   }
 
@@ -123,8 +123,8 @@ public class TestParquetMetadataVersion {
       new MetadataVersion(versionWithLetterInsteadOfNumber);
     } catch (DrillRuntimeException e) {
       assertTrue("Not expected exception is obtained while parsing parquet metadata version",
-          e.getMessage().contains("Could not parse metadata"));
-      throw new DrillRuntimeException(e);
+          e.getMessage().contains(String.format("Could not parse metadata version '%s'", versionWithLetterInsteadOfNumber)));
+      throw e;
     }
   }
 }

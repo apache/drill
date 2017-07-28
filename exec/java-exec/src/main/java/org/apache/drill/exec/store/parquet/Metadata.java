@@ -689,6 +689,7 @@ public class Metadata {
    * Basic class for parquet metadata. Inheritors of this class are json serializable structures which contain
    * the metadata for an entire parquet directory structure
    * <p>
+   * If any new code changes affect on the metadata files content, please update metadata version in such manner:
    * Bump up metadata major version if metadata structure is changed.
    * Bump up metadata minor version if only metadata content is changed, but metadata structure is the same.
    * <p>

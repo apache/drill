@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
 import java.util.List;
@@ -27,14 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-class MetadataVersion implements Comparable<MetadataVersion> {
-  /**
-   * String version starts from 'v' letter<p>
-   * First group is major metadata version (any number of digits, except a single zero digit)<p>
-   * Next character is optional '.' (if minor version is specified)<p>
-   * Next group is optional, minor metadata version (any number of digits, except a single zero digit)<p>
-   * Examples of correct metadata versions: v1, v10, v4.13
-   */
+public class MetadataVersion implements Comparable<MetadataVersion> {
+
   private static final String FORMAT = "v((?!0)\\d+)\\.?((?!0)\\d+)?";
   private static final Pattern PATTERN = Pattern.compile(FORMAT);
 
@@ -57,7 +51,9 @@ class MetadataVersion implements Comparable<MetadataVersion> {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
+    if (this == o) {
+      return true;
+    }
     if (!(o instanceof MetadataVersion)) {
       return false;
     }
@@ -73,9 +69,23 @@ class MetadataVersion implements Comparable<MetadataVersion> {
     return result;
   }
 
+  /**
+   * @return string representation of the metadata file version, for example: "v1", "v10", "v4.13"
+   * <p>
+   * String metadata version consists of the following characters:<p>
+   * "v" letter,<p>
+   * major metadata version (any number of digits, except a single zero digit),<p>
+   * "." delimiter (optional character, used if minor metadata version is specified),<p>
+   * minor metadata version (not specified for "0" minor version)
+   */
   @Override
   public String toString() {
-    return minor == 0 ? String.format("v%s1", major) : String.format("v%s1.%s2", major, minor);
+    StringBuilder builder = new StringBuilder();
+    builder.append("v").append(major);
+    if (minor != 0) {
+      builder.append(".").append(minor);
+    }
+    return builder.toString();
   }
 
   @Override
@@ -119,6 +129,19 @@ class MetadataVersion implements Comparable<MetadataVersion> {
      * All historical versions of the Drill metadata cache files. In case of introducing a new parquet metadata version
      * please follow the {@link MetadataVersion#FORMAT} and add a new version into the end of this list.
      */
-    public static final List<String> SUPPORTED_VERSIONS = Lists.newArrayList(V1, V2, V3, V3_1);
+    public static final List<MetadataVersion> SUPPORTED_VERSIONS = ImmutableList.of(
+        new MetadataVersion(V1),
+        new MetadataVersion(V2),
+        new MetadataVersion(V3),
+        new MetadataVersion(V3_1)
+    );
+
+    /**
+     * @param metadataVersion string representation of the parquet metadata version
+     * @return true if metadata version is supported, false otherwise
+     */
+    public static boolean isVersionSupported(String metadataVersion) {
+      return SUPPORTED_VERSIONS.contains(new MetadataVersion(metadataVersion));
+    }
   }
 }
