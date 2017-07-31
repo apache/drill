@@ -32,6 +32,7 @@ import io.netty.util.internal.PlatformDependent;
 
 public class OffsetVectorWriter extends BaseScalarWriter {
   private static final int VALUE_WIDTH = UInt4Vector.VALUE_WIDTH;
+  private static final int MIN_VECTOR_SIZE = VALUE_WIDTH * 1024;
   private UInt4Vector vector;
   private int writeOffset;
 
@@ -40,12 +41,17 @@ public class OffsetVectorWriter extends BaseScalarWriter {
     this.vector = (UInt4Vector) vector;
     setAddr(this.vector.getBuffer());
 
-    // Initialize position 0 to 0. Actual offsets start
-    // at position 1.
+    // Special handling for first value. Alloc vector if needed.
+    // Offset vectors require a 0 at position 0. The (end) offset
+    // for row 0 starts at position 1, which is handled in
+    // writeOffset() below.
 
     writeOffset = 0;
-    PlatformDependent.putInt(bufAddr, writeOffset);
     lastWriteIndex = 0;
+    if (capacity < MIN_VECTOR_SIZE) {
+      setAddr(this.vector.reallocRaw(MIN_VECTOR_SIZE));
+    }
+    PlatformDependent.putInt(bufAddr, writeOffset);
   }
 
   private final void setAddr(final DrillBuf buf) {
@@ -71,7 +77,7 @@ public class OffsetVectorWriter extends BaseScalarWriter {
       if (size > ValueVector.MAX_BUFFER_SIZE) {
         throw new IllegalStateException("Offset vectors should not overflow");
       } else {
-        setAddr(vector.reallocRaw(BaseAllocator.nextPowerOfTwo(size)));
+        setAddr(vector.reallocRaw(Math.min(4096, BaseAllocator.nextPowerOfTwo(size))));
       }
     }
     while (lastWriteIndex < writeIndex - 1) {

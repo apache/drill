@@ -432,7 +432,7 @@ public class RowSetTest extends SubOperatorTest {
     aWriter.setInt(20);
     bWriter.setInt(201);
     cWriter.setInt(202);
-    maWriter.save(); // Advance to next array position
+    maWriter.save();
     bWriter.setInt(211);
     cWriter.setInt(212);
     maWriter.save();
@@ -441,7 +441,7 @@ public class RowSetTest extends SubOperatorTest {
     aWriter.setInt(30);
     bWriter.setInt(301);
     cWriter.setInt(302);
-    maWriter.save(); // Advance to next array position
+    maWriter.save();
     bWriter.setInt(311);
     cWriter.setInt(312);
     maWriter.save();
@@ -471,7 +471,7 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(ValueType.INTEGER, bReader.valueType());
     assertEquals(ValueType.INTEGER, cReader.valueType());
 
-    // Row 1: used index accessors
+    // Row 1: use index accessors
 
     assertTrue(reader.next());
     assertEquals(10, aReader.getInt());

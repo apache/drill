@@ -168,6 +168,8 @@ import org.joda.time.Period;
 
 public class ColumnAccessors {
 
+  public static final int MIN_BUFFER_SIZE = 4096;
+
 <#list vv.types as type>
   <#list type.minor as minor>
     <#assign drillType=minor.class>
@@ -343,7 +345,11 @@ public class ColumnAccessors {
           <#-- Optimized form of reAlloc() which does not zero memory, does not do bounds
                checks (since they were already done above) and which returns
                the new buffer to save a method call. The write index and offset
-               remain unchanged. -->
+               remain unchanged. Since some vectors start off as 0 length, set a
+               minimum size to avoid silly thrashing on early rows. -->
+          if (size < MIN_BUFFER_SIZE) {
+            size = MIN_BUFFER_SIZE;
+          }
           setAddr(vector.reallocRaw(BaseAllocator.nextPowerOfTwo(size)));
         }
       }
