@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.cache;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedInputStream;
@@ -31,7 +30,6 @@ import java.io.OutputStream;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
@@ -62,14 +60,9 @@ public class TestBatchSerialization extends DrillTest {
   public SingleRowSet makeRowSet(BatchSchema schema, int rowCount) {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(rowCount);
-    try {
-      for (int i = 0; i < rowCount; i++) {
-        RowSetUtilities.setFromInt(writer, 0, i);
-        writer.save();
-      }
-    } catch (VectorOverflowException e) {
-      // Should not occur
-      throw new IllegalStateException(e);
+    for (int i = 0; i < rowCount; i++) {
+      RowSetUtilities.setFromInt(writer, 0, i);
+      writer.save();
     }
     writer.done();
     return rowSet;
@@ -78,18 +71,13 @@ public class TestBatchSerialization extends DrillTest {
   public SingleRowSet makeNullableRowSet(BatchSchema schema, int rowCount) {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(rowCount);
-    try {
-      for (int i = 0; i < rowCount; i++) {
-        if (i % 2 == 0) {
-          RowSetUtilities.setFromInt(writer, 0, i);
-        } else {
-          writer.scalar(0).setNull();
-        }
-        writer.save();
+    for (int i = 0; i < rowCount; i++) {
+      if (i % 2 == 0) {
+        RowSetUtilities.setFromInt(writer, 0, i);
+      } else {
+        writer.scalar(0).setNull();
       }
-    } catch (VectorOverflowException e) {
-      // Should not occur
-      throw new IllegalStateException(e);
+      writer.save();
     }
     writer.done();
     return rowSet;
@@ -180,9 +168,9 @@ public class TestBatchSerialization extends DrillTest {
 
   private SingleRowSet buildMapSet(BatchSchema schema) {
     return fixture.rowSetBuilder(schema)
-        .add(1, 100, "first")
-        .add(2, 200, "second")
-        .add(3, 300, "third")
+        .add(1, new Object[] {100, "first"})
+        .add(2, new Object[] {200, "second"})
+        .add(3, new Object[] {300, "third"})
         .build();
   }
 

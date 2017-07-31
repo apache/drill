@@ -31,21 +31,18 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperExecContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.vector.VectorOverflowException;
-import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.joda.time.Period;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -55,19 +52,7 @@ import com.google.common.collect.Lists;
  * Tests the generated per-batch sort code via its wrapper layer.
  */
 
-public class TestSorter extends DrillTest {
-
-  public static OperatorFixture fixture;
-
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    fixture = OperatorFixture.builder().build();
-  }
-
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-    fixture.close();
-  }
+public class TestSorter extends SubOperatorTest {
 
   public static Sort makeSortConfig(String key, String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef(key);
@@ -202,20 +187,15 @@ public class TestSorter extends DrillTest {
     public SingleRowSet makeDataSet(BufferAllocator allocator, BatchSchema schema, DataItem[] items) {
       ExtendableRowSet rowSet = fixture.rowSet(schema);
       RowSetWriter writer = rowSet.writer(items.length);
-      try {
-        for (int i = 0; i < items.length; i++) {
-          DataItem item = items[i];
-          if (nullable && item.isNull) {
-            writer.scalar(0).setNull();
-          } else {
-            RowSetUtilities.setFromInt(writer, 0, item.key);
-          }
-          writer.scalar(1).setString(Integer.toString(item.value));
-          writer.save();
+      for (int i = 0; i < items.length; i++) {
+        DataItem item = items[i];
+        if (nullable && item.isNull) {
+          writer.scalar(0).setNull();
+        } else {
+          RowSetUtilities.setFromInt(writer, 0, item.key);
         }
-      } catch (VectorOverflowException e) {
-        // Should not occur
-        throw new IllegalStateException(e);
+        writer.scalar(1).setString(Integer.toString(item.value));
+        writer.save();
       }
       writer.done();
       return rowSet;

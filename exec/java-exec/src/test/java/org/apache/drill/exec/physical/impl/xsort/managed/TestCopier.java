@@ -28,16 +28,13 @@ import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrap
 import org.apache.drill.exec.physical.impl.xsort.managed.SortTestUtilities.CopierTester;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.vector.VectorOverflowException;
-import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.SchemaBuilder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -49,19 +46,7 @@ import org.junit.Test;
  * then additional tests should be added to re-validate the code.
  */
 
-public class TestCopier extends DrillTest {
-
-  public static OperatorFixture fixture;
-
-  @BeforeClass
-  public static void setup() {
-    fixture = OperatorFixture.builder().build();
-  }
-
-  @AfterClass
-  public static void tearDown() throws Exception {
-    fixture.close();
-  }
+public class TestCopier extends SubOperatorTest {
 
   @Test
   public void testEmptyInput() throws Exception {
@@ -128,15 +113,10 @@ public class TestCopier extends DrillTest {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(count);
     int value = first;
-    try {
-      for (int i = 0; i < count; i++, value += step) {
-        RowSetUtilities.setFromInt(writer, 0, value);
-        writer.scalar(1).setString(Integer.toString(value));
-        writer.save();
-      }
-    } catch (VectorOverflowException e) {
-      // Should not occur
-      throw new IllegalStateException(e);
+    for (int i = 0; i < count; i++, value += step) {
+      RowSetUtilities.setFromInt(writer, 0, value);
+      writer.scalar(1).setString(Integer.toString(value));
+      writer.save();
     }
     writer.done();
     return rowSet;
@@ -360,22 +340,22 @@ public class TestCopier extends DrillTest {
 
     CopierTester tester = new CopierTester(fixture);
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(1, 10, 100)
-        .add(5, 50, 500)
+        .add(1, new Object[] {10, new Object[] {100}})
+        .add(5, new Object[] {50, new Object[] {500}})
         .withSv2()
         .build());
 
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(2, 20, 200)
-        .add(6, 60, 600)
+        .add(2, new Object[] {20, new Object[] {200}})
+        .add(6, new Object[] {60, new Object[] {600}})
         .withSv2()
         .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-        .add(1, 10, 100)
-        .add(2, 20, 200)
-        .add(5, 50, 500)
-        .add(6, 60, 600)
+        .add(1, new Object[] {10, new Object[] {100}})
+        .add(2, new Object[] {20, new Object[] {200}})
+        .add(5, new Object[] {50, new Object[] {500}})
+        .add(6, new Object[] {60, new Object[] {600}})
         .build());
 
     tester.run();
