@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2017-05-09 01:40:51 UTC
+date: 2017-07-31 04:43:33 UTC
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -9,6 +9,21 @@ the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.  
+
+## What's New in Apache Drill 1.11  
+
+Drill 1.11 provides the following new features and improvements:  
+
+- Cryptography-related functions. (DRILL-5634)
+- Spill to disk for the hash aggregate operator. (DRILL-5457)
+- Format plugin support for PCAP files. (DRILL-5432)
+- Ability to change the HDFS block Size for Parquet files. (DRILL-5379)
+- Ability to store query profiles in memory. (DRILL-5481)
+- Configurable CTAS directory and file permissions option. (DRILL-5391)
+- Support for network encryption. (DRILL-4335)
+- Relative paths stored in the metadata file. (DRILL-3867)
+- Support for ANSI_QUOTES. (DRILL-3510)  
+
 
 ## What's New in Apache Drill 1.10  
 
