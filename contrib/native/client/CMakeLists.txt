@@ -93,7 +93,7 @@ else()
     #    of boost. Arbirtarily, we choose the new namspace to be drill_boost.
     #    See the instructions in the readme for linux/macos and rebuild boost. Then
     #    uncomment the line below to build
-    #    set(Boost_NAMESPACE drill_boost)
+        set(Boost_NAMESPACE drill_boost)
 endif()
 
 find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
