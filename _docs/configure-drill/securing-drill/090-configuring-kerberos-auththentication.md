@@ -1,9 +1,9 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-05-17 01:38:52 UTC
+date: 2017-07-31 20:58:57 UTC
 parent: "Securing Drill"
 ---
-In release 1.10 Drill supports Kerberos v5 network security authentication.  To use Kerberos with Drill and establish connectivity, use the JDBC driver packaged with Drill 1.10.
+In release 1.11 Drill supports Kerberos v5 network security authentication and client-to-drillbit encryption.  To use Kerberos with Drill and establish connectivity, use the JDBC driver packaged with Drill 1.11.
 
 Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos *realm* is unique authentication domain. A centralized *key distribution center (KDC)* coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special *keytab* file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create *principal* (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit.   
 
@@ -14,7 +14,7 @@ See the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") documentatio
 
 ## Prerequisites
 
-The required Kerberos (JDBC) plugin is part of the 1.10 Drill package. To use it, you must have a working Kerberos infrastructure, which Drill does not provide. You must be working in a Linux-based or Windows Active Directory (AD) Kerberos environment with secure clusters and have a Drill server configured for Kerberos. See [Enabling Authentication]({{site.baseurl}}/docs/configuring-kerberos-authentication/#enabling-authentication).
+The required Kerberos (JDBC) plugin is part of the 1.11 Drill package. To use it, you must have a working Kerberos infrastructure, which Drill does not provide. You must be working in a Linux-based or Windows Active Directory (AD) Kerberos environment with secure clusters and have a Drill server configured for Kerberos. See [Enabling Authentication]({{site.baseurl}}/docs/configuring-kerberos-authentication/#enabling-authentication).
 
 ## Client Authentication Process 
 
@@ -38,8 +38,16 @@ This section provides a high-level overview of the Kerberos client authenticatio
 For Kerberos server authentication information, see the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") administration documentation. 
 
 
-## Enabling Authentication
+## Enabling Authentication and Encryption
 During startup, a drillbit service must authenticate. At runtime, Drill uses the keytab file. Trust is based on the keytab file; its secrets are shared with the KDC. The drillbit service also uses this keytab credential to validate service tickets from clients. Based on this information, the drillbit determines whether the client’s identity can be verified to use its service. 
+
+To enable encryption,set the following parameters in the `drill-override.conf` file (as shown in the second example below): 
+
+
+- `security.user.encryption.sasl.enabled` to true. This parameter determines if the drillbit is enabled for encryption. Only Drill 1.11 drillbits support encryption. 
+
+- `security.user.encryption.sasl.max_wrapped_size`. This parameter specifies the maximum size of encoded buffer in bytes (maxbuffer parameter in sasl) that the client and server will receive. Using this the SASL framework exposes maximum buffer size that the wrap function will accept, so that Drill client/server can chop the Outbound RPC message with the size. The maximum recommended value is 16777215. The default is 65536.
+
 
 ![kerberos client server]({{ site.baseurl }}/docs/img/kerberos-client-server.png)
  
@@ -97,11 +105,13 @@ During startup, a drillbit service must authenticate. At runtime, Drill uses the
                         auth.principal:“drill/<clustername>@<REALM>.COM”,  
                         auth.keytab:“/etc/drill/conf/drill.keytab”  
                       }  
-                security.user.auth: {
-                        enabled: true,
-                        packages += "org.apache.drill.exec.rpc.user.security",
-                        impl: "pam",
-                        pam_profiles: ["sudo", "login"]
+                security.user: {
+                        auth.enabled: true,
+                        auth.packages += "org.apache.drill.exec.rpc.user.security",
+                        auth.impl: "pam",
+                        auth.pam_profiles: ["sudo", "login"],
+						encryption.sasl.enabled: true,
+						encryption.sasl.max_wrapped_size: 65536,
                        }   
                 }
 
@@ -141,9 +151,24 @@ The following table lists configuration options for connection URLs. See the Con
 | auth                 | Authentication mechanism. The value is deduced if not specified. Kerberos if principal is provided. Plain  if a user and password is provided. A Drill client can also explicitly specify a particular authentication mechanism to use using this parameter. For example, <auth=kerberos> for Kerberos along with service_name, service_host or principal and <auth=plain> for the Plain authentication with username and password. | Optional           | The preference order is Kerberos and Plain.                                                                                                                                                               |
 | principal            | Drillbit service principal. The format of the principal is primary/instance@realm. For Kerberos, the Drill service principal is derived if the value is not provided using this configuration. service_name (primary) and service_host (instance) are used to generate a valid principal. Since the ticket or keytab contains the realm information, the realm is optional.                                                         | Optional           |                                                                                                                                                                                                           |
 | keytab               | For Kerberos, if the client chooses to authenticate using a keytab rather than a ticket, set the keytab parameter to the location of the keytab file. The client principal must be provided through the user parameter. A Kerberos ticket is used as the default credential (It is assumed to be present on client-side. The Drill client does not generate the required credentials.)                                              | Optional           |                                                                                                                                                                                                           |
+| sasl_encrypt         | When set to true, ensures that a client connects to a server with encryption capabilities. For example, Drill 1.11 drillbits, which support client-to-drillbit encryption.                                                                                                                                                                                                                                                          | Optional           | false                                                                                                                                                                                                     |
 | service_name         | Primary name of the drillbit service principal.                                                                                                                                                                                                                                                                                                                                                                                     | Optional           | drill                                                                                                                                                                                                     |
 | service_host         | Instance name of the drillbit service principal.                                                                                                                                                                                                                                                                                                                                                                                    | Optional           | Since this value is usually the hostname of the node where a drillbit is running, the default value is the drillbit hostname is  provided either through ZooKeeper or through a direct connection string. |
 | realm                | Kerberos realm name for the drillbit service principal. The ticket or keytab contains the realm information.                                                                                                                                                                                                                                                                                                                        | Optional           |                                                                                                                                                                                                           |
+
+
+### Client Encryption 
+A client can specify that it requires a server with encryption capabilities only by setting the  `sasl_encrypt` connection parameter to **true**. If the cluster to which client is connecting has encryption disabled, the client will fail to connect to that server.
+
+	drill.exec {
+ 	 security:  {
+  		  user.auth.enabled: true,
+  		  auth.mechanisms: ["KERBEROS"],
+  		  auth.principal: "drill/serverhostname@REALM.COM",
+  		  auth.keytab: "/etc/drill/conf/drill.keytab",
+  		  user.encryption.sasl.enabled: true
+ 			  }
+	}
 
 
 ### Connection URL Examples

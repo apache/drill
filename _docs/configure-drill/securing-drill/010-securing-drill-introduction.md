@@ -1,6 +1,6 @@
 ---
 title: "Securing Drill Introduction"
-date: 2017-03-16 01:47:58 UTC
+date: 2017-07-31 20:58:54 UTC
 parent: "Securing Drill"
 ---
 
@@ -20,7 +20,7 @@ Before connecting to a data source, you can configure Drill security features an
 			- [Configuring User Impersonation]({{site.baseurl}}/docs/configuring-user-impersonation/)  
 			- [Configuring Inbound Impersonation]({{site.baseurl}}/docs/configuring-inbound-impersonation/)  
 			- [Configuring User Impersonation with Hive Authorization]({{site.baseurl}}/docs/configuring-user-impersonation-with-hive-authorization/)  
-- **Encryption** - Drill does not support encryption as of Drill 1.10.
+- **Encryption** - Drill supports client-to-drillbit encryption in Drill 1.11.
 
 
 
