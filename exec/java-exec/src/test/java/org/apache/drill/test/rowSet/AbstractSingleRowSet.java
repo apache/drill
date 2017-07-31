@@ -35,6 +35,7 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.MapWriter;
 import org.apache.drill.exec.vector.accessor.writer.ObjectArrayWriter;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
@@ -125,16 +126,18 @@ public abstract class AbstractSingleRowSet extends AbstractRowSet implements Sin
 
     @Override
     public AbstractObjectWriter writer() {
-      AbstractObjectWriter mapWriter = MapWriter.build(tupleSchema(), writers());
-      if (schema.mode() != DataMode.REPEATED) {
-        return mapWriter;
+      if (schema.mode() == DataMode.REPEATED) {
+        RepeatedMapVector repeatedMapVector = (RepeatedMapVector) vector;
+        AbstractObjectWriter mapWriter = MapWriter.build(columnSchema(), repeatedMapVector, writers());
+        return ObjectArrayWriter.build(repeatedMapVector, mapWriter);
+      } else {
+        return MapWriter.build(columnSchema(), (MapVector) vector, writers());
       }
-      return ObjectArrayWriter.build((RepeatedMapVector) vector, mapWriter);
     }
 
     @Override
     public AbstractObjectReader reader() {
-      AbstractObjectReader mapReader = MapReader.build(tupleSchema(), readers());
+      AbstractObjectReader mapReader = MapReader.build(columnSchema(), readers());
       if (schema.mode() != DataMode.REPEATED) {
         return mapReader;
       }

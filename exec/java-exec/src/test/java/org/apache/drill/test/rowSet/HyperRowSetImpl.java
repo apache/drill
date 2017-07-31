@@ -187,7 +187,7 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
 
     @Override
     public AbstractObjectReader reader() {
-      AbstractObjectReader mapReader = MapReader.build(tupleSchema(), readers());
+      AbstractObjectReader mapReader = MapReader.build(columnSchema(), readers());
       if (schema.mode() != DataMode.REPEATED) {
         return mapReader;
       }

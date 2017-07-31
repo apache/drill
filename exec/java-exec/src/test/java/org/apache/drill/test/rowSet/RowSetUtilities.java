@@ -17,21 +17,27 @@
  */
 package org.apache.drill.test.rowSet;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigDecimal;
+
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.exec.record.TupleMetadata.ColumnMetadata;
 import org.apache.drill.exec.record.TupleMetadata.StructureType;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.bouncycastle.util.Arrays;
 import org.joda.time.Duration;
 import org.joda.time.Period;
 
@@ -68,15 +74,45 @@ public class RowSetUtilities {
    * @param rowWriter
    * @param index
    * @param value
-   * @throws VectorOverflowException
    */
 
-  public static void setFromInt(RowSetWriter rowWriter, int index, int value) throws VectorOverflowException {
-    ScalarWriter writer = rowWriter.column(index).scalar();
-    if (writer.valueType() == ValueType.PERIOD) {
-      setPeriodFromInt(writer, rowWriter.schema().column(index).getType().getMinorType(), value);
-    } else {
-      AccessorUtilities.setFromInt(writer, value);
+  public static void setFromInt(RowSetWriter rowWriter, int index, int value) {
+    ScalarWriter writer = rowWriter.scalar(index);
+    MaterializedField field = rowWriter.schema().column(index);
+    writer.setObject(testDataFromInt(writer.valueType(), field.getType(), value));
+  }
+
+  public static Object testDataFromInt(ValueType valueType, MajorType dataType, int value) {
+    switch (valueType) {
+    case BYTES:
+      return Integer.toHexString(value).getBytes();
+    case DOUBLE:
+      return (double) value;
+    case INTEGER:
+      switch (dataType.getMinorType()) {
+      case BIT:
+        return value & 0x01;
+      case SMALLINT:
+        return value % 32768;
+      case UINT2:
+        return value & 0xFFFF;
+      case TINYINT:
+        return value % 128;
+      case UINT1:
+        return value & 0xFF;
+      default:
+        return value;
+      }
+    case LONG:
+      return (long) value;
+    case STRING:
+      return Integer.toString(value);
+    case DECIMAL:
+      return BigDecimal.valueOf(value, dataType.getScale());
+    case PERIOD:
+      return periodFromInt(dataType.getMinorType(), value);
+    default:
+      throw new IllegalStateException("Unknown writer type: " + valueType);
     }
   }
 
@@ -94,22 +130,18 @@ public class RowSetUtilities {
    * @throws VectorOverflowException
    */
 
-  public static void setPeriodFromInt(ScalarWriter writer, MinorType minorType,
-      int value) throws VectorOverflowException {
+  public static Period periodFromInt(MinorType minorType, int value) {
     switch (minorType) {
     case INTERVAL:
-      writer.setPeriod(Duration.millis(value).toPeriod());
-      break;
+      return Duration.millis(value).toPeriod();
     case INTERVALYEAR:
-      writer.setPeriod(Period.years(value / 12).withMonths(value % 12));
-      break;
+      return Period.years(value / 12).withMonths(value % 12);
     case INTERVALDAY:
       int sec = value % 60;
       value = value / 60;
       int min = value % 60;
       value = value / 60;
-      writer.setPeriod(Period.days(value).withMinutes(min).withSeconds(sec));
-      break;
+      return Period.days(value).withMinutes(min).withSeconds(sec);
     default:
       throw new IllegalArgumentException("Writer is not an interval: " + minorType);
     }
@@ -140,6 +172,38 @@ public class RowSetUtilities {
         buildMap(allocator, (AbstractMapVector) vector, colSchema.mapSchema());
       }
     }
+  }
 
+  public static void assertEqualValues(ValueType type, Object expectedObj, Object actualObj) {
+    assertEqualValues(type.toString(), type, expectedObj, actualObj);
+  }
+
+  public static void assertEqualValues(String msg, ValueType type, Object expectedObj, Object actualObj) {
+    switch (type) {
+    case BYTES: {
+        byte expected[] = (byte[]) expectedObj;
+        byte actual[] = (byte[]) actualObj;
+        assertEquals(msg + " - byte lengths differ", expected.length, actual.length);
+        assertTrue(msg, Arrays.areEqual(expected, actual));
+        break;
+     }
+     case DOUBLE:
+       assertEquals(msg, (double) expectedObj, (double) actualObj, 0.0001);
+       break;
+     case INTEGER:
+     case LONG:
+     case STRING:
+     case DECIMAL:
+       assertEquals(msg, expectedObj, actualObj);
+       break;
+     case PERIOD: {
+       Period expected = (Period) expectedObj;
+       Period actual = (Period) actualObj;
+       assertEquals(msg, expected.normalizedStandard(), actual.normalizedStandard());
+       break;
+     }
+     default:
+        throw new IllegalStateException( "Unexpected type: " + type);
+    }
   }
 }

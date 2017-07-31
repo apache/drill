@@ -19,7 +19,6 @@ package org.apache.drill.test.rowSet;
 
 import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
@@ -52,18 +51,17 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
     private State state = State.OK;
 
     @Override
-    public int vectorIndex() { return rowIndex; }
+    public final int vectorIndex() { return rowIndex; }
 
-    public boolean next() {
+    public final boolean next() {
       if (++rowIndex < ValueVector.MAX_ROW_COUNT) {
         return true;
-      } else {
-        // Should not call next() again once batch is full.
-        assert rowIndex == ValueVector.MAX_ROW_COUNT;
-        rowIndex = ValueVector.MAX_ROW_COUNT;
-        state = state == State.OK ? State.END_OF_BATCH : state;
-        return false;
       }
+      // Should not call next() again once batch is full.
+      assert rowIndex == ValueVector.MAX_ROW_COUNT;
+      rowIndex = ValueVector.MAX_ROW_COUNT;
+      state = state == State.OK ? State.END_OF_BATCH : state;
+      return false;
     }
 
     public int size() {
@@ -79,7 +77,16 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
     @Override
     public void overflowed() {
       state = State.VECTOR_OVERFLOW;
+      throw new IndexOutOfBoundsException("Row sets don't support vector overflow");
     }
+
+    @Override
+    public boolean legal() {
+      return true;
+    }
+
+    @Override
+    public final void nextElement() { }
   }
 
   private final WriterIndexImpl writerIndex;
@@ -94,7 +101,7 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
   }
 
   @Override
-  public void setRow(Object...values) throws VectorOverflowException {
+  public void setRow(Object...values) {
     setObject(values);
     save();
   }
@@ -103,13 +110,11 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
   public int rowIndex() { return writerIndex.vectorIndex(); }
 
   @Override
-  public boolean save() {
+  public void save() {
     endValue();
-    boolean more = writerIndex.next();
-    if (more) {
+    if (writerIndex.next()) {
       startValue();
     }
-    return more;
   }
 
   @Override

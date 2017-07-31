@@ -17,7 +17,11 @@
  */
 package org.apache.drill.test.rowSet.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.UnsupportedEncodingException;
 
@@ -25,7 +29,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
@@ -35,6 +38,8 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
@@ -75,7 +80,7 @@ public class RowSetTest extends SubOperatorTest {
    */
 
   @Test
-  public void testScalarStructure() throws VectorOverflowException {
+  public void testScalarStructure() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .buildSchema();
@@ -164,7 +169,7 @@ public class RowSetTest extends SubOperatorTest {
    */
 
   @Test
-  public void testScalarArrayStructure() throws VectorOverflowException {
+  public void testScalarArrayStructure() {
     TupleMetadata schema = new SchemaBuilder()
         .addArray("a", MinorType.INT)
         .buildSchema();
@@ -275,7 +280,7 @@ public class RowSetTest extends SubOperatorTest {
    */
 
   @Test
-  public void testMapStructure() throws VectorOverflowException {
+  public void testMapStructure() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addMap("m")
@@ -364,17 +369,23 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(32, bReader.getInt(1));
     assertFalse(reader.next());
 
+    // Verify that the map accessor's value count was set.
+
+    @SuppressWarnings("resource")
+    MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(actual.rowCount(), mapVector.getAccessor().getValueCount());
+
     SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .add(10, new int[] {11, 12})
-        .add(20, new int[] {21, 22})
-        .add(30, new int[] {31, 32})
+        .add(10, new Object[] {new int[] {11, 12}})
+        .add(20, new Object[] {new int[] {21, 22}})
+        .add(30, new Object[] {new int[] {31, 32}})
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);
   }
 
   @Test
-  public void testRepeatedMapStructure() throws VectorOverflowException {
+  public void testRepeatedMapStructure() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addMapArray("m")
@@ -496,6 +507,12 @@ public class RowSetTest extends SubOperatorTest {
 
     assertFalse(reader.next());
 
+    // Verify that the map accessor's value count was set.
+
+    @SuppressWarnings("resource")
+    RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(actual.rowCount(), mapVector.getAccessor().getValueCount());
+
     // Verify the readers and writers again using the testing tools.
 
     SingleRowSet expected = fixture.rowSetBuilder(schema)
@@ -520,22 +537,19 @@ public class RowSetTest extends SubOperatorTest {
 
     ExtendableRowSet rs1 = fixture.rowSet(batchSchema);
     RowSetWriter writer = rs1.writer();
-    try {
-      writer.scalar(0).setInt(10);
-      ScalarWriter array = writer.array(1).scalar();
-      array.setInt(100);
-      array.setInt(110);
-      writer.save();
-      writer.scalar(0).setInt(20);
-      array.setInt(200);
-      array.setInt(120);
-      array.setInt(220);
-      writer.save();
-      writer.scalar(0).setInt(30);
-      writer.save();
-    } catch (VectorOverflowException e) {
-      fail("Should not overflow vector");
-    }
+    writer.scalar(0).setInt(10);
+    ScalarWriter array = writer.array(1).scalar();
+    array.setInt(100);
+    array.setInt(110);
+    writer.save();
+    writer.scalar(0).setInt(20);
+    array.setInt(200);
+    array.setInt(120);
+    array.setInt(220);
+    writer.save();
+    writer.scalar(0).setInt(30);
+    writer.save();
+
     SingleRowSet result = writer.done();
 
     RowSetReader reader = result.reader();
@@ -581,17 +595,10 @@ public class RowSetTest extends SubOperatorTest {
     ExtendableRowSet rs = fixture.rowSet(batchSchema);
     RowSetWriter writer = rs.writer();
     int count = 0;
-    boolean lastSave = true;
     while (! writer.isFull()) {
-      assertTrue(lastSave);
-      try {
-        writer.scalar(0).setInt(count++);
-      } catch (VectorOverflowException e) {
-        fail("Int vector should not overflow");
-      }
-      lastSave = writer.save();
+      writer.scalar(0).setInt(count++);
+      writer.save();
     }
-    assertFalse(lastSave);
     writer.done();
 
     assertEquals(ValueVector.MAX_ROW_COUNT, count);
@@ -614,7 +621,7 @@ public class RowSetTest extends SubOperatorTest {
    */
 
   @Test
-  public void testbufferBounds() {
+  public void testBufferBounds() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
@@ -632,18 +639,23 @@ public class RowSetTest extends SubOperatorTest {
     ExtendableRowSet rs = fixture.rowSet(batchSchema);
     RowSetWriter writer = rs.writer();
     int count = 0;
-    for (;;) {
-      try {
-        writer.scalar(0).setInt(count++);
-      } catch (VectorOverflowException e) {
-        fail("Int vector should not overflow");
-      }
-      try {
+    try {
+
+      // Test overflow. This is not a typical use case: don't want to
+      // hit overflow without overflow handling. In this case, we throw
+      // away the last row because the row set abstraction does not
+      // implement vector overflow other than throwing an exception.
+
+      for (;;) {
+        writer.scalar(0).setInt(count);
         writer.scalar(1).setString(varCharValue);
-      } catch (VectorOverflowException e) {
-        break;
+
+        // Won't get here on overflow.
+        writer.save();
+        count++;
       }
-      assertTrue(writer.save());
+    } catch (IndexOutOfBoundsException e) {
+      assertTrue(e.getMessage().contains("overflow"));
     }
     writer.done();
 

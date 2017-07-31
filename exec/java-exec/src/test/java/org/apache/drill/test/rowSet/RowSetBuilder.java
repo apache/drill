@@ -21,7 +21,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.exec.record.TupleSchema;
-import org.apache.drill.exec.vector.VectorOverflowException;
+import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
@@ -55,6 +55,8 @@ public final class RowSetBuilder {
     writer = rowSet.writer(capacity);
   }
 
+  public TupleWriter writer() { return writer; }
+
   /**
    * Add a new row using column values passed as variable-length arguments. Expects
    * map values to be flattened. a schema of (a:int, b:map(c:varchar)) would be>
@@ -69,11 +71,7 @@ public final class RowSetBuilder {
    */
 
   public RowSetBuilder add(Object...values) {
-    try {
-      writer.setRow(values);
-    } catch (VectorOverflowException e) {
-      throw new IllegalStateException(e);
-    }
+    writer.setRow(values);
     return this;
   }
 
