@@ -26,8 +26,13 @@
 #include "UserBitShared.pb.h"
 #include "utils.hpp"
 
+#ifdef WIN32 
+#include "sasl.h"
+#include "saslplug.h"
+#else
 #include "sasl/sasl.h"
 #include "sasl/saslplug.h"
+#endif
 
 namespace Drill {
 
