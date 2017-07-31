@@ -88,6 +88,9 @@ public abstract class BaseScalarReader implements ScalarReader {
 
   protected void bindIndex(ColumnReaderIndex rowIndex) {
     this.vectorIndex = rowIndex;
+    if (vectorAccessor != null) {
+      vectorAccessor.bind(rowIndex);
+    }
   }
 
   public void bindVector(MajorType majorType, VectorAccessor va) {

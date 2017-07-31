@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
-import org.apache.drill.exec.vector.VectorOverflowException;
-
 /**
  * Defines a writer to set values for value vectors using
  * a simple, uniform interface modeled after a JSON object.
@@ -51,5 +49,5 @@ public interface ObjectWriter {
    * @throws VectorOverflowException
    */
 
-  void set(Object value) throws VectorOverflowException;
+  void set(Object value);
 }

@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.vector.accessor.writer;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.joda.time.Period;
 
 /**
  * Column writer implementation that acts as the basis for the
@@ -31,6 +34,8 @@ public abstract class BaseScalarWriter extends AbstractScalarWriter {
 
   protected ColumnWriterIndex vectorIndex;
   protected int lastWriteIndex;
+  protected long bufAddr;
+  protected int capacity;
 
   public static ScalarObjectWriter build(ValueVector vector, BaseScalarWriter writer) {
     writer.bindVector(vector);
@@ -44,4 +49,46 @@ public abstract class BaseScalarWriter extends AbstractScalarWriter {
 
   @Override
   public void startWrite() { lastWriteIndex = -1; }
+  public int lastWriteIndex() { return lastWriteIndex; }
+  public void setLastWriteIndex(int index) { lastWriteIndex = index; }
+
+  @Override
+  public void setNull() {
+    throw new UnsupportedOperationException("Vector is not nullable");
+  }
+
+  @Override
+  public void setInt(int value) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setLong(long value) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setDouble(double value) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setString(String value) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setBytes(byte[] value, int len) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setDecimal(BigDecimal value) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setPeriod(Period value) {
+    throw new UnsupportedOperationException();
+  }
 }

@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
-import org.apache.drill.exec.vector.VectorOverflowException;
-
 /**
  * Writer for values into an array. Array writes are write-once, sequential:
  * each call to a <tt>setFoo()</tt> method writes a value and advances the array
@@ -68,7 +66,7 @@ public interface ArrayWriter {
    * @param values values for each array element
    * @throws VectorOverflowException
    */
-  void set(Object ...values) throws VectorOverflowException;
+  void set(Object ...values);
 
   /**
    * Write the array given an array of values. The type of array must match
@@ -79,6 +77,6 @@ public interface ArrayWriter {
    * @throws VectorOverflowException
    */
 
-  void setArray(Object array) throws VectorOverflowException;
+  void setObject(Object array);
 //  void setList(List<? extends Object> list);
 }

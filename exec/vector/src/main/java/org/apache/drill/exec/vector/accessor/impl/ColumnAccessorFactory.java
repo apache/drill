@@ -28,8 +28,8 @@ import org.apache.drill.exec.vector.accessor.reader.BaseScalarReader;
 import org.apache.drill.exec.vector.accessor.reader.ScalarArrayReader;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.BaseElementWriter;
 import org.apache.drill.exec.vector.accessor.writer.BaseScalarWriter;
+import org.apache.drill.exec.vector.accessor.writer.NullableScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
@@ -47,16 +47,12 @@ public class ColumnAccessorFactory {
   private static final Class<? extends BaseScalarReader> nullableReaders[] = new Class[typeCount];
   private static final Class<? extends BaseElementReader> elementReaders[] = new Class[typeCount];
   private static final Class<? extends BaseScalarWriter> requiredWriters[] = new Class[typeCount];
-  private static final Class<? extends BaseScalarWriter> nullableWriters[] = new Class[typeCount];
-  private static final Class<? extends BaseElementWriter> elementWriters[] = new Class[typeCount];
 
   static {
     ColumnAccessors.defineRequiredReaders(requiredReaders);
     ColumnAccessors.defineNullableReaders(nullableReaders);
     ColumnAccessors.defineArrayReaders(elementReaders);
     ColumnAccessors.defineRequiredWriters(requiredWriters);
-    ColumnAccessors.defineNullableWriters(nullableWriters);
-    ColumnAccessors.defineArrayWriters(elementWriters);
   }
 
   public static AbstractObjectWriter buildColumnWriter(ValueVector vector) {
@@ -74,11 +70,11 @@ public class ColumnAccessorFactory {
     default:
       switch (mode) {
       case OPTIONAL:
-        return BaseScalarWriter.build(vector, newAccessor(type, nullableWriters));
+        return NullableScalarWriter.build(vector, newAccessor(type, requiredWriters));
       case REQUIRED:
         return BaseScalarWriter.build(vector, newAccessor(type, requiredWriters));
       case REPEATED:
-        return ScalarArrayWriter.build((RepeatedValueVector) vector, newAccessor(type, elementWriters));
+        return ScalarArrayWriter.build((RepeatedValueVector) vector, newAccessor(type, requiredWriters));
       default:
         throw new UnsupportedOperationException(mode.toString());
       }

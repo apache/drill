@@ -19,42 +19,12 @@ package org.apache.drill.exec.vector.accessor.impl;
 
 import java.math.BigDecimal;
 
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.joda.time.Duration;
 
 public class AccessorUtilities {
 
   private AccessorUtilities() { }
-
-  public static void setFromInt(ScalarWriter writer, int value) throws VectorOverflowException {
-    switch (writer.valueType()) {
-    case BYTES:
-      byte bytes[] = Integer.toHexString(value).getBytes();
-      writer.setBytes(bytes, bytes.length);
-      break;
-    case DOUBLE:
-      writer.setDouble(value);
-      break;
-    case INTEGER:
-      writer.setInt(value);
-      break;
-    case LONG:
-      writer.setLong(value);
-      break;
-    case STRING:
-      writer.setString(Integer.toString(value));
-      break;
-    case DECIMAL:
-      writer.setDecimal(BigDecimal.valueOf(value));
-      break;
-    case PERIOD:
-      writer.setPeriod(Duration.millis(value).toPeriod());
-      break;
-    default:
-      throw new IllegalStateException("Unknown writer type: " + writer.valueType());
-    }
-  }
 
   public static int sv4Batch(int sv4Index) {
     return sv4Index >>> 16;

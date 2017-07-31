@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.accessor.writer;
 
-import org.apache.drill.exec.vector.UInt4Vector;
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
@@ -64,8 +62,8 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     }
 
     @Override
-    public void set(Object value) throws VectorOverflowException {
-      arrayWriter.setArray(value);
+    public void set(Object value) {
+      arrayWriter.setObject(value);
     }
 
     public void start() {
@@ -98,32 +96,77 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     }
   }
 
+  /**
+   * Index into the vector of elements for a repeated vector.
+   * Keeps track of the current offset in terms of value positions.
+   * Forwards overflow events to the base index.
+   */
+
+  public class ArrayElementWriterIndex implements ColumnWriterIndex {
+
+    private final ColumnWriterIndex baseIndex;
+    private int startOffset = 0;
+    private int offset = 0;
+
+    public ArrayElementWriterIndex(ColumnWriterIndex baseIndex) {
+      this.baseIndex = baseIndex;
+    }
+
+    public ColumnWriterIndex baseIndex() { return baseIndex; }
+
+    public void reset() {
+      offset = 0;
+      startOffset = 0;
+    }
+
+    public int endValue() {
+      startOffset = offset;
+      return offset;
+    }
+
+    @Override
+    public int vectorIndex() { return offset; }
+
+    @Override
+    public void overflowed() {
+      baseIndex.overflowed();
+    }
+
+    public int arraySize() {
+      return offset - startOffset;
+    }
+
+    @Override
+    public void nextElement() { offset++; }
+
+    @Override
+    public boolean legal() {
+      return true;
+    }
+  }
+
   protected final AbstractObjectWriter elementObjWriter;
-  private final UInt4Vector.Mutator mutator;
+  private final OffsetVectorWriter offsetsWriter = new OffsetVectorWriter();
   private ColumnWriterIndex baseIndex;
-  protected FixedWidthElementWriterIndex elementIndex;
-  private int lastWritePosn = 0;
+  protected ArrayElementWriterIndex elementIndex;
 
   public AbstractArrayWriter(RepeatedValueVector vector, AbstractObjectWriter elementObjWriter) {
     this.elementObjWriter = elementObjWriter;
-    mutator = vector.getOffsetVector().getMutator();
+    offsetsWriter.bindVector(vector.getOffsetVector());
   }
 
   public void bindIndex(ColumnWriterIndex index) {
     baseIndex = index;
-    elementIndex = new FixedWidthElementWriterIndex(baseIndex);
+    offsetsWriter.bindIndex(index);
+    elementIndex = new ArrayElementWriterIndex(baseIndex);
     elementObjWriter.bindIndex(elementIndex);
   }
 
-  protected ElementWriterIndex elementIndex() { return elementIndex; }
+  protected ColumnWriterIndex elementIndex() { return elementIndex; }
 
   @Override
   public int size() {
     return elementIndex.arraySize();
-  }
-
-  private void setOffset(int posn, int offset) {
-    mutator.setSafe(posn, offset);
   }
 
   @Override
@@ -134,31 +177,20 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   @Override
   public void startWrite() {
     elementIndex.reset();
-    setOffset(0, 0);
     elementObjWriter.startWrite();
   }
 
   @Override
-  public void startValue() { fillEmpties(); }
-
-  private void fillEmpties() {
-    final int curPosn = elementIndex.vectorIndex();
-    while (lastWritePosn < baseIndex.vectorIndex()) {
-      lastWritePosn++;
-      setOffset(lastWritePosn, curPosn);
-    }
-  }
+  public void startValue() { }
 
   @Override
   public void endValue() {
-    assert lastWritePosn == baseIndex.vectorIndex();
-    setOffset(lastWritePosn + 1, elementIndex.vectorIndex());
+    offsetsWriter.setOffset(elementIndex.endValue());
   }
 
   @Override
   public void endWrite() {
-    fillEmpties();
-    mutator.setValueCount(elementIndex.vectorIndex());
+    offsetsWriter.finish();
     elementObjWriter.endWrite();
   }
 

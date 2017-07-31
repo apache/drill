@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
@@ -56,7 +55,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     }
 
     @Override
-    public void set(Object value) throws VectorOverflowException {
+    public void set(Object value) {
       tupleWriter.setObject(value);
     }
 
@@ -88,7 +87,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   protected ColumnWriterIndex vectorIndex;
   protected final TupleMetadata schema;
-  private final AbstractObjectWriter writers[];
+  protected final AbstractObjectWriter writers[];
 
   protected AbstractTupleWriter(TupleMetadata schema, AbstractObjectWriter writers[]) {
     this.schema = schema;
@@ -150,17 +149,17 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   }
 
   @Override
-  public void set(int colIndex, Object value) throws VectorOverflowException {
+  public void set(int colIndex, Object value) {
     ObjectWriter colWriter = column(colIndex);
     switch (colWriter.type()) {
     case ARRAY:
-      colWriter.array().setArray(value);
+      colWriter.array().setObject(value);
       break;
     case SCALAR:
       colWriter.scalar().setObject(value);
       break;
     case TUPLE:
-      colWriter.tuple().setTuple(value);
+      colWriter.tuple().setObject(value);
       break;
     default:
       throw new IllegalStateException("Unexpected object type: " + colWriter.type());
@@ -168,12 +167,12 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   }
 
   @Override
-  public void setTuple(Object ...values) throws VectorOverflowException {
+  public void setTuple(Object ...values) {
     setObject(values);
   }
 
   @Override
-  public void setObject(Object value) throws VectorOverflowException {
+  public void setObject(Object value) {
     Object values[] = (Object[]) value;
     int count = Math.min(values.length, schema().size());
     for (int i = 0; i < count; i++) {

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.vector.accessor;
 
 import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.vector.VectorOverflowException;
 
 /**
  * Interface for writing to rows via a column writer. Column writers can be
@@ -66,7 +65,7 @@ public interface TupleWriter {
    * @throws VectorOverflowException if the vector overflows
    */
 
-  void set(int colIndex, Object value) throws VectorOverflowException;
+  void set(int colIndex, Object value);
 
   /**
    * Write a row or map of values, given by Java objects. Object type must
@@ -81,7 +80,7 @@ public interface TupleWriter {
    * @throws VectorOverflowException if the vector overflows
    */
 
-  void setTuple(Object ...values) throws VectorOverflowException;
+  void setTuple(Object ...values);
 
   /**
    * Set the tuple from an array of objects. Primarily for use in
@@ -91,5 +90,5 @@ public interface TupleWriter {
    * @throws VectorOverflowException
    */
 
-  void setObject(Object value) throws VectorOverflowException;
+  void setObject(Object value);
 }

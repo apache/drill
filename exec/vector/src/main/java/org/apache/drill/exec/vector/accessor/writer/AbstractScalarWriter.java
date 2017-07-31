@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector.accessor.writer;
 import java.math.BigDecimal;
 
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -54,7 +53,7 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
     }
 
     @Override
-    public void set(Object value) throws VectorOverflowException {
+    public void set(Object value) {
       scalarWriter.setObject(value);
     }
 
@@ -93,7 +92,7 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
   public abstract void bindVector(ValueVector vector);
 
   @Override
-  public void setObject(Object value) throws VectorOverflowException {
+  public void setObject(Object value) {
     if (value == null) {
       setNull();
     } else if (value instanceof Integer) {
@@ -124,46 +123,6 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
   }
 
   @Override
-  public void setNull() throws VectorOverflowException {
-    throw new UnsupportedOperationException("Vector is not nullable");
-  }
-
-  @Override
-  public void setInt(int value) throws VectorOverflowException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setLong(long value) throws VectorOverflowException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setDouble(double value) throws VectorOverflowException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setString(String value) throws VectorOverflowException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setBytes(byte[] value, int len) throws VectorOverflowException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setDecimal(BigDecimal value) throws VectorOverflowException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setPeriod(Period value) throws VectorOverflowException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public void startWrite() { }
 
   @Override
@@ -174,17 +133,7 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
 
   @Override
   public void endWrite() {
-
-    // Finish up the vector. The methods used in the generated code
-    // can throw the overflow exception, but they should not be used
-    // here in a way that will actually trigger an overflow, so
-    // rethrow as a non-checked exception.
-
-    try {
-      finish();
-    } catch (VectorOverflowException e) {
-      throw new IllegalStateException("Overflow on finish", e);
-    }
+    finish();
   }
 
   /**
@@ -194,5 +143,5 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
    * @throws VectorOverflowException should not actually occur
    */
 
-  protected void finish() throws VectorOverflowException { }
+  public void finish() { }
 }
