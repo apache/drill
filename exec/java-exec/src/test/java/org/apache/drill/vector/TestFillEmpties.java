@@ -19,56 +19,27 @@
 package org.apache.drill.vector;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.RepeatedVarCharVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.VectorOverflowException;
-import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.OperatorFixture;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
 
-public class TestFillEmpties extends DrillTest {
-
-  public static OperatorFixture fixture;
-
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    fixture = OperatorFixture.builder().build();
-  }
-
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-    fixture.close();
-  }
-
-  // To be replaced by a test method in a separate commit.
-
-  public static MaterializedField makeField(String name, MinorType dataType, DataMode mode) {
-    MajorType type = MajorType.newBuilder()
-        .setMinorType(dataType)
-        .setMode(mode)
-        .build();
-
-    return MaterializedField.create(name, type);
-  }
+public class TestFillEmpties extends SubOperatorTest {
 
   @Test
   public void testNullableVarChar() {
     @SuppressWarnings("resource")
-    NullableVarCharVector vector = new NullableVarCharVector(makeField("a", MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator());
+    NullableVarCharVector vector = new NullableVarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator());
     vector.allocateNew( );
 
     // Create "foo", null, "bar", but omit the null.
@@ -88,7 +59,7 @@ public class TestFillEmpties extends DrillTest {
   @Test
   public void testVarChar() {
     @SuppressWarnings("resource")
-    VarCharVector vector = new VarCharVector(makeField("a", MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator());
+    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator());
     vector.allocateNew( );
 
     // Create "foo", null, "bar", but omit the null.
@@ -100,11 +71,7 @@ public class TestFillEmpties extends DrillTest {
     // Work around: test fails without this. But, only the new column writers
     // call this method.
 
-    try {
-      mutator.fillEmptiesBounded(0, 2);
-    } catch (VectorOverflowException e) {
-      fail();
-    }
+    mutator.fillEmpties(0, 2);
     value = makeValue("bar");
     mutator.setSafe(2, value, 0, value.length);
 
@@ -116,7 +83,7 @@ public class TestFillEmpties extends DrillTest {
   @Test
   public void testInt() {
     @SuppressWarnings("resource")
-    IntVector vector = new IntVector(makeField("a", MinorType.INT, DataMode.REQUIRED), fixture.allocator());
+    IntVector vector = new IntVector(SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REQUIRED), fixture.allocator());
     vector.allocateNew( );
 
     // Create 1, 0, 2, but omit the 0.
@@ -133,7 +100,7 @@ public class TestFillEmpties extends DrillTest {
   @Test
   public void testRepeatedVarChar() {
     @SuppressWarnings("resource")
-    RepeatedVarCharVector vector = new RepeatedVarCharVector(makeField("a", MinorType.VARCHAR, DataMode.REPEATED), fixture.allocator());
+    RepeatedVarCharVector vector = new RepeatedVarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REPEATED), fixture.allocator());
     vector.allocateNew( );
 
     // Create "foo", null, "bar", but omit the null.
@@ -148,11 +115,7 @@ public class TestFillEmpties extends DrillTest {
     // Work around: test fails without this. But, only the new column writers
     // call this method.
 
-    try {
-      mutator.fillEmptiesBounded(0, 2);
-    } catch (VectorOverflowException e) {
-      fail();
-    }
+    mutator.fillEmpties(0, 2);
     mutator.startNewValue(2);
     value = makeValue( "c" );
     mutator.addSafe(2, value, 0, value.length);

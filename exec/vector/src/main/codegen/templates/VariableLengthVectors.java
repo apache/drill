@@ -385,12 +385,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       throw new OversizedAllocationException("Unable to expand the buffer. Max allowed buffer size is reached.");
     }
 
-    logger.trace("Reallocating VarChar, new size {}",newAllocationSize);
-    final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
+    reallocRaw((int) newAllocationSize);
+  }
+
+  public DrillBuf reallocRaw(int newAllocationSize) {
+    final DrillBuf newBuf = allocator.buffer(newAllocationSize);
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();
     data = newBuf;
-    allocationSizeInBytes = (int)newAllocationSize;
+    allocationSizeInBytes = newAllocationSize;
+    return data;
   }
 
   public void decrementAllocationMonitor() {
@@ -534,10 +538,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       }
     }
 
-    public void setScalar(int index, byte[] bytes) throws VectorOverflowException {
-      setScalar(index, bytes, 0, bytes.length);
-    }
-
     /**
      * Set the variable length element at the specified index to the supplied byte array.
      *
@@ -568,23 +568,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       }
     }
 
-    public void setScalar(int index, DrillBuf bytes, int start, int length) throws VectorOverflowException {
-      assert index >= 0;
-
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      int currentOffset = offsetVector.getAccessor().get(index);
-      final int newSize = currentOffset + length;
-      if (newSize > MAX_BUFFER_SIZE) {
-        throw new VectorOverflowException();
-      }
-      while (! data.setBytesBounded(currentOffset, bytes, start, length)) {
-        reAlloc();
-      }
-      offsetVector.getMutator().setSafe(index + 1, newSize);
-    }
-
     public void setSafe(int index, byte[] bytes, int start, int length) {
       assert index >= 0;
 
@@ -599,28 +582,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         }
         data.setBytes(currentOffset, bytes, start, length);
       }
-    }
-
-    public void setScalar(int index, byte[] bytes, int start, int length) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setArrayItem(index, bytes, start, length);
-    }
-
-    public void setArrayItem(int index, byte[] bytes, int start, int length) throws VectorOverflowException {
-      assert index >= 0;
-
-      final int currentOffset = offsetVector.getAccessor().get(index);
-      final int newSize = currentOffset + length;
-      if (newSize > MAX_BUFFER_SIZE) {
-        throw new VectorOverflowException();
-      }
-
-      while (! data.setBytesBounded(currentOffset, bytes, start, length)) {
-        reAlloc();
-      }
-      offsetVector.getMutator().setSafe(index + 1, newSize);
     }
 
     @Override
@@ -647,39 +608,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       }
     }
 
-    public void setScalar(int index, int start, int end, DrillBuf buffer) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setArrayItem(index, start, end, buffer);
-    }
-
-    public void setArrayItem(int index, int start, int end, DrillBuf buffer) throws VectorOverflowException {
-      final int len = end - start;
-      final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
-      final int newSize = outputStart + len;
-      if (newSize > MAX_BUFFER_SIZE) {
-        throw new VectorOverflowException();
-      }
-
-      offsetVector.getMutator().setSafe(index+1, newSize);
-      try{
-        buffer.getBytes(start, data, outputStart, len);
-      } catch (IndexOutOfBoundsException e) {
-        while (data.capacity() < newSize) {
-          reAlloc();
-        }
-        buffer.getBytes(start, data, outputStart, len);
-      }
-    }
-
     public void setSafe(int index, Nullable${minor.class}Holder holder) {
       assert holder.isSet == 1;
 
       final int start = holder.start;
       final int end =   holder.end;
       final int len = end - start;
-
       final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
 
       try {
@@ -691,37 +625,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         holder.buffer.getBytes(start, data, outputStart, len);
       }
       offsetVector.getMutator().setSafe(index+1,  outputStart + len);
-    }
-
-    public void setScalar(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setArrayItem(index, holder);
-    }
-
-    public void setArrayItem(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      assert holder.isSet == 1;
-
-      final int start = holder.start;
-      final int end =   holder.end;
-      final int len = end - start;
-
-      final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
-      final int newSize = outputStart + len;
-      if (newSize > MAX_BUFFER_SIZE) {
-        throw new VectorOverflowException();
-      }
-
-      try {
-        holder.buffer.getBytes(start, data, outputStart, len);
-      } catch (IndexOutOfBoundsException e) {
-        while (data.capacity() < newSize) {
-          reAlloc();
-        }
-        holder.buffer.getBytes(start, data, outputStart, len);
-      }
-      offsetVector.getMutator().setSafe(index+1, newSize);
     }
 
     public void setSafe(int index, ${minor.class}Holder holder) {
@@ -741,34 +644,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       offsetVector.getMutator().setSafe( index+1,  outputStart + len);
     }
 
-    public void setScalar(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setArrayItem(index, holder);
-   }
-
-    public void setArrayItem(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      final int start = holder.start;
-      final int end =   holder.end;
-      final int len = end - start;
-      final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
-      final int newSize = outputStart + len;
-      if (newSize > MAX_BUFFER_SIZE) {
-        throw new VectorOverflowException();
-      }
-
-      try {
-        holder.buffer.getBytes(start, data, outputStart, len);
-      } catch (IndexOutOfBoundsException e) {
-        while(data.capacity() < newSize) {
-          reAlloc();
-        }
-        holder.buffer.getBytes(start, data, outputStart, len);
-      }
-      offsetVector.getMutator().setSafe( index+1, newSize);
-    }
-
     /**
      * Backfill missing offsets from the given last written position to the
      * given current write position. Used by the "new" size-safe column
@@ -778,20 +653,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      * to be copied forward
      * @param index the current write position filling occurs up to,
      * but not including, this position
-     * @throws VectorOverflowException if the item was written, false if the index would
-     * overfill the vector
      */
 
-    public void fillEmptiesBounded(int lastWrite, int index)
-            throws VectorOverflowException {
-
-      // Index is the next write index, which might be "virtual",
-      // that is, past the last row at EOF. This check only protects
-      // the actual data written here, which is up to index-1.
-
-      if (index > UInt4Vector.MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
+    public void fillEmpties(int lastWrite, int index) {
       // If last write was 2, offsets are [0, 3, 6]
       // If next write is 4, offsets must be: [0, 3, 6, 6, 6]
       // Remember the offsets are one more than row count.
@@ -803,7 +667,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       }
     }
 
-    protected void set(int index, int start, int length, DrillBuf buffer){
+    protected void set(int index, int start, int length, DrillBuf buffer) {
       assert index >= 0;
       final int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
@@ -811,33 +675,20 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       data.setBytes(currentOffset, bb);
     }
 
-    protected void set(int index, Nullable${minor.class}Holder holder){
+    protected void set(int index, Nullable${minor.class}Holder holder) {
       final int length = holder.end - holder.start;
       final int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       data.setBytes(currentOffset, holder.buffer, holder.start, length);
     }
 
-    protected void set(int index, ${minor.class}Holder holder){
+    protected void set(int index, ${minor.class}Holder holder) {
       final int length = holder.end - holder.start;
       final int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       data.setBytes(currentOffset, holder.buffer, holder.start, length);
     }
 
-  <#if (minor.class == "VarChar")>
-    public void setScalar(int index, String value) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      // Treat a null string as an empty string.
-      if (value != null) {
-        byte encoded[] = value.getBytes(Charsets.UTF_8);
-        setScalar(index, encoded, 0, encoded.length);
-      }
-    }
-
-  </#if>
     @Override
     public void setValueCount(int valueCount) {
       final int currentByteCapacity = getByteCapacity();

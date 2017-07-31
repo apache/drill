@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -106,6 +106,8 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return refCnt.get();
     }
   }
+
+  public long addr() { return addr; }
 
   private long addr(int index) {
     return addr + index;
@@ -546,22 +548,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     chk(index, 4);
     PlatformDependent.putInt(addr(index), value);
     return this;
-  }
-
-  /**
-   * Set an integer, with integrated bounds checking.
-   * @param index location to set
-   * @param value value to set
-   * @return true if the value fit into the buffer, false if the buffer
-   * does not contain sufficient space
-   */
-
-  public boolean putInt(int index, int value) {
-    if (index + 4 > length) {
-      return false;
-    }
-    PlatformDependent.putInt(addr(index), value);
-    return true;
   }
 
   @Override

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /**
- * Tests for value vectors. Is in this module to allow use of
- * the test tools which are available only in this module.
+ * Tests for value vectors. Is in this package to allow use of
+ * the test tools which are available only in this package.
  */
 package org.apache.drill.vector;

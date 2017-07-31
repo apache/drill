@@ -199,15 +199,27 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       throw new OversizedAllocationException("Unable to expand the buffer. Max allowed buffer size is reached.");
     }
 
+    reallocRaw((int) newAllocationSize);
+    final int halfNewCapacity = data.capacity() / 2;
+    data.setZero(halfNewCapacity, halfNewCapacity);
+  }
+
+  /**
+   * Core of vector allocation. Given a new size (which must be a power of two), allocate
+   * the new buffer, copy the current values, and leave the unused parts garbage-filled.
+   *
+   * @param newAllocationSize new buffer size as a power of two
+   * @return the new buffer
+   */
+  public DrillBuf reallocRaw(int newAllocationSize) {
     logger.debug("Reallocating vector [{}]. # of bytes: [{}] -> [{}]", field, allocationSizeInBytes, newAllocationSize);
-    final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
+    final DrillBuf newBuf = allocator.buffer(newAllocationSize);
     newBuf.setBytes(0, data, 0, data.capacity());
-    final int halfNewCapacity = newBuf.capacity() / 2;
-    newBuf.setZero(halfNewCapacity, halfNewCapacity);
     newBuf.writerIndex(data.writerIndex());
     data.release(1);
     data = newBuf;
-    allocationSizeInBytes = (int)newAllocationSize;
+    allocationSizeInBytes = newAllocationSize;
+    return newBuf;
   }
 
   /**
@@ -400,7 +412,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       final String yearString = (Math.abs(years) == 1) ? " year " : " years ";
       final String monthString = (Math.abs(months) == 1) ? " month " : " months ";
       final String dayString = (Math.abs(days) == 1) ? " day " : " days ";
-
 
       return(new StringBuilder().
              append(years).append(yearString).
@@ -633,37 +644,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       data.setBytes(index * VALUE_WIDTH, value, 0, VALUE_WIDTH);
     }
 
-    /**
-     * Set the value of a required or nullable vector. Enforces the value
-     * and size limits.
-     * @param index item to write
-     * @param value value to set
-     * @throws VectorOverflowException if the item was written, false if the index would
-     * overfill the vector
-     */
-
-    public void setScalar(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, value);
-    }
-
-    /**
-     * Set the value of a repeated vector. Enforces only the size limit.
-     * @param index item to write
-     * @param value value to set
-     * @throws VectorOverflowException if the item was written, false if the index would
-     * overfill the vector
-     */
-
-    public void setArrayItem(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, value);
-    }
-
     <#if minor.class == "Interval">
     public void set(int index, int months, int days, int milliseconds) {
       final int offsetIndex = index * VALUE_WIDTH;
@@ -679,20 +659,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       set(index, months, days, milliseconds);
     }
 
-    public void setScalar(int index, int months, int days, int milliseconds) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, months, days, milliseconds);
-    }
-
-    public void setArrayItem(int index, int months, int days, int milliseconds) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, months, days, milliseconds);
-    }
-
     protected void set(int index, ${minor.class}Holder holder) {
       set(index, holder.months, holder.days, holder.milliseconds);
     }
@@ -701,28 +667,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       setSafe(index, holder.months, holder.days, holder.milliseconds);
     }
 
-    public void setScalar(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      setScalar(index, holder.months, holder.days, holder.milliseconds);
-    }
-
-    public void setArrayItem(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      setArrayItem(index, holder.months, holder.days, holder.milliseconds);
-    }
-
     protected void set(int index, Nullable${minor.class}Holder holder) {
       set(index, holder.months, holder.days, holder.milliseconds);
     }
 
     public void setSafe(int index, Nullable${minor.class}Holder holder) {
       setSafe(index, holder.months, holder.days, holder.milliseconds);
-    }
-
-    public void setScalar(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      setScalar(index, holder.months, holder.days, holder.milliseconds);
-    }
-
-    public void setArrayItem(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      setArrayItem(index, holder.months, holder.days, holder.milliseconds);
     }
 
     <#elseif minor.class == "IntervalDay">
@@ -739,34 +689,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       set(index, days, milliseconds);
     }
 
-    public void setScalar(int index, int days, int milliseconds) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, days, milliseconds);
-    }
-
-    public void setArrayItem(int index, int days, int milliseconds) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, days, milliseconds);
-    }
-
     protected void set(int index, ${minor.class}Holder holder) {
       set(index, holder.days, holder.milliseconds);
     }
 
     public void setSafe(int index, ${minor.class}Holder holder) {
       setSafe(index, holder.days, holder.milliseconds);
-    }
-
-    public void setScalar(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      setScalar(index, holder.days, holder.milliseconds);
-    }
-
-    public void setArrayItem(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      setArrayItem(index, holder.days, holder.milliseconds);
     }
 
     protected void set(int index, Nullable${minor.class}Holder holder) {
@@ -777,34 +705,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       setSafe(index, holder.days, holder.milliseconds);
     }
 
-    public void setScalar(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      setScalar(index, holder.days, holder.milliseconds);
-    }
-
-    public void setArrayItem(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      setArrayItem(index, holder.days, holder.milliseconds);
-    }
-
     <#elseif minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense">
     public void setSafe(int index, int start, DrillBuf buffer) {
       while(index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, start, buffer);
-    }
-
-    public void setScalar(int index, int start, DrillBuf buffer) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, start, buffer);
-    }
-
-    public void setArrayItem(int index, int start, DrillBuf buffer) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, start, buffer);
     }
 
     public void set(int index, ${minor.class}Holder holder) {
@@ -815,28 +721,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       setSafe(index, holder.start, holder.buffer);
     }
 
-    public void setScalar(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      setScalar(index, holder.start, holder.buffer);
-    }
-
-    public void setArrayItem(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      setArrayItem(index, holder.start, holder.buffer);
-    }
-
     void set(int index, Nullable${minor.class}Holder holder) {
       set(index, holder.start, holder.buffer);
     }
 
     public void setSafe(int index, Nullable${minor.class}Holder holder) {
       setSafe(index, holder.start, holder.buffer);
-    }
-
-    public void setScalar(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      setScalar(index, holder.start, holder.buffer);
-    }
-
-    public void setArrayItem(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      setArrayItem(index, holder.start, holder.buffer);
     }
 
       <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
@@ -850,20 +740,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
         reAlloc();
       }
       set(index, value);
-    }
-
-    public void setScalar(int index, BigDecimal value) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, value);
-    }
-
-    public void setArrayItem(int index, BigDecimal value) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, value);
     }
 
       </#if>
@@ -898,46 +774,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      */
 
     public void setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-    <#-- optimization for int types; slightly faster than original Version.class -->
-    <#if (minor.javaType!type.javaType) == "int">
-      while (! data.putInt(index * VALUE_WIDTH, value)) {
-        reAlloc();
-      }
-    <#else>
       while(index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, value);
-    </#if>
-    }
-
-    /**
-     * Set the value of a required or nullable vector. Since a scalar vector cannot overflow,
-     * no overflow check is done.
-     * @param index item to write
-     * @param value value to set
-     * @throws VectorOverflowException if the item was written, false if the index would
-     * overfill the vector
-     */
-
-    public void setScalar(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) throws VectorOverflowException {
-      setSafe(index, value);
-    }
-
-    /**
-     * Set the value of a repeated vector. Enforces the size limit, since an array
-     * may, conceivably, contain enough values to overfill a vector.
-     * @param index item to write
-     * @param value value to set
-     * @throws VectorOverflowException if the item was written, false if the index would
-     * overfill the vector
-     */
-
-    public void setArrayItem(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, value);
     }
 
     protected void set(int index, ${minor.class}Holder holder) {
@@ -951,20 +791,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       set(index, holder);
     }
 
-    public void setScalar(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, holder);
-    }
-
-    public void setArrayItem(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, holder);
-    }
-
     protected void set(int index, Nullable${minor.class}Holder holder) {
       data.set${(minor.javaType!type.javaType)?cap_first}(index * VALUE_WIDTH, holder.value);
     }
@@ -974,20 +800,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
         reAlloc();
       }
       set(index, holder);
-    }
-
-    public void setScalar(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_SCALAR_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, holder);
-    }
-
-    public void setArrayItem(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_VALUE_COUNT) {
-        throw new VectorOverflowException();
-      }
-      setSafe(index, holder);
     }
 
     @Override
@@ -1018,30 +830,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
   </#if> <#-- type.width -->
-    /**
-     * Backfill missing offsets from the given last written position to the
-     * given current write position. Used by the "new" size-safe column
-     * writers to allow skipping values. The <tt>set()</tt> and <tt>setSafe()</tt>
-     * <b>do not</b> fill empties. See DRILL-5529 and DRILL-5530.
-     * @param lastWrite the position of the last valid write: the offset
-     * to be copied forward
-     * @param index the current write position filling occurs up to,
-     * but not including, this position
-     * @throws VectorOverflowException if the item was written, false if the index would
-     * overfill the vector
-     */
-
-    public void fillEmptiesBounded(int lastWrite, int index)
-            throws VectorOverflowException {
-  <#if type.width <= 8>
-      for (int i = lastWrite + 1; i <= index; i++) {
-        setSafe(i, <#if (type.width >= 4)>(${minor.javaType!type.javaType})</#if> 0);
-      }
-  <#else>
-      throw new UnsupportedOperationException("Cannot zero-fill ${minor.class} vectors.");
-  </#if>
-    }
-
     @Override
     public void setValueCount(int valueCount) {
       final int currentValueCapacity = getValueCapacity();
