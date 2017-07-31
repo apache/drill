@@ -77,7 +77,7 @@ public class OffsetVectorWriter extends BaseScalarWriter {
       if (size > ValueVector.MAX_BUFFER_SIZE) {
         throw new IllegalStateException("Offset vectors should not overflow");
       } else {
-        setAddr(vector.reallocRaw(Math.min(4096, BaseAllocator.nextPowerOfTwo(size))));
+        setAddr(vector.reallocRaw(BaseAllocator.nextPowerOfTwo(size)));
       }
     }
     while (lastWriteIndex < writeIndex - 1) {
