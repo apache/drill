@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.AbstractRecordReader;
@@ -79,6 +80,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import javax.annotation.Nullable;
+
+import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V1;
+import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V2;
+import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V3;
+import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V3_1;
 
 public class Metadata {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Metadata.class);
@@ -174,20 +180,18 @@ public class Metadata {
   }
 
   /**
-   * Checking whether metadata is corrupted
+   * Ignore reading metadata files, if metadata is corrupted
    *
    * @param metaContext metadata context
    * @param path The path to the metadata file, located in the directory that contains the parquet files
    * @return true if parquet metadata is corrupted, false otherwise
    */
   private static boolean ignoreReadingMetadata(MetadataContext metaContext, Path path) {
-    if (metaContext != null) {
-      if (metaContext.isMetadataFilesCorrupted) {
-        logger.warn("Ignoring of reading '{}' metadata file. Parquet metadata cache files are unsupported or corrupted. " +
-            "Query performance may be slow. Make sure the cache files are up-to-date by running the 'REFRESH TABLE " +
-            "METADATA' command", path);
-        return true;
-      }
+    if (metaContext.isMetadataFilesMissingOrCorrupted) {
+      logger.warn("Ignoring of reading '{}' metadata file. Parquet metadata cache files are unsupported or corrupted. " +
+          "Query performance may be slow. Make sure the cache files are up-to-date by running the 'REFRESH TABLE " +
+          "METADATA' command", path);
+      return true;
     }
     return false;
   }
@@ -233,8 +237,7 @@ public class Metadata {
         childFiles.add(file);
       }
     }
-    ParquetTableMetadata_v3 parquetTableMetadata = new ParquetTableMetadata_v3(MetadataVersion.Constants.V3_1,
-        DrillVersionInfo.getVersion());
+    ParquetTableMetadata_v3 parquetTableMetadata = new ParquetTableMetadata_v3(V3_1, DrillVersionInfo.getVersion());
     if (childFiles.size() > 0) {
       List<ParquetFileMetadata_v3 > childFilesMetadata =
           getParquetFileMetadata_v3(parquetTableMetadata, childFiles);
@@ -308,7 +311,7 @@ public class Metadata {
    */
   private ParquetTableMetadata_v3 getParquetTableMetadata(List<FileStatus> fileStatuses)
       throws IOException {
-    ParquetTableMetadata_v3 tableMetadata = new ParquetTableMetadata_v3();
+    ParquetTableMetadata_v3 tableMetadata = new ParquetTableMetadata_v3(V3_1, DrillVersionInfo.getVersion());
     List<ParquetFileMetadata_v3> fileMetadataList = getParquetFileMetadata_v3(tableMetadata, fileStatuses);
     tableMetadata.files = fileMetadataList;
     tableMetadata.directories = new ArrayList<String>();
@@ -633,7 +636,7 @@ public class Metadata {
       }
     } catch (IOException e) {
       logger.error("Failed to read '{}' metadata file", path, e);
-      metaContext.isMetadataFilesCorrupted = true;
+      metaContext.isMetadataFilesMissingOrCorrupted = true;
     }
   }
 
@@ -687,7 +690,7 @@ public class Metadata {
 
   /**
    * Basic class for parquet metadata. Inheritors of this class are json serializable structures which contain
-   * the metadata for an entire parquet directory structure
+   * different metadata versions for an entire parquet directory structure
    * <p>
    * If any new code changes affect on the metadata files content, please update metadata version in such manner:
    * Bump up metadata major version if metadata structure is changed.
@@ -700,10 +703,10 @@ public class Metadata {
                 property = "metadata_version",
                 visible = true)
   @JsonSubTypes({
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v1.class, name = MetadataVersion.Constants.V1),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v2.class, name = MetadataVersion.Constants.V2),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersion.Constants.V3),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersion.Constants.V3_1)
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v1.class, name = V1),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v2.class, name = V2),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = V3),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = V3_1)
       })
   public static abstract class ParquetTableMetadataBase {
 
@@ -809,7 +812,7 @@ public class Metadata {
     }
   }
 
-  @JsonTypeName(MetadataVersion.Constants.V1)
+  @JsonTypeName(V1)
   public static class ParquetTableMetadata_v1 extends ParquetTableMetadataBase {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     @JsonProperty List<ParquetFileMetadata_v1> files;
@@ -1074,7 +1077,7 @@ public class Metadata {
   /**
    * Struct which contains the metadata for an entire parquet directory structure
    */
-  @JsonTypeName(MetadataVersion.Constants.V2) public static class ParquetTableMetadata_v2 extends ParquetTableMetadataBase {
+  @JsonTypeName(V2) public static class ParquetTableMetadata_v2 extends ParquetTableMetadataBase {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     /*
      ColumnTypeInfo is schema information from all the files and row groups, merged into
@@ -1429,7 +1432,7 @@ public class Metadata {
 
   }
 
-  @JsonTypeName(MetadataVersion.Constants.V3_1)
+  @JsonTypeName(V3_1)
   public static class ParquetTableMetadata_v3 extends ParquetTableMetadataBase {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     /*
@@ -1444,7 +1447,6 @@ public class Metadata {
 
     /**
      * Default constructor needed for deserialization from Parquet Metadata Cache Files
-     * or for creating an empty instances of this class for the case when the Metadata Cache File is absent
      */
     public ParquetTableMetadata_v3() {
       super();
@@ -1893,8 +1895,8 @@ public class Metadata {
         filesWithRelativePaths.add(new ParquetFileMetadata_v3(
             relativize(baseDir, file.getPath()), file.length, file.rowGroups));
       }
-      return new ParquetTableMetadata_v3(MetadataVersion.Constants.V3_1, tableMetadataWithAbsolutePaths,
-          filesWithRelativePaths, directoriesWithRelativePaths, DrillVersionInfo.getVersion());
+      return new ParquetTableMetadata_v3(V3_1, tableMetadataWithAbsolutePaths, filesWithRelativePaths,
+          directoriesWithRelativePaths, DrillVersionInfo.getVersion());
     }
 
     /**

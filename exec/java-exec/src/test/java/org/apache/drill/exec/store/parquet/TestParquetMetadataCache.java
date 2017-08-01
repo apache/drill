@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.commons.io.FileUtils;
@@ -496,12 +494,13 @@ public class TestParquetMetadataCache extends PlanTestBase {
   public void testSpacesInMetadataCachePath() throws Exception {
     final String pathWithSpaces = "path with spaces";
     try {
+      test("use dfs_test.tmp");
       // creating multilevel table to store path with spaces in both metadata files (METADATA and METADATA_DIRECTORIES)
-      test("create table dfs_test.tmp.`%s` as select * from cp.`tpch/nation.parquet`", pathWithSpaces);
-      test("create table dfs_test.tmp.`%1$s/%1$s` as select * from cp.`tpch/nation.parquet`", pathWithSpaces);
-      test("refresh table metadata dfs_test.tmp.`%s`", pathWithSpaces);
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", pathWithSpaces);
+      test("create table `%1$s/%1$s` as select * from cp.`tpch/nation.parquet`", pathWithSpaces);
+      test("refresh table metadata `%s`", pathWithSpaces);
       checkForMetadataFile(pathWithSpaces);
-      String query = String.format("select * from dfs_test.tmp.`%s`", pathWithSpaces);
+      String query = String.format("select * from `%s`", pathWithSpaces);
       int expectedRowCount = 50;
       int expectedNumFiles = 1; // point to selectionRoot since no pruning is done in this query
       int actualRowCount = testSql(query);
@@ -513,7 +512,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
       PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
           new String[] {"Filter"});
     } finally {
-      test("drop table if exists dfs_test.tmp.`%s`", pathWithSpaces);
+      test("drop table if exists `%s`", pathWithSpaces);
     }
   }
 
@@ -523,14 +522,9 @@ public class TestParquetMetadataCache extends PlanTestBase {
     try {
       test("use dfs_test.tmp");
       test("create table `%s` as select * from cp.`tpch/nation.parquet`", unsupportedMetadataVersion);
-      MetadataVersion lastVersion = Iterables.getLast(MetadataVersion.Constants.SUPPORTED_VERSIONS);
-      for (MetadataVersion supportedVersion : MetadataVersion.Constants.SUPPORTED_VERSIONS) {
-        if (lastVersion.compareTo(supportedVersion) < 0) {
-          lastVersion = supportedVersion;
-        }
-      }
-      // Get the future version, which is absent in MetadataVersion.SUPPORTED_VERSIONS list
-      String futureVersion = "v" + (Integer.parseInt(String.valueOf(lastVersion.toString().charAt(1))) + 1);
+      MetadataVersion lastVersion = MetadataVersion.Constants.SUPPORTED_VERSIONS.last();
+      // Get the future version, which is absent in MetadataVersions.SUPPORTED_VERSIONS set
+      String futureVersion = new MetadataVersion(lastVersion.getMajor() + 1, 0).toString();
       copyMetaDataCacheToTempWithReplacements("parquet/unsupported_metadata/unsupported_metadata_version.requires_replace.txt",
           unsupportedMetadataVersion, Metadata.METADATA_FILENAME, futureVersion);
       String query = String.format("select * from %s", unsupportedMetadataVersion);
@@ -571,11 +565,95 @@ public class TestParquetMetadataCache extends PlanTestBase {
     }
   }
 
-  private void checkForMetadataFile(String table) throws Exception {
+  @Test
+  public void testEmptyMetadataFile() throws Exception {
+    final String emptyMetadataFile = "empty_metadata_file";
+    try {
+      test("use dfs_test.tmp");
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", emptyMetadataFile);
+      copyMetaDataCacheToTempReplacingInternalPaths("parquet/unsupported_metadata/" +
+          "empty_metadata_file.requires_replace.txt", emptyMetadataFile, Metadata.METADATA_FILENAME);
+      String query = String.format("select * from %s", emptyMetadataFile);
+      int expectedRowCount = 25;
+      int expectedNumFiles = 1;
+      int actualRowCount = testSql(query);
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+          expectedRowCount, actualRowCount);
+      String numFilesPattern = "numFiles=" + expectedNumFiles;
+      String usedMetaPattern = "usedMetadataFile=false"; // ignoring metadata cache file
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern},
+          new String[] {"Filter"});
+    } finally {
+      test("drop table if exists %s", emptyMetadataFile);
+    }
+  }
+
+  @Test
+  public void testRootMetadataFileIsAbsent() throws Exception {
+    try {
+      test("use dfs_test.tmp");
+      String tmpDir = getDfsTestTmpSchemaLocation();
+      test("refresh table metadata `%s`", tableName1);
+      checkForMetadataFile(tableName1);
+      File rootMetadataFile = FileUtils.getFile(tmpDir, tableName1,  Metadata.METADATA_FILENAME);
+      assertTrue(String.format("Metadata cache file '%s' isn't deleted", rootMetadataFile.getPath()),
+          rootMetadataFile.delete());
+      String query = String.format("select dir0, dir1, o_custkey, o_orderdate from `%s` " +
+          " where dir0=1994 or dir1='Q3'", tableName1);
+      int expectedRowCount = 60;
+      int expectedNumFiles = 6;
+      int actualRowCount = testSql(query);
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+          expectedRowCount, actualRowCount);
+      String numFilesPattern = "numFiles=" + expectedNumFiles;
+      String usedMetaPattern = "usedMetadataFile=false";
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern},
+          new String[] {"cacheFileRoot", "Filter"});
+    } finally {
+      test("refresh table metadata `%s`", tableName1);
+    }
+  }
+
+  @Test
+  public void testInnerMetadataFilesAreAbsent() throws Exception {
+    try {
+      test("use dfs_test.tmp");
+      String tmpDir = getDfsTestTmpSchemaLocation();
+      test("refresh table metadata `%s`", tableName1);
+      checkForMetadataFile(tableName1);
+      File firstInnerMetadataFile = FileUtils.getFile(tmpDir, tableName1, "1994", Metadata.METADATA_FILENAME);
+      File secondInnerMetadataFile = FileUtils.getFile(tmpDir, tableName1, "1994", "Q3", Metadata.METADATA_FILENAME);
+      assertTrue(String.format("Metadata cache file '%s' isn't deleted", firstInnerMetadataFile.getPath()),
+          firstInnerMetadataFile.delete());
+      assertTrue(String.format("Metadata cache file '%s' isn't deleted", secondInnerMetadataFile.getPath()),
+          secondInnerMetadataFile.delete());
+      String query = String.format("select dir0, dir1, o_custkey, o_orderdate from `%s` " +
+          " where dir0=1994 or dir1='Q3'", tableName1);
+      int expectedRowCount = 60;
+      int expectedNumFiles = 6;
+      int actualRowCount = testSql(query);
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+          expectedRowCount, actualRowCount);
+      String numFilesPattern = "numFiles=" + expectedNumFiles;
+      String usedMetaPattern = "usedMetadataFile=false";
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern},
+          new String[] {"cacheFileRoot", "Filter"});
+    } finally {
+      test("refresh table metadata `%s`", tableName1);
+    }
+  }
+
+  /**
+   * Helper method for checking the metadata file existence
+   *
+   * @param table table name or table path
+   */
+  private void checkForMetadataFile(String table) {
     String tmpDir = getDfsTestTmpSchemaLocation();
-    String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);
-    assertTrue(String.format("There is no metadata cache file for the `%s` table", table),
-        Files.exists(new File(metaFile).toPath()));
+    File metaFile = table.startsWith(tmpDir) ? FileUtils.getFile(table, Metadata.METADATA_FILENAME)
+        : FileUtils.getFile(tmpDir, table, Metadata.METADATA_FILENAME);
+    assertTrue(String.format("There is no metadata cache file for the %s table", table),
+        Files.exists(metaFile.toPath()));
   }
 
 }

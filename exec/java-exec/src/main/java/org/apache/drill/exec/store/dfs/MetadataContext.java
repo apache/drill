@@ -42,8 +42,8 @@ public class MetadataContext {
 
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 
-  // Setting this value as true allows to avoid double reading of corrupted or unsupported metadata files
-  public boolean isMetadataFilesCorrupted;
+  // Setting this value as true allows to avoid double reading of corrupted, unsupported or missing metadata files
+  public boolean isMetadataFilesMissingOrCorrupted;
 
   public MetadataContext() {
   }
@@ -65,7 +65,7 @@ public class MetadataContext {
 
   public void clear() {
     dirModifCheckMap.clear();
-    isMetadataFilesCorrupted = false;
+    isMetadataFilesMissingOrCorrupted = false;
   }
 
   public void setPruneStatus(PruneStatus status) {

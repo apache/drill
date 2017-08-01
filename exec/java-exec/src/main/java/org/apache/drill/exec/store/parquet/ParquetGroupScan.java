@@ -111,6 +111,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import javax.validation.constraints.NotNull;
+
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractFileGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetGroupScan.class);
@@ -209,9 +211,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.entries = Lists.newArrayList();
     if (fileSelection.getMetaContext() != null &&
         (fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_STARTED ||
-          fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_PRUNED)) {
-      // if pruning was not applicable or was attempted and nothing was pruned, initialize the
-      // entries with just the selection root instead of the fully expanded list to reduce overhead.
+          fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_PRUNED ||
+            fileSelection.getMetaContext().isMetadataFilesMissingOrCorrupted)) {
+      // if pruning was not applicable or was attempted and nothing was pruned, or metadata caching is corrupted
+      // initialize the entries with just the selection root instead of the fully expanded list to reduce overhead.
       // The fully expanded list is already stored as part of the fileSet.
       // TODO: at some point we should examine whether the list of entries is absolutely needed.
       entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
@@ -223,7 +226,12 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     this.filter = filter;
 
-    init(fileSelection.getMetaContext());
+    // make sure that a metadata context is created since we are going to use metadata caching
+    MetadataContext metaContext = fileSelection.getMetaContext();
+    if (metaContext == null) {
+      metaContext = new MetadataContext();
+    }
+    init(metaContext);
   }
 
   /*
@@ -268,6 +276,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     // use the cacheFileRoot if provided (e.g after partition pruning)
     Path metaFilePath = new Path(cacheFileRoot != null ? cacheFileRoot : selectionRoot, Metadata.METADATA_FILENAME);
     if (!fs.exists(metaFilePath)) { // no metadata cache
+      MetadataContext metaContext = selection.getMetaContext();
+      if (metaContext != null) {
+        // some metadata files are absent, but some are present (since metadata context was created)
+        metaContext.isMetadataFilesMissingOrCorrupted = true;
+      }
       return selection;
     }
 
@@ -638,15 +651,14 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     // we only select the files that are part of selection (by setting fileSet appropriately)
 
     MetadataContext metaContext = selection.getMetaContext();
-    // make sure that a metadata context is created to check PruneStatus later
+    // make sure that a metadata context is created since we are going to use metadata caching
     if (metaContext == null) {
       metaContext = new MetadataContext();
       selection.setMetaContext(metaContext);
     }
     // get (and set internal field) the metadata for the directory by reading the metadata file
-    this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath, metaContext, formatConfig);
-    if (parquetTableMetadata == null) {
-      logger.debug("Selection can't be expanded since metadata file is corrupted or metadata version is not supported");
+    parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath, metaContext, formatConfig);
+    if (ignoreExpandingSelection(parquetTableMetadata, selection)) {
       return selection;
     }
     if (formatConfig.autoCorrectCorruptDates) {
@@ -687,10 +699,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
           //TODO [DRILL-4496] read the metadata cache files in parallel
           final Path metaPath = new Path(cacheFileRoot, Metadata.METADATA_FILENAME);
           final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
-          if (metadata != null) {
-            for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
-              fileSet.add(file.getPath());
-            }
+          if (ignoreExpandingSelection(metadata, selection)) {
+            return selection;
+          }
+          for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
+            fileSet.add(file.getPath());
           }
         } else {
           final Path path = Path.getPathWithoutSchemeAndAuthority(cacheFileRoot);
@@ -725,7 +738,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return newSelection;
   }
 
-  private void init(MetadataContext metaContext) throws IOException {
+  private void init(@NotNull MetadataContext metaContext) throws IOException {
     Path metaPath = null;
     if (entries.size() == 1 && parquetTableMetadata == null) {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
@@ -734,7 +747,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         // if querying a single file we can look up the metadata directly from the file
         metaPath = new Path(p, Metadata.METADATA_FILENAME);
       }
-      if (metaPath != null && fs.exists(metaPath)) {
+      if (!metaContext.isMetadataFilesMissingOrCorrupted && metaPath != null && fs.exists(metaPath)) {
         parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
         if (parquetTableMetadata != null) {
           usedMetadataCache = true;
@@ -746,7 +759,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
       metaPath = new Path(p, Metadata.METADATA_FILENAME);
-      if (fs.isDirectory(new Path(selectionRoot)) && fs.exists(metaPath)) {
+      if (!metaContext.isMetadataFilesMissingOrCorrupted && fs.isDirectory(new Path(selectionRoot))
+          && fs.exists(metaPath)) {
         if (parquetTableMetadata == null) {
           parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
         }
@@ -991,8 +1005,17 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   public ParquetGroupScan clone(FileSelection selection) throws IOException {
     ParquetGroupScan newScan = new ParquetGroupScan(this);
     newScan.modifyFileSelection(selection);
-    newScan.setCacheFileRoot(selection.cacheFileRoot);
-    newScan.init(selection.getMetaContext());
+    MetadataContext metaContext = selection.getMetaContext();
+    if (metaContext == null) {
+      metaContext = new MetadataContext();
+    }
+    if (newScan.usedMetadataCache) {
+      newScan.setCacheFileRoot(selection.cacheFileRoot);
+    } else {
+      // if metadata cache wasn't used it means it is missing or corrupted. Keep the status to avoid double check
+      metaContext.isMetadataFilesMissingOrCorrupted = true;
+    }
+    newScan.init(metaContext);
     return newScan;
   }
 
@@ -1138,6 +1161,24 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       logger.warn("Could not apply filter prune due to Exception : {}", e);
       return null;
     }
+  }
+
+  /**
+   * Ignore expanding selection, if metadata is corrupted
+   *
+   * @param metadata parquet table metadata
+   * @param selection file selection
+   * @return true if parquet metadata is corrupted, false otherwise
+   */
+  private boolean ignoreExpandingSelection(ParquetTableMetadataBase metadata, FileSelection selection) {
+    if (metadata == null || selection.getMetaContext().isMetadataFilesMissingOrCorrupted) {
+      logger.debug("Selection can't be expanded since metadata file is corrupted or metadata version is not supported");
+      selection.revertDirStatuses();
+      this.parquetTableMetadata = null;
+      this.fileSet = null;
+      return true;
+    }
+    return false;
   }
 
 }

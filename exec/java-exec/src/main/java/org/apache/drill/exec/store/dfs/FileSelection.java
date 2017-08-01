@@ -188,6 +188,10 @@ public class FileSelection {
     this.dirStatus = StatusType.EXPANDED_FULLY;
   }
 
+  public void revertDirStatuses() {
+    this.dirStatus = StatusType.NOT_CHECKED;
+  }
+
   public boolean isExpandedFully() {
     return dirStatus == StatusType.EXPANDED_FULLY;
   }
