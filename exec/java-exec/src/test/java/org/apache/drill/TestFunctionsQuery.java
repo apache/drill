@@ -725,7 +725,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
 
   @Test
   public void testNegative() throws Exception {
-    String query = "select  negative(2) as NEG " +
+    String query = "select  negative(cast(2 as bigint)) as NEG " +
         "from cp.`employee.json` where employee_id = 1";
 
     testBuilder()
@@ -921,6 +921,30 @@ public class TestFunctionsQuery extends BaseTestQuery {
             .unOrdered()
             .baselineColumns("col1")
             .baselineValues(false)
+            .go();
+  }
+
+  /**
+  * Test for DRILL-5645, where negation of expressions that do not contain
+  * a RelNode input results in a NullPointerException
+  */
+  @Test
+  public void testNegate() throws Exception {
+    String query = "select -(2 * 2) as col1 from ( values ( 1 ) ) T ( C1 )";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("col1")
+            .baselineValues(-4)
+            .go();
+
+    // Test float
+    query = "select -(1.1 * 1) as col1 from ( values ( 1 ) ) T ( C1 )";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("col1")
+            .baselineValues(-1.1)
             .go();
   }
 }

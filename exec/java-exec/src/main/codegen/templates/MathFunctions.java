@@ -59,7 +59,11 @@ public class GMathFunctions{
 
   <#list func.types as type>
 
+  <#if func.funcName=="negative">
+  @FunctionTemplate(names = {"negative", "u-", "-"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  <#else>
   @FunctionTemplate(name = "${func.funcName}", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  </#if>
   public static class ${func.className}${type.input} implements DrillSimpleFunc {
 
     @Param ${type.input}Holder in;
