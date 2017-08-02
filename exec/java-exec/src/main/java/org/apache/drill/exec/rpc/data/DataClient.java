@@ -72,7 +72,12 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   @Override
   protected DataClientConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    this.connection = new DataClientConnection(channel, this, config.getEncryptionCtxt());
+    connection = new DataClientConnection(channel, this, config.getEncryptionCtxt());
+
+    // Increase the connection count here since at this point it means that we already have the TCP connection.
+    // Later when connection fails for any reason then we will decrease the counter based on Netty's connection close
+    // handler.
+    connection.incConnectionCounter();
     return connection;
   }
 
@@ -127,12 +132,6 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
             remoteEndpoint.getAddress()));
       }
     }
-  }
-
-  @Override
-  protected void finalizeConnection(BitServerHandshake handshake, DataClientConnection connection) {
-    // Increment the Data Connection counter.
-    connection.incConnectionCounter();
   }
 
   protected <M extends MessageLite> RpcCommand<M, DataClientConnection>

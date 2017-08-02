@@ -26,4 +26,8 @@ public interface RpcMetrics {
   void addConnectionCount();
 
   void decConnectionCount();
+
+  long getEncryptedConnectionCount();
+
+  long getUnEncryptedConnectionCount();
 }
