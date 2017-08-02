@@ -35,21 +35,6 @@ public class MathFunctions{
 
   private MathFunctions(){}
 
-  @FunctionTemplate(names = {"negative", "u-", "-"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class Negative implements DrillSimpleFunc{
-
-    @Param BigIntHolder input;
-    @Output BigIntHolder out;
-
-    public void setup(){}
-
-    public void eval(){
-      out.value = -input.value;
-      return;
-    }
-
-  }
-
   @FunctionTemplate(name = "power", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Power implements DrillSimpleFunc{
 
