@@ -26,7 +26,7 @@ import org.apache.drill.exec.rpc.RpcMetrics;
 /**
  * Holds metrics related to bit control rpc layer
  */
-class ControlRpcMetrics extends AbstractRpcMetrics {
+public class ControlRpcMetrics extends AbstractRpcMetrics {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlRpcMetrics.class);
 
   // Total number of control connection's as client and server for a DrillBit.
@@ -76,6 +76,16 @@ class ControlRpcMetrics extends AbstractRpcMetrics {
     } else {
       unencryptedConnection.dec();
     }
+  }
+
+  @Override
+  public long getEncryptedConnectionCount() {
+    return encryptedConnections.getCount();
+  }
+
+  @Override
+  public long getUnEncryptedConnectionCount() {
+    return unencryptedConnection.getCount();
   }
 
   private void registerAllocatorMetrics(final BufferAllocator allocator) {
