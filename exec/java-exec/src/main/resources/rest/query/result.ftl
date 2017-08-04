@@ -11,24 +11,11 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
-    <script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
-    <script>window.jQuery || document.write('<script type="text/javascript" language="javascript" src="../static/js/jquery-1.10.2.min.js">\x3C/script>')
-    </script>
-    <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
-    <script type="text/javascript">
-    jQuery.fn.dataTable || document.write('<script type="text/javascript"  src="../static/js/jquery.dataTables.js">\x3C/script>')
-    </script>
-    <script type="text/javascript" language="javascript" src="//cdn.datatables.net/colvis/1.1.0/js/dataTables.colVis.min.js"></script>
-    <script type="text/javascript">
-    jQuery.fn.dataTable.colVis || document.write('<script type="text/javascript"  src="../static/js/dataTables.colVis.min.js" >\x3C/script>')
-    </script>
-    <link onerror="this.onerror=null;this.href='../static/css/dataTables.colVis.css'" rel="stylesheet" type="text/css"
-        href="//cdn.datatables.net/colvis/1.1.0/css/ dataTables.colVis.css">
-    <link onerror="this.onerror=null;this.href='../static/css/jquery-ui.css'" rel="stylesheet" type="text/css"
-        href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
-    <link onerror="this.onerror=null;this.href='../static/css/dataTables.jqueryui.css'" rel="stylesheet" type="text/css"
-        href="//cdn.datatables.net/plug-ins/be7019ee387/integration/jqueryui/dataTables.jqueryui.css" />
-
+    <script type="text/javascript" language="javascript"  src="../static/js/jquery.dataTables-1.10.0.min.js"> </script>
+    <script type="text/javascript" language="javascript" src="../static/js/dataTables.colVis-1.1.0.min.js"></script>
+    <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
+    <link href="/static/css/dataTables.jqueryui.css" rel="stylesheet">
+    <link href="/static/css/jquery-ui-1.10.3.min.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>
