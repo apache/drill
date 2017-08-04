@@ -112,9 +112,11 @@ public class SchemaTreeProvider implements AutoCloseable {
       return rootSchema;
     } catch(IOException e) {
       // We can't proceed further without a schema, throw a runtime exception.
+      // Improve the error message for client side.
       throw UserException
           .resourceError(e)
           .message("Failed to create schema tree.")
+          .addContext("IOException: ", e.getMessage())
           .build(logger);
     }
   }
