@@ -252,11 +252,13 @@ void DrillClientImpl::doWriteToSocket(const char* dataPtr, size_t bytesToWrite,
     while(1) {
         size_t bytesWritten = m_socket.write_some(boost::asio::buffer(dataPtr, bytesToWrite), errorCode);
 
+        if(errorCode && boost::asio::error::interrupted != errorCode){
+            break;
+        } 
+
         // Update the state
         bytesToWrite -= bytesWritten;
         dataPtr += bytesWritten;
-
-        if(EINTR != errorCode.value()) break;
 
         // Check if all the data is written then break from loop
         if(0 == bytesToWrite) break;
@@ -412,17 +414,22 @@ void DrillClientImpl::doReadFromSocket(ByteBuf_t inBuf, size_t bytesToRead,
         return;
     }
 
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Socket read: reading " << bytesToRead << "data bytes" << std::endl;)
     // Read all the bytes. In case when all the bytes were not read the proper
     // errorCode will be set.
     while(1){
         size_t dataBytesRead = m_socket.read_some(boost::asio::buffer(inBuf, bytesToRead),
                                            errorCode);
+        // Check if errorCode is EINTR then just retry otherwise break from loop
+        if(errorCode && boost::asio::error::interrupted != errorCode){
+            break;
+        } 
+
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Socket read: actual bytes read = " << dataBytesRead << std::endl;)
         // Update the state
         bytesToRead -= dataBytesRead;
         inBuf += dataBytesRead;
 
-        // Check if errorCode is EINTR then just retry otherwise break from loop
-        if(EINTR != errorCode.value()) break;
 
         // Check if all the data is read then break from loop
         if(0 == bytesToRead) break;
@@ -2300,6 +2307,10 @@ namespace { // anonymous
 namespace { // anonymous
 // Helper class to wait on ServerMeta results
 struct ServerMetaContext {
+    ServerMetaContext() : m_done(false), m_status(QRY_FAILURE) 
+    {
+        ; // Do nothing.
+    }
 	bool m_done;
 	status_t m_status;
 	exec::user::ServerMeta m_serverMeta;

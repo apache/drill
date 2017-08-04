@@ -37,6 +37,7 @@ import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -95,7 +96,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
                                             ) throws PartitionNotFoundException {
       List<FileStatus> fileStatuses;
       try {
-        fileStatuses = defaultSchema.getFS().list(false, new Path(defaultSchema.getDefaultLocation(), table));
+        fileStatuses = DrillFileSystemUtil.listDirectories(defaultSchema.getFS(), new Path(defaultSchema.getDefaultLocation(), table), false);
       } catch (IOException e) {
         throw new PartitionNotFoundException("Error finding partitions for table " + table, e);
       }

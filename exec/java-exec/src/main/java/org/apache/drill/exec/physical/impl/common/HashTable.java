@@ -64,8 +64,6 @@ public interface HashTable {
 
   public void getStats(HashTableStats stats);
 
-  public long extraMemoryNeededForResize();
-
   public int size();
 
   public boolean isEmpty();
@@ -78,9 +76,7 @@ public interface HashTable {
 
   public void setMaxVarcharSize(int size);
 
-  public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords);
-
-  // public void addNewKeyBatch();
+  public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords, int numExpectedRecords);
 }
 
 

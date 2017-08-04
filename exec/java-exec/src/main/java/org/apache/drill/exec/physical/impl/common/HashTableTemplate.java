@@ -326,7 +326,7 @@ public abstract class HashTableTemplate implements HashTable {
       hashValues = newHashValues;
     }
 
-    private boolean outputKeys(VectorContainer outContainer, int outStartIndex, int numRecords) {
+    private boolean outputKeys(VectorContainer outContainer, int outStartIndex, int numRecords, int numExpectedRecords) {
 
       /** for debugging
       BigIntVector vv0 = getValueVector(0);
@@ -344,7 +344,16 @@ public abstract class HashTableTemplate implements HashTable {
         @SuppressWarnings("resource")
         ValueVector targetVV = outgoingIter.next().getValueVector();
         TransferPair tp = sourceVV.makeTransferPair(targetVV);
-        tp.splitAndTransfer(outStartIndex, numRecords);
+        if ( outStartIndex == 0 && numRecords == numExpectedRecords ) {
+          // The normal case: The whole column key(s) are transfered as is
+          tp.transfer();
+        } else {
+          // Transfer just the required section (does this ever happen ?)
+          // Requires an expensive allocation and copy
+          logger.debug("Performing partial output of keys, from index {}, num {} (out of {})",
+              outStartIndex,numRecords,numExpectedRecords);
+          tp.splitAndTransfer(outStartIndex, numRecords);
+        }
       }
 
 /*
@@ -508,21 +517,6 @@ public abstract class HashTableTemplate implements HashTable {
 
   public int numResizing() {
     return numResizing;
-  }
-
-  /**
-   *
-   * @return Size of extra memory needed if the HT (i.e. startIndices) is doubled
-   */
-  @Override
-  public long extraMemoryNeededForResize() {
-    if (tableSize == MAXIMUM_CAPACITY) { return 0; } // will not resize
-    int newSize = roundUpToPowerOf2(2 * tableSize);
-
-    if (newSize > MAXIMUM_CAPACITY) {
-      newSize  = MAXIMUM_CAPACITY;
-    }
-    return newSize * 4 /* sizeof(int) */;
   }
 
   @Override
@@ -774,12 +768,9 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   @Override
-  public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords) {
+  public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords, int numExpectedRecords) {
     assert batchIdx < batchHolders.size();
-    if (!batchHolders.get(batchIdx).outputKeys(outContainer, outStartIndex, numRecords)) {
-      return false;
-    }
-    return true;
+    return batchHolders.get(batchIdx).outputKeys(outContainer, outStartIndex, numRecords, numExpectedRecords);
   }
 
   private IntVector allocMetadataVector(int size, int initialValue) {
@@ -795,13 +786,6 @@ public abstract class HashTableTemplate implements HashTable {
   @Override
   public void setMaxVarcharSize(int size) { maxVarcharSize = size; }
 
-/*  @Override
-  public void addNewKeyBatch() {
-    int numberOfBatches = batchHolders.size();
-    this.addBatchHolder();
-    freeIndex = numberOfBatches * BATCH_SIZE;
-  }
-*/
   // These methods will be code-generated in the context of the outer class
   protected abstract void doSetup(@Named("incomingBuild") RecordBatch incomingBuild, @Named("incomingProbe") RecordBatch incomingProbe) throws SchemaChangeException;
 

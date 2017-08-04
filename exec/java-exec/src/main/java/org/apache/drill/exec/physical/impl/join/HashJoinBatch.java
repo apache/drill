@@ -155,7 +155,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     NUM_BUCKETS,
     NUM_ENTRIES,
     NUM_RESIZING,
-    RESIZING_TIME;
+    RESIZING_TIME_MS;
 
     // duplicate for hash ag
 
@@ -526,7 +526,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     stats.setLongStat(Metric.NUM_BUCKETS, htStats.numBuckets);
     stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
     stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
-    stats.setLongStat(Metric.RESIZING_TIME, htStats.resizingTime);
+    stats.setLongStat(Metric.RESIZING_TIME_MS, htStats.resizingTime);
   }
 
   @Override

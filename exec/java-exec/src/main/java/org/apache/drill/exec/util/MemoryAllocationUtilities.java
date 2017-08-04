@@ -66,11 +66,15 @@ public class MemoryAllocationUtilities {
       final long maxOperatorAlloc = maxAllocPerNode / (bufferedOpList.size() * maxWidthPerNode);
       logger.debug("Max buffered operator alloc: {}", maxOperatorAlloc);
 
+      // User configurable option to allow forcing minimum memory.
+      // Ensure that the buffered ops receive the minimum memory needed to make progress.
+      // Without this, the math might work out to allocate too little memory.
+      final long opMinMem = queryContext.getOptions().getOption(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP_KEY).num_val;
+
       for(final PhysicalOperator op : bufferedOpList) {
-        // Ensure that the sort receives the minimum memory needed to make progress.
-        // Without this, the math might work out to allocate too little memory.
 
         long alloc = Math.max(maxOperatorAlloc, op.getInitialAllocation());
+        alloc = Math.max(alloc, opMinMem);
         op.setMaxAllocation(alloc);
       }
     }

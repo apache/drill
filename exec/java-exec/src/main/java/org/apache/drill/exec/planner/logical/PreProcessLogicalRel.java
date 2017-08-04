@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,6 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.planner.StarColumnHelper;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
 import org.apache.drill.exec.util.ApproximateStringMatcher;
@@ -240,7 +239,7 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
         ops.add(op.getName());
       }
       final String bestMatch = ApproximateStringMatcher.getBestMatch(ops, newFunctionName);
-      if (bestMatch != null && bestMatch.length() > 0 && bestMatch.toLowerCase().startsWith("convert")) {
+      if (bestMatch != null && bestMatch.length() > functionName.length() && bestMatch.toLowerCase().startsWith("convert")) {
         final StringBuilder s = new StringBuilder("Did you mean ")
                 .append(bestMatch.substring(functionName.length()))
                 .append("?");

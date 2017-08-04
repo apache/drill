@@ -148,9 +148,9 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     final List<SqlOperator> sqlOperators = Lists.newArrayList();
     sqlOperators.addAll(calciteOperators);
     if(isInferenceEnabled()) {
-      sqlOperators.addAll(calciteOperators);
+      sqlOperators.addAll(drillOperatorsWithInference);
     } else {
-      sqlOperators.addAll(calciteOperators);
+      sqlOperators.addAll(drillOperatorsWithoutInference);
     }
 
     return sqlOperators;

@@ -39,6 +39,7 @@ import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
@@ -51,6 +52,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.hadoop.fs.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,17 +116,22 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
     try (AutoCloseableLock lock = readLock.open()) {
       try {
-        List<FileStatus> f = fs.list(false, basePath);
-        if (f == null || f.isEmpty()) {
+        // list only files with sys file suffix
+        PathFilter sysFileSuffixFilter = new PathFilter() {
+          @Override
+          public boolean accept(Path path) {
+            return path.getName().endsWith(DRILL_SYS_FILE_SUFFIX);
+          }
+        };
+        List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, sysFileSuffixFilter);
+        if (fileStatuses.isEmpty()) {
           return Collections.emptyIterator();
         }
-        List<String> files = Lists.newArrayList();
 
-        for (FileStatus stat : f) {
+        List<String> files = Lists.newArrayList();
+        for (FileStatus stat : fileStatuses) {
           String s = stat.getPath().getName();
-          if (s.endsWith(DRILL_SYS_FILE_SUFFIX)) {
-            files.add(s.substring(0, s.length() - DRILL_SYS_FILE_SUFFIX.length()));
-          }
+          files.add(s.substring(0, s.length() - DRILL_SYS_FILE_SUFFIX.length()));
         }
 
         Collections.sort(files);

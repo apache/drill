@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -138,7 +138,8 @@ public final class JoinStatus {
    *  4. JoinOutcome.SCHEMA_CHANGED : one of the side has change in schema.
    */
   public JoinOutcome getOutcome() {
-    if (!ok) {
+    // on STOP, OUT_OF_MEMORY return FAILURE.
+    if (!ok || eitherMatches(IterOutcome.STOP)) {
       return JoinOutcome.FAILURE;
     }
     if (hasMoreData) {
@@ -162,7 +163,7 @@ public final class JoinStatus {
       return JoinOutcome.WAITING;
     }
     ok = false;
-    // on STOP, OUT_OF_MEMORY return FAILURE.
+
     return JoinOutcome.FAILURE;
   }
 

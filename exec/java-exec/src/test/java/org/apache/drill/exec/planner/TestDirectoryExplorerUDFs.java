@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,20 +14,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+*/
 package org.apache.drill.exec.planner;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.Text;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -185,6 +191,66 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
       }
     } finally {
         TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, getDfsTestTmpSchemaLocation());
+    }
+  }
+
+  @Test // DRILL-4720
+  public void testDirectoryUDFsWithAndWithoutMetadataCache() throws Exception {
+    FileSystem fs = null;
+    try {
+      fs = FileSystem.get(new Configuration());
+
+      // prepare test table with partitions
+      Path table = new Path(getTempDir("table_with_partitions"));
+      String tablePath = table.toUri().getPath();
+      Path dataFile = new Path(TestTools.getWorkingPath(),"src/test/resources/parquet/alltypes_required.parquet");
+      createPartitions(fs, table, dataFile, 2);
+
+      Map<String, String> configurations = ImmutableMap.<String, String>builder()
+          .put("mindir", "part_1")
+          .put("imindir", "part_1")
+          .put("maxdir", "part_2")
+          .put("imaxdir", "part_2")
+          .build();
+
+      String query = "select dir0 from dfs.`%s` where dir0 = %s('dfs', '%s') limit 1";
+
+      // run tests without metadata cache
+      for (Map.Entry<String, String> entry : configurations.entrySet()) {
+        testBuilder()
+            .sqlQuery(query, tablePath, entry.getKey(), tablePath)
+            .unOrdered()
+            .baselineColumns("dir0")
+            .baselineValues(entry.getValue())
+            .go()
+        ;
+      }
+
+      // generate metadata
+      test("refresh table metadata dfs.`%s`", tablePath);
+
+      // run tests with metadata cache
+      for (Map.Entry<String, String> entry : configurations.entrySet()) {
+        testBuilder()
+            .sqlQuery(query, tablePath, entry.getKey(), tablePath)
+            .unOrdered()
+            .baselineColumns("dir0")
+            .baselineValues(entry.getValue())
+            .go();
+      }
+
+    } finally {
+      if (fs != null) {
+        fs.close();
+      }
+    }
+  }
+
+  private void createPartitions(FileSystem fs, Path table, Path dataFile, int number) throws IOException {
+    for (int i = 1; i <= number; i++) {
+      Path partition = new Path(table, "part_" + i);
+      fs.mkdirs(partition);
+      FileUtil.copy(fs, dataFile, fs, partition, false, true, fs.getConf());
     }
   }
 
