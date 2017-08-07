@@ -1242,8 +1242,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring User Authentication", 
-                            "next_url": "/docs/configuring-user-authentication/", 
+                            "next_title": "Configuring User Security", 
+                            "next_url": "/docs/configuring-user-security/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Inbound Impersonation", 
                             "previous_url": "/docs/configuring-inbound-impersonation/", 
@@ -1263,14 +1263,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Plain Authentication", 
-                            "next_url": "/docs/configuring-plain-authentication/", 
+                            "next_title": "Configuring Plain Security", 
+                            "next_url": "/docs/configuring-plain-security/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring User Impersonation with Hive Authorization", 
                             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-authentication.md", 
-                            "title": "Configuring User Authentication", 
-                            "url": "/docs/configuring-user-authentication/"
+                            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md", 
+                            "title": "Configuring User Security", 
+                            "url": "/docs/configuring-user-security/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -1284,14 +1284,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Kerberos Authentication", 
-                            "next_url": "/docs/configuring-kerberos-authentication/", 
+                            "next_title": "Configuring Kerberos Security", 
+                            "next_url": "/docs/configuring-kerberos-security/", 
                             "parent": "Securing Drill", 
-                            "previous_title": "Configuring User Authentication", 
-                            "previous_url": "/docs/configuring-user-authentication/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-authentication.md", 
-                            "title": "Configuring Plain Authentication", 
-                            "url": "/docs/configuring-plain-authentication/"
+                            "previous_title": "Configuring User Security", 
+                            "previous_url": "/docs/configuring-user-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md", 
+                            "title": "Configuring Plain Security", 
+                            "url": "/docs/configuring-plain-security/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -1308,11 +1308,11 @@
                             "next_title": "Configuring Web Console and REST API Security", 
                             "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                             "parent": "Securing Drill", 
-                            "previous_title": "Configuring Plain Authentication", 
-                            "previous_url": "/docs/configuring-plain-authentication/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-auththentication.md", 
-                            "title": "Configuring Kerberos Authentication", 
-                            "url": "/docs/configuring-kerberos-authentication/"
+                            "previous_title": "Configuring Plain Security", 
+                            "previous_url": "/docs/configuring-plain-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
+                            "title": "Configuring Kerberos Security", 
+                            "url": "/docs/configuring-kerberos-security/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -1329,8 +1329,8 @@
                             "next_title": "Configuring a Multitenant Cluster", 
                             "next_url": "/docs/configuring-a-multitenant-cluster/", 
                             "parent": "Securing Drill", 
-                            "previous_title": "Configuring Kerberos Authentication", 
-                            "previous_url": "/docs/configuring-kerberos-authentication/", 
+                            "previous_title": "Configuring Kerberos Security", 
+                            "previous_url": "/docs/configuring-kerberos-security/", 
                             "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
                             "title": "Configuring Web Console and REST API Security", 
                             "url": "/docs/configuring-web-console-and-rest-api-security/"
@@ -1648,7 +1648,7 @@
             "title": "Configuring JReport with Drill", 
             "url": "/docs/configuring-jreport-with-drill/"
         }, 
-        "Configuring Kerberos Authentication": {
+        "Configuring Kerberos Security": {
             "breadcrumbs": [
                 {
                     "title": "Securing Drill", 
@@ -1663,11 +1663,11 @@
             "next_title": "Configuring Web Console and REST API Security", 
             "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
             "parent": "Securing Drill", 
-            "previous_title": "Configuring Plain Authentication", 
-            "previous_url": "/docs/configuring-plain-authentication/", 
-            "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-auththentication.md", 
-            "title": "Configuring Kerberos Authentication", 
-            "url": "/docs/configuring-kerberos-authentication/"
+            "previous_title": "Configuring Plain Security", 
+            "previous_url": "/docs/configuring-plain-security/", 
+            "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
+            "title": "Configuring Kerberos Security", 
+            "url": "/docs/configuring-kerberos-security/"
         }, 
         "Configuring Multitenant Resources": {
             "breadcrumbs": [
@@ -1876,7 +1876,7 @@
             "title": "Configuring ODBC on Windows", 
             "url": "/docs/configuring-odbc-on-windows/"
         }, 
-        "Configuring Plain Authentication": {
+        "Configuring Plain Security": {
             "breadcrumbs": [
                 {
                     "title": "Securing Drill", 
@@ -1888,14 +1888,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Kerberos Authentication", 
-            "next_url": "/docs/configuring-kerberos-authentication/", 
+            "next_title": "Configuring Kerberos Security", 
+            "next_url": "/docs/configuring-kerberos-security/", 
             "parent": "Securing Drill", 
-            "previous_title": "Configuring User Authentication", 
-            "previous_url": "/docs/configuring-user-authentication/", 
-            "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-authentication.md", 
-            "title": "Configuring Plain Authentication", 
-            "url": "/docs/configuring-plain-authentication/"
+            "previous_title": "Configuring User Security", 
+            "previous_url": "/docs/configuring-user-security/", 
+            "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md", 
+            "title": "Configuring Plain Security", 
+            "url": "/docs/configuring-plain-security/"
         }, 
         "Configuring Resources for a Shared Drillbit": {
             "breadcrumbs": [
@@ -1939,27 +1939,6 @@
             "title": "Configuring Tibco Spotfire Server with Drill", 
             "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
         }, 
-        "Configuring User Authentication": {
-            "breadcrumbs": [
-                {
-                    "title": "Securing Drill", 
-                    "url": "/docs/securing-drill/"
-                }, 
-                {
-                    "title": "Configure Drill", 
-                    "url": "/docs/configure-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuring Plain Authentication", 
-            "next_url": "/docs/configuring-plain-authentication/", 
-            "parent": "Securing Drill", 
-            "previous_title": "Configuring User Impersonation with Hive Authorization", 
-            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-authentication.md", 
-            "title": "Configuring User Authentication", 
-            "url": "/docs/configuring-user-authentication/"
-        }, 
         "Configuring User Impersonation": {
             "breadcrumbs": [
                 {
@@ -1993,14 +1972,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring User Authentication", 
-            "next_url": "/docs/configuring-user-authentication/", 
+            "next_title": "Configuring User Security", 
+            "next_url": "/docs/configuring-user-security/", 
             "parent": "Securing Drill", 
             "previous_title": "Configuring Inbound Impersonation", 
             "previous_url": "/docs/configuring-inbound-impersonation/", 
             "relative_path": "_docs/configure-drill/securing-drill/060-configuring-user-impersonation-with-hive-authorization.md", 
             "title": "Configuring User Impersonation with Hive Authorization", 
             "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
+        }, 
+        "Configuring User Security": {
+            "breadcrumbs": [
+                {
+                    "title": "Securing Drill", 
+                    "url": "/docs/securing-drill/"
+                }, 
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Plain Security", 
+            "next_url": "/docs/configuring-plain-security/", 
+            "parent": "Securing Drill", 
+            "previous_title": "Configuring User Impersonation with Hive Authorization", 
+            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md", 
+            "title": "Configuring User Security", 
+            "url": "/docs/configuring-user-security/"
         }, 
         "Configuring Web Console and REST API Security": {
             "breadcrumbs": [
@@ -2017,8 +2017,8 @@
             "next_title": "Configuring a Multitenant Cluster", 
             "next_url": "/docs/configuring-a-multitenant-cluster/", 
             "parent": "Securing Drill", 
-            "previous_title": "Configuring Kerberos Authentication", 
-            "previous_url": "/docs/configuring-kerberos-authentication/", 
+            "previous_title": "Configuring Kerberos Security", 
+            "previous_url": "/docs/configuring-kerberos-security/", 
             "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
             "title": "Configuring Web Console and REST API Security", 
             "url": "/docs/configuring-web-console-and-rest-api-security/"
@@ -11853,8 +11853,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Authentication", 
-                    "next_url": "/docs/configuring-user-authentication/", 
+                    "next_title": "Configuring User Security", 
+                    "next_url": "/docs/configuring-user-security/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring Inbound Impersonation", 
                     "previous_url": "/docs/configuring-inbound-impersonation/", 
@@ -11874,14 +11874,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Plain Authentication", 
-                    "next_url": "/docs/configuring-plain-authentication/", 
+                    "next_title": "Configuring Plain Security", 
+                    "next_url": "/docs/configuring-plain-security/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring User Impersonation with Hive Authorization", 
                     "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-                    "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-authentication.md", 
-                    "title": "Configuring User Authentication", 
-                    "url": "/docs/configuring-user-authentication/"
+                    "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md", 
+                    "title": "Configuring User Security", 
+                    "url": "/docs/configuring-user-security/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11895,14 +11895,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Kerberos Authentication", 
-                    "next_url": "/docs/configuring-kerberos-authentication/", 
+                    "next_title": "Configuring Kerberos Security", 
+                    "next_url": "/docs/configuring-kerberos-security/", 
                     "parent": "Securing Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
-                    "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-authentication.md", 
-                    "title": "Configuring Plain Authentication", 
-                    "url": "/docs/configuring-plain-authentication/"
+                    "previous_title": "Configuring User Security", 
+                    "previous_url": "/docs/configuring-user-security/", 
+                    "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md", 
+                    "title": "Configuring Plain Security", 
+                    "url": "/docs/configuring-plain-security/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11919,11 +11919,11 @@
                     "next_title": "Configuring Web Console and REST API Security", 
                     "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                     "parent": "Securing Drill", 
-                    "previous_title": "Configuring Plain Authentication", 
-                    "previous_url": "/docs/configuring-plain-authentication/", 
-                    "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-auththentication.md", 
-                    "title": "Configuring Kerberos Authentication", 
-                    "url": "/docs/configuring-kerberos-authentication/"
+                    "previous_title": "Configuring Plain Security", 
+                    "previous_url": "/docs/configuring-plain-security/", 
+                    "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
+                    "title": "Configuring Kerberos Security", 
+                    "url": "/docs/configuring-kerberos-security/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11940,8 +11940,8 @@
                     "next_title": "Configuring a Multitenant Cluster", 
                     "next_url": "/docs/configuring-a-multitenant-cluster/", 
                     "parent": "Securing Drill", 
-                    "previous_title": "Configuring Kerberos Authentication", 
-                    "previous_url": "/docs/configuring-kerberos-authentication/", 
+                    "previous_title": "Configuring Kerberos Security", 
+                    "previous_url": "/docs/configuring-kerberos-security/", 
                     "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
                     "title": "Configuring Web Console and REST API Security", 
                     "url": "/docs/configuring-web-console-and-rest-api-security/"
@@ -14375,8 +14375,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring User Authentication", 
-                            "next_url": "/docs/configuring-user-authentication/", 
+                            "next_title": "Configuring User Security", 
+                            "next_url": "/docs/configuring-user-security/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Inbound Impersonation", 
                             "previous_url": "/docs/configuring-inbound-impersonation/", 
@@ -14396,14 +14396,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Plain Authentication", 
-                            "next_url": "/docs/configuring-plain-authentication/", 
+                            "next_title": "Configuring Plain Security", 
+                            "next_url": "/docs/configuring-plain-security/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring User Impersonation with Hive Authorization", 
                             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-authentication.md", 
-                            "title": "Configuring User Authentication", 
-                            "url": "/docs/configuring-user-authentication/"
+                            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md", 
+                            "title": "Configuring User Security", 
+                            "url": "/docs/configuring-user-security/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -14417,14 +14417,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Kerberos Authentication", 
-                            "next_url": "/docs/configuring-kerberos-authentication/", 
+                            "next_title": "Configuring Kerberos Security", 
+                            "next_url": "/docs/configuring-kerberos-security/", 
                             "parent": "Securing Drill", 
-                            "previous_title": "Configuring User Authentication", 
-                            "previous_url": "/docs/configuring-user-authentication/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-authentication.md", 
-                            "title": "Configuring Plain Authentication", 
-                            "url": "/docs/configuring-plain-authentication/"
+                            "previous_title": "Configuring User Security", 
+                            "previous_url": "/docs/configuring-user-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md", 
+                            "title": "Configuring Plain Security", 
+                            "url": "/docs/configuring-plain-security/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -14441,11 +14441,11 @@
                             "next_title": "Configuring Web Console and REST API Security", 
                             "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                             "parent": "Securing Drill", 
-                            "previous_title": "Configuring Plain Authentication", 
-                            "previous_url": "/docs/configuring-plain-authentication/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-auththentication.md", 
-                            "title": "Configuring Kerberos Authentication", 
-                            "url": "/docs/configuring-kerberos-authentication/"
+                            "previous_title": "Configuring Plain Security", 
+                            "previous_url": "/docs/configuring-plain-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
+                            "title": "Configuring Kerberos Security", 
+                            "url": "/docs/configuring-kerberos-security/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -14462,8 +14462,8 @@
                             "next_title": "Configuring a Multitenant Cluster", 
                             "next_url": "/docs/configuring-a-multitenant-cluster/", 
                             "parent": "Securing Drill", 
-                            "previous_title": "Configuring Kerberos Authentication", 
-                            "previous_url": "/docs/configuring-kerberos-authentication/", 
+                            "previous_title": "Configuring Kerberos Security", 
+                            "previous_url": "/docs/configuring-kerberos-security/", 
                             "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
                             "title": "Configuring Web Console and REST API Security", 
                             "url": "/docs/configuring-web-console-and-rest-api-security/"
