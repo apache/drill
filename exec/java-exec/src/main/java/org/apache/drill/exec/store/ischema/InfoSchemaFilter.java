@@ -152,10 +152,10 @@ public class InfoSchemaFilter {
         final String fieldValue = recordValues.get(col.field.toString());
         if (fieldValue != null) {
           if (escape == null) {
-            return Pattern.matches(sqlToRegexLike(pattern.value), fieldValue) ?
+            return Pattern.matches(sqlToRegexLike(pattern.value).getJavaPatternString(), fieldValue) ?
                 Result.TRUE : Result.FALSE;
           } else {
-            return Pattern.matches(sqlToRegexLike(pattern.value, escape.value), fieldValue) ?
+            return Pattern.matches(sqlToRegexLike(pattern.value, escape.value).getJavaPatternString(), fieldValue) ?
                 Result.TRUE : Result.FALSE;
           }
         }
