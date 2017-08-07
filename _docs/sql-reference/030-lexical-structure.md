@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date:  
+date: 2017-08-07 19:02:56 UTC
 parent: "SQL Reference"
 ---
 
@@ -74,13 +74,13 @@ Format dates using dashes (-) to separate year, month, and day. Format time usin
 
 If you have dates and times in other formats, use a [data type conversion function](/data-type-conversion/#other-data-type-conversions) in your queries.
 
-### Identifier
-An identifier is a letter followed by any sequence of letters, digits, or the underscore. For example, names of tables, columns, and aliases are identifiers. Maximum length is 1024 characters. Enclose the following identifiers in back ticks:
+### Identifiers
+An identifier is a letter followed by any sequence of letters, digits, or the underscore. For example, names of tables, columns, and aliases are identifiers. Maximum length is 1024 characters. Enclose the following identifiers with identifier quotes:
 
 * Keywords
-* Identifiers that SQL cannot parse. 
+* Identifiers that SQL cannot parse
 
-For example, enclose the SQL keywords date and time in back ticks when referring to column names, but not when referring to data types:
+For example, enclose the SQL keywords date and time in identifier quotes when referring to column names, but not when referring to data types:
 
     CREATE TABLE dfs.tmp.sampleparquet AS 
     (SELECT trans_id, 
@@ -88,14 +88,13 @@ For example, enclose the SQL keywords date and time in back ticks when referring
     cast(`time` AS time) transtime, 
     cast(amount AS double) amountm,
     user_info, marketing_info, trans_info 
-    FROM dfs.`/Users/drilluser/sample.json`);
+    FROM dfs.`/Users/drilluser/sample.json`);    
 
-Table and column names are case-insensitive. Use back ticks to enclose names that contain special characters. Special characters are those other than the 52 Latin alphabet characters. For example, space and @ are special characters. 
+Table and column names are case-insensitive. Use identifier quotes to enclose names that contain special characters. Special characters are those other than the 52 Latin alphabet characters. For example, space and @ are special characters. 
 
-The following example shows the keyword Year enclosed in back ticks. Because the column alias contains the special space character, also enclose the alias in back ticks, as shown in the following example:
+The following example shows the keyword Year enclosed in identifier quotes. Because the column alias contains the special space character, also enclose the alias in back ticks, as shown in the following example:
 
     SELECT extract(year from transdate) AS `Year`, t.user_info.cust_id AS `Customer Number` FROM dfs.tmp.`sampleparquet` t;
-
     +------------+-----------------+
     |    Year    | Customer Number |
     +------------+-----------------+
@@ -105,7 +104,55 @@ The following example shows the keyword Year enclosed in back ticks. Because the
     | 2013       | 666             |
     | 2013       | 999             |
     +------------+-----------------+
-    5 rows selected (0.051 seconds)
+    5 rows selected (0.051 seconds)  
+
+
+### Identifier Quotes
+Prior to Drill 1.11, the SQL parser in Drill only supported back ticks as identifier quotes. As of Drill 1.11, the SQL parser can also use double quotes and square brackets. The default setting for identifier quotes is back ticks. You can configure the type of identifier quotes used with the  `planner.parser.quoting_identifiers` configuration option, at the system or session level, as shown:  
+
+       ALTER SYSTEM|SESSION SET planner.parser.quoting_identifiers = '"';  
+       ALTER SYSTEM|SESSION SET planner.parser.quoting_identifiers = '[';  
+       ALTER SYSTEM|SESSION SET planner.parser.quoting_identifiers = '`';  
+
+The following table lists the supported identifier quotes with their corresponding Unicode character:   
+ 
+| Quoting   Identifier | Unicode   Character                                                   |
+|----------------------|-----------------------------------------------------------------------|
+| Back ticks           | 'GRAVE   ACCENT' (U+0060)                                             |
+| Double quotes        | 'QUOTATION   MARK' (U+0022)                                           |
+| Square brackets      | 'LEFT   SQUARE BRACKET' (U+005B) and 'RIGHT SQUARE BRACKET' (U+005D;) |  
+
+Alternatively, you can set the type of identifier using the `quoting_identifiers` property in the jdbc connection URL, as shown:  
+ 
+       jdbc:drill:zk=local;quoting_identifiers=[  
+
+**Note:** The identifier quotes used in queries must match the `planner.parser.quoting_identifiers` setting. If you use another type of identifier quotes, Drill returns an error.  
+
+The following queries show the use of each type of identifier quotes:  
+
+       0: jdbc:drill:zk=local> select `employee_id`, `full_name` from cp.`employee.json` limit 1;
+       +--------------+---------------+
+       | employee_id  |   full_name   |
+       +--------------+---------------+
+       | 1            | Sheri Nowmer  |
+       +--------------+---------------+
+       1 row selected (0.148 seconds)  
+
+       0: jdbc:drill:zk=local> select "employee_id", "full_name" from cp."employee.json" limit 1;
+       +--------------+---------------+
+       | employee_id  |   full_name   |
+       +--------------+---------------+
+       | 1            | Sheri Nowmer  |
+       +--------------+---------------+
+       1 row selected (0.129 seconds)  
+
+       0: jdbc:drill:zk=local> select [employee_id], [full_name] from cp.[employee.json] limit 1;
+       +--------------+---------------+
+       | employee_id  |   full_name   |
+       +--------------+---------------+
+       | 1            | Sheri Nowmer  |
+       +--------------+---------------+
+       1 row selected (0.14 seconds)  
 
 ### Integer
 An integer value consists of an optional minus sign, -, followed by one or more digits.

@@ -1,5 +1,5 @@
 ---
-title: "Configuring Plain Authentication"
+title: "Configuring Plain Security"
 date: 2017-05-17 01:38:50 UTC
 parent: "Securing Drill"
 ---
@@ -10,10 +10,10 @@ If you use PAM with `/etc/passwd` for authentication, verify that the users with
 
 This section includes the following topics:
 
-- [Authentication Process]({{site.baseurl}}/docs/configuring-plain-authentication/#authentication-process)
-- [Connecting with SQLLine]({{site.baseurl}}/docs/configuring-plain-authentication/#connecting-with-sqlline)
-- [Connecting with BI Tools]({{site.baseurl}}/docs/configuring-plain-authentication/#connecting-with-bi-tools)
-- [Installing and Configuring Plain Authentication]({{site.baseurl}}/docs/configuring-plain-authentication/#installing-and-configuring-plain-authentication)
+- [Authentication Process]({{site.baseurl}}/docs/configuring-plain-security/#authentication-process)
+- [Connecting with SQLLine]({{site.baseurl}}/docs/configuring-plain-security/#connecting-with-sqlline)
+- [Connecting with BI Tools]({{site.baseurl}}/docs/configuring-plain-security/#connecting-with-bi-tools)
+- [Installing and Configuring Plain Security]({{site.baseurl}}/docs/configuring-plain-security/#installing-and-configuring-plain-security)
 
 ## Authentication Process
 
@@ -59,7 +59,7 @@ To connect to a Drill from a BI tool, such as Tableau, the ODBC driver prompts y
 
 ![User Auth BI Tools](http://i.imgur.com/J5X1Tds.png)
 
-##Installing and Configuring Plain Authentication
+##Installing and Configuring Plain Security
 
 Install and configure the provided Drill PAM for Plain (or username and password) authentication. Drill only supports the PAM provided here. Optionally, you can build and implement a custom authenticator.  
 

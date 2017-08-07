@@ -1,12 +1,12 @@
 ---
 title: "Configuring Inbound Impersonation"
-date: 2017-07-27 20:41:28 UTC
+date: 2017-08-07 19:02:34 UTC
 parent: "Securing Drill"
 ---  
 
 Drill supports [user impersonation]({{site.baseurl}}/docs/configuring-user-impersonation/)  where queries run as the user that created a connection. However, this user is not necessarily the end user who submits the queries. For example, in a classic three-tier architecture, the end user interacts with Tableau Desktop, which communicates with a Tableau Server, which in turn communicates with a Drill cluster. In this scenario, a proxy user creates a connection, and the queries are submitted to Drill by the proxy user on behalf of the end user, and not by the end user directly. In this particular case, the query needs to be run as the end user.  
 
-As of Drill 1.6, an administrator can define inbound impersonation policies to impersonate the end user. The proxy user needs to be authorized to submit queries on behalf of the specified end user. Otherwise, any user can impersonate another user. Then, the query runs as the end user, and data authorization is based on this user’s access permissions. Note that without [authentication]({{site.baseurl}}/docs/configuring-user-authentication/) enabled in both communication channels, a user can impersonate any other user.
+As of Drill 1.6, an administrator can define inbound impersonation policies to impersonate the end user. The proxy user needs to be authorized to submit queries on behalf of the specified end user. Otherwise, any user can impersonate another user. Then, the query runs as the end user, and data authorization is based on this user’s access permissions. Note that without [authentication]({{site.baseurl}}/docs/configuring-user-security/) enabled in both communication channels, a user can impersonate any other user.
 
 Drill trusts proxy users to provide the correct end user identity information. Drill does not authenticate the end user. The proxy user (application) is responsible for end user authentication, which is usually enabled.
 
@@ -46,22 +46,8 @@ Policy format:
               { proxy_principals : { users : [“...”, “...”], groups : [“...”, “...”] },
               target_principals: { users : [“...”, “...”], groups : [“...”, “...”] } }
 
-3. Ensure that the proxy user (application) passes the username of the impersonation target user to Drill when creating a connection. 
+3. Ensure that the proxy user (application) passes the username of the impersonation target user to Drill when creating a connection through the `impersonation_target` connection property. For example, through sqlline:  
 
-The following examples show you how to do this for JDBC and ODBC:  
-  
-
-- For JDBC, through SQLLine using the `impersonation_target` connection property:
-
-            bin/sqlline –u “jdbc:drill:schema=dfs;zk=myclusterzk;impersonation_target=euser1” -n puser1 -p ppass1  
+        bin/sqlline –u “jdbc:drill:schema=dfs;zk=myclusterzk;impersonation_target=euser1” -n puser1 -p ppass1  
 
 In this example, `puser1` is the user submitting the queries. This user is authenticated. Since this user is authorized to impersonate any user, queries through the established connection are run as `euser1`.
-   
-
-- For ODBC on Linux or Mac, you can pass the username through the `DelegationUID` property in the odbc.ini file. See [Configuring ODBC on Linux]({{site.baseurl}}/docs/configuring-odbc-on-linux/) for more information. 
-  
-       
-              DelegationUID=euser1  
-
-  
-If you are using ODBC on Windows, you can use the **ODBC Data Source Administrator** to provide the username through the `Delegation UID` field in the MapR Drill ODBC Driver DSN Setup dialog box. See [Configuring ODBC on Windows]({{site.baseurl}}/docs/configuring-odbc-on-windows/) for more information.

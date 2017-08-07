@@ -1,9 +1,9 @@
 ---
 title: "Configuring Web Console and REST API Security"
-date: 2016-02-08 21:57:12 UTC
+date: 2017-08-07 19:02:44 UTC
 parent: "Securing Drill"
 ---
-Drill 1.5 extends [Drill user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
+Drill 1.5 extends [Drill user security]({{site.baseurl}}/docs/configuring-user-security/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
 you can limit the access of certain users to Web Console functionality, such as viewing the in-progress or completed queries of other users. You can limit users from viewing other users' query profiles, who can cancel queries of other users, and other functionality.
 
 With Web Console security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web Console for storage plugin configuration information.
@@ -34,7 +34,7 @@ As cluster administrator, you can set the following SSL configuration parameters
 
 You need to perform the following configuration tasks using Web Console and REST API security.  
 
-* Configure [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/)  
+* Configure [user security]({{site.baseurl}}/docs/configuring-user-security/)  
 * Set up Web Console administrators  
   Optionally, you can set up Web Console administrator-user groups to facilitate management of multiple Web Console administrators.
 
