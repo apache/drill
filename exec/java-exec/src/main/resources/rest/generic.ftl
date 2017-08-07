@@ -23,17 +23,17 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
       <title>Apache Drill</title>
-      <link rel="shortcut icon" href="/static/img/drill.ico">
+      <link rel="shortcut icon" href="./static/img/drill.ico">
 
-      <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+      <link href="./static/css/bootstrap.min.css" rel="stylesheet">
 
-      <script src="/static/js/jquery.min.js"></script>
-      <script src="/static/js/bootstrap.min.js"></script>
+      <script src="./static/js/jquery.min.js"></script>
+      <script src="./static/js/bootstrap.min.js"></script>
 
       <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
       <!--[if lt IE 9]>
-        <script src="/static/js/html5shiv.js"></script>
-        <script src="/static/js/1.4.2/respond.min.js"></script>
+        <script src="./static/js/html5shiv.js"></script>
+        <script src="./static/js/1.4.2/respond.min.js"></script>
       <![endif]-->
 
       <@page_head/>
@@ -50,35 +50,35 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">Apache Drill</a>
+            <a class="navbar-brand" href=".">Apache Drill</a>
           </div>
           <div class="navbar-collapse collapse">
             <#if showControls == true>
             <ul class="nav navbar-nav">
-              <li><a href="/query">Query</a></li>
-              <li><a href="/profiles">Profiles</a></li>
+              <li><a href="./query">Query</a></li>
+              <li><a href="./profiles">Profiles</a></li>
               <#if showStorage == true>
-              <li><a href="/storage">Storage</a></li>
+              <li><a href="./storage">Storage</a></li>
               </#if>
-              <li><a href="/metrics">Metrics</a></li>
+              <li><a href="./metrics">Metrics</a></li>
               <#if showThreads == true>
-              <li><a href="/threads">Threads</a></li>
+              <li><a href="./threads">Threads</a></li>
               </#if>
               <#if showLogs == true>
-                  <li><a href="/logs">Logs</a></li>
+                  <li><a href="./logs">Logs</a></li>
               </#if>
             </ul>
             </#if>
             <ul class="nav navbar-nav navbar-right">
               <#if showOptions == true>
-              <li><a href="/options">Options</a></li>
+              <li><a href="./options">Options</a></li>
               </#if>
               <li><a href="http://drill.apache.org/docs/">Documentation</a>
               <#if showLogin == true >
-              <li><a href="/login">Log In</a>
+              <li><a href="./login">Log In</a>
               </#if>
               <#if showLogout == true >
-              <li><a href="/logout">Log Out (${loggedInUserName})</a>
+              <li><a href="./logout">Log Out (${loggedInUserName})</a>
               </#if>
             </ul>
           </div>

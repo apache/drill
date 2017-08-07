@@ -14,12 +14,12 @@
 </#macro>
 
 <#macro page_body>
-<a href="/logs">back</a><br/>
+<a href="./logs">back</a><br/>
 <div class="page-header">
 </div>
 <h3>${model.getName()} <span class="badge alert-info">(last ${model.getMaxLines()} lines)</span></h3>
 <p>
-    <a href="/log/${model.getName()}/download">Download Full Log</a>
+    <a href="./log/${model.getName()}/download">Download Full Log</a>
 </p>
     <#if (model.getLines()?size > 0)>
     <pre>
