@@ -14,7 +14,7 @@
 </#macro>
 
 <#macro page_body>
-  <a href="/queries">back</a><br/>
+  <a href="./queries">back</a><br/>
   <div class="page-header">
   </div>
   <#if (model.getErrors()?size > 0) >
@@ -45,7 +45,7 @@
             <td>${query.getTime()}</td>
             <!--
             <td>
-              <a href="/profiles/${query.getQueryId()}">
+              <a href="./profiles/${query.getQueryId()}">
                 <div style="height:100%;width:100%">
                   ${query.getQueryId()}
                 </div>
@@ -53,12 +53,12 @@
             </td>
             -->
             <td>
-              <a href="/profiles/${query.getQueryId()}">
+              <a href="./profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%;white-space:pre-line">${query.getUser()}</div>
               </a>
             </td> 
             <td>
-              <a href="/profiles/${query.getQueryId()}">
+              <a href="./profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
               </a>
             </td> 
@@ -103,7 +103,7 @@
           <td>${query.getTime()}</td>
           <!--
           <td>
-            <a href="/profiles/${query.getQueryId()}">
+            <a href="./profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%">
                 ${query.getQueryId()}
               </div>
@@ -111,13 +111,13 @@
           </td>
           -->
           <td>
-            <a href="/profiles/${query.getQueryId()}">
+            <a href="./profiles/${query.getQueryId()}">
             <div style="height:100%;width:100%;white-space:pre-line">${query.getUser()}</div>
             </a>
           </td> 
           
           <td>
-            <a href="/profiles/${query.getQueryId()}">
+            <a href="./profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
             </a>
           </td>      

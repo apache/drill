@@ -14,7 +14,7 @@
 </#macro>
 
 <#macro page_body>
-  <a href="/queries">back</a><br/>
+  <a href="./queries">back</a><br/>
   <div class="page-header">
   </div>
   <h4>Enabled Storage Plugins</h4>
@@ -28,7 +28,7 @@
                 ${plugin.getName()}
               </td>
               <td style="border:none;">
-                <a class="btn btn-primary" href="/storage/${plugin.getName()}">Update</a>
+                <a class="btn btn-primary" href="./storage/${plugin.getName()}">Update</a>
                 <a class="btn btn-default" onclick="doEnable('${plugin.getName()}', false)">Disable</a>
               </td>
             </tr>
@@ -50,7 +50,7 @@
                 ${plugin.getName()}
               </td>
               <td style="border:none;">
-                <a class="btn btn-primary" href="/storage/${plugin.getName()}">Update</a>
+                <a class="btn btn-primary" href="./storage/${plugin.getName()}">Update</a>
                 <a class="btn btn-primary" onclick="doEnable('${plugin.getName()}', true)">Enable</a>
               </td>
             </tr>
