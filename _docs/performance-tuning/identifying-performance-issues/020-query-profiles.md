@@ -1,13 +1,13 @@
 ---
 title: "Query Profiles"
-date: 2017-08-08 02:23:02 UTC
+date: 2017-08-08 02:33:05 UTC
 parent: "Identifying Performance Issues"
 ---
 
-A profile is a summary of metrics collected for each query that Drill executes. Query profiles provide information that you can use to monitor and analyze query performance. When Drill executes a query, Drill writes the profile of each query to disk, which is either the local filesystem or a distributed file system, such as HDFS. As of Drill 1.11, Drill can [store profiles in memory]({{site.baseurl}}/docs/start-up-options/#configuring-start-up-options) instead of storing them to disk. You can view query profiles in the Drill Web Console at `http://<IP address or host name>:8047`.  
+A profile is a summary of metrics collected for each query that Drill executes. Query profiles provide information that you can use to monitor and analyze query performance. When Drill executes a query, Drill writes the profile of each query to disk, which is either the local filesystem or a distributed file system, such as HDFS. As of Drill 1.11, Drill can [store profiles in memory]({{site.baseurl}}/docs/start-up-options/#configuring-start-up-options) instead of writing them to disk. You can view query profiles in the Drill Web Console at `http://<IP address or host name>:8047`.  
 
 ##Query Profiles in the Drill Web Console 
-You can access query profiles in the Drill Web Console. The Drill Web Console provides aggregate statistics across profile lists. Profile lists consist of data from major and minor fragments, operators, and input streams. You can use profiles in conjunction with Drill logs for debugging purposes. In addition to viewing query profiles, you can modify, resubmit, or cancel queries from the Drill Web Console.  
+The Drill Web Console provides aggregate statistics across profile lists. Profile lists consist of data from major and minor fragments, operators, and input streams. You can use profiles in conjunction with Drill logs for debugging purposes. In addition to viewing query profiles, you can modify, resubmit, or cancel queries from the Drill Web Console.  
 
 ###Query, Fragment, and Operator Identifiers  
  
