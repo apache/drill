@@ -1,6 +1,6 @@
 ---
 title: "Start-Up Options"
-date: 2016-04-14 20:31:04 UTC
+date: 2017-08-08 02:22:56 UTC
 parent: "Configuration Options"
 ---
 Drill’s start-up options reside in a [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) configuration file format, which is
@@ -47,14 +47,17 @@ You can configure start-up options for each Drillbit in `<drill_home>/conf/drill
 
 The summary of start-up options, also known as boot options, lists default values. The following descriptions provide more detail on key options that are frequently reconfigured:
 
-* drill.exec.http.ssl_enabled  
+* **drill.exec.http.ssl_enabled**  
   Available in Drill 1.2. Enables or disables [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support). Settings are TRUE and FALSE, respectively. The default is FALSE.  
-* drill.exec.sys.store.provider.class  
+* **drill.exec.sys.store.provider.class**  
   Defines the persistent storage (PStore) provider. The [PStore]({{ site.baseurl }}/docs/persistent-configuration-storage) holds configuration and profile data.  
-* drill.exec.buffer.size  
+* **drill.exec.buffer.size**  
   Defines the amount of memory available, in terms of record batches, to hold data on the downstream side of an operation. Drill pushes data downstream as quickly as possible to make data immediately available. This requires Drill to use memory to hold the data pending operations. When data on a downstream operation is required, that data is immediately available so Drill does not have to go over the network to process it. Providing more memory to this option increases the speed at which Drill completes a query.  
-* drill.exec.sort.external.spill.directories  
+* **drill.exec.sort.external.spill.directories**  
   Tells Drill which directory to use when spooling. Drill uses a spool and sort operation for beyond memory operations. The sorting operation is designed to spool to a Hadoop file system. The default Hadoop file system is a local file system in the `/tmp` directory. Spooling performance (both writing and reading back from it) is constrained by the file system.  
-* drill.exec.zk.connect  
-  Provides Drill with the ZooKeeper quorum to use to connect to data sources. Change this setting to point to the ZooKeeper quorum that you want Drill to use. You must configure this option on each Drillbit node.
-
+* **drill.exec.zk.connect**  
+  Provides Drill with the ZooKeeper quorum to use to connect to data sources. Change this setting to point to the ZooKeeper quorum that you want Drill to use. You must configure this option on each Drillbit node.  
+* **drill.exec.profiles.store.inmemory**  
+  Available as of Drill 1.11. When set to TRUE, enables Drill to store query profiles in memory instead of writing the query profiles to disk. When set to FALSE, Drill writes the profile for each query to disk, which is either the local file system or a distributed file system, such as HDFS. For sub-second queries, writing the query profile to disk is expensive due to the interactions with the file system. Enable this option if you want Drill to store the profiles of sub-second queries in memory instead of writing them to disk. When you enable this option, Drill stores the profiles in memory for as long as the drillbit runs. When the drillbit restarts, the profiles no longer exist. You can set the maximum number of most recent profiles to retain in memory through the drill.exec.profiles.store.capacity option. Settings are TRUE and FALSE. Default is FALSE.  
+* **drill.exec.profiles.store.capacity**  
+  Available as of Drill 1.11. Sets the maximum number of most recent profiles to retain in memory when the drill.exec.profiles.store.inmemory option is enabled. Default is 1000.  

@@ -1,6 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
-date: 2016-08-04 16:47:22 UTC
+date: 2017-08-08 02:22:58 UTC
 parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin configurations on one Drill node in a 
@@ -85,13 +85,13 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile"</td>
+    <td>"pcap"<br>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile"</td>
     <td>yes</td>
     <td>One or more valid file formats for reading. Drill detects formats of some files; others require configuration. The maprdb format is in installations of the mapr-drill package.  </td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
-    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"sequencefile"</td>
+    <td>"pcap"<br>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"sequencefile"</td>
     <td>yes</td>
     <td>Format type. You can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
