@@ -1,10 +1,10 @@
 ---
 title: "Persistent Configuration Storage"
-date: 2017-08-08 21:12:16 UTC
+date: 2017-08-08 21:29:41 UTC
 parent: "Configuration Options"
 ---
 Drill stores persistent configuration data in a persistent configuration store
-(PStore). The data stored in a PStore includes state information for storage plugins, query profiles, and ALTER SYSTEM settings. This data is encoded in JSON or Protobuf format. Drill can write this data to the local file system or a distributed file system, such as HDFS. As of Drill 1.11, Drill can store query profiles in memory instead of writing the profiles to disk.
+(PStore). The data stored in a PStore includes state information for storage plugins, query profiles, and ALTER SYSTEM settings. This data is encoded in JSON or Protobuf format. Drill can write this data to the local file system or a distributed file system, such as HDFS. As of Drill 1.11, Drill can [store query profiles in memory](https://drill.apache.org/docs/persistent-configuration-storage/#storing-query-profiles-in-memory) instead of writing the profiles to disk.
 
 The default type of PStore configured depends on the Drill installation mode. The following table provides the persistent storage mode for each of the Drill
 modes:
@@ -65,8 +65,5 @@ override.conf.`
 	  },  
 
 ##Storing Query Profiles in Memory
-As of Drill 1.11, Drill can store query profiles in memory instead of writing them to disk. For sub-second queries, writing the query profile to disk is expensive due to the interactions with the file system. You can enable the `drill.exec.profiles.store.inmemory` option in the drill-override.conf file if you want Drill to store the profiles for sub-second queries in memory instead of writing the profiles to disk. When you enable this option, Drill stores the profiles in memory for as long as the drillbit runs. When the drillbit restarts, the profiles no longer exist. You can set the maximum number of most recent profiles to retain in memory through the `drill.exec.profiles.store.capacity` option. The default is set to 1000. See [Start-Up Options]({{site.baseurl}}/docs/start-up-options/) for more information.  
-
-{% include startnote.html %}You must restart Drill after you enable the `drill.exec.profiles.store.inmemory` option.{% include endnote.html %} 
-
+As of Drill 1.11, Drill can store query profiles in memory instead of writing them to disk. For sub-second queries, writing the query profile to disk is expensive due to the interactions with the file system. You can enable the `drill.exec.profiles.store.inmemory` option in the drill-override.conf file if you want Drill to store the profiles for sub-second queries in memory instead of writing the profiles to disk. When you enable this option, Drill stores the profiles in memory for as long as the drillbit runs. When the drillbit restarts, the profiles no longer exist. You can set the maximum number of most recent profiles to retain in memory through the `drill.exec.profiles.store.capacity` option. See [Start-Up Options]({{site.baseurl}}/docs/start-up-options/) for more information. You must [restart the drillbit]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/) after you enable the `drill.exec.profiles.store.inmemory` option. 
 
