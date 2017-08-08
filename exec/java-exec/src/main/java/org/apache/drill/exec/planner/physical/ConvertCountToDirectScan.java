@@ -19,11 +19,15 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -83,6 +87,8 @@ public class ConvertCountToDirectScan extends Prule {
       RelOptHelper.some(DrillAggregateRel.class,
                             RelOptHelper.any(DrillScanRel.class)), "Agg_on_scan");
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConvertCountToDirectScan.class);
+
   /** Creates a SplunkPushDownRule. */
   protected ConvertCountToDirectScan(RelOptRuleOperand rule, String id) {
     super(rule, "ConvertCountToDirectScan:" + id);
@@ -107,17 +113,18 @@ public class ConvertCountToDirectScan extends Prule {
       return;
     }
 
-    final CountsCollector countsCollector = new CountsCollector(settings);
-    // if counts were not collected, rule won't be applied
-    if (!countsCollector.collect(agg, scan, project)) {
+    Map<String, Long> result = collectCounts(settings, agg, scan, project);
+    logger.trace("Calculated the following aggregate counts: ", result);
+    // if could not determine the counts, rule won't be applied
+    if (result.isEmpty()) {
       return;
     }
 
-    final RelDataType scanRowType = constructDataType(agg);
+    final RelDataType scanRowType = constructDataType(agg, result.keySet());
 
     final DynamicPojoRecordReader<Long> reader = new DynamicPojoRecordReader<>(
         buildSchema(scanRowType.getFieldNames()),
-        Collections.singletonList(countsCollector.getCounts()));
+        Collections.singletonList((List<Long>) new ArrayList<>(result.values())));
 
     final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
     final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getFiles(), scanStats);
@@ -133,16 +140,120 @@ public class ConvertCountToDirectScan extends Prule {
   }
 
   /**
-   * For each aggregate call creates field with "count$" prefix and bigint type.
+   * Collects counts for each aggregation call.
+   * Will return empty result map if was not able to determine count for at least one aggregation call,
+   *
+   * For each aggregate call will determine if count can be calculated. Collects counts only for COUNT function.
+   * For star, not null expressions and implicit columns sets count to total record number.
+   * For other cases obtains counts from group scan operator. Also count can not be calculated for parition columns.
+   *
+   * @param agg aggregate relational expression
+   * @param scan scan relational expression
+   * @param project project relational expression
+   * @return result map where key is count column name, value is count value
+   */
+  private Map<String, Long> collectCounts(PlannerSettings settings, DrillAggregateRel agg, DrillScanRel scan, DrillProjectRel project) {
+    final Set<String> implicitColumnsNames = ColumnExplorer.initImplicitFileColumns(settings.getOptions()).keySet();
+    final GroupScan oldGrpScan = scan.getGroupScan();
+    final long totalRecordCount = oldGrpScan.getScanStats(settings).getRecordCount();
+    final LinkedHashMap<String, Long> result = new LinkedHashMap<>();
+
+    for (int i = 0; i < agg.getAggCallList().size(); i++) {
+      AggregateCall aggCall = agg.getAggCallList().get(i);
+    //for (AggregateCall aggCall : agg.getAggCallList()) {
+      long cnt;
+
+      // rule can be applied only for count function, return empty counts
+      if (!"count".equalsIgnoreCase(aggCall.getAggregation().getName()) ) {
+        return ImmutableMap.of();
+      }
+
+      if (containsStarOrNotNullInput(aggCall, agg)) {
+        cnt = totalRecordCount;
+
+      } else if (aggCall.getArgList().size() == 1) {
+        // count(columnName) ==> Agg ( Scan )) ==> columnValueCount
+        int index = aggCall.getArgList().get(0);
+
+        if (project != null) {
+          // project in the middle of Agg and Scan : Only when input of AggCall is a RexInputRef in Project, we find the index of Scan's field.
+          // For instance,
+          // Agg - count($0)
+          //  \
+          //  Proj - Exp={$1}
+          //    \
+          //   Scan (col1, col2).
+          // return count of "col2" in Scan's metadata, if found.
+          if (!(project.getProjects().get(index) instanceof RexInputRef)) {
+            return ImmutableMap.of(); // do not apply for all other cases.
+          }
+
+          index = ((RexInputRef) project.getProjects().get(index)).getIndex();
+        }
+
+        String columnName = scan.getRowType().getFieldNames().get(index).toLowerCase();
+
+        // for implicit column count will the same as total record count
+        if (implicitColumnsNames.contains(columnName)) {
+          cnt = totalRecordCount;
+        } else {
+          SchemaPath simplePath = SchemaPath.getSimplePath(columnName);
+
+          if (ColumnExplorer.isPartitionColumn(settings.getOptions(), simplePath)) {
+            return ImmutableMap.of();
+          }
+
+          cnt = oldGrpScan.getColumnValueCount(simplePath);
+          if (cnt == GroupScan.NO_COLUMN_STATS) {
+            // if column stats is not available don't apply this rule, return empty counts
+            return ImmutableMap.of();
+          }
+        }
+      } else {
+        return ImmutableMap.of();
+      }
+
+      String name = "count" + i + "$" + (aggCall.getName() == null ? aggCall.toString() : aggCall.getName());
+      result.put(name, cnt);
+    }
+
+    return ImmutableMap.copyOf(result);
+  }
+
+  /**
+   * Checks if aggregate call contains star or non-null expression:
+   * <pre>
+   * count(*)  == >  empty arg  ==>  rowCount
+   * count(Not-null-input) ==> rowCount
+   * </pre>
+   *
+   * @param aggregateCall aggregate call
+   * @param aggregate aggregate relation expression
+   * @return true of aggregate call contains star or non-null expression
+   */
+  private boolean containsStarOrNotNullInput(AggregateCall aggregateCall, DrillAggregateRel aggregate) {
+    return aggregateCall.getArgList().isEmpty() ||
+        (aggregateCall.getArgList().size() == 1 &&
+            !aggregate.getInput().getRowType().getFieldList().get(aggregateCall.getArgList().get(0)).getType().isNullable());
+  }
+
+  /**
+   * For each aggregate call creates field based on its name with bigint type.
    * Constructs record type for created fields.
    *
    * @param aggregateRel aggregate relation expression
+   * @param fieldNames field names
    * @return record type
    */
-  private RelDataType constructDataType(DrillAggregateRel aggregateRel) {
+  private RelDataType constructDataType(DrillAggregateRel aggregateRel, Collection<String> fieldNames) {
     List<RelDataTypeField> fields = new ArrayList<>();
-    for (int i = 0; i < aggregateRel.getAggCallList().size(); i++) {
-      RelDataTypeField field = new RelDataTypeFieldImpl("count$" + i, i, aggregateRel.getCluster().getTypeFactory().createSqlType(SqlTypeName.BIGINT));
+    Iterator<String> filedNamesIterator = fieldNames.iterator();
+    int fieldIndex = 0;
+    while (filedNamesIterator.hasNext()) {
+      RelDataTypeField field = new RelDataTypeFieldImpl(
+          filedNamesIterator.next(),
+          fieldIndex++,
+          aggregateRel.getCluster().getTypeFactory().createSqlType(SqlTypeName.BIGINT));
       fields.add(field);
     }
     return new RelRecordType(fields);
@@ -175,147 +286,6 @@ public class ConvertCountToDirectScan extends Prule {
       expressions.add(RexInputRef.of(i, rowType));
     }
     return expressions;
-  }
-
-  /**
-   * Helper class to collect counts based on metadata information.
-   * For example, for parquet files it can be obtained from parquet footer (total row count)
-   * or from parquet metadata files (column counts).
-   */
-  private class CountsCollector {
-
-    private final PlannerSettings settings;
-    private final Set<String> implicitColumnsNames;
-    private final List<SchemaPath> columns;
-    private final List<Long> counts;
-
-    CountsCollector(PlannerSettings settings) {
-      this.settings = settings;
-      this.implicitColumnsNames = ColumnExplorer.initImplicitFileColumns(settings.getOptions()).keySet();
-      this.counts = new ArrayList<>();
-      this.columns = new ArrayList<>();
-    }
-
-    /**
-     * Collects counts for each aggregation call.
-     * Will fail to collect counts if:
-     * <ol>
-     *   <li>was not able to determine count for at least one aggregation call</li>
-     *   <li>count if used for file system partition column</li>
-     * </ol>
-     *
-     * @param agg aggregate relational expression
-     * @param scan scan relational expression
-     * @param project project relational expression
-     *
-     * @return true if counts were collected, false otherwise
-     */
-    boolean collect(DrillAggregateRel agg, DrillScanRel scan, DrillProjectRel project) {
-      return calculateCounts(agg, scan, project) && !containsPartitionColumns();
-    }
-
-    /**
-     * @return list of counts
-     */
-    List<Long> getCounts() {
-      return counts;
-    }
-
-    /**
-     * For each aggregate call if determine if count can be calculated. Collects counts only for COUNT function.
-     * For star, not null expressions and implicit columns sets count to total record number.
-     * For other cases obtains counts from group scan operator.
-     *
-     * @param agg aggregate relational expression
-     * @param scan scan relational expression
-     * @param project project relational expression
-     * @return true if counts were collected, false otherwise
-     */
-    private boolean calculateCounts(DrillAggregateRel agg, DrillScanRel scan, DrillProjectRel project) {
-      final GroupScan oldGrpScan = scan.getGroupScan();
-      final long totalRecordCount = oldGrpScan.getScanStats(settings).getRecordCount();
-
-      for (AggregateCall aggCall : agg.getAggCallList()) {
-        long cnt;
-
-        // rule can be applied only for count function
-        if (!"count".equalsIgnoreCase(aggCall.getAggregation().getName()) ) {
-          return false;
-        }
-
-        if (containsStarOrNotNullInput(aggCall, agg)) {
-          cnt = totalRecordCount;
-
-        } else if (aggCall.getArgList().size() == 1) {
-          // count(columnName) ==> Agg ( Scan )) ==> columnValueCount
-          int index = aggCall.getArgList().get(0);
-
-          if (project != null) {
-            // project in the middle of Agg and Scan : Only when input of AggCall is a RexInputRef in Project, we find the index of Scan's field.
-            // For instance,
-            // Agg - count($0)
-            //  \
-            //  Proj - Exp={$1}
-            //    \
-            //   Scan (col1, col2).
-            // return count of "col2" in Scan's metadata, if found.
-            if (!(project.getProjects().get(index) instanceof RexInputRef)) {
-              return false; // do not apply for all other cases.
-            }
-
-            index = ((RexInputRef) project.getProjects().get(index)).getIndex();
-          }
-
-          String columnName = scan.getRowType().getFieldNames().get(index).toLowerCase();
-
-          // for implicit column count will the same as total record count
-          if (implicitColumnsNames.contains(columnName)) {
-            cnt = totalRecordCount;
-          } else {
-            SchemaPath simplePath = SchemaPath.getSimplePath(columnName);
-            columns.add(simplePath);
-
-            cnt = oldGrpScan.getColumnValueCount(simplePath);
-            if (cnt == GroupScan.NO_COLUMN_STATS) {
-              // if column stats is not available don't apply this rule
-              return false;
-            }
-          }
-        } else {
-          return false;
-        }
-        counts.add(cnt);
-      }
-      return true;
-    }
-
-    /**
-     * Checks if aggregate call contains star or non-null expression:
-     * <pre>
-     * count(*)  == >  empty arg  ==>  rowCount
-     * count(Not-null-input) ==> rowCount
-     * </pre>
-     *
-     * @param aggregateCall aggregate call
-     * @param aggregate aggregate relation expression
-     * @return true of aggregate call contains star or non-null expression
-     */
-    private boolean containsStarOrNotNullInput(AggregateCall aggregateCall, DrillAggregateRel aggregate) {
-      return aggregateCall.getArgList().isEmpty() ||
-          (aggregateCall.getArgList().size() == 1 &&
-              !aggregate.getInput().getRowType().getFieldList().get(aggregateCall.getArgList().get(0)).getType().isNullable());
-    }
-
-    /**
-     * Checks if stores list of columns contains file system partition columns.
-     *
-     * @return true if contains partition columns, false otherwise
-     */
-    private boolean containsPartitionColumns() {
-      final ColumnExplorer columnExplorer = new ColumnExplorer(settings.getOptions(), columns);
-      return columnExplorer.containsPartitionColumns();
-    }
-
   }
 
 }

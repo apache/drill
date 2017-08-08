@@ -67,20 +67,20 @@ public class MetadataDirectGroupScan extends DirectGroupScan {
    * </p>
    *
    * <p>
-   * Example: [usedMetadata = true, files = [/tmp/0_0_0.parquet], numFiles = 1]
+   * Example: [files = [/tmp/0_0_0.parquet], numFiles = 1]
    * </p>
    *
    * @return string representation of group scan data
    */
   @Override
   public String getDigest() {
-    StringBuilder builder = new StringBuilder();
-    builder.append("usedMetadata = true, ");
     if (files != null) {
+      StringBuilder builder = new StringBuilder();
       builder.append("files = ").append(files).append(", ");
       builder.append("numFiles = ").append(files.size()).append(", ");
+      return builder.append(super.getDigest()).toString();
     }
-    return builder.append(super.getDigest()).toString();
+    return super.getDigest();
   }
 
 }

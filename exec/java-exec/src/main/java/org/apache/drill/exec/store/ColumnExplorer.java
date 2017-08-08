@@ -87,6 +87,32 @@ public class ColumnExplorer {
   }
 
   /**
+   * Checks if given column is partition or not.
+   *
+   * @param optionManager options
+   * @param column column
+   * @return true if given column is partition, false otherwise
+   */
+  public static boolean isPartitionColumn(OptionManager optionManager, SchemaPath column){
+    String partitionDesignator = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    String path = column.getAsUnescapedPath();
+    return isPartitionColumn(partitionDesignator, path);
+  }
+
+  /**
+   * Checks if given column is partition or not.
+   *
+   * @param partitionDesignator partition designator
+   * @param path column path
+   * @return true if given column is partition, false otherwise
+   */
+  public static boolean isPartitionColumn(String partitionDesignator, String path){
+    Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
+    Matcher matcher = pattern.matcher(path);
+    return matcher.matches();
+  }
+
+  /**
    * Compares selection root and actual file path to determine partition columns values.
    * Adds implicit file columns according to columns list.
    *
@@ -160,11 +186,9 @@ public class ColumnExplorer {
     if (isStarQuery) {
       selectedImplicitColumns.putAll(allImplicitColumns);
     } else {
-      Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
         String path = column.getAsUnescapedPath();
-        Matcher m = pattern.matcher(path);
-        if (m.matches()) {
+        if (isPartitionColumn(partitionDesignator, path)) {
           selectedPartitionColumns.add(Integer.parseInt(path.substring(partitionDesignator.length())));
         } else if (allImplicitColumns.get(path) != null) {
           selectedImplicitColumns.put(path, allImplicitColumns.get(path));
