@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor.impl;
+package org.apache.drill.exec.vector.accessor.writer;
 
 import java.math.BigDecimal;
 
-import org.apache.drill.exec.vector.accessor.ArrayWriter;
-import org.apache.drill.exec.vector.accessor.ColumnWriter;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.joda.time.Period;
 
 /**
@@ -31,13 +30,31 @@ import org.joda.time.Period;
  * method(s).
  */
 
-public abstract class AbstractColumnWriter extends AbstractColumnAccessor implements ColumnWriter {
+public abstract class BaseScalarWriter extends AbstractScalarWriter {
 
-  public void start() { }
+  protected ColumnWriterIndex vectorIndex;
+  protected int lastWriteIndex;
+  protected long bufAddr;
+  protected int capacity;
+
+  public static ScalarObjectWriter build(ValueVector vector, BaseScalarWriter writer) {
+    writer.bindVector(vector);
+    return new ScalarObjectWriter(writer);
+  }
+
+  @Override
+  public void bindIndex(ColumnWriterIndex vectorIndex) {
+    this.vectorIndex = vectorIndex;
+  }
+
+  @Override
+  public void startWrite() { lastWriteIndex = -1; }
+  public int lastWriteIndex() { return lastWriteIndex; }
+  public void setLastWriteIndex(int index) { lastWriteIndex = index; }
 
   @Override
   public void setNull() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("Vector is not nullable");
   }
 
   @Override
@@ -61,7 +78,7 @@ public abstract class AbstractColumnWriter extends AbstractColumnAccessor implem
   }
 
   @Override
-  public void setBytes(byte[] value) {
+  public void setBytes(byte[] value, int len) {
     throw new UnsupportedOperationException();
   }
 
@@ -72,16 +89,6 @@ public abstract class AbstractColumnWriter extends AbstractColumnAccessor implem
 
   @Override
   public void setPeriod(Period value) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public TupleWriter map() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public ArrayWriter array() {
     throw new UnsupportedOperationException();
   }
 }

@@ -31,20 +31,18 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperExecContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.joda.time.Period;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -54,19 +52,7 @@ import com.google.common.collect.Lists;
  * Tests the generated per-batch sort code via its wrapper layer.
  */
 
-public class TestSorter extends DrillTest {
-
-  public static OperatorFixture fixture;
-
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    fixture = OperatorFixture.builder().build();
-  }
-
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-    fixture.close();
-  }
+public class TestSorter extends SubOperatorTest {
 
   public static Sort makeSortConfig(String key, String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef(key);
@@ -204,11 +190,11 @@ public class TestSorter extends DrillTest {
       for (int i = 0; i < items.length; i++) {
         DataItem item = items[i];
         if (nullable && item.isNull) {
-          writer.column(0).setNull();
+          writer.scalar(0).setNull();
         } else {
           RowSetUtilities.setFromInt(writer, 0, item.key);
         }
-        writer.column(1).setString(Integer.toString(item.value));
+        writer.scalar(1).setString(Integer.toString(item.value));
         writer.save();
       }
       writer.done();
@@ -218,7 +204,7 @@ public class TestSorter extends DrillTest {
     private void verify(RowSet actual) {
       DataItem expected[] = Arrays.copyOf(data, data.length);
       doSort(expected);
-      RowSet expectedRows = makeDataSet(actual.allocator(), actual.schema().batch(), expected);
+      RowSet expectedRows = makeDataSet(actual.allocator(), actual.batchSchema(), expected);
       doVerify(expected, expectedRows, actual);
     }
 
@@ -380,7 +366,7 @@ public class TestSorter extends DrillTest {
       int prevMonths = 0;
       long prevMs = 0;
       while (reader.next()) {
-        Period period = reader.column(0).getPeriod().normalizedStandard();
+        Period period = reader.scalar(0).getPeriod().normalizedStandard();
         int years = period.getYears();
         assertTrue(prevYears <= years);
         if (prevYears != years) {

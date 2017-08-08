@@ -20,21 +20,18 @@ package org.apache.drill.test.rowSet;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.HyperVectorWrapper;
+import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.ColumnReader;
-import org.apache.drill.exec.vector.accessor.ColumnWriter;
-import org.apache.drill.exec.vector.accessor.TupleReader;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
+import org.apache.parquet.column.ColumnWriter;
 
 /**
  * A row set is a collection of rows stored as value vectors. Elsewhere in
  * Drill we call this a "record batch", but that term has been overloaded to
- * mean the runtime implementation of an operator...
+ * mean the runtime implementation of an operator.
  * <p>
  * A row set encapsulates a set of vectors and provides access to Drill's
  * various "views" of vectors: {@link VectorContainer},
@@ -52,7 +49,7 @@ import org.apache.drill.exec.vector.accessor.TupleWriter;
  * Drill provides a large number of vector (data) types. Each requires a
  * type-specific way to set data. The row set writer uses a {@link ColumnWriter}
  * to set each value in a way unique to the specific data type. Similarly, the
- * row set reader provides a {@link ColumnReader} interface. In both cases,
+ * row set reader provides a {@link ScalarReader} interface. In both cases,
  * columns can be accessed by index number (as defined in the schema) or
  * by name.
  * <p>
@@ -78,56 +75,6 @@ import org.apache.drill.exec.vector.accessor.TupleWriter;
 
 public interface RowSet {
 
-  /**
-   * Interface for writing values to a row set. Only available
-   * for newly-created, single, direct row sets. Eventually, if
-   * we want to allow updating a row set, we have to create a
-   * new row set with the updated columns, then merge the new
-   * and old row sets to create a new immutable row set.
-   */
-
-  public interface RowSetWriter extends TupleWriter {
-    void setRow(Object...values);
-    boolean valid();
-    int index();
-    void save();
-    void done();
-  }
-
-  /**
-   * Reader for all types of row sets.
-   */
-
-  public interface RowSetReader extends TupleReader {
-
-    /**
-     * Total number of rows in the row set.
-     * @return total number of rows
-     */
-    int size();
-
-    boolean next();
-    int index();
-    void set(int index);
-
-    /**
-     * Batch index: 0 for a single batch, batch for the current
-     * row is a hyper-batch.
-     * @return index of the batch for the current row
-     */
-    int batchIndex();
-
-    /**
-     * The index of the underlying row which may be indexed by an
-     * Sv2 or Sv4.
-     *
-     * @return
-     */
-
-    int rowIndex();
-    boolean valid();
-  }
-
   boolean isExtendable();
 
   boolean isWritable();
@@ -138,13 +85,11 @@ public interface RowSet {
 
   int rowCount();
 
-  RowSetWriter writer();
-
   RowSetReader reader();
 
   void clear();
 
-  RowSetSchema schema();
+  TupleMetadata schema();
 
   BufferAllocator allocator();
 
@@ -171,7 +116,6 @@ public interface RowSet {
    */
 
   public interface SingleRowSet extends RowSet {
-    ValueVector[] vectors();
     SingleRowSet toIndirect();
     SelectionVector2 getSv2();
   }
@@ -184,7 +128,7 @@ public interface RowSet {
 
   public interface ExtendableRowSet extends SingleRowSet {
     void allocate(int recordCount);
-    void setRowCount(int rowCount);
+    RowSetWriter writer();
     RowSetWriter writer(int initialRowCount);
   }
 
@@ -195,6 +139,5 @@ public interface RowSet {
 
   public interface HyperRowSet extends RowSet {
     SelectionVector4 getSv4();
-    HyperVectorWrapper<ValueVector> getHyperVector(int i);
   }
 }

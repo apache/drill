@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.test.DrillTest;
 import org.junit.AfterClass;
 
 /**

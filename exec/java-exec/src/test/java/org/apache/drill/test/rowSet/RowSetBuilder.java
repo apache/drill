@@ -19,7 +19,10 @@ package org.apache.drill.test.rowSet;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.TupleSchema;
+import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
 /**
@@ -40,13 +43,19 @@ public final class RowSetBuilder {
   private boolean withSv2;
 
   public RowSetBuilder(BufferAllocator allocator, BatchSchema schema) {
+    this(allocator, TupleSchema.fromFields(schema), 10);
+  }
+
+  public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema) {
     this(allocator, schema, 10);
   }
 
-  public RowSetBuilder(BufferAllocator allocator, BatchSchema schema, int capacity) {
-    rowSet = new DirectRowSet(allocator, schema);
+  public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema, int capacity) {
+    rowSet = DirectRowSet.fromSchema(allocator, schema);
     writer = rowSet.writer(capacity);
   }
+
+  public TupleWriter writer() { return writer; }
 
   /**
    * Add a new row using column values passed as variable-length arguments. Expects
@@ -56,8 +65,9 @@ public final class RowSetBuilder {
    * <tt>add(10, new int[] {100, 200});</tt><br>
    * @param values column values in column index order
    * @return this builder
-   * @see {@link #addSingleCol(Object)} to create a row of a single column when
-   * the value to <tt>add()</tt> is ambiguous
+   * @throws IllegalStateException if the batch, or any vector in the batch,
+   * becomes full. This method is designed to be used in tests where we will
+   * seldom create a full vector of data.
    */
 
   public RowSetBuilder add(Object...values) {
@@ -110,10 +120,10 @@ public final class RowSetBuilder {
   }
 
   public SingleRowSet build() {
-    writer.done();
+    SingleRowSet result = writer.done();
     if (withSv2) {
-      return rowSet.toIndirect();
+      return result.toIndirect();
     }
-    return rowSet;
+    return result;
   }
 }

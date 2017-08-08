@@ -24,8 +24,40 @@
  * framework for the java-exec project. That one implementation is specific to
  * unit tests, but the accessor framework could easily be used for other
  * purposes as well.
+ *
+ * <h4>Vector Overflow Handling</h4>
+ *
+ * The writers provide integrated support for detecting and handling vector
+ * overflow. Overflow occurs when a value exceeds some maximum, such as the
+ * 16MB block size in Netty. Overflow handling consists of replacing the
+ * "full" vector with a new, empty vector as part of a new batch. Overflow
+ * handing code must copy partially written values from the "overflow" row
+ * to the new vectors. The classes here do not provide overflow handling,
+ * rather they provide the framework on top of which overflow handling can be
+ * built by a higher level of abstraction.
+ *
+ * <h4>JSON-Like Model</h4>
+ *
+ * The object reader and writer provide a generic, JSON-like interface
+ * to allow any valid combination of readers or writers (generically
+ * accessors):<pre><code>
+ * row : tuple
+ * tuple : (name column) *
+ * column : scalar obj | array obj | tuple obj
+ * scalar obj : scalar accessor
+ * array obj : array accessor
+ * array accessor : element accessor
+ * tuple obj : tuple</code></pre>
  * <p>
- * Drill provides a set of column readers and writers. Compared to those, this
+ * As seen above, the accessor tree starts with a tuple (a row in the form of
+ * a class provided by the consumer.) Each column in the tuple is represented
+ * by an object accesor. That object accessor contains a scalar, tuple or array
+ * accessor. This models Drill's JSON structure: a row can have a list of lists
+ * of tuples that contains lists of ints, say.
+ *
+ * <h4>Comparison with Previous Vector Readers and Writers</h4>
+ *
+ * Drill provides a set of vector readers and writers. Compared to those, this
  * set:
  * <ul>
  * <li>Works with all Drill data types. The other set works only with repeated
@@ -36,23 +68,24 @@
  * other set has accessors specific to each of the ~30 data types which Drill
  * supports.</li>
  * </ul>
- * The key difference is that this set is designed for developer ease-of-use, a
- * primary requirement for unit tests. The other set is designed to be used in
+ * The key difference is that this set is designed for both developer ease-of-use
+ * and performance. Developer eas-of-use is a
+ * primary requirement for unit tests. Performance is critical for production
+ * code. The other set is designed to be used in
  * machine-generated or write-once code and so can be much more complex.
- * <p>
- * That is, the accessors here are optimized for test code: they trade
- * convenience for a slight decrease in speed (the performance hit comes from
- * the extra level of indirection which hides the complex, type-specific code
- * otherwise required.)
- * <p>
- * {@link ColumnReader} and {@link ColumnWriter} are the core abstractions: they
+ *
+ * <h4>Overview of the Code Structure</h4>
+ *
+ * {@link ScalarReader} and {@link ColumnWriter} are the core abstractions: they
  * provide simplified access to the myriad of Drill column types via a
  * simplified, uniform API. {@link TupleReader} and {@link TupleWriter} provide
  * a simplified API to rows or maps (both of which are tuples in Drill.)
  * {@link AccessorUtilities} provides a number of data conversion tools.
- * <p>
- * Overview of the code structure:
  * <dl>
+ * <dt>ObjectWriter, ObjectReader</dt>
+ * <dd>Drill follows a JSON data model. A row is a tuple (AKA structure). Each
+ * column is a scalar, a map (AKA tuple, structure) or an array (AKA a repeated
+ * value.)</dd>
  * <dt>TupleWriter, TupleReader</dt>
  * <dd>In relational terms, a tuple is an ordered collection of values, where
  * the meaning of the order is provided by a schema (usually a name/type pair.)
@@ -62,12 +95,8 @@
  * But, doing so is slower than access by position (index). To provide efficient
  * code, the tuple classes assume that the implementation imposes a column
  * ordering which can be exposed via the indexes.</dd>
- * <dt>ColumnAccessor</dt>
- * <dd>A generic base class for column readers and writers that provides the
- * column data type.</dd>
- * <dt>ColumnWriter, ColumnReader</dt>
- * <dd>A uniform interface implemented for each column type ("major type" in
- * Drill terminology). The scalar types: Nullable (Drill optional) and
+ * <dt>ScalarWriter, ScalarReader</dt>
+ * <dd>A uniform interface for the scalar types: Nullable (Drill optional) and
  * non-nullable (Drill required) fields use the same interface. Arrays (Drill
  * repeated) are special. To handle the array aspect, even array fields use the
  * same interface, but the <tt>getArray</tt> method returns another layer of
@@ -98,11 +127,11 @@
  * <dd>The generated accessors: one for each combination of write/read, data
  * (minor) type and cardinality (data model).
  * <dd>
- * <dt>RowIndex</dt>
+ * <dt>ColumnReaderIndex, ColumnWriterIndex</dt>
  * <dd>This nested class binds the accessor to the current row position for the
  * entire record batch. That is, you don't ask for the value of column a for row
  * 5, then the value of column b for row 5, etc. as with the "raw" vectors.
- * Instead, the implementation sets the row position (with, say an interator.)
+ * Instead, the implementation sets the row position (with, say an iterator.)
  * Then, all columns implicitly return values for the current row.
  * <p>
  * Different implementations of the row index handle the case of no selection
@@ -122,6 +151,16 @@
  * The column index picks out the x coordinate (horizontal position along the
  * columns.)</dt>
  * </dl>
+ * <h4>Column Writer Optimizations</h4>
+ * The writer classes here started as a simple abstraction on top of the existing
+ * vector mutators. The classes were then recruited for use in a new writer
+ * abstraction for Drill's record readers. At that point, performance became
+ * critical. The key to performance is to bypass the vector and the mutator and
+ * instead work with the Netty direct memory functions. This seems a risky
+ * approach until we realize that the writers form a very clear interface:
+ * the same interface supported the original mutator-based implementation and
+ * the revised Netty-based implementation. The benefit, however, is stark;
+ * the direct-to-Netty version is up to 4x faster (for repeated types).
  */
 
 package org.apache.drill.exec.vector.accessor;

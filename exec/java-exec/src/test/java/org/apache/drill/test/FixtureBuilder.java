@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.server.options.OptionValidator;
 
 /**
  * Build a Drillbit and client with the options provided. The simplest
@@ -141,6 +142,10 @@ public class FixtureBuilder {
     return this;
   }
 
+  public FixtureBuilder sessionOption(OptionValidator key, Object value) {
+    return sessionOption(key.getOptionName(), value);
+  }
+
   /**
    * Provide a system option to be set once the Drillbit
    * is started.
@@ -157,6 +162,10 @@ public class FixtureBuilder {
     }
     systemOptions.add(new RuntimeOption(key, value));
     return this;
+  }
+
+  public FixtureBuilder systemOption(OptionValidator key, Object value) {
+    return systemOption(key.getOptionName(), value);
   }
 
   /**

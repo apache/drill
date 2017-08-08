@@ -15,24 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor.impl;
-
-import org.apache.drill.exec.vector.accessor.TupleAccessor;
 
 /**
- * Common base class for tuple readers and writers.
+ * Implementation of the vector writers. Writers are size-aware and will
+ * throw a {@link VectorOverflowException} if any vector exceeds the maximum
+ * size (16 MB.)
  */
 
-public abstract class AbstractTupleAccessor implements TupleAccessor {
-
-  protected final TupleSchema schema;
-
-  public AbstractTupleAccessor(TupleSchema schema) {
-    this.schema = schema;
-  }
-
-  @Override
-  public TupleSchema schema() {
-    return schema;
-  }
-}
+package org.apache.drill.exec.vector.accessor.writer;
