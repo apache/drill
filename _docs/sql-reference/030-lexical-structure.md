@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: 2017-08-07 19:02:56 UTC
+date: 2017-08-08 21:12:19 UTC
 parent: "SQL Reference"
 ---
 
@@ -120,7 +120,7 @@ The following table lists the supported identifier quotes with their correspondi
 |----------------------|-----------------------------------------------------------------------|
 | Back ticks           | 'GRAVE   ACCENT' (U+0060)                                             |
 | Double quotes        | 'QUOTATION   MARK' (U+0022)                                           |
-| Square brackets      | 'LEFT   SQUARE BRACKET' (U+005B) and 'RIGHT SQUARE BRACKET' (U+005D;) |  
+| Square brackets      | 'LEFT   SQUARE BRACKET' (U+005B) and 'RIGHT SQUARE BRACKET' (U+005D) |  
 
 Alternatively, you can set the type of identifier using the `quoting_identifiers` property in the jdbc connection URL, as shown:  
  
