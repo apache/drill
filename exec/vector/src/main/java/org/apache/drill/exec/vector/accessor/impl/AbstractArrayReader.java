@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
+import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.impl.AbstractColumnReader.VectorAccessor;
 import org.joda.time.Period;
@@ -32,7 +33,7 @@ import org.joda.time.Period;
  * subclasses are generated for each repeated value vector type.
  */
 
-public abstract class AbstractArrayReader extends AbstractColumnAccessor implements ArrayReader {
+public abstract class AbstractArrayReader implements ArrayReader {
 
   /**
    * Column reader that provides access to an array column by returning a
@@ -58,7 +59,7 @@ public abstract class AbstractArrayReader extends AbstractColumnAccessor impleme
     }
 
     @Override
-    public void bind(RowIndex rowIndex, ValueVector vector) {
+    public void bind(ColumnReaderIndex rowIndex, ValueVector vector) {
       arrayReader.bind(rowIndex, vector);
       vectorIndex = rowIndex;
     }
@@ -69,11 +70,18 @@ public abstract class AbstractArrayReader extends AbstractColumnAccessor impleme
     }
   }
 
+  protected ColumnReaderIndex vectorIndex;
   protected VectorAccessor vectorAccessor;
 
-  public void bind(RowIndex rowIndex, MaterializedField field, VectorAccessor va) {
+  public abstract void bind(ColumnReaderIndex rowIndex, ValueVector vector);
+
+  public void bind(ColumnReaderIndex rowIndex, MaterializedField field, VectorAccessor va) {
     bind(rowIndex);
     vectorAccessor = va;
+  }
+
+  protected void bind(ColumnReaderIndex rowIndex) {
+    this.vectorIndex = rowIndex;
   }
 
   @Override

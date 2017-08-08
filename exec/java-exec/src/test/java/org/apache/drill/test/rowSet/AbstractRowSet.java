@@ -22,7 +22,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
-import org.apache.drill.exec.vector.accessor.impl.AbstractColumnAccessor.RowIndex;
+import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.impl.AbstractColumnReader;
 import org.apache.drill.exec.vector.accessor.impl.TupleReaderImpl;
 
@@ -40,7 +40,7 @@ public abstract class AbstractRowSet implements RowSet {
    * must call <tt>next()</tt> to advance to the first row.
    */
 
-  public static abstract class RowSetIndex implements RowIndex {
+  public static abstract class RowSetIndex implements ColumnReaderIndex {
     protected int rowIndex = -1;
 
     public int position() { return rowIndex; }
@@ -106,10 +106,10 @@ public abstract class AbstractRowSet implements RowSet {
     public int size() { return index.size(); }
 
     @Override
-    public int rowIndex() { return index.index(); }
+    public int rowIndex() { return index.vectorIndex(); }
 
     @Override
-    public int batchIndex() { return index.batch(); }
+    public int batchIndex() { return index.batchIndex(); }
 
     @Override
     public void set(int index) { this.index.set(index); }
@@ -158,7 +158,5 @@ public abstract class AbstractRowSet implements RowSet {
   }
 
   @Override
-  public BatchSchema batchSchema() {
-    return container.getSchema();
-  }
+  public BatchSchema batchSchema() { return container.getSchema(); }
 }

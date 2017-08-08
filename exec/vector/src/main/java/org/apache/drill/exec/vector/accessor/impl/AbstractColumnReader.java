@@ -23,6 +23,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
+import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.joda.time.Period;
 
@@ -33,15 +34,22 @@ import org.joda.time.Period;
  * method(s).
  */
 
-public abstract class AbstractColumnReader extends AbstractColumnAccessor implements ColumnReader {
+public abstract class AbstractColumnReader implements ColumnReader {
 
   public interface VectorAccessor {
     ValueVector vector();
   }
 
+  protected ColumnReaderIndex vectorIndex;
   protected VectorAccessor vectorAccessor;
 
-  public void bind(RowIndex rowIndex, MaterializedField field, VectorAccessor va) {
+  public abstract void bind(ColumnReaderIndex rowIndex, ValueVector vector);
+
+  protected void bind(ColumnReaderIndex rowIndex) {
+    this.vectorIndex = rowIndex;
+  }
+
+  public void bind(ColumnReaderIndex rowIndex, MaterializedField field, VectorAccessor va) {
     bind(rowIndex);
     vectorAccessor = va;
   }

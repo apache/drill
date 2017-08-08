@@ -31,11 +31,12 @@ import java.io.OutputStream;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -76,7 +77,11 @@ public class TestBatchSerialization extends DrillTest {
       if (i % 2 == 0) {
         RowSetUtilities.setFromInt(writer, 0, i);
       } else {
-        writer.column(0).setNull();
+        try {
+          writer.column(0).setNull();
+        } catch (VectorOverflowException e) {
+          throw new IllegalStateException(e);
+        }
       }
       writer.save();
     }

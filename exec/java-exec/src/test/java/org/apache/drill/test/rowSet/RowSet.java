@@ -28,8 +28,6 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
-import org.apache.drill.exec.vector.accessor.TupleReader;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
 
 /**
  * A row set is a collection of rows stored as value vectors. Elsewhere in
@@ -77,56 +75,6 @@ import org.apache.drill.exec.vector.accessor.TupleWriter;
  */
 
 public interface RowSet {
-
-  /**
-   * Interface for writing values to a row set. Only available
-   * for newly-created, single, direct row sets. Eventually, if
-   * we want to allow updating a row set, we have to create a
-   * new row set with the updated columns, then merge the new
-   * and old row sets to create a new immutable row set.
-   */
-
-  public interface RowSetWriter extends TupleWriter {
-    void setRow(Object...values);
-    boolean valid();
-    int index();
-    void save();
-    void done();
-  }
-
-  /**
-   * Reader for all types of row sets.
-   */
-
-  public interface RowSetReader extends TupleReader {
-
-    /**
-     * Total number of rows in the row set.
-     * @return total number of rows
-     */
-    int size();
-
-    boolean next();
-    int index();
-    void set(int index);
-
-    /**
-     * Batch index: 0 for a single batch, batch for the current
-     * row is a hyper-batch.
-     * @return index of the batch for the current row
-     */
-    int batchIndex();
-
-    /**
-     * The index of the underlying row which may be indexed by an
-     * Sv2 or Sv4.
-     *
-     * @return
-     */
-
-    int rowIndex();
-    boolean valid();
-  }
 
   boolean isExtendable();
 

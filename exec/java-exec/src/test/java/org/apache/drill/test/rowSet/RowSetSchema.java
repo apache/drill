@@ -18,11 +18,10 @@
 package org.apache.drill.test.rowSet;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.impl.TupleNameSpace;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.accessor.TupleAccessor.TupleSchema;
@@ -87,47 +86,6 @@ public class RowSetSchema {
   }
 
   /**
-   * Implementation of a tuple name space. Tuples allow both indexed and
-   * named access to their members.
-   *
-   * @param <T> the type of object representing each column
-   */
-
-  public static class NameSpace<T> {
-    private final Map<String,Integer> nameSpace = new HashMap<>();
-    private final List<T> columns = new ArrayList<>();
-
-    public int add(String key, T value) {
-      int index = columns.size();
-      nameSpace.put(key, index);
-      columns.add(value);
-      return index;
-    }
-
-    public T get(int index) {
-      return columns.get(index);
-    }
-
-    public T get(String key) {
-      int index = getIndex(key);
-      if (index == -1) {
-        return null;
-      }
-      return get(index);
-    }
-
-    public int getIndex(String key) {
-      Integer index = nameSpace.get(key);
-      if (index == null) {
-        return -1;
-      }
-      return index;
-    }
-
-    public int count() { return columns.size(); }
-  }
-
-  /**
    * Provides a non-flattened, physical view of the schema. The top-level
    * row includes maps, maps expand to a nested tuple schema. This view
    * corresponds, more-or-less, to the physical storage of vectors in
@@ -136,9 +94,9 @@ public class RowSetSchema {
 
   private static class TupleSchemaImpl implements TupleSchema {
 
-    private NameSpace<LogicalColumn> columns;
+    private TupleNameSpace<LogicalColumn> columns;
 
-    public TupleSchemaImpl(NameSpace<LogicalColumn> ns) {
+    public TupleSchemaImpl(TupleNameSpace<LogicalColumn> ns) {
       this.columns = ns;
     }
 
@@ -157,7 +115,7 @@ public class RowSetSchema {
 
     @Override
     public int columnIndex(String name) {
-      return columns.getIndex(name);
+      return columns.indexOf(name);
     }
 
     @Override
@@ -175,7 +133,7 @@ public class RowSetSchema {
   public static class FlattenedSchema extends TupleSchemaImpl {
     protected final TupleSchemaImpl maps;
 
-    public FlattenedSchema(NameSpace<LogicalColumn> cols, NameSpace<LogicalColumn> maps) {
+    public FlattenedSchema(TupleNameSpace<LogicalColumn> cols, TupleNameSpace<LogicalColumn> maps) {
       super(cols);
       this.maps = new TupleSchemaImpl(maps);
     }
@@ -195,7 +153,7 @@ public class RowSetSchema {
    */
 
   public static class PhysicalSchema {
-    protected final NameSpace<LogicalColumn> schema = new NameSpace<>();
+    protected final TupleNameSpace<LogicalColumn> schema = new TupleNameSpace<>();
 
     public LogicalColumn column(int index) {
       return schema.get(index);
@@ -207,13 +165,13 @@ public class RowSetSchema {
 
     public int count() { return schema.count(); }
 
-    public NameSpace<LogicalColumn> nameSpace() { return schema; }
+    public TupleNameSpace<LogicalColumn> nameSpace() { return schema; }
   }
 
   private static class SchemaExpander {
     private final PhysicalSchema physicalSchema;
-    private final NameSpace<LogicalColumn> cols = new NameSpace<>();
-    private final NameSpace<LogicalColumn> maps = new NameSpace<>();
+    private final TupleNameSpace<LogicalColumn> cols = new TupleNameSpace<>();
+    private final TupleNameSpace<LogicalColumn> maps = new TupleNameSpace<>();
 
     public SchemaExpander(BatchSchema schema) {
       physicalSchema = expand("", schema);

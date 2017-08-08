@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
+import org.apache.drill.exec.vector.VectorOverflowException;
+
 /**
  * Interface for writing to rows via a column writer.
  * Column writers can be obtained by name or index. Column
@@ -30,5 +32,5 @@ package org.apache.drill.exec.vector.accessor;
 public interface TupleWriter extends TupleAccessor {
   ColumnWriter column(int colIndex);
   ColumnWriter column(String colName);
-  void set(int colIndex, Object value);
+  void set(int colIndex, Object value) throws VectorOverflowException;
 }

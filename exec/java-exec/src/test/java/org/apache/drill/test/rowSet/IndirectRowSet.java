@@ -33,7 +33,7 @@ public class IndirectRowSet extends AbstractSingleRowSet {
 
   /**
    * Reader index that points to each row indirectly through the
-   * selection vector. The {@link #index()} method points to the
+   * selection vector. The {@link #vectorIndex()} method points to the
    * actual data row, while the {@link #position()} method gives
    * the position relative to the indirection vector. That is,
    * the position increases monotonically, but the index jumps
@@ -50,10 +50,10 @@ public class IndirectRowSet extends AbstractSingleRowSet {
     }
 
     @Override
-    public int index() { return sv2.getIndex(rowIndex); }
+    public int vectorIndex() { return sv2.getIndex(rowIndex); }
 
     @Override
-    public int batch() { return 0; }
+    public int batchIndex() { return 0; }
   }
 
   private final SelectionVector2 sv2;

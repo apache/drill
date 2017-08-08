@@ -31,6 +31,7 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.AbstractOperatorExecContext;
 import org.apache.drill.exec.ops.FragmentExecContext;
@@ -40,12 +41,15 @@ import org.apache.drill.exec.ops.OperExecContextImpl;
 import org.apache.drill.exec.ops.OperatorExecContext;
 import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.rowSet.impl.MaterializedSchema;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.server.options.BaseOptionManager;
 import org.apache.drill.exec.server.options.OptionSet;
+import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.HyperRowSetImpl;
@@ -112,14 +116,19 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
   public static class TestOptionSet extends BaseOptionManager {
 
+    private boolean withDefaults;
     private Map<String,OptionValue> values = new HashMap<>();
 
     public TestOptionSet() {
-      // Crashes in FunctionImplementationRegistry if not set
-      set(ExecConstants.CAST_TO_NULLABLE_NUMERIC, false);
-      // Crashes in the Dynamic UDF code if not disabled
-      set(ExecConstants.USE_DYNAMIC_UDFS_KEY, false);
-//      set(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR, false);
+      this(true);
+    }
+    public TestOptionSet(boolean withDefaults) {
+      this.withDefaults = withDefaults;
+//      // Crashes in FunctionImplementationRegistry if not set
+//      set(ExecConstants.CAST_TO_NULLABLE_NUMERIC, false);
+//      // Crashes in the Dynamic UDF code if not disabled
+//      set(ExecConstants.USE_DYNAMIC_UDFS_KEY, false);
+////      set(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR, false);
     }
 
     public void set(String key, int value) {
@@ -144,7 +153,14 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
     @Override
     public OptionValue getOption(String name) {
-      return values.get(name);
+      OptionValue value = values.get(name);
+      if (value == null && withDefaults) {
+        OptionValidator validator = SystemOptionManager.VALIDATORS.get(name);
+        if (validator != null) {
+          value = SystemOptionManager.VALIDATORS.get(name).getDefault();
+        }
+      }
+      return value;
     }
   }
 
@@ -311,6 +327,10 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
   public RowSetBuilder rowSetBuilder(BatchSchema schema) {
     return new RowSetBuilder(allocator, schema);
+  }
+
+  public RowSetBuilder rowSetBuilder(MaterializedSchema schema) {
+    return rowSetBuilder(schema.asBatchSchema());
   }
 
   public ExtendableRowSet rowSet(BatchSchema schema) {

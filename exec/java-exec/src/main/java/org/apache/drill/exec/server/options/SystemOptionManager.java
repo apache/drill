@@ -40,6 +40,7 @@ import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -51,7 +52,8 @@ import com.google.common.collect.Sets;
 public class SystemOptionManager extends BaseOptionManager implements OptionManager, AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
-  private static final CaseInsensitiveMap<OptionValidator> VALIDATORS;
+  @VisibleForTesting
+  public static final CaseInsensitiveMap<OptionValidator> VALIDATORS;
 
   static {
     final OptionValidator[] validators = new OptionValidator[]{

@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.accessor;
 
 import java.math.BigDecimal;
 
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.joda.time.Duration;
 import org.joda.time.Period;
 
@@ -26,10 +27,11 @@ public class AccessorUtilities {
 
   private AccessorUtilities() { }
 
-  public static void setFromInt(ColumnWriter writer, int value) {
+  public static void setFromInt(ColumnWriter writer, int value) throws VectorOverflowException {
     switch (writer.valueType()) {
     case BYTES:
-      writer.setBytes(Integer.toHexString(value).getBytes());
+      final byte byteVal[] = Integer.toHexString(value).getBytes();
+      writer.setBytes(byteVal, byteVal.length);
       break;
     case DOUBLE:
       writer.setDouble(value);
@@ -62,62 +64,62 @@ public class AccessorUtilities {
     return sv4Index & 0xFFFF;
   }
 
-  public static void setBooleanArray(ArrayWriter arrayWriter, boolean[] value) {
+  public static void setBooleanArray(ArrayWriter arrayWriter, boolean[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setInt(value[i] ? 1 : 0);
     }
   }
 
-  public static void setByteArray(ArrayWriter arrayWriter, byte[] value) {
+  public static void setByteArray(ArrayWriter arrayWriter, byte[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setInt(value[i]);
     }
   }
 
-  public static void setShortArray(ArrayWriter arrayWriter, short[] value) {
+  public static void setShortArray(ArrayWriter arrayWriter, short[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setInt(value[i]);
     }
   }
 
-  public static void setIntArray(ArrayWriter arrayWriter, int[] value) {
+  public static void setIntArray(ArrayWriter arrayWriter, int[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setInt(value[i]);
     }
   }
 
-  public static void setLongArray(ArrayWriter arrayWriter, long[] value) {
+  public static void setLongArray(ArrayWriter arrayWriter, long[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setLong(value[i]);
     }
   }
 
-  public static void setFloatArray(ArrayWriter arrayWriter, float[] value) {
+  public static void setFloatArray(ArrayWriter arrayWriter, float[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setDouble(value[i]);
     }
   }
 
-  public static void setDoubleArray(ArrayWriter arrayWriter, double[] value) {
+  public static void setDoubleArray(ArrayWriter arrayWriter, double[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setDouble(value[i]);
     }
   }
 
-  public static void setStringArray(ArrayWriter arrayWriter, String[] value) {
+  public static void setStringArray(ArrayWriter arrayWriter, String[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setString(value[i]);
     }
   }
 
-  public static void setPeriodArray(ArrayWriter arrayWriter, Period[] value) {
+  public static void setPeriodArray(ArrayWriter arrayWriter, Period[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setPeriod(value[i]);
     }
   }
 
   public static void setBigDecimalArray(ArrayWriter arrayWriter,
-      BigDecimal[] value) {
+      BigDecimal[] value) throws VectorOverflowException {
     for (int i = 0; i < value.length; i++) {
       arrayWriter.setDecimal(value[i]);
     }

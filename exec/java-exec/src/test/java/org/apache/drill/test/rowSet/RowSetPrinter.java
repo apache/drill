@@ -21,7 +21,6 @@ import java.io.PrintStream;
 
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.accessor.TupleAccessor.TupleSchema;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
 
 /**
  * Print a row set in CSV-like format. Primarily for debugging.
