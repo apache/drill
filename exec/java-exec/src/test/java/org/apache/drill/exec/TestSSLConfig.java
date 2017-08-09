@@ -18,11 +18,9 @@
 
 package org.apache.drill.exec;
 
-import org.apache.drill.common.config.DrillConfig;
+
 import org.apache.drill.common.exceptions.DrillException;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.SSLConfig;
-import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.ConfigBuilder;
 import org.junit.Test;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
@@ -30,53 +28,74 @@ import static org.junit.Assert.assertTrue;
 
 public class TestSSLConfig {
 
-
   @Test
-  public void firstTest() throws Exception {
+  public void testMissingKeystorePath() throws Exception {
 
-    OperatorFixture.OperatorFixtureBuilder builder = OperatorFixture.builder();
-    builder.configBuilder().put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "root");
-    builder.configBuilder().put(ExecConstants.HTTP_KEYSTORE_PATH, "");
-    try (OperatorFixture fixture = builder.build()) {
-      DrillConfig config = fixture.config();
-      try {
-        SSLConfig sslv = new SSLConfig(config);
-        fail();
-      } catch (Exception e) {
-        assertTrue(e instanceof DrillException);
-      }
+    ConfigBuilder config = new ConfigBuilder();
+    config.put(ExecConstants.HTTP_KEYSTORE_PATH, "");
+    config.put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "root");
+    try {
+      SSLConfig sslv = new SSLConfig(config.build());
+      fail();
+      //Expected
+    } catch (Exception e) {
+      assertTrue(e instanceof DrillException);
     }
   }
 
   @Test
-  public void secondTest() throws Exception {
+  public void testMissingKeystorePassword() throws Exception {
 
-    OperatorFixture.OperatorFixtureBuilder builder = OperatorFixture.builder();
-    builder.configBuilder().put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "");
-    builder.configBuilder().put(ExecConstants.HTTP_KEYSTORE_PATH, "/root");
-    try (OperatorFixture fixture = builder.build()) {
-      DrillConfig config = fixture.config();
-      try {
-        SSLConfig sslv = new SSLConfig(config);
-        fail();
-      } catch (Exception e) {
-        assertTrue(e instanceof DrillException);
-      }
+    ConfigBuilder config = new ConfigBuilder();
+    config.put(ExecConstants.HTTP_KEYSTORE_PATH, "/root");
+    config.put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "");
+    try {
+      SSLConfig sslv = new SSLConfig(config.build());
+      fail();
+      //Expected
+    } catch (Exception e) {
+      assertTrue(e instanceof DrillException);
     }
   }
 
   @Test
-  public void thirdTest() throws Exception {
+  public void testForKeystoreConfig() throws Exception {
 
-    OperatorFixture.OperatorFixtureBuilder builder = OperatorFixture.builder();
-    builder.configBuilder().put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "root");
-    builder.configBuilder().put(ExecConstants.HTTP_KEYSTORE_PATH, "/root");
-    try (OperatorFixture fixture = builder.build()) {
-      DrillConfig config = fixture.config();
-      SSLConfig sslv = new SSLConfig(config);
-      assertEquals("root", sslv.getkeystorePassword());
-      assertEquals("/root", sslv.getkeystorePath());
+    ConfigBuilder config = new ConfigBuilder();
+    config.put(ExecConstants.HTTP_KEYSTORE_PATH, "/root");
+    config.put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "root");
+    try {
+      SSLConfig sslv = new SSLConfig(config.build());
+      assertEquals("/root", sslv.getKeyStorePath());
+      assertEquals("root", sslv.getKeyStorePassword());
+    } catch (Exception e) {
+      fail();
+
     }
+  }
+
+  @Test
+  public void testForBackwardCompatability() throws Exception {
+
+    ConfigBuilder config = new ConfigBuilder();
+    config.put("javax.net.ssl.keyStore", "/root");
+    config.put("javax.net.ssl.keyStorePassword", "root");
+    SSLConfig sslv = new SSLConfig(config.build());
+    assertEquals("/root",sslv.getKeyStorePath());
+    assertEquals("root", sslv.getKeyStorePassword());
+  }
+
+  @Test
+  public void testForTrustStore() throws Exception {
+
+    ConfigBuilder config = new ConfigBuilder();
+    config.put(ExecConstants.HTTP_TRUSTSTORE_PATH, "/root");
+    config.put(ExecConstants.HTTP_TRUSTSTORE_PASSWORD, "root");
+    SSLConfig sslv = new SSLConfig(config.build());
+    assertEquals(true, sslv.hasTrustStorePath());
+    assertEquals(true,sslv.hasTrustStorePassword());
+    assertEquals("/root",sslv.getTrustStorePath());
+    assertEquals("root",sslv.getTrustStorePassword());
   }
 }
 

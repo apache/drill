@@ -21,17 +21,15 @@ import com.typesafe.config.Config;
 import org.apache.drill.common.exceptions.DrillException;
 
 public class SSLConfig {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SSLConfig.class);
 
   private final String keystorePath;
 
   private final String keystorePassword;
 
-  private final String truststorePassword;
-
   private final String truststorePath;
 
-  public boolean isValid = false;
+  private final String truststorePassword;
+
 
   public SSLConfig(Config config) throws DrillException {
 
@@ -45,26 +43,35 @@ public class SSLConfig {
 
     /*If keystorePath or keystorePassword is provided in the configuration file use that*/
     if (!keystorePath.isEmpty() || !keystorePassword.isEmpty()) {
-      if (keystorePath.isEmpty() || keystorePassword.isEmpty()) {
-        throw new DrillException(" *.ssl.keyStorePath and/or *.ssl.keyStorePassword in the configuration file can't be empty.");
+      if (keystorePath.isEmpty()) {
+        throw new DrillException(" *.ssl.keyStorePath in the configuration file is empty, but *.ssl.keyStorePassword is set");
       }
-      isValid = true;
+      else if (keystorePassword.isEmpty()){
+        throw new DrillException(" *.ssl.keyStorePassword in the configuration file is empty, but *.ssl.keyStorePath is set ");
+      }
+
     }
   }
 
-  public String getkeystorePath() {
+  public boolean isSslValid() { return !keystorePath.isEmpty() && !keystorePassword.isEmpty(); }
+
+  public String getKeyStorePath() {
     return keystorePath;
   }
 
-  public String getkeystorePassword() {
+  public String getKeyStorePassword() {
     return keystorePassword;
   }
 
-  public String gettruststorePath() {
+  public boolean hasTrustStorePath() { return !truststorePath.isEmpty(); }
+
+  public boolean hasTrustStorePassword() {return !truststorePassword.isEmpty(); }
+
+  public String getTrustStorePath() {
     return truststorePath;
   }
 
-  public String gettruststorePassword() {
+  public String getTrustStorePassword() {
     return truststorePassword;
   }
 }

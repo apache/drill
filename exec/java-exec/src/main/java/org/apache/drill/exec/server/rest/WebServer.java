@@ -146,7 +146,7 @@ public class WebServer implements AutoCloseable {
         serverConnector = createHttpsConnector();
       }
       catch(DrillException e){
-        throw new DrillbitStartupException(e.getMessage(),e.getCause());
+        throw new DrillbitStartupException(e.getMessage(),e);
       }
 
     } else {
@@ -274,15 +274,15 @@ public class WebServer implements AutoCloseable {
     final SslContextFactory sslContextFactory = new SslContextFactory();
     SSLConfig ssl = new SSLConfig(config);
 
-    if(ssl.isValid){
+    if(ssl.isSslValid()){
       logger.info("Using configured SSL settings for web server");
 
-      sslContextFactory.setKeyStorePath(ssl.getkeystorePath());
-      sslContextFactory.setKeyStorePassword(ssl.getkeystorePassword());
-      if(!ssl.gettruststorePath().isEmpty()){
-        sslContextFactory.setTrustStorePath(ssl.gettruststorePath());
-        if(!ssl.gettruststorePassword().isEmpty()){
-          sslContextFactory.setTrustStorePassword(ssl.gettruststorePassword());
+      sslContextFactory.setKeyStorePath(ssl.getKeyStorePath());
+      sslContextFactory.setKeyStorePassword(ssl.getKeyStorePassword());
+      if(ssl.hasTrustStorePath()){
+        sslContextFactory.setTrustStorePath(ssl.getTrustStorePath());
+        if(ssl.hasTrustStorePassword()){
+          sslContextFactory.setTrustStorePassword(ssl.getTrustStorePassword());
         }
       }
     } else {
@@ -349,7 +349,6 @@ public class WebServer implements AutoCloseable {
     sslConnector.setPort(config.getInt(ExecConstants.HTTP_PORT));
 
     return sslConnector;
-
   }
 
   /**
