@@ -20,68 +20,67 @@ package org.apache.drill.exec.store.direct;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.RecordReader;
 
+import java.util.Collection;
 import java.util.List;
 
-@JsonTypeName("direct-scan")
-public class DirectGroupScan extends AbstractGroupScan {
+/**
+ * Represents direct scan based on metadata information.
+ * For example, for parquet files it can be obtained from parquet footer (total row count)
+ * or from parquet metadata files (column counts).
+ * Contains reader, statistics and list of scanned files if present.
+ */
+@JsonTypeName("metadata-direct-scan")
+public class MetadataDirectGroupScan extends DirectGroupScan {
 
-  protected final RecordReader reader;
-  protected final ScanStats stats;
+  private final Collection<String> files;
 
-  public DirectGroupScan(RecordReader reader) {
-    this(reader, ScanStats.TRIVIAL_TABLE);
+  public MetadataDirectGroupScan(RecordReader reader, Collection<String> files) {
+    super(reader);
+    this.files = files;
   }
 
-  public DirectGroupScan(RecordReader reader, ScanStats stats) {
-    super((String) null);
-    this.reader = reader;
-    this.stats = stats;
-  }
-
-  @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
-    assert endpoints.size() == 1;
-  }
-
-  @Override
-  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-    assert minorFragmentId == 0;
-    return new DirectSubScan(reader);
-  }
-
-  @Override
-  public int getMaxParallelizationWidth() {
-    return 1;
-  }
-
-  @Override
-  public ScanStats getScanStats() {
-    return stats;
+  public MetadataDirectGroupScan(RecordReader reader, Collection<String> files, ScanStats stats) {
+    super(reader, stats);
+    this.files = files;
   }
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     assert children == null || children.isEmpty();
-    return new DirectGroupScan(reader, stats);
-  }
-
-  @Override
-  public String getDigest() {
-    return String.valueOf(reader);
+    return new MetadataDirectGroupScan(reader, files, stats);
   }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     return this;
+  }
+
+  /**
+   * <p>
+   * Returns string representation of group scan data.
+   * Includes list of files if present.
+   * </p>
+   *
+   * <p>
+   * Example: [files = [/tmp/0_0_0.parquet], numFiles = 1]
+   * </p>
+   *
+   * @return string representation of group scan data
+   */
+  @Override
+  public String getDigest() {
+    if (files != null) {
+      StringBuilder builder = new StringBuilder();
+      builder.append("files = ").append(files).append(", ");
+      builder.append("numFiles = ").append(files.size()).append(", ");
+      return builder.append(super.getDigest()).toString();
+    }
+    return super.getDigest();
   }
 
 }
