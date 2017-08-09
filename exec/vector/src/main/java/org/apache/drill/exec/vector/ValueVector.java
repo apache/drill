@@ -228,6 +228,19 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   void exchange(ValueVector other);
 
   /**
+   * Convert a non-nullable vector to nullable by shuffling the data from
+   * one to the other. Avoids the need to generate copy code just to change
+   * mode. If this vector is non-nullable, accepts a nullable dual (same
+   * minor type, different mode.) If the vector is non-nullable, or non-scalar,
+   * then throws an exception.
+   *
+   * @param nullableVector nullable vector of the same minor type as
+   * this vector
+   */
+
+  void toNullable(ValueVector nullableVector);
+
+  /**
    * An abstraction that is used to read from this vector instance.
    */
   interface Accessor {

@@ -267,6 +267,11 @@ public class UnionVector implements ValueVector {
     return newVector;
   }
 
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
+
   private class TransferImpl implements TransferPair {
 
     UnionVector to;

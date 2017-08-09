@@ -531,4 +531,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public int getPayloadByteCount(int valueCount) {
     return getSizeFromCount(valueCount);
   }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    NullableBitVector dest = (NullableBitVector) nullableVector;
+    dest.getMutator().fromNotNullable(this);
+  }
 }

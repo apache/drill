@@ -452,4 +452,9 @@ public class RepeatedListVector extends AbstractContainerVector
     // TODO: Figure out how to test this scenario, then what to do...
     throw new UnsupportedOperationException("Exchange() not yet supported for repeated lists");
   }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
 }

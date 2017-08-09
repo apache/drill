@@ -206,6 +206,11 @@ public class ObjectVector extends BaseValueVector {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
+
   public final class Accessor extends BaseAccessor {
     @Override
     public Object getObject(int index) {
