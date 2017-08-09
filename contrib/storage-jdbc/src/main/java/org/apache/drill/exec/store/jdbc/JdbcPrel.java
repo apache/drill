@@ -27,13 +27,12 @@ import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.volcano.RelSubset;
-import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.RelWriter;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.physical.AbstractPrel;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
@@ -43,16 +42,14 @@ import org.apache.drill.exec.store.jdbc.JdbcStoragePlugin.DrillJdbcConvention;
 /**
  * Represents a JDBC Plan once the children nodes have been rewritten into SQL.
  */
-public class JdbcPrel extends AbstractRelNode implements Prel {
+public class JdbcPrel extends AbstractPrel {
 
   private final String sql;
-  private final double rows;
   private final DrillJdbcConvention convention;
 
   public JdbcPrel(RelOptCluster cluster, RelTraitSet traitSet, JdbcIntermediatePrel prel) {
-    super(cluster, traitSet);
+    super(cluster, traitSet, prel.getInput());
     final RelNode input = prel.getInput();
-    rows = input.getRows();
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
 
     // generate sql for tree.
@@ -81,18 +78,13 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    JdbcGroupScan output = new JdbcGroupScan(sql, convention.getPlugin(), rows);
+    JdbcGroupScan output = new JdbcGroupScan(sql, convention.getPlugin(), getRows());
     return creator.addMetadata(this, output);
   }
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
     return super.explainTerms(pw).item("sql", sql);
-  }
-
-  @Override
-  public double estimateRowCount(RelMetadataQuery mq) {
-    return rows;
   }
 
   @Override

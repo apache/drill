@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,10 +22,8 @@ import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexNode;
 
 import java.util.List;
 
@@ -38,16 +36,12 @@ import java.util.List;
  * @see org.apache.drill.exec.planner.physical.HashJoinPrel
  */
 
-public class SwapHashJoinVisitor extends BasePrelVisitor<Prel, Double, RuntimeException>{
+public class SwapHashJoinRegardingRowCountVisitor extends BasePrelVisitor<Prel, Double, RuntimeException> {
 
-  private static SwapHashJoinVisitor INSTANCE = new SwapHashJoinVisitor();
+  private static final SwapHashJoinRegardingRowCountVisitor INSTANCE = new SwapHashJoinRegardingRowCountVisitor();
 
-  public static Prel swapHashJoin(Prel prel, Double marginFactor){
+  public static Prel swapHashJoin(Prel prel, Double marginFactor) {
     return prel.accept(INSTANCE, marginFactor);
-  }
-
-  private SwapHashJoinVisitor() {
-
   }
 
   @Override
@@ -67,7 +61,7 @@ public class SwapHashJoinVisitor extends BasePrelVisitor<Prel, Double, RuntimeEx
 
     if (prel instanceof HashJoinPrel) {
       // Mark left/right is swapped, when INNER hash join's left row count < ( 1+ margin factor) right row count.
-      if (newJoin.getLeft().getRows() < (1 + value.doubleValue() ) * newJoin.getRight().getRows() &&
+      if (newJoin.getLeft().getRows() < (1 + value) * newJoin.getRight().getRows() &&
           newJoin.getJoinType() == JoinRelType.INNER) {
         ( (HashJoinPrel) newJoin).setSwapped(true);
       }
