@@ -133,9 +133,10 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   @Override
-  public ${valuesName} getValuesVector() {
-    return values;
-  }
+  public ${valuesName} getValuesVector() { return values; }
+
+  @Override
+  public UInt1Vector getBitsVector() { return bits; }
 
   @Override
   public void setInitialCapacity(int numRecords) {
@@ -398,6 +399,14 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     mutator.exchange(other.getMutator());
   }
 
+  <#if type.major != "VarLen">
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    exchange(nullableVector);
+    clear();
+  }
+
+  </#if>
   public final class Accessor extends BaseDataValueVector.BaseAccessor <#if type.major = "VarLen">implements VariableWidthVector.VariableWidthAccessor</#if> {
     final UInt1Vector.Accessor bAccessor = bits.getAccessor();
     final ${valuesName}.Accessor vAccessor = values.getAccessor();
@@ -449,8 +458,8 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     @Override
     public ${friendlyType} getObject(int index) {
       if (isNull(index)) {
-          return null;
-      }else{
+        return null;
+      } else {
         return vAccessor.getObject(index);
       }
     }
@@ -458,8 +467,8 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     <#if minor.class == "Interval" || minor.class == "IntervalDay" || minor.class == "IntervalYear">
     public StringBuilder getAsStringBuilder(int index) {
       if (isNull(index)) {
-          return null;
-      }else{
+        return null;
+      } else {
         return vAccessor.getAsStringBuilder(index);
       }
     }
@@ -777,6 +786,21 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       int temp = setCount;
       setCount = target.setCount;
       target.setCount = temp;
+    }
+
+    public void fromNotNullable(${minor.class}Vector srce) {
+      clear();
+      final int valueCount = srce.getAccessor().getValueCount();
+
+      // Create a new bits vector, all values non-null
+
+      fillBitsVector(getBitsVector(), valueCount);
+
+      // Swap the data portion
+
+      getValuesVector().exchange(srce);
+      <#if type.major = "VarLen">lastSet = valueCount;</#if>
+      setValueCount(valueCount);
     }
   }
 }

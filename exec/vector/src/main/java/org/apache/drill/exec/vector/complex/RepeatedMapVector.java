@@ -604,4 +604,9 @@ public class RepeatedMapVector extends AbstractMapVector
     super.collectLedgers(ledgers);
     offsets.collectLedgers(ledgers);
   }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
 }

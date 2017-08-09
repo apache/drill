@@ -388,5 +388,10 @@ public class MapVector extends AbstractMapVector {
     valueCount = 0;
 
     super.close();
- }
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
 }

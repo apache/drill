@@ -162,8 +162,14 @@ public class ZeroVector implements ValueVector {
   @Override
   public void exchange(ValueVector other) { }
 
+  @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {}
 
   @Override
   public int getPayloadByteCount(int valueCount) { return 0; }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
 }
