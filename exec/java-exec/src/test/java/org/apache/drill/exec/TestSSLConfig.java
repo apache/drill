@@ -98,11 +98,3 @@ public class TestSSLConfig {
     assertEquals("root",sslv.getTrustStorePassword());
   }
 }
-
-
-
-
-
-
-
-

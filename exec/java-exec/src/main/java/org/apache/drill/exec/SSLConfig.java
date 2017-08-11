@@ -53,25 +53,17 @@ public class SSLConfig {
     }
   }
 
-  public boolean isSslValid() { return !keystorePath.isEmpty() && !keystorePassword.isEmpty(); }
+  public boolean isSslValid() {  return !keystorePath.isEmpty() && !keystorePassword.isEmpty(); }
 
-  public String getKeyStorePath() {
-    return keystorePath;
-  }
+  public String getKeyStorePath() {  return keystorePath; }
 
-  public String getKeyStorePassword() {
-    return keystorePassword;
-  }
+  public String getKeyStorePassword() {  return keystorePassword; }
 
-  public boolean hasTrustStorePath() { return !truststorePath.isEmpty(); }
+  public boolean hasTrustStorePath() {  return !truststorePath.isEmpty(); }
 
-  public boolean hasTrustStorePassword() {return !truststorePassword.isEmpty(); }
+  public boolean hasTrustStorePassword() {  return !truststorePassword.isEmpty(); }
 
-  public String getTrustStorePath() {
-    return truststorePath;
-  }
+  public String getTrustStorePath() {  return truststorePath; }
 
-  public String getTrustStorePassword() {
-    return truststorePassword;
-  }
+  public String getTrustStorePassword() {  return truststorePassword; }
 }

@@ -146,9 +146,8 @@ public class WebServer implements AutoCloseable {
         serverConnector = createHttpsConnector();
       }
       catch(DrillException e){
-        throw new DrillbitStartupException(e.getMessage(),e);
+        throw new DrillbitStartupException(e.getMessage(), e);
       }
-
     } else {
       serverConnector = createHttpConnector();
     }
@@ -273,7 +272,6 @@ public class WebServer implements AutoCloseable {
 
     final SslContextFactory sslContextFactory = new SslContextFactory();
     SSLConfig ssl = new SSLConfig(config);
-
     if(ssl.isSslValid()){
       logger.info("Using configured SSL settings for web server");
 
