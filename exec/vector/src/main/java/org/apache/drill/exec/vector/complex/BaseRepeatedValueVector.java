@@ -21,12 +21,14 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.AddOrGetResult;
@@ -182,6 +184,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     return vector == DEFAULT_DATA_VECTOR ? 0:1;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T extends ValueVector> AddOrGetResult<T> addOrGetVector(VectorDescriptor descriptor) {
     boolean created = false;
@@ -210,13 +213,15 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   }
 
   @Override
-  public int getAllocatedByteCount() {
-    return offsets.getAllocatedByteCount() + vector.getAllocatedByteCount();
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    offsets.collectLedgers(ledgers);
+    vector.collectLedgers(ledgers);
   }
 
   @Override
-  public int getPayloadByteCount() {
-    return offsets.getPayloadByteCount() + vector.getPayloadByteCount();
+  public int getPayloadByteCount(int valueCount) {
+    int entryCount = offsets.getAccessor().get(valueCount);
+    return offsets.getPayloadByteCount(valueCount) + vector.getPayloadByteCount(entryCount);
   }
 
   @Override

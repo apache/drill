@@ -21,6 +21,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 
 public class SortConfig {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
 
   /**
    * Smallest allowed output batch size. The smallest output batch
@@ -62,6 +63,12 @@ public class SortConfig {
 
   private final int bufferedBatchLimit;
 
+  /**
+   * Limit the size of the in-memory merge return batches.
+   * Primarily for testing.
+   */
+
+  private final int mSortBatchSize;
 
   public SortConfig(DrillConfig config) {
 
@@ -101,15 +108,26 @@ public class SortConfig {
     } else {
       bufferedBatchLimit = Math.max(value, 2);
     }
+
+    // Limit on memory merge batch size; primarily for testing
+
+    if (config.hasPath(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE)) {
+      mSortBatchSize = Math.max(1,
+            Math.min(Character.MAX_VALUE,
+                     config.getInt(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE)));
+    } else {
+      mSortBatchSize = Character.MAX_VALUE;
+    }
+
     logConfig();
   }
 
   private void logConfig() {
-    ExternalSortBatch.logger.debug("Config: " +
+    logger.debug("Config: " +
                  "spill file size = {}, spill batch size = {}, " +
-                 "merge limit = {}, merge batch size = {}",
-                  spillFileSize(), spillFileSize(),
-                  mergeLimit(), mergeBatchSize());
+                 "merge batch size = {}, mSort batch size = {}",
+                  spillFileSize, spillBatchSize,
+                  mergeBatchSize, mSortBatchSize);
   }
 
   public long maxMemory() { return maxMemory; }
@@ -118,4 +136,5 @@ public class SortConfig {
   public int spillBatchSize() { return spillBatchSize; }
   public int mergeBatchSize() { return mergeBatchSize; }
   public int getBufferedBatchLimit() { return bufferedBatchLimit; }
+  public int getMSortBatchSize() { return mSortBatchSize; }
 }

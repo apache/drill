@@ -117,16 +117,18 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
         return IterOutcome.STOP;
       }
       next = b.next();
-    }finally{
+    } finally {
       stats.startProcessing();
     }
 
-    switch(next){
+    switch(next) {
     case OK_NEW_SCHEMA:
       stats.batchReceived(inputIndex, b.getRecordCount(), true);
       break;
     case OK:
       stats.batchReceived(inputIndex, b.getRecordCount(), false);
+      break;
+    default:
       break;
     }
 

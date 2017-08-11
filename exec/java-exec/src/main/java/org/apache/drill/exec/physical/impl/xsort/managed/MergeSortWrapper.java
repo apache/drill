@@ -103,7 +103,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
    * @return the sv4 for this operator
    */
 
-  public void merge(List<BatchGroup.InputBatch> batchGroups) {
+  public void merge(List<BatchGroup.InputBatch> batchGroups, int outputBatchSize) {
 
     // Add the buffered batches to a collection that MSorter can use.
     // The builder takes ownership of the batches and will release them if
@@ -124,7 +124,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
       sv4 = builder.getSv4();
       Sort popConfig = context.getOperatorDefn();
       mSorter = createNewMSorter(popConfig.getOrderings(), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
-      mSorter.setup(context, context.getAllocator(), sv4, destContainer, sv4.getCount());
+      mSorter.setup(context, context.getAllocator(), sv4, destContainer, sv4.getCount(), outputBatchSize);
     } catch (SchemaChangeException e) {
       throw UserException.unsupportedError(e)
             .message("Unexpected schema change - likely code error.")
@@ -139,7 +139,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
     context.injectUnchecked(ExternalSortBatch.INTERRUPTION_AFTER_SORT);
     sv4 = mSorter.getSV4();
 
-    destContainer.buildSchema(SelectionVectorMode.FOUR_BYTE);
+//    destContainer.buildSchema(SelectionVectorMode.FOUR_BYTE);
   }
 
   private MSorter createNewMSorter(List<Ordering> orderings, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping) {
@@ -147,7 +147,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
     cg.plainJavaCapable(true);
 
     // Uncomment out this line to debug the generated code.
-//  cg.saveCodeForDebugging(true);
+//    cg.saveCodeForDebugging(true);
     ClassGenerator<MSorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 
@@ -232,13 +232,9 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
     } catch (RuntimeException e) {
       ex = (ex == null) ? e : ex;
     }
-    try {
-      if (sv4 != null) {
-        sv4.clear();
-      }
-    } catch (RuntimeException e) {
-      ex = (ex == null) ? e : ex;
-    }
+
+    // Sv4 is cleared by the builder, above.
+
     if (ex != null) {
       throw ex;
     }
