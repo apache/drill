@@ -55,7 +55,7 @@ public class SqlTo${type} implements DrillSimpleFunc {
     String formatString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(right);
     String pattern = org.apache.drill.common.expression.fn.JodaDateValidator.toJodaFormat(formatString);
     try {
-      format = org.joda.time.format.DateTimeFormat.forPattern(pattern);
+      format = org.joda.time.format.DateTimeFormat.forPattern(pattern).withLocale(java.util.Locale.ENGLISH);
     } catch (IllegalArgumentException e) {
       throw org.apache.drill.common.exceptions.UserException.functionError(e)
         .message("Error parsing formatter %s in %s function", formatString, "sql_to_${type?lower_case}")

@@ -65,7 +65,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
         byte[] buf = new byte[right.end - right.start];
         right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
         String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-        format = org.joda.time.format.DateTimeFormat.forPattern(input);
+        format = org.joda.time.format.DateTimeFormat.forPattern(input).withLocale(java.util.Locale.ENGLISH);
     }
 
     public void eval() {

@@ -75,6 +75,12 @@
     <dependency>
       <groupId>com.mapr.fs</groupId>
       <artifactId>mapr-hbase</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-codec</artifactId>
+          <groupId>commons-codec</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.mapr.db</groupId>
