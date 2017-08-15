@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -26,11 +26,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig {
 
-  private boolean autoCorrectCorruptDates = true;
+  public boolean autoCorrectCorruptDates = true;
 
   /**
    * @return true if auto correction of corrupt dates is enabled, false otherwise
    */
+  @JsonIgnore
   public boolean areCorruptDatesAutoCorrected() {
     return autoCorrectCorruptDates;
   }
