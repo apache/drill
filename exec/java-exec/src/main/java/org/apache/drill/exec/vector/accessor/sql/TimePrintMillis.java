@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,11 @@ import java.sql.Time;
 
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
+/**
+ * This class is an inheritor of {@link java.sql.Time}, which allows to print time milliseconds correctly. <p>
+ * TODO: There will no need in using of this class, when Drill SQLLine will contain the fix for
+ * <a href="https://github.com/julianhyde/sqlline/issues/66">SQLLine date, time, timestamp formats</a> issue is resolved.
+ */
 public class TimePrintMillis extends Time {
   private static final String[] leadingZeroes = {"", "0", "00"};
 

@@ -267,7 +267,7 @@ public class ${name}Accessor extends AbstractSqlAccessor {
     org.joda.time.LocalDate date = new org.joda.time.LocalDate(ac.get(index), org.joda.time.DateTimeZone.UTC);
     // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
     // See more in Javadoc for "LocalDate#toDate()"
-    return new Date(date.toDate().getTime());
+    return new DatePrintYear(date.toDate().getTime());
   }
 
   <#elseif minor.class == "TimeStamp">
