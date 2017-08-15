@@ -34,18 +34,9 @@ public class MetadataContext {
    */
   private Map<String, Boolean> dirModifCheckMap = Maps.newHashMap();
 
-  public enum PruneStatus {
-    NOT_STARTED,         // initial state
-    PRUNED,              // partitions were pruned
-    NOT_PRUNED           // partitions did not get pruned
-  }
-
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 
-  private boolean isMetadataCacheCorrupted;
-
-  public MetadataContext() {
-  }
+  private boolean metadataCacheCorrupted;
 
   public void setStatus(String dir) {
     dirModifCheckMap.put(dir,  true);
@@ -64,7 +55,7 @@ public class MetadataContext {
 
   public void clear() {
     dirModifCheckMap.clear();
-    isMetadataCacheCorrupted = false;
+    metadataCacheCorrupted = false;
   }
 
   public void setPruneStatus(PruneStatus status) {
@@ -79,7 +70,7 @@ public class MetadataContext {
    * @return true if parquet metadata cache files are missing or corrupted, false otherwise
    */
   public boolean isMetadataCacheCorrupted() {
-    return isMetadataCacheCorrupted;
+    return metadataCacheCorrupted;
   }
 
   /**
@@ -88,7 +79,13 @@ public class MetadataContext {
    * @param metadataCacheCorrupted metadata corruption status
    */
   public void setMetadataCacheCorrupted(boolean metadataCacheCorrupted) {
-    isMetadataCacheCorrupted = metadataCacheCorrupted;
+    this.metadataCacheCorrupted = metadataCacheCorrupted;
+  }
+
+  public enum PruneStatus {
+    NOT_STARTED,         // initial state
+    PRUNED,              // partitions were pruned
+    NOT_PRUNED           // partitions did not get pruned
   }
 
 }

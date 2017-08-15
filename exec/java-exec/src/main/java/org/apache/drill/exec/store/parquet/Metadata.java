@@ -649,7 +649,7 @@ public class Metadata {
 
     Stopwatch timer = Stopwatch.createStarted();
 
-    metaContext.setStatus(parentDir.toString());
+    metaContext.setStatus(parentDir.toUri().getPath());
     long metaFileModifyTime = fs.getFileStatus(metaFilePath).getModificationTime();
     FileStatus directoryStatus = fs.getFileStatus(parentDir);
     int numDirs = 1;
