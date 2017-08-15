@@ -652,12 +652,12 @@ public class BaseTestQuery extends ExecTest {
     String metadataFileContents = getFile(srcFileOnClassPath);
     Path rootMeta = new Path(dfsTestTmpSchemaLocation, destFolderInTmp);
     Path newMetaCache = new Path(rootMeta, metaFileName);
-    FSDataOutputStream outSteam = fs.create(newMetaCache);
-    if (customStringReplacement != null) {
-      metadataFileContents = metadataFileContents.replace("CUSTOM_STRING_REPLACEMENT", customStringReplacement);
+    try (FSDataOutputStream outSteam = fs.create(newMetaCache)) {
+      if (customStringReplacement != null) {
+        metadataFileContents = metadataFileContents.replace("CUSTOM_STRING_REPLACEMENT", customStringReplacement);
+      }
+      outSteam.writeBytes(metadataFileContents.replace("REPLACED_IN_TEST", dfsTestTmpSchemaLocation));
     }
-    outSteam.writeBytes(metadataFileContents.replace("REPLACED_IN_TEST", dfsTestTmpSchemaLocation));
-    outSteam.close();
   }
 
  }

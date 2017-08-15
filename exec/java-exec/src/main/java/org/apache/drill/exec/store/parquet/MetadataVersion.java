@@ -78,10 +78,9 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
   }
 
   /**
-   * @return string representation of the metadata file version, for example: "v1", "v10", "v4.13"
+   * @return string representation of the metadata file version, for example: "1", "10", "4.13"
    * <p>
    * String metadata version consists of the following characters:<p>
-   * optional "v" letter,<p>
    * major metadata version (any number of digits, except a single zero digit),<p>
    * optional "." delimiter (used if minor metadata version is specified),<p>
    * minor metadata version (not specified for "0" minor version)

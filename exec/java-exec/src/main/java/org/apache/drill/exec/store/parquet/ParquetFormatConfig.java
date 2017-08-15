@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,9 +24,16 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-public class ParquetFormatConfig implements FormatPluginConfig{
+public class ParquetFormatConfig implements FormatPluginConfig {
 
-  public boolean autoCorrectCorruptDates = true;
+  private boolean autoCorrectCorruptDates = true;
+
+  /**
+   * @return true if auto correction of corrupt dates is enabled, false otherwise
+   */
+  public boolean areCorruptDatesAutoCorrected() {
+    return autoCorrectCorruptDates;
+  }
 
   @Override
   public boolean equals(Object o) {

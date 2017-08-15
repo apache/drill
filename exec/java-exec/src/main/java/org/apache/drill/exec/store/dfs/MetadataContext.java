@@ -42,8 +42,7 @@ public class MetadataContext {
 
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 
-  // Setting this value as true allows to avoid double reading of corrupted, unsupported or missing metadata files
-  public boolean isMetadataFilesMissingOrCorrupted;
+  private boolean isMetadataCacheCorrupted;
 
   public MetadataContext() {
   }
@@ -65,7 +64,7 @@ public class MetadataContext {
 
   public void clear() {
     dirModifCheckMap.clear();
-    isMetadataFilesMissingOrCorrupted = false;
+    isMetadataCacheCorrupted = false;
   }
 
   public void setPruneStatus(PruneStatus status) {
@@ -74,6 +73,22 @@ public class MetadataContext {
 
   public PruneStatus getPruneStatus() {
     return pruneStatus;
+  }
+
+  /**
+   * @return true if parquet metadata cache files are missing or corrupted, false otherwise
+   */
+  public boolean isMetadataCacheCorrupted() {
+    return isMetadataCacheCorrupted;
+  }
+
+  /**
+   * Setting this as true allows to avoid double reading of corrupted, unsupported or missing metadata files
+   *
+   * @param metadataCacheCorrupted metadata corruption status
+   */
+  public void setMetadataCacheCorrupted(boolean metadataCacheCorrupted) {
+    isMetadataCacheCorrupted = metadataCacheCorrupted;
   }
 
 }

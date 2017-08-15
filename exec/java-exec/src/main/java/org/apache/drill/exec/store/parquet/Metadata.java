@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.AbstractRecordReader;
@@ -146,8 +145,7 @@ public class Metadata {
    * @param path The path to the metadata file, located in the directory that contains the parquet files
    * @param metaContext metadata context
    * @param formatConfig parquet format plugin configs
-   * @return parquet table metadata
-   * @throws IOException if metadata file can't be read or updated
+   * @return parquet table metadata. Null if metadata cache is missing, unsupported or corrupted
    */
   public static @Nullable ParquetTableMetadataBase readBlockMeta(FileSystem fs, Path path, MetadataContext metaContext,
       ParquetFormatConfig formatConfig) {
@@ -166,8 +164,7 @@ public class Metadata {
    * @param path The path to the metadata file, located in the directory that contains the parquet files
    * @param metaContext metadata context
    * @param formatConfig parquet format plugin configs
-   * @return parquet metadata for a directory
-   * @throws IOException if metadata file can't be read or updated
+   * @return parquet metadata for a directory. Null if metadata cache is missing, unsupported or corrupted
    */
   public static @Nullable ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, Path path,
       MetadataContext metaContext, ParquetFormatConfig formatConfig) {
@@ -180,14 +177,14 @@ public class Metadata {
   }
 
   /**
-   * Ignore reading metadata files, if metadata is corrupted
+   * Ignore reading metadata files, if metadata is missing, unsupported or corrupted
    *
-   * @param metaContext metadata context
+   * @param metaContext Metadata context
    * @param path The path to the metadata file, located in the directory that contains the parquet files
-   * @return true if parquet metadata is corrupted, false otherwise
+   * @return true if parquet metadata is missing or corrupted, false otherwise
    */
   private static boolean ignoreReadingMetadata(MetadataContext metaContext, Path path) {
-    if (metaContext.isMetadataFilesMissingOrCorrupted) {
+    if (metaContext.isMetadataCacheCorrupted()) {
       logger.warn("Ignoring of reading '{}' metadata file. Parquet metadata cache files are unsupported or corrupted. " +
           "Query performance may be slow. Make sure the cache files are up-to-date by running the 'REFRESH TABLE " +
           "METADATA' command", path);
@@ -305,9 +302,9 @@ public class Metadata {
   /**
    * Get the parquet metadata for a list of parquet files
    *
-   * @param fileStatuses
-   * @return
-   * @throws IOException
+   * @param fileStatuses List of file statuses
+   * @return parquet table metadata object
+   * @throws IOException if parquet file metadata can't be obtained
    */
   private ParquetTableMetadata_v3 getParquetTableMetadata(List<FileStatus> fileStatuses)
       throws IOException {
@@ -429,7 +426,7 @@ public class Metadata {
 
     ArrayList<SchemaPath> ALL_COLS = new ArrayList<>();
     ALL_COLS.add(AbstractRecordReader.STAR_COLUMN);
-    boolean autoCorrectCorruptDates = formatConfig.autoCorrectCorruptDates;
+    boolean autoCorrectCorruptDates = formatConfig.areCorruptDatesAutoCorrected();
     ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS, autoCorrectCorruptDates);
     if (logger.isDebugEnabled()) {
       logger.debug(containsCorruptDates.toString());
@@ -572,8 +569,8 @@ public class Metadata {
    */
   private void readBlockMeta(Path path, boolean dirsOnly, MetadataContext metaContext) {
     Stopwatch timer = Stopwatch.createStarted();
-    Path parentDir = Path.getPathWithoutSchemeAndAuthority(path.getParent()); // parent directory of the metadata file
-    String parentDirString = parentDir.toUri().getPath(); // string representation for parent directory of the metadata file
+    Path metadataParentDir = Path.getPathWithoutSchemeAndAuthority(path.getParent());
+    String metadataParentDirPath = metadataParentDir.toUri().getPath();
     ObjectMapper mapper = new ObjectMapper();
 
     final SimpleModule serialModule = new SimpleModule();
@@ -590,16 +587,14 @@ public class Metadata {
     try (FSDataInputStream is = fs.open(path)) {
       boolean alreadyCheckedModification = false;
       boolean newMetadata = false;
-      if (metaContext != null) {
-        alreadyCheckedModification = metaContext.getStatus(parentDirString);
-      }
+        alreadyCheckedModification = metaContext.getStatus(metadataParentDirPath);
 
       if (dirsOnly) {
         parquetTableMetadataDirs = mapper.readValue(is, ParquetTableMetadataDirs.class);
         logger.info("Took {} ms to read directories from directory cache file", timer.elapsed(TimeUnit.MILLISECONDS));
         timer.stop();
-        parquetTableMetadataDirs.updateRelativePaths(parentDirString);
-        if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), path, parentDir, metaContext)) {
+        parquetTableMetadataDirs.updateRelativePaths(metadataParentDirPath);
+        if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), path, metadataParentDir, metaContext)) {
           parquetTableMetadataDirs =
               (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(path.getParent()).toString())).getRight();
           newMetadata = true;
@@ -609,9 +604,9 @@ public class Metadata {
         logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
         timer.stop();
         if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 0)) >= 0) {
-          ((ParquetTableMetadata_v3) parquetTableMetadata).updateRelativePaths(parentDirString);
+          ((ParquetTableMetadata_v3) parquetTableMetadata).updateRelativePaths(metadataParentDirPath);
         }
-        if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), path, parentDir, metaContext)) {
+        if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), path, metadataParentDir, metaContext)) {
           parquetTableMetadata =
               (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(path.getParent()).toString())).getLeft();
           newMetadata = true;
@@ -630,13 +625,13 @@ public class Metadata {
         }
 
       }
-      if (newMetadata && metaContext != null) {
+      if (newMetadata) {
         // if new metadata files were created, invalidate the existing metadata context
         metaContext.clear();
       }
     } catch (IOException e) {
       logger.error("Failed to read '{}' metadata file", path, e);
-      metaContext.isMetadataFilesMissingOrCorrupted = true;
+      metaContext.setMetadataCacheCorrupted(true);
     }
   }
 
@@ -644,21 +639,17 @@ public class Metadata {
    * Check if the parquet metadata needs to be updated by comparing the modification time of the directories with
    * the modification time of the metadata file
    *
-   * @param directories
-   * @param metaFilePath
-   * @return
-   * @throws IOException
+   * @param directories List of directories
+   * @param metaFilePath path of parquet metadata cache file
+   * @return true if metadata needs to be updated, false otherwise
+   * @throws IOException if some resources are not accessible
    */
-  private boolean tableModified(List<String> directories, Path metaFilePath,
-      Path parentDir,
-      MetadataContext metaContext)
+  private boolean tableModified(List<String> directories, Path metaFilePath, Path parentDir, MetadataContext metaContext)
       throws IOException {
 
     Stopwatch timer = Stopwatch.createStarted();
 
-    if (metaContext != null) {
-      metaContext.setStatus(parentDir.toString());
-    }
+    metaContext.setStatus(parentDir.toString());
     long metaFileModifyTime = fs.getFileStatus(metaFilePath).getModificationTime();
     FileStatus directoryStatus = fs.getFileStatus(parentDir);
     int numDirs = 1;
@@ -671,9 +662,7 @@ public class Metadata {
     }
     for (String directory : directories) {
       numDirs++;
-      if (metaContext != null) {
-        metaContext.setStatus(directory);
-      }
+      metaContext.setStatus(directory);
       directoryStatus = fs.getFileStatus(new Path(directory));
       if (directoryStatus.getModificationTime() > metaFileModifyTime) {
         logger.info("Directory {} was modified. Took {} ms to check modification time of {} directories", directoryStatus.getPath().toString(),

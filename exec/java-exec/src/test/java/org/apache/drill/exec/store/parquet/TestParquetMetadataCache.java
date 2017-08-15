@@ -17,21 +17,29 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.store.dfs.MetadataContext;
+import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(JMockit.class)
 public class TestParquetMetadataCache extends PlanTestBase {
   private static final String WORKING_PATH = TestTools.getWorkingPath();
   private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
@@ -590,16 +598,31 @@ public class TestParquetMetadataCache extends PlanTestBase {
 
   @Test
   public void testRootMetadataFileIsAbsent() throws Exception {
+    final String tmpDir = getDfsTestTmpSchemaLocation();
+    final String rootMetaCorruptedTable = "root_meta_corrupted_table";
+    File dataDir = new File(tmpDir, rootMetaCorruptedTable);
     try {
+      // copy the data into the temporary location, delete root metadata file
+      dataDir.mkdir();
+      FileUtils.copyDirectory(new File(String.format(String.format("%s/multilevel/parquet", TEST_RES_PATH))), dataDir);
+
       test("use dfs_test.tmp");
-      String tmpDir = getDfsTestTmpSchemaLocation();
-      test("refresh table metadata `%s`", tableName1);
-      checkForMetadataFile(tableName1);
-      File rootMetadataFile = FileUtils.getFile(tmpDir, tableName1,  Metadata.METADATA_FILENAME);
+      test("refresh table metadata `%s`", rootMetaCorruptedTable);
+      checkForMetadataFile(rootMetaCorruptedTable);
+      File rootMetadataFile = FileUtils.getFile(tmpDir, rootMetaCorruptedTable,  Metadata.METADATA_FILENAME);
       assertTrue(String.format("Metadata cache file '%s' isn't deleted", rootMetadataFile.getPath()),
           rootMetadataFile.delete());
+
+      // mock Metadata tableModified method to avoid occasional metadata files updating
+      new MockUp<Metadata>() {
+        @Mock
+        boolean tableModified(List<String> directories, Path metaFilePath, Path parentDir, MetadataContext metaContext) {
+          return false;
+        }
+      };
+
       String query = String.format("select dir0, dir1, o_custkey, o_orderdate from `%s` " +
-          " where dir0=1994 or dir1='Q3'", tableName1);
+          " where dir0=1994 or dir1='Q3'", rootMetaCorruptedTable);
       int expectedRowCount = 60;
       int expectedNumFiles = 6;
       int actualRowCount = testSql(query);
@@ -610,25 +633,40 @@ public class TestParquetMetadataCache extends PlanTestBase {
       PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern},
           new String[] {"cacheFileRoot", "Filter"});
     } finally {
-      test("refresh table metadata `%s`", tableName1);
+      FileUtils.deleteQuietly(dataDir);
     }
   }
 
   @Test
   public void testInnerMetadataFilesAreAbsent() throws Exception {
+    final String tmpDir = getDfsTestTmpSchemaLocation();
+    final String innerMetaCorruptedTable = "inner_meta_corrupted_table";
+    File dataDir = new File(tmpDir, innerMetaCorruptedTable);
     try {
+      // copy the data into the temporary location, delete a few inner metadata files
+      dataDir.mkdir();
+      FileUtils.copyDirectory(new File(String.format(String.format("%s/multilevel/parquet", TEST_RES_PATH))), dataDir);
+
       test("use dfs_test.tmp");
-      String tmpDir = getDfsTestTmpSchemaLocation();
-      test("refresh table metadata `%s`", tableName1);
-      checkForMetadataFile(tableName1);
-      File firstInnerMetadataFile = FileUtils.getFile(tmpDir, tableName1, "1994", Metadata.METADATA_FILENAME);
-      File secondInnerMetadataFile = FileUtils.getFile(tmpDir, tableName1, "1994", "Q3", Metadata.METADATA_FILENAME);
+      test("refresh table metadata `%s`", innerMetaCorruptedTable);
+      checkForMetadataFile(innerMetaCorruptedTable);
+      File firstInnerMetadataFile = FileUtils.getFile(tmpDir, innerMetaCorruptedTable, "1994", Metadata.METADATA_FILENAME);
+      File secondInnerMetadataFile = FileUtils.getFile(tmpDir, innerMetaCorruptedTable, "1994", "Q3", Metadata.METADATA_FILENAME);
       assertTrue(String.format("Metadata cache file '%s' isn't deleted", firstInnerMetadataFile.getPath()),
           firstInnerMetadataFile.delete());
       assertTrue(String.format("Metadata cache file '%s' isn't deleted", secondInnerMetadataFile.getPath()),
           secondInnerMetadataFile.delete());
+
+      // mock Metadata tableModified method to avoid occasional metadata files updating
+      new MockUp<Metadata>() {
+        @Mock
+        boolean tableModified(List<String> directories, Path metaFilePath, Path parentDir, MetadataContext metaContext) {
+          return false;
+        }
+      };
+
       String query = String.format("select dir0, dir1, o_custkey, o_orderdate from `%s` " +
-          " where dir0=1994 or dir1='Q3'", tableName1);
+          " where dir0=1994 or dir1='Q3'", innerMetaCorruptedTable);
       int expectedRowCount = 60;
       int expectedNumFiles = 6;
       int actualRowCount = testSql(query);
@@ -639,7 +677,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
       PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern},
           new String[] {"cacheFileRoot", "Filter"});
     } finally {
-      test("refresh table metadata `%s`", tableName1);
+      FileUtils.deleteQuietly(dataDir);
     }
   }
 
