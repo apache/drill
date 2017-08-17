@@ -20,10 +20,8 @@ package org.apache.drill.exec.server.options;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 import java.util.Collection;
 import java.util.Map;
@@ -55,13 +53,11 @@ public class SessionOptionManager extends InMemoryOptionManager {
   }
 
   @Override
-  boolean setLocalOption(final OptionValue value) {
-    final boolean set = super.setLocalOption(value);
-    if (!set) {
-      return false;
-    }
+  public void setLocalOptionHelper(final OptionValue value) {
+    super.setLocalOptionHelper(value);
     final String name = value.name;
-    final OptionValidator validator = getFallbackOptionManager().getValidator(name); // if set, validator must exist.
+    final OptionDefinition definition = getOptionDefinition(name); // if set, validator must exist.
+    final OptionValidator validator = definition.getValidator();
     final boolean shortLived = validator.isShortLived();
     if (shortLived) {
       final int start = session.getQueryCount() + 1; // start from the next query
@@ -69,7 +65,6 @@ public class SessionOptionManager extends InMemoryOptionManager {
       final int end = start + ttl;
       shortLivedOptions.put(name, new ImmutablePair<>(start, end));
     }
-    return true;
   }
 
   @Override
@@ -83,7 +78,7 @@ public class SessionOptionManager extends InMemoryOptionManager {
       final int start = shortLivedOptions.get(name).getLeft();
       // option is not in effect if queryNumber < start
       if (queryNumber < start) {
-        return getFallbackOptionManager().getValidator(name).getDefault();
+        return fallback.getOption(name);
       // reset if queryNumber <= end
       } else {
         options.remove(name);
@@ -116,14 +111,22 @@ public class SessionOptionManager extends InMemoryOptionManager {
     return liveOptions;
   }
 
-  @Override
-  boolean supportsOptionType(OptionType type) {
-    return type == OptionType.SESSION;
+  /**
+   * Gets the SystemOptionManager.
+   * @return The SystemOptionManager.
+   */
+  public SystemOptionManager getSystemOptionManager() {
+    final SystemOptionManager systemOptionManager = (SystemOptionManager) fallback;
+    return systemOptionManager;
   }
 
-  /* Gets fallback manager and returns it as SystemOptionManager */
-  public SystemOptionManager getFallbackOptionManager() {
-    final SystemOptionManager systemOptionManager = (SystemOptionManager) getFallback();
-    return systemOptionManager;
+  @Override
+  public OptionValue getDefault(String optionName) {
+    return fallback.getDefault(optionName);
+  }
+
+  @Override
+  protected OptionValue.OptionScope getScope() {
+    return OptionValue.OptionScope.SESSION;
   }
 }

@@ -15,14 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.util;
 
-public class Pointer<T> {
-  public volatile T value;
+package org.apache.drill.exec.server.options;
 
-  public Pointer(){}
+import com.google.common.base.Preconditions;
 
-  public Pointer(T value){
-    this.value = value;
+/**
+ * This holds all the information about an option.
+ */
+public class OptionDefinition {
+  private final OptionValidator validator;
+  private final OptionMetaData metaData;
+
+  public OptionDefinition(OptionValidator validator) {
+    this.validator = Preconditions.checkNotNull(validator);
+    this.metaData = OptionMetaData.DEFAULT;
+  }
+
+  public OptionDefinition(OptionValidator validator, OptionMetaData metaData) {
+    this.validator = Preconditions.checkNotNull(validator);
+    this.metaData = Preconditions.checkNotNull(metaData);
+  }
+
+  public OptionValidator getValidator() {
+    return validator;
+  }
+
+  public OptionMetaData getMetaData() {
+    return metaData;
   }
 }

@@ -35,12 +35,14 @@ import java.util.Map;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.OperatorFixture;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -264,7 +266,9 @@ public class TestParquetWriter extends BaseTestQuery {
       String inputTable = "cp.`tpch/lineitem.parquet`";
       runTestAndValidate(selection, validationSelection, inputTable, "lineitem_parquet_converted");
     } finally {
-      test("alter session set `%s` = %b", ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR.getDefault().bool_val);
+      OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `%s` = %b", ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING,
+        optionSet.getDefault(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING).bool_val);
     }
   }
 
@@ -318,8 +322,11 @@ public class TestParquetWriter extends BaseTestQuery {
       String inputTable = "cp.`tpch/supplier.parquet`";
       runTestAndValidate("*", "*", inputTable, "supplier_parquet_no_dict_uncompressed");
     } finally {
-      test(String.format("alter session set `%s` = %b", ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR.getDefault().bool_val));
-      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
+      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
+      test(String.format("alter session set `%s` = %b", ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING,
+        optionSet.getDefault(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING).bool_val));
+      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE,
+        optionSet.getDefault(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).string_val));
     }
   }
 
@@ -330,7 +337,9 @@ public class TestParquetWriter extends BaseTestQuery {
       String inputTable = "cp.`tpch/supplier.parquet`";
       runTestAndValidate("*", "*", inputTable, "supplier_parquet_dict_gzip");
     } finally {
-      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
+      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
+      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE,
+        optionSet.getDefault(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).string_val));
     }
   }
 
@@ -452,8 +461,9 @@ public class TestParquetWriter extends BaseTestQuery {
         .optionSettingQueriesForBaseline("alter system set `store.parquet.use_new_reader` = true")
         .build().run();
     } finally {
+      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
       test("alter system set `%s` = %b", ExecConstants.PARQUET_NEW_RECORD_READER,
-          ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR.getDefault().bool_val);
+        optionSet.getDefault(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val);
     }
   }
 
@@ -472,10 +482,10 @@ public class TestParquetWriter extends BaseTestQuery {
             "alter system set `store.parquet.use_new_reader` = true")
         .build().run();
     } finally {
+      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
       test("alter system set `%s` = %b",
           ExecConstants.PARQUET_NEW_RECORD_READER,
-          ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR
-              .getDefault().bool_val);
+          optionSet.getDefault(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val);
     }
   }
 
@@ -947,7 +957,8 @@ public class TestParquetWriter extends BaseTestQuery {
       String inputTable = "cp.`tpch/supplier.parquet`";
         runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_gzip");
     } finally {
-      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
+      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
+      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, optionSet.getDefault(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).string_val));
     }
   }
 
@@ -958,7 +969,8 @@ public class TestParquetWriter extends BaseTestQuery {
       String inputTable = "cp.`supplier_snappy.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_snappy");
     } finally {
-      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
+      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
+      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, optionSet.getDefault(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).string_val));
     }
   }
 

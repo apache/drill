@@ -20,17 +20,13 @@ package org.apache.drill.exec.server.options;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.server.options.OptionValue.OptionScope;
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class TypeValidators {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
   public static class PositiveLongValidator extends LongValidator {
-    private final long max;
+    protected final long max;
 
     public PositiveLongValidator(String name, long max) {
       super(name);
@@ -38,8 +34,8 @@ public class TypeValidators {
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (v.num_val > max || v.num_val < 1) {
         throw UserException.validationError()
             .message(String.format("Option %s must be between %d and %d.", getOptionName(), 1, max))
@@ -55,8 +51,8 @@ public class TypeValidators {
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (!isPowerOfTwo(v.num_val)) {
         throw UserException.validationError()
             .message(String.format("Option %s must be a power of two.", getOptionName()))
@@ -70,8 +66,8 @@ public class TypeValidators {
   }
 
   public static class RangeDoubleValidator extends DoubleValidator {
-    private final double min;
-    private final double max;
+    protected final double min;
+    protected final double max;
 
     public RangeDoubleValidator(String name, double min, double max) {
       super(name);
@@ -80,8 +76,8 @@ public class TypeValidators {
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (v.float_val > max || v.float_val < min) {
         throw UserException.validationError()
             .message(String.format("Option %s must be between %f and %f.", getOptionName(), min, max))
@@ -93,14 +89,14 @@ public class TypeValidators {
   public static class MinRangeDoubleValidator extends RangeDoubleValidator {
     private final String maxValidatorName;
 
-    public MinRangeDoubleValidator(String name, double min, double max, double def, String maxValidatorName) {
+    public MinRangeDoubleValidator(String name, double min, double max, String maxValidatorName) {
       super(name, min, max);
       this.maxValidatorName = maxValidatorName;
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       OptionValue maxValue = manager.getOption(maxValidatorName);
       if (v.float_val > maxValue.float_val) {
         throw UserException.validationError()
@@ -114,14 +110,14 @@ public class TypeValidators {
   public static class MaxRangeDoubleValidator extends RangeDoubleValidator {
     private final String minValidatorName;
 
-    public MaxRangeDoubleValidator(String name, double min, double max, double def, String minValidatorName) {
+    public MaxRangeDoubleValidator(String name, double min, double max, String minValidatorName) {
       super(name, min, max);
       this.minValidatorName = minValidatorName;
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       OptionValue minValue = manager.getOption(minValidatorName);
       if (v.float_val < minValue.float_val) {
         throw UserException.validationError()
@@ -134,60 +130,25 @@ public class TypeValidators {
 
   public static class BooleanValidator extends TypeValidator {
     public BooleanValidator(String name) {
-      this(name, false);
-    }
-
-    public BooleanValidator(String name, boolean isAdminOption) {
-      super(name, Kind.BOOLEAN, isAdminOption);
-    }
-
-    public void loadDefault(DrillConfig bootConfig){
-      OptionValue value = OptionValue.createBoolean(OptionType.SYSTEM, getOptionName(), bootConfig.getBoolean(getConfigProperty()), OptionScope.BOOT);
-      setDefaultValue(value);
+      super(name, Kind.BOOLEAN);
     }
   }
 
   public static class StringValidator extends TypeValidator {
     public StringValidator(String name) {
-      this(name, false);
-    }
-    public StringValidator(String name, boolean isAdminOption) {
-      super(name, Kind.STRING, isAdminOption);
-    }
-
-    public void loadDefault(DrillConfig bootConfig){
-      OptionValue value = OptionValue.createString(OptionType.SYSTEM, getOptionName(), bootConfig.getString(getConfigProperty()), OptionScope.BOOT);
-      setDefaultValue(value);
+      super(name, Kind.STRING);
     }
   }
 
   public static class LongValidator extends TypeValidator {
     public LongValidator(String name) {
-      this(name, false);
-    }
-
-    public LongValidator(String name, boolean isAdminOption) {
-      super(name, Kind.LONG, isAdminOption);
-    }
-
-    public void loadDefault(DrillConfig bootConfig){
-      OptionValue value = OptionValue.createLong(OptionType.SYSTEM, getOptionName(), bootConfig.getLong(getConfigProperty()), OptionScope.BOOT);
-      setDefaultValue(value);
+      super(name, Kind.LONG);
     }
   }
 
   public static class DoubleValidator extends TypeValidator {
     public DoubleValidator(String name) {
-      this(name,false);
-    }
-
-    public DoubleValidator(String name, boolean isAdminOption) {
-      super(name, Kind.DOUBLE, isAdminOption);
-    }
-
-    public void loadDefault(DrillConfig bootConfig){
-      OptionValue value = OptionValue.createDouble(OptionType.SYSTEM, getOptionName(),bootConfig.getDouble(getConfigProperty()), OptionScope.BOOT);
-      setDefaultValue(value);
+      super(name, Kind.DOUBLE);
     }
   }
 
@@ -202,8 +163,8 @@ public class TypeValidators {
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (v.num_val > max || v.num_val < min) {
         throw UserException.validationError()
             .message(String.format("Option %s must be between %d and %d.", getOptionName(), min, max))
@@ -226,8 +187,8 @@ public class TypeValidators {
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (!valuesSet.contains(v.string_val.toLowerCase())) {
         throw UserException.validationError()
             .message(String.format("Option %s must be one of: %s.", getOptionName(), valuesSet))
@@ -242,18 +203,8 @@ public class TypeValidators {
    * the available number of processors and cpu load average
    */
   public static class MaxWidthValidator extends LongValidator{
-
     public MaxWidthValidator(String name) {
-      this(name, false);
-    }
-
-    public MaxWidthValidator(String name, boolean isAdminOption) {
-      super(name, isAdminOption);
-    }
-
-    public void loadDefault(DrillConfig bootConfig) {
-      OptionValue value = OptionValue.createLong(OptionType.SYSTEM, getOptionName(), bootConfig.getLong(getConfigProperty()), OptionScope.BOOT);
-      setDefaultValue(value);
+      super(name);
     }
 
     public int computeMaxWidth(double cpuLoadAverage, long maxWidth) {
@@ -272,33 +223,18 @@ public class TypeValidators {
 
   public static abstract class TypeValidator extends OptionValidator {
     private final Kind kind;
-    private OptionValue defaultValue = null;
 
     public TypeValidator(final String name, final Kind kind) {
-      this(name, kind, false);
-    }
-
-    public TypeValidator(final String name, final Kind kind, final boolean isAdminOption) {
-      super(name, isAdminOption);
+      super(name);
       this.kind = kind;
     }
 
     @Override
-    public OptionValue getDefault() {
-      return defaultValue;
-    }
-
-    @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
       if (v.kind != kind) {
         throw UserException.validationError()
             .message(String.format("Option %s must be of type %s but you tried to set to %s.", getOptionName(),
               kind.name(), v.kind.name()))
-            .build(logger);
-      }
-      if (isAdminOption() && v.type != OptionType.SYSTEM) {
-        throw UserException.validationError()
-            .message("Admin related settings can only be set at SYSTEM level scope. Given scope '%s'.", v.type)
             .build(logger);
       }
     }
@@ -306,14 +242,6 @@ public class TypeValidators {
     @Override
     public Kind getKind() {
       return kind;
-    }
-
-    protected void setDefaultValue(OptionValue defaultValue) {
-      this.defaultValue = defaultValue;
-    }
-
-    public String getConfigProperty() {
-      return OPTION_DEFAULTS_ROOT + getOptionName();
     }
   }
 }

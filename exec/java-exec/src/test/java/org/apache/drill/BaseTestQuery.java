@@ -460,6 +460,18 @@ public class BaseTestQuery extends ExecTest {
     return file.getPath();
   }
 
+  protected static void setSessionOption(final String option, final boolean value) {
+    setSessionOption(option, Boolean.toString(value));
+  }
+
+  protected static void setSessionOption(final String option, final long value) {
+    setSessionOption(option, Long.toString(value));
+  }
+
+  protected static void setSessionOption(final String option, final double value) {
+    setSessionOption(option, Double.toString(value));
+  }
+
   protected static void setSessionOption(final String option, final String value) {
     try {
       runSQL(String.format("alter session set `%s` = %s", option, value));

@@ -21,6 +21,7 @@ import static com.google.common.base.Throwables.propagate;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -43,7 +44,7 @@ import org.apache.drill.exec.util.MiniZooKeeperCluster;
 public class ZookeeperHelper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZookeeperHelper.class);
 
-  private final File testDir = new File("target/test-data");
+  private final File testDir = new File("target/test-data/" + ManagementFactory.getRuntimeMXBean().getName());
   private final DrillConfig config;
   private String zkUrl;
   private MiniZooKeeperCluster zkCluster;

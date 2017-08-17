@@ -19,6 +19,7 @@ package org.apache.drill.exec;
 
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
+import org.apache.drill.exec.server.options.OptionMetaData;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
@@ -423,13 +424,13 @@ public interface ExecConstants {
    * such as changing system options.
    */
   String ADMIN_USERS_KEY = "security.admin.users";
-  StringValidator ADMIN_USERS_VALIDATOR = new StringValidator(ADMIN_USERS_KEY, true);
+  StringValidator ADMIN_USERS_VALIDATOR = new StringValidator(ADMIN_USERS_KEY);
 
   /**
    * Option whose value is a comma separated list of admin usergroups.
    */
   String ADMIN_USER_GROUPS_KEY = "security.admin.user_groups";
-  StringValidator ADMIN_USER_GROUPS_VALIDATOR = new StringValidator(ADMIN_USER_GROUPS_KEY, true);
+  StringValidator ADMIN_USER_GROUPS_VALIDATOR = new StringValidator(ADMIN_USER_GROUPS_KEY);
   /**
    * Option whose value is a string representing list of inbound impersonation policies.
    *
@@ -472,8 +473,7 @@ public interface ExecConstants {
    * for any query.
    */
   String ENABLE_QUERY_PROFILE_OPTION = "exec.query_profile.save";
-  BooleanValidator ENABLE_QUERY_PROFILE_VALIDATOR = new BooleanValidator(
-      ENABLE_QUERY_PROFILE_OPTION);
+  BooleanValidator ENABLE_QUERY_PROFILE_VALIDATOR = new BooleanValidator(ENABLE_QUERY_PROFILE_OPTION);
 
   /**
    * Profiles are normally written after the last client message to reduce latency.
@@ -482,8 +482,7 @@ public interface ExecConstants {
    * verification.
    */
   String QUERY_PROFILE_DEBUG_OPTION = "exec.query_profile.debug_mode";
-  BooleanValidator QUERY_PROFILE_DEBUG_VALIDATOR = new BooleanValidator(
-      QUERY_PROFILE_DEBUG_OPTION);
+  BooleanValidator QUERY_PROFILE_DEBUG_VALIDATOR = new BooleanValidator(QUERY_PROFILE_DEBUG_OPTION);
 
   String USE_DYNAMIC_UDFS_KEY = "exec.udf.use_dynamic";
   BooleanValidator USE_DYNAMIC_UDFS = new BooleanValidator(USE_DYNAMIC_UDFS_KEY);

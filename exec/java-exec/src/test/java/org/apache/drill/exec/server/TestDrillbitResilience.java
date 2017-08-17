@@ -81,6 +81,7 @@ import org.apache.drill.exec.work.foreman.ForemanException;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.OperatorFixture;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -805,8 +806,9 @@ public class TestDrillbitResilience extends DrillTest {
       final String query = "SELECT sales_city, COUNT(*) cnt FROM cp.`region.json` GROUP BY sales_city";
       assertCancelledWithoutException(control, new ListenerThatCancelsQueryAfterFirstBatchOfData(), query);
     } finally {
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
       setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
-      setSessionOption(HASHAGG.getOptionName(), HASHAGG.getDefault().bool_val.toString());
+      setSessionOption(HASHAGG.getOptionName(), testOptionSet.getDefault(HASHAGG.getOptionName()).bool_val.toString());
     }
   }
 
@@ -836,10 +838,11 @@ public class TestDrillbitResilience extends DrillTest {
       final long after = countAllocatedMemory();
       assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
     } finally {
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
       setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
-      setSessionOption(HASHAGG.getOptionName(), HASHAGG.getDefault().bool_val.toString());
+      setSessionOption(HASHAGG.getOptionName(), testOptionSet.getDefault(HASHAGG.getOptionName()).bool_val.toString());
       setSessionOption(PARTITION_SENDER_SET_THREADS.getOptionName(),
-          Long.toString(PARTITION_SENDER_SET_THREADS.getDefault().num_val));
+          Long.toString(testOptionSet.getDefault(PARTITION_SENDER_SET_THREADS.getOptionName()).num_val));
     }
   }
 

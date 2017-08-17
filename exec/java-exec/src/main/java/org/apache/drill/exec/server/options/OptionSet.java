@@ -20,7 +20,6 @@ package org.apache.drill.exec.server.options;
 /**
  * Immutable set of options accessible by name or validator.
  */
-
 public interface OptionSet {
 
   /**
@@ -36,6 +35,13 @@ public interface OptionSet {
    * @return the option value, null if the option does not exist
    */
   OptionValue getOption(String name);
+
+  /**
+   * Gets the default value for the specified option.
+   * @param optionName The option to retrieve the default value for.
+   * @return The default value for the option.
+   */
+  OptionValue getDefault(String optionName);
 
   /**
    * Gets the boolean value (from the option value) for the given boolean validator.

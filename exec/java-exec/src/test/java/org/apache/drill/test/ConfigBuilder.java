@@ -25,6 +25,9 @@ import org.apache.drill.common.config.DrillConfig;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.server.options.OptionDefinition;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 
 /**
  * Builds a {@link DrillConfig} for use in tests. Use this when a config
@@ -34,12 +37,13 @@ public class ConfigBuilder {
 
   protected String configResource;
   protected Properties configProps;
+  protected CaseInsensitiveMap<OptionDefinition> definitions = SystemOptionManager.createDefaultOptionDefinitions();
 
   /**
    * Use the given configuration properties as overrides.
    * @param configProps a collection of config properties
    * @return this builder
-   * @see {@link #configProperty(String, Object)}
+   * @see {@link #put(String, Object)}
    */
 
   public ConfigBuilder configProps(Properties configProps) {
@@ -64,11 +68,11 @@ public class ConfigBuilder {
    * drill.exec.http.enabled : false
    * </code></pre>
    * It may be more convenient to add your settings to the default
-   * config settings with {@link #configProperty(String, Object)}.
+   * config settings with {@link #put(String, Object)}.
    * @param configResource path to the file that contains the
    * config file to be read
    * @return this builder
-   * @see {@link #configProperty(String, Object)}
+   * @see {@link #put(String, Object)}
    */
 
   public ConfigBuilder resource(String configResource) {
@@ -103,6 +107,15 @@ public class ConfigBuilder {
     }
     configProps.put(key, value.toString());
     return this;
+  }
+
+  public ConfigBuilder putDefinition(OptionDefinition definition) {
+    definitions.put(definition.getValidator().getOptionName(), definition);
+    return this;
+  }
+
+  public CaseInsensitiveMap<OptionDefinition> getDefinitions() {
+    return CaseInsensitiveMap.newImmutableMap(definitions);
   }
 
   public DrillConfig build() {

@@ -23,6 +23,8 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.ValidationException;
 
 import org.apache.calcite.util.NlsString;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
@@ -30,8 +32,8 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
+import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlLiteral;
@@ -64,19 +66,15 @@ public class SetOptionHandler extends AbstractSqlHandler {
     }
 
     final String scope = option.getScope();
-    final OptionValue.OptionType type;
     final OptionValue.OptionScope optionScope;
     if (scope == null) { // No scope mentioned assumed SESSION
-      type = OptionType.SESSION;
       optionScope = OptionScope.SESSION;
     } else {
       switch (scope.toLowerCase()) {
       case "session":
-        type = OptionType.SESSION;
         optionScope = OptionScope.SESSION;
         break;
       case "system":
-        type = OptionType.SYSTEM;
         optionScope = OptionScope.SYSTEM;
         break;
       default:
@@ -86,8 +84,8 @@ public class SetOptionHandler extends AbstractSqlHandler {
       }
     }
 
-    final OptionManager options = context.getOptions();
-    if (type == OptionType.SYSTEM) {
+    final QueryOptionManager options = context.getOptions();
+    if (optionScope == OptionScope.SYSTEM) {
       // If the user authentication is enabled, make sure the user who is trying to change the system option has
       // administrative privileges.
       if (context.isUserAuthenticationEnabled() &&
@@ -101,53 +99,55 @@ public class SetOptionHandler extends AbstractSqlHandler {
       }
     }
 
+    final String optionName = option.getName().toString();
+
     // Currently, we convert multi-part identifier to a string.
-    final String name = option.getName().toString();
+    final OptionManager chosenOptions = options.getOptionManager(optionScope);
+
     if (value != null) { // SET option
-      final OptionValue optionValue = createOptionValue(name, type, (SqlLiteral) value, optionScope);
-      options.setOption(optionValue);
+      final Object literalObj = sqlLiteralToObject((SqlLiteral) value);
+      chosenOptions.setLocalOption(optionName, literalObj);
     } else { // RESET option
-      if ("ALL".equalsIgnoreCase(name)) {
-        options.deleteAllOptions(type);
+      if ("ALL".equalsIgnoreCase(optionName)) {
+        chosenOptions.deleteAllLocalOptions();
       } else {
-        options.deleteOption(name, type);
+        chosenOptions.deleteLocalOption(optionName);
       }
     }
 
-    return DirectPlan.createDirectPlan(context, true, String.format("%s updated.", name));
+    return DirectPlan.createDirectPlan(context, true, String.format("%s updated.", optionName));
   }
 
-  private static OptionValue createOptionValue(final String name, final OptionValue.OptionType type,
-                                               final SqlLiteral literal, final OptionValue.OptionScope scope) {
+  private static Object sqlLiteralToObject(final SqlLiteral literal) {
     final Object object = literal.getValue();
     final SqlTypeName typeName = literal.getTypeName();
     switch (typeName) {
     case DECIMAL: {
       final BigDecimal bigDecimal = (BigDecimal) object;
       if (bigDecimal.scale() == 0) {
-        return OptionValue.createLong(type, name, bigDecimal.longValue(), scope);
+        return bigDecimal.longValue();
       } else {
-        return OptionValue.createDouble(type, name, bigDecimal.doubleValue(), scope);
+        return bigDecimal.doubleValue();
       }
     }
 
     case DOUBLE:
     case FLOAT:
-      return OptionValue.createDouble(type, name, ((BigDecimal) object).doubleValue(), scope);
+      return ((BigDecimal) object).doubleValue();
 
     case SMALLINT:
     case TINYINT:
     case BIGINT:
     case INTEGER:
-      return OptionValue.createLong(type, name, ((BigDecimal) object).longValue(), scope);
+      return ((BigDecimal) object).longValue();
 
     case VARBINARY:
     case VARCHAR:
     case CHAR:
-      return OptionValue.createString(type, name, ((NlsString) object).getValue(), scope);
+      return ((NlsString) object).getValue().toString();
 
     case BOOLEAN:
-      return OptionValue.createBoolean(type, name, (Boolean) object, scope);
+      return object;
 
     default:
       throw UserException.validationError()
