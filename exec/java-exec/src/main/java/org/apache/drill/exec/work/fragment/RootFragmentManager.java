@@ -17,73 +17,22 @@
  */
 package org.apache.drill.exec.work.fragment;
 
-import java.io.IOException;
-
-import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.rpc.data.IncomingDataBatch;
-import org.apache.drill.exec.work.batch.IncomingBuffers;
 
-// TODO a lot of this is the same as NonRootFragmentManager
-public class RootFragmentManager implements FragmentManager {
+/**
+ * This managers determines when to run a root fragment node.
+ */
+public class RootFragmentManager extends AbstractFragmentManager {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootFragmentManager.class);
 
-  private final IncomingBuffers buffers;
-  private final FragmentExecutor runner;
-  private final FragmentHandle handle;
-  private volatile boolean cancel = false;
-
-  public RootFragmentManager(final FragmentHandle handle, final IncomingBuffers buffers, final FragmentExecutor runner) {
-    super();
-    this.handle = handle;
-    this.buffers = buffers;
-    this.runner = runner;
-  }
-
-  @Override
-  public boolean handle(final IncomingDataBatch batch) throws FragmentSetupException, IOException {
-    return buffers.batchArrived(batch);
+  public RootFragmentManager(final PlanFragment fragment, final FragmentExecutor fragmentExecutor,
+                             final FragmentStatusReporter statusReporter) {
+    super(fragment, fragmentExecutor, statusReporter);
   }
 
   @Override
   public void receivingFragmentFinished(final FragmentHandle handle) {
     throw new IllegalStateException("The root fragment should not be sending any messages to receiver.");
   }
-
-  @Override
-  public FragmentExecutor getRunnable() {
-    return runner;
-  }
-
-  public FragmentHandle getHandle() {
-    return handle;
-  }
-
-  @Override
-  public void cancel() {
-    cancel = true;
-    runner.cancel();
-  }
-
-  @Override
-  public boolean isCancelled() {
-    return cancel;
-  }
-
-  @Override
-  public void unpause() {
-    runner.unpause();
-  }
-
-  @Override
-  public boolean isWaiting() {
-    return !buffers.isDone() && !cancel;
-  }
-
-  @Override
-  public FragmentContext getFragmentContext() {
-    return runner.getContext();
-  }
-
 }
