@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Mac OS X"
-date: 2017-06-06 23:26:12 UTC
+date: 2017-08-17 04:11:50 UTC
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data
@@ -10,7 +10,7 @@ procedure:
 * [Step 1: Driver Installer Updates Sample Configuration Files]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-1:-driver-installer-updates-sample-configuration-files)
 * [Step 2: Set Environment Variables]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-2:-set-environment-variables)
 * [Step 3: Define the ODBC Data Sources in odbc.ini]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-3:-define-the-odbc-data-sources-in-.odbc.ini)
-* [Step 4: Configure the MapR Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-4:-configure-the-mapr-drill-odbc-driver)
+* [Step 4: Configure the Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-4:-configure-the-drill-odbc-driver)
 
 ## Step 1: Driver Installer Updates Sample Configuration Files
 
@@ -73,11 +73,6 @@ You set the following properties for using Drill in distributed mode:
 ### Authentication Properties
 If the Drillbit requires authentication, uncomment the AuthenticationType, add an AuthenticationType, and configure properties. If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option. You do not need to configure additional settings.
 
-
-* **MapRSASL** 
-	* The MapR login utility must be used to obtain a MapR ticket for MapR SASL authentication. 
-	* You must install and configure the MapR login utility before you can use the MapR SASL authentication mechanism. See <a href="http://maprdocs.mapr.com/home/SecurityGuide/SecurityArchitecture-AuthenticationArchitecture.html" title="MapR Login Utilty">Authentication Architecture: The maprlogin Utility</a> and <a href="http://maprdocs.mapr.com/home/SecurityGuide/Tickets.html">Tickets</a>.
-
 * **Kerberos** 
 	*  See the <a href="http://web.mit.edu/kerberos/" title="MIT Kerberos">MIT Kerberos</a> documentation for installing and configuring a Kerberos environment, which is beyond the scope of the information provided here.
 	* To specify the Kerberos mechanism:
@@ -106,7 +101,7 @@ To use Drill in local mode, do not define the ZKQuorum and ZKClusterID propertie
 * `PORT=31010`
 
 [Driver Configuration Options]({{ site.baseurl }}/docs/odbc-configuration-reference/#configuration-options) describes configuration options available for controlling the
-behavior of DSNs using the MapR Drill ODBC Driver.
+behavior of DSNs using the Drill ODBC Driver.
 
 ###Sample Configuration File
 The following sample shows a possible configuration for using Drill in embedded mode. 
@@ -136,7 +131,7 @@ The following sample shows a possible configuration for using Drill in embedded 
 
     # If ConnectionType is Direct, include Host and Port. If ConnectionType is ZooKeeper, include ZKQuorum and ZKClusterID
     # They can also be specified on the connection string.
-    # AuthenticationType: No authentication; Plain; Kerberos; MapRSASL
+    # AuthenticationType: No authentication; Plain; Kerberos;
     ConnectionType=Direct
     HOST=localhost
     PORT=31010
@@ -155,13 +150,11 @@ The following sample shows a possible configuration for using Drill in embedded 
 
     # The DriverUnicodeEncoding setting is only used for MapRDM
 
-
-
 ----------
 
-## Step 4: Configure the MapR Drill ODBC Driver
+## Step 4: Configure the Drill ODBC Driver
 
-Configure the MapR Drill ODBC Driver for your environment by modifying the `.mapr.drillodbc.ini` configuration
+Configure the Drill ODBC Driver for your environment by modifying the `.mapr.drillodbc.ini` configuration
 file. This configures the driver to work with your ODBC driver manager. The following sample shows a possible configuration, which you can use as is if you installed the default iODBC driver manager.
 
 **Example**
@@ -177,7 +170,7 @@ file. This configures the driver to work with your ODBC driver manager. The foll
 
 ### Configuring .mapr.drillodbc.ini
 
-To configure the MapR Drill ODBC Driver in the `.mapr.drillodbc.ini` configuration file, complete the following steps:
+To configure the Drill ODBC Driver in the `.mapr.drillodbc.ini` configuration file, complete the following steps:
 
   1. Open the `.mapr.drillodbc.ini` configuration file in a text editor. 
  

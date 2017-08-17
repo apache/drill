@@ -1,6 +1,6 @@
 ---
 title: "Testing the ODBC Connection"
-date: 2017-06-06 23:26:13 UTC
+date: 2017-08-17 04:11:59 UTC
 parent: "Configuring ODBC"
 ---
 You can use DSN connection strings and DSN-less connection strings for your connections.
@@ -73,20 +73,6 @@ Example:
 	Host=192.168.222.160;Port=31010;
 	AuthenticationType=Kerberos; 
 	KrbServiceHost=maprdriverdemo.example.com;	KrbServiceName=drill
-
-###MapR-SASL Authentication Connections
-
-The following is the format of a DSN-less connection string for a Drillbit that requires MapR-SASL authentication:
-
-Driver=MapR Drill ODBC Driver;ConnectionType=Direct; Host=[*Server*];Port=[*PortNumber*];AuthenticationType=MapRSASL
-
-Example:
-
-    Driver=MapR Drill ODBC Driver;
-	ConnectionType=Direct; 
-	Host=192.168.227.169;
-	Port=31010;
-	AuthenticationType=MapRSASL
 
 ###Plain Authentication Connections
 

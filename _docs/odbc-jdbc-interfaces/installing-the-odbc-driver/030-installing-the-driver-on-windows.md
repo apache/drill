@@ -1,27 +1,23 @@
 ---
 title: "Installing the Driver on Windows"
-date: 2017-06-21 23:59:01 UTC
+date: 2017-08-17 04:12:13 UTC
 parent: "Installing the ODBC Driver"
 ---
-The MapR Drill ODBC Driver installer is available for 32- and 64-bit
+The Drill ODBC Driver installer is available for 32- and 64-bit
 applications on Windows®. On 64-bit Windows operating systems, you can execute both 32- and 64-bit applications. However, 64-bit applications must use 64-bit drivers, and 32-bit applications must use 32-bit drivers. Make sure that you use the driver version that matches the bitness of the client application machine. 
 					
-  * MapR Drill 1.3 32-bit.msi for 32-bit applications
-  * MapR Drill 1.3 64-bit.msi for 64-bit applications  
+  * Drill 1.3 32-bit.msi for 32-bit applications
+  * Drill 1.3 64-bit.msi for 64-bit applications  
 
   
 {% include startnote.html %}Currently Drill does not support a 32-bit Windows machine. However, the 32- or 64-bit MapR Drill ODBC Driver is supported on a 64-bit machine.{% include endnote.html %}
 
 
-Install the MapR Drill ODBC Driver on a system that meets the system requirements. Complete the following steps, described in detail in this document:  
+To install the Drill ODBC Driver on a system that meets the system requirements, complete the following steps:  
 
-   *  [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-1:-download-the-mapr-drill-odbc-driver)
-   *  [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-2:-install-the-mapr-drill-odbc-driver) 
+   *  [Step 1: Download the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-1:-download-the-drill-odbc-driver)
+   *  [Step 2: Install the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-2:-install-the-drill-odbc-driver) 
    *  [Step 3: Verify the installation]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-3:-verify-the-installation) 
-
-## Known Issue
-
-The 32-bit driver does not support MapR-SASL. The 32-bit driver supports Plain and Kerberos authentication only. 
 
 ##  System Requirements
 
@@ -49,7 +45,7 @@ To install the driver, you need Administrator privileges on the computer.
 
 ----------
 
-## Step 1: Download the MapR Drill ODBC Driver
+## Step 1: Download the Drill ODBC Driver
 
 Download the installer that corresponds to the bitness of the client application from which you want to create an ODBC connection. The current version is 1.3.8.
 
@@ -58,7 +54,7 @@ Download the installer that corresponds to the bitness of the client application
 
 ----------
 
-## Step 2: Install the MapR Drill ODBC Driver
+## Step 2: Install the Drill ODBC Driver
 
 1. Double-click the installer from the location where you downloaded it.
 2. Click **Next.**
@@ -76,7 +72,7 @@ To verify the installation on Windows 10, perform the following steps:
 1\. Go to **Settings** and enter **odbc**.  
 
 
-2\. Select **Set up ODBC data sources `<version>`**.  The **ODBC Data Source Administrator `<version>`** dialog appears. Click the **System DSN** to view the MapR Drill data source. 
+2\. Select **Set up ODBC data sources `<version>`**.  The **ODBC Data Source Administrator `<version>`** dialog appears. Click the **System DSN** to view the Drill data source. 
 
 ![](http://i.imgur.com/IEN5iek.png) 
 

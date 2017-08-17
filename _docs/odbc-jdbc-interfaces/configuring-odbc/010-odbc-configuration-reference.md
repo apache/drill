@@ -1,9 +1,9 @@
 ---
 title: "ODBC Configuration Reference"
-date: 2017-06-06 23:26:11 UTC
+date: 2017-08-17 04:11:39 UTC
 parent: "Configuring ODBC"
 ---
-You can use various configuration options to control the behavior of the MapR Drill ODBC Driver. You can use these options in a connection string or in the `odbc.ini` configuration file for the Mac OS X version or the driver.
+You can use various configuration options to control the behavior of the Drill ODBC Driver. You can use these options in a connection string or in the `odbc.ini` configuration file for the Mac OS X version or the driver.
 
 {% include startnote.html %}If you use a connection string to connect to your data source, set these configuration properties in the connection string instead of the .odbc.ini file.{% include endnote.html %}
 
@@ -14,7 +14,7 @@ The following table provides a list of the configuration options and a brief des
 | ﻿Property | Default Values | Brief Description |
 |-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | AdvancedProperties | `CastAnyToVarchar=true; HandshakeTimeout=5; QueryTimeout=180; TimestampTZDisplayTimezone=local; ExcludedSchemas= sys,INFORMATION_SCHEMA; NumberOfPrefetchBuffers=5` | Not required. Advanced properties for configuring the driver. You can set custom connection properties by specifying them as advanced properties.   If you specify a property that the driver does not explicitly support, the driver still accepts the property, and passes it to the server for processing.  Separate advanced properties using a semi-colon (;) and then surround all advanced properties in a connection string using braces { and }. For example,  `{<property>;<property>; . . .}`  In addition, the following Advanced Properties string excludes the schemas named `test` and `abc`, sets the timeout to 30 seconds, and sets the time zone to Coordinated Universal Time:`HandshakeTimeout=30;QueryTimeout=30;TimestampTZDisplayTimezone=utc;ExcludedSchemas=test,abc`. |
-| AuthenticationType | No Authentication | Not required.  This option specifies how the driver authenticates the connection to Drill.   No Authentication: The driver does not authenticate the connection to Drill. Kerberos: The driver authenticates the connection using the Kerberos protocol. Plain: The driver authenticates the connection using a user name and a password. MapRSASL: The driver authenticates the connection using the MapR-SASL protocol. |
+| AuthenticationType | No Authentication | Not required.  This option specifies how the driver authenticates the connection to Drill.   No Authentication: The driver does not authenticate the connection to Drill. Kerberos: The driver authenticates the connection using the Kerberos protocol. Plain: The driver authenticates the connection using a user name and a password.  |
 | Catalog | The default catalog name specified  in the driver's .did file (typically, DRILL). | Not required. The name of the synthetic catalog under which all of the schemas/databases are organized. This catalog name is used as the value for SQL_DATABASE_NAME or CURRENT CATALOG. |
 | ConnectionType | Direct to Drillbit (Direct) | Required. This option specifies whether the driver connects to a single server or a ZooKeeper cluster. Direct to Drillbit (Direct): The driver connects to a single Drill server. ZooKeeper Quorum (ZooKeeper): The driver connects to a ZooKeeper cluster. |
 | DelegationUID | none | Not required. If a value is specified for this setting, the driver delegates all operations against Drill to the specified user, rather than to the authenticated user for the connection. This option is applicable only when Plain authentication is enabled. |
@@ -126,55 +126,6 @@ The following is an example connection string for the Zookeeper connection type:
 
     DRIVER=MapR Drill ODBC Driver;AdvancedProperties={HandshakeTimeout=0;QueryTimeout=0;TimestampTZDisplayTimezone=utc;ExcludedSchemas=sys, INFORMATION_SCHEMA;};Catalog=DRILL;Schema=;ConnectionType=ZooKeeper;ZKQuorum=192.168.39.43:5181;ZKClusterID=drillbits1
 
-## Logging Options
-
-Configure logging to troubleshoot issues. To configure logging, click the **Logging Options** button on the ODBC DSN Setup dialog and then set a log leveland a log path.
-
-If logging is enabled, the MapR Drill ODBC driver logs events in following log files in the log path that you configure:
-
-* `driver.log` provides a log of driver events.
-* `drillclient.log` provides a log of the Drill client events.
-
-
-### Logging Levels
-
-The following log levels are available:
-
-* (0) OFF: Disables logging.
-* (1) FATAL: Logs severe error events that may cause the driver to stop running.
-* (2) ERROR: Logs error events that may allow the driver to continue running.
-* (3) WARNING: Logs events about potentially harmful situations.
-* (4) INFO: Logs high-level events about driver processes.
-* (5) DEBUG: Logs detailed events that may help to debug issues.
-* (6) TRACE: Logs finer-grained events than the DEBUG level.
-
-### Enabling Logging
-
-To enable logging:
-
-1. Open the `.mapr.drillodbc.ini` configuration file in a text editor. (On Mac OS X, the default installation will install a .mapr.drillodbc.ini to $HOME.)
-
-2. Set the LogLevel key to the desired level of information to include in log files. 
-For example:
-
-      `LogLevel=2`
-
-3. Set the LogPath key to the full path to the folder where you want to save log files. 
-For example:  
-
-      `LogPath=/localhome/employee/Documents`
-
-4. Save the `.mapr.drillodbc.ini` configuration file. The MapR Drill ODBC Driver produces two log files at the location you specify using the Log Path field:  
-   * `driver.log` provides a log of driver activities.
-   * `drillclient.log` provides a log of Drill client activities.
-
-### Disabling Logging
-
-To disable logging:
-
-1. Open the `.mapr.drillodbc.ini` configuration file in a text editor.
-2. Set the LogLevel key to zero (`0`).
-3. Save the `.mapr.drillodbc.ini` configuration file.  
 
 
 

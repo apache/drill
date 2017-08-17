@@ -1,18 +1,23 @@
 ---
 title: "Secure Communication Paths"
-date: 2017-08-07 19:02:29 UTC
+date: 2017-08-17 04:11:19 UTC
 parent: "Securing Drill"
 ---
 As illustrated in the following figure, Drill features five secure communication paths. Drill 1.11 introduces encryption between a Drill client and Drillbit. 
 
 
-1. [Web Client to Drillbit]({{site.baseurl}}/docs/server-communication-paths/#web-client-to-drillbit)
-1. [C++ Client to Drillbit]({{site.baseurl}}/docs/server-communication-paths/#c++-client-to-drillbit)
-1. [Java Client to Drillbit]({{site.baseurl}}/docs/server-communication-paths/#java-client-to-drillbit)
-1. [Java Client and Drillbit to ZooKeeper]({{site.baseurl}}/docs/server-communication-paths/#java-client-and-drillbit-to-zookeeper)
-1. [Drillbit to Hive Storage Plugin]({{site.baseurl}}/docs/server-communication-paths/#drillbit-to-hive-storage-plugin)
+1. [Web Client to Drillbit]({{site.baseurl}}/docs/secure-communication-paths/#web-client-to-drillbit)
+1. [Java and C++ Client to Drillbit]({{site.baseurl}}/docs/secure-communication-paths/#java-and-c++-client-to-drillbit)
+1. [Java Client and Drillbit to ZooKeeper]({{site.baseurl}}/docs/secure-communication-paths/#drill-client-and-drillbit-to-zookeeper)
+1. [Drillbit to Hive Storage Plugin]({{site.baseurl}}/docs/secure-communication-paths/#drillbit-to-hive-storage-plugin)
 
 ![secure comm paths]({{ site.baseurl }}/docs/img/secure-communication-paths.png)
+
+---
+**Note**
+
+Drillbit-to-drillbit encryption is not available yet.
+
 
 ## Web Client to Drillbit
 

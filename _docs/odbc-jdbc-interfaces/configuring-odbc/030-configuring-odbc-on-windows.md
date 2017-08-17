@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Windows"
-date: 2017-06-22 20:42:15 UTC
+date: 2017-08-17 04:11:54 UTC
 parent: "Configuring ODBC"
 ---
 To create an ODBC connection to Drill data sources on Windows, complete the following steps:
@@ -38,13 +38,10 @@ version of the ODBC Data Source Administrator to create the DSN.
 ### Step 2: Select an Authentication Option
 To password protect the DSN, select the appropriate authentication type in the **Authentication Type** dropdown.  If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option. You do not need to configure additional settings.
 
-* **MapR-SASL**
-	* The maprlogin utility must be used to obtain a MapR ticket. To install and use the MapR login utility, see <a href="http://maprdocs.mapr.com/home/SecurityGuide/SecurityArchitecture-AuthenticationArchitecture.html" title="MapR Login Utilty">Authentication Architecture: The maprlogin Utility</a> and <a href="http://maprdocs.mapr.com/home/SecurityGuide/Tickets.html/">Tickets</a>.
 * **Kerberos** - configure Host FQDN and Service Name properties.
 	* To specify the default Kerberos mechanism, select the Use Only SSPI checkbox.
 	* To use MIT Kerberos by default and only use the SSPI plugin if the GSSAPI library is not available, clear the Use Only SSPI checkbox.
 * **Plain Authentication** - configure UID and PWD properties. 
-
 
 ### Step 3: Configure the Connection Type
 In the **Connection Type** section, **Direct to Drillbit** is selected for using Drill in embedded mode. To use Drill in embedded mode, set the connection type to **Direct** and define HOST and PORT properties. For example:

@@ -1,9 +1,9 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2017-06-21 23:59:00 UTC
+date: 2017-08-17 04:12:04 UTC
 parent: "Installing the ODBC Driver"
 ---
-Install the MapR Drill ODBC Driver on the machine from which you connect to
+Install the Drill ODBC Driver on the machine from which you connect to
 the Drill service. You can install the 32- or 64-bit driver on Linux. Install
 the version of the driver that matches the architecture of the client
 application that you use to access Drill. The 64-bit editions of Linux support
@@ -11,15 +11,12 @@ application that you use to access Drill. The 64-bit editions of Linux support
 
 Install the MapR Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/installing-the-driver-on-linux/#system-requirements), and then complete the following steps described in detail in this document:
 
-  * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-1:-download-the-mapr-drill-odbc-driver) 
-  * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-2:-install-the-mapr-drill-odbc-driver)
-  * [Step 3: Check the MapR Drill ODBC Driver version]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-3:-check-the-mapr-drill-odbc-driver-version)
+  * [Step 1: Download the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-1:-download-the-mapr-drill-odbc-driver) 
+  * [Step 2: Install the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-2:-install-the-mapr-drill-odbc-driver)
+  * [Step 3: Check the Drill ODBC Driver version]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-3:-check-the-mapr-drill-odbc-driver-version)
 
 Verify that your system meets the system requirements before you start.
 
-## Known Issue
-
-MapR-SASL is not supported on 32-bit machines. 
 
 ## System Requirements
 
@@ -43,10 +40,10 @@ MapR-SASL is not supported on 32-bit machines.
 
 To install the driver, you need Administrator privileges on the computer. 
 
-## Step 1: Download the MapR Drill ODBC Driver
+## Step 1: Download the Drill ODBC Driver
 Download the driver from the [download site](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/). The current version is 1.3.8.
 
-## Step 2: Install the MapR Drill ODBC Driver
+## Step 2: Install the Drill ODBC Driver
 
 To install the driver, complete the following steps:
 
@@ -65,10 +62,10 @@ To install the driver, complete the following steps:
       	`zypper install RPMFileName`
 
 
-The MapR Drill ODBC Driver typically resolves dependencies automatically. If not, error messages during the installation indicate that the package manager in your Linux distribution cannot resolve the
+The Drill ODBC Driver typically resolves dependencies automatically. If not, error messages during the installation indicate that the package manager in your Linux distribution cannot resolve the
 dependencies automatically. In this case, manually install the packages.
 
-The following table provides a list of the MapR Drill ODBC Driver file
+The following table provides a list of the Drill ODBC Driver file
 locations and descriptions:
 
 File| Description  
@@ -78,7 +75,7 @@ File| Description
 `/opt/mapr/drill/lib/32 `| 32-bit shared libraries directory (will be created if you install the 32-bit driver).  
 `/opt/mapr/drill/lib/64`| 64-bit shared libraries directory (will be created if you install the 64-bit driver)..  
   
-## Step 3: Check the MapR Drill ODBC Driver Version
+## Step 3: Check the Drill ODBC Driver Version
 
 To check the version of the driver you installed, use the following case-sensitive command on the terminal command line:
 
