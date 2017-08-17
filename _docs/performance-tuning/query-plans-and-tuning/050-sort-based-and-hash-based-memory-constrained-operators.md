@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2017-08-17 21:20:22 UTC
+date: 2017-08-17 22:46:43 UTC
 parent: "Query Plans and Tuning"
 --- 
 
@@ -9,7 +9,7 @@ Drill uses hash-based and sort-based operators depending on the query characteri
 When planning a query with sort- and hash-based operations, Drill evaluates the available memory multiplied by a configurable reduction constant (for parallelization purposes) and then limits the operations to the maximum of this amount of memory. Drill spills data to disk if the sort and hash aggregate operations cannot be performed in memory. Alternatively, you can disable large hash operations if they do not fit in memory on your system. When disabled, Drill creates alternative plans. You can also modify the minimum hash table size, increasing the size for very large aggregations or joins when you have large amounts of memory for Drill to use. If you have large data sets, you can increase the hash table size to improve performance. 
 
 ##Memory Options
-The `planner.memory.max_query_memory_per_node` option sets the maximum amount of direct memory allocated to the Sort and Hash Aggregate operators during each query on a node. The default limit is 2147483648 bytes (2GB), which is quite conservative. This memory is split between operators. If a query plan contains multiple Sort and/or Hash Aggregate operators, the memory is divided between them.
+The `planner.memory.max_query_memory_per_node` option sets the maximum amount of direct memory allocated to the Sort and Hash Aggregate operators during each query on a node. The default limit is set to 2147483648 bytes (2GB), which is too small for queries on large data sets and should be increased. This memory is split between operators. If a query plan contains multiple Sort and/or Hash Aggregate operators, the memory is divided between them.
 
 When a query is parallelized, the number of operators is multiplied, which reduces the amount of memory given to each instance of the Sort and Hash Aggregate operators during a query. If you encounter memory issues when running queries with Sort and Hash Aggregate operators, calculate the memory requirements for your queries and the amount of available memory on each node. Based on the information, increase the value of the `planner.memory.max_query_memory_per_node` option using the ALTER SYSTEM|SESSION SET command, as shown:  
 
