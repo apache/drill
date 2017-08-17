@@ -28,6 +28,8 @@ import mockit.MockUp;
 import mockit.NonStrictExpectations;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -41,6 +43,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.MaterializedField;
@@ -50,6 +53,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
+import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.vector.Float8Vector;
@@ -66,6 +70,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -361,6 +366,98 @@ public class TestBitBitKerberos extends BaseTestQuery {
       fail();
     } catch(Exception ex) {
       assertTrue(ex.getCause() instanceof DrillbitStartupException);
+    }
+  }
+
+  /**
+   * Test to validate that a query which is running only on local Foreman node runs fine even if the Bit-Bit
+   * Auth config is wrong. With DRILL-5721, all the local fragment setup and status update
+   * doesn't happen over Control tunnel but instead happens locally. Without the fix in DRILL-5721 these queries will
+   * hang.
+   *
+   * This test only starts up 1 Drillbit so that all fragments are scheduled on Foreman Drillbit node
+   * @throws Exception
+   */
+  @Test
+  public void localQuerySuccessWithWrongBitAuthConfig() throws Exception {
+
+    final Properties connectionProps = new Properties();
+    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
+    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
+    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
+
+    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
+        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+            ConfigValueFactory.fromAnyRef(true))
+        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
+            ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
+        .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+            ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
+        .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
+        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
+            ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+        .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
+            ConfigValueFactory.fromAnyRef(true))
+        .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
+            ConfigValueFactory.fromAnyRef("kerberos"))
+        .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
+            ConfigValueFactory.fromAnyRef(false))
+        ,false);
+
+    updateTestCluster(1, newConfig, connectionProps);
+
+    // Run a query using the new client
+    final String query = getFile("queries/tpch/01.sql");
+    test(query);
+  }
+
+  /**
+   * Test to validate that query setup fails while scheduling remote fragments when multiple Drillbits are running with
+   * wrong Bit-to-Bit Authentication configuration.
+   *
+   * This test starts up 2 Drillbit so that there are combination of local and remote fragments for query
+   * execution. Note: When test runs with wrong config then for control connection Drillbit's uses wrong
+   * service principal to talk to another Drillbit, and due to this Kerby server also fails with NullPointerException.
+   * But for unit testing this should be fine.
+   * @throws Exception
+   */
+  @Test
+  public void queryFailureWithWrongBitAuthConfig() throws Exception {
+    try{
+      final Properties connectionProps = new Properties();
+      connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
+      connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
+      connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
+
+      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
+          .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+              ConfigValueFactory.fromAnyRef(true))
+          .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
+              ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
+          .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+              ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
+          .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+              ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
+          .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
+              ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+          .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
+              ConfigValueFactory.fromAnyRef(true))
+          .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
+              ConfigValueFactory.fromAnyRef("kerberos"))
+          .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
+              ConfigValueFactory.fromAnyRef(false))
+          ,false);
+
+      updateTestCluster(2, newConfig, connectionProps);
+
+      test("alter session set `planner.slice_target` = 10");
+      final String query = getFile("queries/tpch/01.sql");
+      test(query);
+      fail();
+    } catch(Exception ex) {
+      assertTrue(ex instanceof UserRemoteException);
+      assertTrue(((UserRemoteException)ex).getErrorType() == UserBitShared.DrillPBError.ErrorType.CONNECTION);
     }
   }
 

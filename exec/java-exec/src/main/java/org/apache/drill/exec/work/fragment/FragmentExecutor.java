@@ -92,7 +92,7 @@ public class FragmentExecutor implements Runnable {
    * @param rootOperator
    */
   public FragmentExecutor(final FragmentContext context, final PlanFragment fragment,
-      final FragmentStatusReporter statusReporter, final FragmentRoot rootOperator) {
+                          final FragmentStatusReporter statusReporter, final FragmentRoot rootOperator) {
     this.fragmentContext = context;
     this.statusReporter = statusReporter;
     this.fragment = fragment;
@@ -261,6 +261,9 @@ public class FragmentExecutor implements Runnable {
       eventProcessor.start();
 
       // here we could be in FAILED, RUNNING, or CANCELLATION_REQUESTED
+      // FAILED state will be because of any Exception in execution loop root.next()
+      // CANCELLATION_REQUESTED because of a CANCEL request received by Foreman.
+      // ELSE will be in FINISHED state.
       cleanup(FragmentState.FINISHED);
 
       clusterCoordinator.removeDrillbitStatusListener(drillbitStatusListener);
