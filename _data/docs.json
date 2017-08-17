@@ -1710,12 +1710,33 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring ODBC on Linux", 
-                    "next_url": "/docs/configuring-odbc-on-linux/", 
+                    "next_title": "ODBC Configuration Reference", 
+                    "next_url": "/docs/odbc-configuration-reference/", 
                     "parent": "Configuring ODBC", 
                     "previous_title": "Configuring ODBC", 
                     "previous_url": "/docs/configuring-odbc/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+                    "title": "ODBC Configuration Reference", 
+                    "url": "/docs/odbc-configuration-reference/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring ODBC", 
+                            "url": "/docs/configuring-odbc/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring ODBC on Linux", 
+                    "next_url": "/docs/configuring-odbc-on-linux/", 
+                    "parent": "Configuring ODBC", 
+                    "previous_title": "ODBC Configuration Reference", 
+                    "previous_url": "/docs/odbc-configuration-reference/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
                     "title": "ODBC Configuration Reference", 
                     "url": "/docs/odbc-configuration-reference/"
                 }, 
@@ -5839,9 +5860,9 @@
             "next_title": "Configuring ODBC on Linux", 
             "next_url": "/docs/configuring-odbc-on-linux/", 
             "parent": "Configuring ODBC", 
-            "previous_title": "Configuring ODBC", 
-            "previous_url": "/docs/configuring-odbc/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+            "previous_title": "ODBC Configuration Reference", 
+            "previous_url": "/docs/odbc-configuration-reference/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
             "title": "ODBC Configuration Reference", 
             "url": "/docs/odbc-configuration-reference/"
         }, 
@@ -6000,12 +6021,33 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC on Linux", 
-                            "next_url": "/docs/configuring-odbc-on-linux/", 
+                            "next_title": "ODBC Configuration Reference", 
+                            "next_url": "/docs/odbc-configuration-reference/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+                            "title": "ODBC Configuration Reference", 
+                            "url": "/docs/odbc-configuration-reference/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring ODBC on Linux", 
+                            "next_url": "/docs/configuring-odbc-on-linux/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "ODBC Configuration Reference", 
+                            "previous_url": "/docs/odbc-configuration-reference/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
                             "title": "ODBC Configuration Reference", 
                             "url": "/docs/odbc-configuration-reference/"
                         }, 
@@ -15124,12 +15166,33 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC on Linux", 
-                            "next_url": "/docs/configuring-odbc-on-linux/", 
+                            "next_title": "ODBC Configuration Reference", 
+                            "next_url": "/docs/odbc-configuration-reference/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+                            "title": "ODBC Configuration Reference", 
+                            "url": "/docs/odbc-configuration-reference/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring ODBC on Linux", 
+                            "next_url": "/docs/configuring-odbc-on-linux/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "ODBC Configuration Reference", 
+                            "previous_url": "/docs/odbc-configuration-reference/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
                             "title": "ODBC Configuration Reference", 
                             "url": "/docs/odbc-configuration-reference/"
                         }, 
