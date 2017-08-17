@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Security"
-date: 2017-08-17 04:11:23 UTC
+date: 2017-08-17 18:54:38 UTC
 parent: "Securing Drill"
 ---
 Drill 1.11 supports Kerberos v5 network security authentication and encryption for Kerberos. To use Kerberos with Drill and establish connectivity, use the JDBC driver packaged with Drill.

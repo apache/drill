@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Windows"
-date: 2017-08-17 04:11:54 UTC
+date: 2017-08-17 18:55:12 UTC
 parent: "Configuring ODBC"
 ---
 To create an ODBC connection to Drill data sources on Windows, complete the following steps:

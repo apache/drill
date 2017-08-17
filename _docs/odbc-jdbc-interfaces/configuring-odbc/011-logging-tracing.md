@@ -1,6 +1,6 @@
 ---
-title: "ODBC Configuration Reference"
-date: 2017-06-06 23:26:11 UTC
+title: "Logging Tracing"
+date: 2017-08-17 18:54:56 UTC
 parent: "Configuring ODBC"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-08-17 04:12:08 UTC
+date: 2017-08-17 18:55:25 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the Drill ODBC Driver on the machine from which you connect to

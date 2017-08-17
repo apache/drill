@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2017-08-17 04:12:04 UTC
+date: 2017-08-17 18:55:21 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the Drill ODBC Driver on the machine from which you connect to
