@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.metrics.DrillMetrics;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 
 public class BlockMapBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BlockMapBuilder.class);
@@ -228,6 +230,7 @@ public class BlockMapBuilder {
 
     // Find submap of ranges that intersect with the rowGroup
     ImmutableRangeMap<Long,BlockLocation> subRangeMap = blockMap.subRangeMap(rowGroupRange);
+    final Set<String> noDrillbitHosts = logger.isDebugEnabled() ? Sets.<String>newHashSet() : null;
 
     // Iterate through each block in this submap and get the host for the block location
     for (Map.Entry<Range<Long>,BlockLocation> block : subRangeMap.asMapOfRanges().entrySet()) {
@@ -246,8 +249,8 @@ public class BlockMapBuilder {
         DrillbitEndpoint endpoint = getDrillBitEndpoint(host);
         if (endpoint != null) {
           endpointByteMap.add(endpoint, bytes);
-        } else {
-          logger.info("Failure finding Drillbit running on host {}.  Skipping affinity to that host.", host);
+        } else if (noDrillbitHosts != null && noDrillbitHosts.add(host)) {
+          logger.debug("Failure finding Drillbit running on host {}.  Skipping affinity to that host.", host);
         }
       }
     }
