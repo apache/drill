@@ -17,44 +17,108 @@
  */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
-import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
-import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
-import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
+import org.apache.drill.common.exceptions.UserException;
 
-public abstract class BaseOptionManager implements OptionSet {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseOptionManager.class);
+import java.util.Iterator;
 
-  /**
-   * Gets the current option value given a validator.
-   *
-   * @param validator the validator
-   * @return option value
-   * @throws IllegalArgumentException - if the validator is not found
-   */
-  private OptionValue getOptionSafe(OptionValidator validator)  {
-    OptionValue value = getOption(validator.getOptionName());
-    return value == null ? validator.getDefault() : value;
+/**
+ * This {@link OptionManager} implements some the basic methods and should be extended by concrete implementations.
+ */
+public abstract class BaseOptionManager extends BaseOptionSet implements OptionManager {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseOptionManager.class);
+
+  @Override
+  public OptionList getInternalOptionList() {
+    return getAllOptionList(true);
   }
 
   @Override
-  public boolean getOption(BooleanValidator validator) {
-    return getOptionSafe(validator).bool_val;
+  public OptionList getPublicOptionList() {
+    return getAllOptionList(false);
   }
 
   @Override
-  public double getOption(DoubleValidator validator) {
-    return getOptionSafe(validator).float_val;
+  public void setLocalOption(final String name, final boolean value) {
+    setLocalOption(name, Boolean.valueOf(value));
   }
 
   @Override
-  public long getOption(LongValidator validator) {
-    return getOptionSafe(validator).num_val;
+  public void setLocalOption(final String name, final long value) {
+    setLocalOption(name, Long.valueOf(value));
   }
 
   @Override
-  public String getOption(StringValidator validator) {
-    return getOptionSafe(validator).string_val;
+  public void setLocalOption(final String name, final double value) {
+    setLocalOption(name, Double.valueOf(value));
   }
 
+  @Override
+  public void setLocalOption(final String name, final String value) {
+    setLocalOption(name, (Object) value);
+  }
+
+  @Override
+  public void setLocalOption(final String name, final Object value) {
+    final OptionDefinition definition = getOptionDefinition(name);
+    final OptionValidator validator = definition.getValidator();
+    final OptionMetaData metaData = definition.getMetaData();
+    final OptionValue.AccessibleScopes type = definition.getMetaData().getType();
+    final OptionValue.OptionScope scope = getScope();
+    checkOptionPermissions(name, type, scope);
+    final OptionValue optionValue = OptionValue.create(type, name, value, scope);
+    validator.validate(optionValue, metaData, this);
+    setLocalOptionHelper(optionValue);
+  }
+
+  @Override
+  public void setLocalOption(final OptionValue.Kind kind, final String name, final String valueStr) {
+    Object value;
+
+    switch (kind) {
+      case LONG:
+        value = Long.valueOf(valueStr);
+        break;
+      case DOUBLE:
+        value = Double.valueOf(valueStr);
+        break;
+      case STRING:
+        value = valueStr;
+        break;
+      case BOOLEAN:
+        value = Boolean.valueOf(valueStr);
+        break;
+      default:
+        throw new IllegalArgumentException(String.format("Unsupported kind %s", kind));
+    }
+
+    setLocalOption(name, value);
+  }
+
+  private static void checkOptionPermissions(String name, OptionValue.AccessibleScopes type, OptionValue.OptionScope scope) {
+    if (!type.inScopeOf(scope)) {
+      throw UserException.permissionError()
+        .message(String.format("Cannot change option %s in scope %s", name, scope))
+        .build(logger);
+    }
+  }
+
+  abstract protected void setLocalOptionHelper(OptionValue optionValue);
+
+  abstract protected OptionValue.OptionScope getScope();
+
+  private OptionList getAllOptionList(boolean internal)
+  {
+    Iterator<OptionValue> values = this.iterator();
+    OptionList optionList = new OptionList();
+
+    while (values.hasNext()) {
+      OptionValue value = values.next();
+
+      if (getOptionDefinition(value.getName()).getMetaData().isInternal() == internal) {
+        optionList.add(value);
+      }
+    }
+
+    return optionList;
+  }
 }

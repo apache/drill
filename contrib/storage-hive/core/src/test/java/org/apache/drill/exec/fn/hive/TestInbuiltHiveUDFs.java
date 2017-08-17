@@ -134,7 +134,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
 
     } finally {
       // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption);
+      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
     }
   }
 

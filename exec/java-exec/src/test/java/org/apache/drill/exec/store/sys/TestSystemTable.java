@@ -34,7 +34,7 @@ public class TestSystemTable extends BaseTestQuery {
   public void alterSessionOption() throws Exception {
 
     newTest() //
-      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by type desc", ExecConstants.JSON_ALL_TEXT_MODE)
+      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by accessibleScopes desc", ExecConstants.JSON_ALL_TEXT_MODE)
       .baselineColumns("bool")
       .ordered()
       .baselineValues(false)
@@ -43,7 +43,7 @@ public class TestSystemTable extends BaseTestQuery {
     test("alter session set `%s` = true", ExecConstants.JSON_ALL_TEXT_MODE);
 
     newTest() //
-      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by type desc ", ExecConstants.JSON_ALL_TEXT_MODE)
+      .sqlQuery("select bool_val as bool from sys.options where name = '%s' order by accessibleScopes desc ", ExecConstants.JSON_ALL_TEXT_MODE)
       .baselineColumns("bool")
       .ordered()
       .baselineValues(false)

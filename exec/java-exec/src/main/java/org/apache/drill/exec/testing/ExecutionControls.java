@@ -22,15 +22,14 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionMetaData;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.TypeValidators.TypeValidator;
 import org.apache.drill.exec.testing.InjectionSite.InjectionSiteKeyDeserializer;
 import org.apache.drill.exec.util.AssertionUtil;
@@ -96,12 +95,7 @@ public final class ExecutionControls {
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      if (v.type != OptionType.SESSION) {
-        throw UserException.validationError()
-            .message("Controls can be set only at SESSION level.")
-            .build(logger);
-      }
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
       final String jsonString = v.string_val;
       try {
         validateControlsString(jsonString);
@@ -110,11 +104,6 @@ public final class ExecutionControls {
             .message(String.format("Invalid controls option string (%s) due to %s.", jsonString, e.getMessage()))
             .build(logger);
       }
-    }
-
-    public void loadDefault(DrillConfig bootConfig){
-      OptionValue value = OptionValue.createString(OptionType.SYSTEM, getOptionName(), bootConfig.getString(getConfigProperty()), OptionValue.OptionScope.BOOT);
-      setDefaultValue(value);
     }
   }
 

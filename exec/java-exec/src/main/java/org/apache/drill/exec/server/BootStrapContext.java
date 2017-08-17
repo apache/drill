@@ -31,6 +31,7 @@ import java.util.concurrent.SynchronousQueue;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.KerberosUtil;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -41,6 +42,7 @@ import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.rpc.security.AuthenticatorProviderImpl;
+import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -64,6 +66,7 @@ public class BootStrapContext implements AutoCloseable {
   public static final String KERBEROS_NAME_MAPPING = SERVICE_LOGIN_PREFIX + ".auth_to_local";
 
   private final DrillConfig config;
+  private final CaseInsensitiveMap<OptionDefinition> definitions;
   private final AuthenticatorProvider authProvider;
   private final EventLoopGroup loop;
   private final EventLoopGroup loop2;
@@ -75,8 +78,10 @@ public class BootStrapContext implements AutoCloseable {
   private final ExecutorService scanDecodeExecutor;
   private final String hostName;
 
-  public BootStrapContext(DrillConfig config, ScanResult classpathScan) throws DrillbitStartupException {
+  public BootStrapContext(DrillConfig config, CaseInsensitiveMap<OptionDefinition> definitions,
+                          ScanResult classpathScan) throws DrillbitStartupException {
     this.config = config;
+    this.definitions = definitions;
     this.classpathScan = classpathScan;
     this.hostName = getCanonicalHostName();
     login(config);
@@ -188,6 +193,10 @@ public class BootStrapContext implements AutoCloseable {
 
   public DrillConfig getConfig() {
     return config;
+  }
+
+  public CaseInsensitiveMap<OptionDefinition> getDefinitions() {
+    return definitions;
   }
 
   public EventLoopGroup getBitLoopGroup() {

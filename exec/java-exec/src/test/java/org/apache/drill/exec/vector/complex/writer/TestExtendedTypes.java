@@ -29,6 +29,7 @@ import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.test.OperatorFixture;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -59,12 +60,13 @@ public class TestExtendedTypes extends BaseTestQuery {
           + "/0_0_0.json"));
       assertEquals(new String(originalData), new String(newData));
     } finally {
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
       testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
           ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getDefault().getValue()));
+          testOptionSet.getDefault(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()).getValue()));
       testNoResult(String.format("ALTER SESSION SET `%s` = %s",
           ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
-          ExecConstants.JSON_EXTENDED_TYPES.getDefault().getValue()));
+          testOptionSet.getDefault(ExecConstants.JSON_EXTENDED_TYPES.getOptionName()).getValue()));
     }
   }
 
@@ -89,12 +91,13 @@ public class TestExtendedTypes extends BaseTestQuery {
       String expected = "drill_timestamp_millies,bin,bin1\n2015-07-07T03:59:43.488,drill,drill\n";
       Assert.assertEquals(expected, actual);
     } finally {
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
       testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
           ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getDefault().getValue()));
+          testOptionSet.getDefault(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()).getValue()));
       testNoResult(String.format("ALTER SESSION SET `%s` = %s",
           ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
-          ExecConstants.JSON_EXTENDED_TYPES.getDefault().getValue()));
+          testOptionSet.getDefault(ExecConstants.JSON_EXTENDED_TYPES.getOptionName()).getValue()));
     }
   }
 }

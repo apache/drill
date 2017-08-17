@@ -19,6 +19,12 @@
 package org.apache.drill.test;
 
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.options.OptionDefinition;
+import org.apache.drill.exec.server.options.OptionMetaData;
+import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.TypeValidators;
+import org.apache.drill.exec.store.sys.SystemTable;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -32,6 +38,51 @@ import static org.junit.Assert.assertEquals;
  * */
 
 public class TestConfigLinkage {
+  public static final String MOCK_PROPERTY = "mock.prop";
+
+  public static OptionDefinition createMockPropOptionDefinition() {
+    return new OptionDefinition(new TypeValidators.StringValidator(MOCK_PROPERTY), new OptionMetaData(OptionValue.AccessibleScopes.ALL, false, true));
+  }
+
+  @Test
+  public void testDefaultInternalValue() throws Exception {
+    OptionDefinition optionDefinition = createMockPropOptionDefinition();
+
+    FixtureBuilder builder = ClusterFixture.builder().
+      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      putDefinition(optionDefinition);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String mockProp = client.queryBuilder().
+        sql("SELECT string_val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS.getTableName(), MOCK_PROPERTY).singletonString();
+      String mockProp2 = client.queryBuilder().
+        sql("SELECT val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS_VAL.getTableName(), MOCK_PROPERTY).singletonString();
+
+      assertEquals("a", mockProp);
+      assertEquals("a", mockProp2);
+    }
+  }
+
+  @Test
+  public void testDefaultValidatorInternalValue() throws Exception {
+    OptionDefinition optionDefinition = createMockPropOptionDefinition();
+
+    FixtureBuilder builder = ClusterFixture.builder().
+      putDefinition(optionDefinition).
+      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a");
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String mockProp = client.queryBuilder().
+        sql("SELECT string_val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS.getTableName(), MOCK_PROPERTY).singletonString();
+      String mockProp2 = client.queryBuilder().
+        sql("SELECT val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS_VAL.getTableName(), MOCK_PROPERTY).singletonString();
+
+      assertEquals("a", mockProp);
+      assertEquals("a", mockProp2);
+    }
+  }
 
   /* Test if session option takes precedence */
   @Test
@@ -39,7 +90,9 @@ public class TestConfigLinkage {
     FixtureBuilder builder = ClusterFixture.builder().sessionOption(ExecConstants.SLICE_TARGET, 10);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.slice_target'").singletonString();
+      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'SESSION'", SystemTable.OPTION_VAL
+        .getTableName())
+        .singletonString();
       assertEquals(slice_target, "10");
     }
   }
@@ -50,19 +103,44 @@ public class TestConfigLinkage {
     FixtureBuilder builder = ClusterFixture.builder().systemOption(ExecConstants.SLICE_TARGET, 10000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.slice_target'").singletonString();
+      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'SYSTEM'", SystemTable.OPTION_VAL.getTableName())
+        .singletonString();
       assertEquals(slice_target, "10000");
     }
   }
 
-  /* Test if config option takes effect if system/session are not set */
+  @Test
+  public void testInternalSystemOption() throws Exception {
+    OptionDefinition optionDefinition = createMockPropOptionDefinition();
+
+    FixtureBuilder builder = ClusterFixture.builder().
+      putDefinition(optionDefinition).
+      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      systemOption(MOCK_PROPERTY, "blah");
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String mockProp = client.queryBuilder().
+        sql("SELECT string_val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS.getTableName(), MOCK_PROPERTY)
+        .singletonString();
+      String mockProp2 = client.queryBuilder().
+        sql("SELECT val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS_VAL.getTableName(), MOCK_PROPERTY)
+        .singletonString();
+
+      assertEquals("blah", mockProp);
+      assertEquals("blah", mockProp2);
+    }
+  }
+
+  /* Test if config option takes precedence if config option is not set */
   @Test
   public void testConfigOption() throws Exception {
     FixtureBuilder builder = ClusterFixture.builder()
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.slice_target'").singletonString();
+      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'BOOT'", SystemTable.OPTION_VAL.getTableName())
+        .singletonString();
       assertEquals(slice_target, "1000");
     }
   }
@@ -73,7 +151,8 @@ public class TestConfigLinkage {
     try (ClusterFixture cluster = ClusterFixture.standardCluster();
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SYSTEM SET `planner.slice_target` = 10000").run();
-      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.slice_target'").singletonString();
+      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'SYSTEM'", SystemTable.OPTION_VAL.getTableName())
+        .singletonString();
       assertEquals(slice_target, "10000");
     }
   }
@@ -85,7 +164,8 @@ public class TestConfigLinkage {
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SESSION SET `planner.slice_target` = 10000").run();
-      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.slice_target'").singletonString();
+      String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'SESSION'", SystemTable.OPTION_VAL.getTableName())
+        .singletonString();
       assertEquals(slice_target, "10000");
     }
   }
@@ -96,7 +176,8 @@ public class TestConfigLinkage {
     FixtureBuilder builder = ClusterFixture.bareBuilder().setOptionDefault(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 2);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.width.max_per_node'").singletonString();
+      String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.width.max_per_node' and optionScope = 'BOOT'", SystemTable.OPTION_VAL.getTableName())
+        .singletonString();
       assertEquals("2", maxWidth);
     }
   }
@@ -107,7 +188,8 @@ public class TestConfigLinkage {
     FixtureBuilder builder = ClusterFixture.bareBuilder().systemOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 3);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.width.max_per_node'").singletonString();
+      String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.width.max_per_node' and optionScope = 'SYSTEM'", SystemTable.OPTION_VAL.getTableName())
+        .singletonString();
       assertEquals("3", maxWidth);
     }
   }
@@ -118,7 +200,8 @@ public class TestConfigLinkage {
     FixtureBuilder builder = ClusterFixture.bareBuilder().sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 2);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.options2 where name='planner.width.max_per_node'").singletonString();
+      String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.width.max_per_node' and optionScope = 'SESSION'", SystemTable.OPTION_VAL.getTableName())
+        .singletonString();
       assertEquals("2", maxWidth);
     }
   }
@@ -145,7 +228,7 @@ public class TestConfigLinkage {
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String scope = client.queryBuilder()
-                          .sql("SELECT optionScope from sys.options2 where name='planner.slice_target'")
+                          .sql("SELECT optionScope from sys.%s where name='planner.slice_target'", SystemTable.OPTION_VAL.getTableName())
                           .singletonString();
       Assert.assertEquals("BOOT",scope);
     }
@@ -158,7 +241,7 @@ public class TestConfigLinkage {
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String scope = client.queryBuilder()
-              .sql("SELECT optionScope from sys.options2 where name='planner.slice_target'")
+              .sql("SELECT optionScope from sys.%s where name='planner.slice_target'", SystemTable.OPTION_VAL.getTableName())
               .singletonString();
       Assert.assertEquals("SYSTEM",scope);
     }
@@ -171,7 +254,7 @@ public class TestConfigLinkage {
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String scope = client.queryBuilder()
-              .sql("SELECT optionScope from sys.options2 where name='planner.slice_target'")
+              .sql("SELECT optionScope from sys.%s where name='planner.slice_target'", SystemTable.OPTION_VAL.getTableName())
               .singletonString();
       Assert.assertEquals("SESSION",scope);
     }
@@ -185,7 +268,7 @@ public class TestConfigLinkage {
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SYSTEM set `planner.slice_target`= 10000").run();
       String scope = client.queryBuilder()
-              .sql("SELECT optionScope from sys.options2 where name='planner.slice_target'")
+              .sql("SELECT optionScope from sys.%s where name='planner.slice_target'", SystemTable.OPTION_VAL.getTableName())
               .singletonString();
       Assert.assertEquals("SYSTEM",scope);
     }
@@ -199,11 +282,34 @@ public class TestConfigLinkage {
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SESSION set `planner.slice_target`= 10000").run();
       String scope = client.queryBuilder()
-              .sql("SELECT optionScope from sys.options2 where name='planner.slice_target'")
+              .sql("SELECT optionScope from sys.%s where name='planner.slice_target'", SystemTable.OPTION_VAL.getTableName())
               .singletonString();
       Assert.assertEquals("SESSION",scope);
     }
   }
 
+  @Test
+  public void testAlterInternalSystemOption() throws Exception {
+    OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
+    FixtureBuilder builder = ClusterFixture.builder().
+      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      putDefinition(optionDefinition);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      client.queryBuilder().sql("ALTER SYSTEM SET `%s` = 'bleh'", MOCK_PROPERTY).run();
+
+      client.queryBuilder().sql("SELECT * FROM sys.%s", SystemTable.INTERNAL_OPTIONS.getTableName()).printCsv();
+      client.queryBuilder().sql("SELECT * FROM sys.%s", SystemTable.INTERNAL_OPTIONS_VAL.getTableName()).printCsv();
+
+      String mockProp = client.queryBuilder().
+        sql("SELECT string_val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS, MOCK_PROPERTY).singletonString();
+      String mockProp2 = client.queryBuilder().
+        sql("SELECT val FROM sys.%s where name='%s'", SystemTable.INTERNAL_OPTIONS_VAL, MOCK_PROPERTY).singletonString();
+
+      assertEquals("bleh", mockProp);
+      assertEquals("bleh", mockProp2);
+    }
+  }
 }

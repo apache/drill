@@ -30,9 +30,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
-
 
 /*
  * Extends the original Option iterator. The idea is to hide the implementation details and present the
@@ -59,9 +57,15 @@ public class ExtendedOptionIterator implements Iterator<Object> {
   private final OptionManager fragmentOptions;
   private final Iterator<OptionValue> mergedOptions;
 
-  public ExtendedOptionIterator(FragmentContext context) {
+  public ExtendedOptionIterator(FragmentContext context, boolean internal) {
     fragmentOptions = context.getOptions();
-    mergedOptions = sortOptions(fragmentOptions.iterator());
+    final Iterator<OptionValue> optionList;
+
+    if (!internal) {
+      mergedOptions = sortOptions(fragmentOptions.getPublicOptionList().iterator());
+    } else {
+      mergedOptions = sortOptions(fragmentOptions.getInternalOptionList().iterator());
+    }
   }
    /* *
     * Remove the redundant rows for the same option based on the scope and return
@@ -118,7 +122,7 @@ public class ExtendedOptionIterator implements Iterator<Object> {
       put(Kind.BOOLEAN,"BIT");
 
     }};
-    return new ExtendedOptionValueWrapper(value.name, typeMapping.get(value.kind), value.type,value.getValue().toString(), value.scope);
+    return new ExtendedOptionValueWrapper(value.name, typeMapping.get(value.kind), value.accessibleScopes,value.getValue().toString(), value.scope);
   }
 
   public enum Status {
@@ -132,15 +136,15 @@ public class ExtendedOptionIterator implements Iterator<Object> {
 
     public final String name;
     public final String kind;
-    public final OptionType type;
+    public final OptionValue.AccessibleScopes accessibleScopes;
     public final String val;
     public final OptionScope optionScope;
 
 
-    public ExtendedOptionValueWrapper(final String name, final String kind, final OptionType type, final String value, final OptionScope scope) {
+    public ExtendedOptionValueWrapper(final String name, final String kind, final OptionValue.AccessibleScopes type, final String value, final OptionScope scope) {
       this.name = name;
       this.kind = kind;
-      this.type = type;
+      this.accessibleScopes = type;
       this.val = value;
       this.optionScope = scope;
     }

@@ -133,6 +133,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   private RemoteServiceSet serviceSet;
   private File dfsTestTempDir;
   protected List<ClientFixture> clients = new ArrayList<>();
+  protected RestClientFixture restClientFixture;
   private boolean usesZk;
   private boolean preserveLocalFiles;
   private boolean isLocal;
@@ -187,7 +188,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     } else if (builder.localZkCount > 0) {
       // Case where we need a local ZK just for this test cluster.
 
-      zkHelper = new ZookeeperHelper("dummy");
+      zkHelper = new ZookeeperHelper();
       zkHelper.startZookeeper(builder.localZkCount);
       ownsZK = true;
     }
@@ -267,7 +268,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     Preconditions.checkArgument(builder.bitCount > 0);
     int bitCount = builder.bitCount;
     for (int i = 0; i < bitCount; i++) {
-      Drillbit bit = new Drillbit(config, serviceSet);
+      Drillbit bit = new Drillbit(config, builder.configBuilder.getDefinitions(), serviceSet);
       bit.run();
 
       // Bit name and registration.
@@ -346,11 +347,23 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     return new ClientFixture.ClientBuilder(this);
   }
 
+  public RestClientFixture.Builder restClientBuilder() {
+    return new RestClientFixture.Builder(this);
+  }
+
   public ClientFixture clientFixture() {
     if (clients.isEmpty()) {
       clientBuilder().build();
     }
     return clients.get(0);
+  }
+
+  public RestClientFixture restClientFixture() {
+    if (restClientFixture == null) {
+      restClientFixture = restClientBuilder().build();
+    }
+
+    return restClientFixture;
   }
 
   public DrillClient client() {
@@ -570,8 +583,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   public static FixtureBuilder builder() {
     FixtureBuilder builder = new FixtureBuilder()
-         .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE)
-         ;
+         .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE);
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
     builder.configBuilder.configProps(props);

@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.typesafe.config.ConfigException;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
@@ -36,7 +35,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassCompilerSelector;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
@@ -69,148 +67,154 @@ import com.google.common.collect.Sets;
  *  that is loaded into validator from the config will be returned.
  *  </p>
  */
-
-public class SystemOptionManager extends BaseOptionManager implements OptionManager, AutoCloseable {
+public class SystemOptionManager extends BaseOptionManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
-  private CaseInsensitiveMap<OptionValidator> VALIDATORS;
-  public void populateValidators() {
-    final OptionValidator[] validators = new OptionValidator[]{
-      PlannerSettings.CONSTANT_FOLDING,
-      PlannerSettings.EXCHANGE,
-      PlannerSettings.HASHAGG,
-      PlannerSettings.STREAMAGG,
-      PlannerSettings.HASHJOIN,
-      PlannerSettings.MERGEJOIN,
-      PlannerSettings.NESTEDLOOPJOIN,
-      PlannerSettings.MULTIPHASE,
-      PlannerSettings.BROADCAST,
-      PlannerSettings.BROADCAST_THRESHOLD,
-      PlannerSettings.BROADCAST_FACTOR,
-      PlannerSettings.NESTEDLOOPJOIN_FACTOR,
-      PlannerSettings.NLJOIN_FOR_SCALAR,
-      PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR,
-      PlannerSettings.MUX_EXCHANGE,
-      PlannerSettings.DEMUX_EXCHANGE,
-      PlannerSettings.PRODUCER_CONSUMER,
-      PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE,
-      PlannerSettings.HASH_SINGLE_KEY,
-      PlannerSettings.IDENTIFIER_MAX_LENGTH,
-      PlannerSettings.HASH_JOIN_SWAP,
-      PlannerSettings.HASH_JOIN_SWAP_MARGIN_FACTOR,
-      PlannerSettings.PARTITION_SENDER_THREADS_FACTOR,
-      PlannerSettings.PARTITION_SENDER_MAX_THREADS,
-      PlannerSettings.PARTITION_SENDER_SET_THREADS,
-      PlannerSettings.ENABLE_DECIMAL_DATA_TYPE,
-      PlannerSettings.HEP_OPT,
-      PlannerSettings.PLANNER_MEMORY_LIMIT,
-      PlannerSettings.HEP_PARTITION_PRUNING,
-      PlannerSettings.FILTER_MIN_SELECTIVITY_ESTIMATE_FACTOR,
-      PlannerSettings.FILTER_MAX_SELECTIVITY_ESTIMATE_FACTOR,
-      PlannerSettings.TYPE_INFERENCE,
-      PlannerSettings.IN_SUBQUERY_THRESHOLD,
-      PlannerSettings.UNIONALL_DISTRIBUTE,
-      PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING,
-      PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD,
-      PlannerSettings.QUOTING_IDENTIFIERS,
-      PlannerSettings.JOIN_OPTIMIZATION,
-      PlannerSettings.FORCE_2PHASE_AGGR, // for testing
-      ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR,
-      ExecConstants.HASHAGG_MAX_MEMORY_VALIDATOR,
-      ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR, // for tuning
-      ExecConstants.HASHAGG_FALLBACK_ENABLED_VALIDATOR, // for enable/disable unbounded HashAgg
-      ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
-      ExecConstants.OUTPUT_FORMAT_VALIDATOR,
-      ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
-      ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK_VALIDATOR,
-      ExecConstants.PARQUET_PAGE_SIZE_VALIDATOR,
-      ExecConstants.PARQUET_DICT_PAGE_SIZE_VALIDATOR,
-      ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR,
-      ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR,
-      ExecConstants.PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR,
-      ExecConstants.PARQUET_VECTOR_FILL_CHECK_THRESHOLD_VALIDATOR,
-      ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR,
-      ExecConstants.PARQUET_PAGEREADER_ASYNC_VALIDATOR,
-      ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE_VALIDATOR,
-      ExecConstants.PARQUET_PAGEREADER_ENFORCETOTALSIZE_VALIDATOR,
-      ExecConstants.PARQUET_COLUMNREADER_ASYNC_VALIDATOR,
-      ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ_VALIDATOR,
-      ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE_VALIDATOR,
-      ExecConstants.PARQUET_PAGEREADER_USE_FADVISE_VALIDATOR,
-      ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP_VALIDATOR,
-      ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR,
-      ExecConstants.ENABLE_UNION_TYPE,
-      ExecConstants.TEXT_ESTIMATED_ROW_SIZE,
-      ExecConstants.JSON_EXTENDED_TYPES,
-      ExecConstants.JSON_WRITER_UGLIFY,
-      ExecConstants.JSON_WRITER_SKIPNULLFIELDS,
-      ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
-      ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR,
-      ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR,
-      ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR,
-      ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR,
-      ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
-      ExecConstants.MONGO_BSON_RECORD_READER_VALIDATOR,
-      ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR,
-      ExecConstants.SLICE_TARGET_OPTION,
-      ExecConstants.AFFINITY_FACTOR,
-      ExecConstants.MAX_WIDTH_GLOBAL,
-      ExecConstants.MAX_WIDTH_PER_NODE,
-      ExecConstants.ENABLE_QUEUE,
-      ExecConstants.LARGE_QUEUE_SIZE,
-      ExecConstants.QUEUE_THRESHOLD_SIZE,
-      ExecConstants.QUEUE_TIMEOUT,
-      ExecConstants.SMALL_QUEUE_SIZE,
-      ExecConstants.MIN_HASH_TABLE_SIZE,
-      ExecConstants.MAX_HASH_TABLE_SIZE,
-      ExecConstants.EARLY_LIMIT0_OPT,
-      ExecConstants.ENABLE_MEMORY_ESTIMATION,
-      ExecConstants.MAX_QUERY_MEMORY_PER_NODE,
-      ExecConstants.MIN_MEMORY_PER_BUFFERED_OP,
-      ExecConstants.NON_BLOCKING_OPERATORS_MEMORY,
-      ExecConstants.HASH_JOIN_TABLE_FACTOR,
-      ExecConstants.HASH_AGG_TABLE_FACTOR,
-      ExecConstants.AVERAGE_FIELD_WIDTH,
-      ExecConstants.NEW_VIEW_DEFAULT_PERMS_VALIDATOR,
-      ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR,
-      ExecConstants.ADMIN_USERS_VALIDATOR,
-      ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
-      ExecConstants.IMPERSONATION_POLICY_VALIDATOR,
-      ClassCompilerSelector.JAVA_COMPILER_VALIDATOR,
-      ClassCompilerSelector.JAVA_COMPILER_JANINO_MAXSIZE,
-      ClassCompilerSelector.JAVA_COMPILER_DEBUG,
-      ExecConstants.ENABLE_VERBOSE_ERRORS,
-      ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
-      ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
-      ExecConstants.ENABLE_NEW_TEXT_READER,
-      ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST,
-      ExecConstants.BULK_LOAD_TABLE_LIST_BULK_SIZE,
-      ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR,
-      ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL_VALIDATOR,
-      ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL_VALIDATOR,
-      ExecConstants.IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR,
-      ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR,
-      ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR,
-      ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR,
-      ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR,
-      ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION,
-      ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR,
-      ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR,
-      ExecConstants.USE_DYNAMIC_UDFS,
-      ExecConstants.QUERY_TRANSIENT_STATE_UPDATE,
-      ExecConstants.PERSISTENT_TABLE_UMASK_VALIDATOR,
-      ExecConstants.CPU_LOAD_AVERAGE,
-      ExecConstants.ENABLE_VECTOR_VALIDATOR,
-      ExecConstants.ENABLE_ITERATOR_VALIDATOR
+  /**
+   * Creates all the OptionDefinitions to be registered with the {@link SystemOptionManager}.
+   * @return A map
+   */
+  public static CaseInsensitiveMap<OptionDefinition> createDefaultOptionDefinitions() {
+    final OptionDefinition[] definitions = new OptionDefinition[]{
+      new OptionDefinition(PlannerSettings.CONSTANT_FOLDING),
+      new OptionDefinition(PlannerSettings.EXCHANGE),
+      new OptionDefinition(PlannerSettings.HASHAGG),
+      new OptionDefinition(PlannerSettings.STREAMAGG),
+      new OptionDefinition(PlannerSettings.HASHJOIN),
+      new OptionDefinition(PlannerSettings.MERGEJOIN),
+      new OptionDefinition(PlannerSettings.NESTEDLOOPJOIN),
+      new OptionDefinition(PlannerSettings.MULTIPHASE),
+      new OptionDefinition(PlannerSettings.BROADCAST),
+      new OptionDefinition(PlannerSettings.BROADCAST_THRESHOLD),
+      new OptionDefinition(PlannerSettings.BROADCAST_FACTOR),
+      new OptionDefinition(PlannerSettings.NESTEDLOOPJOIN_FACTOR),
+      new OptionDefinition(PlannerSettings.NLJOIN_FOR_SCALAR),
+      new OptionDefinition(PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR),
+      new OptionDefinition(PlannerSettings.MUX_EXCHANGE),
+      new OptionDefinition(PlannerSettings.DEMUX_EXCHANGE),
+      new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER),
+      new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE),
+      new OptionDefinition(PlannerSettings.HASH_SINGLE_KEY),
+      new OptionDefinition(PlannerSettings.IDENTIFIER_MAX_LENGTH),
+      new OptionDefinition(PlannerSettings.HASH_JOIN_SWAP),
+      new OptionDefinition(PlannerSettings.HASH_JOIN_SWAP_MARGIN_FACTOR),
+      new OptionDefinition(PlannerSettings.PARTITION_SENDER_THREADS_FACTOR),
+      new OptionDefinition(PlannerSettings.PARTITION_SENDER_MAX_THREADS),
+      new OptionDefinition(PlannerSettings.PARTITION_SENDER_SET_THREADS),
+      new OptionDefinition(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE),
+      new OptionDefinition(PlannerSettings.HEP_OPT),
+      new OptionDefinition(PlannerSettings.PLANNER_MEMORY_LIMIT),
+      new OptionDefinition(PlannerSettings.HEP_PARTITION_PRUNING),
+      new OptionDefinition(PlannerSettings.FILTER_MIN_SELECTIVITY_ESTIMATE_FACTOR),
+      new OptionDefinition(PlannerSettings.FILTER_MAX_SELECTIVITY_ESTIMATE_FACTOR),
+      new OptionDefinition(PlannerSettings.TYPE_INFERENCE),
+      new OptionDefinition(PlannerSettings.IN_SUBQUERY_THRESHOLD),
+      new OptionDefinition(PlannerSettings.UNIONALL_DISTRIBUTE),
+      new OptionDefinition(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING),
+      new OptionDefinition(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD),
+      new OptionDefinition(PlannerSettings.QUOTING_IDENTIFIERS),
+      new OptionDefinition(PlannerSettings.JOIN_OPTIMIZATION),
+      new OptionDefinition(PlannerSettings.FORCE_2PHASE_AGGR), // for testing
+      new OptionDefinition(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR),
+      new OptionDefinition(ExecConstants.HASHAGG_MAX_MEMORY_VALIDATOR),
+      new OptionDefinition(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR), // for tuning
+      new OptionDefinition(ExecConstants.HASHAGG_FALLBACK_ENABLED_VALIDATOR), // for enable/disable unbounded HashAgg
+      new OptionDefinition(ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION),
+      new OptionDefinition(ExecConstants.OUTPUT_FORMAT_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_PAGE_SIZE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_DICT_PAGE_SIZE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_VECTOR_FILL_CHECK_THRESHOLD_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_PAGEREADER_ASYNC_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_PAGEREADER_ENFORCETOTALSIZE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_COLUMNREADER_ASYNC_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_PAGEREADER_USE_FADVISE_VALIDATOR),
+      new OptionDefinition(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP_VALIDATOR),
+      new OptionDefinition(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+      new OptionDefinition(ExecConstants.ENABLE_UNION_TYPE),
+      new OptionDefinition(ExecConstants.TEXT_ESTIMATED_ROW_SIZE),
+      new OptionDefinition(ExecConstants.JSON_EXTENDED_TYPES),
+      new OptionDefinition(ExecConstants.JSON_WRITER_UGLIFY),
+      new OptionDefinition(ExecConstants.JSON_WRITER_SKIPNULLFIELDS),
+      new OptionDefinition(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+      new OptionDefinition(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+      new OptionDefinition(ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR),
+      new OptionDefinition(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR),
+      new OptionDefinition(ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR),
+      new OptionDefinition(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+      new OptionDefinition(ExecConstants.MONGO_BSON_RECORD_READER_VALIDATOR),
+      new OptionDefinition(ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR),
+      new OptionDefinition(ExecConstants.SLICE_TARGET_OPTION),
+      new OptionDefinition(ExecConstants.AFFINITY_FACTOR),
+      new OptionDefinition(ExecConstants.MAX_WIDTH_GLOBAL),
+      new OptionDefinition(ExecConstants.MAX_WIDTH_PER_NODE),
+      new OptionDefinition(ExecConstants.ENABLE_QUEUE),
+      new OptionDefinition(ExecConstants.LARGE_QUEUE_SIZE),
+      new OptionDefinition(ExecConstants.QUEUE_THRESHOLD_SIZE),
+      new OptionDefinition(ExecConstants.QUEUE_TIMEOUT),
+      new OptionDefinition(ExecConstants.SMALL_QUEUE_SIZE),
+      new OptionDefinition(ExecConstants.MIN_HASH_TABLE_SIZE),
+      new OptionDefinition(ExecConstants.MAX_HASH_TABLE_SIZE),
+      new OptionDefinition(ExecConstants.EARLY_LIMIT0_OPT),
+      new OptionDefinition(ExecConstants.ENABLE_MEMORY_ESTIMATION),
+      new OptionDefinition(ExecConstants.MAX_QUERY_MEMORY_PER_NODE),
+      new OptionDefinition(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP),
+      new OptionDefinition(ExecConstants.NON_BLOCKING_OPERATORS_MEMORY),
+      new OptionDefinition(ExecConstants.HASH_JOIN_TABLE_FACTOR),
+      new OptionDefinition(ExecConstants.HASH_AGG_TABLE_FACTOR),
+      new OptionDefinition(ExecConstants.AVERAGE_FIELD_WIDTH),
+      new OptionDefinition(ExecConstants.NEW_VIEW_DEFAULT_PERMS_VALIDATOR),
+      new OptionDefinition(ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR),
+      new OptionDefinition(ExecConstants.ADMIN_USERS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.IMPERSONATION_POLICY_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ClassCompilerSelector.JAVA_COMPILER_VALIDATOR),
+      new OptionDefinition(ClassCompilerSelector.JAVA_COMPILER_JANINO_MAXSIZE),
+      new OptionDefinition(ClassCompilerSelector.JAVA_COMPILER_DEBUG),
+      new OptionDefinition(ExecConstants.ENABLE_VERBOSE_ERRORS),
+      new OptionDefinition(ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR),
+      new OptionDefinition(ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR),
+      new OptionDefinition(ExecConstants.ENABLE_NEW_TEXT_READER),
+      new OptionDefinition(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST),
+      new OptionDefinition(ExecConstants.BULK_LOAD_TABLE_LIST_BULK_SIZE),
+      new OptionDefinition(ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR),
+      new OptionDefinition(ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL_VALIDATOR),
+      new OptionDefinition(ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL_VALIDATOR),
+      new OptionDefinition(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR),
+      new OptionDefinition(ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR),
+      new OptionDefinition(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR),
+      new OptionDefinition(ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR),
+      new OptionDefinition(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR,  new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION),
+      new OptionDefinition(ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR),
+      new OptionDefinition(ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR),
+      new OptionDefinition(ExecConstants.USE_DYNAMIC_UDFS),
+      new OptionDefinition(ExecConstants.QUERY_TRANSIENT_STATE_UPDATE),
+      new OptionDefinition(ExecConstants.PERSISTENT_TABLE_UMASK_VALIDATOR),
+      new OptionDefinition(ExecConstants.CPU_LOAD_AVERAGE),
+      new OptionDefinition(ExecConstants.ENABLE_VECTOR_VALIDATOR),
+      new OptionDefinition(ExecConstants.ENABLE_ITERATOR_VALIDATOR)
     };
-    final Map<String, OptionValidator> tmp = new HashMap<>();
-    for (final OptionValidator validator : validators) {
-      tmp.put(validator.getOptionName(), validator);
+
+    final CaseInsensitiveMap<OptionDefinition> map = CaseInsensitiveMap.newHashMap();
+
+    for (final OptionDefinition definition: definitions) {
+      map.put(definition.getValidator().getOptionName(), definition);
     }
+
     if (AssertionUtil.isAssertionsEnabled()) {
-      tmp.put(ExecConstants.DRILLBIT_CONTROL_INJECTIONS, ExecConstants.DRILLBIT_CONTROLS_VALIDATOR);
+      map.put(ExecConstants.DRILLBIT_CONTROL_INJECTIONS, new OptionDefinition(ExecConstants.DRILLBIT_CONTROLS_VALIDATOR));
     }
-    VALIDATORS = CaseInsensitiveMap.newImmutableMap(tmp);
+
+    return map;
   }
 
   private final PersistentStoreConfig<OptionValue> config;
@@ -223,37 +227,23 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
    * NOTE: CRUD operations must use lowercase keys.
    */
   private PersistentStore<OptionValue> options;
+  private CaseInsensitiveMap<OptionDefinition> definitions;
+  private CaseInsensitiveMap<OptionValue> defaults;
 
-  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider) {
-    this(lpPersistence,provider,null);
+  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
+                             final DrillConfig bootConfig) {
+    this(lpPersistence, provider, bootConfig, SystemOptionManager.createDefaultOptionDefinitions());
   }
 
-  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider, final DrillConfig bootConfig) {
+  public SystemOptionManager(final LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
+                             final DrillConfig bootConfig, final CaseInsensitiveMap<OptionDefinition> definitions) {
     this.provider = provider;
     this.config = PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
           .name("sys.options")
           .build();
     this.bootConfig = bootConfig;
-    populateValidators();
-    populateDefaultValues();
-
-  }
-
-  /**
-   * Gets the {@link OptionValidator} associated with the name.
-   *
-   * @param name name of the option
-   * @return the associated validator
-   * @throws UserException - if the validator is not found
-   */
-  public OptionValidator getValidator(final String name) {
-    final OptionValidator validator = VALIDATORS.get(name);
-    if (validator == null) {
-      throw UserException.validationError()
-              .message(String.format("The option '%s' does not exist.", name.toLowerCase()))
-              .build(logger);
-    }
-    return validator;
+    this.definitions = definitions;
+    this.defaults = populateDefaultValues(definitions, bootConfig);
   }
 
   /**
@@ -267,12 +257,13 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
     // if necessary, deprecate and replace options from persistent store
     for (final Entry<String, OptionValue> option : Lists.newArrayList(options.getAll())) {
       final String name = option.getKey();
-      final OptionValidator validator = VALIDATORS.get(name);
-      if (validator == null) {
+      final OptionDefinition definition = definitions.get(name);
+      if (definition == null) {
         // deprecated option, delete.
         options.delete(name);
         logger.warn("Deleting deprecated option `{}`", name);
       } else {
+        OptionValidator validator = definition.getValidator();
         final String canonicalName = validator.getOptionName().toLowerCase();
         if (!name.equals(canonicalName)) {
           // for backwards compatibility <= 1.1, rename to lower case.
@@ -283,6 +274,7 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
         }
       }
     }
+
     return this;
   }
 
@@ -290,8 +282,8 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
   public Iterator<OptionValue> iterator() {
     final Map<String, OptionValue> buildList = CaseInsensitiveMap.newHashMap();
     // populate the default options
-    for (final Map.Entry<String, OptionValidator> entry : VALIDATORS.entrySet()) {
-      buildList.put(entry.getKey(), entry.getValue().getDefault());
+    for (final Map.Entry<String, OptionValue> entry : defaults.entrySet()) {
+      buildList.put(entry.getKey(), entry.getValue());
     }
     // override if changed
     for (final Map.Entry<String, OptionValue> entry : Lists.newArrayList(options.getAll())) {
@@ -304,39 +296,48 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
   public OptionValue getOption(final String name) {
     // check local space (persistent store)
     final OptionValue value = options.get(name.toLowerCase());
+
     if (value != null) {
       return value;
     }
 
-    // If option is not set return the default set in the validator.
-    final OptionValidator validator = getValidator(name);
-    return validator.getDefault();
+    // otherwise, return default set in the validator.
+    return defaults.get(name);
   }
 
   @Override
-  public void setOption(final OptionValue value) {
-    checkArgument(value.type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
-    final String name = value.name.toLowerCase();
-    final OptionValidator validator = getValidator(name);
+  public OptionValue getDefault(String optionName) {
+    return defaults.get(optionName);
+  }
 
-    validator.validate(value, this); // validate the option
-    if (options.get(name) == null && value.equals(validator.getDefault())) {
+  @Override
+  protected void setLocalOptionHelper(final OptionValue value) {
+    final String name = value.name.toLowerCase();
+    final OptionDefinition definition = getOptionDefinition(name);
+    final OptionValidator validator = definition.getValidator();
+
+    validator.validate(value, definition.getMetaData(), this); // validate the option
+
+    if (options.get(name) == null && value.equals(getDefault(name))) {
       return; // if the option is not overridden, ignore setting option to default
     }
+
     options.put(name, value);
   }
 
   @Override
-  public void deleteOption(final String name, OptionType type) {
-    checkArgument(type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
+  protected OptionValue.OptionScope getScope() {
+    return OptionValue.OptionScope.SYSTEM;
+  }
 
-    getValidator(name); // ensure option exists
+  @Override
+  public void deleteLocalOption(final String name) {
+    getOptionDefinition(name); // ensure option exists
     options.delete(name.toLowerCase());
   }
 
   @Override
-  public void deleteAllOptions(OptionType type) {
-    checkArgument(type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
+  public void deleteAllLocalOptions() {
     final Set<String> names = Sets.newHashSet();
     for (final Map.Entry<String, OptionValue> entry : Lists.newArrayList(options.getAll())) {
       names.add(entry.getKey());
@@ -346,17 +347,63 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
     }
   }
 
-  public void populateDefaultValues() {
-
+  public static CaseInsensitiveMap<OptionValue> populateDefaultValues(Map<String, OptionDefinition> definitions, DrillConfig bootConfig) {
     // populate the options from the config
-    final Map<String, OptionValidator> tmp = new HashMap<>();
-    for (OptionValidator validator: VALIDATORS.values()) {
-      try {
-         validator.loadDefault(bootConfig);
-      } catch (ConfigException.Missing e) {
-        throw new IllegalStateException("Config Option is missing"+ validator.getOptionName());
+    final Map<String, OptionValue> defaults = new HashMap<>();
+
+    for (final Map.Entry<String, OptionDefinition> entry : definitions.entrySet()) {
+      final OptionDefinition definition = entry.getValue();
+      final OptionMetaData metaData = definition.getMetaData();
+      final OptionValue.AccessibleScopes type = metaData.getType();
+      final OptionValidator validator = definition.getValidator();
+      final String name = validator.getOptionName();
+      final String configName = validator.getConfigProperty();
+      final OptionValue.Kind kind = validator.getKind();
+      OptionValue optionValue;
+
+      switch (kind) {
+        case BOOLEAN:
+          optionValue = OptionValue.create(type, name,
+            bootConfig.getBoolean(configName), OptionValue.OptionScope.BOOT);
+          break;
+        case LONG:
+          optionValue = OptionValue.create(type, name,
+            bootConfig.getLong(configName), OptionValue.OptionScope.BOOT);
+          break;
+        case STRING:
+          optionValue = OptionValue.create(type, name,
+            bootConfig.getString(configName), OptionValue.OptionScope.BOOT);
+          break;
+        case DOUBLE:
+          optionValue = OptionValue.create(type, name,
+            bootConfig.getDouble(configName), OptionValue.OptionScope.BOOT);
+          break;
+        default:
+          throw new UnsupportedOperationException();
       }
+
+      defaults.put(name, optionValue);
     }
+
+    return CaseInsensitiveMap.newImmutableMap(defaults);
+  }
+
+  /**
+   * Gets the {@link OptionDefinition} associated with the name.
+   *
+   * @param name name of the option
+   * @return the associated option definition
+   * @throws UserException - if the definition is not found
+   */
+  @Override
+  public OptionDefinition getOptionDefinition(String name) {
+    final OptionDefinition definition = definitions.get(name);
+    if (definition == null) {
+      throw UserException.validationError()
+        .message(String.format("The option '%s' does not exist.", name.toLowerCase()))
+        .build(logger);
+    }
+    return definition;
   }
 
   @Override

@@ -80,9 +80,15 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-	  <includes>
-	    <include>${mongo.TestSuite}</include>
-	  </includes>
+          <includes>
+            <include>${mongo.TestSuite}</include>
+          </includes>
+          <excludes>
+            <exclude>**/TestMongoFilterPushDown.java</exclude>
+            <exclude>**/TestMongoProjectPushDown.java</exclude>
+            <exclude>**/TestMongoQueries.java</exclude>
+            <exclude>**/TestMongoChunkAssignment.java</exclude>
+          </excludes>
           <systemProperties>
             <property>
               <name>logback.log.dir</name>

@@ -90,10 +90,10 @@ public class PlannerSettings implements Context{
 
   public static final DoubleValidator FILTER_MIN_SELECTIVITY_ESTIMATE_FACTOR =
           new MinRangeDoubleValidator("planner.filter.min_selectivity_estimate_factor",
-          0.0, 1.0, 0.0d, "planner.filter.max_selectivity_estimate_factor");
+          0.0, 1.0, "planner.filter.max_selectivity_estimate_factor");
   public static final DoubleValidator FILTER_MAX_SELECTIVITY_ESTIMATE_FACTOR =
           new MaxRangeDoubleValidator("planner.filter.max_selectivity_estimate_factor",
-          0.0, 1.0, 1.0d, "planner.filter.min_selectivity_estimate_factor");
+          0.0, 1.0, "planner.filter.min_selectivity_estimate_factor");
 
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
   public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY);

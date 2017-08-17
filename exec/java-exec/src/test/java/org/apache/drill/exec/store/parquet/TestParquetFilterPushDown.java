@@ -23,6 +23,7 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl;
+import org.apache.drill.test.OperatorFixture;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -291,7 +292,9 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       testParquetFilterPD(query1, 9, 3, false);
 
     } finally {
-      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY  + "` = " + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING.getDefault().bool_val);
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY  + "` = " +
+        testOptionSet.getDefault(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY).bool_val);
       deleteTableIfExists(tableName);
     }
   }
@@ -314,7 +317,9 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       testParquetFilterPD(query1, 9, 3, false);
 
     } finally {
-      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY  + "` = " + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD.getDefault().num_val);
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY + "` = " +
+        testOptionSet.getDefault(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY).num_val);
       deleteTableIfExists(tableName);
     }
   }
