@@ -1710,8 +1710,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Logging Tracing", 
-                    "next_url": "/docs/logging-tracing/", 
+                    "next_title": "Logging and Tracing", 
+                    "next_url": "/docs/logging-and-tracing/", 
                     "parent": "Configuring ODBC", 
                     "previous_title": "Configuring ODBC", 
                     "previous_url": "/docs/configuring-odbc/", 
@@ -1736,9 +1736,9 @@
                     "parent": "Configuring ODBC", 
                     "previous_title": "ODBC Configuration Reference", 
                     "previous_url": "/docs/odbc-configuration-reference/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
-                    "title": "Logging Tracing", 
-                    "url": "/docs/logging-tracing/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-and-tracing.md", 
+                    "title": "Logging and Tracing", 
+                    "url": "/docs/logging-and-tracing/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1755,8 +1755,8 @@
                     "next_title": "Configuring ODBC on Mac OS X", 
                     "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
                     "parent": "Configuring ODBC", 
-                    "previous_title": "Logging Tracing", 
-                    "previous_url": "/docs/logging-tracing/", 
+                    "previous_title": "Logging and Tracing", 
+                    "previous_url": "/docs/logging-and-tracing/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
                     "title": "Configuring ODBC on Linux", 
                     "url": "/docs/configuring-odbc-on-linux/"
@@ -1849,8 +1849,8 @@
             "next_title": "Configuring ODBC on Mac OS X", 
             "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
             "parent": "Configuring ODBC", 
-            "previous_title": "Logging Tracing", 
-            "previous_url": "/docs/logging-tracing/", 
+            "previous_title": "Logging and Tracing", 
+            "previous_url": "/docs/logging-and-tracing/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
             "title": "Configuring ODBC on Linux", 
             "url": "/docs/configuring-odbc-on-linux/"
@@ -5536,7 +5536,7 @@
             "title": "Log and Debug Introduction", 
             "url": "/docs/log-and-debug-introduction/"
         }, 
-        "Logging Tracing": {
+        "Logging and Tracing": {
             "breadcrumbs": [
                 {
                     "title": "Configuring ODBC", 
@@ -5553,9 +5553,9 @@
             "parent": "Configuring ODBC", 
             "previous_title": "ODBC Configuration Reference", 
             "previous_url": "/docs/odbc-configuration-reference/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
-            "title": "Logging Tracing", 
-            "url": "/docs/logging-tracing/"
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-and-tracing.md", 
+            "title": "Logging and Tracing", 
+            "url": "/docs/logging-and-tracing/"
         }, 
         "Manually Adding Custom Functions to Drill": {
             "breadcrumbs": [
@@ -5878,8 +5878,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Logging Tracing", 
-            "next_url": "/docs/logging-tracing/", 
+            "next_title": "Logging and Tracing", 
+            "next_url": "/docs/logging-and-tracing/", 
             "parent": "Configuring ODBC", 
             "previous_title": "Configuring ODBC", 
             "previous_url": "/docs/configuring-odbc/", 
@@ -6042,8 +6042,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Logging Tracing", 
-                            "next_url": "/docs/logging-tracing/", 
+                            "next_title": "Logging and Tracing", 
+                            "next_url": "/docs/logging-and-tracing/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
@@ -6068,9 +6068,9 @@
                             "parent": "Configuring ODBC", 
                             "previous_title": "ODBC Configuration Reference", 
                             "previous_url": "/docs/odbc-configuration-reference/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
-                            "title": "Logging Tracing", 
-                            "url": "/docs/logging-tracing/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-and-tracing.md", 
+                            "title": "Logging and Tracing", 
+                            "url": "/docs/logging-and-tracing/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -6087,8 +6087,8 @@
                             "next_title": "Configuring ODBC on Mac OS X", 
                             "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
                             "parent": "Configuring ODBC", 
-                            "previous_title": "Logging Tracing", 
-                            "previous_url": "/docs/logging-tracing/", 
+                            "previous_title": "Logging and Tracing", 
+                            "previous_url": "/docs/logging-and-tracing/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
                             "title": "Configuring ODBC on Linux", 
                             "url": "/docs/configuring-odbc-on-linux/"
@@ -15187,8 +15187,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Logging Tracing", 
-                            "next_url": "/docs/logging-tracing/", 
+                            "next_title": "Logging and Tracing", 
+                            "next_url": "/docs/logging-and-tracing/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
@@ -15213,9 +15213,9 @@
                             "parent": "Configuring ODBC", 
                             "previous_title": "ODBC Configuration Reference", 
                             "previous_url": "/docs/odbc-configuration-reference/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-tracing.md", 
-                            "title": "Logging Tracing", 
-                            "url": "/docs/logging-tracing/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/011-logging-and-tracing.md", 
+                            "title": "Logging and Tracing", 
+                            "url": "/docs/logging-and-tracing/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -15232,8 +15232,8 @@
                             "next_title": "Configuring ODBC on Mac OS X", 
                             "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
                             "parent": "Configuring ODBC", 
-                            "previous_title": "Logging Tracing", 
-                            "previous_url": "/docs/logging-tracing/", 
+                            "previous_title": "Logging and Tracing", 
+                            "previous_url": "/docs/logging-and-tracing/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
                             "title": "Configuring ODBC on Linux", 
                             "url": "/docs/configuring-odbc-on-linux/"
