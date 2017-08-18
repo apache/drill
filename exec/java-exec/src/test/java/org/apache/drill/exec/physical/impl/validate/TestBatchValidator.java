@@ -68,10 +68,10 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add(10, 100)
-        .add(20, 120)
-        .add(30, null)
-        .add(40, 140)
+        .addRow(10, 100)
+        .addRow(20, 120)
+        .addRow(30, null)
+        .addRow(40, 140)
         .build();
 
     BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
@@ -88,10 +88,10 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add("col1.1", "col1.2")
-        .add("col2.1", "col2.2")
-        .add("col3.1", null)
-        .add("col4.1", "col4.2")
+        .addRow("col1.1", "col1.2")
+        .addRow("col2.1", "col2.2")
+        .addRow("col3.1", null)
+        .addRow("col4.1", "col4.2")
         .build();
 
     BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
@@ -108,9 +108,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add(new int[] {}, new String[] {})
-        .add(new int[] {1, 2, 3}, new String[] {"fred", "barney", "wilma"})
-        .add(new int[] {4}, new String[] {"dino"})
+        .addRow(new int[] {}, new String[] {})
+        .addRow(new int[] {1, 2, 3}, new String[] {"fred", "barney", "wilma"})
+        .addRow(new int[] {4}, new String[] {"dino"})
         .build();
 
     BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
@@ -126,9 +126,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add("x")
-        .add("y")
-        .add("z")
+        .addRow("x")
+        .addRow("y")
+        .addRow("z")
         .build();
 
     // Here we are evil: stomp on the last offset to simulate corruption.
@@ -160,9 +160,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add("x")
-        .add("y")
-        .add("z")
+        .addRow("x")
+        .addRow("y")
+        .addRow("z")
         .build();
 
     zapOffset(batch, 0, 1);
@@ -198,9 +198,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add("xx")
-        .add("yy")
-        .add("zz")
+        .addRow("xx")
+        .addRow("yy")
+        .addRow("zz")
         .build();
 
     zapOffset(batch, 2, 1);
@@ -222,9 +222,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add("xx")
-        .add("yy")
-        .add("zz")
+        .addRow("xx")
+        .addRow("yy")
+        .addRow("zz")
         .build();
 
     zapOffset(batch, 1, 10);
@@ -246,9 +246,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add("xx")
-        .add("yy")
-        .add("zz")
+        .addRow("xx")
+        .addRow("yy")
+        .addRow("zz")
         .build();
 
     zapOffset(batch, 3, 100_000);
@@ -270,9 +270,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add((Object) new String[] {})
-        .add((Object) new String[] {"fred", "barney", "wilma"})
-        .add((Object) new String[] {"dino"})
+        .addRow((Object) new String[] {})
+        .addRow((Object) new String[] {"fred", "barney", "wilma"})
+        .addRow((Object) new String[] {"dino"})
         .build();
 
     VectorAccessible va = batch.vectorAccessible();
@@ -298,9 +298,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .add((Object) new String[] {})
-        .add((Object) new String[] {"fred", "barney", "wilma"})
-        .add((Object) new String[] {"dino"})
+        .addRow((Object) new String[] {})
+        .addRow((Object) new String[] {"fred", "barney", "wilma"})
+        .addRow((Object) new String[] {"dino"})
         .build();
 
     VectorAccessible va = batch.vectorAccessible();

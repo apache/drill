@@ -38,23 +38,25 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 /**
- * Manages the relationship between one or more allocators and a particular UDLE. Ensures that one allocator owns the
- * memory that multiple allocators may be referencing. Manages a BufferLedger between each of its associated allocators.
- * This class is also responsible for managing when memory is allocated and returned to the Netty-based
- * PooledByteBufAllocatorL.
+ * Manages the relationship between one or more allocators and a particular
+ * UDLE. Ensures that one allocator owns the memory that multiple allocators may
+ * be referencing. Manages a BufferLedger between each of its associated
+ * allocators. This class is also responsible for managing when memory is
+ * allocated and returned to the Netty-based PooledByteBufAllocatorL.
  *
- * The only reason that this isn't package private is we're forced to put DrillBuf in Netty's package which need access
- * to these objects or methods.
+ * The only reason that this isn't package private is we're forced to put
+ * DrillBuf in Netty's package which need access to these objects or methods.
  *
- * Threading: AllocationManager manages thread-safety internally. Operations within the context of a single BufferLedger
- * are lockless in nature and can be leveraged by multiple threads. Operations that cross the context of two ledgers
- * will acquire a lock on the AllocationManager instance. Important note, there is one AllocationManager per
- * UnsafeDirectLittleEndian buffer allocation. As such, there will be thousands of these in a typical query. The
+ * Threading: AllocationManager manages thread-safety internally. Operations
+ * within the context of a single BufferLedger are lockless in nature and can be
+ * leveraged by multiple threads. Operations that cross the context of two
+ * ledgers will acquire a lock on the AllocationManager instance. Important
+ * note, there is one AllocationManager per UnsafeDirectLittleEndian buffer
+ * allocation. As such, there will be thousands of these in a typical query. The
  * contention of acquiring a lock on AllocationManager should be very low.
- *
  */
+
 public class AllocationManager {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocationManager.class);
 
   private static final AtomicLong MANAGER_ID_GENERATOR = new AtomicLong(0);
   private static final AtomicLong LEDGER_ID_GENERATOR = new AtomicLong(0);
@@ -87,11 +89,13 @@ public class AllocationManager {
   }
 
   /**
-   * Associate the existing underlying buffer with a new allocator. This will increase the reference count to the
-   * provided ledger by 1.
+   * Associate the existing underlying buffer with a new allocator. This will
+   * increase the reference count to the provided ledger by 1.
+   *
    * @param allocator
    *          The target allocator to associate this buffer with.
-   * @return The Ledger (new or existing) that associates the underlying buffer to this new ledger.
+   * @return The Ledger (new or existing) that associates the underlying buffer
+   *         to this new ledger.
    */
   BufferLedger associate(final BaseAllocator allocator) {
     return associate(allocator, true);
@@ -114,7 +118,6 @@ public class AllocationManager {
         }
         return ledger;
       }
-
     }
     try (AutoCloseableLock write = writeLock.open()) {
       // we have to recheck existing ledger since a second reader => writer could be competing with us.
@@ -138,11 +141,16 @@ public class AllocationManager {
     }
   }
 
+  public static int chunkSize() {
+    return INNER_ALLOCATOR.getChunkSize();
+  }
 
   /**
-   * The way that a particular BufferLedger communicates back to the AllocationManager that it now longer needs to hold
-   * a reference to particular piece of memory.
+   * The way that a particular BufferLedger communicates back to the
+   * AllocationManager that it now longer needs to hold a reference to
+   * particular piece of memory.
    */
+
   private class ReleaseListener {
 
     private final BufferAllocator allocator;
@@ -154,6 +162,7 @@ public class AllocationManager {
     /**
      * Can only be called when you already hold the writeLock.
      */
+
     public void release() {
       allocator.assertOpen();
 
@@ -180,16 +189,17 @@ public class AllocationManager {
           throw new IllegalStateException("The final removal of a ledger should be connected to the owning ledger.");
         }
       }
-
-
     }
   }
 
   /**
-   * The reference manager that binds an allocator manager to a particular BaseAllocator. Also responsible for creating
-   * a set of DrillBufs that share a common fate and set of reference counts.
-   * As with AllocationManager, the only reason this is public is due to DrillBuf being in io.netty.buffer package.
+   * The reference manager that binds an allocator manager to a particular
+   * BaseAllocator. Also responsible for creating a set of DrillBufs that share
+   * a common fate and set of reference counts. As with AllocationManager, the
+   * only reason this is public is due to DrillBuf being in io.netty.buffer
+   * package.
    */
+
   public class BufferLedger {
 
     private final IdentityHashMap<DrillBuf, Object> buffers =
@@ -294,7 +304,6 @@ public class AllocationManager {
           }
         }
       }
-
     }
 
     private void inc() {
@@ -302,9 +311,11 @@ public class AllocationManager {
     }
 
     /**
-     * Decrement the ledger's reference count. If the ledger is decremented to zero, this ledger should release its
-     * ownership back to the AllocationManager
+     * Decrement the ledger's reference count. If the ledger is decremented to
+     * zero, this ledger should release its ownership back to the
+     * AllocationManager
      */
+
     public int decrement(int decrement) {
       allocator.assertOpen();
 
@@ -321,29 +332,36 @@ public class AllocationManager {
     }
 
     /**
-     * Returns the ledger associated with a particular BufferAllocator. If the BufferAllocator doesn't currently have a
-     * ledger associated with this AllocationManager, a new one is created. This is placed on BufferLedger rather than
-     * AllocationManager directly because DrillBufs don't have access to AllocationManager and they are the ones
-     * responsible for exposing the ability to associate multiple allocators with a particular piece of underlying
-     * memory. Note that this will increment the reference count of this ledger by one to ensure the ledger isn't
-     * destroyed before use.
+     * Returns the ledger associated with a particular BufferAllocator. If the
+     * BufferAllocator doesn't currently have a ledger associated with this
+     * AllocationManager, a new one is created. This is placed on BufferLedger
+     * rather than AllocationManager directly because DrillBufs don't have
+     * access to AllocationManager and they are the ones responsible for
+     * exposing the ability to associate multiple allocators with a particular
+     * piece of underlying memory. Note that this will increment the reference
+     * count of this ledger by one to ensure the ledger isn't destroyed before
+     * use.
      *
      * @param allocator
      * @return
      */
+
     public BufferLedger getLedgerForAllocator(BufferAllocator allocator) {
       return associate((BaseAllocator) allocator);
     }
 
     /**
-     * Create a new DrillBuf associated with this AllocationManager and memory. Does not impact reference count.
-     * Typically used for slicing.
+     * Create a new DrillBuf associated with this AllocationManager and memory.
+     * Does not impact reference count. Typically used for slicing.
+     *
      * @param offset
      *          The offset in bytes to start this new DrillBuf.
      * @param length
      *          The length in bytes that this DrillBuf will provide access to.
-     * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger
+     * @return A new DrillBuf that shares references with all DrillBufs
+     *         associated with this BufferLedger
      */
+
     public DrillBuf newDrillBuf(int offset, int length) {
       allocator.assertOpen();
       return newDrillBuf(offset, length, null);
@@ -394,6 +412,7 @@ public class AllocationManager {
      *
      * @return Size in bytes
      */
+
     public int getSize() {
       return size;
     }

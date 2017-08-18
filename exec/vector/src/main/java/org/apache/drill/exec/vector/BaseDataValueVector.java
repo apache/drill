@@ -37,6 +37,16 @@ public abstract class BaseDataValueVector extends BaseValueVector {
     data = allocator.getEmpty();
   }
 
+  /**
+   * Core of vector allocation. Given a new size (which must be a power of two), allocate
+   * the new buffer, copy the current values, and leave the unused parts garbage-filled.
+   *
+   * @param newAllocationSize new buffer size as a power of two
+   * @return the new buffer
+   */
+
+  public abstract DrillBuf reallocRaw(int newAllocationSize);
+
   @Override
   public void clear() {
     if (data != null) {
@@ -82,6 +92,11 @@ public abstract class BaseDataValueVector extends BaseValueVector {
     return data.writerIndex();
   }
 
+  @Override
+  public int getAllocatedSize() {
+    return data.capacity();
+  }
+
   public DrillBuf getBuffer() { return data; }
 
   /**
@@ -101,6 +116,7 @@ public abstract class BaseDataValueVector extends BaseValueVector {
     // No state in an Accessor to reset
   }
 
+  @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
     BufferLedger ledger = data.getLedger();
     if (ledger != null) {

@@ -63,16 +63,20 @@ public class RepeatedMapVector extends AbstractMapVector
   private final Mutator mutator = new Mutator();
   private final EmptyValuePopulator emptyPopulator;
 
-  public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
+  public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field, allocator, callBack);
     this.offsets = new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator);
     this.emptyPopulator = new EmptyValuePopulator(offsets);
   }
 
-  @Override
-  public UInt4Vector getOffsetVector() {
-    return offsets;
+  public RepeatedMapVector(MaterializedField field, UInt4Vector offsets, CallBack callBack) {
+    super(field, offsets.getAllocator(), callBack);
+    this.offsets = offsets;
+    this.emptyPopulator = new EmptyValuePopulator(offsets);
   }
+
+  @Override
+  public UInt4Vector getOffsetVector() { return offsets; }
 
   @Override
   public ValueVector getDataVector() {
@@ -93,9 +97,7 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
-  public RepeatedMapReaderImpl getReader() {
-    return reader;
-  }
+  public RepeatedMapReaderImpl getReader() { return reader; }
 
   @Override
   public void allocateNew(int groupCount, int innerValueCount) {
@@ -134,6 +136,11 @@ public class RepeatedMapVector extends AbstractMapVector
       return 0;
     }
     return offsets.getBufferSize() + super.getBufferSize();
+  }
+
+  @Override
+  public int getAllocatedSize() {
+    return offsets.getAllocatedSize() + super.getAllocatedSize();
   }
 
   @Override

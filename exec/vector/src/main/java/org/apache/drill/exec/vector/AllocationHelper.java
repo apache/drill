@@ -39,7 +39,7 @@ public class AllocationHelper {
       ((VariableWidthVector) vector).allocateNew(valueCount * bytesPerValue, valueCount);
     } else if (vector instanceof RepeatedFixedWidthVectorLike) {
       ((RepeatedFixedWidthVectorLike) vector).allocateNew(valueCount, childValCount);
-    } else if (vector instanceof RepeatedVariableWidthVectorLike && childValCount > 0 && bytesPerValue > 0) {
+    } else if (vector instanceof RepeatedVariableWidthVectorLike) {
       // Assertion thrown if byte count is zero in the full allocateNew,
       // so use default version instead.
       ((RepeatedVariableWidthVectorLike) vector).allocateNew(childValCount * bytesPerValue, valueCount, childValCount);

@@ -17,24 +17,38 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
+import org.apache.drill.exec.record.TupleMetadata;
+
 /**
  * Interface for reading from tuples (rows or maps). Provides
  * a column reader for each column that can be obtained either
  * by name or column index (as defined in the tuple schema.)
  * Also provides two generic methods to get the value as a
  * Java object or as a string.
+ * <p>
+ * {@see TupleWriter}
  */
 
-public interface TupleReader extends TupleAccessor {
-  ColumnReader column(int colIndex);
+public interface TupleReader {
+  TupleMetadata schema();
+  int columnCount();
 
-  /**
-   * Returns column reader for the column with name specified in param.
-   *
-   * @param colName name of the column in the schema
-   * @return column reader
-   */
-  ColumnReader column(String colName);
-  Object get(int colIndex);
-  String getAsString(int colIndex);
+  ObjectReader column(int colIndex);
+  ObjectReader column(String colName);
+
+  // Convenience methods
+
+  ObjectType type(int colIndex);
+  ObjectType type(String colName);
+  ScalarReader scalar(int colIndex);
+  ScalarReader scalar(String colName);
+  TupleReader tuple(int colIndex);
+  TupleReader tuple(String colName);
+  ArrayReader array(int colIndex);
+  ArrayReader array(String colName);
+  ScalarElementReader elements(int colIndex);
+  ScalarElementReader elements(String colName);
+
+  Object getObject();
+  String getAsString();
 }

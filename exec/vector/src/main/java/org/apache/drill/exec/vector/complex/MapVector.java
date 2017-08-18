@@ -67,10 +67,7 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
-  public FieldReader getReader() {
-    //return new SingleMapReaderImpl(MapVector.this);
-    return reader;
-  }
+  public FieldReader getReader() { return reader; }
 
   transient private MapTransferPair ephPair;
   transient private MapSingleCopier ephPair2;
@@ -95,9 +92,7 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
-  protected boolean supportsDirectRead() {
-    return true;
-  }
+  protected boolean supportsDirectRead() { return true; }
 
   public Iterator<String> fieldNameIterator() {
     return getChildFieldNames().iterator();
@@ -121,6 +116,15 @@ public class MapVector extends AbstractMapVector {
     }
 
     return (int) buffer;
+  }
+
+  @Override
+  public int getAllocatedSize() {
+    int size = 0;
+    for (final ValueVector v : this) {
+      size += v.getAllocatedSize();
+    }
+    return size;
   }
 
   @Override
@@ -353,6 +357,10 @@ public class MapVector extends AbstractMapVector {
     return getChildByOrdinal(id);
   }
 
+  public void setMapValueCount(int valueCount) {
+    this.valueCount = valueCount;
+  }
+
   public class Mutator extends BaseValueVector.BaseMutator {
 
     @Override
@@ -360,7 +368,7 @@ public class MapVector extends AbstractMapVector {
       for (final ValueVector v : getChildren()) {
         v.getMutator().setValueCount(valueCount);
       }
-      MapVector.this.valueCount = valueCount;
+      setMapValueCount(valueCount);
     }
 
     @Override
