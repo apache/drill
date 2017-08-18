@@ -23,9 +23,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.accessor.ColumnAccessor;
-import org.apache.drill.exec.vector.accessor.ColumnReader;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
+import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetReader;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -44,13 +45,14 @@ public class JsonFileBuilder
   public static final String DEFAULT_DECIMAL_FORMATTER = "%s";
   public static final String DEFAULT_PERIOD_FORMATTER = "%s";
 
+  @SuppressWarnings("unchecked")
   public static final Map<String, String> DEFAULT_FORMATTERS = new ImmutableMap.Builder()
-    .put(ColumnAccessor.ValueType.DOUBLE, DEFAULT_DOUBLE_FORMATTER)
-    .put(ColumnAccessor.ValueType.INTEGER, DEFAULT_INTEGER_FORMATTER)
-    .put(ColumnAccessor.ValueType.LONG, DEFAULT_LONG_FORMATTER)
-    .put(ColumnAccessor.ValueType.STRING, DEFAULT_STRING_FORMATTER)
-    .put(ColumnAccessor.ValueType.DECIMAL, DEFAULT_DECIMAL_FORMATTER)
-    .put(ColumnAccessor.ValueType.PERIOD, DEFAULT_PERIOD_FORMATTER)
+    .put(ValueType.DOUBLE, DEFAULT_DOUBLE_FORMATTER)
+    .put(ValueType.INTEGER, DEFAULT_INTEGER_FORMATTER)
+    .put(ValueType.LONG, DEFAULT_LONG_FORMATTER)
+    .put(ValueType.STRING, DEFAULT_STRING_FORMATTER)
+    .put(ValueType.DECIMAL, DEFAULT_DECIMAL_FORMATTER)
+    .put(ValueType.PERIOD, DEFAULT_PERIOD_FORMATTER)
     .build();
 
   private final RowSet rowSet;
@@ -66,8 +68,7 @@ public class JsonFileBuilder
     Preconditions.checkNotNull(columnFormatter);
 
     Iterator<MaterializedField> fields = rowSet
-      .schema()
-      .batch()
+      .batchSchema()
       .iterator();
 
     boolean hasColumn = false;
@@ -90,14 +91,12 @@ public class JsonFileBuilder
     tableFile.getParentFile().mkdirs();
 
     try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(tableFile))) {
-      final RowSet.RowSetReader reader = rowSet.reader();
+      final RowSetReader reader = rowSet.reader();
       final int numCols = rowSet
-        .schema()
-        .batch()
+        .batchSchema()
         .getFieldCount();
       final Iterator<MaterializedField> fieldIterator = rowSet
-        .schema()
-        .batch()
+        .batchSchema()
         .iterator();
       final List<String> columnNames = Lists.newArrayList();
       final List<String> columnFormatters = Lists.newArrayList();
@@ -105,8 +104,8 @@ public class JsonFileBuilder
       // Build formatters from first row.
       while (fieldIterator.hasNext()) {
         final String columnName = fieldIterator.next().getName();
-        final ColumnReader columnReader = reader.column(columnName);
-        final ColumnAccessor.ValueType valueType = columnReader.valueType();
+        final ScalarReader columnReader = reader.scalar(columnName);
+        final ValueType valueType = columnReader.valueType();
         final String columnFormatter;
 
         if (customFormatters.containsKey(columnName)) {
@@ -135,7 +134,7 @@ public class JsonFileBuilder
           sb.append(separator);
 
           final String columnName = columnNames.get(columnIndex);
-          final ColumnReader columnReader = reader.column(columnIndex);
+          final ScalarReader columnReader = reader.scalar(columnIndex);
           final String columnFormatter = columnFormatters.get(columnIndex);
           final Object columnObject = columnReader.getObject();
           final String columnString = String.format(columnFormatter, columnObject);

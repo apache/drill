@@ -198,14 +198,10 @@ public class RepeatedListVector extends AbstractContainerVector
     }
 
     @Override
-    public RepeatedListAccessor getAccessor() {
-      return accessor;
-    }
+    public RepeatedListAccessor getAccessor() { return accessor; }
 
     @Override
-    public RepeatedListMutator getMutator() {
-      return mutator;
-    }
+    public RepeatedListMutator getMutator() { return mutator; }
 
     @Override
     public FieldReader getReader() {
@@ -277,11 +273,8 @@ public class RepeatedListVector extends AbstractContainerVector
     }
   }
 
-
-    @Override
-  public RepeatedListReaderImpl getReader() {
-    return reader;
-  }
+  @Override
+  public RepeatedListReaderImpl getReader() { return reader; }
 
   @Override
   public DelegateRepeatedVector.RepeatedListAccessor getAccessor() {
@@ -331,6 +324,11 @@ public class RepeatedListVector extends AbstractContainerVector
   @Override
   public int getBufferSize() {
     return delegate.getBufferSize();
+  }
+
+  @Override
+  public int getAllocatedSize() {
+    return delegate.getAllocatedSize();
   }
 
   @Override

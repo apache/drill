@@ -93,7 +93,7 @@ public class QueryRowSetIterator implements Iterator<DirectRowSet>, Iterable<Dir
       batch = null;
       VectorContainer container = loader.getContainer();
       container.setRecordCount(loader.getRecordCount());
-      return new DirectRowSet(allocator, container);
+      return DirectRowSet.fromContainer(container);
     } catch (SchemaChangeException e) {
       throw new IllegalStateException(e);
     }

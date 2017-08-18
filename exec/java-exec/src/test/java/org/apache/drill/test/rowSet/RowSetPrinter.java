@@ -20,8 +20,8 @@ package org.apache.drill.test.rowSet;
 import java.io.PrintStream;
 
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.vector.accessor.TupleAccessor.TupleSchema;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
+import org.apache.drill.exec.record.ColumnMetadata;
+import org.apache.drill.exec.record.TupleMetadata;
 
 /**
  * Print a row set in CSV-like format. Primarily for debugging.
@@ -41,21 +41,21 @@ public class RowSetPrinter {
   public void print(PrintStream out) {
     SelectionVectorMode selectionMode = rowSet.indirectionType();
     RowSetReader reader = rowSet.reader();
-    int colCount = reader.schema().count();
-    printSchema(out, selectionMode);
+    int colCount = reader.schema().size();
+    printSchema(out, selectionMode, reader);
     while (reader.next()) {
       printHeader(out, reader, selectionMode);
       for (int i = 0; i < colCount; i++) {
         if (i > 0) {
           out.print(", ");
         }
-        out.print(reader.getAsString(i));
+        out.print(reader.column(i).getAsString());
       }
       out.println();
     }
   }
 
-  private void printSchema(PrintStream out, SelectionVectorMode selectionMode) {
+  private void printSchema(PrintStream out, SelectionVectorMode selectionMode, RowSetReader reader) {
     out.print("#");
     switch (selectionMode) {
     case FOUR_BYTE:
@@ -68,14 +68,24 @@ public class RowSetPrinter {
       break;
     }
     out.print(": ");
-    TupleSchema schema = rowSet.schema().hierarchicalAccess();
-    for (int i = 0; i < schema.count(); i++) {
+    TupleMetadata schema = reader.schema();
+    printTupleSchema(out, schema);
+    out.println();
+  }
+
+  private void printTupleSchema(PrintStream out, TupleMetadata schema) {
+    for (int i = 0; i < schema.size(); i++) {
       if (i > 0) {
         out.print(", ");
       }
-      out.print(schema.column(i).getName());
+      ColumnMetadata colSchema = schema.metadata(i);
+      out.print(colSchema.name());
+      if (colSchema.isMap()) {
+        out.print("(");
+        printTupleSchema(out, colSchema.mapSchema());
+        out.print(")");
+      }
     }
-    out.println();
   }
 
   private void printHeader(PrintStream out, RowSetReader reader, SelectionVectorMode selectionMode) {

@@ -18,6 +18,9 @@
 
 import java.lang.Override;
 
+import org.apache.drill.common.types.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
 import org.mortbay.jetty.servlet.Holder;
@@ -55,7 +58,10 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
 
   public Repeated${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    addOrGetVector(VectorDescriptor.create(Types.required(field.getType().getMinorType())));
+    MajorType majorType = field.getType();
+    addOrGetVector(VectorDescriptor.create(Types.withScaleAndPrecision(
+        majorType.getMinorType(), DataMode.REQUIRED,
+        majorType.getScale(), majorType.getPrecision())));
   }
 
   @Override
@@ -341,22 +347,9 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
       addSafe(index, bytes, 0, bytes.length);
     }
 
-    public void addEntry(int index, byte[] bytes) throws VectorOverflowException {
-      addEntry(index, bytes, 0, bytes.length);
-    }
-
     public void addSafe(int index, byte[] bytes, int start, int length) {
       final int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().setSafe(nextOffset, bytes, start, length);
-      offsets.getMutator().setSafe(index+1, nextOffset+1);
-    }
-
-    public void addEntry(int index, byte[] bytes, int start, int length) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      final int nextOffset = offsets.getAccessor().get(index+1);
-      values.getMutator().setArrayItem(nextOffset, bytes, start, length);
       offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
 
@@ -364,15 +357,6 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     public void addSafe(int index, ${minor.javaType!type.javaType} srcValue) {
       final int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().setSafe(nextOffset, srcValue);
-      offsets.getMutator().setSafe(index+1, nextOffset+1);
-    }
-
-    public void addEntry(int index, ${minor.javaType!type.javaType} srcValue) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      final int nextOffset = offsets.getAccessor().get(index+1);
-      values.getMutator().setArrayItem(nextOffset, srcValue);
       offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
 
@@ -393,27 +377,10 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
       offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
 
-    public void addEntry(int index, ${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      final int nextOffset = offsets.getAccessor().get(index+1);
-      values.getMutator().setArrayItem(nextOffset, holder);
-      offsets.getMutator().setSafe(index+1, nextOffset+1);
-    }
 
     public void addSafe(int index, Nullable${minor.class}Holder holder) {
       final int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().setSafe(nextOffset, holder);
-      offsets.getMutator().setSafe(index+1, nextOffset+1);
-    }
-
-    public void addEntry(int index, Nullable${minor.class}Holder holder) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      final int nextOffset = offsets.getAccessor().get(index+1);
-      values.getMutator().setArrayItem(nextOffset, holder);
       offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
 
@@ -427,11 +394,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
      * @param index the current write position to be initialized
      */
 
-    public void fillEmptiesBounded(int lastWrite, int index)
-            throws VectorOverflowException {
-      if (index >= UInt4Vector.MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
+    public void fillEmpties(int lastWrite, int index) {
       // If last write was 2, offsets are [0, 3, 6]
       // If next write is 4, offsets must be: [0, 3, 6, 6, 6]
       // Remember the offsets are one more than row count.
@@ -449,29 +412,11 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
       offsets.getMutator().setSafe(rowIndex+1, nextOffset+1);
     }
 
-    public void addEntry(int rowIndex, <#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) throws VectorOverflowException {
-      if (rowIndex >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      final int nextOffset = offsets.getAccessor().get(rowIndex+1);
-      values.getMutator().setArrayItem(nextOffset, <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-      offsets.getMutator().setSafe(rowIndex+1, nextOffset+1);
-    }
-
     </#if>
     <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
     public void addSafe(int index, BigDecimal value) {
       final int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().setSafe(nextOffset, value);
-      offsets.getMutator().setSafe(index+1, nextOffset+1);
-    }
-
-    public void addEntry(int index, BigDecimal value) throws VectorOverflowException {
-      if (index >= MAX_ROW_COUNT) {
-        throw new VectorOverflowException();
-      }
-      final int nextOffset = offsets.getAccessor().get(index+1);
-      values.getMutator().setArrayItem(nextOffset, value);
       offsets.getMutator().setSafe(index+1, nextOffset+1);
     }
 

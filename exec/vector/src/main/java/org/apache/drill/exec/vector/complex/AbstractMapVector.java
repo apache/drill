@@ -64,7 +64,6 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       valueVector.close();
     }
     vectors.clear();
-
     super.close();
   }
 
@@ -178,7 +177,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    *
    * Note that this method does not enforce any vector type check nor throws a schema change exception.
    */
-  protected void putChild(String name, ValueVector vector) {
+  public void putChild(String name, ValueVector vector) {
     putVector(name, vector);
     field.addChild(vector.getField());
   }
@@ -277,6 +276,16 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       }
     }
     return actualBufSize;
+  }
+
+  @Override
+  public int getAllocatedSize() {
+    int size = 0;
+
+    for (final ValueVector v : vectors.values()) {
+      size += v.getAllocatedSize();
+    }
+    return size;
   }
 
   @Override

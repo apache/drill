@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * A record batch contains a set of field values for a particular range of
@@ -38,7 +39,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 public interface RecordBatch extends VectorAccessible {
 
   /** max batch size, limited by 2-byte length in SV2: 65536 = 2^16 */
-  public static final int MAX_BATCH_SIZE = 65536;
+  public static final int MAX_BATCH_SIZE = ValueVector.MAX_ROW_COUNT;
 
   /**
    * Describes the outcome of incrementing RecordBatch forward by a call to

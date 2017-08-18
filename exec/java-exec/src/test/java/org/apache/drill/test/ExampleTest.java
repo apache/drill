@@ -123,8 +123,8 @@ public class ExampleTest {
         .build();
 
       final RowSet rowSet = new RowSetBuilder(allocator, schema)
-        .add("1", "kiwi")
-        .add("2", "watermelon")
+        .addRow("1", "kiwi")
+        .addRow("2", "watermelon")
         .build();
 
       new JsonFileBuilder(rowSet).build(tableFile);

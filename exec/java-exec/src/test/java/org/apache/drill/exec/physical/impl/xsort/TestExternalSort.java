@@ -60,7 +60,7 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 0; i <= record_count; i += 2) {
-        rowSetBuilder.add(i);
+        rowSetBuilder.addRow(i);
       }
 
       final RowSet rowSet = rowSetBuilder.build();
@@ -76,7 +76,7 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 1; i <= record_count; i += 2) {
-        rowSetBuilder.add((float) i);
+        rowSetBuilder.addRow((float) i);
       }
 
       final RowSet rowSet = rowSetBuilder.build();
@@ -131,7 +131,7 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 0; i <= record_count; i += 2) {
-        rowSetBuilder.add(i);
+        rowSetBuilder.addRow(i);
       }
 
       final RowSet rowSet = rowSetBuilder.build();
@@ -147,7 +147,7 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 1; i <= record_count; i += 2) {
-        rowSetBuilder.add(i);
+        rowSetBuilder.addRow(i);
       }
 
       final RowSet rowSet = rowSetBuilder.build();
@@ -199,7 +199,7 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 0; i <= record_count; i += 2) {
-        rowSetBuilder.add(i, i);
+        rowSetBuilder.addRow(i, i);
       }
 
       final RowSet rowSet = rowSetBuilder.build();
@@ -216,7 +216,7 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 1; i <= record_count; i += 2) {
-        rowSetBuilder.add(i, i);
+        rowSetBuilder.addRow(i, i);
       }
 
       final RowSet rowSet = rowSetBuilder.build();

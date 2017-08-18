@@ -52,7 +52,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private final int offset;
   private final BufferLedger ledger;
   private final BufferManager bufManager;
-//  private final ByteBufAllocator alloc;
   private final boolean isEmpty;
   private volatile int length;
   private final HistoricalLog historicalLog = BaseAllocator.DEBUG ?
@@ -72,7 +71,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     this.udle = byteBuf;
     this.isEmpty = isEmpty;
     this.bufManager = manager;
-//    this.alloc = alloc;
     this.addr = byteBuf.memoryAddress() + offset;
     this.ledger = ledger;
     this.length = length;
@@ -105,6 +103,8 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return refCnt.get();
     }
   }
+
+  public long addr() { return addr; }
 
   private long addr(int index) {
     return addr + index;
@@ -882,4 +882,70 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     }
   }
 
+  // The "unsafe" methods are for use ONLY by code that does its own
+  // bounds checking. They are called "unsafe" for a reason: they will crash
+  // the JVM if values are addressed out of bounds.
+
+  /**
+   * Write an integer to the buffer at the given byte index, without
+   * bounds checks.
+   *
+   * @param offset byte (not int) offset of the location to write
+   * @param value the value to write
+   */
+
+  public void unsafePutInt(int offset, int value) {
+    PlatformDependent.putInt(addr + offset, value);
+  }
+
+  /**
+   * Write a long to the buffer at the given byte index, without
+   * bounds checks.
+   *
+   * @param index byte (not long) offset of the location to write
+   * @param value the value to write
+   */
+
+  public void unsafePutLong(int index, long value) {
+    PlatformDependent.putLong(addr + index, value);
+  }
+
+  /**
+   * Write a short to the buffer at the given byte index, without
+   * bounds checks.
+   *
+   * @param offset byte (not short) offset of the location to write
+   * @param value the value to write
+   */
+
+  public void unsafePutShort(int offset, short value) {
+    PlatformDependent.putShort(addr + offset, value);
+  }
+
+  /**
+   * Write a byte to the buffer at the given byte index, without
+   * bounds checks.
+   *
+   * @param offset byte offset of the location to write
+   * @param value the value to write
+   */
+
+  public void unsafePutByte(int offset, byte value) {
+    PlatformDependent.putByte(addr + offset, value);
+  }
+
+  /**
+   * Copy a buffer of heap data to the buffer memory.
+   *
+   * @param srce source byte buffer
+   * @param srcOffset offset within the byte buffer of the start of data
+   * @param destOffset byte offset into this buffer to which to write the
+   * data
+   * @param length length of the data, which must be within the
+   * bounds of this buffer
+   */
+
+  public void unsafeCopyMemory(byte[] srce, int srcOffset, int destOffset, int length) {
+    PlatformDependent.copyMemory(srce, srcOffset, addr + destOffset, length);
+  }
 }

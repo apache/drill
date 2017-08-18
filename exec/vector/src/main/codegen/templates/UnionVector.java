@@ -116,7 +116,6 @@ public class UnionVector implements ValueVector {
     }
     return mapVector;
   }
-
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign fields = minor.fields!type.fields />
   <#assign uncappedName = name?uncap_first/>
@@ -136,9 +135,7 @@ public class UnionVector implements ValueVector {
     }
     return ${uncappedName}Vector;
   }
-
   </#if>
-
   </#list></#list>
 
   private static final MajorType LIST_TYPE = Types.optional(MinorType.LIST);
@@ -183,8 +180,7 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public void setInitialCapacity(int numRecords) {
-  }
+  public void setInitialCapacity(int numRecords) { }
 
   @Override
   public int getValueCapacity() {
@@ -192,8 +188,7 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public void close() {
-  }
+  public void close() { }
 
   @Override
   public void clear() {
@@ -201,9 +196,7 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public MaterializedField getField() {
-    return field;
-  }
+  public MaterializedField getField() { return field; }
 
   @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
@@ -290,9 +283,7 @@ public class UnionVector implements ValueVector {
     }
 
     @Override
-    public void splitAndTransfer(int startIndex, int length) {
-
-    }
+    public void splitAndTransfer(int startIndex, int length) { }
 
     @Override
     public ValueVector getTo() {
@@ -306,14 +297,10 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public Accessor getAccessor() {
-    return accessor;
-  }
+  public Accessor getAccessor() { return accessor; }
 
   @Override
-  public Mutator getMutator() {
-    return mutator;
-  }
+  public Mutator getMutator() { return mutator; }
 
   @Override
   public FieldReader getReader() {
@@ -344,6 +331,11 @@ public class UnionVector implements ValueVector {
   @Override
   public int getBufferSize() {
     return internalMap.getBufferSize();
+  }
+
+  @Override
+  public int getAllocatedSize() {
+    return internalMap.getAllocatedSize();
   }
 
   @Override
@@ -381,7 +373,6 @@ public class UnionVector implements ValueVector {
 
   public class Accessor extends BaseValueVector.BaseAccessor {
 
-
     @Override
     public Object getObject(int index) {
       int type = typeVector.getAccessor().get(index);
@@ -406,12 +397,9 @@ public class UnionVector implements ValueVector {
       }
     }
 
-    public byte[] get(int index) {
-      return null;
-    }
+    public byte[] get(int index) { return null; }
 
-    public void get(int index, ComplexHolder holder) {
-    }
+    public void get(int index, ComplexHolder holder) { }
 
     public void get(int index, UnionHolder holder) {
       FieldReader reader = new UnionReader(UnionVector.this);
@@ -420,9 +408,7 @@ public class UnionVector implements ValueVector {
     }
 
     @Override
-    public int getValueCount() {
-      return valueCount;
-    }
+    public int getValueCount() { return valueCount; }
 
     @Override
     public boolean isNull(int index) {
@@ -436,7 +422,7 @@ public class UnionVector implements ValueVector {
 
   public class Mutator extends BaseValueVector.BaseMutator {
 
-    UnionWriter writer;
+    protected UnionWriter writer;
 
     @Override
     public void setValueCount(int valueCount) {

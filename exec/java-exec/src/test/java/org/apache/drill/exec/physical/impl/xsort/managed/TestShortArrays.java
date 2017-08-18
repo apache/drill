@@ -61,9 +61,9 @@ public class TestShortArrays extends SubOperatorTest {
         .addArray("b", MinorType.INT)
         .build();
     RowSetBuilder builder = fixture.rowSetBuilder(schema)
-        .add(1, new int[] {10});
+        .addRow(1, new int[] {10});
     for (int i = 2; i <= 10; i++) {
-      builder.add(i, new int[] {});
+      builder.addRow(i, new int[] {});
     }
     RowSet rows = builder.build();
 
@@ -87,9 +87,9 @@ public class TestShortArrays extends SubOperatorTest {
 
     SingleRowSet empty = fixture.rowSet(schema);
     vi.allocateBatch(empty.container(), 100);
-    assertEquals(2, empty.vectors().length);
+    assertEquals(2, empty.container().getNumberOfColumns());
     @SuppressWarnings("resource")
-    ValueVector bVector = empty.vectors()[1];
+    ValueVector bVector = empty.container().getValueVector(1).getValueVector();
     assertTrue(bVector instanceof RepeatedIntVector);
     assertEquals(16, ((RepeatedIntVector) bVector).getDataVector().getValueCapacity());
 
