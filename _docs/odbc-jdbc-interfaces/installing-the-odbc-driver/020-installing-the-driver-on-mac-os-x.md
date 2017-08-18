@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-08-17 18:55:25 UTC
+date: 2017-08-18 17:48:04 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the Drill ODBC Driver on the machine from which you connect to
@@ -65,4 +65,3 @@ To display information about the iODBC driver manager installed on the machine, 
 ### Next Step
 
 [Configuring ODBC on Mac OS X]({{ site.baseurl }}/docs/configuring-odbc-on-mac-os-x/).
-

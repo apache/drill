@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2017-08-17 21:20:15 UTC
+date: 2017-08-18 17:47:31 UTC
 parent: "Configure Drill"
 ---
 
@@ -16,7 +16,7 @@ As of Drill 1.5, Drill uses a new allocator that improves an operator’s use of
 
 
 ## Drillbit Memory  
-The value set for the [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option sets the maximum amount of direct memory allocated to the Sort and Hash Aggreate operators in each query on a node. If a query plan contains multiple Sort and/or Hash Aggregate operators, they all share this memory. If you encounter memory issues when running queries with Sort and/or Hash Aggregate operators, increase the value of this option. See [Sort-Based and Hash-Based Memory Constrained Operators](https://drill.apache.org/docs/sort-based-and-hash-based-memory-constrained-operators/) for more information.  
+The value set for the [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option sets the maximum amount of direct memory allocated to the Sort and Hash Aggreate operators in each query on a node. If a query plan contains multiple Sort and/or Hash Aggregate operators, they all share this memory. The default limit is set to 2147483648 bytes (2GB), which should be increased for queries on large data sets. If you encounter memory issues when running queries with Sort and/or Hash Aggregate operators, increase the value of this option. See [Sort-Based and Hash-Based Memory Constrained Operators](https://drill.apache.org/docs/sort-based-and-hash-based-memory-constrained-operators/) for more information.  
 
 If you continue to encounter memory issues after increasing this value, you can also reduce the value of the [`planner.width.max_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/) option to reduce the level of parallelism per node. However, this may increase the amount of time required for a query to complete. 
 

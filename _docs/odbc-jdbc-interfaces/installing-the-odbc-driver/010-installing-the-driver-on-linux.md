@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2017-08-17 18:55:21 UTC
+date: 2017-08-18 17:48:00 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the Drill ODBC Driver on the machine from which you connect to
@@ -9,11 +9,11 @@ the version of the driver that matches the architecture of the client
 application that you use to access Drill. The 64-bit editions of Linux support
 32- and 64-bit applications.
 
-Install the MapR Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/installing-the-driver-on-linux/#system-requirements), and then complete the following steps described in detail in this document:
+Install the Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/installing-the-driver-on-linux/#system-requirements), and then complete the following steps described in detail in this document:
 
-  * [Step 1: Download the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-1:-download-the-mapr-drill-odbc-driver) 
-  * [Step 2: Install the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-2:-install-the-mapr-drill-odbc-driver)
-  * [Step 3: Check the Drill ODBC Driver version]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-3:-check-the-mapr-drill-odbc-driver-version)
+  * [Step 1: Download the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-1:-download-the-drill-odbc-driver)
+  * [Step 2: Install the Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-2:-install-the-drill-odbc-driver)
+  * [Step 3: Check the Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-3:-check-the-drill-odbc-driver-version)
 
 Verify that your system meets the system requirements before you start.
 
@@ -25,11 +25,7 @@ Verify that your system meets the system requirements before you start.
     * CentOS 5, 6, or 7
     * SUSE Linux Enterprise Server (SLES) 11 or 12     
  * 90 MB of available disk space.
- * An installed ODBC driver manager:
-    * iODBC 3.52.7 or above  
-      or 
-    * unixODBC 2.2.14 or above  
-    On Linux, 3.52.7 is available as a tarball. After unpacking the tarball, see the README for instructions about building the driver manager.  
+ * An installed ODBC driver manager such as, iODBC 3.52.7 (or above) or unixODBC 2.2.14 (or above). On Linux, iODBC 3.52.7 is available as a tarball. After unpacking the tarball, see the README for instructions about building the driver manager.  
  * The client must be able to resolve the actual host name of the Drill node or nodes from the IP address. Verify that a DNS entry was created on the client machine for the Drill node or nodes. If not, create an entry in `/etc/hosts` for each node in the following format:  
 
     	<drill-machine-IP> <drill-machine-hostname>  

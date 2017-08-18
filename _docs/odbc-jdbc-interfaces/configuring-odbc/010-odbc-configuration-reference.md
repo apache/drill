@@ -1,6 +1,6 @@
 ---
 title: "ODBC Configuration Reference"
-date: 2017-08-17 18:54:52 UTC
+date: 2017-08-18 17:47:53 UTC
 parent: "Configuring ODBC"
 ---
 You can use various configuration options to control the behavior of the Drill ODBC Driver. You can use these options in a connection string or in the `odbc.ini` configuration file for the Mac OS X version or the driver.
@@ -19,10 +19,10 @@ The following table provides a list of the configuration options and a brief des
 | ConnectionType | Direct to Drillbit (Direct) | Required. This option specifies whether the driver connects to a single server or a ZooKeeper cluster. Direct to Drillbit (Direct): The driver connects to a single Drill server. ZooKeeper Quorum (ZooKeeper): The driver connects to a ZooKeeper cluster. |
 | DelegationUID | none | Not required. If a value is specified for this setting, the driver delegates all operations against Drill to the specified user, rather than to the authenticated user for the connection. This option is applicable only when Plain authentication is enabled. |
 | DisableAsync | Clear (0) | Not required. This option specifies whether the driver supports asynchronous queries.   Enabled (1): The driver does not support asynchronous queries. Disabled (0): The driver supports asynchronous queries. This option is not supported in connection strings or DSNs. Instead, it must be set as a driver-wide property in the mapr.drillodbc.ini file. Settings in that file apply to all connections that use the driver. |
-| Driver | MapR Drill ODBC Driver on Windows machines or the absolute path of the driver shared object file when installed on a non-Windows machine | On Windows, the name of the installed driver (MapR Drill ODBC Driver). On other platforms, the name of the installed driver as specified in odbcinst.ini, or the absolute path of the driver shared object file. |
+| Driver | Drill ODBC Driver on Windows machines or the absolute path of the driver shared object file when installed on a non-Windows machine | On Windows, the name of the installed driver (Drill ODBC Driver). On other platforms, the name of the installed driver as specified in odbcinst.ini, or the absolute path of the driver shared object file. |
 | Host | localhost | Required if the ConnectionType property is set to Direct to Drillbit. The IP address or host name of the Drill server. |
 | KrbServiceHost | none | Required for Kerberos authentication. The fully qualified domain name of the Drill server host. |
-| KrbServiceName | `map` (default) | Required for Kerberos authentication. The Kerberos service principal name of the Drill server. mapr is the default for the MapR Drill ODBC driver. |
+| KrbServiceName | `map` (default) | Required for Kerberos authentication. The Kerberos service principal name of the Drill server. mapr is the default for the Drill ODBC driver. |
 | LogLevel | OFF (0) | Not required. Use this property to enable or disable logging in the driver and to specify the amount of detail included in log files. Only enable logging long enough to capture an issue. Logging decreases performance and can consume a large quantity of disk space.   This option is not supported in connection strings. To configure logging for the Windows driver, you must use the Logging Options dialog box. To configure logging for a non-Windows driver, you must use the mapr.drillodbc.ini file. |
 | LogPath | none | Required if logging is enabled. The full path to the folder where the driver saves log files when logging is enabled. When logging is enabled, the driver produces two log files at the location that you specify in the LogPath property:  driver.log provides a log of driver activities, and  drillclient.log provides a log of Drill client activities.   This option is not supported in connection strings. To configure logging for the Windows driver, you must use the Logging Options dialog box. To configure logging for a non-Windows driver, you must use the mapr.drillodbc.ini file. |
 | Port | 31010 | Required if the ConnectionType property is set to Direct to Drillbit. The TCP port that the Drill server uses to listen for client connections. Set the TCP port on which the Drill server is listening. |
@@ -71,7 +71,7 @@ When you choose to connect directly to a Drillbit, the ODBC driver connects to t
 
 ### Schema
 
-The name of a schema, or [storage plugin]({ site.baseurl }}/docs/storage-plugin-registration/), from the default schema list of the data sources that you have configured to
+The name of a schema, or [storage plugin]({{site.baseurl}}/docs/storage-plugin-registration/), from the default schema list of the data sources that you have configured to
 use with Drill. Queries on other schemas can still be issued by explicitly specifying the schema in the query.
 
 Views that you create using the Drill Explorer do not appear under the schema associated with the data source type. Instead, the views can be accessed from the file-based schema that you selected when saving the view.
@@ -95,7 +95,7 @@ For example, the following Advanced Properties string excludes the schemas named
 `Time:HandshakeTimeout=30;QueryTimeout=30;
 TimestampTZDisplayTimezone=utc;ExcludedSchemas=test,abc`
 
-The following table lists and describes the advanced properties that you can set when using the MapR Drill ODBC Driver.
+The following table lists and describes the advanced properties that you can set when using the Drill ODBC Driver.
 
 | ﻿Property                   | Default Values         | Brief Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |----------------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

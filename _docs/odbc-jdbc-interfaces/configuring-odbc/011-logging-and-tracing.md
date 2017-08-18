@@ -1,5 +1,5 @@
 ---
-title: "Logging Tracing"
+title: "Logging and Tracing"
 date: 2017-08-17 18:54:56 UTC
 parent: "Configuring ODBC"
 ---

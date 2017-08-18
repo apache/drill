@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Linux"
-date: 2017-08-17 18:55:03 UTC
+date: 2017-08-18 17:47:57 UTC
 parent: "Configuring ODBC"
 ---
 
@@ -10,8 +10,8 @@ steps:
 
 * [Step 1: Set Environment Variables]({{site.baseurl}}/docs/configuring-odbc-on-linux/#step-1:-set-environment-variables)
 * [Step 2: Define the ODBC Data Sources in odbc.ini]({{site.baseurl}}/docs/configuring-odbc-on-linux/#step-2:-define-the-odbc-data-sources-in-.odbc.ini)
-* [Step 3: (Optional) Define the ODBC Driver in odbcinst.ini]({{site.baseurl}}/docs/configuring-odbc-on-linux/#step-3:-(optional)-define-the-odbc-driver-in-.odbcinst.ini)
-* [Step 4: Configure the Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-linux/#configuring-.mapr.drillodbc.ini)
+* [Step 3: (Optional) Define the ODBC Driver in .odbcinst.ini]({{site.baseurl}}/configuring-odbc-on-linux/#step-3:-(optional)-define-the-odbc-driver-in-.odbcinst.ini)
+* [Step 4: Configure the Drill ODBC Driver]({{site.baseurl}}/configuring-odbc-on-linux/#step-4:-configure-the-drill-odbc-driver)
 
 ## Sample Configuration Files
 
