@@ -38,10 +38,6 @@
           <artifactId>log4j</artifactId>
           <groupId>log4j</groupId>
         </exclusion>
-        <exclusion>
-          <artifactId>commons-codec</artifactId>
-          <groupId>commons-codec</groupId>
-        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>

@@ -18,11 +18,14 @@
 package org.apache.drill.exec.fn.interp;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,6 +35,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 public class TestConstantFolding extends PlanTestBase {
+
+  @BeforeClass
+  public static void setupLocal() throws IOException {
+    Locale.setDefault(new Locale("en", "US"));
+  }
 
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
