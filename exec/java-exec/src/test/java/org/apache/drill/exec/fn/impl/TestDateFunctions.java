@@ -20,7 +20,9 @@ package org.apache.drill.exec.fn.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
@@ -34,6 +36,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.joda.time.LocalDateTime;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -42,6 +45,11 @@ import com.google.common.io.Files;
 
 public class TestDateFunctions extends PopUnitTestBase {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDateFunctions.class);
+
+    @BeforeClass
+    public static void setupLocal() {
+        Locale.setDefault(new Locale("en", "US"));
+    }
 
     public void testCommon(String[] expectedResults, String physicalPlan, String resourceFile) throws Exception {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();

@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
 import org.joda.time.DateTime;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -29,6 +30,11 @@ import java.util.List;
 import java.util.Map;
 
 public class TestCastFunctions extends BaseTestQuery {
+
+  @BeforeClass
+  public static void setupLocal() {
+    System.setProperty("user.timezone","Etc/GMT");
+  }
 
   @Test
   public void testVarbinaryToDate() throws Exception {
