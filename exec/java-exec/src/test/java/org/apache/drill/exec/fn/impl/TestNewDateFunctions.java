@@ -26,8 +26,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.sql.Date;
-
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestNewDateFunctions extends BaseTestQuery {
   DateTime date;
@@ -55,9 +53,9 @@ public class TestNewDateFunctions extends BaseTestQuery {
         .sqlQuery("select case when isdate(date1) then cast(date1 as date) else null end res1 from " + dateValues)
         .unOrdered()
         .baselineColumns("res1")
-        .baselineValues(new DateTime(Date.valueOf("1900-01-01").getTime()))
-        .baselineValues(new DateTime(Date.valueOf("3500-01-01").getTime()))
-        .baselineValues(new DateTime(Date.valueOf("2000-12-31").getTime()))
+        .baselineValues(new DateTime(1900, 1, 1, 0, 0))
+        .baselineValues(new DateTime(3500, 1, 1, 0, 0))
+        .baselineValues(new DateTime(2000, 12, 31, 0, 0))
         .baselineValues(new Object[] {null})
         .baselineValues(new Object[] {null})
         .baselineValues(new Object[] {null})
