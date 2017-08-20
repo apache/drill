@@ -79,6 +79,10 @@ public class TestNestedLoopJoin extends PlanTestBase {
   private static final String testNlJoinWithLargeRightInput = "select * from cp.`tpch/region.parquet`r " +
       "left join cp.`tpch/nation.parquet` n on r.r_regionkey <> n.n_regionkey";
 
+  private static final String testNlJoinWithLimit1 = "select r_regionkey from cp.`tpch/region.parquet` r join " +
+    "(select n_regionkey from cp.`tpch/nation.parquet` limit 1 ) n " +
+    "on r.r_regionkey < n.n_regionkey";
+
   @Test
   public void testNlJoinExists_1_planning() throws Exception {
     testPlanMatchingPatterns(testNlJoinExists_1, new String[]{nlpattern}, new String[]{});
@@ -328,4 +332,10 @@ public class TestNestedLoopJoin extends PlanTestBase {
       test(RESET_JOIN_OPTIMIZATION);
     }
   }
+
+  @Test
+  public void testNlWithSubQueryLimit1()throws Exception{
+      testPlanMatchingPatterns(testNlJoinWithLimit1, new String[]{nlpattern}, new String[]{});
+  }
+
 }

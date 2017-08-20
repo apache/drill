@@ -17,18 +17,21 @@
  */
 package org.apache.drill.exec.planner.cost;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
-import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
+import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMdMaxRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.util.BuiltInMethod;
+import org.apache.drill.exec.planner.logical.DrillLimitRel;
 
-public class DrillDefaultRelMetadataProvider {
-  private DrillDefaultRelMetadataProvider() {
+public class DrillRelMdMaxRowCount extends RelMdMaxRowCount {
+
+  private static final DrillRelMdMaxRowCount INSTANCE = new DrillRelMdMaxRowCount();
+
+  public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider.reflectiveSource(BuiltInMethod.MAX_ROW_COUNT.method, INSTANCE);
+
+  public Double getMaxRowCount(DrillLimitRel rel, RelMetadataQuery mq) {
+    return rel.getRows();
   }
 
-  public static final RelMetadataProvider INSTANCE = ChainedRelMetadataProvider.of(ImmutableList
-      .of(DrillRelMdRowCount.SOURCE,
-          DrillRelMdDistinctRowCount.SOURCE,
-          DrillRelMdMaxRowCount.SOURCE,
-          DefaultRelMetadataProvider.INSTANCE));
 }
