@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.util.List;
@@ -136,6 +137,46 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
       // restore the system option
       QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption);
     }
+  }
+
+  @Test
+  public void testLastDay() throws Exception {
+    testBuilder()
+        .sqlQuery("select last_day(to_date('1994-02-01','yyyy-MM-dd')) as `LAST_DAY` from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("LAST_DAY")
+        .baselineValues("1994-02-28")
+        .go();
+  }
+
+  @Test
+  public void testDatediff() throws Exception {
+    testBuilder()
+        .sqlQuery("select datediff(date '1996-03-01', timestamp '1997-02-10 17:32:00.0') as `DATEDIFF` from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("DATEDIFF")
+        .baselineValues(-346)
+        .go();
+  }
+
+  @Test
+  public void testFromUTCTimestamp() throws Exception {
+    testBuilder()
+        .sqlQuery("select from_utc_timestamp('1970-01-01 08:00:00','PST') as PST_TIMESTAMP from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("PST_TIMESTAMP")
+        .baselineValues(DateTime.parse("1970-01-01T00:00:00.0"))
+        .go();
+  }
+
+  @Test
+  public void testToUTCTimestamp() throws Exception {
+    testBuilder()
+        .sqlQuery("select to_utc_timestamp('1970-01-01 00:00:00','PST') as UTC_TIMESTAMP from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("UTC_TIMESTAMP")
+        .baselineValues(DateTime.parse("1970-01-01T08:00:00.0"))
+        .go();
   }
 
 }

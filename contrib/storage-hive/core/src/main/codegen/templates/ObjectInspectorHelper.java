@@ -204,7 +204,11 @@ public class ObjectInspectorHelper {
           <#elseif entry.hiveType == "TIMESTAMP">
             JVar tsVar = jc._else().decl(m.directClass(java.sql.Timestamp.class.getCanonicalName()), "ts",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
-            jc._else().assign(returnValueHolder.ref("value"), tsVar.invoke("getTime"));
+            // Bringing relative timestamp value without timezone info to timestamp value in UTC, since Drill keeps date-time values in UTC
+            JVar localDateTimeVar = jc._else().decl(m.directClass(org.joda.time.LocalDateTime.class.getCanonicalName()), "localDateTime",
+                JExpr._new(m.directClass(org.joda.time.LocalDateTime.class.getCanonicalName())).arg(tsVar));
+            jc._else().assign(returnValueHolder.ref("value"), localDateTimeVar.invoke("toDateTime")
+                .arg(m.directClass(org.joda.time.DateTimeZone.class.getCanonicalName()).staticRef("UTC")).invoke("getMillis"));
           <#elseif entry.hiveType == "DATE">
             JVar dVar = jc._else().decl(m.directClass(java.sql.Date.class.getCanonicalName()), "d",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
