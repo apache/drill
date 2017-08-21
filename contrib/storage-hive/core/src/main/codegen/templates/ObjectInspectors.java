@@ -213,7 +213,10 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
-      return new java.sql.Timestamp(h.value);
+      org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
+      // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
+      // See more in Javadoc for "LocalDateTime#toDate()"
+      return new java.sql.Timestamp(dateTime.toDate().getTime());
     }
 
     @Override
@@ -226,7 +229,10 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
-      return new TimestampWritable(new java.sql.Timestamp(h.value));
+      org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
+      // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
+      // See more in Javadoc for "LocalDateTime#toDate()"
+      return new TimestampWritable(new java.sql.Timestamp(dateTime.toDate().getTime()));
     }
 
 <#elseif entry.drillType == "Date">
@@ -240,7 +246,10 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
-      return new java.sql.Date(h.value);
+      org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
+      // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
+      // See more in Javadoc for "LocalDate#toDate()"
+      return new java.sql.Date(localDate.toDate().getTime());
     }
 
     @Override
@@ -253,7 +262,10 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
-      return new DateWritable(new java.sql.Date(h.value));
+      org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
+      // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
+      // See more in Javadoc for "LocalDate#toDate()"
+      return new DateWritable(new java.sql.Date(localDate.toDate().getTime()));
     }
 
 <#else>
