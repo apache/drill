@@ -393,7 +393,7 @@ if [ ! -e "$JAVA" ]; then
 fi
 
 # Ensure that Java version is at least 1.7
-"$JAVA" -version 2>&1 | grep "version" | egrep -e "1.4|1.5|1.6" > /dev/null
+"$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6" > /dev/null
 if [ $? -eq 0 ]; then
   fatal_error "Java 1.7 or later is required to run Apache Drill."
 fi

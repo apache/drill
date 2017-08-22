@@ -81,7 +81,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     if (BaseAllocator.DEBUG) {
       historicalLog.recordEvent("create()");
     }
-
   }
 
   public DrillBuf reallocIfNeeded(final int size) {
@@ -184,15 +183,15 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   /**
    * Transfer the memory accounting ownership of this DrillBuf to another allocator. This will generate a new DrillBuf
    * that carries an association with the underlying memory of this DrillBuf. If this DrillBuf is connected to the
-   * owning BufferLedger of this memory, that memory ownership/accounting will be transferred to the taret allocator. If
+   * owning BufferLedger of this memory, that memory ownership/accounting will be transferred to the target allocator. If
    * this DrillBuf does not currently own the memory underlying it (and is only associated with it), this does not
    * transfer any ownership to the newly created DrillBuf.
-   *
+   * <p>
    * This operation has no impact on the reference count of this DrillBuf. The newly created DrillBuf with either have a
    * reference count of 1 (in the case that this is the first time this memory is being associated with the new
    * allocator) or the current value of the reference count for the other AllocationManager/BufferLedger combination in
    * the case that the provided allocator already had an association to this underlying memory.
-   *
+   * <p>
    * Transfers will always succeed, even if that puts the other allocator into an overlimit situation. This is possible
    * due to the fact that the original owning allocator may have allocated this memory out of a local reservation
    * whereas the target allocator may need to allocate new memory from a parent or RootAllocator. This operation is done
@@ -218,6 +217,13 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   /**
+   * Visible only for memory allocation calculations.
+   *
+   * @return
+   */
+  public BufferLedger getLedger() { return ledger; }
+
+  /**
    * The outcome of a Transfer.
    */
   public class TransferResult {
@@ -236,7 +242,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       this.allocationFit = allocationFit;
       this.buffer = buffer;
     }
-
   }
 
   @Override
@@ -269,9 +274,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       throw new IllegalStateException(
           String.format("DrillBuf[%d] refCnt has gone negative. Buffer Info: %s", id, toVerboseString()));
     }
-
     return refCnt == 0;
-
   }
 
   @Override

@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.cache;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -119,8 +116,6 @@ public class TestBatchSerialization extends DrillTest {
    */
   private void verifySerialize(SingleRowSet rowSet, SingleRowSet expected) throws IOException {
 
-    long origSize = rowSet.size();
-
     File dir = OperatorFixture.getTempDir("serial");
     File outFile = new File(dir, "serialze.dat");
     try (OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile))) {
@@ -135,7 +130,6 @@ public class TestBatchSerialization extends DrillTest {
           .read());
     }
 
-    assertTrue(origSize >= result.size());
     new RowSetComparison(expected)
       .verifyAndClearAll(result);
     outFile.delete();

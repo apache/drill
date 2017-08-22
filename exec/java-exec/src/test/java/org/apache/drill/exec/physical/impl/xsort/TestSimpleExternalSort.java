@@ -35,14 +35,17 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.test.SecondaryTest;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
+@Category(SecondaryTest.class)
 public class TestSimpleExternalSort extends DrillTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(80000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(80_000);
 
   @Test
   public void mergeSortWithSv2Managed() throws Exception {
@@ -100,7 +103,7 @@ public class TestSimpleExternalSort extends DrillTest {
          ClientFixture client = cluster.clientFixture()) {
       chooseImpl(client, testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("xsort/one_key_sort_descending.json").results();
-      assertEquals(1000000, client.countResults(results));
+      assertEquals(1_000_000, client.countResults(results));
       validateResults(client.allocator(), results);
     }
   }

@@ -27,9 +27,12 @@ import org.apache.drill.exec.physical.impl.xsort.MSortTemplate;
 import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.InputBatch;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeTask;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.VectorInitializer;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
@@ -70,6 +73,103 @@ public class SortImpl {
     SelectionVector4 getSv4();
   }
 
+  public static class EmptyResults implements SortResults {
+
+    private final VectorContainer dest;
+
+    public EmptyResults(VectorContainer dest) {
+      dest.setRecordCount(0);
+      dest.buildSchema(SelectionVectorMode.NONE);
+      this.dest = dest;
+    }
+
+    @Override
+    public boolean next() { return false; }
+
+    @Override
+    public void close() { }
+
+    @Override
+    public int getBatchCount() { return 0; }
+
+    @Override
+    public int getRecordCount() { return 0; }
+
+    @Override
+    public SelectionVector4 getSv4() { return null; }
+
+    @Override
+    public SelectionVector2 getSv2() { return null; }
+
+    @Override
+    public VectorContainer getContainer() { return dest; }
+  }
+
+
+  /**
+   * Return results for a single input batch. No merge is needed;
+   * the original (sorted) input batch is simply passed as the result.
+   * Note that this version requires replacing the operator output
+   * container with the batch container. (Vector ownership transfer
+   * was already done when accepting the input batch.)
+   */
+
+  public static class SingleBatchResults implements SortResults {
+
+    private boolean done;
+    private final VectorContainer outputContainer;
+    private final BatchGroup.InputBatch batch;
+
+    public SingleBatchResults(BatchGroup.InputBatch batch, VectorContainer outputContainer) {
+      this.batch = batch;
+      this.outputContainer = outputContainer;
+    }
+
+    @Override
+    public boolean next() {
+      if (done) {
+        return false;
+      }
+
+      // The following implementation is wrong. Must transfer buffers,
+      // not vectors. The output container already contains vectors
+      // for the output schema.
+
+      for (VectorWrapper<?> vw : batch.getContainer()) {
+        outputContainer.add(vw.getValueVector());
+      }
+      outputContainer.buildSchema(SelectionVectorMode.TWO_BYTE);
+      outputContainer.setRecordCount(batch.getRecordCount());
+      done = true;
+      return true;
+    }
+
+    @Override
+    public void close() {
+      try {
+        batch.close();
+      } catch (IOException e) {
+        // Should never occur for an input batch
+        throw new IllegalStateException(e);
+      }
+    }
+
+    @Override
+    public int getBatchCount() { return 1; }
+
+    @Override
+    public int getRecordCount() { return outputContainer.getRecordCount(); }
+
+    @Override
+    public SelectionVector4 getSv4() { return null; }
+
+    @Override
+    public SelectionVector2 getSv2() { return batch.getSv2(); }
+
+    @Override
+    public VectorContainer getContainer() { return outputContainer; }
+  }
+
   private final SortConfig config;
   private final SortMetrics metrics;
   private final SortMemoryManager memManager;
@@ -88,7 +188,12 @@ public class SortImpl {
 
   private final BufferedBatches bufferedBatches;
 
-  public SortImpl(OperExecContext opContext, SortConfig sortConfig, SpilledRuns spilledRuns, VectorContainer batch) {
+  private RecordBatchSizer sizer;
+
+  private VectorInitializer allocHelper;
+
+  public SortImpl(OperExecContext opContext, SortConfig sortConfig,
+                  SpilledRuns spilledRuns, VectorContainer batch) {
     this.context = opContext;
     outputBatch = batch;
     this.spilledRuns = spilledRuns;
@@ -103,7 +208,10 @@ public class SortImpl {
     // limit will reduce the probability that random chance causes the allocator
     // to kill the query because of a small, spurious over-allocation.
 
-    allocator.setLimit((long)(allocator.getLimit() * 1.10));
+    long maxMem = memManager.getMemoryLimit();
+    long newMax = (long)(maxMem * 1.10);
+    allocator.setLimit(newMax);
+    logger.debug("Config: Resetting allocator to 10% safety margin: {}", newMax);
   }
 
   public void setSchema(BatchSchema schema) {
@@ -138,16 +246,16 @@ public class SortImpl {
     // ownership. Allows us to figure out if we need to spill first,
     // to avoid overflowing memory simply due to ownership transfer.
 
-    RecordBatchSizer sizer = analyzeIncomingBatch(incoming);
+   analyzeIncomingBatch(incoming);
 
     // The heart of the external sort operator: spill to disk when
     // the in-memory generation exceeds the allowed memory limit.
     // Preemptively spill BEFORE accepting the new batch into our memory
-    // pool. The allocator will throw an OOM exception if we accept the
-    // batch when we are near the limit - despite the fact that the batch
-    // is already in memory and no new memory is allocated during the transfer.
+    // pool. Although the allocator will allow us to exceed the memory limit
+    // during the transfer, we immediately follow the transfer with an SV2
+    // allocation that will fail if we are over the allocation limit.
 
-    if ( isSpillNeeded(sizer.actualSize())) {
+    if (isSpillNeeded(sizer.actualSize())) {
       spillFromMemory();
     }
 
@@ -172,7 +280,12 @@ public class SortImpl {
     // (which may exclude some records due to filtering.)
 
     validateBatchSize(sizer.actualSize(), batchSize);
-    memManager.updateEstimates((int) batchSize, sizer.netRowWidth(), sizer.rowCount());
+    if (memManager.updateEstimates((int) batchSize, sizer.netRowWidth(), sizer.rowCount())) {
+
+      // If estimates changed, discard the helper based on the old estimates.
+
+      allocHelper = null;
+    }
   }
 
   /**
@@ -181,13 +294,12 @@ public class SortImpl {
    * @return an analysis of the incoming batch
    */
 
-  private RecordBatchSizer analyzeIncomingBatch(VectorAccessible incoming) {
-    RecordBatchSizer sizer = new RecordBatchSizer(incoming);
+  private void analyzeIncomingBatch(VectorAccessible incoming) {
+    sizer = new RecordBatchSizer(incoming);
     sizer.applySv2();
     if (metrics.getInputBatchCount() == 0) {
       logger.debug("{}", sizer.toString());
     }
-    return sizer;
   }
 
   /**
@@ -195,20 +307,32 @@ public class SortImpl {
    * Spilling is driven purely by memory availability (and an optional
    * batch limit for testing.)
    *
-   * @return true if spilling is needed, false otherwise
+   * @return true if spilling is needed (and possible), false otherwise
    */
 
   private boolean isSpillNeeded(int incomingSize) {
 
+    if (bufferedBatches.size() >= config.getBufferedBatchLimit()) {
+      return true;
+    }
+
     // Can't spill if less than two batches else the merge
     // can't make progress.
 
+    final boolean spillNeeded = memManager.isSpillNeeded(allocator.getAllocatedMemory(), incomingSize);
     if (bufferedBatches.size() < 2) {
-      return false; }
 
-    if (bufferedBatches.size() >= config.getBufferedBatchLimit()) {
-      return true; }
-    return memManager.isSpillNeeded(allocator.getAllocatedMemory(), incomingSize);
+      // If we can't fit the batch into memory, then place a definite error
+      // message into the log to simplify debugging.
+
+      if (spillNeeded) {
+        logger.error("Insufficient memory to merge two batches. Incoming batch size: {}, available memory: {}",
+                     incomingSize, memManager.freeMemory(allocator.getAllocatedMemory()));
+      }
+      return false;
+    }
+
+    return spillNeeded;
   }
 
   private void validateBatchSize(long actualBatchSize, long memoryDelta) {
@@ -235,45 +359,22 @@ public class SortImpl {
 
     // Do the actual spill.
 
-    logger.trace("Spilling {} of {} batches, memory = {}",
+    logger.trace("Spilling {} of {} batches, allocated memory = {} bytes",
         batchesToSpill.size(), startCount,
         allocator.getAllocatedMemory());
     int spillBatchRowCount = memManager.getSpillBatchRowCount();
-    spilledRuns.mergeAndSpill(batchesToSpill, spillBatchRowCount);
+    spilledRuns.mergeAndSpill(batchesToSpill, spillBatchRowCount, allocHelper());
     metrics.incrSpillCount();
   }
 
-  public SortMetrics getMetrics() { return metrics; }
-
-  public static class EmptyResults implements SortResults {
-
-    private final VectorContainer dest;
-
-    public EmptyResults(VectorContainer dest) {
-      this.dest = dest;
+  private VectorInitializer allocHelper() {
+    if (allocHelper == null) {
+      allocHelper = sizer.buildVectorInitializer();
     }
-
-    @Override
-    public boolean next() { return false; }
-
-    @Override
-    public void close() { }
-
-    @Override
-    public int getBatchCount() { return 0; }
-
-    @Override
-    public int getRecordCount() { return 0; }
-
-    @Override
-    public SelectionVector4 getSv4() { return null; }
-
-    @Override
-    public SelectionVector2 getSv2() { return null; }
-
-    @Override
-    public VectorContainer getContainer() { return dest; }
+    return allocHelper;
   }
+
+  public SortMetrics getMetrics() { return metrics; }
 
   public SortResults startMerge() {
     if (metrics.getInputRowCount() == 0) {
@@ -284,72 +385,22 @@ public class SortImpl {
         metrics.getInputBatchCount(), spilledRuns.size(),
         metrics.getInputBytes());
 
-    // Do the merge of the loaded batches. The merge can be done entirely in memory if
-    // the results fit; else we have to do a disk-based merge of
-    // pre-sorted spilled batches.
+    // Do the merge of the loaded batches. The merge can be done entirely in
+    // memory if the results fit; else we have to do a disk-based merge of
+    // pre-sorted spilled batches. Special case the single-batch query;
+    // this accelerates small, quick queries.
+    //
+    // Note: disabling this optimization because it turns out to be
+    // quite hard to transfer a set of vectors from one place to another.
 
-    boolean optimizeOn = true; // Debug only
-    if (optimizeOn && metrics.getInputBatchCount() == 1) {
+    /* if (metrics.getInputBatchCount() == 1) {
       return singleBatchResult();
-    } else if (canUseMemoryMerge()) {
+    } else */ if (canUseMemoryMerge()) {
       return mergeInMemory();
     } else {
       return mergeSpilledRuns();
     }
   }
-
-  /**
-   * Return results for a single input batch. No merge is needed;
-   * the original (sorted) input batch is simply passed as the result.
-   * Note that this version requires replacing the operator output
-   * container with the batch container. (Vector ownership transfer
-   * was already done when accepting the input batch.)
-   */
-
-  public static class SingleBatchResults implements SortResults {
-
-    private boolean done;
-    private final BatchGroup.InputBatch batch;
-
-    public SingleBatchResults(BatchGroup.InputBatch batch) {
-      this.batch = batch;
-    }
-
-    @Override
-    public boolean next() {
-      if (done) {
-        return false;
-      }
-      done = true;
-      return true;
-    }
-
-    @Override
-    public void close() {
-      try {
-        batch.close();
-      } catch (IOException e) {
-        // Should never occur for an input batch
-        throw new IllegalStateException(e);
-      }
-    }
-
-    @Override
-    public int getBatchCount() { return 1; }
-
-    @Override
-    public int getRecordCount() { return batch.getRecordCount(); }
-
-    @Override
-    public SelectionVector4 getSv4() { return null; }
-
-    @Override
-    public SelectionVector2 getSv2() { return batch.getSv2(); }
-
-    @Override
-    public VectorContainer getContainer() {return batch.getContainer(); }
-  }
-
   /**
    * Input consists of a single batch. Just return that batch as
    * the output.
@@ -358,7 +409,7 @@ public class SortImpl {
 
   private SortResults singleBatchResult() {
     List<InputBatch> batches = bufferedBatches.removeAll();
-    return new SingleBatchResults(batches.get(0));
+    return new SingleBatchResults(batches.get(0), outputBatch);
   }
 
   /**
@@ -413,7 +464,7 @@ public class SortImpl {
 
     MergeSortWrapper memoryMerge = new MergeSortWrapper(context, outputBatch);
     try {
-      memoryMerge.merge(bufferedBatches.removeAll());
+      memoryMerge.merge(bufferedBatches.removeAll(), config.getMSortBatchSize());
     } catch (Throwable t) {
       memoryMerge.close();
       throw t;
@@ -461,13 +512,13 @@ public class SortImpl {
     }
 
     int mergeRowCount = memManager.getMergeBatchRowCount();
-    return spilledRuns.finalMerge(bufferedBatches.removeAll(), outputBatch, mergeRowCount);
+    return spilledRuns.finalMerge(bufferedBatches.removeAll(), outputBatch, mergeRowCount, allocHelper);
   }
 
   private void mergeRuns(int targetCount) {
     long mergeMemoryPool = memManager.getMergeMemoryLimit();
     int spillBatchRowCount = memManager.getSpillBatchRowCount();
-    spilledRuns.mergeRuns(targetCount, mergeMemoryPool, spillBatchRowCount);
+    spilledRuns.mergeRuns(targetCount, mergeMemoryPool, spillBatchRowCount, allocHelper);
     metrics.incrMergeCount();
   }
 

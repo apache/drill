@@ -281,7 +281,6 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
 
       // Validate schema when available.
       if (batchState == OK || batchState == OK_NEW_SCHEMA) {
-        final BatchSchema prevLastSchema = lastSchema;
         final BatchSchema prevLastNewSchema = lastNewSchema;
 
         lastSchema = incoming.getSchema();
@@ -364,5 +363,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
         String.format("You should not call getOutgoingContainer() for class %s",
                       this.getClass().getCanonicalName()));
   }
+
+  public RecordBatch getIncoming() { return incoming; }
 
 }

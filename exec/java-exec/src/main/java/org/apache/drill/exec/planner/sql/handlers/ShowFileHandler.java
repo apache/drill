@@ -102,6 +102,6 @@ public class ShowFileHandler extends DefaultSqlHandler {
                                                                  fileStatus.getAccessTime(), fileStatus.getModificationTime());
       rows.add(result);
     }
-    return DirectPlan.createDirectPlan(context.getCurrentEndpoint(), rows.iterator(), ShowFilesCommandResult.class);
+    return DirectPlan.createDirectPlan(context.getCurrentEndpoint(), rows, ShowFilesCommandResult.class);
   }
 }
