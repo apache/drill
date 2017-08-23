@@ -54,7 +54,12 @@ public class QueryResources {
   @Path("/query")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQuery() {
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/query.ftl", sc);
+    return ViewableWithPermissions.create(
+        authEnabled.get(),
+        "/rest/query/query.ftl",
+        sc,
+        // if impersonation is enabled without authentication, will provide mechanism to add user name to request header from Web UI
+        WebServer.isImpersonationOnlyEnabled(work.getContext().getConfig()));
   }
 
   @POST
