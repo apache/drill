@@ -20,6 +20,8 @@ package org.apache.drill.exec.server.rest;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.QueryWrapper.QueryResult;
@@ -54,7 +56,10 @@ public class QueryResources {
   @Path("/query")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQuery() {
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/query.ftl", sc);
+    final DrillConfig config = work.getContext().getConfig();
+    // if impersonation is enabled without impersonation, will provide mechanism to add user name to request header from Web UI
+    boolean supportUserName = !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/query.ftl", sc, supportUserName);
   }
 
   @POST
