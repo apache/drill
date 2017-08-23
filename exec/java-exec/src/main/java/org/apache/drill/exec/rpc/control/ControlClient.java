@@ -79,6 +79,11 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
             ? config.getMessageHandler()
             : new FailingRequestHandler<ControlConnection>(),
         this);
+
+    // Increase the connection count here since at this point it means that we already have the TCP connection.
+    // Later when connection fails for any reason then we will decrease the counter based on Netty's connection close
+    // handler.
+    connection.incConnectionCounter();
     return connection;
   }
 
@@ -132,9 +137,6 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   @Override
   protected void finalizeConnection(BitControlHandshake handshake, ControlConnection connection) {
     connection.setEndpoint(handshake.getEndpoint());
-
-    // Increment the Control Connection counter.
-    connection.incConnectionCounter();
   }
 
   @Override

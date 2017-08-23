@@ -110,6 +110,11 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
           ? config.getMessageHandler()
           : new ServerAuthenticationHandler<>(config.getMessageHandler(),
           RpcType.SASL_MESSAGE_VALUE, RpcType.SASL_MESSAGE));
+
+      // Increase the connection count here since at this point it means that we already have the TCP connection.
+      // Later when connection fails for any reason then we will decrease the counter based on Netty's connection close
+      // handler.
+      incConnectionCounter();
     }
 
     void disableReadTimeout() {
@@ -150,10 +155,6 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
       if (config.getImpersonationManager() != null && targetName != null) {
         config.getImpersonationManager().replaceUserOnSession(targetName, session);
       }
-
-      // Increase the corresponding connection counter.
-      // For older clients we call this method directly.
-      incConnectionCounter();
     }
 
     @Override
