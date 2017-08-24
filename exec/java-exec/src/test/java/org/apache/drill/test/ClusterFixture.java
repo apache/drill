@@ -19,6 +19,7 @@ package org.apache.drill.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -118,7 +119,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // storage. Profiles will go here when running in distributed
       // mode.
 
-      put(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT, "/tmp/drill/log");
+      put(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT, "/tmp/drill/tests");
+      put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, "file:/tmp/drill/tests");
     }
   };
 
@@ -729,7 +731,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   public File getDrillTempDir() {
-    return new File(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
+    return new File(URI.create(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH)).getPath());
   }
 
   public boolean usesZK() {
