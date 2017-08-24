@@ -23,6 +23,7 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
@@ -32,9 +33,11 @@ import org.apache.drill.exec.proto.UserBitShared.Registry;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,7 +46,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
@@ -67,18 +69,28 @@ import static org.mockito.Mockito.verify;
 @RunWith(MockitoJUnitRunner.class)
 public class TestDynamicUDFSupport extends BaseTestQuery {
 
-  private static final File jars = new File(TestTools.getWorkingPath() + "/src/test/resources/jars");
+  private static final Path jars = new Path(TestTools.getWorkingPath(), "src/test/resources/jars");
   private static final String default_binary_name = "DrillUDF-1.0.jar";
   private static final String default_source_name = JarUtil.getSourceName(default_binary_name);
 
   @Rule
   public final TemporaryFolder base = new TemporaryFolder();
 
+  private static FileSystem localFileSystem;
+
+  @BeforeClass
+  public static void init() throws IOException {
+    Configuration configuration = new Configuration();
+    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
+    localFileSystem = FileSystem.get(configuration);
+  }
+
   @Before
   public void setup() {
     Properties overrideProps = new Properties();
-    overrideProps.setProperty("drill.exec.udf.directory.root", base.getRoot().getPath());
-    overrideProps.setProperty("drill.tmp-dir", base.getRoot().getPath());
+    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, base.getRoot().getPath());
+    overrideProps.setProperty(ExecConstants.DRILL_TMP_DIR, base.getRoot().getPath());
+    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
     updateTestCluster(1, DrillConfig.create(overrideProps));
   }
 
@@ -120,8 +132,11 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   @Test
   public void testAbsentBinaryInStaging() throws Exception {
     Path staging = getDrillbitContext().getRemoteFunctionRegistry().getStagingArea();
+    FileSystem fs = getDrillbitContext().getRemoteFunctionRegistry().getFs();
+    copyJar(fs, jars, staging, default_binary_name);
 
-    String summary = String.format("File %s does not exist", new Path(staging, default_binary_name).toUri().getPath());
+    String summary = String.format("File %s does not exist on file system %s",
+        new Path(staging, default_source_name).toUri().getPath(), fs.getUri());
 
     testBuilder()
         .sqlQuery("create function using jar '%s'", default_binary_name)
@@ -133,11 +148,13 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Test
   public void testAbsentSourceInStaging() throws Exception {
-    Path staging = getDrillbitContext().getRemoteFunctionRegistry().getStagingArea();
-    copyJar(getDrillbitContext().getRemoteFunctionRegistry().getFs(), new Path(jars.toURI()),
-        staging, default_binary_name);
+    RemoteFunctionRegistry remoteFunctionRegistry = getDrillbitContext().getRemoteFunctionRegistry();
+    FileSystem fs = remoteFunctionRegistry.getFs();
+    Path staging = remoteFunctionRegistry.getStagingArea();
+    copyJar(fs, jars, staging, default_binary_name);
 
-    String summary = String.format("File %s does not exist", new Path(staging, default_source_name).toUri().getPath());
+    String summary = String.format("File %s does not exist on file system %s",
+        new Path(staging, default_source_name).toUri().getPath(), fs.getUri());
 
     testBuilder()
         .sqlQuery("create function using jar '%s'", default_binary_name)
@@ -432,10 +449,11 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     Path localUdfDirPath = Deencapsulation.getField(
         getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir");
-    File localUdfDir = new File(localUdfDirPath.toUri().getPath());
 
-    assertTrue("Binary should exist in local udf directory", new File(localUdfDir, default_binary_name).exists());
-    assertTrue("Source should exist in local udf directory", new File(localUdfDir, default_source_name).exists());
+    assertTrue("Binary should exist in local udf directory",
+        localFileSystem.exists(new Path(localUdfDirPath, default_binary_name)));
+    assertTrue("Source should exist in local udf directory",
+        localFileSystem.exists(new Path(localUdfDirPath, default_source_name)));
   }
 
   @Test
@@ -498,10 +516,11 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     Path localUdfDirPath = Deencapsulation.getField(
         getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir");
-    File localUdfDir = new File(localUdfDirPath.toUri().getPath());
 
-    assertTrue("Binary should exist in local udf directory", new File(localUdfDir, default_binary_name).exists());
-    assertTrue("Source should exist in local udf directory", new File(localUdfDir, default_source_name).exists());
+    assertTrue("Binary should exist in local udf directory",
+        localFileSystem.exists(new Path(localUdfDirPath, default_binary_name)));
+    assertTrue("Source should exist in local udf directory",
+        localFileSystem.exists(new Path(localUdfDirPath, default_source_name)));
 
     String summary = "The following UDFs in jar %s have been unregistered:\n" +
         "[custom_lower(VARCHAR-REQUIRED)]";
@@ -530,9 +549,9 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
 
     assertFalse("Binary should not be present in local udf directory",
-        new File(localUdfDir, default_binary_name).exists());
+        localFileSystem.exists(new Path(localUdfDirPath, default_binary_name)));
     assertFalse("Source should not be present in local udf directory",
-        new File(localUdfDir, default_source_name).exists());
+        localFileSystem.exists(new Path(localUdfDirPath, default_source_name)));
   }
 
   @Test
@@ -549,7 +568,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     Thread.sleep(1000);
 
-    Path src = new Path(jars.toURI().getPath(), "v2");
+    Path src = new Path(jars, "v2");
     copyJarsToStagingArea(src, default_binary_name, default_source_name);
     test("create function using jar '%s'", default_binary_name);
     testBuilder()
@@ -887,11 +906,11 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   }
 
   private void copyDefaultJarsToStagingArea() throws IOException {
-    copyJarsToStagingArea(new Path(jars.toURI()), default_binary_name, default_source_name);
+    copyJarsToStagingArea(jars, default_binary_name, default_source_name);
   }
 
   private void copyJarsToStagingArea(String binaryName, String sourceName) throws IOException  {
-    copyJarsToStagingArea(new Path(jars.toURI()), binaryName, sourceName);
+    copyJarsToStagingArea(jars, binaryName, sourceName);
   }
 
   private void copyJarsToStagingArea(Path src, String binaryName, String sourceName) throws IOException {

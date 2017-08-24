@@ -83,7 +83,8 @@ import org.apache.drill.exec.vector.ValueVector;
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
-  public static final String TEMP_SCHEMA = "dfs_test.tmp";
+  public static final String TEST_SCHEMA = "dfs_test";
+  public static final String TEMP_SCHEMA = TEST_SCHEMA + ".tmp";
 
   private static final int MAX_WIDTH_PER_NODE = 2;
 

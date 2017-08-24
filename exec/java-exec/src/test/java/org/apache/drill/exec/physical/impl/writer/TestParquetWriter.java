@@ -731,6 +731,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .go();
 
       Configuration hadoopConf = new Configuration();
+      hadoopConf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
       Path output = new Path(getDfsTestTmpSchemaLocation(), outputFile);
       FileSystem fs = output.getFileSystem(hadoopConf);
       for (FileStatus file : fs.listStatus(output)) {
