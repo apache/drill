@@ -23,13 +23,14 @@ import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.WorkManager;
@@ -106,6 +107,8 @@ public class WebServer implements AutoCloseable {
 
   private Server embeddedJetty;
 
+  private final Drillbit drillbit;
+
   private int port;
 
   /**
@@ -114,11 +117,12 @@ public class WebServer implements AutoCloseable {
    * @param context Bootstrap context.
    * @param workManager WorkManager instance.
    */
-  public WebServer(final BootStrapContext context, final WorkManager workManager) {
+  public WebServer(final BootStrapContext context, final WorkManager workManager, final Drillbit drillbit) {
     this.context = context;
     this.config = context.getConfig();
     this.metrics = context.getMetrics();
     this.workManager = workManager;
+    this.drillbit = drillbit;
   }
 
   private static final String BASE_STATIC_PATH = "/rest/static/";
@@ -193,7 +197,7 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
 
-    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(new DrillRestServer(workManager, servletContextHandler.getServletContext())));
+    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 

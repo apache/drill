@@ -101,6 +101,16 @@ public final class CoordinationProtos {
      */
     com.google.protobuf.ByteString
         getVersionBytes();
+
+    // optional .exec.DrillbitEndpoint.State state = 7;
+    /**
+     * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+     */
+    boolean hasState();
+    /**
+     * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+     */
+    org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State getState();
   }
   /**
    * Protobuf type {@code exec.DrillbitEndpoint}
@@ -191,6 +201,17 @@ public final class CoordinationProtos {
               version_ = input.readBytes();
               break;
             }
+            case 56: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State value = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(7, rawValue);
+              } else {
+                bitField0_ |= 0x00000040;
+                state_ = value;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -228,6 +249,106 @@ public final class CoordinationProtos {
     @java.lang.Override
     public com.google.protobuf.Parser<DrillbitEndpoint> getParserForType() {
       return PARSER;
+    }
+
+    /**
+     * Protobuf enum {@code exec.DrillbitEndpoint.State}
+     */
+    public enum State
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>STARTUP = 0;</code>
+       */
+      STARTUP(0, 0),
+      /**
+       * <code>ONLINE = 1;</code>
+       */
+      ONLINE(1, 1),
+      /**
+       * <code>QUIESCENT = 2;</code>
+       */
+      QUIESCENT(2, 2),
+      /**
+       * <code>OFFLINE = 3;</code>
+       */
+      OFFLINE(3, 3),
+      ;
+
+      /**
+       * <code>STARTUP = 0;</code>
+       */
+      public static final int STARTUP_VALUE = 0;
+      /**
+       * <code>ONLINE = 1;</code>
+       */
+      public static final int ONLINE_VALUE = 1;
+      /**
+       * <code>QUIESCENT = 2;</code>
+       */
+      public static final int QUIESCENT_VALUE = 2;
+      /**
+       * <code>OFFLINE = 3;</code>
+       */
+      public static final int OFFLINE_VALUE = 3;
+
+
+      public final int getNumber() { return value; }
+
+      public static State valueOf(int value) {
+        switch (value) {
+          case 0: return STARTUP;
+          case 1: return ONLINE;
+          case 2: return QUIESCENT;
+          case 3: return OFFLINE;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<State>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<State>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<State>() {
+              public State findValueByNumber(int number) {
+                return State.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final State[] VALUES = values();
+
+      public static State valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private State(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:exec.DrillbitEndpoint.State)
     }
 
     private int bitField0_;
@@ -387,6 +508,22 @@ public final class CoordinationProtos {
       }
     }
 
+    // optional .exec.DrillbitEndpoint.State state = 7;
+    public static final int STATE_FIELD_NUMBER = 7;
+    private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State state_;
+    /**
+     * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+     */
+    public boolean hasState() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+     */
+    public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State getState() {
+      return state_;
+    }
+
     private void initFields() {
       address_ = "";
       userPort_ = 0;
@@ -394,6 +531,7 @@ public final class CoordinationProtos {
       dataPort_ = 0;
       roles_ = org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance();
       version_ = "";
+      state_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.STARTUP;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -424,6 +562,9 @@ public final class CoordinationProtos {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(6, getVersionBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeEnum(7, state_.getNumber());
       }
       getUnknownFields().writeTo(output);
     }
@@ -457,6 +598,10 @@ public final class CoordinationProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, getVersionBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(7, state_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -591,6 +736,8 @@ public final class CoordinationProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         version_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
+        state_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.STARTUP;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -647,6 +794,10 @@ public final class CoordinationProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.version_ = version_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.state_ = state_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -684,6 +835,9 @@ public final class CoordinationProtos {
           bitField0_ |= 0x00000020;
           version_ = other.version_;
           onChanged();
+        }
+        if (other.hasState()) {
+          setState(other.getState());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1072,6 +1226,42 @@ public final class CoordinationProtos {
   }
   bitField0_ |= 0x00000020;
         version_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.DrillbitEndpoint.State state = 7;
+      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State state_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.STARTUP;
+      /**
+       * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+       */
+      public boolean hasState() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+       */
+      public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State getState() {
+        return state_;
+      }
+      /**
+       * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+       */
+      public Builder setState(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000040;
+        state_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
+       */
+      public Builder clearState() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        state_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.STARTUP;
         onChanged();
         return this;
       }
@@ -2575,19 +2765,21 @@ public final class CoordinationProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022Coordination.proto\022\004exec\"\214\001\n\020DrillbitE" +
+      "\n\022Coordination.proto\022\004exec\"\367\001\n\020DrillbitE" +
       "ndpoint\022\017\n\007address\030\001 \001(\t\022\021\n\tuser_port\030\002 " +
       "\001(\005\022\024\n\014control_port\030\003 \001(\005\022\021\n\tdata_port\030\004" +
       " \001(\005\022\032\n\005roles\030\005 \001(\0132\013.exec.Roles\022\017\n\007vers" +
-      "ion\030\006 \001(\t\"i\n\024DrillServiceInstance\022\n\n\002id\030" +
-      "\001 \001(\t\022\033\n\023registrationTimeUTC\030\002 \001(\003\022(\n\010en" +
-      "dpoint\030\003 \001(\0132\026.exec.DrillbitEndpoint\"\227\001\n" +
-      "\005Roles\022\027\n\tsql_query\030\001 \001(\010:\004true\022\032\n\014logic" +
-      "al_plan\030\002 \001(\010:\004true\022\033\n\rphysical_plan\030\003 \001" +
-      "(\010:\004true\022\033\n\rjava_executor\030\004 \001(\010:\004true\022\037\n",
-      "\021distributed_cache\030\005 \001(\010:\004trueB3\n\033org.ap" +
-      "ache.drill.exec.protoB\022CoordinationProto" +
-      "sH\001"
+      "ion\030\006 \001(\t\022+\n\005state\030\007 \001(\0162\034.exec.Drillbit" +
+      "Endpoint.State\"<\n\005State\022\013\n\007STARTUP\020\000\022\n\n\006" +
+      "ONLINE\020\001\022\r\n\tQUIESCENT\020\002\022\013\n\007OFFLINE\020\003\"i\n\024" +
+      "DrillServiceInstance\022\n\n\002id\030\001 \001(\t\022\033\n\023regi" +
+      "strationTimeUTC\030\002 \001(\003\022(\n\010endpoint\030\003 \001(\0132" +
+      "\026.exec.DrillbitEndpoint\"\227\001\n\005Roles\022\027\n\tsql",
+      "_query\030\001 \001(\010:\004true\022\032\n\014logical_plan\030\002 \001(\010" +
+      ":\004true\022\033\n\rphysical_plan\030\003 \001(\010:\004true\022\033\n\rj" +
+      "ava_executor\030\004 \001(\010:\004true\022\037\n\021distributed_" +
+      "cache\030\005 \001(\010:\004trueB3\n\033org.apache.drill.ex" +
+      "ec.protoB\022CoordinationProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2599,7 +2791,7 @@ public final class CoordinationProtos {
           internal_static_exec_DrillbitEndpoint_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_DrillbitEndpoint_descriptor,
-              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", "Version", });
+              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", "Version", "State", });
           internal_static_exec_DrillServiceInstance_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_exec_DrillServiceInstance_fieldAccessorTable = new

@@ -590,4 +590,17 @@ public final class ExecConstants {
   public static String bootDefaultFor(String name) {
     return OPTION_DEFAULTS_ROOT + name;
 }
+  /**
+   * Boot-time config option provided to modify duration of the grace period.
+   * Grace period is the amount of time where the drillbit accepts work after
+   * the shutdown request is triggered. The primary use of grace period is to
+   * avoid the race conditions caused by zookeeper delay in updating the state
+   * information of the drillbit that is shutting down. So, it is advisable
+   * to have a grace period that is atleast twice the amount of zookeeper
+   * refresh time.
+   */
+  public static final String GRACE_PERIOD = "drill.exec.grace_period_ms";
+
+  public static final String DRILL_PORT_HUNT = "drill.exec.port_hunt";
+
 }

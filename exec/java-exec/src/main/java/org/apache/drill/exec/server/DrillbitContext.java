@@ -157,8 +157,37 @@ public class DrillbitContext implements AutoCloseable {
     return context.getConfig();
   }
 
-  public Collection<DrillbitEndpoint> getBits() {
+  public Collection<DrillbitEndpoint> getAvailableBits() {
     return coord.getAvailableEndpoints();
+  }
+
+  public Collection<DrillbitEndpoint> getBits() {
+    return coord.getOnlineEndPoints();
+  }
+
+  public boolean isOnline(DrillbitEndpoint endpoint) {
+    return endpoint.getState().equals(DrillbitEndpoint.State.ONLINE);
+  }
+
+  public boolean isForeman(DrillbitEndpoint endpoint) {
+    DrillbitEndpoint foreman = getEndpoint();
+    if(endpoint.getAddress().equals(foreman.getAddress()) &&
+            endpoint.getUserPort() == foreman.getUserPort()) {
+      return true;
+    }
+    return false;
+  }
+
+  public boolean isForemanOnline() {
+    Collection<DrillbitEndpoint> dbs = getAvailableBits();
+    for (DrillbitEndpoint db : dbs) {
+      if( isForeman(db)) {
+        if (isOnline(db)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public BufferAllocator getAllocator() {

@@ -37,6 +37,7 @@ import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
@@ -46,6 +47,7 @@ import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,6 +79,8 @@ public class WorkManager implements AutoCloseable {
   private final WorkEventBus workBus;
   private final Executor executor;
   private final StatusThread statusThread;
+  private long numOfRunningQueries;
+  private long numOfRunningFragments;
 
   /**
    * How often the StatusThread collects statistics about running fragments.
@@ -165,31 +169,56 @@ public class WorkManager implements AutoCloseable {
    *
    * <p>This is intended to be used by {@link org.apache.drill.exec.server.Drillbit#close()}.</p>
    */
-  public void waitToExit() {
+  public void waitToExit(Drillbit bit, boolean forcefulShutdown) {
     synchronized(this) {
-      if (queries.isEmpty() && runningFragments.isEmpty()) {
+      numOfRunningQueries = queries.size();
+      numOfRunningFragments = runningFragments.size();
+      if ( queries.isEmpty() && runningFragments.isEmpty()) {
         return;
       }
-
+      logger.info("Draining " + queries +" queries and "+ runningFragments+" fragments.");
       exitLatch = new ExtendedLatch();
     }
-
-    // Wait for at most 5 seconds or until the latch is released.
-    exitLatch.awaitUninterruptibly(5000);
+    // Wait uninterruptibly until all the queries and running fragments on that drillbit goes down
+    // to zero
+    if( forcefulShutdown ) {
+      exitLatch.awaitUninterruptibly(5000);
+    } else {
+      exitLatch.awaitUninterruptibly();
+    }
   }
 
   /**
    * If it is safe to exit, and the exitLatch is in use, signals it so that waitToExit() will
-   * unblock.
+   * unblock. Logs the number of pending fragments and queries that are running on that
+   * drillbit to track the progress of shutdown process.
    */
   private void indicateIfSafeToExit() {
     synchronized(this) {
       if (exitLatch != null) {
+        logger.info("Waiting for "+ queries.size() +" queries to complete before shutting down");
+        logger.info("Waiting for "+ runningFragments.size() +" running fragments to complete before shutting down");
+        if(runningFragments.size() > numOfRunningFragments|| queries.size() > numOfRunningQueries) {
+          logger.info("New Fragments or queries are added while drillbit is Shutting down");
+        }
         if (queries.isEmpty() && runningFragments.isEmpty()) {
+          // Both Queries and Running fragments are empty.
+          // So its safe for the drillbit to exit.
           exitLatch.countDown();
         }
       }
     }
+  }
+  /**
+   *  Get the number of queries that are running on a drillbit.
+   *  Primarily used to monitor the number of running queries after a
+   *  shutdown request is triggered.
+   */
+  public synchronized Map<String, Integer> getRemainingQueries() {
+        Map<String, Integer> queriesInfo = new HashMap<String, Integer>();
+        queriesInfo.put("queriesCount", queries.size());
+        queriesInfo.put("fragmentsCount", runningFragments.size());
+        return queriesInfo;
   }
 
   /**
