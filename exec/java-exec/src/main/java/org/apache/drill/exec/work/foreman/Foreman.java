@@ -253,7 +253,17 @@ public class Foreman implements Runnable {
     final Thread currentThread = Thread.currentThread();
     final String originalName = currentThread.getName();
     currentThread.setName(queryIdString + ":foreman");
-
+    try {
+      /*
+       Check if the foreman is ONLINE. If not dont accept any new queries.
+      */
+      if (!drillbitContext.isForemanOnline()) {
+        throw new ForemanException("Query submission failed since Foreman is shutting down.");
+      }
+    } catch (ForemanException e) {
+      logger.debug("Failure while submitting query", e);
+      addToEventQueue(QueryState.FAILED, e);
+    }
     // track how long the query takes
     queryManager.markStartTime();
     enqueuedQueries.dec();
@@ -559,7 +569,7 @@ public class Foreman implements Runnable {
     final SimpleParallelizer parallelizer = new SimpleParallelizer(queryContext);
     return parallelizer.getFragments(
         queryContext.getOptions().getOptionList(), queryContext.getCurrentEndpoint(),
-        queryId, queryContext.getActiveEndpoints(), rootFragment,
+        queryId, queryContext.getOnlineEndpoints(), rootFragment,
         initiatingClient.getSession(), queryContext.getQueryContextInfo());
   }
 

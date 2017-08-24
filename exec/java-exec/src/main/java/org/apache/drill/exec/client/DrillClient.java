@@ -329,7 +329,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
           throw new RpcException("Failure setting up ZK for client.", e);
         }
       }
-      endpoints.addAll(clusterCoordinator.getAvailableEndpoints());
+      // Gets the drillbit endpoints that are ONLINE and excludes the drillbits that are
+      // in QUIESCENT state. This avoids the clients connecting to drillbits that are
+      // shutting down thereby avoiding reducing the chances of query failures.
+      endpoints.addAll(clusterCoordinator.getOnlineEndPoints());
       // Make sure we have at least one endpoint in the list
       checkState(!endpoints.isEmpty(), "No active Drillbit endpoint found from ZooKeeper. Check connection parameters?");
     }
@@ -418,7 +421,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       retry--;
       try {
         Thread.sleep(this.reconnectDelay);
-        final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
+        // Gets the drillbit endpoints that are ONLINE and excludes the drillbits that are
+        // in QUIESCENT state. This avoids the clients connecting to drillbits that are
+        // shutting down thereby reducing the chances of query failures.
+        final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getOnlineEndPoints());
         if (endpoints.isEmpty()) {
           continue;
         }
@@ -434,6 +440,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
     client.connect(endpoint, properties, getUserCredentials());
+    logger.info("Foreman drillbit is" + endpoint.getAddress());
   }
 
   public BufferAllocator getAllocator() {
