@@ -108,7 +108,7 @@ public abstract class FallbackOptionManager extends BaseOptionManager implements
 
   @Override
   public void setOption(OptionValue value) {
-    final OptionValidator validator = SystemOptionManager.getValidator(value.name);
+    final OptionValidator validator =  getSystemOptionManager().getValidator(value.name);
 
     validator.validate(value, this); // validate the option
 
@@ -120,7 +120,7 @@ public abstract class FallbackOptionManager extends BaseOptionManager implements
 
   @Override
   public void deleteOption(final String name, final OptionType type) {
-    SystemOptionManager.getValidator(name); // ensure the option exists
+    getSystemOptionManager().getValidator(name); // ensure the option exists
 
     // fallback if unable to delete locally
     if (!deleteLocalOption(name, type)) {
@@ -143,5 +143,28 @@ public abstract class FallbackOptionManager extends BaseOptionManager implements
       list.add(value);
     }
     return list;
+  }
+
+  public OptionManager getFallback() {
+    return fallback;
+  }
+
+  /**
+   * {@link FragmentOptionManager} and {@link SessionOptionManager} use {@link SystemOptionManager} as the fall back
+   * manager so for both FragmentOptionManager and SessionOptionManager fallback is the SystemOptionManager so it is
+   * returned. But in case of {@link QueryOptionManager}, it uses {@link SessionOptionManager} as the fallback manager
+   * and since SessionOptionManager uses SystemOptionManager as fallback, SystemOptionManager can be fetched from the
+   * SessionOptionManager.
+   */
+  public SystemOptionManager getSystemOptionManager() {
+    final SystemOptionManager systemOptionManager;
+    if(fallback instanceof SessionOptionManager) {
+      final SessionOptionManager sessionOptionManager = (SessionOptionManager) fallback;
+      systemOptionManager = sessionOptionManager.getFallbackOptionManager();
+    }
+    else {
+      systemOptionManager = (SystemOptionManager) fallback;
+    }
+    return systemOptionManager;
   }
 }

@@ -56,4 +56,5 @@ public abstract class BaseOptionManager implements OptionSet {
   public String getOption(StringValidator validator) {
     return getOptionSafe(validator).string_val;
   }
+
 }

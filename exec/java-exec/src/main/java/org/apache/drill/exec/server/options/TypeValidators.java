@@ -20,10 +20,11 @@ package org.apache.drill.exec.server.options;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class TypeValidators {
@@ -31,8 +32,8 @@ public class TypeValidators {
   public static class PositiveLongValidator extends LongValidator {
     private final long max;
 
-    public PositiveLongValidator(String name, long max, long def) {
-      super(name, def);
+    public PositiveLongValidator(String name, long max) {
+      super(name);
       this.max = max;
     }
 
@@ -49,8 +50,8 @@ public class TypeValidators {
 
   public static class PowerOfTwoLongValidator extends PositiveLongValidator {
 
-    public PowerOfTwoLongValidator(String name, long max, long def) {
-      super(name, max, def);
+    public PowerOfTwoLongValidator(String name, long max) {
+      super(name, max);
     }
 
     @Override
@@ -72,8 +73,8 @@ public class TypeValidators {
     private final double min;
     private final double max;
 
-    public RangeDoubleValidator(String name, double min, double max, double def) {
-      super(name, def);
+    public RangeDoubleValidator(String name, double min, double max) {
+      super(name);
       this.min = min;
       this.max = max;
     }
@@ -93,7 +94,7 @@ public class TypeValidators {
     private final String maxValidatorName;
 
     public MinRangeDoubleValidator(String name, double min, double max, double def, String maxValidatorName) {
-      super(name, min, max, def);
+      super(name, min, max);
       this.maxValidatorName = maxValidatorName;
     }
 
@@ -114,7 +115,7 @@ public class TypeValidators {
     private final String minValidatorName;
 
     public MaxRangeDoubleValidator(String name, double min, double max, double def, String minValidatorName) {
-      super(name, min, max, def);
+      super(name, min, max);
       this.minValidatorName = minValidatorName;
     }
 
@@ -132,42 +133,61 @@ public class TypeValidators {
   }
 
   public static class BooleanValidator extends TypeValidator {
-    public BooleanValidator(String name, boolean def) {
-      this(name, def, false);
+    public BooleanValidator(String name) {
+      this(name, false);
     }
 
-    public BooleanValidator(String name, boolean def, boolean isAdminOption) {
-      super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def), isAdminOption);
+    public BooleanValidator(String name, boolean isAdminOption) {
+      super(name, Kind.BOOLEAN, isAdminOption);
+    }
+
+    public void loadDefault(DrillConfig bootConfig){
+      OptionValue value = OptionValue.createBoolean(OptionType.SYSTEM, getOptionName(), bootConfig.getBoolean(getConfigProperty()), OptionScope.BOOT);
+      setDefaultValue(value);
     }
   }
 
   public static class StringValidator extends TypeValidator {
-    public StringValidator(String name, String def) {
-      this(name, def, false);
+    public StringValidator(String name) {
+      this(name, false);
+    }
+    public StringValidator(String name, boolean isAdminOption) {
+      super(name, Kind.STRING, isAdminOption);
     }
 
-    public StringValidator(String name, String def, boolean isAdminOption) {
-      super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def), isAdminOption);
+    public void loadDefault(DrillConfig bootConfig){
+      OptionValue value = OptionValue.createString(OptionType.SYSTEM, getOptionName(), bootConfig.getString(getConfigProperty()), OptionScope.BOOT);
+      setDefaultValue(value);
     }
   }
 
   public static class LongValidator extends TypeValidator {
-    public LongValidator(String name, long def) {
-      this(name, def, false);
+    public LongValidator(String name) {
+      this(name, false);
     }
 
-    public LongValidator(String name, long def, boolean isAdminOption) {
-      super(name, Kind.LONG, OptionValue.createLong(OptionType.SYSTEM, name, def), isAdminOption);
+    public LongValidator(String name, boolean isAdminOption) {
+      super(name, Kind.LONG, isAdminOption);
+    }
+
+    public void loadDefault(DrillConfig bootConfig){
+      OptionValue value = OptionValue.createLong(OptionType.SYSTEM, getOptionName(), bootConfig.getLong(getConfigProperty()), OptionScope.BOOT);
+      setDefaultValue(value);
     }
   }
 
   public static class DoubleValidator extends TypeValidator {
-    public DoubleValidator(String name, double def) {
-      this(name, def, false);
+    public DoubleValidator(String name) {
+      this(name,false);
     }
 
-    public DoubleValidator(String name, double def, boolean isAdminOption) {
-      super(name, Kind.DOUBLE, OptionValue.createDouble(OptionType.SYSTEM, name, def), isAdminOption);
+    public DoubleValidator(String name, boolean isAdminOption) {
+      super(name, Kind.DOUBLE, isAdminOption);
+    }
+
+    public void loadDefault(DrillConfig bootConfig){
+      OptionValue value = OptionValue.createDouble(OptionType.SYSTEM, getOptionName(),bootConfig.getDouble(getConfigProperty()), OptionScope.BOOT);
+      setDefaultValue(value);
     }
   }
 
@@ -175,8 +195,8 @@ public class TypeValidators {
     private final long min;
     private final long max;
 
-    public RangeLongValidator(String name, long min, long max, long def) {
-      super(name, def);
+    public RangeLongValidator(String name, long min, long max) {
+      super(name);
       this.min = min;
       this.max = max;
     }
@@ -198,9 +218,8 @@ public class TypeValidators {
   public static class EnumeratedStringValidator extends StringValidator {
     private final Set<String> valuesSet = Sets.newLinkedHashSet();
 
-    public EnumeratedStringValidator(String name, String def, String... values) {
-      super(name, def);
-      valuesSet.add(def.toLowerCase());
+    public EnumeratedStringValidator(String name, String... values) {
+      super(name);
       for (String value : values) {
         valuesSet.add(value.toLowerCase());
       }
@@ -217,19 +236,51 @@ public class TypeValidators {
     }
   }
 
-  public static abstract class TypeValidator extends OptionValidator {
-    private final Kind kind;
-    private final OptionValue defaultValue;
+  /** Max width is a special validator which computes and validates
+   *  the maxwidth. If the maxwidth is already set in system/session
+   * the value is returned or else it is computed dynamically based on
+   * the available number of processors and cpu load average
+   */
+  public static class MaxWidthValidator extends LongValidator{
 
-    public TypeValidator(final String name, final Kind kind, final OptionValue defValue) {
-      this(name, kind, defValue, false);
+    public MaxWidthValidator(String name) {
+      this(name, false);
     }
 
-    public TypeValidator(final String name, final Kind kind, final OptionValue defValue, final boolean isAdminOption) {
+    public MaxWidthValidator(String name, boolean isAdminOption) {
       super(name, isAdminOption);
-      checkArgument(defValue.type == OptionType.SYSTEM, "Default value must be SYSTEM type.");
+    }
+
+    public void loadDefault(DrillConfig bootConfig) {
+      OptionValue value = OptionValue.createLong(OptionType.SYSTEM, getOptionName(), bootConfig.getLong(getConfigProperty()), OptionScope.BOOT);
+      setDefaultValue(value);
+    }
+
+    public int computeMaxWidth(double cpuLoadAverage, long maxWidth) {
+      // if maxwidth is already set return it
+      if (maxWidth != 0) {
+        return (int) maxWidth;
+      }
+      // else compute the value and return
+      else {
+        int availProc = Runtime.getRuntime().availableProcessors();
+        long maxWidthPerNode = Math.max(1, Math.min(availProc, Math.round(availProc * cpuLoadAverage)));
+        return (int) maxWidthPerNode;
+      }
+    }
+  }
+
+  public static abstract class TypeValidator extends OptionValidator {
+    private final Kind kind;
+    private OptionValue defaultValue = null;
+
+    public TypeValidator(final String name, final Kind kind) {
+      this(name, kind, false);
+    }
+
+    public TypeValidator(final String name, final Kind kind, final boolean isAdminOption) {
+      super(name, isAdminOption);
       this.kind = kind;
-      this.defaultValue = defValue;
     }
 
     @Override
@@ -255,6 +306,14 @@ public class TypeValidators {
     @Override
     public Kind getKind() {
       return kind;
+    }
+
+    protected void setDefaultValue(OptionValue defaultValue) {
+      this.defaultValue = defaultValue;
+    }
+
+    public String getConfigProperty() {
+      return OPTION_DEFAULTS_ROOT + getOptionName();
     }
   }
 }

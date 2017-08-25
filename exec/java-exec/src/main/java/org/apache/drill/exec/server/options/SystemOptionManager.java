@@ -26,7 +26,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.typesafe.config.ConfigException;
 import org.apache.commons.collections.IteratorUtils;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -48,12 +50,31 @@ import com.google.common.collect.Sets;
  * Only one instance of this class exists per drillbit. Options set at the system level affect the entire system and
  * persist between restarts.
  */
+
+/**
+ *  <p> All the system options are externalized into conf file. While adding a new system option
+ *  a validator should be added and the default value for the option should be set in
+ *  the conf files(example : drill-module.conf) under the namespace drill.exec.options.
+ *  </p>
+ *
+ *  <p>
+ *  The SystemOptionManager loads all the validators and the default values for the options are
+ *  fetched from the config. The validators are populated with the default values fetched from
+ *  the config. If the option is not set in the conf files config option is missing exception
+ *  will be thrown.
+ *  </p>
+ *
+ *  <p>
+ *  If the option is set using ALTER, the value that is set will be returned. Else the default value
+ *  that is loaded into validator from the config will be returned.
+ *  </p>
+ */
+
 public class SystemOptionManager extends BaseOptionManager implements OptionManager, AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
-  private static final CaseInsensitiveMap<OptionValidator> VALIDATORS;
-
-  static {
+  private CaseInsensitiveMap<OptionValidator> VALIDATORS;
+  public void populateValidators() {
     final OptionValidator[] validators = new OptionValidator[]{
       PlannerSettings.CONSTANT_FOLDING,
       PlannerSettings.EXCHANGE,
@@ -177,8 +198,9 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
       ExecConstants.USE_DYNAMIC_UDFS,
       ExecConstants.QUERY_TRANSIENT_STATE_UPDATE,
       ExecConstants.PERSISTENT_TABLE_UMASK_VALIDATOR,
-      ExecConstants.ENABLE_ITERATOR_VALIDATOR,
-      ExecConstants.ENABLE_VECTOR_VALIDATOR
+      ExecConstants.CPU_LOAD_AVERAGE,
+      ExecConstants.ENABLE_VECTOR_VALIDATOR,
+      ExecConstants.ENABLE_ITERATOR_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {
@@ -194,6 +216,7 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
 
   private final PersistentStoreProvider provider;
 
+  private final DrillConfig bootConfig;
   /**
    * Persistent store for options that have been changed from default.
    * NOTE: CRUD operations must use lowercase keys.
@@ -201,10 +224,35 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
   private PersistentStore<OptionValue> options;
 
   public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider) {
+    this(lpPersistence,provider,null);
+  }
+
+  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider, final DrillConfig bootConfig) {
     this.provider = provider;
-    this.config =  PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
-        .name("sys.options")
-        .build();
+    this.config = PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
+          .name("sys.options")
+          .build();
+    this.bootConfig = bootConfig;
+    populateValidators();
+    populateDefaultValues();
+
+  }
+
+  /**
+   * Gets the {@link OptionValidator} associated with the name.
+   *
+   * @param name name of the option
+   * @return the associated validator
+   * @throws UserException - if the validator is not found
+   */
+  public OptionValidator getValidator(final String name) {
+    final OptionValidator validator = VALIDATORS.get(name);
+    if (validator == null) {
+      throw UserException.validationError()
+              .message(String.format("The option '%s' does not exist.", name.toLowerCase()))
+              .build(logger);
+    }
+    return validator;
   }
 
   /**
@@ -237,23 +285,6 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
     return this;
   }
 
-  /**
-   * Gets the {@link OptionValidator} associated with the name.
-   *
-   * @param name name of the option
-   * @return the associated validator
-   * @throws UserException - if the validator is not found
-   */
-  public static OptionValidator getValidator(final String name) {
-    final OptionValidator validator = VALIDATORS.get(name);
-    if (validator == null) {
-      throw UserException.validationError()
-          .message(String.format("The option '%s' does not exist.", name))
-          .build(logger);
-    }
-    return validator;
-  }
-
   @Override
   public Iterator<OptionValue> iterator() {
     final Map<String, OptionValue> buildList = CaseInsensitiveMap.newHashMap();
@@ -276,7 +307,7 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
       return value;
     }
 
-    // otherwise, return default.
+    // If option is not set return the default set in the validator.
     final OptionValidator validator = getValidator(name);
     return validator.getDefault();
   }
@@ -288,7 +319,6 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
     final OptionValidator validator = getValidator(name);
 
     validator.validate(value, this); // validate the option
-
     if (options.get(name) == null && value.equals(validator.getDefault())) {
       return; // if the option is not overridden, ignore setting option to default
     }
@@ -312,6 +342,19 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
     }
     for (final String name : names) {
       options.delete(name); // should be lowercase
+    }
+  }
+
+  public void populateDefaultValues() {
+
+    // populate the options from the config
+    final Map<String, OptionValidator> tmp = new HashMap<>();
+    for (OptionValidator validator: VALIDATORS.values()) {
+      try {
+         validator.loadDefault(bootConfig);
+      } catch (ConfigException.Missing e) {
+        throw new IllegalStateException("Config Option is missing"+ validator.getOptionName());
+      }
     }
   }
 

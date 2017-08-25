@@ -86,8 +86,8 @@ public class InboundImpersonationManager {
    */
   public static class InboundImpersonationPolicyValidator extends StringValidator {
 
-    public InboundImpersonationPolicyValidator(String name, String def) {
-      super(name, def, true);
+    public InboundImpersonationPolicyValidator(String name) {
+      super(name, true);
     }
 
     @Override
