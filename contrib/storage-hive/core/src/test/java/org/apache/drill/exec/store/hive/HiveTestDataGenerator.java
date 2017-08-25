@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -330,6 +330,7 @@ public class HiveTestDataGenerator {
             "  string_field STRING," +
             "  varchar_field VARCHAR(50)," +
             "  timestamp_field TIMESTAMP," +
+            "  date_field DATE," +
             "  char_field CHAR(10)" +
             ") PARTITIONED BY (" +
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
@@ -393,6 +394,7 @@ public class HiveTestDataGenerator {
         "  string_field," +
         "  varchar_field," +
         "  timestamp_field," +
+        "  date_field," +
         "  char_field" +
         " FROM readtest WHERE tinyint_part = 64");
 

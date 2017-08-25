@@ -289,7 +289,7 @@ public interface ExecConstants {
   // in core which is not right. Move this option and above two mongo plugin related options once we have the feature.
   String HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS = "store.hive.optimize_scan_with_native_readers";
   OptionValidator HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR =
-      new BooleanValidator(HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS, false);
+      new BooleanValidator(HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS, true);
 
   String SLICE_TARGET = "planner.slice_target";
   long SLICE_TARGET_DEFAULT = 100000l;
