@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.directory.api.util.Strings;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -427,7 +426,7 @@ public class SpillSet {
 
     String nodeDir = "";
     if (ep != null  &&  ep.getAddress() != null) {
-      nodeDir = ep.getAddress() + "-" + ep.getUserPort() + "/";
+      nodeDir = ep.getAddress() + "-" + ep.getUserPort() + "_";
     }
     spillDirName = String.format("%s%s_%s_%s-%s-%s",
         nodeDir,
