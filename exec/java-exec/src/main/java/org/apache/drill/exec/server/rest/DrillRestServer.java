@@ -241,8 +241,7 @@ public class DrillRestServer extends ResourceConfig {
      * @return session user principal
      */
     private Principal createSessionUserPrincipal(DrillConfig config, HttpServletRequest request) {
-      final boolean checkForUserName = !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
-      if (checkForUserName) {
+      if (WebServer.isImpersonationOnlyEnabled(config)) {
         final String userName = request.getHeader("User-Name");
         if (!Strings.isNullOrEmpty(userName)) {
           return new DrillUserPrincipal(userName, true);

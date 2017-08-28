@@ -68,6 +68,10 @@
       <script>
         function doSubmit() {
           var userName = document.getElementById("userName").value;
+          if (!userName.trim()) {
+              alert("Please fill in User Name field");
+              return;
+          }
           $.ajax({
             type: "POST",
             beforeSend: function (request) {
@@ -79,6 +83,9 @@
               var newDoc = document.open("text/html", "replace");
               newDoc.write(response);
               newDoc.close();
+            },
+            error: function (request, textStatus, errorThrown) {
+              alert(errorThrown);
             }
           });
         }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,6 @@ package org.apache.drill.exec.server.rest;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -126,6 +125,16 @@ public class WebServer implements AutoCloseable {
   private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
 
   /**
+   * Checks if only impersonation is enabled.
+   *
+   * @param config Drill configuration
+   * @return true if impersonation without authentication is enabled, false otherwise
+   */
+  public static boolean isImpersonationOnlyEnabled(DrillConfig config) {
+    return !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+  }
+
+  /**
    * Start the web server including setup.
    * @throws Exception
    */
@@ -183,6 +192,12 @@ public class WebServer implements AutoCloseable {
     if (authEnabled) {
       servletContextHandler.setSecurityHandler(createSecurityHandler());
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    }
+
+    if (isImpersonationOnlyEnabled(workManager.getContext().getConfig())) {
+      for (String path : new String[]{"/query", "/query.json"}) {
+        servletContextHandler.addFilter(UserNameFilter.class, path, EnumSet.of(DispatcherType.REQUEST));
+      }
     }
 
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
