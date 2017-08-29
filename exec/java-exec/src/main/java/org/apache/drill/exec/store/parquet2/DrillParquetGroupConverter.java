@@ -178,6 +178,15 @@ public class DrillParquetGroupConverter extends GroupConverter {
           return new DrillIntConverter(writer);
         }
         switch(type.getOriginalType()) {
+          case UINT_8 :
+          case UINT_16:
+          case UINT_32:
+          case INT_8  :
+          case INT_16 :
+          case INT_32 : {
+            IntWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).integer() : mapWriter.integer(name);
+            return new DrillIntConverter(writer);
+          }
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
             Decimal9Writer writer = type.getRepetition() == Repetition.REPEATED
@@ -216,6 +225,11 @@ public class DrillParquetGroupConverter extends GroupConverter {
           return new DrillBigIntConverter(writer);
         }
         switch(type.getOriginalType()) {
+          case UINT_64:
+          case INT_64 : {
+            BigIntWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).bigInt() : mapWriter.bigInt(name);
+            return new DrillBigIntConverter(writer);
+          }
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
             Decimal18Writer writer = type.getRepetition() == Repetition.REPEATED
@@ -264,6 +278,10 @@ public class DrillParquetGroupConverter extends GroupConverter {
         }
         switch(type.getOriginalType()) {
           case UTF8: {
+            VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
+            return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
+          }
+          case ENUM: {
             VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
             return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
           }
