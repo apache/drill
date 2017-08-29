@@ -1,0 +1,8 @@
+<project default="copy-resources">
+  <target name="init"/>
+  <target name="copy-resources" depends="init">
+    <copy todir="target/classes/codegen" filtering="false">
+      <fileset dir="src/main/codegen" includes="" excludes="**/*.java"/>
+    </copy>
+  </target>
+</project>
