@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 
+import static org.apache.drill.test.TestBuilder.mapOf;
+
 public class TestParquetComplex extends BaseTestQuery {
 
   private static final String DATAFILE = "cp.`store/parquet/complex/complex.parquet`";
@@ -189,6 +191,20 @@ public class TestParquetComplex extends BaseTestQuery {
         .unOrdered()
         .jsonBaselineFile("store/parquet/complex/baseline8.json")
         .baselineColumns(columns)
+        .build()
+        .run();
+  }
+
+  @Test //DRILL-5971
+  public void checkLogicalIntTypes() throws Exception {
+    String query = String.format("select t.int32, t.int64, t.complextype  \n" +
+            "from cp.`store/parquet/complex/test_logical_int.parquet` t" );
+    String[] columns = {"int32", "int64", "complextype"};
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns(columns)
+        .baselineValues(new Integer(3), new Long(1501286406429L), mapOf("a","a","b","b") )
         .build()
         .run();
   }
