@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.drill.exec.planner.common.DrillUnionRelBase;
 import org.apache.calcite.rel.InvalidRelException;
@@ -30,6 +29,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
+import org.slf4j.Logger;
 
 /**
  * Rule that converts a {@link LogicalUnion} to a {@link DrillUnionRelBase}, implemented by a "union" operation.
@@ -44,7 +44,7 @@ public class DrillUnionAllRule extends RelOptRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final LogicalUnion union = (LogicalUnion) call.rel(0);
+    final LogicalUnion union = call.rel(0);
 
     // This rule applies to Union-All only
     if(!union.all) {
@@ -61,7 +61,7 @@ public class DrillUnionAllRule extends RelOptRule {
       call.transformTo(new DrillUnionRel(union.getCluster(), traits, convertedInputs, union.all,
           true /* check compatibility */));
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString()) ;
+      tracer.warn(e.toString()) ;
     }
   }
 }

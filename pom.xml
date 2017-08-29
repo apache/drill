@@ -36,7 +36,8 @@
     <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
-    <calcite.version>1.4.0-drill-r23</calcite.version>
+    <calcite.version>1.13.0-drill-r0</calcite.version>
+    <avatica.version>1.10.0</avatica.version>
     <janino.version>2.7.6</janino.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
     <jackson.version>2.7.9</jackson.version>
@@ -57,7 +58,7 @@
     <hive.version>1.2.1</hive.version>
     <hadoop.version>2.7.1</hadoop.version>
     <hbase.version>1.1.3</hbase.version>
-    <fmpp.version>0.9.15</fmpp.version>
+    <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.26-incubating</freemarker.version>
     <javassist.version>3.16.1-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
@@ -716,6 +717,25 @@
   <!-- Managed Dependencies -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.apache.calcite.avatica</groupId>
+        <artifactId>avatica</artifactId>
+        <version>${avatica.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>protobuf-java</artifactId>
+            <groupId>com.google.protobuf</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>org.msgpack</groupId>
         <artifactId>msgpack</artifactId>
@@ -1722,6 +1742,10 @@
             <artifactId>calcite-core</artifactId>
             <version>${calcite.version}</version>
             <exclusions>
+              <exclusion>
+                <groupId>org.apache.calcite.avatica</groupId>
+                <artifactId>avatica-core</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>org.jgrapht</groupId>
                 <artifactId>jgrapht-jdk1.5</artifactId>

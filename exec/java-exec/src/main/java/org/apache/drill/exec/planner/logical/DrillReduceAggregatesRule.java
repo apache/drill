@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -66,6 +65,7 @@ import org.apache.calcite.util.Util;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
+import org.slf4j.Logger;
 
 /**
  * Rule to reduce aggregates to simpler forms. Currently only AVG(x) to
@@ -718,7 +718,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldAggRel.getGroupSets(),
             newAggregateCalls));
       } catch (InvalidRelException e) {
-        tracer.warning(e.toString());
+        tracer.warn(e.toString());
       }
     }
   }
@@ -760,7 +760,8 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                     sumZeroAgg,
                     sumType,
                     rexWinAggCall.operands,
-                    rexWinAggCall.ordinal);
+                    rexWinAggCall.ordinal,
+                    rexWinAggCall.distinct);
             aggCalls.add(sumZeroCall);
           } else {
             aggCalls.add(rexWinAggCall);

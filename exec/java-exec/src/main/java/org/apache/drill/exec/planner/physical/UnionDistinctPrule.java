@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.drill.exec.planner.logical.DrillUnionRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
@@ -30,6 +29,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 public class UnionDistinctPrule extends Prule {
   public static final RelOptRule INSTANCE = new UnionDistinctPrule();
@@ -42,20 +42,20 @@ public class UnionDistinctPrule extends Prule {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    DrillUnionRel union = (DrillUnionRel) call.rel(0);
+    DrillUnionRel union = call.rel(0);
     return (union.isDistinct() && union.isHomogeneous(false /* don't compare names */));
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillUnionRel union = (DrillUnionRel) call.rel(0);
+    final DrillUnionRel union = call.rel(0);
     final List<RelNode> inputs = union.getInputs();
     List<RelNode> convertedInputList = Lists.newArrayList();
     RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
 
     try {
-      for (int i = 0; i < inputs.size(); i++) {
-        RelNode convertedInput = convert(inputs.get(i), PrelUtil.fixTraits(call, traits));
+      for (RelNode input : inputs) {
+        RelNode convertedInput = convert(input, PrelUtil.fixTraits(call, traits));
         convertedInputList.add(convertedInput);
       }
 
@@ -67,7 +67,7 @@ public class UnionDistinctPrule extends Prule {
       call.transformTo(unionDistinct);
 
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 

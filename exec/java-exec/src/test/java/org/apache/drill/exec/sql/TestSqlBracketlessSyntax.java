@@ -18,7 +18,7 @@
 package org.apache.drill.exec.sql;
 
 import org.apache.calcite.config.Lex;
-import org.apache.calcite.jdbc.SimpleCalciteSchema;
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Planner;
@@ -46,7 +46,7 @@ public class TestSqlBracketlessSyntax {
             .setIdentifierMaxLength(PlannerSettings.DEFAULT_IDENTIFIER_MAX_LENGTH)
             .setParserFactory(DrillParserImpl.FACTORY)
             .build()) //
-        .defaultSchema(SimpleCalciteSchema.createRootSchema(false)) //
+        .defaultSchema(CalciteSchema.createRootSchema(false, false).plus()) //
         .convertletTable(DrillConvertletTable.INSTANCE) //
         .build();
     Planner planner = Frameworks.getPlanner(config);

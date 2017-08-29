@@ -134,8 +134,19 @@ public class Records {
         case CHAR:                this.DATA_TYPE = "CHARACTER";         break;
         case VARCHAR:             this.DATA_TYPE = "CHARACTER VARYING"; break;
         case VARBINARY:           this.DATA_TYPE = "BINARY VARYING";    break;
-        case INTERVAL_YEAR_MONTH: this.DATA_TYPE = "INTERVAL";          break;
-        case INTERVAL_DAY_TIME:   this.DATA_TYPE = "INTERVAL";          break;
+        case INTERVAL_YEAR:
+        case INTERVAL_YEAR_MONTH:
+        case INTERVAL_MONTH:
+        case INTERVAL_DAY:
+        case INTERVAL_DAY_HOUR:
+        case INTERVAL_DAY_MINUTE:
+        case INTERVAL_DAY_SECOND:
+        case INTERVAL_HOUR:
+        case INTERVAL_HOUR_MINUTE:
+        case INTERVAL_HOUR_SECOND:
+        case INTERVAL_MINUTE:
+        case INTERVAL_MINUTE_SECOND:
+        case INTERVAL_SECOND:     this.DATA_TYPE = "INTERVAL";          break;
         // 3:  SqlTypeName enumerators not yet seen and confirmed or handled.
         default:
           logger.warn( "Type not handled explicitly (code needs review): "
@@ -292,21 +303,43 @@ public class Records {
 
           }
           break;
+        case INTERVAL_YEAR:
         case INTERVAL_YEAR_MONTH:
-        case INTERVAL_DAY_TIME:
+        case INTERVAL_MONTH:
+        case INTERVAL_DAY:
+        case INTERVAL_DAY_HOUR:
+        case INTERVAL_DAY_MINUTE:
+        case INTERVAL_DAY_SECOND:
+        case INTERVAL_HOUR:
+        case INTERVAL_HOUR_MINUTE:
+        case INTERVAL_HOUR_SECOND:
+        case INTERVAL_MINUTE:
+        case INTERVAL_MINUTE_SECOND:
+        case INTERVAL_SECOND:
           this.CHARACTER_MAXIMUM_LENGTH = null;
           this.CHARACTER_OCTET_LENGTH = null;
           this.NUMERIC_PRECISION = null;
           this.NUMERIC_PRECISION_RADIX = null;
           this.NUMERIC_SCALE = null;
           switch ( sqlTypeName ) {
+            case INTERVAL_YEAR:
             case INTERVAL_YEAR_MONTH:
+            case INTERVAL_MONTH:
               // NOTE:  Apparently can't get use RelDataType, etc.; it seems to
               // apply a default fractional seconds precision of 6 for SECOND,
               // even though SECOND does not exist for this case.
               this.DATETIME_PRECISION = 0;
               break;
-            case INTERVAL_DAY_TIME:
+            case INTERVAL_DAY:
+            case INTERVAL_DAY_HOUR:
+            case INTERVAL_DAY_MINUTE:
+            case INTERVAL_DAY_SECOND:
+            case INTERVAL_HOUR:
+            case INTERVAL_HOUR_MINUTE:
+            case INTERVAL_HOUR_SECOND:
+            case INTERVAL_MINUTE:
+            case INTERVAL_MINUTE_SECOND:
+            case INTERVAL_SECOND:
               this.DATETIME_PRECISION =
                   relDataType
                   .getIntervalQualifier()

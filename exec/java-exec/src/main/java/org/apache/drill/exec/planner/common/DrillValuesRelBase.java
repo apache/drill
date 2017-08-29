@@ -216,7 +216,9 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         }
         return;
 
+      case INTERVAL_YEAR:
       case INTERVAL_YEAR_MONTH:
+      case INTERVAL_MONTH:
         if (isLiteralNull(literal)) {
           out.writeIntervalNull();
         } else {
@@ -225,7 +227,16 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         }
         return;
 
-      case INTERVAL_DAY_TIME:
+      case INTERVAL_DAY:
+      case INTERVAL_DAY_HOUR:
+      case INTERVAL_DAY_MINUTE:
+      case INTERVAL_DAY_SECOND:
+      case INTERVAL_HOUR:
+      case INTERVAL_HOUR_MINUTE:
+      case INTERVAL_HOUR_SECOND:
+      case INTERVAL_MINUTE:
+      case INTERVAL_MINUTE_SECOND:
+      case INTERVAL_SECOND:
         if (isLiteralNull(literal)) {
           out.writeIntervalNull();
         } else {

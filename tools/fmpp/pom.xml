@@ -45,9 +45,19 @@
       <version>3.3.3</version>
     </dependency>
     <dependency>
-      <groupId>net.sourceforge.fmpp</groupId>
-      <artifactId>fmpp</artifactId>
+      <groupId>com.googlecode.fmpp-maven-plugin</groupId>
+      <artifactId>fmpp-maven-plugin</artifactId>
       <version>${fmpp.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging-api</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>

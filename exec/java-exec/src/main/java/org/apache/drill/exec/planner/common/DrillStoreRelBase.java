@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import org.apache.calcite.rel.core.TableModify;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rex.RexNode;
 
 /**
  * Base class for logical and physical Store implemented in Drill
@@ -33,9 +34,9 @@ import org.apache.calcite.plan.RelTraitSet;
 public abstract class DrillStoreRelBase extends TableModify implements DrillRelNode {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStoreRelBase.class);
 
-  protected DrillStoreRelBase(RelOptCluster cluster, RelTraitSet traits, RelOptTable table, CatalogReader catalogReader,
-      RelNode child, Operation operation, List<String> updateColumnList, boolean flattened) {
-    super(cluster, traits, table, catalogReader, child, operation, updateColumnList, flattened);
+  protected DrillStoreRelBase(RelOptCluster cluster, RelTraitSet traits, RelOptTable table, CatalogReader catalogReader, RelNode child,
+                              Operation operation, List<String> updateColumnList, List<RexNode> sourceExpressionList, boolean flattened) {
+    super(cluster, traits, table, catalogReader, child, operation, updateColumnList, sourceExpressionList, flattened);
 
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.logging.Logger;
-
-import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.Convention;
@@ -28,6 +25,7 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.util.trace.CalciteTrace;
+import org.slf4j.Logger;
 
 /**
  * Rule that converts an {@link LogicalAggregate} to a {@link DrillAggregateRel}, implemented by a Drill "segment" operation
@@ -43,7 +41,7 @@ public class DrillAggregateRule extends RelOptRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final LogicalAggregate aggregate = (LogicalAggregate) call.rel(0);
+    final LogicalAggregate aggregate = call.rel(0);
     final RelNode input = call.rel(1);
 
     if (aggregate.containsDistinctCall()) {
@@ -57,7 +55,7 @@ public class DrillAggregateRule extends RelOptRule {
       call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.indicator,
           aggregate.getGroupSet(), aggregate.getGroupSets(), aggregate.getAggCallList()));
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 }

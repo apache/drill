@@ -129,7 +129,7 @@ public class TopProjectVisitor extends BasePrelVisitor<Prel, Void, RuntimeExcept
 
     List<String> fieldNames = SqlValidatorUtil.uniquify(
         validatedRowType.getFieldNames(),
-        SqlValidatorUtil.F_SUGGESTER2,
+        SqlValidatorUtil.EXPR_SUGGESTER,
         prel.getCluster().getTypeFactory().getTypeSystem().isSchemaCaseSensitive());
 
     RelDataType newRowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), projections, fieldNames, null);

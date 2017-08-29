@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.calcite.util.BitSets;
 
@@ -37,6 +36,7 @@ import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 public class StreamAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new StreamAggPrule();
@@ -174,7 +174,7 @@ public class StreamAggPrule extends AggPruleBase {
         }
       }
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 

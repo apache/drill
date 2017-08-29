@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
@@ -65,9 +64,9 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
 
       if (viewExpansionContext.isImpersonationEnabled()) {
         token = viewExpansionContext.reserveViewExpansionToken(viewOwner);
-        rel = context.expandView(rowType, view.getSql(), token.getSchemaTree(), view.getWorkspaceSchemaPath());
+        rel = context.expandView(rowType, view.getSql(), token.getSchemaTree(), view.getWorkspaceSchemaPath()).rel;
       } else {
-        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath());
+        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath(), ImmutableList.<String>of()).rel;
       }
 
       // If the View's field list is not "*", create a cast.

@@ -128,7 +128,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   private static ResultSet mdrReqCHAR_5;
   // No NCHAR, etc., in Drill (?).
   private static ResultSet mdrOptVARBINARY_16;
-  private static ResultSet mdrOptBINARY_1048576;
+  private static ResultSet mdrOptBINARY_65536;
 
   private static ResultSet mdrReqDATE;
   private static ResultSet mdrReqTIME;
@@ -256,7 +256,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
         + "\n  CAST( NULL    AS VARCHAR            ) AS mdrOptVARCHAR,        "
         + "\n  CAST( '55'    AS CHAR(5)            ) AS mdrReqCHAR_5,         "
         + "\n  CAST( NULL    AS VARBINARY(16)      ) AS mdrOptVARBINARY_16,   "
-        + "\n  CAST( NULL    AS VARBINARY(1048576) ) AS mdrOptBINARY_1048576, "
+        + "\n  CAST( NULL    AS VARBINARY(65536)   ) AS mdrOptBINARY_65536,   "
         + "\n  CAST( NULL    AS BINARY(8)          ) AS mdrOptBINARY_8,       "
         + "\n  "
         + "\n                   DATE '2015-01-01'    AS mdrReqDATE,           "
@@ -307,7 +307,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     mdrOptVARCHAR        = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptVARCHAR" );
     mdrReqCHAR_5         = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqCHAR_5" );
     mdrOptVARBINARY_16   = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptVARBINARY_16" );
-    mdrOptBINARY_1048576 = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptBINARY_1048576" );
+    mdrOptBINARY_65536   = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptBINARY_65536" );
 
     mdrReqDATE           = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqDATE" );
     mdrReqTIME           = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqTIME" );
@@ -671,7 +671,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptBINARY_1048576CHECK() throws SQLException {
-    assertThat( getIntOrNull( mdrOptBINARY_1048576, "DATA_TYPE" ), equalTo( Types.VARBINARY ) );
+    assertThat( getIntOrNull(mdrOptBINARY_65536, "DATA_TYPE" ), equalTo( Types.VARBINARY ) );
   }
 
   @Test
@@ -849,7 +849,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptBINARY_1048576CHECK() throws SQLException {
-    assertThat( mdrOptBINARY_1048576.getString( "TYPE_NAME" ),
+    assertThat( mdrOptBINARY_65536.getString( "TYPE_NAME" ),
                 equalTo( "BINARY VARYING" ) );
   }
 
@@ -1039,7 +1039,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptBINARY_1048576() throws SQLException {
-    assertThat( getIntOrNull( mdrOptBINARY_1048576, "COLUMN_SIZE" ), equalTo( 1048576 ) );
+    assertThat( getIntOrNull(mdrOptBINARY_65536, "COLUMN_SIZE" ), equalTo( 65536 ) );
   }
 
   @Test
@@ -1109,13 +1109,16 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 equalTo( 12 ) );  // "P123DT12H12M"
   }
 
-  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
+  //Fixed with Calcite update
+  //@Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_2D_S5() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_2D_S5, "COLUMN_SIZE" ),
                 equalTo( 20 ) );  // "P12DT12H12M12.12345S"
   }
 
+  @Ignore( "Ignored after Calcite update" )
+  @Test
   public void test_COLUMN_SIZE_hasINTERIMValue_mdrReqINTERVAL_2D_S5() throws SQLException {
     assertThat( "When DRILL-3244 fixed, un-ignore above method and purge this.",
                 getIntOrNull( mdrReqINTERVAL_2D_S5, "COLUMN_SIZE" ),
@@ -1134,13 +1137,15 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 equalTo( 7 ) );  // "PT1H12M"
   }
 
-  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
+  //Fixed with Calcite update
+  //@Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_3H_S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3H_S1, "COLUMN_SIZE" ),
                 equalTo( 14 ) );  // "PT123H12M12.1S"
   }
 
+  @Ignore( "Ignored after Calcite update" )
   @Test
   public void test_COLUMN_SIZE_hasINTERIMValue_mdrReqINTERVAL_3H_S1() throws SQLException {
     assertThat( "When DRILL-3244 fixed, un-ignore above method and purge this.",
@@ -1172,13 +1177,15 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 equalTo( 13 ) );  // "PT123.123456S"
   }
 
-  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
+  //Fixed with Calcite update
+  //@Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_3S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3S1, "COLUMN_SIZE" ),
                 equalTo( 8 ) );  // "PT123.1S"
   }
 
+  @Ignore( "Ignored after Calcite update" )
   @Test
   public void test_COLUMN_SIZE_hasINTERIMValue_mdrReqINTERVAL_3S1() throws SQLException {
     assertThat( "When DRILL-3244 fixed, un-ignore above method and purge this.",
@@ -1342,7 +1349,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrOptBINARY_1048576CHECK() throws SQLException {
-    assertThat( getIntOrNull( mdrOptBINARY_1048576, "DECIMAL_DIGITS" ), nullValue() );
+    assertThat( getIntOrNull(mdrOptBINARY_65536, "DECIMAL_DIGITS" ), nullValue() );
   }
 
   @Test
@@ -1420,12 +1427,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_3D_Mi, "DECIMAL_DIGITS" ), equalTo( 6 ) );
   }
 
-  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
+  //Fixed with Calcite update
+  //@Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqINTERVAL_2D_S5() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_2D_S5, "DECIMAL_DIGITS" ), equalTo( 5 ) );
   }
 
+  @Ignore( "Ignored after Calcite update" )
   @Test
   public void test_DECIMAL_DIGITS_hasINTERIMValue_mdrReqINTERVAL_2D_S5() throws SQLException {
     assertThat( "When DRILL-3244 fixed, un-ignore above method and purge this.",
@@ -1450,12 +1459,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_1H_Mi, "DECIMAL_DIGITS" ), equalTo( 6 ) );
   }
 
-  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
+  //Fixed with Calcite update
+  //@Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqINTERVAL_3H_S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3H_S1, "DECIMAL_DIGITS" ), equalTo( 1 ) );
   }
 
+  @Ignore( "Ignored after Calcite update" )
   @Test
   public void test_DECIMAL_DIGITS_hasINTERIMValue_mdrReqINTERVAL_3H_S1() throws SQLException {
     assertThat( "When DRILL-3244 fixed, un-ignore above method and purge this.",
@@ -1640,7 +1651,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_NUM_PREC_RADIX_hasRightValue_mdrOptBINARY_1048576CHECK() throws SQLException {
-    assertThat( getIntOrNull( mdrOptBINARY_1048576, "NUM_PREC_RADIX" ), nullValue() );
+    assertThat( getIntOrNull(mdrOptBINARY_65536, "NUM_PREC_RADIX" ), nullValue() );
   }
 
   @Test
@@ -1824,7 +1835,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   @Test
   public void test_NULLABLE_hasRightValue_mdrOptBINARY_1048576() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
-                getIntOrNull( mdrOptBINARY_1048576, "NULLABLE" ), equalTo( columnNullable ) );
+                getIntOrNull(mdrOptBINARY_65536, "NULLABLE" ), equalTo( columnNullable ) );
   }
 
   @Test
@@ -2186,7 +2197,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrOptBINARY_1048576CHECK() throws SQLException {
-    assertThat( getIntOrNull( mdrOptBINARY_1048576, "CHAR_OCTET_LENGTH" ), nullValue() );
+    assertThat( getIntOrNull(mdrOptBINARY_65536, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
   @Test
@@ -2443,7 +2454,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrOptBINARY_1048576CHECK() throws SQLException {
-    assertThat( mdrOptBINARY_1048576.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
+    assertThat( mdrOptBINARY_65536.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
   }
 
   @Test

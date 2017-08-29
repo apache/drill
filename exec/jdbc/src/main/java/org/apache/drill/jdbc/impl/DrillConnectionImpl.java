@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,6 +46,8 @@ import org.apache.calcite.avatica.AvaticaFactory;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Meta.ExecuteResult;
 import org.apache.calcite.avatica.Meta.MetaResultSet;
+import org.apache.calcite.avatica.NoSuchStatementException;
+import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.UnregisteredDriver;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -180,16 +182,16 @@ class DrillConnectionImpl extends AvaticaConnection
 
 
   @Override
-  protected ResultSet createResultSet(MetaResultSet metaResultSet) throws SQLException {
-    return super.createResultSet(metaResultSet);
+  protected ResultSet createResultSet(MetaResultSet metaResultSet, QueryState state) throws SQLException {
+    return super.createResultSet(metaResultSet, state);
   }
 
   @Override
   protected ExecuteResult prepareAndExecuteInternal(AvaticaStatement statement, String sql, long maxRowCount)
-      throws SQLException {
+      throws SQLException, NoSuchStatementException {
     try {
       return super.prepareAndExecuteInternal(statement, sql, maxRowCount);
-    } catch(RuntimeException e) {
+    } catch (RuntimeException e) {
       Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
       throw e;
     }

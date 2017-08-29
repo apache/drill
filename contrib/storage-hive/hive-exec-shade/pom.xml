@@ -42,6 +42,10 @@
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
         </exclusion>
+        <exclusion>
+          <artifactId>calcite-avatica</artifactId>
+          <groupId>org.apache.calcite</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>
@@ -71,7 +75,7 @@
                   <include>com.twitter:parquet-encoding</include>
                   <include>com.twitter:parquet-generator</include>
                   <include>org.apache.calcite:calcite-core</include>
-                  <include>org.apache.calcite:calcite-avatica</include>
+                  <include>org.apache.calcite.avatica:avatica-core</include>
                 </includes>
               </artifactSet>
               <createDependencyReducedPom>false</createDependencyReducedPom>

@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
 
+import org.apache.calcite.sql.SqlDescribeSchema;
+import org.apache.calcite.sql.SqlDescribeTable;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.tools.RelConversionException;
@@ -28,10 +30,13 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
+import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
+import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -112,6 +117,16 @@ public class DrillSqlWorker {
     case SET_OPTION:
       handler = new SetOptionHandler(context);
       break;
+    case DESCRIBE_TABLE:
+      if (sqlNode instanceof DrillSqlDescribeTable) {
+        handler = new DescribeTableHandler(config);
+        break;
+      }
+    case DESCRIBE_SCHEMA:
+      if (sqlNode instanceof SqlDescribeSchema) {
+        handler = new DescribeSchemaHandler(config);
+        break;
+      }
     case OTHER:
       if(sqlNode instanceof SqlCreateTable) {
         handler = ((DrillSqlCall)sqlNode).getSqlHandler(config, textPlan);

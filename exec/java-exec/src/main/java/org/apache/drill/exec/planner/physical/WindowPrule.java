@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -154,15 +154,15 @@ public class WindowPrule extends Prule {
 
           newOperandsOfWindowFunction.add(operand);
         }
-
         aggCall = new Window.RexWinAggCall(
             (SqlAggFunction) aggCall.getOperator(),
             aggCall.getType(),
             newOperandsOfWindowFunction,
-            aggCall.ordinal);
+            aggCall.ordinal,
+            aggCall.distinct);
 
         newWinAggCalls.add(new Window.RexWinAggCall(
-            (SqlAggFunction)aggCall.getOperator(), aggCall.getType(), aggCall.getOperands(), aggOrd.i)
+            (SqlAggFunction)aggCall.getOperator(), aggCall.getType(), aggCall.getOperands(), aggOrd.i, aggCall.distinct)
         );
       }
 

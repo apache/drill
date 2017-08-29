@@ -20,7 +20,7 @@ package org.apache.drill.exec.store;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.calcite.jdbc.SimpleCalciteSchema;
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
@@ -106,7 +106,7 @@ public class SchemaTreeProvider implements AutoCloseable {
    */
   public SchemaPlus createRootSchema(SchemaConfig schemaConfig) {
     try {
-      final SchemaPlus rootSchema = SimpleCalciteSchema.createRootSchema(false);
+      final SchemaPlus rootSchema = CalciteSchema.createRootSchema(false, false).plus();
       dContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
       schemaTreesToClose.add(rootSchema);
       return rootSchema;

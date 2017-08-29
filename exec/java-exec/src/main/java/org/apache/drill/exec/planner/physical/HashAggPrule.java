@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.logging.Logger;
-
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
@@ -31,6 +29,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
 
 public class HashAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new HashAggPrule();
@@ -94,7 +93,7 @@ public class HashAggPrule extends AggPruleBase {
         }
       }
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 

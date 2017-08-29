@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
@@ -33,6 +32,7 @@ import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 
 public class NestedLoopJoinPrule extends JoinPruleBase {
@@ -81,7 +81,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       return;
     }
 
-    final DrillJoinRel join = (DrillJoinRel) call.rel(0);
+    final DrillJoinRel join = call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
 
@@ -97,7 +97,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       }
 
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 

@@ -49,6 +49,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.direct.DirectGroupScan;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -71,8 +72,11 @@ public class FindLimit0Visitor extends RelShuttleImpl {
       ImmutableSet.<SqlTypeName>builder()
           .add(SqlTypeName.INTEGER, SqlTypeName.BIGINT, SqlTypeName.FLOAT, SqlTypeName.DOUBLE,
               SqlTypeName.VARCHAR, SqlTypeName.BOOLEAN, SqlTypeName.DATE, SqlTypeName.TIME,
-              SqlTypeName.TIMESTAMP, SqlTypeName.INTERVAL_YEAR_MONTH, SqlTypeName.INTERVAL_DAY_TIME,
-              SqlTypeName.CHAR)
+              SqlTypeName.TIMESTAMP, SqlTypeName.INTERVAL_YEAR, SqlTypeName.INTERVAL_YEAR_MONTH,
+              SqlTypeName.INTERVAL_MONTH, SqlTypeName.INTERVAL_DAY, SqlTypeName.INTERVAL_DAY_HOUR,
+              SqlTypeName.INTERVAL_DAY_MINUTE, SqlTypeName.INTERVAL_DAY_SECOND, SqlTypeName.INTERVAL_HOUR,
+              SqlTypeName.INTERVAL_HOUR_MINUTE, SqlTypeName.INTERVAL_HOUR_SECOND, SqlTypeName.INTERVAL_MINUTE,
+              SqlTypeName.INTERVAL_MINUTE_SECOND, SqlTypeName.INTERVAL_SECOND, SqlTypeName.CHAR)
           .build();
 
   /**
@@ -230,6 +234,27 @@ public class FindLimit0Visitor extends RelShuttleImpl {
 
     @Override
     public void close() throws Exception {
+    }
+
+    /**
+     * Represents RelDataTypeReader content as string, used in query plan json.
+     * Example: RelDataTypeReader{columnNames=[col1], columnTypes=[INTERVALYEAR-OPTIONAL]}
+     *
+     * @return string representation of RelDataTypeReader content
+     */
+    @Override
+    public String toString() {
+      StringBuilder builder = new StringBuilder();
+      builder.append("RelDataTypeReader{columnNames=");
+      builder.append(columnNames).append(", columnTypes=");
+      List<String> columnTypesList = new ArrayList<>(columnTypes.size());
+      for (TypeProtos.MajorType columnType : columnTypes) {
+        columnTypesList.add(columnType.getMinorType().toString() + "-" + columnType.getMode().toString());
+      }
+      builder.append(columnTypesList);
+      builder.append("}");
+
+      return builder.toString();
     }
   }
 }

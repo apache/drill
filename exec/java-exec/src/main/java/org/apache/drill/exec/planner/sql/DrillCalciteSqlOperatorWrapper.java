@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlMonotonicity;
 import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.util.Litmus;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.List;
@@ -88,7 +89,7 @@ public class DrillCalciteSqlOperatorWrapper extends SqlOperator implements Drill
   }
 
   @Override
-  public boolean validRexOperands(int count, boolean fail) {
+  public boolean validRexOperands(int count, Litmus litmus) {
     return true;
   }
 

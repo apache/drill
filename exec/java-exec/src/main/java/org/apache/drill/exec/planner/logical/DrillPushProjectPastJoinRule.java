@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.rules.ProjectJoinTransposeRule;
 import org.apache.calcite.rel.rules.PushProjector;
 import org.apache.calcite.plan.RelOptRule;
@@ -26,7 +27,7 @@ public class DrillPushProjectPastJoinRule extends ProjectJoinTransposeRule {
   public static final RelOptRule INSTANCE = new DrillPushProjectPastJoinRule(DrillConditions.PRESERVE_ITEM);
 
   protected DrillPushProjectPastJoinRule(PushProjector.ExprCondition preserveExprCondition) {
-    super(preserveExprCondition);
+    super(preserveExprCondition, RelFactories.LOGICAL_BUILDER);
   }
 
 }

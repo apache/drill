@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.logical;
 
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.logical.LogicalFilter;
@@ -79,6 +80,14 @@ public class DrillRelFactories {
    * {@link org.apache.calcite.rel.logical.LogicalJoin}.
    */
   private static class DrillJoinFactoryImpl implements RelFactories.JoinFactory {
+
+    @Override
+    public RelNode createJoin(RelNode left, RelNode right,
+                              RexNode condition, Set<CorrelationId> variablesSet,
+                              JoinRelType joinType, boolean semiJoinDone) {
+      return new DrillJoinRel(left.getCluster(), left.getTraitSet(), left, right, condition, joinType);
+    }
+
     @Override
     public RelNode createJoin(RelNode left, RelNode right,
                               RexNode condition, JoinRelType joinType,

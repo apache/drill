@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -106,8 +106,19 @@ public class View {
         p = dataType.getPrecision();
         s = dataType.getScale();
         break;
+      case INTERVAL_YEAR:
       case INTERVAL_YEAR_MONTH:
-      case INTERVAL_DAY_TIME:
+      case INTERVAL_MONTH:
+      case INTERVAL_DAY:
+      case INTERVAL_DAY_HOUR:
+      case INTERVAL_DAY_MINUTE:
+      case INTERVAL_DAY_SECOND:
+      case INTERVAL_HOUR:
+      case INTERVAL_HOUR_MINUTE:
+      case INTERVAL_HOUR_SECOND:
+      case INTERVAL_MINUTE:
+      case INTERVAL_MINUTE_SECOND:
+      case INTERVAL_SECOND:
         p = dataType.getIntervalQualifier().getStartPrecisionPreservingDefault();
       default:
         break;

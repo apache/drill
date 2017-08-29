@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,12 +58,8 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
           resultSetType, resultSetConcurrency, resultSetHoldability);
     connection.openStatementsRegistry.addStatement(this);
     this.preparedStatementHandle = preparedStatementHandle;
-    if (preparedStatementHandle != null) {
-      ((DrillColumnMetaDataList) signature.columns).updateColumnMetaData(preparedStatementHandle.getColumnsList());
-    }
+    ((DrillColumnMetaDataList) signature.columns).updateColumnMetaData(preparedStatementHandle.getColumnsList());
   }
-
-
 
   /**
    * Throws AlreadyClosedSqlException <i>iff</i> this PreparedStatement is closed.
@@ -333,13 +329,17 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   }
 
   @Override
-  public void clearBatch() throws SQLException {
-    throwIfClosed();
+  public void clearBatch() throws RuntimeException {
+    try {
+      throwIfClosed();
+    } catch (AlreadyClosedSqlException e) {
+      throw new RuntimeException(e);
+    }
     try {
       super.clearBatch();
     }
     catch (UnsupportedOperationException e) {
-      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+      throw new RuntimeException(new SQLFeatureNotSupportedException(e.getMessage(), e));
     }
   }
 

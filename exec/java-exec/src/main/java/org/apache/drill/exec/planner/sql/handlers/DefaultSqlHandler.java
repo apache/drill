@@ -23,6 +23,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.calcite.plan.RelOptCostImpl;
+import org.apache.calcite.plan.RelOptLattice;
+import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptUtil;
@@ -37,6 +41,8 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rel.metadata.CachingRelMetadataProvider;
+import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
 import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
@@ -46,13 +52,13 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.TypedSqlNode;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.calcite.util.Pair;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
@@ -189,13 +195,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   protected ConvertedRelNode validateAndConvert(SqlNode sqlNode) throws ForemanSetupException, RelConversionException, ValidationException {
     final SqlNode rewrittenSqlNode = rewrite(sqlNode);
-    final TypedSqlNode validatedTypedSqlNode = validateNode(rewrittenSqlNode);
-    final SqlNode validated = validatedTypedSqlNode.getSqlNode();
+    final Pair<SqlNode, RelDataType> validatedTypedSqlNode = validateNode(rewrittenSqlNode);
+    final SqlNode validated = validatedTypedSqlNode.getKey();
 
     RelNode rel = convertToRel(validated);
     rel = preprocessNode(rel);
 
-    return new ConvertedRelNode(rel, validatedTypedSqlNode.getType());
+    return new ConvertedRelNode(rel, validatedTypedSqlNode.getValue());
   }
 
   /**
@@ -375,7 +381,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         hepPgmBldr.addRuleInstance(rule);
       }
 
-      final HepPlanner planner = new HepPlanner(hepPgmBldr.build(), context.getPlannerSettings());
+      // Set noDAG = true to avoid caching problems which lead to incorrect Drill work.
+      final HepPlanner planner = new HepPlanner(hepPgmBldr.build(), context.getPlannerSettings(), true, null,
+          RelOptCostImpl.FACTORY);
 
       JaninoRelMetadataProvider relMetadataProvider = JaninoRelMetadataProvider.of(DrillDefaultRelMetadataProvider.INSTANCE);
       RelMetadataQuery.THREAD_PROVIDERS.set(relMetadataProvider);
@@ -397,7 +405,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       Preconditions.checkArgument(planner instanceof VolcanoPlanner,
           "Cluster is expected to be constructed using VolcanoPlanner. Was actually of type %s.", planner.getClass()
               .getName());
-      output = program.run(planner, input, toTraits);
+      output = program.run(planner, input, toTraits,
+          ImmutableList.<RelOptMaterialization>of(), ImmutableList.<RelOptLattice>of());
 
       break;
     }
@@ -613,9 +622,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   }
 
-  private TypedSqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
+  private Pair<SqlNode, RelDataType> validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
     final SqlNode sqlNodeValidated = config.getConverter().validate(sqlNode);
-    final TypedSqlNode typedSqlNode = new TypedSqlNode(sqlNodeValidated, config.getConverter().getOutputType(
+    final Pair<SqlNode, RelDataType> typedSqlNode = new Pair<>(sqlNodeValidated, config.getConverter().getOutputType(
         sqlNodeValidated));
 
     // Check if the unsupported functionality is used
@@ -634,7 +643,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   private RelNode convertToRel(SqlNode node) throws RelConversionException {
-    final RelNode convertedNode = config.getConverter().toRel(node);
+    final RelNode convertedNode = config.getConverter().toRel(node).rel;
     log("INITIAL", convertedNode, logger, null);
     return transform(PlannerType.HEP, PlannerPhase.WINDOW_REWRITE, convertedNode);
   }
@@ -674,7 +683,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     final List<String> fieldNames2 = SqlValidatorUtil.uniquify(
         validatedRowType.getFieldNames(),
-        SqlValidatorUtil.F_SUGGESTER2,
+        SqlValidatorUtil.EXPR_SUGGESTER,
         rel.getCluster().getTypeFactory().getTypeSystem().isSchemaCaseSensitive());
 
     RelDataType newRowType = RexUtil.createStructType(rel.getCluster().getTypeFactory(), projections, fieldNames2);

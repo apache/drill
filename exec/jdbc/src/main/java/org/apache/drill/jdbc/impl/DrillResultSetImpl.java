@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,6 +48,7 @@ import org.apache.calcite.avatica.AvaticaSite;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.util.Cursor;
 import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
@@ -66,10 +67,10 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   private final DrillConnectionImpl connection;
   private volatile boolean hasPendingCancelationNotification = false;
 
-  DrillResultSetImpl(AvaticaStatement statement, Meta.Signature signature,
+  DrillResultSetImpl(AvaticaStatement statement, QueryState state, Meta.Signature signature,
                      ResultSetMetaData resultSetMetaData, TimeZone timeZone,
                      Meta.Frame firstFrame) {
-    super(statement, signature, resultSetMetaData, timeZone, firstFrame);
+    super(statement, state, signature, resultSetMetaData, timeZone, firstFrame);
     connection = (DrillConnectionImpl) statement.getConnection();
   }
 
