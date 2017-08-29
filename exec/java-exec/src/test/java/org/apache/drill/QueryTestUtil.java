@@ -41,6 +41,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.util.VectorUtil;
 
 /**
@@ -190,7 +191,7 @@ public class QueryTestUtil {
     final OptionManager optionManager = drillbitContext.getOptionManager();
     final OptionValue originalOptionValue = optionManager.getOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION);
     final OptionValue newOptionValue = OptionValue.createString(OptionValue.OptionType.SYSTEM,
-        ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase());
+        ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase(), OptionScope.SYSTEM);
     optionManager.setOption(newOptionValue);
 
     // flush the code cache

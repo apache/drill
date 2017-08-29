@@ -63,6 +63,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.AfterClass;
@@ -180,20 +181,20 @@ public class TestPartitionSender extends PlanTestBase {
 
     final OptionList options = new OptionList();
     // try multiple scenarios with different set of options
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1));
+    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1, OptionScope.SESSION));
     testThreadsHelper(hashToRandomExchange, drillbitContext, options,
         incoming, registry, planReader, planningSet, rootFragment, 1);
 
     options.clear();
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1));
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.partitioner_sender_max_threads", 10));
+    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1, OptionScope.SESSION));
+    options.add(OptionValue.createLong(OptionType.SESSION, "planner.partitioner_sender_max_threads", 10, OptionScope.SESSION));
     hashToRandomExchange.setCost(1000);
     testThreadsHelper(hashToRandomExchange, drillbitContext, options,
         incoming, registry, planReader, planningSet, rootFragment, 10);
 
     options.clear();
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1000));
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.partitioner_sender_threads_factor",2));
+    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1000, OptionScope.SESSION));
+    options.add(OptionValue.createLong(OptionType.SESSION, "planner.partitioner_sender_threads_factor",2, OptionScope.SESSION));
     hashToRandomExchange.setCost(14000);
     testThreadsHelper(hashToRandomExchange, drillbitContext, options,
         incoming, registry, planReader, planningSet, rootFragment, 2);

@@ -34,6 +34,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -226,7 +227,7 @@ public class Drillbit implements AutoCloseable {
       }
 
       final OptionValue optionValue = OptionValue.createOption(
-          defaultValue.kind, OptionType.SYSTEM, optionName, optionString);
+          defaultValue.kind, OptionType.SYSTEM, optionName, optionString, OptionScope.SYSTEM);
       optionManager.setOption(optionValue);
     }
   }

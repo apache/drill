@@ -41,6 +41,8 @@ import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
 import com.google.common.collect.Maps;
@@ -247,8 +249,8 @@ public class UserSession implements AutoCloseable {
    * @param value option value
    */
   public void setSessionOption(String name, String value) {
-    OptionValue.Kind optionKind = SystemOptionManager.getValidator(name).getKind();
-    OptionValue optionValue = OptionValue.createOption(optionKind, OptionValue.OptionType.SESSION, name, value);
+    OptionValue.Kind optionKind = ((SessionOptionManager) sessionOptions).getFallbackOptionManager().getValidator(name).getKind();
+    OptionValue optionValue = OptionValue.createOption(optionKind, OptionType.SESSION, name, value, OptionScope.SESSION);
     sessionOptions.setOption(optionValue);
   }
 

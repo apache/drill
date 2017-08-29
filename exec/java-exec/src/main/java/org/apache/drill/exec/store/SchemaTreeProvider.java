@@ -112,9 +112,16 @@ public class SchemaTreeProvider implements AutoCloseable {
       return rootSchema;
     } catch(IOException e) {
       // We can't proceed further without a schema, throw a runtime exception.
+      // Improve the error message for client side.
+
+      final String contextString = isImpersonationEnabled ? "[Hint: Username is absent in connection URL or doesn't " +
+          "exist on Drillbit node. Please specify a username in connection URL which is present on Drillbit node.]" :
+          "";
       throw UserException
           .resourceError(e)
           .message("Failed to create schema tree.")
+          .addContext("IOException: ", e.getMessage())
+          .addContext(contextString)
           .build(logger);
     }
   }

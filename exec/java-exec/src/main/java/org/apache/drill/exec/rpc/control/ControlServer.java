@@ -60,12 +60,18 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
   @Override
   protected ControlConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    return new ControlConnection(channel, "control server", config,
+    final ControlConnection controlConnection = new ControlConnection(channel, "control server", config,
         config.getAuthMechanismToUse() == null
             ? config.getMessageHandler()
             : new ServerAuthenticationHandler<>(config.getMessageHandler(),
             RpcType.SASL_MESSAGE_VALUE, RpcType.SASL_MESSAGE),
         this);
+
+    // Increase the connection count here since at this point it means that we already have the TCP connection.
+    // Later when connection fails for any reason then we will decrease the counter based on Netty's connection close
+    // handler.
+    controlConnection.incConnectionCounter();
+    return controlConnection;
   }
 
 
@@ -103,9 +109,6 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
         if (config.getAuthMechanismToUse() != null) {
           builder.addAllAuthenticationMechanisms(config.getAuthProvider().getAllFactoryNames());
         }
-
-        // Increase the Control Connection counter on server side
-        connection.incConnectionCounter();
 
         return builder.build();
       }

@@ -22,14 +22,22 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
 import org.apache.drill.exec.store.sys.PersistentStore;
+import com.google.common.base.Preconditions;
 
 /**
+ * <p>
  * An {@link OptionValue option value} is used by an {@link OptionManager} to store a run-time setting. This setting,
  * for example, could affect a query in execution stage. Instances of this class are JSON serializable and can be stored
  * in a {@link PersistentStore persistent store} (see {@link SystemOptionManager#options}), or
  * in memory (see {@link InMemoryOptionManager#options}).
+ * </p>
+ *<p>  OptionType defines the permission level of the option.If it can be set at System level or Session level or so on.
+ * Whereas OptionScope defines the scope at which the option is being set. If the option is being set at the BOOT time
+ * the scope of the option is BOOT. If it is set at SYSTEM level the scope is SYSTEM. Although they look similar there
+ * is a fine level which differentiates both of them which is at which level of hierarchy they can be set and
+ * at what at level of hierarchy they were actually set.
+ * </p>
  */
 @JsonInclude(Include.NON_NULL)
 public class OptionValue implements Comparable<OptionValue> {
@@ -42,6 +50,10 @@ public class OptionValue implements Comparable<OptionValue> {
     BOOLEAN, LONG, STRING, DOUBLE
   }
 
+  public enum OptionScope {
+    BOOT, SYSTEM, SESSION, QUERY
+  }
+
   public final String name;
   public final Kind kind;
   public final OptionType type;
@@ -49,33 +61,34 @@ public class OptionValue implements Comparable<OptionValue> {
   public final String string_val;
   public final Boolean bool_val;
   public final Double float_val;
+  public final OptionScope scope;
 
-  public static OptionValue createLong(OptionType type, String name, long val) {
-    return new OptionValue(Kind.LONG, type, name, val, null, null, null);
+  public static OptionValue createLong(OptionType type, String name, long val, OptionScope scope) {
+    return new OptionValue(Kind.LONG, type, name, val, null, null, null, scope);
   }
 
-  public static OptionValue createBoolean(OptionType type, String name, boolean bool) {
-    return new OptionValue(Kind.BOOLEAN, type, name, null, null, bool, null);
+  public static OptionValue createBoolean(OptionType type, String name, boolean bool, OptionScope scope) {
+    return new OptionValue(Kind.BOOLEAN, type, name, null, null, bool, null, scope);
   }
 
-  public static OptionValue createString(OptionType type, String name, String val) {
-    return new OptionValue(Kind.STRING, type, name, null, val, null, null);
+  public static OptionValue createString(OptionType type, String name, String val, OptionScope scope) {
+    return new OptionValue(Kind.STRING, type, name, null, val, null, null, scope);
   }
 
-  public static OptionValue createDouble(OptionType type, String name, double val) {
-    return new OptionValue(Kind.DOUBLE, type, name, null, null, null, val);
+  public static OptionValue createDouble(OptionType type, String name, double val, OptionScope scope) {
+    return new OptionValue(Kind.DOUBLE, type, name, null, null, null, val, scope);
   }
 
-  public static OptionValue createOption(Kind kind, OptionType type, String name, String val) {
+  public static OptionValue createOption(Kind kind, OptionType type, String name, String val, OptionScope scope) {
     switch (kind) {
       case BOOLEAN:
-        return createBoolean(type, name, Boolean.valueOf(val));
+        return createBoolean(type, name, Boolean.valueOf(val), scope);
       case LONG:
-        return createLong(type, name, Long.valueOf(val));
+        return createLong(type, name, Long.valueOf(val), scope);
       case STRING:
-        return createString(type, name, val);
+        return createString(type, name, val, scope);
       case DOUBLE:
-        return createDouble(type, name, Double.valueOf(val));
+        return createDouble(type, name, Double.valueOf(val), scope);
       default:
         return null;
     }
@@ -88,16 +101,17 @@ public class OptionValue implements Comparable<OptionValue> {
                       @JsonProperty("num_val") Long num_val,
                       @JsonProperty("string_val") String string_val,
                       @JsonProperty("bool_val") Boolean bool_val,
-                      @JsonProperty("float_val") Double float_val) {
+                      @JsonProperty("float_val") Double float_val,
+                      @JsonProperty("scope") OptionScope scope) {
     Preconditions.checkArgument(num_val != null || string_val != null || bool_val != null || float_val != null);
     this.kind = kind;
     this.type = type;
     this.name = name;
-
     this.float_val = float_val;
     this.num_val = num_val;
     this.string_val = string_val;
     this.bool_val = bool_val;
+    this.scope = scope;
   }
 
   public String getName() {

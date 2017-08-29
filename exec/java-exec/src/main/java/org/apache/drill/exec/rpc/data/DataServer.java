@@ -58,7 +58,13 @@ public class DataServer extends BasicServer<RpcType, DataServerConnection> {
   @Override
   protected DataServerConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    return new DataServerConnection(channel, config);
+    final DataServerConnection dataServerConnection = new DataServerConnection(channel, config);
+
+    // Increase the connection count here since at this point it means that we already have the TCP connection.
+    // Later when connection fails for any reason then we will decrease the counter based on Netty's connection close
+    // handler.
+    dataServerConnection.incConnectionCounter();
+    return dataServerConnection;
   }
 
   @Override
@@ -82,9 +88,6 @@ public class DataServer extends BasicServer<RpcType, DataServerConnection> {
         if (config.getAuthMechanismToUse() != null) {
           builder.addAllAuthenticationMechanisms(config.getAuthProvider().getAllFactoryNames());
         }
-
-        // Increase the Data Connection counter on server side.
-        connection.incConnectionCounter();
 
         return builder.build();
       }

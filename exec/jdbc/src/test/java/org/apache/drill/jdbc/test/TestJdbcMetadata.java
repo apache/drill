@@ -81,7 +81,7 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getTables("DRILL", "sys", "opt%", new String[]{"SYSTEM_TABLE", "SYSTEM_VIEW"});
       }
-    }, 1);
+    }, 2);
   }
 
   @Test
@@ -101,6 +101,6 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getColumns("DRILL", "sys", "opt%", "%ame");
       }
-    }, 1);
+    }, 2);
   }
 }

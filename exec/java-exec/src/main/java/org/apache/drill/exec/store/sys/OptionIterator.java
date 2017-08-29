@@ -25,6 +25,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.DrillConfigIterator;
+import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
@@ -40,10 +41,12 @@ public class OptionIterator implements Iterator<Object> {
 
   private final OptionManager fragmentOptions;
   private final Iterator<OptionValue> mergedOptions;
+  private FragmentContext context;
 
   public OptionIterator(FragmentContext context, Mode mode){
     final DrillConfigIterator configOptions = new DrillConfigIterator(context.getConfig());
     fragmentOptions = context.getOptions();
+    this.context = context;
     final Iterator<OptionValue> optionList;
     switch(mode){
     case BOOT:
@@ -71,10 +74,12 @@ public class OptionIterator implements Iterator<Object> {
   public OptionValueWrapper next() {
     final OptionValue value = mergedOptions.next();
     final Status status;
+    final FragmentOptionManager fragmentOptionManager = (FragmentOptionManager) fragmentOptions;
+    final SystemOptionManager systemOptionManager = (SystemOptionManager) fragmentOptionManager.getFallback();
     if (value.type == OptionType.BOOT) {
       status = Status.BOOT;
     } else {
-      final OptionValue def = SystemOptionManager.getValidator(value.name).getDefault();
+      final OptionValue def = systemOptionManager.getValidator(value.name).getDefault();
       if (value.equalsIgnoreType(def)) {
         status = Status.DEFAULT;
         } else {

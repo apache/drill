@@ -25,7 +25,10 @@ import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.NonTransientRpcException;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.control.ControlRpcMetrics;
+import org.apache.drill.exec.rpc.data.DataRpcMetrics;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
+import org.apache.drill.exec.rpc.user.UserRpcMetrics;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.hadoop.security.authentication.util.KerberosName;
@@ -41,6 +44,7 @@ import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
 import java.util.Properties;
 
+import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 
 @Ignore("See DRILL-5387")
@@ -119,6 +123,49 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
     test("SHOW TABLES");
     test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
     test("SELECT * FROM cp.`region.json`");
+  }
+
+  /**
+   * Test connection counter values for both encrypted and unencrypted connections over all Drillbit channels.
+   * Encryption is enabled only for UserRpc NOT for ControlRpc and DataRpc. Test validates corresponding connection
+   * count for each channel.
+   * For example: There is only 1 DrillClient so encrypted connection count of UserRpcMetrics will be 1. Before
+   * running any query there should not be any connection (control or data) between Drillbits, hence those counters
+   * are 0. After running a simple query since there is only 1 fragment which is root fragment the Control Connection
+   * count is 2 (for unencrypted counter) based on connection for status update of fragment to Foreman. It is 2 because
+   * for Control and Data Server we count total number of client and server connections on a node. There is no
+   * Data Connection because there is no data exchange between multiple fragments.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testConnectionCounters() throws Exception {
+    final Properties connectionProps = new Properties();
+    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
+    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
+    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
+    updateClient(connectionProps);
+
+    assertTrue(UserRpcMetrics.getInstance().getEncryptedConnectionCount() == 1);
+    assertTrue(UserRpcMetrics.getInstance().getUnEncryptedConnectionCount() == 0);
+
+    // Run few queries using the new client
+    testBuilder()
+        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+        .unOrdered()
+        .baselineColumns("session_user")
+        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+        .go();
+
+    // Check encrypted counters value
+    assertTrue(1 == UserRpcMetrics.getInstance().getEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
+    assertTrue(0 == DataRpcMetrics.getInstance().getEncryptedConnectionCount());
+
+    // Check unencrypted counters value
+    assertTrue(0 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(2 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
   }
 
   @Test
@@ -337,6 +384,69 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
     test("SHOW TABLES");
     test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
     test("SELECT * FROM cp.`region.json` LIMIT 5");
+  }
+
+  /**
+   * Test connection counter values for both encrypted and unencrypted connections over all Drillbit channels.
+   * Encryption is enabled for UserRpc, ControlRpc and DataRpc. Test validates corresponding connection
+   * count for each channel.
+   * For example: There is only 1 DrillClient so encrypted connection count of UserRpcMetrics
+   * will be 1. Before running any query there should not be any connection (control or data) between Drillbits,
+   * hence those counters are 0. After running a simple query since there is only 1 fragment which is root fragment
+   * the Control Connection count is 2 (for encrypted counter) based on connection for status update of fragment to
+   * Foreman. It is 2 because for Control and Data Server we count total number of client and server connections on a
+   * node. There is no Data Connection because there is no data exchange between multiple fragments.
+   */
+
+  @Test
+  public void testEncryptedConnectionCountersAllChannel() throws Exception {
+    final Properties connectionProps = new Properties();
+    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
+    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
+    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
+
+    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
+        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+            ConfigValueFactory.fromAnyRef(true))
+        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
+            ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
+        .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+            ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
+        .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
+        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
+            ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+        .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
+            ConfigValueFactory.fromAnyRef(true))
+        .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
+            ConfigValueFactory.fromAnyRef(true))
+        .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
+            ConfigValueFactory.fromAnyRef("kerberos"))
+        .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
+            ConfigValueFactory.fromAnyRef(true))
+        .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
+            ConfigValueFactory.fromAnyRef(true))
+        ,false);
+
+    updateTestCluster(1, newConfig, connectionProps);
+
+    // Run few queries using the new client
+    testBuilder()
+        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+        .unOrdered()
+        .baselineColumns("session_user")
+        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+        .go();
+
+    // Check encrypted counters value
+    assertTrue(1 == UserRpcMetrics.getInstance().getEncryptedConnectionCount());
+    assertTrue(2 == ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
+    assertTrue(0 == DataRpcMetrics.getInstance().getEncryptedConnectionCount());
+
+    // Check unencrypted counters value
+    assertTrue(0 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
   }
 
   @Test
