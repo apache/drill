@@ -17,9 +17,12 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(PlannerTest.class)
 public class TestTpchLimit0 extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchLimit0.class);
 

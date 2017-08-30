@@ -18,10 +18,15 @@
 package org.apache.drill.exec.expr;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SqlTest.class, PlannerTest.class})
 public class TestSchemaPathMaterialization extends BaseTestQuery {
 
   @Test
@@ -83,6 +88,7 @@ public class TestSchemaPathMaterialization extends BaseTestQuery {
   }
 
   @Test //DRILL-1962
+  @Category(UnlikelyTest.class)
   public void testProjectionMultipleFiles() throws Exception {
     final String query="select t.oooa.oa.oab.oabc[1].rowValue1 rowValue from dfs.`${WORKING_PATH}/src/test/resources/complex/json/multiple/*.json` t";
 
@@ -94,6 +100,7 @@ public class TestSchemaPathMaterialization extends BaseTestQuery {
   }
 
   @Test //DRILL-4264
+  @Category(UnlikelyTest.class)
   public void testFieldNameWithDot() throws Exception {
     final String tableName = "dfs_test.tmp.table_with_dot_field";
     try {

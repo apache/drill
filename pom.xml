@@ -33,7 +33,7 @@
     <dep.junit.version>4.11</dep.junit.version>
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
     <dep.guava.version>18.0</dep.guava.version>
-    <forkCount>2</forkCount>
+    <forkCount>1C</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
     <calcite.version>1.4.0-drill-r21</calcite.version>
     <janino.version>2.7.6</janino.version>
@@ -53,6 +53,7 @@
     <hbase.version>1.1.3</hbase.version>
     <fmpp.version>0.9.15</fmpp.version>
     <freemarker.version>2.3.26-incubating</freemarker.version>
+    <excludedGroups></excludedGroups>
   </properties>
 
   <scm>
@@ -174,7 +175,6 @@
   </issueManagement>
 
   <build>
-
     <plugins>
       <plugin>
         <groupId>org.apache.rat</groupId>
@@ -438,7 +438,8 @@
               -XX:MaxPermSize=512M -XX:MaxDirectMemorySize=3072M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
-              -XX:+CMSClassUnloadingEnabled -ea</argLine>
+              -XX:+CMSClassUnloadingEnabled -ea
+            </argLine>
             <forkCount>${forkCount}</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
@@ -447,8 +448,8 @@
             <systemPropertyVariables>
               <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             </systemPropertyVariables>
-			<excludedGroups>org.apache.drill.test.SecondaryTest</excludedGroups>
-		  </configuration>
+            <excludedGroups>${excludedGroups}</excludedGroups>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

@@ -24,10 +24,14 @@ import static org.junit.Assert.fail;
 
 import java.util.regex.Pattern;
 
+import org.apache.drill.categories.HbaseStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.store.hbase.HBaseRegexParser;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HbaseStorageTest.class})
 public class TestHBaseRegexParser extends DrillTest {
 
   @Test

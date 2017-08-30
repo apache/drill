@@ -21,6 +21,7 @@ package org.apache.drill.vector;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -39,7 +40,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class TestFillEmpties extends DrillTest {
 
   public static OperatorFixture fixture;

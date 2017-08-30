@@ -19,6 +19,7 @@ package org.apache.drill.exec.pop;
 
 import java.util.List;
 
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.planner.fragment.Fragment;
@@ -35,9 +36,11 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(PlannerTest.class)
 public class TestFragmentChecker extends PopUnitTestBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFragmentChecker.class);
 

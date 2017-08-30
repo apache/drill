@@ -23,8 +23,10 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.SQLException;
 import java.sql.Connection;
@@ -36,6 +38,7 @@ import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@Category(JdbcTest.class)
 public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
 
   public static Driver testDrillDriver;

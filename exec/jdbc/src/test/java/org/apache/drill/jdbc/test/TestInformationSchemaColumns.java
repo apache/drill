@@ -34,10 +34,12 @@ import java.sql.Types;
 
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 // NOTE: TestInformationSchemaColumns and DatabaseMetaDataGetColumnsTest
 // have identical sections.  (Cross-maintain them for now; factor out later.)
@@ -51,6 +53,7 @@ import org.junit.Test;
 /**
  * Test class for Drill's INFORMATION_SCHEMA.COLUMNS implementation.
  */
+@Category(JdbcTest.class)
 public class TestInformationSchemaColumns extends JdbcTestBase {
 
   private static final String VIEW_SCHEMA = "dfs_test.tmp";

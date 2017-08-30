@@ -19,10 +19,11 @@ package org.apache.drill.jdbc;
 
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
-import org.apache.drill.jdbc.Driver;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static java.sql.Connection.*;
 import java.sql.Connection;
@@ -30,11 +31,11 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Savepoint;
 import java.sql.SQLException;
 
-
 /**
  * Test for Drill's implementation of Connection's main transaction-related
  * methods.
  */
+@Category(JdbcTest.class)
 public class ConnectionTransactionMethodsTest {
 
   private static Connection connection;

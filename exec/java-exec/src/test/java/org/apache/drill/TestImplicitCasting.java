@@ -17,17 +17,19 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.types.MinorType;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.resolver.TypeCastRules;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(SqlTest.class)
 public class TestImplicitCasting {
   @Test
   public void testTimeStampAndTime() {

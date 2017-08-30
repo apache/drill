@@ -25,12 +25,15 @@ import java.sql.Types;
 import java.util.Properties;
 
 import org.apache.drill.jdbc.test.JdbcAssert;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test compatibility with older versions of the server
  */
+@Category(JdbcTest.class)
 public class LegacyDatabaseMetaDataGetColumnsTest extends DatabaseMetaDataGetColumnsTest {
 
   @BeforeClass

@@ -21,11 +21,13 @@ import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.util.JarUtil;
 import org.codehaus.janino.Java;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import java.io.File;
@@ -46,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 
 
 @RunWith(JMockit.class)
+@Category(SqlFunctionTest.class)
 public class FunctionInitializerTest {
 
   private static final String CLASS_NAME = "com.drill.udf.CustomLowerFunction";

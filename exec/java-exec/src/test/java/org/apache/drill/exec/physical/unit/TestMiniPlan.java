@@ -19,6 +19,7 @@
 package org.apache.drill.exec.physical.unit;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.physical.config.Filter;
@@ -31,6 +32,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +43,7 @@ import java.util.List;
  * built from PopBuilder/ScanBuilder, 2)an expected schema and base line values,
  * or 3) indicating no batch is expected.
  */
+@Category(PlannerTest.class)
 public class TestMiniPlan extends MiniPlanUnitTestBase {
 
   protected static DrillFileSystem fs;

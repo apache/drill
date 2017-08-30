@@ -17,24 +17,24 @@
  */
 package org.apache.drill.jdbc;
 
-import org.apache.drill.jdbc.Driver;
-
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLException;
 
-
 /**
  * Test for Drill's implementation of Statement's methods (most).
  */
+@Category(JdbcTest.class)
 public class StatementTest extends JdbcTestBase {
 
   private static Connection connection;

@@ -22,6 +22,7 @@ import mockit.Mock;
 import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
@@ -37,6 +38,7 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
@@ -50,6 +52,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JMockit.class)
+@Category(SqlTest.class)
 public class TestCTTAS extends BaseTestQuery {
 
   private static final UUID session_id = UUID.nameUUIDFromBytes("sessionId".getBytes());

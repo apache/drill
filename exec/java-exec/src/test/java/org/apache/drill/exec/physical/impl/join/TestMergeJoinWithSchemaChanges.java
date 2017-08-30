@@ -18,16 +18,17 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.TestBuilder;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 
+@Category(OperatorTest.class)
 public class TestMergeJoinWithSchemaChanges extends BaseTestQuery {
 
   @Test

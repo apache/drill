@@ -23,6 +23,7 @@ import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
 import com.google.common.collect.Lists;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.TestTools;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.store.dfs.MetadataContext;
@@ -32,6 +33,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import java.io.File;
@@ -93,6 +95,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-3917, positive test case for DRILL-4530
+  @Category(UnlikelyTest.class)
   public void testPartitionPruningWithMetadataCache_2() throws Exception {
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName1));
     checkForMetadataFile(tableName1);
@@ -112,6 +115,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-3937 (partitioning column is varchar)
+  @Category(UnlikelyTest.class)
   public void testPartitionPruningWithMetadataCache_3() throws Exception {
     String tableName = "orders_ctas_varchar";
     test("use dfs_test.tmp");
@@ -133,6 +137,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-3937 (partitioning column is binary using convert_to)
+  @Category(UnlikelyTest.class)
   public void testPartitionPruningWithMetadataCache_4() throws Exception {
     String tableName = "orders_ctas_binary";
     test("use dfs_test.tmp");
@@ -225,6 +230,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test //DRILL-4511
+  @Category(UnlikelyTest.class)
   public void testTableDoesNotExistWithEmptyDirectory() throws Exception {
     File path = new File(getTempDir("empty_directory"));
     String pathString = path.toURI().getPath();
@@ -242,6 +248,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test //DRILL-4511
+  @Category(UnlikelyTest.class)
   public void testTableDoesNotExistWithIncorrectTableName() throws Exception {
     String tableName = "incorrect_table";
     testBuilder()
@@ -264,6 +271,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4530  // single leaf level partition
+  @Category(UnlikelyTest.class)
   public void testDrill4530_1() throws Exception {
     // create metadata cache
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
@@ -286,6 +294,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4530  // single non-leaf level partition
+  @Category(UnlikelyTest.class)
   public void testDrill4530_2() throws Exception {
     // create metadata cache
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
@@ -308,6 +317,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4530  // only dir1 filter is present, no dir0, hence this maps to multiple partitions
+  @Category(UnlikelyTest.class)
   public void testDrill4530_3() throws Exception {
     // create metadata cache
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
@@ -330,6 +340,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4530  // non-existent partition (1 subdirectory's cache file will still be read for schema)
+  @Category(UnlikelyTest.class)
   public void testDrill4530_4() throws Exception {
     // create metadata cache
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
@@ -352,6 +363,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4794
+  @Category(UnlikelyTest.class)
   public void testDrill4794() throws Exception {
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName1));
     checkForMetadataFile(tableName1);
@@ -372,6 +384,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4786
+  @Category(UnlikelyTest.class)
   public void testDrill4786_1() throws Exception {
     // create metadata cache
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
@@ -396,6 +409,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4786
+  @Category(UnlikelyTest.class)
   public void testDrill4786_2() throws Exception {
     // create metadata cache
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
@@ -420,6 +434,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4877
+  @Category(UnlikelyTest.class)
   public void testDrill4877() throws Exception {
     // create metadata cache
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
@@ -692,6 +707,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-4264
+  @Category(UnlikelyTest.class)
   public void testMetadataCacheFieldWithDots() throws Exception {
     final String tableWithDots = "dfs_test.tmp.`complex_table`";
     try {

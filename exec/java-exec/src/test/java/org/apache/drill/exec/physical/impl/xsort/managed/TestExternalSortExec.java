@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
@@ -37,7 +38,9 @@ import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestExternalSortExec extends DrillTest {
 
   @Test

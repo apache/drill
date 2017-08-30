@@ -18,15 +18,17 @@
 package org.apache.drill.exec.physical.impl.limit;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.OperatorFixture;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(OperatorTest.class)
 public class TestLimitWithExchanges extends BaseTestQuery {
   final String WORKING_PATH = TestTools.getWorkingPath();
   final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";

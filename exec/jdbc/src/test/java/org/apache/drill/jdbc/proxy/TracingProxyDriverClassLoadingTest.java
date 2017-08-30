@@ -25,8 +25,10 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
@@ -39,6 +41,7 @@ import static org.hamcrest.CoreMatchers.*;
 /**
  * Test of TracingProxyDriver's loading of driver class.
  */
+@Category(JdbcTest.class)
 public class TracingProxyDriverClassLoadingTest extends DrillTest {
 
   @Ignore( "except when run in own JVM (so Drill Driver not already loaded)" )

@@ -17,8 +17,12 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import org.apache.drill.categories.MongoStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, MongoStorageTest.class})
 public class TestMongoQueries extends MongoTestBase {
 
   @Test

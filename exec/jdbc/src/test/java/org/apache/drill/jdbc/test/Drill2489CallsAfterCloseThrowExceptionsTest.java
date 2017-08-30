@@ -20,9 +20,11 @@ package org.apache.drill.jdbc.test;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -48,7 +50,6 @@ import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 
-
 /**
  * Test class for JDBC requirement that almost all methods throw
  * {@link SQLException} when called on a closed primary object (e.g.,
@@ -67,6 +68,7 @@ import org.apache.drill.jdbc.AlreadyClosedSqlException;
  *   secondary objects such as {@link Array} or {@link Struct}).
  * </p>
  */
+@Category(JdbcTest.class)
 public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
   private static final Logger logger =
       getLogger(Drill2489CallsAfterCloseThrowExceptionsTest.class);

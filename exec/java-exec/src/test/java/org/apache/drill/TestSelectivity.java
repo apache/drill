@@ -17,11 +17,13 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.categories.PlannerTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(PlannerTest.class)
 public class TestSelectivity extends BaseTestQuery {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSelectivity.class);
 

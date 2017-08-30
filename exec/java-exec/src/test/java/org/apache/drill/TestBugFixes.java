@@ -18,16 +18,19 @@
 package org.apache.drill;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Category(UnlikelyTest.class)
 public class TestBugFixes extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
   private static final String WORKING_PATH = TestTools.getWorkingPath();

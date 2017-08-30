@@ -22,15 +22,18 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
+@Category(SqlTest.class)
 public class TestConstantFolding extends PlanTestBase {
 
   @Rule

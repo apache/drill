@@ -24,9 +24,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlTest.class)
 public class TestSelectWithOption extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 

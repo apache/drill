@@ -271,6 +271,10 @@ public class BaseTestQuery extends ExecTest {
     return allocator;
   }
 
+  public static int getUserPort() {
+    return bits[0].getUserPort();
+  }
+
   public static TestBuilder newTest() {
     return testBuilder();
   }

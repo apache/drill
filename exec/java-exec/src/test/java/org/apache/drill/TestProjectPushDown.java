@@ -18,14 +18,17 @@
 
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 // Test the optimizer plan in terms of project pushdown.
 // When a query refers to a subset of columns in a table, optimizer should push the list
 // of refereed columns to the SCAN operator, so that SCAN operator would only retrieve
 // the column values in the subset of columns.
 
+@Category(PlannerTest.class)
 public class TestProjectPushDown extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(TestProjectPushDown.class);

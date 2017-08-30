@@ -18,14 +18,17 @@
 package org.apache.drill.exec.server;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OptionsTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.UserExceptionMatcher;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.exec.ExecConstants.ENABLE_VERBOSE_ERRORS_KEY;
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
 import static org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.VALIDATION;
 
+@Category(OptionsTest.class)
 public class TestOptions extends BaseTestQuery {
 //  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptions.class);
 

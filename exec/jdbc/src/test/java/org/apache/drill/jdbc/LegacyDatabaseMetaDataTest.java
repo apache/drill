@@ -20,11 +20,14 @@ package org.apache.drill.jdbc;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test compatibility with older versions of the server
  */
+@Category(JdbcTest.class)
 public class LegacyDatabaseMetaDataTest extends DatabaseMetaDataTest {
   @BeforeClass
   public static void setUpConnection() throws SQLException {

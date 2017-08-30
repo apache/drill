@@ -18,14 +18,17 @@
 
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
+@Category(OperatorTest.class)
 public class TestNestedLoopJoin extends PlanTestBase {
 
   private static String nlpattern = "NestedLoopJoin";

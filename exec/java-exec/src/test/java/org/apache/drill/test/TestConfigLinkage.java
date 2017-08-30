@@ -18,6 +18,7 @@
 
 package org.apache.drill.test;
 
+import org.apache.drill.categories.OptionsTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionMetaData;
@@ -27,6 +28,8 @@ import org.apache.drill.exec.server.options.TypeValidators;
 import org.apache.drill.exec.store.sys.SystemTable;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import static org.junit.Assert.assertEquals;
 /*
  * Tests to test if the linkage between the two config option systems
@@ -37,6 +40,7 @@ import static org.junit.Assert.assertEquals;
  * i.e., if the value is not set in system/session.
  * */
 
+@Category(OptionsTest.class)
 public class TestConfigLinkage {
   public static final String MOCK_PROPERTY = "mock.prop";
 
@@ -49,7 +53,7 @@ public class TestConfigLinkage {
     OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
     FixtureBuilder builder = ClusterFixture.builder().
-      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
       putDefinition(optionDefinition);
 
     try (ClusterFixture cluster = builder.build();
@@ -70,7 +74,7 @@ public class TestConfigLinkage {
 
     FixtureBuilder builder = ClusterFixture.builder().
       putDefinition(optionDefinition).
-      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a");
+      configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a");
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -115,7 +119,7 @@ public class TestConfigLinkage {
 
     FixtureBuilder builder = ClusterFixture.builder().
       putDefinition(optionDefinition).
-      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
       systemOption(MOCK_PROPERTY, "blah");
 
     try (ClusterFixture cluster = builder.build();
@@ -293,7 +297,7 @@ public class TestConfigLinkage {
     OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
     FixtureBuilder builder = ClusterFixture.builder().
-      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
       putDefinition(optionDefinition);
 
     try (ClusterFixture cluster = builder.build();

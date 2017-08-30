@@ -20,6 +20,8 @@ package org.apache.drill.exec.sql;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -27,14 +29,17 @@ import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(SqlTest.class)
 public class TestCTAS extends BaseTestQuery {
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef1() throws Exception {
     ctasErrorTestHelper("CREATE TABLE %s.%s AS SELECT region_id, region_id FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "region_id")
@@ -42,6 +47,7 @@ public class TestCTAS extends BaseTestQuery {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef2() throws Exception {
     ctasErrorTestHelper("CREATE TABLE %s.%s AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "sales_city")
@@ -49,6 +55,7 @@ public class TestCTAS extends BaseTestQuery {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef3() throws Exception {
     ctasErrorTestHelper(
         "CREATE TABLE %s.%s(regionid, regionid) " +
@@ -58,6 +65,7 @@ public class TestCTAS extends BaseTestQuery {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef4() throws Exception {
     ctasErrorTestHelper(
         "CREATE TABLE %s.%s(regionid, salescity, salescity) " +
@@ -67,6 +75,7 @@ public class TestCTAS extends BaseTestQuery {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void withDuplicateColumnsInDef5() throws Exception {
     ctasErrorTestHelper(
         "CREATE TABLE %s.%s(regionid, salescity, SalesCity) " +
@@ -94,6 +103,7 @@ public class TestCTAS extends BaseTestQuery {
   }
 
   @Test // DRILL-2422
+  @Category(UnlikelyTest.class)
   public void createTableWhenATableWithSameNameAlreadyExists() throws Exception{
     final String newTblName = "createTableWhenTableAlreadyExists";
 
@@ -111,6 +121,7 @@ public class TestCTAS extends BaseTestQuery {
   }
 
   @Test // DRILL-2422
+  @Category(UnlikelyTest.class)
   public void createTableWhenAViewWithSameNameAlreadyExists() throws Exception{
     final String newTblName = "createTableWhenAViewWithSameNameAlreadyExists";
 

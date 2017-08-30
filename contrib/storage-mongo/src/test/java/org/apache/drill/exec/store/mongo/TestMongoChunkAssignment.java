@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.mongo.common.ChunkInfo;
@@ -36,7 +37,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mongodb.ServerAddress;
+import org.junit.experimental.categories.Category;
 
+@Category(MongoStorageTest.class)
 public class TestMongoChunkAssignment {
   static final String HOST_A = "A";
   static final String HOST_B = "B";

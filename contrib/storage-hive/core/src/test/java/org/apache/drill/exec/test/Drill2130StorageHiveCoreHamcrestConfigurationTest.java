@@ -18,10 +18,10 @@
 package org.apache.drill.exec.test;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
-
 
 public class Drill2130StorageHiveCoreHamcrestConfigurationTest {
 

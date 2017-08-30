@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -49,11 +50,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests the generated per-batch sort code via its wrapper layer.
  */
 
+@Category(OperatorTest.class)
 public class TestSorter extends DrillTest {
 
   public static OperatorFixture fixture;

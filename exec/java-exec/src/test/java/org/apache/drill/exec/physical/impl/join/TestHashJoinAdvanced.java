@@ -20,14 +20,18 @@ package org.apache.drill.exec.physical.impl.join;
 
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
+@Category(OperatorTest.class)
 public class TestHashJoinAdvanced extends BaseTestQuery {
 
   // Have to disable merge join, if this testcase is to test "HASH-JOIN".
@@ -42,6 +46,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
   }
 
   @Test //DRILL-2197 Left Self Join with complex type in projection
+  @Category(UnlikelyTest.class)
   public void testLeftSelfHashJoinWithMap() throws Exception {
     final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from cp.`join/complex_1.json` a left outer join cp.`join/complex_1.json` b on a.id=b.id order by a.id";
 
@@ -54,6 +59,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
   }
 
   @Test //DRILL-2197 Left Join with complex type in projection
+  @Category(UnlikelyTest.class)
   public void testLeftHashJoinWithMap() throws Exception {
     final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from cp.`join/complex_1.json` a left outer join cp.`join/complex_2.json` b on a.id=b.id order by a.id";
 
@@ -80,6 +86,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
   }
 
   @Test  // DRILL-2771, similar problem as DRILL-2197 except problem reproduces with right outer join instead of left
+  @Category(UnlikelyTest.class)
   public void testRightJoinWithMap() throws Exception {
     final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from " +
         "cp.`join/complex_1.json` b right outer join cp.`join/complex_1.json` a on a.id = b.id order by a.id";
@@ -132,6 +139,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
   }
 
   @Test //DRILL-2197 Left Join with complex type in projection
+  @Category(UnlikelyTest.class)
   public void testJoinWithMapAndDotField() throws Exception {
     File directory = new File(BaseTestQuery.getTempDir("json/input"));
     try {

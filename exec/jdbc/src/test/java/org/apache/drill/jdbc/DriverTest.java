@@ -19,7 +19,6 @@ package org.apache.drill.jdbc;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
-//import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -33,16 +32,19 @@ import java.util.Properties;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.DrillTest;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.io.Resources;
+import org.junit.experimental.categories.Category;
 
 /**
  * (Some) unit and integration tests for org.apache.drill.jdbc.Driver.
  */
+@Category(JdbcTest.class)
 public class DriverTest extends DrillTest {
 
   // TODO: Move Jetty status server disabling to DrillTest.
