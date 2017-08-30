@@ -160,6 +160,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.QUEUE_THRESHOLD_SIZE),
       new OptionDefinition(ExecConstants.QUEUE_TIMEOUT),
       new OptionDefinition(ExecConstants.SMALL_QUEUE_SIZE),
+      new OptionDefinition(ExecConstants.QUEUE_MEMORY_RESERVE, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.QUEUE_MEMORY_RATIO, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
       new OptionDefinition(ExecConstants.MIN_HASH_TABLE_SIZE),
       new OptionDefinition(ExecConstants.MAX_HASH_TABLE_SIZE),
       new OptionDefinition(ExecConstants.EARLY_LIMIT0_OPT),
@@ -418,6 +420,11 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
 
   @Override
   public void close() throws Exception {
-    options.close();
+    // If the server exits very early, the options may not yet have
+    // been created. Gracefully handle that case.
+
+    if (options != null) {
+      options.close();
+    }
   }
 }

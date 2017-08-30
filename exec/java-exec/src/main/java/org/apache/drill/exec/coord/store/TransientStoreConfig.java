@@ -53,6 +53,7 @@ public class TransientStoreConfig<V> {
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof TransientStoreConfig && obj.getClass().equals(getClass())) {
+      @SuppressWarnings("unchecked")
       final TransientStoreConfig<V> other = (TransientStoreConfig<V>)obj;
       return Objects.equal(name, other.name) && Objects.equal(serializer, other.serializer);
     }
@@ -70,5 +71,4 @@ public class TransientStoreConfig<V> {
   public static <V> TransientStoreConfigBuilder<V> newJacksonBuilder(final ObjectMapper mapper, final Class<V> klazz) {
     return TransientStoreConfig.<V>newBuilder().serializer(new JacksonSerializer<>(mapper, klazz));
   }
-
 }

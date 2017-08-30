@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -53,7 +53,6 @@ public class SoftAffinityFragmentParallelizer implements FragmentParallelizer {
   @Override
   public void parallelizeFragment(final Wrapper fragmentWrapper, final ParallelizationParameters parameters,
       final Collection<DrillbitEndpoint> activeEndpoints) throws PhysicalOperatorSetupException {
-    final Fragment fragment = fragmentWrapper.getNode();
 
     // Find the parallelization width of fragment
     final Stats stats = fragmentWrapper.getStats();

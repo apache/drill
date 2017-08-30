@@ -103,6 +103,7 @@ public class Drillbit implements AutoCloseable {
     this(config, SystemOptionManager.createDefaultOptionDefinitions(), serviceSet, classpathScan);
   }
 
+  @SuppressWarnings("resource")
   @VisibleForTesting
   public Drillbit(
     final DrillConfig config,
@@ -122,7 +123,7 @@ public class Drillbit implements AutoCloseable {
       storeProvider = new CachingPersistentStoreProvider(new LocalPersistentStoreProvider(config));
     } else {
       coord = new ZKClusterCoordinator(config);
-      storeProvider = new PersistentStoreRegistry(this.coord, config).newPStoreProvider();
+      storeProvider = new PersistentStoreRegistry<ClusterCoordinator>(this.coord, config).newPStoreProvider();
       isDistributedMode = true;
     }
 
@@ -157,6 +158,7 @@ public class Drillbit implements AutoCloseable {
     }
     final DrillbitEndpoint md = engine.start();
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider, profileStoreProvider);
+    @SuppressWarnings("resource")
     final DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
@@ -165,6 +167,10 @@ public class Drillbit implements AutoCloseable {
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
     registrationHandle = coord.register(md);
     webServer.start();
+
+    // Must start the RM after the above since it needs to read system options.
+
+    drillbitContext.startRM();
 
     Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));
     logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
@@ -224,6 +230,7 @@ public class Drillbit implements AutoCloseable {
       return;
     }
 
+    @SuppressWarnings("resource")
     final SystemOptionManager optionManager = getContext().getOptionManager();
 
     // parse out the properties, validate, and then set them
@@ -324,7 +331,6 @@ public class Drillbit implements AutoCloseable {
     return start(config, SystemOptionManager.createDefaultOptionDefinitions(), remoteServiceSet);
   }
 
-  @SuppressWarnings("resource")
   @VisibleForTesting
   public static Drillbit start(final DrillConfig config, final CaseInsensitiveMap<OptionDefinition> validators,
                                final RemoteServiceSet remoteServiceSet)

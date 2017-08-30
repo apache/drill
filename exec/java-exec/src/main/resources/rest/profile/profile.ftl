@@ -110,6 +110,8 @@
 
   </div>
 
+  <#assign queueName = model.getProfile().getQueueName() />
+  <#assign queued = queueName != "" && queueName != "-" />
   <div class="page-header"></div>
   <h3>Query Profile</h3>
   <div class="panel-group" id="query-profile-accordion">
@@ -129,6 +131,10 @@
                 <th>State</th>
                 <th>Foreman</th>
                 <th>Total Fragments</th>
+     <#if queued>
+                <th>Total Cost</th>
+                <th>Queue</th>
+     </#if>
             </tr>
             </thead>
             <tbody>
@@ -136,12 +142,17 @@
                   <td>${model.getProfile().getState().name()}</td>
                   <td>${model.getProfile().getForeman().getAddress()}</td>
                   <td>${model.getProfile().getTotalFragments()}</td>
+     <#if queued>
+                  <td>${model.getProfile().getTotalCost()}</td>
+                  <td>${queueName}</td>
+     </#if>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
+
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
@@ -156,7 +167,9 @@
             <thead>
               <tr>
                 <th>Planning</th>
+     <#if queued>
                 <th>Queued</th>
+     </#if>
                 <th>Execution</th>
                 <th>Total</th>
               </tr>
@@ -164,7 +177,9 @@
             <tbody>
               <tr>
                 <td>${model.getPlanningDuration()}</td>
+     <#if queued>
                 <td>${model.getQueuedDuration()}</td>
+     </#if>
                 <td>${model.getExecutionDuration()}</td>
                 <td>${model.getProfileDuration()}</td>
               </tr>

@@ -33,7 +33,22 @@ public class MemoryAllocationUtilities {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MemoryAllocationUtilities.class);
 
   /**
-   * Helper method to setup SortMemoryAllocations
+   * Helper method to setup Memory Allocations
+   * <p>
+   * Plan the memory for buffered operators (the only ones that can spill in this release)
+   * based on assumptions. These assumptions are the amount of memory per node to give
+   * to each query and the number of sort operators per node.
+   * <p>
+   * The reason the total
+   * memory is an assumption is that we have know knowledge of the number of queries
+   * that can run, so we need the user to tell use that information by configuring the
+   * amount of memory to be assumed available to each query.
+   * <p>
+   * The number of sorts per node could be calculated, but we instead simply take
+   * the worst case: the maximum per-query, per-node parallization and assume that
+   * all sorts appear in all fragments &mdash; a gross oversimplification, but one
+   * that Drill has long made.
+   * <p>
    * since this method can be used in multiple places adding it in this class
    * rather than keeping it in Foreman
    * @param plan
@@ -50,7 +65,7 @@ public class MemoryAllocationUtilities {
     // look for external sorts
     final List<PhysicalOperator> bufferedOpList = new LinkedList<>();
     for (final PhysicalOperator op : plan.getSortedOperators()) {
-      if ( op.isBufferedOperator() ) {
+      if (op.isBufferedOperator()) {
         bufferedOpList.add(op);
       }
     }

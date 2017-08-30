@@ -31,78 +31,91 @@ import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 interface Comparators {
 
   final static Comparator<MajorFragmentProfile> majorId = new Comparator<MajorFragmentProfile>() {
+    @Override
     public int compare(final MajorFragmentProfile o1, final MajorFragmentProfile o2) {
       return Long.compare(o1.getMajorFragmentId(), o2.getMajorFragmentId());
     }
   };
 
   final static Comparator<MinorFragmentProfile> minorId = new Comparator<MinorFragmentProfile>() {
+    @Override
     public int compare(final MinorFragmentProfile o1, final MinorFragmentProfile o2) {
       return Long.compare(o1.getMinorFragmentId(), o2.getMinorFragmentId());
     }
   };
 
   final static Comparator<MinorFragmentProfile> startTime = new Comparator<MinorFragmentProfile>() {
+    @Override
     public int compare(final MinorFragmentProfile o1, final MinorFragmentProfile o2) {
       return Long.compare(o1.getStartTime(), o2.getStartTime());
     }
   };
 
   final static Comparator<MinorFragmentProfile> lastUpdate = new Comparator<MinorFragmentProfile>() {
+    @Override
     public int compare(final MinorFragmentProfile o1, final MinorFragmentProfile o2) {
       return Long.compare(o1.getLastUpdate(), o2.getLastUpdate());
     }
   };
 
   final static Comparator<MinorFragmentProfile> lastProgress = new Comparator<MinorFragmentProfile>() {
+    @Override
     public int compare(final MinorFragmentProfile o1, final MinorFragmentProfile o2) {
       return Long.compare(o1.getLastProgress(), o2.getLastProgress());
     }
   };
 
   final static Comparator<MinorFragmentProfile> endTime = new Comparator<MinorFragmentProfile>() {
+    @Override
     public int compare(final MinorFragmentProfile o1, final MinorFragmentProfile o2) {
       return Long.compare(o1.getEndTime(), o2.getEndTime());
     }
   };
 
   final static Comparator<MinorFragmentProfile> fragmentPeakMemory = new Comparator<MinorFragmentProfile>() {
+    @Override
     public int compare(final MinorFragmentProfile o1, final MinorFragmentProfile o2) {
       return Long.compare(o1.getMaxMemoryUsed(), o2.getMaxMemoryUsed());
     }
   };
 
   final static Comparator<MinorFragmentProfile> runTime = new Comparator<MinorFragmentProfile>() {
+    @Override
     public int compare(final MinorFragmentProfile o1, final MinorFragmentProfile o2) {
       return Long.compare(o1.getEndTime() - o1.getStartTime(), o2.getEndTime() - o2.getStartTime());
     }
   };
 
   final static Comparator<OperatorProfile> operatorId = new Comparator<OperatorProfile>() {
+    @Override
     public int compare(final OperatorProfile o1, final OperatorProfile o2) {
       return Long.compare(o1.getOperatorId(), o2.getOperatorId());
     }
   };
 
   final static Comparator<Pair<OperatorProfile, Integer>> setupTime = new Comparator<Pair<OperatorProfile, Integer>>() {
+    @Override
     public int compare(final Pair<OperatorProfile, Integer> o1, final Pair<OperatorProfile, Integer> o2) {
       return Long.compare(o1.getLeft().getSetupNanos(), o2.getLeft().getSetupNanos());
     }
   };
 
   final static Comparator<Pair<OperatorProfile, Integer>> processTime = new Comparator<Pair<OperatorProfile, Integer>>() {
+    @Override
     public int compare(final Pair<OperatorProfile, Integer> o1, final Pair<OperatorProfile, Integer> o2) {
       return Long.compare(o1.getLeft().getProcessNanos(), o2.getLeft().getProcessNanos());
     }
   };
 
   final static Comparator<Pair<OperatorProfile, Integer>> waitTime = new Comparator<Pair<OperatorProfile, Integer>>() {
+    @Override
     public int compare(final Pair<OperatorProfile, Integer> o1, final Pair<OperatorProfile, Integer> o2) {
       return Long.compare(o1.getLeft().getWaitNanos(), o2.getLeft().getWaitNanos());
     }
   };
 
   final static Comparator<Pair<OperatorProfile, Integer>> operatorPeakMemory = new Comparator<Pair<OperatorProfile, Integer>>() {
+    @Override
     public int compare(final Pair<OperatorProfile, Integer> o1, final Pair<OperatorProfile, Integer> o2) {
       return Long.compare(o1.getLeft().getPeakLocalMemoryAllocated(), o2.getLeft().getPeakLocalMemoryAllocated());
     }
