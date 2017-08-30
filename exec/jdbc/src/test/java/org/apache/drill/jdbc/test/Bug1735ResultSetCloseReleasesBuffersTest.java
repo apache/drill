@@ -23,12 +23,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Function;
+import org.junit.experimental.categories.Category;
 
+@Category(JdbcTest.class)
 public class Bug1735ResultSetCloseReleasesBuffersTest extends JdbcTestQueryBase {
 
   // TODO: Move Jetty status server disabling to DrillTest.

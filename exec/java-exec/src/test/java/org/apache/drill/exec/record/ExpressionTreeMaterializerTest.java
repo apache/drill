@@ -25,6 +25,7 @@ import mockit.Mock;
 import mockit.MockUp;
 import mockit.NonStrictExpectations;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -49,7 +50,9 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class ExpressionTreeMaterializerTest extends ExecTest {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializerTest.class);

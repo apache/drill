@@ -18,6 +18,8 @@
 package org.apache.drill.exec.physical.impl.writer;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.hadoop.fs.FileSystem;
@@ -25,7 +27,9 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestParquetWriterEmptyFiles extends BaseTestQuery {
 
   private static FileSystem fs;

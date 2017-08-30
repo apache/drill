@@ -21,10 +21,12 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import mockit.Mocked;
 import mockit.NonStrictExpectations;
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@Category(PlannerTest.class)
 public class TestHardAffinityFragmentParallelizer {
 
   // Create a set of test endpoints

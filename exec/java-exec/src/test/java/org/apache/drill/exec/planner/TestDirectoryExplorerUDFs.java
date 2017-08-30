@@ -23,6 +23,8 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
@@ -37,6 +39,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
@@ -45,6 +48,7 @@ import com.google.common.collect.Lists;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
+@Category({SqlTest.class, PlannerTest.class})
 public class TestDirectoryExplorerUDFs extends PlanTestBase {
 
   private static class ConstantFoldingTestConfig {

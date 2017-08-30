@@ -35,13 +35,13 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.FixtureBuilder;
-import org.apache.drill.test.SecondaryTest;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-@Category(SecondaryTest.class)
+@Category(SlowTest.class)
 public class TestSimpleExternalSort extends DrillTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
 

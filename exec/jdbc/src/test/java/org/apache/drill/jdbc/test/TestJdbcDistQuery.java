@@ -30,15 +30,18 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
+@Category(JdbcTest.class)
 public class TestJdbcDistQuery extends JdbcTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcDistQuery.class);
 

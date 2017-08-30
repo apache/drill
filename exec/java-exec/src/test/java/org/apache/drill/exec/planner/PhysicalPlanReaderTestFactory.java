@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.ClassPathScanner;
@@ -24,7 +25,9 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.junit.experimental.categories.Category;
 
+@Category(PlannerTest.class)
 public class PhysicalPlanReaderTestFactory {
 
   public static LogicalPlanPersistence defaultLogicalPlanPersistence(DrillConfig c) {

@@ -18,7 +18,10 @@
 package org.apache.drill.jdbc;
 
 import org.apache.calcite.avatica.util.Quoting;
+import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -31,6 +34,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Test for Drill's Properties in the JDBC URL connection string
  */
+@Category({SlowTest.class, JdbcTest.class})
 public class ConnectionInfoTest extends JdbcTestBase {
   private static Connection connection;
   private static DatabaseMetaData dbmd;

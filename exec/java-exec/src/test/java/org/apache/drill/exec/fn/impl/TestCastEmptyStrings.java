@@ -19,12 +19,16 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestCastEmptyStrings extends BaseTestQuery {
     // enable decimal data type
     @BeforeClass

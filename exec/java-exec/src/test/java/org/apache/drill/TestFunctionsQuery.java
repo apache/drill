@@ -17,18 +17,21 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
 
+@Category(SqlFunctionTest.class)
 public class TestFunctionsQuery extends BaseTestQuery {
 
   // enable decimal data type

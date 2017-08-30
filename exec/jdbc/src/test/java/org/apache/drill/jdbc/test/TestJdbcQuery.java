@@ -24,11 +24,14 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Types;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Function;
+import org.junit.experimental.categories.Category;
 
+@Category(JdbcTest.class)
 public class TestJdbcQuery extends JdbcTestQueryBase {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 

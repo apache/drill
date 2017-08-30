@@ -18,14 +18,16 @@
 package org.apache.drill.exec.physical.impl.TopN;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.TestBuilder;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
+@Category(OperatorTest.class)
 public class TestTopNSchemaChanges extends BaseTestQuery {
 
   @Test

@@ -19,9 +19,12 @@ package org.apache.drill.exec.impersonation;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
+import org.apache.drill.categories.SecurityTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -30,6 +33,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
@@ -41,6 +45,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW, CREATE TABLE and DROP TABLE
  */
+@Category({SlowTest.class, SecurityTest.class})
 public class TestImpersonationMetadata extends BaseTestImpersonation {
   private static final String user1 = "drillTestUser1";
   private static final String user2 = "drillTestUser2";
@@ -130,6 +135,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   }
 
   @Test // DRILL-3037
+  @Category(UnlikelyTest.class)
   public void testImpersonatingProcessUser() throws Exception {
     updateClient(processUser);
 

@@ -21,12 +21,16 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestSampleHiveUDFs extends HiveTestBase {
 
   private void helper(String query, String expected) throws Exception {

@@ -18,9 +18,12 @@
 package org.apache.drill.exec.sql;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlTest.class)
 public class TestWithClause extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestWithClause.class);
 

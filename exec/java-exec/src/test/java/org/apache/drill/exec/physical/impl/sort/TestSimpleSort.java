@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.sort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
@@ -45,8 +46,10 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
 @Ignore
+@Category(OperatorTest.class)
 public class TestSimpleSort extends ExecTest {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleSort.class);
   private final DrillConfig c = DrillConfig.create();

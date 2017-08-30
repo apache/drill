@@ -17,12 +17,15 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.Assert;
+import org.junit.experimental.categories.Category;
 
-
+@Category(SqlTest.class)
 public class TestDropTable extends PlanTestBase {
 
   private static final String CREATE_SIMPLE_TABLE = "create table %s as select 1 from cp.`employee.json`";
@@ -176,6 +179,7 @@ public class TestDropTable extends PlanTestBase {
   }
 
   @Test // DRILL-4673
+  @Category(UnlikelyTest.class)
   public void testDropTableIfExistsWhileTableExists() throws Exception {
     final String existentTableName = "test_table_exists";
     test("use dfs_test.tmp");
@@ -191,6 +195,7 @@ public class TestDropTable extends PlanTestBase {
   }
 
   @Test // DRILL-4673
+  @Category(UnlikelyTest.class)
   public void testDropTableIfExistsWhileTableDoesNotExist() throws Exception {
     final String nonExistentTableName = "test_table_not_exists";
     test("use dfs_test.tmp");
@@ -205,6 +210,7 @@ public class TestDropTable extends PlanTestBase {
   }
 
   @Test // DRILL-4673
+  @Category(UnlikelyTest.class)
   public void testDropTableIfExistsWhileItIsAView() throws Exception {
     final String viewName = "test_view";
     try{

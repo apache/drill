@@ -38,13 +38,14 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 import org.slf4j.Logger;
-
 
 /**
  * Test that non-SQLException exceptions used by Drill's current version of
@@ -64,6 +65,7 @@ import org.slf4j.Logger;
  * 103 UnsupportedOperationException in AvaticaResultSet
  * </pre>
  */
+@Category(JdbcTest.class)
 public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase {
   private static final Logger logger =
       getLogger(Drill2769UnsupportedReportsUseSqlExceptionTest.class);

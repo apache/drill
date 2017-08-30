@@ -17,12 +17,15 @@
  */
 package org.apache.drill.jdbc.test;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
 
-
+@Category(JdbcTest.class)
 public class Drill2130JavaJdbcHamcrestConfigurationTest {
 
   @SuppressWarnings("unused")

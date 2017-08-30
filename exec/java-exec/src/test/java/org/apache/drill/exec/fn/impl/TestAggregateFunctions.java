@@ -21,7 +21,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.TestTools;
@@ -29,6 +33,7 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,6 +41,7 @@ import java.io.FileWriter;
 import java.util.List;
 import java.util.Map;
 
+@Category({SqlFunctionTest.class, OperatorTest.class, PlannerTest.class})
 public class TestAggregateFunctions extends BaseTestQuery {
 
   private static final String TEST_RES_PATH =   TestTools.getWorkingPath() + "/src/test/resources";
@@ -113,6 +119,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-2170: Subquery has group-by, order-by on aggregate function and limit
+  @Category(UnlikelyTest.class)
   public void testDrill2170() throws Exception {
     String query =
         "select count(*) as cnt from "
@@ -132,6 +139,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-2168
+  @Category(UnlikelyTest.class)
   public void testGBExprWithDrillFunc() throws Exception {
     testBuilder()
         .ordered()
@@ -148,6 +156,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test //DRILL-2242
+  @Category(UnlikelyTest.class)
   public void testDRILLNestedGBWithSubsetKeys() throws Exception {
     String sql = " select count(*) as cnt from (select l_partkey from\n" +
         "   (select l_partkey, l_suppkey from cp.`tpch/lineitem.parquet`\n" +
@@ -367,6 +376,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test //DRILL-2748
+  @Category(UnlikelyTest.class)
   public void testPushFilterPastAgg() throws Exception {
     final String query =
         " select cnt " +
@@ -442,6 +452,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-3781
+  @Category(UnlikelyTest.class)
   // GROUP BY System functions in schema table.
   public void testGroupBySystemFuncSchemaTable() throws Exception {
     final String query = "select count(*) as cnt from sys.version group by CURRENT_DATE";
@@ -452,6 +463,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test //DRILL-3781
+  @Category(UnlikelyTest.class)
   // GROUP BY System functions in csv, parquet, json table.
   public void testGroupBySystemFuncFileSystemTable() throws Exception {
     final String query = String.format("select count(*) as cnt from dfs_test.`%s/nation/nation.tbl` group by CURRENT_DATE", TEST_RES_PATH);
@@ -511,6 +523,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
 
 
   @Test // DRILL-4531
+  @Category(UnlikelyTest.class)
   public void testPushFilterDown() throws Exception {
     final String sql =
         "SELECT  cust.custAddress, \n"
@@ -543,6 +556,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-2385: count on complex objects failed with missing function implementation
+  @Category(UnlikelyTest.class)
   public void testCountComplexObjects() throws Exception {
     final String query = "select count(t.%s) %s from cp.`complex/json/complex.json` t";
     Map<String, String> objectsMap = Maps.newHashMap();
@@ -574,6 +588,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-4264
+  @Category(UnlikelyTest.class)
   public void testCountOnFieldWithDots() throws Exception {
     File directory = new File(BaseTestQuery.getTempDir("json/input"));
     try {

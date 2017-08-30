@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.user.security;
 import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
@@ -38,6 +39,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.security.auth.Subject;
 import java.lang.reflect.Field;
@@ -48,6 +50,7 @@ import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 
 @Ignore("See DRILL-5387")
+@Category(SecurityTest.class)
 public class TestUserBitKerberosEncryption extends BaseTestQuery {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(TestUserBitKerberosEncryption.class);

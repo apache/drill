@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -69,6 +70,7 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
@@ -79,6 +81,7 @@ import com.google.common.collect.Lists;
  * ability to copy and flush data
  *
  */
+@Category(OperatorTest.class)
 public class TestPartitionSender extends PlanTestBase {
 
   private static final SimpleParallelizer PARALLELIZER = new SimpleParallelizer(

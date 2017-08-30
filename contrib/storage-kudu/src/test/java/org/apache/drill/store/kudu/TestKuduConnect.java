@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.categories.KuduStorageTest;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.kudu.ColumnSchema;
@@ -37,8 +38,10 @@ import org.apache.kudu.client.PartialRow;
 import org.apache.kudu.client.RowResult;
 import org.apache.kudu.client.RowResultIterator;
 import org.apache.kudu.client.SessionConfiguration;
+import org.junit.experimental.categories.Category;
 
 @Ignore("requires remote kudu server")
+@Category(KuduStorageTest.class)
 public class TestKuduConnect {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestKuduConnect.class);
 

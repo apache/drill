@@ -18,6 +18,7 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
@@ -28,6 +29,7 @@ import org.apache.drill.PlanTestBase;
 
 import org.apache.drill.test.UserExceptionMatcher;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestWindowFunctions extends BaseTestQuery {
   static final String WORKING_PATH = TestTools.getWorkingPath();
@@ -228,6 +230,7 @@ public class TestWindowFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-3346
+  @Category(UnlikelyTest.class)
   public void testWindowGroupByOnView() throws Exception {
     try {
       thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));

@@ -19,14 +19,17 @@ package org.apache.drill.exec.physical.impl.writer;
 
 import static java.lang.String.format;
 
+import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.parquet.Metadata;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for compatibility reading old parquet files after date corruption
@@ -59,6 +62,7 @@ import org.junit.Test;
  * Use of this option is assumed to be extremely unlikely, but it is included
  * for completeness.
  */
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
   // 4 files are in the directory:

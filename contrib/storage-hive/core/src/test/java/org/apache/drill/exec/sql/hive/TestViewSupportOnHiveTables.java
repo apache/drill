@@ -18,12 +18,16 @@
 package org.apache.drill.exec.sql.hive;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.drill.categories.HiveStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.sql.TestBaseViewSupport;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   private static final String TEMP_SCHEMA = "dfs_test.tmp";
 

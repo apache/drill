@@ -83,11 +83,13 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.categories.SlowTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
@@ -96,6 +98,7 @@ import com.google.common.base.Preconditions;
  * Test how resilient drillbits are to throwing exceptions during various phases of query
  * execution by injecting exceptions at various points, and to cancellations in various phases.
  */
+@Category(SlowTest.class)
 public class TestDrillbitResilience extends DrillTest {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
 
