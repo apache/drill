@@ -273,4 +273,27 @@ public class TestBugFixes extends BaseTestQuery {
         .baselineValues((long) 2)
         .go();
   }
+
+  @Test
+  public void testDRILL5269() throws Exception {
+    try {
+      test("ALTER SESSION SET `planner.enable_nljoin_for_scalar_only` = false");
+      test("ALTER SESSION SET `planner.slice_target` = 500");
+      test("\nSELECT `one` FROM (\n" +
+          "  SELECT 1 `one` FROM cp.`tpch/nation.parquet`\n" +
+          "  INNER JOIN (\n" +
+          "    SELECT 2 `two` FROM cp.`tpch/nation.parquet`\n" +
+          "  ) `t0` ON (\n" +
+          "    `tpch/nation.parquet`.n_regionkey IS NOT DISTINCT FROM `t0`.`two`\n" +
+          "  )\n" +
+          "  GROUP BY `one`\n" +
+          ") `t1`\n" +
+          "  INNER JOIN (\n" +
+          "    SELECT count(1) `a_count` FROM cp.`tpch/nation.parquet`\n" +
+          ") `t5` ON TRUE\n");
+    } finally {
+      test("ALTER SESSION RESET `planner.enable_nljoin_for_scalar_only`");
+      test("ALTER SESSION RESET `planner.slice_target`");
+    }
+  }
 }
