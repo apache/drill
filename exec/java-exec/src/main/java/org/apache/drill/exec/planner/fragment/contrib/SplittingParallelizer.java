@@ -41,9 +41,9 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.QueryWorkUnit;
+import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -115,7 +115,6 @@ public class SplittingParallelizer extends SimpleParallelizer {
     int plansCount = 0;
     DrillbitEndpoint[] endPoints = null;
     long initialAllocation = 0;
-    long maxAllocation = 0;
 
     final Iterator<Wrapper> iter = planningSet.iterator();
     while (iter.hasNext()) {
@@ -131,7 +130,6 @@ public class SplittingParallelizer extends SimpleParallelizer {
         // allocation
         plansCount = wrapper.getWidth();
         initialAllocation = (wrapper.getInitialAllocation() != 0 ) ? wrapper.getInitialAllocation()/plansCount : 0;
-        maxAllocation = (wrapper.getMaxAllocation() != 0 ) ? wrapper.getMaxAllocation()/plansCount : 0;
         endPoints = new DrillbitEndpoint[plansCount];
         for (int mfId = 0; mfId < plansCount; mfId++) {
           endPoints[mfId] = wrapper.getAssignedEndpoint(mfId);
@@ -140,7 +138,7 @@ public class SplittingParallelizer extends SimpleParallelizer {
     }
     if ( plansCount == 0 ) {
       // no exchange, return list of single QueryWorkUnit
-      workUnits.add(generateWorkUnit(options, foremanNode, queryId, reader, rootNode, planningSet, session, queryContextInfo));
+      workUnits.add(generateWorkUnit(options, foremanNode, queryId, rootNode, planningSet, session, queryContextInfo));
       return workUnits;
     }
 
@@ -171,9 +169,9 @@ public class SplittingParallelizer extends SimpleParallelizer {
       // Create a minorFragment for each major fragment.
       for (int minorFragmentId = 0; minorFragmentId < plansCount; minorFragmentId++) {
         // those fragments should be empty
-        List<PlanFragment> fragments = Lists.newArrayList();
+        List<MinorFragmentDefn> fragments = Lists.newArrayList();
 
-        PlanFragment rootFragment = null;
+        MinorFragmentDefn rootFragment = null;
         FragmentRoot rootOperator = null;
 
         IndexedFragmentNode iNode = new IndexedFragmentNode(minorFragmentId, wrapper);
@@ -186,35 +184,25 @@ public class SplittingParallelizer extends SimpleParallelizer {
         Preconditions.checkArgument(op instanceof FragmentRoot);
         FragmentRoot root = (FragmentRoot) op;
 
-        // get plan as JSON
-        String plan;
-        String optionsData;
-        try {
-          plan = reader.writeJson(root);
-          optionsData = reader.writeJson(options);
-        } catch (JsonProcessingException e) {
-          throw new ForemanSetupException("Failure while trying to convert fragment into json.", e);
-        }
 
         PlanFragment fragment = PlanFragment.newBuilder() //
             .setForeman(endPoints[minorFragmentId]) //
-            .setFragmentJson(plan) //
             .setHandle(handle) //
             .setAssignment(endPoints[minorFragmentId]) //
             .setLeafFragment(isLeafFragment) //
             .setContext(queryContextInfo)
             .setMemInitial(initialAllocation)//
             .setMemMax(wrapper.getMaxAllocation()) // TODO - for some reason OOM is using leaf fragment max allocation divided by width
-            .setOptionsJson(optionsData)
             .setCredentials(session.getCredentials())
             .addAllCollector(CountRequiredFragments.getCollectors(root))
             .build();
 
+        MinorFragmentDefn fragmentDefn = new MinorFragmentDefn(fragment, root, options);
         if (isRootNode) {
           if (logger.isDebugEnabled()) {
             logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
           }
-          rootFragment = fragment;
+          rootFragment = fragmentDefn;
           rootOperator = root;
         } else {
           if (logger.isDebugEnabled()) {

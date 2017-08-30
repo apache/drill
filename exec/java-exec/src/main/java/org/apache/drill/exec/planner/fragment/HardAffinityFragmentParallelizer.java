@@ -66,7 +66,7 @@ public class HardAffinityFragmentParallelizer implements FragmentParallelizer {
       }
     }
 
-    // Step 1: Find the width taking into various parameters
+    // Step 1: Find the width taking into account various parameters
     // 1.1. Find the parallelization based on cost. Use max cost of all operators in this fragment; this is consistent
     //      with the calculation that ExcessiveExchangeRemover uses.
     int width = (int) Math.ceil(stats.getMaxCost() / parameters.getSliceTarget());

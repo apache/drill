@@ -73,17 +73,20 @@ public class ProfileResources {
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
-    private String queryId;
-    private long startTime;
-    private long endTime;
-    private Date time;
-    private String link;
-    private String foreman;
-    private String query;
-    private String state;
-    private String user;
+    private final String queryId;
+    private final long startTime;
+    private final long endTime;
+    private final Date time;
+    private final String link;
+    private final String foreman;
+    private final String query;
+    private final String state;
+    private final String user;
+    private final double totalCost;
+    private final String queueName;
 
-    public ProfileInfo(DrillConfig drillConfig, String queryId, long startTime, long endTime, String foreman, String query, String state, String user) {
+    public ProfileInfo(DrillConfig drillConfig, String queryId, long startTime, long endTime, String foreman, String query,
+                       String state, String user, double totalCost, String queueName) {
       this.queryId = queryId;
       this.startTime = startTime;
       this.endTime = endTime;
@@ -93,52 +96,36 @@ public class ProfileResources {
       this.query = query.substring(0,  Math.min(query.length(), 150));
       this.state = state;
       this.user = user;
+      this.totalCost = totalCost;
+      this.queueName = queueName;
     }
 
-    public String getUser() {
-      return user;
-    }
+    public String getUser() { return user; }
 
-    public String getQuery(){
-      return query;
-    }
+    public String getQuery() { return query; }
 
-    public String getQueryId() {
-      return queryId;
-    }
+    public String getQueryId() { return queryId; }
 
-    public String getTime() {
-      return format.format(time);
-    }
+    public String getTime() { return format.format(time); }
 
-    public long getStartTime() {
-      return startTime;
-    }
+    public long getStartTime() { return startTime; }
 
-    public long getEndTime() {
-      return endTime;
-    }
+    public long getEndTime() { return endTime; }
 
     public String getDuration() {
       return (new SimpleDurationFormat(startTime, endTime)).verbose();
     }
 
-    public String getState() {
-      return state;
-    }
+    public String getState() { return state; }
 
-    public String getLink() {
-      return link;
-    }
+    public String getLink() { return link; }
 
     @Override
     public int compareTo(ProfileInfo other) {
       return time.compareTo(other.time);
     }
 
-    public String getForeman() {
-      return foreman;
-    }
+    public String getForeman() { return foreman; }
 
     /**
      * Generates link which will return query profile in json representation.
@@ -164,6 +151,9 @@ public class ProfileResources {
       return sb.toString();
     }
 
+    public double getTotalCost() { return totalCost; }
+
+    public String getQueueName() { return queueName; }
   }
 
   protected PersistentStoreProvider getProvider() {
@@ -204,6 +194,7 @@ public class ProfileResources {
   //max Param to cap listing of profiles
   private static final String MAX_QPROFILES_PARAM = "max";
 
+  @SuppressWarnings("resource")
   @GET
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
@@ -223,8 +214,11 @@ public class ProfileResources {
           final Map.Entry<String, QueryInfo> runningEntry = runningEntries.next();
           final QueryInfo profile = runningEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            runningQueries.add(new ProfileInfo(work.getContext().getConfig(), runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(), profile.getForeman()
-              .getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            runningQueries.add(
+                new ProfileInfo(work.getContext().getConfig(),
+                    runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(),
+                    profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(),
+                    profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -250,8 +244,11 @@ public class ProfileResources {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
           final QueryProfile profile = profileEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            finishedQueries.add(new ProfileInfo(work.getContext().getConfig(), profileEntry.getKey(), profile.getStart(), profile.getEnd(), profile.getForeman().getAddress(),
-              profile.getQuery(), profile.getState().name(), profile.getUser()));
+            finishedQueries.add(
+                new ProfileInfo(work.getContext().getConfig(),
+                    profileEntry.getKey(), profile.getStart(), profile.getEnd(),
+                    profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(),
+                    profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -277,6 +274,7 @@ public class ProfileResources {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/list.ftl", sc, profiles);
   }
 
+  @SuppressWarnings("resource")
   private QueryProfile getQueryProfile(String queryId) {
     QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
 
@@ -343,7 +341,7 @@ public class ProfileResources {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
   }
 
-
+  @SuppressWarnings("resource")
   @GET
   @Path("/profiles/cancel/{queryid}")
   @Produces(MediaType.TEXT_PLAIN)
@@ -372,7 +370,8 @@ public class ProfileResources {
       }
     }catch(Exception e){
       logger.debug("Failure to find query as running profile.", e);
-      return String.format("Failure attempting to cancel query %s.  Unable to find information about where query is actively running.", queryId);
+      return String.format
+          ("Failure attempting to cancel query %s.  Unable to find information about where query is actively running.", queryId);
     }
   }
 

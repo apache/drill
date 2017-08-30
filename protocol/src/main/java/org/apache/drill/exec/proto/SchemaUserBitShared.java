@@ -1618,6 +1618,10 @@ public final class SchemaUserBitShared
 
                 if(message.hasOptionsJson())
                     output.writeString(6, message.getOptionsJson(), false);
+                if(message.hasTotalCost())
+                    output.writeDouble(7, message.getTotalCost(), false);
+                if(message.hasQueueName())
+                    output.writeString(8, message.getQueueName(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryInfo message)
             {
@@ -1676,6 +1680,12 @@ public final class SchemaUserBitShared
                         case 6:
                             builder.setOptionsJson(input.readString());
                             break;
+                        case 7:
+                            builder.setTotalCost(input.readDouble());
+                            break;
+                        case 8:
+                            builder.setQueueName(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1722,6 +1732,8 @@ public final class SchemaUserBitShared
                 case 4: return "user";
                 case 5: return "foreman";
                 case 6: return "optionsJson";
+                case 7: return "totalCost";
+                case 8: return "queueName";
                 default: return null;
             }
         }
@@ -1739,6 +1751,8 @@ public final class SchemaUserBitShared
             fieldMap.put("user", 4);
             fieldMap.put("foreman", 5);
             fieldMap.put("optionsJson", 6);
+            fieldMap.put("totalCost", 7);
+            fieldMap.put("queueName", 8);
         }
     }
 
@@ -1794,6 +1808,10 @@ public final class SchemaUserBitShared
                     output.writeInt64(18, message.getPlanEnd(), false);
                 if(message.hasQueueWaitEnd())
                     output.writeInt64(19, message.getQueueWaitEnd(), false);
+                if(message.hasTotalCost())
+                    output.writeDouble(20, message.getTotalCost(), false);
+                if(message.hasQueueName())
+                    output.writeString(21, message.getQueueName(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
             {
@@ -1893,6 +1911,12 @@ public final class SchemaUserBitShared
                         case 19:
                             builder.setQueueWaitEnd(input.readInt64());
                             break;
+                        case 20:
+                            builder.setTotalCost(input.readDouble());
+                            break;
+                        case 21:
+                            builder.setQueueName(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1952,6 +1976,8 @@ public final class SchemaUserBitShared
                 case 17: return "optionsJson";
                 case 18: return "planEnd";
                 case 19: return "queueWaitEnd";
+                case 20: return "totalCost";
+                case 21: return "queueName";
                 default: return null;
             }
         }
@@ -1982,6 +2008,8 @@ public final class SchemaUserBitShared
             fieldMap.put("optionsJson", 17);
             fieldMap.put("planEnd", 18);
             fieldMap.put("queueWaitEnd", 19);
+            fieldMap.put("totalCost", 20);
+            fieldMap.put("queueName", 21);
         }
     }
 

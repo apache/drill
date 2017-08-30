@@ -350,7 +350,7 @@ public final class ExecConstants {
   public static final LongValidator MAX_QUERY_MEMORY_PER_NODE = new RangeLongValidator(MAX_QUERY_MEMORY_PER_NODE_KEY, 1024 * 1024, Long.MAX_VALUE);
 
   /**
-   * Minimum memory alocated to each buffered operator instance.
+   * Minimum memory allocated to each buffered operator instance.
    * <p/>
    * DEFAULT: 40 MB
    */
@@ -377,11 +377,30 @@ public final class ExecConstants {
   public static final String AVERAGE_FIELD_WIDTH_KEY = "planner.memory.average_field_width";
   public static final OptionValidator AVERAGE_FIELD_WIDTH = new PositiveLongValidator(AVERAGE_FIELD_WIDTH_KEY, Long.MAX_VALUE);
 
+  // Resource management boot-time options.
+
+  public static final String MAX_MEMORY_PER_NODE = "drill.exec.rm.memory_per_node";
+  public static final String MAX_CPUS_PER_NODE = "drill.exec.rm.cpus_per_node";
+
+  // Resource management system run-time options.
+
+  // Enables queues. When running embedded, enables an in-process queue. When
+  // running distributed, enables the Zookeeper-based distributed queue.
+
   public static final BooleanValidator ENABLE_QUEUE = new BooleanValidator("exec.queue.enable");
-  public static final LongValidator LARGE_QUEUE_SIZE = new PositiveLongValidator("exec.queue.large", 1000);
-  public static final LongValidator SMALL_QUEUE_SIZE = new PositiveLongValidator("exec.queue.small", 100000);
+  public static final LongValidator LARGE_QUEUE_SIZE = new PositiveLongValidator("exec.queue.large", 10_000);
+  public static final LongValidator SMALL_QUEUE_SIZE = new PositiveLongValidator("exec.queue.small", 100_000);
   public static final LongValidator QUEUE_THRESHOLD_SIZE = new PositiveLongValidator("exec.queue.threshold", Long.MAX_VALUE);
   public static final LongValidator QUEUE_TIMEOUT = new PositiveLongValidator("exec.queue.timeout_millis", Long.MAX_VALUE);
+
+  // Ratio of memory for small queries vs. large queries.
+  // Each small query gets 1 unit, each large query gets QUEUE_MEMORY_RATIO units.
+  // A lower limit of 1 enforces the intuition that a large query should never get
+  // *less* memory than a small one.
+
+  public static final DoubleValidator QUEUE_MEMORY_RATIO = new RangeDoubleValidator("exec.queue.memory_ratio", 1.0, 1000);
+
+  public static final DoubleValidator QUEUE_MEMORY_RESERVE = new RangeDoubleValidator("exec.queue.memory_reserve_ratio", 0, 1.0);
 
   public static final String ENABLE_VERBOSE_ERRORS_KEY = "exec.errors.verbose";
   public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY);

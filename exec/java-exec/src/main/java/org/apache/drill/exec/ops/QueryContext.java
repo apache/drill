@@ -60,10 +60,10 @@ import io.netty.buffer.DrillBuf;
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
 public class QueryContext implements AutoCloseable, OptimizerRulesContext, SchemaConfigInfoProvider {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
 
   private final DrillbitContext drillbitContext;
   private final UserSession session;
+  private final QueryId queryId;
   private final QueryOptionManager queryOptions;
   private final PlannerSettings plannerSettings;
   private final ExecutionControls executionControls;
@@ -87,6 +87,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   public QueryContext(final UserSession session, final DrillbitContext drillbitContext, QueryId queryId) {
     this.drillbitContext = drillbitContext;
     this.session = session;
+    this.queryId = queryId;
     queryOptions = new QueryOptionManager(session.getOptions());
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
     plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
@@ -118,14 +119,12 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return plannerSettings;
   }
 
-  public UserSession getSession() {
-    return session;
-  }
+  public UserSession getSession() { return session; }
 
   @Override
-  public BufferAllocator getAllocator() {
-    return allocator;
-  }
+  public BufferAllocator getAllocator() { return allocator; }
+
+  public QueryId getQueryId( ) { return queryId; }
 
   /**
    * Return reference to default schema instance in a schema tree. Each {@link org.apache.calcite.schema.SchemaPlus}

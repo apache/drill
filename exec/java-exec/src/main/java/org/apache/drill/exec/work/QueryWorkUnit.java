@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,39 +17,99 @@
  */
 package org.apache.drill.exec.work;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.FragmentRoot;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 
 public class QueryWorkUnit {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWorkUnit.class);
-  private final PlanFragment rootFragment; // for local
+
+  /**
+   * Definition of a minor fragment that contains the (unserialized) fragment operator
+   * tree and the (partially built) fragment. Allows the resource manager to apply
+   * memory allocations before serializing the fragments to JSON.
+   */
+
+  public static class MinorFragmentDefn {
+    private PlanFragment fragment;
+    private final FragmentRoot root;
+    private final OptionList options;
+
+    public MinorFragmentDefn(final PlanFragment fragment, final FragmentRoot root, OptionList options) {
+      this.fragment = fragment;
+      this.root = root;
+      this.options = options;
+    }
+
+    public FragmentRoot root() { return root; }
+    public PlanFragment fragment() { return fragment; }
+    public OptionList options() { return options; }
+
+    public PlanFragment applyPlan(PhysicalPlanReader reader) throws ForemanSetupException {
+      // get plan as JSON
+      try {
+        final String plan = reader.writeJson(root);
+        final String optionsData = reader.writeJson(options);
+        return PlanFragment.newBuilder(fragment)
+            .setFragmentJson(plan)
+            .setOptionsJson(optionsData)
+            .build();
+      } catch (JsonProcessingException e) {
+        throw new ForemanSetupException("Failure while trying to convert fragment into json.", e);
+      }
+    }
+  }
+
+  private PlanFragment rootFragment; // for local
+  private final MinorFragmentDefn rootFragmentDefn;
   private final FragmentRoot rootOperator; // for local
-  private final List<PlanFragment> fragments;
+  private List<PlanFragment> fragments = new ArrayList<>();
+  private final List<MinorFragmentDefn> minorFragmentDefns;
 
-  public QueryWorkUnit(final FragmentRoot rootOperator, final PlanFragment rootFragment,
-      final List<PlanFragment> fragments) {
-    Preconditions.checkNotNull(rootFragment);
-    Preconditions.checkNotNull(fragments);
+  public QueryWorkUnit(final FragmentRoot rootOperator, final MinorFragmentDefn rootFragmentDefn,
+      final List<MinorFragmentDefn> minorFragmentDefns) {
     Preconditions.checkNotNull(rootOperator);
+    Preconditions.checkNotNull(rootFragmentDefn);
+    Preconditions.checkNotNull(minorFragmentDefns);
 
-    this.rootFragment = rootFragment;
-    this.fragments = fragments;
+    this.rootFragmentDefn = rootFragmentDefn;
     this.rootOperator = rootOperator;
+    this.minorFragmentDefns = minorFragmentDefns;
   }
 
   public PlanFragment getRootFragment() {
     return rootFragment;
   }
 
+  public MinorFragmentDefn getRootFragmentDefn() {
+    return rootFragmentDefn;
+  }
+
   public List<PlanFragment> getFragments() {
     return fragments;
   }
 
+  public List<MinorFragmentDefn> getMinorFragmentDefns() {
+    return minorFragmentDefns;
+  }
+
   public FragmentRoot getRootOperator() {
     return rootOperator;
+  }
+
+  public void applyPlan(PhysicalPlanReader reader) throws ForemanSetupException {
+    assert rootFragment == null;
+    rootFragment = rootFragmentDefn.applyPlan(reader);
+    assert fragments.isEmpty();
+    for (MinorFragmentDefn defn : minorFragmentDefns) {
+      fragments.add(defn.applyPlan(reader));
+    }
   }
 }
