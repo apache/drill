@@ -202,7 +202,7 @@ public class FragmentExecutor implements Runnable {
 
       // if we didn't get the root operator when the executor was created, create it now.
       final FragmentRoot rootOperator = this.rootOperator != null ? this.rootOperator :
-          drillbitContext.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
+          drillbitContext.getPlanReader().readFragmentRoot(fragment.getFragmentJson());
 
           root = ImplCreator.getExec(fragmentContext, rootOperator);
           if (root == null) {

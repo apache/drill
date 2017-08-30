@@ -493,7 +493,7 @@ public class Foreman implements Runnable {
 
     final FragmentRoot rootOperator;
     try {
-      rootOperator = drillbitContext.getPlanReader().readFragmentOperator(rootFragment.getFragmentJson());
+      rootOperator = drillbitContext.getPlanReader().readFragmentRoot(rootFragment.getFragmentJson());
     } catch (IOException e) {
       throw new ExecutionSetupException(String.format("Unable to parse FragmentRoot from fragment: %s", rootFragment.getFragmentJson()));
     }
