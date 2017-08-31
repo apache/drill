@@ -271,7 +271,6 @@
         <configuration>
           <excludes>
             <exclude>**/logging.properties</exclude>
-            <exclude>**/logback-test.xml</exclude>
             <exclude>**/logback.out.xml</exclude>
             <exclude>**/logback.xml</exclude>
           </excludes>
