@@ -423,10 +423,11 @@ public class ExpressionTreeMaterializer {
           TypeProtos.MajorType parmType = matchedFuncHolder.getParmMajorType(i);
 
           //Case 1: If  1) the argument is NullExpression
-          //            2) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangable).
+          //            2) the minor type of parameter of matchedFuncHolder is not LATE (the type of null expression is still unknown)
+          //            3) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangeable).
           //        then replace NullExpression with a TypedNullConstant
-          if (currentArg.equals(NullExpression.INSTANCE) &&
-            ( parmType.getMode().equals(TypeProtos.DataMode.OPTIONAL) ||
+          if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(parmType.getMinorType()) &&
+              (TypeProtos.DataMode.OPTIONAL.equals(parmType.getMode()) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
           } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
