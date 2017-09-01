@@ -310,7 +310,7 @@ public class SortImpl {
    * @return true if spilling is needed (and possible), false otherwise
    */
 
-  private boolean isSpillNeeded(int incomingSize) {
+  private boolean isSpillNeeded(long incomingSize) {
 
     if (bufferedBatches.size() >= config.getBufferedBatchLimit()) {
       return true;
@@ -407,6 +407,9 @@ public class SortImpl {
    * @return results iterator over the single input batch
    */
 
+  // Disabled temporarily
+
+  @SuppressWarnings("unused")
   private SortResults singleBatchResult() {
     List<InputBatch> batches = bufferedBatches.removeAll();
     return new SingleBatchResults(batches.get(0), outputBatch);
@@ -499,9 +502,11 @@ public class SortImpl {
           spilledRuns.size());
       switch (task.action) {
       case SPILL:
+        logger.debug("Consolidate: spill");
         spillFromMemory();
         break;
       case MERGE:
+        logger.debug("Consolidate: merge {} batches", task.count);
         mergeRuns(task.count);
         break;
       case NONE:

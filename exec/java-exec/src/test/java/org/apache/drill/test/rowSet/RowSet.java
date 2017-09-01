@@ -160,7 +160,7 @@ public interface RowSet {
    * @return memory size in bytes
    */
 
-  int size();
+  long size();
 
   RowSet merge(RowSet other);
 

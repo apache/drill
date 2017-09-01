@@ -47,7 +47,7 @@ public class SortMetrics {
     this.stats = stats;
   }
 
-  public void updateInputMetrics(int rowCount, int batchSize) {
+  public void updateInputMetrics(int rowCount, long batchSize) {
     inputRecordCount += rowCount;
     inputBatchCount++;
     totalInputBytes += batchSize;

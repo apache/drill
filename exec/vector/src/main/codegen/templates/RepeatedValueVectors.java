@@ -183,6 +183,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     copyFromSafe(fromIndex, toIndex, (Repeated${minor.class}Vector) from);
   }
 
+  @Override
   public boolean allocateNewSafe() {
     /* boolean to keep track if all the memory allocations were successful.
      * Used in the case of composite vectors when we need to allocate multiple
@@ -224,6 +225,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
             .setVarByteLength(values.getVarByteLength());
   }
 
+  @Override
   public void allocateNew(int totalBytes, int valueCount, int innerValueCount) {
     try {
       offsets.allocateNew(valueCount + 1);
@@ -236,6 +238,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     mutator.reset();
   }
 
+  @Override
   public int getByteCapacity(){
     return values.getByteCapacity();
   }
