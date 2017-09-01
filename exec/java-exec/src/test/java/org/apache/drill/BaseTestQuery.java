@@ -59,7 +59,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.VectorUtil;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -83,7 +82,8 @@ import org.apache.drill.exec.vector.ValueVector;
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
-  public static final String TEMP_SCHEMA = "dfs_test.tmp";
+  public static final String TEST_SCHEMA = "dfs_test";
+  public static final String TEMP_SCHEMA = TEST_SCHEMA + ".tmp";
 
   private static final int MAX_WIDTH_PER_NODE = 2;
 
@@ -138,9 +138,7 @@ public class BaseTestQuery extends ExecTest {
     // turns on the verbose errors in tests
     // sever side stacktraces are added to the message before sending back to the client
     test("ALTER SESSION SET `exec.errors.verbose` = true");
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(conf);
+    fs = getLocalFileSystem();
   }
 
   protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig) {

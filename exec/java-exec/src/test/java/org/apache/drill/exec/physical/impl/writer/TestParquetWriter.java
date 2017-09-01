@@ -119,10 +119,7 @@ public class TestParquetWriter extends BaseTestQuery {
 
   @BeforeClass
   public static void initFs() throws Exception {
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-
-    fs = FileSystem.get(conf);
+    fs = getLocalFileSystem();
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 
@@ -731,6 +728,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .go();
 
       Configuration hadoopConf = new Configuration();
+      hadoopConf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
       Path output = new Path(getDfsTestTmpSchemaLocation(), outputFile);
       FileSystem fs = output.getFileSystem(hadoopConf);
       for (FileStatus file : fs.listStatus(output)) {

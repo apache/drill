@@ -19,10 +19,9 @@ package org.apache.drill.exec.util;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.drill.exec.ExecTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.io.File;
@@ -64,7 +63,7 @@ public class FileSystemUtilTestBase {
   @BeforeClass
   public static void setup() throws IOException {
     // initialize file system
-    fs = FileSystem.get(new Configuration());
+    fs = ExecTest.getLocalFileSystem();
 
     // create temporary directory with sub-folders and files
     final File tempDir = Files.createTempDir();
@@ -88,13 +87,6 @@ public class FileSystemUtilTestBase {
     Path underscoreDirectory = new Path(base, "_a");
     fs.mkdirs(underscoreDirectory);
     fs.createNewFile(new Path(underscoreDirectory, "f.txt"));
-  }
-
-  @AfterClass
-  public static void tearDown() throws Exception {
-    if (fs != null) {
-      fs.close();
-    }
   }
 
   private static void createDefaultStructure(FileSystem fs, Path base, String name, int nesting) throws IOException {

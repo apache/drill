@@ -25,11 +25,12 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.TestUtilities;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -41,8 +42,10 @@ public class TemporaryTablesAutomaticDropTest extends BaseTestQuery {
 
   private static final String session_id = "sessionId";
 
+  private FileSystem fs;
+
   @Before
-  public void init() throws Exception {
+  public void setup() throws Exception {
     new MockUp<UUID>() {
       @Mock
       public UUID randomUUID() {
@@ -52,47 +55,49 @@ public class TemporaryTablesAutomaticDropTest extends BaseTestQuery {
     Properties testConfigurations = cloneDefaultTestConfigProperties();
     testConfigurations.put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, TEMP_SCHEMA);
     updateTestCluster(1, DrillConfig.create(testConfigurations));
+
+    fs = getLocalFileSystem();
   }
 
   @Test
   public void testAutomaticDropWhenClientIsClosed() throws Exception {
-    File sessionTemporaryLocation = createAndCheckSessionTemporaryLocation("client_closed",
+    Path sessionTemporaryLocation = createAndCheckSessionTemporaryLocation("client_closed",
             getDfsTestTmpSchemaLocation());
     updateClient("new_client");
-    assertFalse("Session temporary location should be absent", sessionTemporaryLocation.exists());
+    assertFalse("Session temporary location should be absent", fs.exists(sessionTemporaryLocation));
   }
 
   @Test
   public void testAutomaticDropWhenDrillbitIsClosed() throws Exception {
-    File sessionTemporaryLocation = createAndCheckSessionTemporaryLocation("drillbit_closed",
+    Path sessionTemporaryLocation = createAndCheckSessionTemporaryLocation("drillbit_closed",
             getDfsTestTmpSchemaLocation());
     bits[0].close();
-    assertFalse("Session temporary location should be absent", sessionTemporaryLocation.exists());
+    assertFalse("Session temporary location should be absent", fs.exists(sessionTemporaryLocation));
   }
 
   @Test
   public void testAutomaticDropOfSeveralSessionTemporaryLocations() throws Exception {
-    File firstSessionTemporaryLocation = createAndCheckSessionTemporaryLocation("first_location",
+    Path firstSessionTemporaryLocation = createAndCheckSessionTemporaryLocation("first_location",
             getDfsTestTmpSchemaLocation());
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     String tempDir = TestUtilities.createTempDir();
     try {
       TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, tempDir);
-      File secondSessionTemporaryLocation = createAndCheckSessionTemporaryLocation("second_location", tempDir);
+      Path secondSessionTemporaryLocation = createAndCheckSessionTemporaryLocation("second_location", tempDir);
       updateClient("new_client");
-      assertFalse("First session temporary location should be absent", firstSessionTemporaryLocation.exists());
-      assertFalse("Second session temporary location should be absent", secondSessionTemporaryLocation.exists());
+      assertFalse("First session temporary location should be absent", fs.exists(firstSessionTemporaryLocation));
+      assertFalse("Second session temporary location should be absent", fs.exists(secondSessionTemporaryLocation));
     } finally {
       TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, getDfsTestTmpSchemaLocation());
     }
   }
 
-  private File createAndCheckSessionTemporaryLocation(String suffix, String schemaLocation) throws Exception {
+  private Path createAndCheckSessionTemporaryLocation(String suffix, String schemaLocation) throws Exception {
     String temporaryTableName = "temporary_table_automatic_drop_" + suffix;
     test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", TEMP_SCHEMA, temporaryTableName);
-    File sessionTemporaryLocation = new File(schemaLocation,
+    Path sessionTemporaryLocation = new Path(schemaLocation,
             UUID.nameUUIDFromBytes(session_id.getBytes()).toString());
-    assertTrue("Session temporary location should exist", sessionTemporaryLocation.exists());
+    assertTrue("Session temporary location should exist", fs.exists(sessionTemporaryLocation));
     return sessionTemporaryLocation;
   }
 
