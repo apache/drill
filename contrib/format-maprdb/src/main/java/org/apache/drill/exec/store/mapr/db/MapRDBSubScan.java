@@ -71,12 +71,30 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
     this.tableType = tableType;
   }
 
+
+  @JsonProperty("formatPluginConfig")
+  public MapRDBFormatPluginConfig getFormatPluginConfig() {
+    return (MapRDBFormatPluginConfig) formatPlugin.getConfig();
+  }
+
+  @JsonProperty("storageConfig")
+  public StoragePluginConfig getStorageConfig(){
+    return formatPlugin.getStorageConfig();
+  }
+
+  @JsonProperty("regionScanSpecList")
   public List<MapRDBSubScanSpec> getRegionScanSpecList() {
     return regionScanSpecList;
   }
 
+  @JsonProperty("columns")
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  @JsonProperty("tableType")
+  public String getTableType() {
+    return tableType;
   }
 
   @Override
@@ -105,18 +123,9 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
     return 1001;
   }
 
-  public String getTableType() {
-    return tableType;
-  }
-
   @JsonIgnore
   public MapRDBFormatPlugin getFormatPlugin() {
     return formatPlugin;
-  }
-
-  @JsonIgnore
-  public MapRDBFormatPluginConfig getFormatPluginConfig() {
-    return (MapRDBFormatPluginConfig) formatPlugin.getConfig();
   }
 
 }
