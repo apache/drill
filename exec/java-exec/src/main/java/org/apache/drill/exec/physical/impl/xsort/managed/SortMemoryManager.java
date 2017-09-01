@@ -680,9 +680,11 @@ public class SortMemoryManager {
     // spilled run.
 
     // Maximum spill batches that fit into available memory.
+    // Use the maximum buffer size since spill batches seem to
+    // be read with almost 50% internal fragmentation.
 
     int memMergeLimit = (int) ((mergeMemoryLimit - allocMemory) /
-                                spillBatchSize.expectedBufferSize);
+                                spillBatchSize.maxBufferSize);
     memMergeLimit = Math.max(0, memMergeLimit);
 
     // If batches are in memory, and we need more memory to merge
@@ -751,7 +753,7 @@ public class SortMemoryManager {
   // Must spill if we are below the spill point (the amount of memory
   // needed to do the minimal spill.)
 
-  public boolean isSpillNeeded(long allocatedBytes, int incomingSize) {
+  public boolean isSpillNeeded(long allocatedBytes, long incomingSize) {
     return allocatedBytes + incomingSize >= bufferMemoryLimit;
   }
 

@@ -26,6 +26,8 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * Prototype mechanism to allocate vectors based on expected
  * data sizes. This version uses a name-based map of fields
@@ -33,15 +35,20 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
  * simply iterate over the schema rather than doing a per-field
  * lookup. But, the mechanisms needed to do the efficient solution
  * don't exist yet.
+ * <p>
+ * The element count is a float because it might be fractional.
+ * If every tenth array has an element, then the count per array
+ * is 0.1.
  */
 
 public class VectorInitializer {
 
-  private static class AllocationHint {
+  @VisibleForTesting
+  public static class AllocationHint {
     public final int entryWidth;
-    public final int elementCount;
+    public final float elementCount;
 
-    private AllocationHint(int width, int elements) {
+    private AllocationHint(int width, float elements) {
       entryWidth = width;
       elementCount = elements;
     }
@@ -72,12 +79,16 @@ public class VectorInitializer {
     hints.put(name, new AllocationHint(width, 1));
   }
 
-  public void fixedWidthArray(String name, int elements) {
+  public void fixedWidthArray(String name, float elements) {
     hints.put(name, new AllocationHint(0, elements));
   }
 
-  public void variableWidthArray(String name, int width, int elements) {
-    hints.put(name, new AllocationHint(width, elements));
+  public void variableWidthArray(String name, float width, float elements) {
+    hints.put(name, new AllocationHint((int) Math.ceil(width), elements));
+  }
+
+  public AllocationHint hint(String name) {
+    return hints.get(name);
   }
 
   public void allocateBatch(VectorAccessible va, int recordCount) {
@@ -95,7 +106,7 @@ public class VectorInitializer {
       allocateVector(vector, recordCount, hint);
     }
 //    Set<BufferLedger> ledgers = new HashSet<>();
-//    vector.getLedgers(ledgers);
+//    vector.collectLedgers(ledgers);
 //    int size = 0;
 //    for (BufferLedger ledger : ledgers) {
 //      size += ledger.getAccountedSize();

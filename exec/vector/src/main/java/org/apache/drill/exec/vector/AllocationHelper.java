@@ -27,6 +27,12 @@ public class AllocationHelper {
   }
 
   public static void allocatePrecomputedChildCount(ValueVector vector, int valueCount, int bytesPerValue, int childValCount) {
+
+    // Don't fail if given a 0-sized array. Assume at least one value.
+    childValCount = Math.max(1, childValCount);
+    valueCount = Math.max(1, valueCount);
+    bytesPerValue = Math.max(1, bytesPerValue);
+
     if (vector instanceof FixedWidthVector) {
       ((FixedWidthVector) vector).allocateNew(valueCount);
     } else if (vector instanceof VariableWidthVector) {
@@ -44,6 +50,21 @@ public class AllocationHelper {
 
   public static void allocate(ValueVector vector, int valueCount, int bytesPerValue, int repeatedPerTop){
     allocatePrecomputedChildCount(vector, valueCount, bytesPerValue, repeatedPerTop * valueCount);
+  }
+
+  /**
+   * Allocate an array, but with a fractional value for the number of elements
+   * per array. This form is useful when the number comes from observations and
+   * represents an average.
+   *
+   * @param vector the vector to allocate
+   * @param valueCount the number of top-level values
+   * @param bytesPerValue the width of each value
+   * @param repeatedPerTop the number of array elements per value.
+   */
+  public static void allocate(ValueVector vector, int valueCount, int bytesPerValue, float repeatedPerTop){
+    allocatePrecomputedChildCount(vector, valueCount, bytesPerValue,
+        (int) Math.ceil(repeatedPerTop * valueCount));
   }
 
   /**

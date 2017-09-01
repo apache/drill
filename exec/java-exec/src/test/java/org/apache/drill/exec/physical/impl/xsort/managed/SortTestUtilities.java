@@ -102,7 +102,6 @@ public class SortTestUtilities {
       }
       int rowCount = outputRowCount();
       VectorContainer dest = new VectorContainer();
-      @SuppressWarnings("resource")
       BatchMerger merger = copier.startMerge(schema.toBatchSchema(SelectionVectorMode.NONE),
                                              batches, dest, rowCount, null);
 
