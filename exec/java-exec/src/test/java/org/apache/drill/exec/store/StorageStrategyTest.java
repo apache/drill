@@ -18,11 +18,10 @@ package org.apache.drill.exec.store;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.drill.exec.ExecTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -41,9 +40,7 @@ public class StorageStrategyTest {
 
   @BeforeClass
   public static void setup() throws Exception {
-    Configuration configuration = new Configuration();
-    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(configuration);
+    fs = ExecTest.getLocalFileSystem();
   }
 
   @Test

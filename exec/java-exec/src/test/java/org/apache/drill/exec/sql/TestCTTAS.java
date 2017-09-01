@@ -30,7 +30,6 @@ import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.util.TestUtilities;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -74,9 +73,7 @@ public class TestCTTAS extends BaseTestQuery {
     pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(TestUtilities.createTempDir(), true, null));
     pluginRegistry.createOrUpdate(TEST_SCHEMA, pluginConfig, true);
 
-    Configuration configuration = new Configuration();
-    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(configuration);
+    fs = getLocalFileSystem();
     expectedFolderPermission = new FsPermission(StorageStrategy.TEMPORARY.getFolderPermission());
     expectedFilePermission = new FsPermission(StorageStrategy.TEMPORARY.getFilePermission());
   }

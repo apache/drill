@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,9 +22,6 @@ import java.util.List;
 
 import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.TestTools;
@@ -42,7 +39,6 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -97,12 +93,9 @@ public class TestWriteToDisk extends ExecTest {
         VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(
             batch, context.getAllocator());
 
-        Configuration conf = new Configuration();
-        conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-
         final VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(
             context.getAllocator());
-        try (final FileSystem fs = FileSystem.get(conf)) {
+        try (final FileSystem fs = getLocalFileSystem()) {
           final File tempDir = Files.createTempDir();
           tempDir.deleteOnExit();
           final Path path = new Path(tempDir.getAbsolutePath(), "drillSerializable");

@@ -24,7 +24,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StorageStrategy;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
@@ -288,9 +287,7 @@ public class TestCTAS extends BaseTestQuery {
     test("use %s", TEMP_SCHEMA);
     String tableName = "with_custom_permission";
     StorageStrategy storageStrategy = new StorageStrategy("000", false);
-    Configuration configuration = new Configuration();
-    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    FileSystem fs = FileSystem.get(configuration);
+    FileSystem fs = getLocalFileSystem();
     try {
       test("alter session set `%s` = '%s'", ExecConstants.PERSISTENT_TABLE_UMASK, storageStrategy.getUmask());
       test("create table %s as select 'A' from (values(1))", tableName);

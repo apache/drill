@@ -33,7 +33,6 @@ import org.apache.drill.exec.proto.UserBitShared.Registry;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
@@ -80,9 +79,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @BeforeClass
   public static void init() throws IOException {
-    Configuration configuration = new Configuration();
-    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    localFileSystem = FileSystem.get(configuration);
+    localFileSystem = getLocalFileSystem();
   }
 
   @Before
@@ -133,10 +130,9 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   public void testAbsentBinaryInStaging() throws Exception {
     Path staging = getDrillbitContext().getRemoteFunctionRegistry().getStagingArea();
     FileSystem fs = getDrillbitContext().getRemoteFunctionRegistry().getFs();
-    copyJar(fs, jars, staging, default_binary_name);
 
     String summary = String.format("File %s does not exist on file system %s",
-        new Path(staging, default_source_name).toUri().getPath(), fs.getUri());
+        new Path(staging, default_binary_name).toUri().getPath(), fs.getUri());
 
     testBuilder()
         .sqlQuery("create function using jar '%s'", default_binary_name)
@@ -148,9 +144,8 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Test
   public void testAbsentSourceInStaging() throws Exception {
-    RemoteFunctionRegistry remoteFunctionRegistry = getDrillbitContext().getRemoteFunctionRegistry();
-    FileSystem fs = remoteFunctionRegistry.getFs();
-    Path staging = remoteFunctionRegistry.getStagingArea();
+    Path staging = getDrillbitContext().getRemoteFunctionRegistry().getStagingArea();
+    FileSystem fs = getDrillbitContext().getRemoteFunctionRegistry().getFs();
     copyJar(fs, jars, staging, default_binary_name);
 
     String summary = String.format("File %s does not exist on file system %s",

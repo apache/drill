@@ -25,7 +25,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.TestUtilities;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
@@ -57,9 +56,7 @@ public class TemporaryTablesAutomaticDropTest extends BaseTestQuery {
     testConfigurations.put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, TEMP_SCHEMA);
     updateTestCluster(1, DrillConfig.create(testConfigurations));
 
-    Configuration configuration = new Configuration();
-    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(configuration);
+    fs = getLocalFileSystem();
   }
 
   @Test

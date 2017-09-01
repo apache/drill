@@ -30,7 +30,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.Text;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -196,9 +195,7 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
 
   @Test // DRILL-4720
   public void testDirectoryUDFsWithAndWithoutMetadataCache() throws Exception {
-    Configuration configuration = new Configuration();
-    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    FileSystem fs = FileSystem.get(configuration);
+    FileSystem fs = getLocalFileSystem();
     // prepare test table with partitions
     Path table = new Path(getTempDir("table_with_partitions"));
     String tablePath = table.toUri().getPath();

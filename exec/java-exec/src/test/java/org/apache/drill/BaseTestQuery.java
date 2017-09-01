@@ -59,7 +59,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.VectorUtil;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -139,9 +138,7 @@ public class BaseTestQuery extends ExecTest {
     // turns on the verbose errors in tests
     // sever side stacktraces are added to the message before sending back to the client
     test("ALTER SESSION SET `exec.errors.verbose` = true");
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(conf);
+    fs = getLocalFileSystem();
   }
 
   protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig) {

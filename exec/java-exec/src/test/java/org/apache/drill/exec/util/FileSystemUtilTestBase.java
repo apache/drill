@@ -19,7 +19,7 @@ package org.apache.drill.exec.util;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.drill.exec.ExecTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
@@ -63,9 +63,7 @@ public class FileSystemUtilTestBase {
   @BeforeClass
   public static void setup() throws IOException {
     // initialize file system
-    Configuration configuration = new Configuration();
-    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(configuration);
+    fs = ExecTest.getLocalFileSystem();
 
     // create temporary directory with sub-folders and files
     final File tempDir = Files.createTempDir();
