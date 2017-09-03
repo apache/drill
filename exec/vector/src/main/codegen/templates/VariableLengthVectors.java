@@ -422,6 +422,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     offsetVector.exchange(target.offsetVector);
   }
 
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    Nullable${minor.class}Vector dest = (Nullable${minor.class}Vector) nullableVector;
+    dest.getMutator().fromNotNullable(this);
+  }
+
   public final class Accessor extends BaseValueVector.BaseAccessor implements VariableWidthAccessor {
     final UInt${type.width}Vector.Accessor oAccessor = offsetVector.getAccessor();
     public long getStartEnd(int index){

@@ -335,6 +335,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     ++allocationMonitor;
   }
 
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    Nullable${minor.class}Vector dest = (Nullable${minor.class}Vector) nullableVector;
+    dest.getMutator().fromNotNullable(this);
+  }
+
   public final class Accessor extends BaseDataValueVector.BaseAccessor {
     @Override
     public int getValueCount() {
