@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper;
 import com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.google.common.base.Strings;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -188,7 +189,6 @@ public class DrillRestServer extends ResourceConfig {
 
     @Override
     public WebUserConnection provide() {
-      final HttpSession session = request.getSession();
       final DrillbitContext drillbitContext = workManager.getContext();
       final DrillConfig config = drillbitContext.getConfig();
 
@@ -198,9 +198,9 @@ public class DrillRestServer extends ResourceConfig {
                       config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
                       config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
 
-      final Principal sessionUserPrincipal = new AnonDrillUserPrincipal();
+      final Principal sessionUserPrincipal = createSessionUserPrincipal(config, request);
 
-      // Create new UserSession for each request from Anonymous user
+      // Create new UserSession for each request from non-authenticated user
       final UserSession drillUserSession = UserSession.Builder.newBuilder()
               .withCredentials(UserBitShared.UserCredentials.newBuilder()
                       .setUserName(sessionUserPrincipal.getName())
@@ -230,6 +230,26 @@ public class DrillRestServer extends ResourceConfig {
     public void dispose(WebUserConnection instance) {
 
     }
+
+    /**
+     * Creates session user principal. If impersonation is enabled without authentication and User-Name header is present and valid,
+     * will create session user principal with provided user name, otherwise anonymous user name will be used.
+     * In both cases session user principal will have admin rights.
+     *
+     * @param config drill config
+     * @param request client request
+     * @return session user principal
+     */
+    private Principal createSessionUserPrincipal(DrillConfig config, HttpServletRequest request) {
+      if (WebServer.isImpersonationOnlyEnabled(config)) {
+        final String userName = request.getHeader("User-Name");
+        if (!Strings.isNullOrEmpty(userName)) {
+          return new DrillUserPrincipal(userName, true);
+        }
+      }
+      return new AnonDrillUserPrincipal();
+    }
+
   }
 
   // Provider which injects DrillUserPrincipal directly instead of getting it from SecurityContext and typecasting
