@@ -11,7 +11,15 @@
           enabled : true,
           driver  : "com.mysql.jdbc.Driver",
           url     : "jdbc:mysql://localhost:${mysql.reserved.port}/${mysql.database.name}?user=root&password=root&useJDBCCompliantTimezoneShift=true"
-      }
+        },
+        oracle : {
+            type    : "jdbc",
+            enabled : true,
+            driver  : "oracle.jdbc.OracleDriver",
+            url     : "jdbc:oracle:thin:@localhost:1521/ORCL",
+            username: "system",
+            password: "1111"
+        }
     }
 }
 
