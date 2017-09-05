@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.agg;
 
 import ch.qos.logback.classic.Level;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggTemplate;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -34,6 +35,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -136,6 +138,70 @@ public class TestHashAggrSpill extends BaseTestQuery {
              ClientFixture client = cluster.clientFixture()) {
             String sql = "SELECT empid_s44, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1100K` GROUP BY empid_s44, dept_i, branch_i";
             runAndDump(client, sql, 1_100_000, 3, 2);
+        }
+    }
+
+    /**
+     * Test when memory limit is set to very low value even to hold one partition in 2 Phase Hash Agg scenario and
+     * fallback mechanism to use unbounded memory is disabled then Query Fails in HashAgg with Resource Error.
+     * @throws Exception
+     */
+    @Test
+    public void testHashAggrFailWithFallbackDisabed() throws Exception {
+        LogFixture.LogFixtureBuilder logBuilder = LogFixture.builder()
+            .toConsole()
+            .logger("org.apache.drill.exec.physical.impl.aggregate", Level.DEBUG)
+            ;
+
+        FixtureBuilder builder = ClusterFixture.builder()
+            .configProperty(ExecConstants.HASHAGG_MAX_MEMORY,74_000)
+            .configProperty(ExecConstants.HASHAGG_NUM_PARTITIONS,4)
+            .configProperty(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION,3)
+            .sessionOption(PlannerSettings.FORCE_2PHASE_AGGR_KEY,true)
+            .maxParallelization(2)
+            .saveProfiles()
+            ;
+        try (LogFixture logs = logBuilder.build();
+             ClusterFixture cluster = builder.build();
+             ClientFixture client = cluster.clientFixture()) {
+            String sql = "SELECT empid_s17, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1200K` GROUP BY empid_s17, dept_i, branch_i";
+            QueryBuilder.QuerySummary summary = client.queryBuilder().sql(sql).run();
+            fail();
+        } catch (Exception ex) {
+            assertTrue(ex instanceof UserRemoteException);
+            assertTrue(((UserRemoteException)ex).getErrorType() == UserBitShared.DrillPBError.ErrorType.RESOURCE);
+        }
+    }
+
+    /**
+     * Test when memory limit is set to very low value even to hold one partition in 2 Phase Hash Agg scenario and
+     * fallback mechanism to use unbounded memory is enabled then query completes successfully without spilling.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testHashAggrSuccessWithFallbackEnabled() throws Exception {
+        LogFixture.LogFixtureBuilder logBuilder = LogFixture.builder()
+            .toConsole()
+            .logger("org.apache.drill.exec.physical.impl.aggregate", Level.DEBUG)
+            ;
+
+        FixtureBuilder builder = ClusterFixture.builder()
+            .configProperty(ExecConstants.HASHAGG_MAX_MEMORY,74_000)
+            .configProperty(ExecConstants.HASHAGG_NUM_PARTITIONS,4)
+            .configProperty(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION,3)
+            .sessionOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY, true)
+            .sessionOption(PlannerSettings.FORCE_2PHASE_AGGR_KEY,true)
+            .maxParallelization(2)
+            .saveProfiles()
+            ;
+        try (LogFixture logs = logBuilder.build();
+             ClusterFixture cluster = builder.build();
+             ClientFixture client = cluster.clientFixture()) {
+            String sql = "SELECT empid_s17, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1200K` GROUP BY empid_s17, dept_i, branch_i";
+            runAndDump(client, sql, 1_200_000, 0, 0);
+        } catch (Exception ex) {
+            fail();
         }
     }
 }

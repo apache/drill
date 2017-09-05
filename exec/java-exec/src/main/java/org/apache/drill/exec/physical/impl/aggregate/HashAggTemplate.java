@@ -379,11 +379,13 @@ public abstract class HashAggTemplate implements HashAggregator {
    */
   private void delayedSetup() {
 
+    final boolean fallbackEnabled = context.getOptions().getOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY).bool_val;
+
     // Set the number of partitions from the configuration (raise to a power of two, if needed)
     numPartitions = context.getConfig().getInt(ExecConstants.HASHAGG_NUM_PARTITIONS);
     if ( numPartitions == 1 ) {
       canSpill = false;
-      logger.warn("Spilling was disabled due to configuration setting of num_partitions to 1");
+      logger.warn("Spilling is disabled due to configuration setting of num_partitions to 1");
     }
     numPartitions = BaseAllocator.nextPowerOfTwo(numPartitions); // in case not a power of 2
 
@@ -401,9 +403,20 @@ public abstract class HashAggTemplate implements HashAggregator {
       while ( numPartitions * ( estMaxBatchSize * minBatchesPerPartition + 2 * 1024 * 1024) > memAvail ) {
         numPartitions /= 2;
         if ( numPartitions < 2) {
-          if ( is2ndPhase ) {
+          if (is2ndPhase) {
             canSpill = false;  // 2nd phase needs at least 2 to make progress
-            logger.warn("Spilling was disabled - not enough memory available for internal partitioning");
+
+            if (fallbackEnabled) {
+              logger.warn("Spilling is disabled - not enough memory available for internal partitioning. Falling back"
+                  + " to use unbounded memory");
+            } else {
+              throw UserException.resourceError()
+                  .message(String.format("Not enough memory for internal partitioning and fallback mechanism for "
+                      + "HashAgg to use unbounded memory is disabled. Either enable fallback config %s using Alter "
+                      + "session/system command or increase memory limit for Drillbit",
+                      ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY))
+                  .build(logger);
+            }
           }
           break;
         }
