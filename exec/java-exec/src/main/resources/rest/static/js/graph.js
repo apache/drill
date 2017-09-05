@@ -11,7 +11,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-$(window).load(function () {
+$(window).on('load',(function () {
     // for each record, unroll the array pointed to by "fieldpath" into a new
     // record for each element of the array
     function unnest (table, fieldpath, dest) {
@@ -310,4 +310,4 @@ $(window).load(function () {
         //            .append("tbody"), extractminortimes(profile),
         //            ["name", "start", "end"]);
     });
-});
+}));
