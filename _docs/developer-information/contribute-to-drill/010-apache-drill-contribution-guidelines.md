@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date: 2016-12-08 20:59:28 UTC
+date: 2017-09-06 21:18:53 UTC
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive
@@ -54,8 +54,7 @@ Setting up IDE formatters is recommended and can be done by importing the
 following settings into your browser:
 
 
-* IntelliJ IDEA formatter: [settings
-jar](https://cwiki.apache.org/confluence/download/attachments/29687985/intellij-idea-settings.jar?version=1&modificationDate=1381928827000&api=v2)
+* IntelliJ IDEA formatter: [settings jar]({{site.baseurl}}/docs/attachments/intellij-idea-settings.jar)
 * Eclipse: [formatter xml](https://issues.apache.org/jira/secure/attachment/12474245/eclipse_formatter_apache.xml)
 
 ### Understanding Maven
