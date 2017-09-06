@@ -19,10 +19,16 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.ParseFilter;
@@ -139,4 +145,46 @@ public class HBaseUtils {
     return Bytes.compareTo(left, right) < 0 ? left : right;
   }
 
+
+  /**
+   * Verify column family in schema path exists in the hbase table, or schema path refers to a row_key column.
+   * Convert * column into list of column family defined in HTableDescriptor. Return converted list if
+   * star column conversion happens.
+   *
+   * @param columns
+   * @param hTableDesc
+   * @return
+   * @throws DrillRuntimeException if column family does not exist, or is not row_key column.
+   */
+  public static List<SchemaPath> verifyColumnsAndConvertStar(List<SchemaPath> columns, HTableDescriptor hTableDesc) {
+    boolean hasStarCol = false;
+    LinkedHashSet<SchemaPath> requestedColumns = new LinkedHashSet<>();
+
+    for (SchemaPath column : columns) {
+      // convert * into [row_key, cf1, cf2, ..., cf_n].
+      if (column.equals(Utilities.STAR_COLUMN)) {
+        hasStarCol = true;
+        Set<byte[]> families = hTableDesc.getFamiliesKeys();
+        requestedColumns.add(DrillHBaseConstants.ROW_KEY_PATH);
+        for (byte[] family : families) {
+          SchemaPath colFamily = SchemaPath.getSimplePath(Bytes.toString(family));
+          requestedColumns.add(colFamily);
+        }
+      } else {
+        if (!(column.equals(DrillHBaseConstants.ROW_KEY_PATH) ||
+            hTableDesc.hasFamily(getBytes(column.getRootSegment().getPath())))) {
+          DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
+              column.getRootSegment().getPath(), hTableDesc.getNameAsString());
+        }
+        requestedColumns.add(column);
+      }
+    }
+
+    // since star column has been converted, reset.
+    if (hasStarCol) {
+      return new ArrayList<>(requestedColumns);
+    } else {
+      return columns;
+    }
+  }
 }
