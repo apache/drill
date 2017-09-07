@@ -31,6 +31,7 @@ import org.apache.curator.retry.RetryNTimes;
 import org.apache.curator.test.TestingServer;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.zookeeper.CreateMode;
@@ -71,6 +72,8 @@ public class TestZookeeperClient {
 
   @Before
   public void setUp() throws Exception {
+    ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
+
     server = new TestingServer();
     final RetryPolicy policy = new RetryNTimes(1, 1000);
     curator = CuratorFrameworkFactory.newClient(server.getConnectString(), policy);

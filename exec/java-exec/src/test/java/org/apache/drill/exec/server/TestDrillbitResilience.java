@@ -42,6 +42,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.RepeatTestRule.Repeat;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -184,6 +185,8 @@ public class TestDrillbitResilience extends DrillTest {
   public static void startSomeDrillbits() throws Exception {
     // turn off the HTTP server to avoid port conflicts between the drill bits
     System.setProperty(ExecConstants.HTTP_ENABLE, "false");
+
+    ZookeeperTestUtil.setJaasTestConfigFile();
 
     // turn on error for failure in cancelled fragments
     zkHelper = new ZookeeperHelper(true, true);
