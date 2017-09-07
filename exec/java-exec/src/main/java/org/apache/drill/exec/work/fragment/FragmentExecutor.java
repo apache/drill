@@ -300,6 +300,7 @@ public class FragmentExecutor implements Runnable {
     } else {
       statusReporter.stateChanged(outcome);
     }
+    statusReporter.close();
   }
 
 
@@ -444,6 +445,7 @@ public class FragmentExecutor implements Runnable {
         logger.warn("Foreman {} no longer active.  Cancelling fragment {}.",
                     foremanEndpoint.getAddress(),
                     QueryIdHelper.getQueryIdentifier(fragmentContext.getHandle()));
+        statusReporter.close();
         FragmentExecutor.this.cancel();
       }
     }

@@ -27,19 +27,21 @@ import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * The status reporter is responsible for receiving changes in fragment state and propagating the status back to the
  * Foreman through a control tunnel.
  */
-public class FragmentStatusReporter {
+public class FragmentStatusReporter implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStatusReporter.class);
 
   private final FragmentContext context;
-  private final ControlTunnel tunnel;
+  private final AtomicReference<ControlTunnel> tunnel;
 
   public FragmentStatusReporter(final FragmentContext context, final ControlTunnel tunnel) {
     this.context = context;
-    this.tunnel = tunnel;
+    this.tunnel = new AtomicReference<>(tunnel);
   }
 
   /**
@@ -98,7 +100,12 @@ public class FragmentStatusReporter {
   }
 
   private void sendStatus(final FragmentStatus status) {
-    tunnel.sendFragmentStatus(status);
+    final ControlTunnel tunnel = this.tunnel.get();
+    if (tunnel != null) {
+      tunnel.sendFragmentStatus(status);
+    } else {
+      logger.warn("{}: State {} is not reported as {} is closed", QueryIdHelper.getQueryIdentifier(context.getHandle()), status.getProfile().getState(), this);
+    }
   }
 
   /**
@@ -113,4 +120,14 @@ public class FragmentStatusReporter {
     sendStatus(status);
   }
 
+  @Override
+  public void close()
+  {
+    final ControlTunnel tunnel = this.tunnel.getAndSet(null);
+    if (tunnel != null) {
+      logger.debug("Closing {}", this);
+    } else {
+      logger.warn("{} was already closed", this);
+    }
+  }
 }
