@@ -31,7 +31,7 @@
       <thead>
         <tr>
           <#list model.getColumns() as value>
-          <th>${value?html}</th>
+          <th>${value}</th>
           </#list>
         </tr>
       </thead>
@@ -39,7 +39,7 @@
       <#list model.getRows() as record>
         <tr>
           <#list record as value>
-          <td>${value!"null"?html}</td>
+          <td>${value!"null"}</td>
           </#list>
         </tr>
       </#list>
