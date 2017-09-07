@@ -19,11 +19,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import static org.junit.Assert.assertTrue;
 
-import mockit.Mock;
-import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
-import org.apache.calcite.util.ConversionUtil;
-import org.apache.calcite.util.Util;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
@@ -38,7 +34,6 @@ import org.junit.runner.RunWith;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.nio.charset.Charset;
 
 @RunWith(JMockit.class)
 @Category(SqlFunctionTest.class)
@@ -1339,16 +1334,6 @@ public class TestStringFunctions extends BaseTestQuery {
   @Ignore("DRILL-5477")
   @Test
   public void testMultiByteEncoding() throws Exception {
-    // mock calcite util method to return utf charset
-    // instead of setting saffron.default.charset at system level
-    new MockUp<Util>()
-    {
-      @Mock
-      Charset getDefaultCharset() {
-        return Charset.forName(ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
-      }
-    };
-
     testBuilder()
         .sqlQuery("select\n" +
             "upper('привет')as col_upper,\n" +
