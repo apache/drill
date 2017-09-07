@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,6 +27,7 @@ import java.util.Properties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.util.MiniZooKeeperCluster;
+import org.apache.drill.test.ClusterFixture;
 
 /**
  * Test utility for managing a Zookeeper instance.
@@ -94,6 +95,8 @@ public class ZookeeperHelper {
     }
 
     try {
+      ExecTest.setZookeeperSaslTestConfigProps();
+
       zkCluster = new MiniZooKeeperCluster();
       zkCluster.setDefaultClientPort(MiniZooKeeperCluster.DEFAULT_PORT);
 

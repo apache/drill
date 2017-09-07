@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.coord.zk.PathUtils;
 import org.apache.drill.exec.util.GuavaPatcher;
 import org.apache.drill.hbase.test.Drill2130StorageHBaseHamcrestConfigurationTest;
 import org.apache.hadoop.conf.Configuration;
@@ -36,6 +37,9 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
+import static org.apache.drill.exec.server.TestDrillbitResilience.LOGIN_CONF_RESOURCE_PATHNAME;
+import static org.apache.zookeeper.Environment.JAAS_CONF_KEY;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -95,6 +99,10 @@ public class HBaseTestsSuite {
 
   @BeforeClass
   public static void initCluster() throws Exception {
+    // Specifies JAAS configuration file
+    String configPath = PathUtils.getPathWithProtocol(ClassLoader.getSystemResource(LOGIN_CONF_RESOURCE_PATHNAME));
+    System.setProperty(JAAS_CONF_KEY, configPath);
+
     if (initCount.get() == 0) {
       synchronized (HBaseTestsSuite.class) {
         if (initCount.get() == 0) {

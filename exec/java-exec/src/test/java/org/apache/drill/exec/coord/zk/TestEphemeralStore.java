@@ -27,6 +27,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.curator.test.TestingServer;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.junit.After;
@@ -61,6 +62,7 @@ public class TestEphemeralStore {
 
   @Before
   public void setUp() throws Exception {
+    ExecTest.setZookeeperSaslTestConfigProps();
     server = new TestingServer();
     final RetryPolicy policy = new RetryNTimes(2, 1000);
     curator = CuratorFrameworkFactory.newClient(server.getConnectString(), policy);

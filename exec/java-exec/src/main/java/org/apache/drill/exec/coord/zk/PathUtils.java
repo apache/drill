@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,8 @@ package org.apache.drill.exec.coord.zk;
 
 import com.google.common.base.Preconditions;
 import org.apache.parquet.Strings;
+
+import java.net.URL;
 
 /**
  * A convenience class used to expedite zookeeper paths manipulations.
@@ -70,4 +72,14 @@ public final class PathUtils {
     return builder.toString();
   }
 
+  /**
+   * Creates and returns path with the protocol at the beginning from specified {@code url}.
+   */
+  public static String getPathWithProtocol(URL url) {
+    if (url.getProtocol() != null) {
+      return url.getProtocol() + ":" + url.getPath();
+    } else {
+      return url.getPath();
+    }
+  }
 }
