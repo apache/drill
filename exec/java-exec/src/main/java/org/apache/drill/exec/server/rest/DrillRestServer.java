@@ -22,6 +22,13 @@ import com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper;
 import com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.google.common.base.Strings;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.FileTemplateLoader;
+import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.TemplateLoader;
+import freemarker.cache.WebappTemplateLoader;
+import freemarker.core.HTMLOutputFormat;
+import freemarker.template.Configuration;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -48,17 +55,22 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 
 import javax.inject.Inject;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DrillRestServer extends ResourceConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRestServer.class);
 
-  public DrillRestServer(final WorkManager workManager) {
+  public DrillRestServer(final WorkManager workManager, final ServletContext servletContext) {
     register(DrillRoot.class);
     register(StatusResources.class);
     register(StorageResources.class);
@@ -67,9 +79,13 @@ public class DrillRestServer extends ResourceConfig {
     register(MetricsResources.class);
     register(ThreadsResources.class);
     register(LogsResources.class);
+
+    property(FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY, getFreemarkerConfiguration(servletContext));
     register(FreemarkerMvcFeature.class);
+
     register(MultiPartFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+
 
     final boolean isAuthEnabled =
         workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
@@ -111,6 +127,31 @@ public class DrillRestServer extends ResourceConfig {
       }
     });
   }
+
+  /**
+   * Creates freemarker configuration settings,
+   * default output format to trigger auto-escaping policy
+   * and template loaders.
+   *
+   * @param servletContext servlet context
+   * @return freemarker configuration settings
+   */
+  private Configuration getFreemarkerConfiguration(ServletContext servletContext) {
+    Configuration configuration = new Configuration(Configuration.VERSION_2_3_26);
+    configuration.setOutputFormat(HTMLOutputFormat.INSTANCE);
+
+    List<TemplateLoader> loaders = new ArrayList<>();
+    loaders.add(new WebappTemplateLoader(servletContext));
+    loaders.add(new ClassTemplateLoader(DrillRestServer.class, "/"));
+    try {
+      loaders.add(new FileTemplateLoader(new File("/")));
+    } catch (IOException e) {
+      logger.error("Could not set up file template loader.", e);
+    }
+    configuration.setTemplateLoader(new MultiTemplateLoader(loaders.toArray(new TemplateLoader[loaders.size()])));
+    return configuration;
+  }
+
 
   public static class AuthWebUserConnectionProvider implements Factory<WebUserConnection> {
 

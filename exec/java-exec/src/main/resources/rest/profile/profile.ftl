@@ -17,7 +17,7 @@
 <script>
     var globalconfig = {
         "queryid" : "${model.getQueryId()}",
-        "operators" : ${model.getOperatorsJSON()}
+        "operators" : ${model.getOperatorsJSON()?no_esc}
     };
 </script>
 </#macro>
@@ -32,7 +32,9 @@
     <li><a href="#query-physical" role="tab" data-toggle="tab">Physical Plan</a></li>
     <li><a href="#query-visual" role="tab" data-toggle="tab">Visualized Plan</a></li>
     <li><a href="#query-edit" role="tab" data-toggle="tab">Edit Query</a></li>
-    <#if model.hasError() ><li><a href="#query-error" role="tab" data-toggle="tab">Error</a></li></#if>
+    <#if model.hasError()>
+        <li><a href="#query-error" role="tab" data-toggle="tab">Error</a></li>
+    </#if>
   </ul>
   <div id="query-content" class="tab-content">
     <div id="query-query" class="tab-pane">
@@ -45,71 +47,133 @@
       <svg id="query-visual-canvas" class="center-block"></svg>
     </div>
     <div id="query-edit" class="tab-pane">
-      <form role="form" action="/query" method="POST">
-        <div class="form-group">
-          <textarea class="form-control" id="query" name="query" style="font-family: Courier;">${model.getProfile().query}</textarea>
-        </div>
-        <div class="form-group">
-          <div class="radio-inline">
-            <label>
-              <input type="radio" name="queryType" id="sql" value="SQL" checked>
-              SQL
-            </label>
-          </div>
-          <div class="radio-inline">
-            <label>
-              <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-              PHYSICAL
-            </label>
-          </div>
-          <div class="radio-inline">
-            <label>
-              <input type="radio" name="queryType" id="logical" value="LOGICAL">
-              LOGICAL
-            </label>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-default">Re-run query</button>
-      </form>
-      <form action="/profiles/cancel/${model.queryId}" method="GET">
-        <button type="link" class="btn btn-default">Cancel query</button>
-      </form>
-    </div>
-    <#if model.hasError() >
-    <div id="query-error" class="tab-pane">
       <p>
-      <pre>
-      ${model.getProfile().error?trim}
-      </pre>
+        <form role="form" action="/query" method="POST">
+          <div class="form-group">
+            <textarea class="form-control" id="query" name="query" style="font-family: Courier;">${model.getProfile().query}</textarea>
+          </div>
+          <div class="form-group">
+            <div class="radio-inline">
+              <label>
+                <input type="radio" name="queryType" id="sql" value="SQL" checked>
+                    SQL
+              </label>
+            </div>
+            <div class="radio-inline">
+              <label>
+                 <input type="radio" name="queryType" id="physical" value="PHYSICAL">
+                     PHYSICAL
+              </label>
+            </div>
+            <div class="radio-inline">
+              <label>
+                <input type="radio" name="queryType" id="logical" value="LOGICAL">
+                    LOGICAL
+              </label>
+            </div>
+            </div>
+            <button type="submit" class="btn btn-default">Re-run query</button>
+          </form>
       </p>
-      <p>Failure node: ${model.getProfile().errorNode}</p>
-      <p>Error ID: ${model.getProfile().errorId}</p>
-
-        <h3 class="panel-title">
-          <a data-toggle="collapse" href="#error-verbose">
-            Verbose Error Message...
-          </a>
-        </h3>
-      <div id="error-verbose" class="panel-collapse collapse">
-        <div class="panel-body">
-        <p></p><p></p>
-          <pre>
-            ${model.getProfile().verboseError?trim}
-          </pre>
+      <p>
+      <form action="/profiles/cancel/${model.queryId}" method="GET">
+        <div class="form-group">
+          <button type="submit" class="btn btn-default">Cancel query</button>
         </div>
+      </form>
+        </p>
     </div>
+    <#if model.hasError()>
+      <div id="query-error" class="tab-pane fade">
+        <p><pre>${model.getProfile().error?trim}</pre></p>
+        <p>Failure node: ${model.getProfile().errorNode}</p>
+        <p>Error ID: ${model.getProfile().errorId}</p>
+
+        <div class="page-header"></div>
+        <h3>Verbose Error Message</h3>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#error-message-overview">
+                 Overview
+              </a>
+            </h4>
+          </div>
+          <div id="error-message-overview" class="panel-collapse collapse">
+            <div class="panel-body">
+              <pre>${model.getProfile().verboseError?trim}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
     </#if>
+
   </div>
 
   <div class="page-header"></div>
   <h3>Query Profile</h3>
-  <p>STATE: ${model.getProfile().getState().name()}</p>
-  <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
-  <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
-  <p>DURATION: ${model.getProfileDuration()}</p>
-  <p style="text-indent:5em;">PLANNING: ${model.getPlanningDuration()}</p>
-  <p style="text-indent:5em;">QUEUED: ${model.getQueuedDuration()}</p>
-  <p style="text-indent:5em;">EXECUTION: ${model.getExecutionDuration()}</p>
+  <div class="panel-group" id="query-profile-accordion">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" href="#query-profile-overview">
+              Overview
+          </a>
+        </h4>
+      </div>
+      <div id="query-profile-overview" class="panel-collapse collapse in">
+        <div class="panel-body">
+          <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>State</th>
+                <th>Foreman</th>
+                <th>Total Fragments</th>
+            </tr>
+            </thead>
+            <tbody>
+              <tr>
+                  <td>${model.getProfile().getState().name()}</td>
+                  <td>${model.getProfile().getForeman().getAddress()}</td>
+                  <td>${model.getProfile().getTotalFragments()}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" href="#query-profile-duration">
+             Duration
+          </a>
+        </h4>
+      </div>
+      <div id="query-profile-duration" class="panel-collapse collapse">
+        <div class="panel-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Planning</th>
+                <th>Queued</th>
+                <th>Execution</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${model.getPlanningDuration()}</td>
+                <td>${model.getQueuedDuration()}</td>
+                <td>${model.getExecutionDuration()}</td>
+                <td>${model.getProfileDuration()}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <#assign options = model.getOptions()>
   <#if (options?keys?size > 0)>
@@ -162,8 +226,7 @@
       </div>
       <div id="fragment-overview" class="panel-collapse collapse">
         <div class="panel-body">
-          <svg id="fragment-overview-canvas" class="center-block"></svg>
-          ${model.getFragmentsOverview()}
+          ${model.getFragmentsOverview()?no_esc}
         </div>
       </div>
     </div>
@@ -178,7 +241,7 @@
       </div>
       <div id="${frag.getId()}" class="panel-collapse collapse">
         <div class="panel-body">
-          ${frag.getContent()}
+          ${frag.getContent()?no_esc}
         </div>
       </div>
     </div>
@@ -199,7 +262,7 @@
       </div>
       <div id="operator-overview" class="panel-collapse collapse">
         <div class="panel-body">
-          ${model.getOperatorsOverview()}
+          ${model.getOperatorsOverview()?no_esc}
         </div>
       </div>
     </div>
@@ -215,7 +278,7 @@
       </div>
       <div id="${op.getId()}" class="panel-collapse collapse">
         <div class="panel-body">
-          ${op.getContent()}
+          ${op.getContent()?no_esc}
         </div>
         <div class="panel panel-info">
           <div class="panel-heading">
@@ -227,7 +290,7 @@
           </div>
           <div id="${op.getId()}-metrics" class="panel-collapse collapse">
             <div class="panel-body" style="display:block;overflow-x:auto">
-              ${op.getMetricsTable()}
+              ${op.getMetricsTable()?no_esc}
             </div>
           </div>
         </div>
