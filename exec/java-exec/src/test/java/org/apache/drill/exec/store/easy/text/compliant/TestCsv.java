@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.drill.test.ClusterFixture;
@@ -117,12 +118,12 @@ public class TestCsv extends ClusterTest {
     RowSet actual = client.queryBuilder().sql(makeStatement(fileName)).rowSet();
 
     BatchSchema expectedSchema = new SchemaBuilder()
-        .add("column_1", MinorType.VARCHAR)
-        .add("column_2", MinorType.VARCHAR)
-        .add("col_9b", MinorType.VARCHAR)
-        .add("c", MinorType.VARCHAR)
-        .add("c_2", MinorType.VARCHAR)
-        .add("c_2_2", MinorType.VARCHAR)
+        .add("column_1", Types.optional(MinorType.VARCHAR))
+        .add("column_2", Types.optional(MinorType.VARCHAR))
+        .add("col_9b", Types.optional(MinorType.VARCHAR))
+        .add("c", Types.optional(MinorType.VARCHAR))
+        .add("c_2", Types.optional(MinorType.VARCHAR))
+        .add("c_2_2", Types.optional(MinorType.VARCHAR))
         .build();
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .add("10", "foo", "bar", "fourth", "fifth", "sixth")
@@ -140,9 +141,9 @@ public class TestCsv extends ClusterTest {
     RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
     BatchSchema expectedSchema = new SchemaBuilder()
-        .add("A", MinorType.VARCHAR)
-        .add("b", MinorType.VARCHAR)
-        .add("C", MinorType.VARCHAR)
+        .add("A", Types.optional(MinorType.VARCHAR))
+        .add("b", Types.optional(MinorType.VARCHAR))
+        .add("C", Types.optional(MinorType.VARCHAR))
         .build();
     assertEquals(expectedSchema, actual.batchSchema());
 
@@ -151,6 +152,27 @@ public class TestCsv extends ClusterTest {
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);
+  }
+
+  // Test fix for DRILL-5550
+  @Test
+  public void testCsvHeaderNonExistentColumn() throws IOException {
+    String fileName = "case5.csv";
+    buildFile(fileName, validHeaders);
+    String sql = "SELECT a, b, c, d FROM `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+            .add("a", Types.optional(MinorType.VARCHAR))
+            .add("b", Types.optional(MinorType.VARCHAR))
+            .add("c", Types.optional(MinorType.VARCHAR))
+            .add("d", Types.optional(MinorType.VARCHAR))
+            .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+            .add("10", "foo", "bar", null)
+            .build();
+    new RowSetComparison(expected)
+            .verifyAndClearAll(actual);
   }
 
   private String makeStatement(String fileName) {

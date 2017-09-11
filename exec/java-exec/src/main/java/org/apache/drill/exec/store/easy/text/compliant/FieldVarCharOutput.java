@@ -32,7 +32,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 
 /**
  * Class is responsible for generating record batches for text file inputs. We generate
@@ -45,11 +45,11 @@ class FieldVarCharOutput extends TextOutput {
   static final String COL_NAME = "columns";
 
   // array of output vector
-  private final VarCharVector [] vectors;
+  private final NullableVarCharVector [] vectors;
   // boolean array indicating which fields are selected (if star query entire array is set to true)
   private final boolean[] selectedFields;
   // current vector to which field will be added
-  private VarCharVector currentVector;
+  private NullableVarCharVector currentVector;
   // track which field is getting appended
   private int currentFieldIndex = -1;
   // track chars within field
@@ -65,7 +65,6 @@ class FieldVarCharOutput extends TextOutput {
   private int recordCount = 0;
   private int maxField = 0;
   private int[] nullCols;
-  private byte nullValue[] = new byte[0];
 
   /**
    * We initialize and add the varchar vector for each incoming field in this
@@ -127,12 +126,12 @@ class FieldVarCharOutput extends TextOutput {
       }
     }
 
-    this.vectors = new VarCharVector[totalFields];
+    this.vectors = new NullableVarCharVector[totalFields];
 
     for (int i = 0; i <= maxField; i++) {
       if (selectedFields[i]) {
-        MaterializedField field = MaterializedField.create(outputColumns.get(i), Types.required(TypeProtos.MinorType.VARCHAR));
-        this.vectors[i] = outputMutator.addField(field, VarCharVector.class);
+        MaterializedField field = MaterializedField.create(outputColumns.get(i), Types.optional(TypeProtos.MinorType.VARCHAR));
+        this.vectors[i] = outputMutator.addField(field, NullableVarCharVector.class);
       }
     }
 
@@ -211,10 +210,10 @@ class FieldVarCharOutput extends TextOutput {
       endField();
     }
 
-    // Fill in null (really empty) values.
+    // Fill in null values
 
     for (int i = 0; i < nullCols.length; i++) {
-      vectors[nullCols[i]].getMutator().setSafe(recordCount, nullValue, 0, 0);
+      vectors[nullCols[i]].getMutator().setNull(recordCount);
     }
     recordCount++;
   }
