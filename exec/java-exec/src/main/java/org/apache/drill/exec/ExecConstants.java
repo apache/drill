@@ -30,7 +30,6 @@ import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidat
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
-import org.apache.drill.exec.server.options.TypeValidators.MaxWidthValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
@@ -149,6 +148,9 @@ public final class ExecConstants {
   public static final String HTTP_KEYSTORE_PASSWORD = SSL_KEYSTORE_PASSWORD;
   public static final String HTTP_TRUSTSTORE_PATH = SSL_TRUSTSTORE_PATH;
   public static final String HTTP_TRUSTSTORE_PASSWORD = SSL_TRUSTSTORE_PASSWORD;
+  public static final String HTTP_AUTHENTICATION_MECHANISMS = "drill.exec.http.auth.mechanisms";
+  public static final String HTTP_SPNEGO_PRINCIPAL = "drill.exec.http.auth.spnego.principal";
+  public static final String HTTP_SPNEGO_KEYTAB = "drill.exec.http.auth.spnego.keytab";
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";

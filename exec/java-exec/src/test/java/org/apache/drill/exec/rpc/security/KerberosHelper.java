@@ -49,10 +49,14 @@ public class KerberosHelper {
 
   private boolean kdcStarted;
 
-  public KerberosHelper(final String testName) {
+  public KerberosHelper(final String testName, String serverShortName) {
     final String realm = "EXAMPLE.COM";
     CLIENT_PRINCIPAL = CLIENT_SHORT_NAME + "@" + realm;
-    final String serverShortName = System.getProperty("user.name");
+
+    if (serverShortName == null) {
+      serverShortName = System.getProperty("user.name");
+    }
+
     SERVER_PRINCIPAL = serverShortName + "/" + HOSTNAME + "@" + realm;
     this.testName = testName;
   }

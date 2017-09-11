@@ -38,9 +38,11 @@ public class DrillUserPrincipal implements Principal {
 
   public static final String[] NON_ADMIN_USER_ROLES = new String[]{AUTHENTICATED_ROLE};
 
-  public static final List<RolePrincipal> ADMIN_PRINCIPALS = ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE), new RolePrincipal(ADMIN_ROLE));
+  public static final List<RolePrincipal> ADMIN_PRINCIPALS =
+      ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE), new RolePrincipal(ADMIN_ROLE));
 
-  public static final List<RolePrincipal> NON_ADMIN_PRINCIPALS = ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE));
+  public static final List<RolePrincipal> NON_ADMIN_PRINCIPALS =
+      ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE));
 
   private final String userName;
 

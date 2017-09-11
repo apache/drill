@@ -95,7 +95,8 @@ public class TestBitBitKerberos extends BaseTestQuery {
   public static void setupTest() throws Exception {
 
     final Config config = DrillConfig.create(cloneDefaultTestConfigProperties());
-    krbHelper = new KerberosHelper(TestBitBitKerberos.class.getSimpleName());
+
+    krbHelper = new KerberosHelper(TestBitBitKerberos.class.getSimpleName(), null);
     krbHelper.setupKdc(dirTestWatcher.getTmpDir());
 
     newConfig = new DrillConfig(
