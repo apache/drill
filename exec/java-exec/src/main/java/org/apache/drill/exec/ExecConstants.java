@@ -122,6 +122,10 @@ public interface ExecConstants {
   String HTTP_SESSION_MEMORY_RESERVATION = "drill.exec.http.session.memory.reservation";
   String HTTP_SESSION_MEMORY_MAXIMUM = "drill.exec.http.session.memory.maximum";
   String HTTP_SESSION_MAX_IDLE_SECS = "drill.exec.http.session_max_idle_secs";
+  String HTTP_AUTHENTICATION_MECHANISMS = "drill.exec.http.auth.mechanisms";
+  String HTTP_SPNEGO_PRINCIPAL_= "drill.exec.http.spnego.auth.principal";
+  String HTTP_SPNEGO_KEYTAB_= "drill.exec.http.spnego.auth.keytab";
+  String HTTP_SPNEGO_REALM_= "drill.exec.http.spnego.auth.realm";
   String HTTP_KEYSTORE_PATH = "drill.exec.ssl.keyStorePath";
   String HTTP_KEYSTORE_PASSWORD = "drill.exec.ssl.keyStorePassword";
   String HTTP_TRUSTSTORE_PATH = "drill.exec.ssl.trustStorePath";
