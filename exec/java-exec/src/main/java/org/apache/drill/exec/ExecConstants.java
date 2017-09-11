@@ -149,6 +149,9 @@ public final class ExecConstants {
   public static final String HTTP_KEYSTORE_PASSWORD = SSL_KEYSTORE_PASSWORD;
   public static final String HTTP_TRUSTSTORE_PATH = SSL_TRUSTSTORE_PATH;
   public static final String HTTP_TRUSTSTORE_PASSWORD = SSL_TRUSTSTORE_PASSWORD;
+  public static final String HTTP_AUTHENTICATION_MECHANISMS = "drill.exec.http.auth.mechanisms";
+  public static final String HTTP_SPNEGO_PRINCIPAL_= "drill.exec.http.auth.spnego.principal";
+  public static final String HTTP_SPNEGO_KEYTAB_= "drill.exec.http.auth.spnego.keytab";
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";

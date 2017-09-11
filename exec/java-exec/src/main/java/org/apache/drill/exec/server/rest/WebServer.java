@@ -28,10 +28,11 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
+import org.apache.drill.exec.server.rest.auth.DrillSecurityHandler;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -56,7 +57,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -136,7 +136,8 @@ public class WebServer implements AutoCloseable {
    * @return true if impersonation without authentication is enabled, false otherwise
    */
   public static boolean isImpersonationOnlyEnabled(DrillConfig config) {
-    return !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+    return !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
+        && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   /**
@@ -150,11 +151,6 @@ public class WebServer implements AutoCloseable {
     }
 
     final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
-      logger.warn("Not starting web server. Currently Drill supports web authentication only through " +
-          "username/password. But PLAIN mechanism is not configured.");
-      return;
-    }
 
     port = config.getInt(ExecConstants.HTTP_PORT);
     boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
@@ -187,9 +183,10 @@ public class WebServer implements AutoCloseable {
     }
   }
 
-  private ServletContextHandler createServletContextHandler(final boolean authEnabled) {
+  private ServletContextHandler createServletContextHandler(final boolean authEnabled) throws Exception {
     // Add resources
-    final ErrorHandler errorHandler = new ErrorHandler();
+    final DrillErrorHandler errorHandler = new DrillErrorHandler();
+
     errorHandler.setShowStacks(true);
     errorHandler.setShowMessageInTitle(true);
 
@@ -197,7 +194,8 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
 
-    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
+    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(
+        new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 
@@ -216,7 +214,8 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
     if (authEnabled) {
-      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      //DrillSecurityHandler is used to support SPNEGO and FORM authentication together
+      servletContextHandler.setSecurityHandler(new DrillSecurityHandler(config, workManager.getContext()));
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
