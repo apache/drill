@@ -231,10 +231,10 @@ public class TestExceptionInjection extends BaseTestQuery {
       final DrillbitContext drillbitContext2 = drillbit2.getContext();
 
       final UserSession session = UserSession.Builder.newBuilder()
-        .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
-        .withUserProperties(UserProperties.getDefaultInstance())
-        .withOptionManager(drillbitContext1.getOptionManager())
-        .build();
+          .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+          .withUserProperties(UserProperties.getDefaultInstance())
+          .withOptionManager(drillbitContext1.getOptionManager())
+          .build();
 
       final String passthroughDesc = "<<injected from descPassthrough>>";
       final int nSkip = 7;
@@ -242,7 +242,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       final Class<? extends Throwable> exceptionClass = RuntimeException.class;
       // only drillbit1's (address, port)
       final String controls = Controls.newBuilder()
-        .addExceptionOnBit(DummyClass.class, passthroughDesc, exceptionClass, drillbitContext1.getEndpoint(), nSkip, nFire)
+      .addExceptionOnBit(DummyClass.class, passthroughDesc, exceptionClass, drillbitContext1.getEndpoint(), nSkip, nFire)
         .build();
 
       ControlsInjectionUtil.setControls(session, controls);

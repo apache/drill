@@ -76,6 +76,12 @@ public class MongoTestSuit implements MongoTestConstants {
 
   private static volatile AtomicInteger initCount = new AtomicInteger(0);
 
+  private static volatile boolean runningSuite = false;
+
+  public static boolean isRunningSuite() {
+    return runningSuite;
+  }
+
   private static class DistributedMode {
     private static MongosSystemForTestFactory mongosTestFactory;
 
@@ -223,6 +229,7 @@ public class MongoTestSuit implements MongoTestConstants {
         TestTableGenerator.importData(DATATYPE_DB, DATATYPE_COLLECTION, DATATYPE_DATA);
       }
       initCount.incrementAndGet();
+      runningSuite = true;
     }
   }
 
@@ -253,6 +260,7 @@ public class MongoTestSuit implements MongoTestConstants {
           }
         }
         finally {
+          runningSuite = false;
           if (mongoClient != null) {
             mongoClient.close();
           }

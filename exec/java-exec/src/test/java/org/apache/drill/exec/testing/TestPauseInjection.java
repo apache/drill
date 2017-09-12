@@ -189,8 +189,7 @@ public class TestPauseInjection extends BaseTestQuery {
         // test that the pause happens
         final DummyClass dummyClass = new DummyClass(queryContext, trigger);
         final long actualDuration = dummyClass.pauses();
-        assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration),
-          expectedDuration <= actualDuration);
+        assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration), expectedDuration <= actualDuration);
         assertTrue("No exception should be thrown.", ex.value == null);
         try {
           queryContext.close();

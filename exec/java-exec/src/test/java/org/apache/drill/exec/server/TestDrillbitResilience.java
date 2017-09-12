@@ -186,7 +186,7 @@ public class TestDrillbitResilience extends DrillTest {
     System.setProperty(ExecConstants.HTTP_ENABLE, "false");
 
     // turn on error for failure in cancelled fragments
-    zkHelper = new ZookeeperHelper(true);
+    zkHelper = new ZookeeperHelper(true, true);
     zkHelper.startZookeeper(1);
 
     // use a non-null service set so that the drillbits can use port hunting

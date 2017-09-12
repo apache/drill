@@ -188,7 +188,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     } else if (builder.localZkCount > 0) {
       // Case where we need a local ZK just for this test cluster.
 
-      zkHelper = new ZookeeperHelper("dummy");
+      zkHelper = new ZookeeperHelper();
       zkHelper.startZookeeper(builder.localZkCount);
       ownsZK = true;
     }
