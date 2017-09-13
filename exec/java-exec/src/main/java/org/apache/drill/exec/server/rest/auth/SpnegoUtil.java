@@ -41,6 +41,7 @@ public class SpnegoUtil {
         this.config = configuration;
     }
 
+    //Reads the SPNEGO realm from the config file
     public String getSpnegoRealm() throws DrillException {
          realm = config.getString(ExecConstants.HTTP_SPNEGO_REALM_).trim();
         if(realm.isEmpty()){
@@ -49,7 +50,7 @@ public class SpnegoUtil {
         return realm;
     }
 
-
+    //Reads the SPNEGO principal from the config file
     public String getSpnegoPrincipal() throws DrillException {
         principal = config.getString(ExecConstants.HTTP_SPNEGO_PRINCIPAL_).trim();
         if(principal.isEmpty()){
@@ -58,6 +59,7 @@ public class SpnegoUtil {
         return principal;
     }
 
+    //Reads the SPNEGO keytab from the config file
     public String getSpnegoKeytab() throws DrillException {
         keytab = config.getString(ExecConstants.HTTP_SPNEGO_KEYTAB_).trim();
         if(keytab.isEmpty()){
@@ -66,21 +68,23 @@ public class SpnegoUtil {
         return keytab;
     }
 
+    //Performs the Server login to KDC for SPNEGO
     public  UserGroupInformation getUgi() throws DrillException {
+        try {
         if (!UserGroupInformation.isSecurityEnabled()) {
-            final Configuration Config = new Configuration();
-            Config.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
+            final Configuration newConfig = new Configuration();
+            newConfig.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
                     UserGroupInformation.AuthenticationMethod.KERBEROS.toString());
-            UserGroupInformation.setConfiguration(Config);
+            UserGroupInformation.setConfiguration(newConfig);
+            ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, this.getSpnegoKeytab());
+            final Configuration oldConfig = new Configuration();
+            UserGroupInformation.setConfiguration(oldConfig);
+        } else {
+            ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, this.getSpnegoKeytab());
         }
-        try{
-            ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal,this.getSpnegoKeytab());
-
+        }catch (Exception e) {
+            throw new DrillException("Login failed for" + principal + "with given keytab");
         }
-        catch (Exception e){
-            throw new DrillException("Login failed for"+principal+"with given keytab");
-        }
-
         return ugi;
     }
 }

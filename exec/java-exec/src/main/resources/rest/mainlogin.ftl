@@ -14,13 +14,15 @@
 
 <#macro page_body>
         <div class="page-header">
+        </div>
+        <div class="container container-table">
         <div align="center" class="table-responsive">
-    <a href ="/login" class="btn btn-primary"> Login </a>
-    <a href = "/sn" class="btn btn-primary"> SSO</a>
-    <#if model??>
-    <p style="color:red">${model}</p></br>
-    </#if>
-    </div>
-    </div>
+        <a href ="/login" class="btn btn-primary"> Login </a>
+        <a href = "/sn" class="btn btn-primary"> SSO</a>
+        <#if model??>
+        <p style="color:red">${model}</p></br>
+        </#if>
+        </div>
+        </div>
 </#macro>
 <@page_html/>

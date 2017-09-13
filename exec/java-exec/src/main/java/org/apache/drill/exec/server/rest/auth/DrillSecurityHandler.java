@@ -42,7 +42,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -53,7 +52,6 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTI
 
 public class DrillSecurityHandler extends ConstraintSecurityHandler {
 
-    private DrillConfig DrillConfig;
     private final WorkManager workManager;
     private DrillConstraintSecurityHandler basicSecurityHandler;
     private DrillConstraintSecurityHandler spnegoSecurityHandler;
@@ -64,7 +62,6 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
     private SpnegoUtil spnUtil;
 
     public DrillSecurityHandler(DrillConfig config,WorkManager work) throws DrillbitStartupException,IOException {
-        DrillConfig = config;
         spnUtil = new SpnegoUtil(config);
         this.workManager = work;
         try {
@@ -94,8 +91,6 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
         basicSecurityHandler.setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
         basicSecurityHandler.setAuthenticator(new FormAuthenticator("/login", "/login", true));
         basicSecurityHandler.setLoginService(new DrillRestLoginService(workManager.getContext()));
-
-
     }
 
     public void initializeSpnegoAuthentication() throws DrillException {
@@ -106,7 +101,6 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
         loginService.setIdentityService(identityService);
         spnegoSecurityHandler.setLoginService(loginService);
         spnegoSecurityHandler.setConstraintMappings(Collections.<ConstraintMapping>emptyList(),knownRoles);
-
     }
 
     @Override
@@ -118,24 +112,22 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
         if(configuredMechanisms.isEmpty() || configuredMechanisms.contains(HTTP_FORM) ) {
             basicSecurityHandler.doStart();
         }
-
     }
-
 
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest)baseRequest;
-        String header = req.getHeader(HttpHeader.AUTHORIZATION.asString());
-        HttpSession session = req.getSession(true);
+
+        String header = request.getHeader(HttpHeader.AUTHORIZATION.asString());
+        HttpSession session = request.getSession(true);
         SessionAuthentication authentication = (SessionAuthentication) session.getAttribute("org.eclipse.jetty.security.UserIdentity");
-        String uri = req.getRequestURI();
+        String uri = request.getRequestURI();
         //Before authentication, all requests go through the Formauthenticator except for Spnegologin request
         //If this authentication is null, user hasn't logged in yet
         if(authentication == null){
-            if( uri.equals("/sn") ){
+            if(configuredMechanisms.contains(HTTP_SPNEGO) && configuredMechanisms.contains(HTTP_FORM) && uri.equals("/sn") || configuredMechanisms.contains(HTTP_SPNEGO) && !configuredMechanisms.contains(HTTP_FORM)){
                 spnegoSecurityHandler.handle(target, baseRequest, request, response);
             }
-            else {
+            else if (configuredMechanisms.contains(HTTP_FORM) || configuredMechanisms.isEmpty()){
                 basicSecurityHandler.handle(target, baseRequest, request, response);
             }
 

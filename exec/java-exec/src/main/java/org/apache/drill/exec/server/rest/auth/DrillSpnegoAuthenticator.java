@@ -62,9 +62,11 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
         HttpSession session = req.getSession(true);
         Authentication authentication = (Authentication) session.getAttribute("org.eclipse.jetty.security.UserIdentity");
         String uri = req.getRequestURI();
+        //If the Request URI is for Spnego login then the request is sent to login module using this flag
         if( uri.equals("/sn")){
             mandatory = true;
         }
+        //For logout remove the attribute from the session that holds useridentity
         if (authentication != null && uri.equals("/logout")) {
             session.removeAttribute("org.eclipse.jetty.security.UserIdentity");
             Authentication auth = (Authentication) session.getAttribute("org.eclipse.jetty.security.UserIdentity");
@@ -95,13 +97,13 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
                     UserIdentity user = this.login((String) null, spnegoToken, request);
                     //redirect the request to the desired page after successful login
                     if (user != null) {
-                        String nuri;
+                        String newUri;
                         synchronized(session) {
-                            nuri = (String)session.getAttribute("org.eclipse.jetty.security.form_URI");
-                            if(nuri == null || nuri.length() == 0) {
-                                nuri = req.getContextPath();
-                                if(nuri.length() == 0) {
-                                    nuri = "/";
+                            newUri = (String)session.getAttribute("org.eclipse.jetty.security.form_URI");
+                            if(newUri == null || newUri.length() == 0) {
+                                newUri = req.getContextPath();
+                                if(newUri.length() == 0) {
+                                    newUri = "/";
                                 }
                             }
                         }
@@ -110,7 +112,7 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
                         Request base_request = HttpChannel.getCurrentHttpChannel().getRequest();
                         int redirectCode = base_request.getHttpVersion().getVersion() < HttpVersion.HTTP_1_1.getVersion()?302:303;
                         try {
-                            base_response.sendRedirect(redirectCode, res.encodeRedirectURL(nuri));
+                            base_response.sendRedirect(redirectCode, res.encodeRedirectURL(newUri));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
