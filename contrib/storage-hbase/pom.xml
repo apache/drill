@@ -188,6 +188,10 @@
               <artifactId>log4j</artifactId>
               <groupId>log4j</groupId>
             </exclusion>
+              <exclusion>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+              </exclusion>
           </exclusions>
           <scope>test</scope>
         </dependency>
@@ -200,6 +204,10 @@
               <artifactId>log4j</artifactId>
               <groupId>log4j</groupId>
             </exclusion>
+              <exclusion>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+              </exclusion>
           </exclusions>
         </dependency>
       </dependencies>
