@@ -35,12 +35,15 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.record.MajorTypeSerDe;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.deser.std.StdDelegatingDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.annotations.VisibleForTesting;
 
 public class PhysicalPlanReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlanReader.class);
@@ -53,19 +56,23 @@ public class PhysicalPlanReader {
   public PhysicalPlanReader(DrillConfig config, ScanResult scanResult, LogicalPlanPersistence lpPersistance, final DrillbitEndpoint endpoint,
                             final StoragePluginRegistry pluginRegistry) {
 
+    ObjectMapper lpMapper = lpPersistance.getMapper();
+
     // Endpoint serializer/deserializer.
     SimpleModule deserModule = new SimpleModule("PhysicalOperatorModule") //
         .addSerializer(DrillbitEndpoint.class, new DrillbitEndpointSerDe.Se()) //
         .addDeserializer(DrillbitEndpoint.class, new DrillbitEndpointSerDe.De()) //
         .addSerializer(MajorType.class, new MajorTypeSerDe.Se())
-        .addDeserializer(MajorType.class, new MajorTypeSerDe.De());
+        .addDeserializer(MajorType.class, new MajorTypeSerDe.De())
+        .addDeserializer(DynamicPojoRecordReader.class,
+            new StdDelegatingDeserializer<>(new DynamicPojoRecordReader.Converter(lpMapper)));
 
-    ObjectMapper lpMapper = lpPersistance.getMapper();
     lpMapper.registerModule(deserModule);
     Set<Class<? extends PhysicalOperator>> subTypes = PhysicalOperatorUtil.getSubTypes(scanResult);
     for (Class<? extends PhysicalOperator> subType : subTypes) {
       lpMapper.registerSubtypes(subType);
     }
+    lpMapper.registerSubtypes(DynamicPojoRecordReader.class);
     InjectableValues injectables = new InjectableValues.Std() //
             .addValue(StoragePluginRegistry.class, pluginRegistry) //
         .addValue(DrillbitEndpoint.class, endpoint); //
@@ -89,13 +96,24 @@ public class PhysicalPlanReader {
     return physicalPlanReader.readValue(json);
   }
 
-  public FragmentRoot readFragmentOperator(String json) throws JsonProcessingException, IOException {
+  public FragmentRoot readFragmentRoot(String json) throws JsonProcessingException, IOException {
     logger.debug("Attempting to read {}", json);
     PhysicalOperator op = operatorReader.readValue(json);
-    if(op instanceof FragmentLeaf){
+    if(op instanceof FragmentRoot){
       return (FragmentRoot) op;
     }else{
       throw new UnsupportedOperationException(String.format("The provided json fragment doesn't have a FragmentRoot as its root operator.  The operator was %s.", op.getClass().getCanonicalName()));
+    }
+  }
+
+  @VisibleForTesting
+  public FragmentLeaf readFragmentLeaf(String json) throws JsonProcessingException, IOException {
+    logger.debug("Attempting to read {}", json);
+    PhysicalOperator op = operatorReader.readValue(json);
+    if (op instanceof FragmentLeaf){
+      return (FragmentLeaf) op;
+    } else {
+      throw new UnsupportedOperationException(String.format("The provided json fragment is not a FragmentLeaf. The operator was %s.", op.getClass().getCanonicalName()));
     }
   }
 

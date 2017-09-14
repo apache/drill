@@ -27,6 +27,8 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +42,7 @@ public abstract class AbstractPojoRecordReader<T> extends AbstractRecordReader i
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractPojoRecordReader.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(AbstractPojoRecordReader.class);
 
-  protected final List<T> records;
+  @JsonProperty protected final List<T> records;
   protected List<PojoWriter> writers;
 
   private Iterator<T> currentIterator;

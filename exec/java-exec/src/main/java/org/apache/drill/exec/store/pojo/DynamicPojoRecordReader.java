@@ -21,7 +21,16 @@ import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.StdConverter;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +41,10 @@ import java.util.Map;
  *
  * @param <T> type of given values, if contains various types, use Object class
  */
+@JsonTypeName("dynamic-pojo-record-reader")
 public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>> {
 
+  @JsonProperty
   private final LinkedHashMap<String, Class<?>> schema;
 
   public DynamicPojoRecordReader(LinkedHashMap<String, Class<?>> schema, List<List<T>> records) {
@@ -67,5 +78,34 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
     return "DynamicPojoRecordReader{" +
         "records = " + records +
         "}";
+  }
+
+  /**
+   * An utility class that converts from {@link com.fasterxml.jackson.databind.JsonNode}
+   * to DynamicPojoRecordReader during physical plan fragment deserialization.
+   */
+  public static class Converter extends StdConverter<JsonNode, DynamicPojoRecordReader>
+  {
+    private static final TypeReference<LinkedHashMap<String, Class<?>>> schemaType =
+        new TypeReference<LinkedHashMap<String, Class<?>>>() {};
+
+    private final ObjectMapper mapper;
+
+    public Converter(ObjectMapper mapper)
+    {
+      this.mapper = mapper;
+    }
+
+    @Override
+    public DynamicPojoRecordReader convert(JsonNode value) {
+      LinkedHashMap<String, Class<?>> schema = mapper.convertValue(value.get("schema"), schemaType);
+
+      ArrayList records = new ArrayList(schema.size());
+      final Iterator<JsonNode> recordsIterator = value.get("records").get(0).elements();
+      for (Class<?> fieldType : schema.values()) {
+        records.add(mapper.convertValue(recordsIterator.next(), fieldType));
+      }
+      return new DynamicPojoRecordReader(schema, Collections.singletonList(records));
+    }
   }
 }

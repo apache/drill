@@ -19,7 +19,12 @@
 package org.apache.drill.exec;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -35,18 +40,71 @@ import org.apache.drill.exec.physical.config.UnionExchange;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.store.direct.DirectSubScan;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
+import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
+
+import org.junit.Before;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.Lists;
 
 public class TestOpSerialization {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOpSerialization.class);
+  private DrillConfig config;
+  private PhysicalPlanReader reader;
+  private ObjectWriter writer;
+
+  private static PhysicalOperator setupPhysicalOperator(PhysicalOperator operator)
+  {
+    operator.setOperatorId(1);
+    operator.setCost(1.0);
+    operator.setMaxAllocation(1000);
+    return operator;
+  }
+
+  private static void assertOperator(PhysicalOperator operator)
+  {
+    assertEquals(1, operator.getOperatorId());
+    assertEquals(1.0, operator.getCost(), 0.00001);
+    assertEquals(1000, operator.getMaxAllocation());
+  }
+
+  @Before
+  public void setUp()
+  {
+    config = DrillConfig.create();
+    reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(config);
+    LogicalPlanPersistence logicalPlanPersistence = PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(config);
+    writer = logicalPlanPersistence.getMapper().writer();
+  }
+
+  @Test
+  public void testDirectSubScan() throws Exception {
+    LinkedHashMap<String, Class<?>> schema = new LinkedHashMap<>();
+    schema.put("count1", Long.class);
+    schema.put("count2", Long.class);
+
+    DirectSubScan scan = new DirectSubScan(new DynamicPojoRecordReader<>(schema,
+        Collections.singletonList(Arrays.asList(0L, 1L))));
+    scan = (DirectSubScan) reader.readFragmentLeaf(writer.writeValueAsString(setupPhysicalOperator(scan)));
+    assertOperator(scan);
+  }
+
+  @Test
+  public void testMockSubScan() throws Exception {
+    MockSubScanPOP scan = new MockSubScanPOP("abc", false, null);
+    scan.setOperatorId(1);
+    scan = (MockSubScanPOP) reader.readFragmentLeaf(writer.writeValueAsString(setupPhysicalOperator(scan)));
+    assertOperator(scan);
+    assertEquals("abc", scan.getUrl());
+    assertNull(scan.getReadEntries());
+    assertFalse(scan.isExtended());
+  }
 
   @Test
   public void testSerializedDeserialize() throws Throwable {
-    DrillConfig c = DrillConfig.create();
-    PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     MockSubScanPOP s = new MockSubScanPOP("abc", false, null);
     s.setOperatorId(3);
     Filter f = new Filter(s, new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN), 0.1f);
@@ -69,8 +127,7 @@ public class TestOpSerialization {
         pops = Lists.reverse(pops);
       }
       PhysicalPlan plan1 = new PhysicalPlan(PlanProperties.builder().build(), pops);
-      LogicalPlanPersistence logicalPlanPersistence = PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c);
-      String json = plan1.unparse(logicalPlanPersistence.getMapper().writer());
+      String json = plan1.unparse(writer);
 
       PhysicalPlan plan2 = reader.readPhysicalPlan(json);
 
