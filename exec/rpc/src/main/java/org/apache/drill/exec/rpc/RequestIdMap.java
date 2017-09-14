@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.rpc;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +26,9 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.procedures.IntObjectProcedure;
 import com.google.common.base.Preconditions;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 
 /**
  * Manages the creation of rpc futures for a particular socket <--> socket
@@ -54,10 +54,12 @@ class RequestIdMap {
     isOpen.set(false);
     if (ex != null) {
       final RpcException e = RpcException.mapException(ex);
+      IntObjectHashMap<RpcOutcome<?>> clonedMap;
       synchronized (map) {
-        map.forEach(new SetExceptionProcedure(e));
+        clonedMap = map.clone();
         map.clear();
       }
+      clonedMap.forEach(new SetExceptionProcedure(e));
     }
   }
 
