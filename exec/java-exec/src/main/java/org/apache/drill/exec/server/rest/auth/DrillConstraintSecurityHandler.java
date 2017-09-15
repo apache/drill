@@ -19,12 +19,9 @@ package org.apache.drill.exec.server.rest.auth;
 
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 
-
+/** Class that extends the ConstraintSecurityHandler that helps to initiate two both the Form and SecurityHandlers**/
 public class DrillConstraintSecurityHandler extends ConstraintSecurityHandler {
 
-    public DrillConstraintSecurityHandler() {
-
-    }
 
     @Override
     public void doStart() throws Exception {
@@ -35,4 +32,5 @@ public class DrillConstraintSecurityHandler extends ConstraintSecurityHandler {
     public void doStop() throws Exception {
         super.doStop();
     }
+
 }

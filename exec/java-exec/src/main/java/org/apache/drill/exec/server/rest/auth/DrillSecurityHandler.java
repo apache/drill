@@ -25,6 +25,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.rpc.security.AuthStringUtil;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.WorkManager;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -52,28 +54,28 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTI
 
 public class DrillSecurityHandler extends ConstraintSecurityHandler {
 
-    private final WorkManager workManager;
     private DrillConstraintSecurityHandler basicSecurityHandler;
     private DrillConstraintSecurityHandler spnegoSecurityHandler;
+    private Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
     private final String HTTP_FORM ="FORM";
     private final String HTTP_SPNEGO ="SPNEGO";
-    private List<String> configuredMechanisms = Lists.newArrayList();
-    private Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
+    private List<String> configuredMechanisms =  Lists.newArrayList();
     private SpnegoUtil spnUtil;
+    private boolean spnegoEnabled = false;
+    private boolean formEnabled = false;
 
-    public DrillSecurityHandler(DrillConfig config,WorkManager work) throws DrillbitStartupException,IOException {
+    public DrillSecurityHandler(DrillConfig config,DrillbitContext drillContext) throws DrillbitStartupException,IOException {
         spnUtil = new SpnegoUtil(config);
-        this.workManager = work;
         try {
             if (config.hasPath(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)) {
                 configuredMechanisms = config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS);
-                if (configuredMechanisms.contains(HTTP_FORM)) {
-                    initializeFormAuthentication();
-
+                if (AuthStringUtil.listContains(configuredMechanisms,HTTP_FORM)) {
+                    formEnabled = true;
+                    initializeFormAuthentication(drillContext);
                 }
-                if (configuredMechanisms.contains(HTTP_SPNEGO)) {
-                    initializeSpnegoAuthentication();
-
+                if (AuthStringUtil.listContains(configuredMechanisms,HTTP_SPNEGO)) {
+                    spnegoEnabled = true ;
+                    initializeSpnegoAuthentication(drillContext);
                 }
             }
         }
@@ -82,21 +84,22 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
         }
         //Backward compatability for Form authentication
         if(!config.hasPath(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)){
-            initializeFormAuthentication();
+            formEnabled = true;
+            initializeFormAuthentication(drillContext);
         }
     }
 
-    public void initializeFormAuthentication(){
+    public void initializeFormAuthentication(DrillbitContext drillContext){
         basicSecurityHandler = new DrillConstraintSecurityHandler();
         basicSecurityHandler.setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
         basicSecurityHandler.setAuthenticator(new FormAuthenticator("/login", "/login", true));
-        basicSecurityHandler.setLoginService(new DrillRestLoginService(workManager.getContext()));
+        basicSecurityHandler.setLoginService(new DrillRestLoginService(drillContext));
     }
 
-    public void initializeSpnegoAuthentication() throws DrillException {
+    public void initializeSpnegoAuthentication(DrillbitContext drillContext) throws DrillException {
         spnegoSecurityHandler = new DrillConstraintSecurityHandler();
         spnegoSecurityHandler.setAuthenticator(new DrillSpnegoAuthenticator());
-        final SpnegoLoginService loginService = new DrillSpnegoLoginService(spnUtil.getSpnegoRealm(),spnUtil.getSpnegoPrincipal(),workManager.getContext(),spnUtil.getUgi());
+        final SpnegoLoginService loginService = new DrillSpnegoLoginService(spnUtil,drillContext);
         final IdentityService identityService = new DefaultIdentityService();
         loginService.setIdentityService(identityService);
         spnegoSecurityHandler.setLoginService(loginService);
@@ -106,10 +109,10 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
     @Override
     public void doStart() throws Exception {
         super.doStart();
-        if(!configuredMechanisms.isEmpty() && configuredMechanisms.contains(HTTP_SPNEGO)) {
+        if(!configuredMechanisms.isEmpty() && spnegoEnabled) {
             spnegoSecurityHandler.doStart();
         }
-        if(configuredMechanisms.isEmpty() || configuredMechanisms.contains(HTTP_FORM) ) {
+        if(formEnabled) {
             basicSecurityHandler.doStart();
         }
     }
@@ -124,20 +127,19 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
         //Before authentication, all requests go through the Formauthenticator except for Spnegologin request
         //If this authentication is null, user hasn't logged in yet
         if(authentication == null){
-            if(configuredMechanisms.contains(HTTP_SPNEGO) && configuredMechanisms.contains(HTTP_FORM) && uri.equals("/sn") || configuredMechanisms.contains(HTTP_SPNEGO) && !configuredMechanisms.contains(HTTP_FORM)){
+            if(spnegoEnabled && uri.equals("/sn") || !formEnabled){
                 spnegoSecurityHandler.handle(target, baseRequest, request, response);
             }
-            else if (configuredMechanisms.contains(HTTP_FORM) || configuredMechanisms.isEmpty()){
+            else if (formEnabled){
                 basicSecurityHandler.handle(target, baseRequest, request, response);
             }
-
         }
         //If user has logged in, use the corresponding handler to handle the request
         else{
-            if(authentication.getAuthMethod() == "FORM"){
+            if(authentication.getAuthMethod() == HTTP_FORM){
                 basicSecurityHandler.handle(target, baseRequest, request, response);
             }
-            else if(authentication.getAuthMethod() == "SPNEGO"){
+            else if(authentication.getAuthMethod() == HTTP_SPNEGO){
                 spnegoSecurityHandler.handle(target, baseRequest, request, response);
             }
         }
@@ -146,10 +148,10 @@ public class DrillSecurityHandler extends ConstraintSecurityHandler {
     @Override
     public void setHandler(Handler handler) {
         super.setHandler(handler);
-        if(!configuredMechanisms.isEmpty() && configuredMechanisms.contains(HTTP_SPNEGO)) {
+        if(!configuredMechanisms.isEmpty() && spnegoEnabled) {
             spnegoSecurityHandler.setHandler(handler);
         }
-        if(configuredMechanisms.isEmpty() || configuredMechanisms.contains(HTTP_SPNEGO)) {
+        if(formEnabled) {
             basicSecurityHandler.setHandler(handler);
         }
     }

@@ -31,6 +31,7 @@ import org.apache.drill.exec.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.server.rest.auth.DrillSecurityHandler;
 import org.apache.drill.exec.work.WorkManager;
@@ -104,8 +105,6 @@ public class WebServer implements AutoCloseable {
 
   private final BootStrapContext context;
 
-  private final String SpnegoAuth = "SPNEGO";
-
   /**
    * Create Jetty based web server.
    *
@@ -147,8 +146,8 @@ public class WebServer implements AutoCloseable {
     if (embeddedJetty == null) {
       return;
     }
-    boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
+    boolean authEnabled = (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED));
+   if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
       logger.warn("Not starting web server. Currently Drill supports web authentication only through " +
           "username/password. But PLAIN mechanism is not configured.");
       return;
@@ -167,7 +166,7 @@ public class WebServer implements AutoCloseable {
     embeddedJetty.addConnector(serverConnector);
 
     // Add resources
-    final ErrorHandler errorHandler = new ErrorHandler();
+    final DrillErrorHandler errorHandler = new DrillErrorHandler();
     errorHandler.setShowStacks(true);
     errorHandler.setShowMessageInTitle(true);
 
@@ -195,8 +194,7 @@ public class WebServer implements AutoCloseable {
 
     if (authEnabled) {
       //DrillSecurityHandler is used to support SPNEGO and FORM authentication together
-      DrillSecurityHandler securityHandler = new DrillSecurityHandler(config, workManager);
-      servletContextHandler.setSecurityHandler(securityHandler);
+      servletContextHandler.setSecurityHandler(new DrillSecurityHandler(config, workManager.getContext()));
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 

@@ -47,12 +47,8 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
+
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoAuthenticator.class);
-
-    public DrillSpnegoAuthenticator() {
-
-    }
-
 
     @Override
     public Authentication validateRequest(ServletRequest request, ServletResponse response, boolean mandatory) throws ServerAuthException {
@@ -62,8 +58,8 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
         HttpSession session = req.getSession(true);
         Authentication authentication = (Authentication) session.getAttribute("org.eclipse.jetty.security.UserIdentity");
         String uri = req.getRequestURI();
-        //If the Request URI is for Spnego login then the request is sent to login module using this flag
-        if( uri.equals("/sn")){
+        //If the Request URI is for Spnego login then the request is sent to the login module my modifying this flag
+        if (uri.equals("/spnegoLogin")) {
             mandatory = true;
         }
         //For logout remove the attribute from the session that holds useridentity
@@ -71,11 +67,9 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
             session.removeAttribute("org.eclipse.jetty.security.UserIdentity");
             Authentication auth = (Authentication) session.getAttribute("org.eclipse.jetty.security.UserIdentity");
             return auth;
-        }
-        else if (authentication != null) {
+        } else if (authentication != null) {
             return authentication;
-        }
-        else {
+        } else {
             String header = req.getHeader(HttpHeader.AUTHORIZATION.asString());
             if (!mandatory) {
                 return new DeferredAuthentication(this);
@@ -98,11 +92,11 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
                     //redirect the request to the desired page after successful login
                     if (user != null) {
                         String newUri;
-                        synchronized(session) {
-                            newUri = (String)session.getAttribute("org.eclipse.jetty.security.form_URI");
-                            if(newUri == null || newUri.length() == 0) {
+                        synchronized (session) {
+                            newUri = (String) session.getAttribute("org.eclipse.jetty.security.form_URI");
+                            if (newUri == null || newUri.length() == 0) {
                                 newUri = req.getContextPath();
-                                if(newUri.length() == 0) {
+                                if (newUri.length() == 0) {
                                     newUri = "/";
                                 }
                             }
@@ -110,7 +104,7 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
                         response.setContentLength(0);
                         Response base_response = HttpChannel.getCurrentHttpChannel().getResponse();
                         Request base_request = HttpChannel.getCurrentHttpChannel().getRequest();
-                        int redirectCode = base_request.getHttpVersion().getVersion() < HttpVersion.HTTP_1_1.getVersion()?302:303;
+                        int redirectCode = base_request.getHttpVersion().getVersion() < HttpVersion.HTTP_1_1.getVersion() ? 302 : 303;
                         try {
                             base_response.sendRedirect(redirectCode, res.encodeRedirectURL(newUri));
                         } catch (IOException e) {
@@ -118,13 +112,10 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
                         }
                         return new UserAuthentication(this.getAuthMethod(), user);
                     }
-
                 }
-
                 return Authentication.UNAUTHENTICATED;
             }
         }
-
     }
 
 
@@ -138,6 +129,4 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
 
         return user;
     }
-
-
 }

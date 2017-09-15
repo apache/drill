@@ -41,14 +41,6 @@ public class SpnegoUtil {
         this.config = configuration;
     }
 
-    //Reads the SPNEGO realm from the config file
-    public String getSpnegoRealm() throws DrillException {
-         realm = config.getString(ExecConstants.HTTP_SPNEGO_REALM_).trim();
-        if(realm.isEmpty()){
-            throw new DrillException(" drill.exec.http.spnego.auth.realm in the configuration file can't be empty");
-        }
-        return realm;
-    }
 
     //Reads the SPNEGO principal from the config file
     public String getSpnegoPrincipal() throws DrillException {

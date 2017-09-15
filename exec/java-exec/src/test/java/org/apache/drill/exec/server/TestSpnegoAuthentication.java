@@ -28,17 +28,35 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
 import org.apache.drill.exec.rpc.user.security.TestUserBitKerberos;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
+import org.apache.drill.exec.server.rest.auth.DrillSecurityHandler;
+import org.apache.drill.exec.server.rest.auth.DrillSpnegoAuthenticator;
+import org.apache.drill.exec.server.rest.auth.DrillSpnegoLoginService;
+import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
+import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.RoleInfo;
+import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.server.Authentication;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.UserIdentity;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -118,6 +136,20 @@ public class TestSpnegoAuthentication extends BaseTestQuery {
                 }
             }
         });
+
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+
+        Mockito.when(request.getHeader(KerberosAuthenticator.AUTHORIZATION))
+                .thenReturn(KerberosAuthenticator.NEGOTIATE + " " + token);
+        Mockito.when(request.getServerName()).thenReturn("localhost");
+
+
+
+        DrillSpnegoAuthenticator authenticator = new  DrillSpnegoAuthenticator();
+        ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
+        securityHandler.setAuthenticator(authenticator);
+        Authentication authToken = authenticator.validateRequest((ServletRequest)request,(ServletResponse) response,true);
 
 
 

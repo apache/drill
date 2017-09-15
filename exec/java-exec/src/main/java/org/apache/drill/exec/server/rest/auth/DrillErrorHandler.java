@@ -15,38 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
-
 package org.apache.drill.exec.server.rest.auth;
 
-import org.eclipse.jetty.server.Authentication;
-import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.ErrorHandler;
-
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.Writer;
 
 
 public class DrillErrorHandler extends ErrorHandler {
 
-
-
     @Override
     protected void writeErrorPageMessage(HttpServletRequest request, Writer writer, int code, String message, String uri) throws IOException {
 
         super.writeErrorPageMessage(request,writer,code,message,uri);
-        //writer.write("<h2 Spnego login failed");
-        if(uri.equals("/sn")) {
 
+        if(uri.equals("/sn")) {
             writer.write("<p>Spnego login failed</p>");
-            String path = request.getContextPath();
-            String ref = path+"/login";
-            writer.write("<a href='/mainlogin'> root </a>");
+            writer.write("<p>Check the requirements or Use this link to do Form Authentication</p>");
+            writer.write("<a href='/login'> login </a>");
         }
     }
 }

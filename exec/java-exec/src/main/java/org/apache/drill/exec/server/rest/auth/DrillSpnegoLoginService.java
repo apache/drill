@@ -21,6 +21,7 @@ package org.apache.drill.exec.server.rest.auth;
 
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.ContextFunctions;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -58,19 +59,17 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
 
 
 
-    public DrillSpnegoLoginService(String realm, String serverPrincipal, DrillbitContext drillbitContext, UserGroupInformation ugSpnego) {
-        super(realm);
-        this.serverPrincipal = Objects.requireNonNull(serverPrincipal);
-        drillContext = drillbitContext;
-        ugi =  ugSpnego;
+    public DrillSpnegoLoginService(SpnegoUtil spnegoUtil, DrillbitContext drillBitContext) throws DrillException {
+        super(DrillSpnegoLoginService.class.getName());
+        this.serverPrincipal = spnegoUtil.getSpnegoPrincipal();
+        drillContext = drillBitContext;
+        ugi =  spnegoUtil.getUgi();
     }
 
     @Override
     protected void doStart() throws Exception {
         // Override the parent implementation, setting _targetName to be the serverPrincipal
         // without the need for a one-line file to do the same thing.
-        //
-        // AbstractLifeCycle's doStart() method does nothing, so we aren't missing any extra logic.
         final Field targetNameField = SpnegoLoginService.class.getDeclaredField(TARGET_NAME_FIELD_NAME);
         targetNameField.setAccessible(true);
         targetNameField.set(this, serverPrincipal);
@@ -99,7 +98,7 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
 
         GSSManager manager = GSSManager.getInstance();
         try {
-
+            //Providing both OID's is required here. If we provide only one, we're requiring that clients provide us the SPNEGO OID to authentica via Kerberos.
             Oid spnegoOid = new Oid("1.3.6.1.5.5.2");
             Oid krb5Oid = new Oid("1.2.840.113554.1.2.2");
             GSSName gssName = manager.createName(serverPrincipal, null);
@@ -116,10 +115,6 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
                 if (gContext.isEstablished()) {
                     String clientName = gContext.getSrcName().toString();
                     String role = clientName.substring(0, clientName.indexOf(64));
-                    // LOG.debug("SpnegoUserRealm: established a security context", new Object[0]);
-                    //LOG.debug("Client Principal is: " + gContext.getSrcName(), new Object[0]);
-                    // LOG.debug("Server Principal is: " + gContext.getTargName(), new Object[0]);
-                    // LOG.debug("Client Default Role: " + role, new Object[0]);
                     final SystemOptionManager sysOptions = drillContext.getOptionManager();
 
                     final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(role,
@@ -138,17 +133,7 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
         } catch (GSSException gsse) {
             logger.warn("Caught GSSException trying to authenticate the client", gsse);
         }
-
         return null;
-
     }
-
-    @Override
-    public boolean validate(UserIdentity user) {
-        return true;
-    }
-
-
-
 }
 

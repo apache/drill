@@ -44,7 +44,7 @@ import java.net.URLDecoder;
 @PermitAll
 public class LogInLogOutResources {
   public static final String REDIRECT_QUERY_PARM = "redirect";
-  public static final String LOGIN_RESOURCE = "mainlogin";
+  public static final String LOGIN_RESOURCE = "mainLogin";
 
   @GET
   @Path("/login")
@@ -70,17 +70,16 @@ public class LogInLogOutResources {
   }
 
   @GET
-  @Path("/sn")
+  @Path("/spnegoLogin")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getspnegologin(@Context HttpServletRequest request, @Context HttpServletResponse response,
+  public Viewable getSpnegologin(@Context HttpServletRequest request, @Context HttpServletResponse response,
                                  @Context SecurityContext sc, @Context UriInfo uriInfo, @QueryParam(REDIRECT_QUERY_PARM) String redirect)
           throws Exception {
     if (AuthDynamicFeature.isUserLoggedIn(sc)) {
       request.getRequestDispatcher("/").forward(request, response);
       return null;
     }
-
-    return ViewableWithPermissions.createmainLoginPage("Invalid SPNEGO credentials.");
+    return ViewableWithPermissions.createMainLoginPage("Invalid SPNEGO credentials or SPNEGO is not configured");
   }
 
   // Request type is POST because POST request which contains the login credentials are invalid and the request is
@@ -103,12 +102,11 @@ public class LogInLogOutResources {
     req.getRequestDispatcher("/").forward(req, resp);
   }
   @GET
-  @Path("/mainlogin")
+  @Path("/mainLogin")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getMainLoginPage(@Context HttpServletRequest request, @Context HttpServletResponse response,
                                    @Context SecurityContext sc, @Context UriInfo uriInfo, @QueryParam(REDIRECT_QUERY_PARM) String redirect)
           throws Exception {
-    //req.getRequestDispatcher("/").forward(req, resp);
     if (!StringUtils.isEmpty(redirect)) {
       // If the URL has redirect in it, set the redirect URI in session, so that after the login is successful, request
       // is forwarded to the redirect page.
@@ -116,8 +114,7 @@ public class LogInLogOutResources {
       final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
       session.setAttribute(FormAuthenticator.__J_URI, destURI.toString());
     }
-    return  ViewableWithPermissions.createmainLoginPage(null);
 
+    return  ViewableWithPermissions.createMainLoginPage(null);
   }
-
 }

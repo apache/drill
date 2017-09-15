@@ -61,8 +61,8 @@ public class ViewableWithPermissions extends Viewable {
     return new ViewableWithPermissions(true, "/rest/login.ftl", null, false, errorMsg);
   }
 
-  public static Viewable createmainLoginPage(final String errorMsg) {
-    return new ViewableWithPermissions(true, "/rest/mainlogin.ftl", null, false, errorMsg);
+  public static Viewable createMainLoginPage(final String errorMsg) {
+    return new ViewableWithPermissions(true, "/rest/mainLogin.ftl", null, false, errorMsg);
   }
 
   private ViewableWithPermissions(final boolean authEnabled, final String templateName, final SecurityContext sc,
