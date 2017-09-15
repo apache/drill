@@ -44,14 +44,14 @@ import java.net.URLDecoder;
 @PermitAll
 public class LogInLogOutResources {
   public static final String REDIRECT_QUERY_PARM = "redirect";
-  public static final String LOGIN_RESOURCE = "login";
+  public static final String LOGIN_RESOURCE = "mainLogin";
 
   @GET
   @Path("/login")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getLoginPage(@Context HttpServletRequest request, @Context HttpServletResponse response,
-      @Context SecurityContext sc, @Context UriInfo uriInfo, @QueryParam(REDIRECT_QUERY_PARM) String redirect)
-      throws Exception {
+                               @Context SecurityContext sc, @Context UriInfo uriInfo, @QueryParam(REDIRECT_QUERY_PARM) String redirect)
+          throws Exception {
     if (AuthDynamicFeature.isUserLoggedIn(sc)) {
       // if the user is already login, forward the request to homepage.
       request.getRequestDispatcher("/").forward(request, response);
@@ -67,6 +67,19 @@ public class LogInLogOutResources {
     }
 
     return ViewableWithPermissions.createLoginPage(null);
+  }
+
+  @GET
+  @Path("/spnegoLogin")
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable getSpnegologin(@Context HttpServletRequest request, @Context HttpServletResponse response,
+                                 @Context SecurityContext sc, @Context UriInfo uriInfo, @QueryParam(REDIRECT_QUERY_PARM) String redirect)
+          throws Exception {
+    if (AuthDynamicFeature.isUserLoggedIn(sc)) {
+      request.getRequestDispatcher("/").forward(request, response);
+      return null;
+    }
+    return ViewableWithPermissions.createMainLoginPage("Invalid SPNEGO credentials or SPNEGO is not configured");
   }
 
   // Request type is POST because POST request which contains the login credentials are invalid and the request is
@@ -87,5 +100,21 @@ public class LogInLogOutResources {
     }
 
     req.getRequestDispatcher("/").forward(req, resp);
+  }
+  @GET
+  @Path("/mainLogin")
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable getMainLoginPage(@Context HttpServletRequest request, @Context HttpServletResponse response,
+                                   @Context SecurityContext sc, @Context UriInfo uriInfo, @QueryParam(REDIRECT_QUERY_PARM) String redirect)
+          throws Exception {
+    if (!StringUtils.isEmpty(redirect)) {
+      // If the URL has redirect in it, set the redirect URI in session, so that after the login is successful, request
+      // is forwarded to the redirect page.
+      final HttpSession session = request.getSession(true);
+      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
+      session.setAttribute(FormAuthenticator.__J_URI, destURI.toString());
+    }
+
+    return  ViewableWithPermissions.createMainLoginPage(null);
   }
 }

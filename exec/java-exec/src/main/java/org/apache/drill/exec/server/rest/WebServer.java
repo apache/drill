@@ -21,6 +21,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.DrillException;
@@ -30,7 +31,9 @@ import org.apache.drill.exec.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
+import org.apache.drill.exec.server.rest.auth.DrillSecurityHandler;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -80,6 +83,7 @@ import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
@@ -142,13 +146,12 @@ public class WebServer implements AutoCloseable {
     if (embeddedJetty == null) {
       return;
     }
-    final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
+    boolean authEnabled = (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED));
+   if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
       logger.warn("Not starting web server. Currently Drill supports web authentication only through " +
           "username/password. But PLAIN mechanism is not configured.");
       return;
     }
-
     final ServerConnector serverConnector;
     if (config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
       try {
@@ -163,7 +166,7 @@ public class WebServer implements AutoCloseable {
     embeddedJetty.addConnector(serverConnector);
 
     // Add resources
-    final ErrorHandler errorHandler = new ErrorHandler();
+    final DrillErrorHandler errorHandler = new DrillErrorHandler();
     errorHandler.setShowStacks(true);
     errorHandler.setShowMessageInTitle(true);
 
@@ -190,7 +193,8 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
     if (authEnabled) {
-      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      //DrillSecurityHandler is used to support SPNEGO and FORM authentication together
+      servletContextHandler.setSecurityHandler(new DrillSecurityHandler(config, workManager.getContext()));
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
