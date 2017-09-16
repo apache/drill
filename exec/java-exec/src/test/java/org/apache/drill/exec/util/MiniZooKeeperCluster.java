@@ -47,6 +47,7 @@ public class MiniZooKeeperCluster {
 
   private static final int TICK_TIME = 2000;
   private static final int CONNECTION_TIMEOUT = 10000;
+  public static final int DEFAULT_PORT = 2181;
 
   private boolean started;
 
