@@ -26,9 +26,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.TestTools;
 import org.apache.hadoop.fs.FileStatus;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class TestFileSelection extends BaseTestQuery {
   private static final List<FileStatus> EMPTY_STATUSES = ImmutableList.of();
@@ -62,5 +60,4 @@ public class TestFileSelection extends BaseTestQuery {
       throw ex;
     }
   }
-
 }

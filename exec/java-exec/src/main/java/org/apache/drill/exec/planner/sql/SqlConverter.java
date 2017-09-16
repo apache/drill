@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.CalciteSchemaImpl;
@@ -53,6 +54,8 @@ import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.calcite.util.Util;
+import org.apache.commons.collections.ListUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.Types;
@@ -114,7 +117,7 @@ public class SqlConverter {
     this.session = context.getSession();
     this.drillConfig = context.getConfig();
     this.catalog = new DrillCalciteCatalogReader(
-        CalciteSchemaImpl.from(rootSchema),
+        this.rootSchema,
         parserConfig.caseSensitive(),
         CalciteSchemaImpl.from(defaultSchema).path(null),
         typeFactory,
@@ -281,7 +284,7 @@ public class SqlConverter {
     @Override
     public RelNode expandView(RelDataType rowType, String queryString, List<String> schemaPath) {
       final DrillCalciteCatalogReader catalogReader = new DrillCalciteCatalogReader(
-          CalciteSchemaImpl.from(rootSchema),
+          rootSchema,
           parserConfig.caseSensitive(),
           schemaPath,
           typeFactory,
@@ -294,7 +297,7 @@ public class SqlConverter {
     @Override
     public RelNode expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
       final DrillCalciteCatalogReader catalogReader = new DrillCalciteCatalogReader(
-          CalciteSchemaImpl.from(rootSchema), // new root schema
+          rootSchema, // new root schema
           parserConfig.caseSensitive(),
           schemaPath,
           typeFactory,
@@ -431,17 +434,20 @@ public class SqlConverter {
     private final DrillConfig drillConfig;
     private final UserSession session;
     private boolean allowTemporaryTables;
+    private final SchemaPlus rootSchema;
 
-    DrillCalciteCatalogReader(CalciteSchema rootSchema,
+
+    DrillCalciteCatalogReader(SchemaPlus rootSchema,
                               boolean caseSensitive,
                               List<String> defaultSchema,
                               JavaTypeFactory typeFactory,
                               DrillConfig drillConfig,
                               UserSession session) {
-      super(rootSchema, caseSensitive, defaultSchema, typeFactory);
+      super(CalciteSchemaImpl.from(rootSchema), caseSensitive, defaultSchema, typeFactory);
       this.drillConfig = drillConfig;
       this.session = session;
       this.allowTemporaryTables = true;
+      this.rootSchema = rootSchema;
     }
 
     /**
@@ -481,7 +487,39 @@ public class SqlConverter {
             .message("Temporary tables usage is disallowed. Used temporary table name: %s.", names)
             .build(logger);
       }
-      return super.getTable(names);
+
+      RelOptTableImpl table = super.getTable(names);
+
+      // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
+      if (table == null) {
+        isValidSchema(names);
+      }
+
+      return table;
+    }
+
+    /**
+     * check if the schema provided is a valid schema:
+     * <li>schema is not indicated (only one element in the names list)<li/>
+     *
+     * @param names             list of schema and table names, table name is always the last element
+     * @return throws a userexception if the schema is not valid.
+     */
+    private void isValidSchema(final List<String> names) throws UserException {
+      SchemaPlus defaultSchema = session.getDefaultSchema(this.rootSchema);
+      String defaultSchemaCombinedPath = SchemaUtilites.getSchemaPath(defaultSchema);
+      List<String> schemaPath = Util.skipLast(names);
+      String schemaPathCombined = SchemaUtilites.getSchemaPath(schemaPath);
+      String commonPrefix = SchemaUtilites.getPrefixSchemaPath(defaultSchemaCombinedPath,
+              schemaPathCombined,
+              parserConfig.caseSensitive());
+      boolean isPrefixDefaultPath = commonPrefix.length() == defaultSchemaCombinedPath.length();
+      List<String> fullSchemaPath = Strings.isNullOrEmpty(defaultSchemaCombinedPath) ? schemaPath :
+              isPrefixDefaultPath ? schemaPath : ListUtils.union(SchemaUtilites.getSchemaPathAsList(defaultSchema), schemaPath);
+      if (names.size() > 1 && (SchemaUtilites.findSchema(this.rootSchema, fullSchemaPath) == null &&
+              SchemaUtilites.findSchema(this.rootSchema, schemaPath) == null)) {
+        SchemaUtilites.throwSchemaNotFoundException(defaultSchema, schemaPath);
+      }
     }
 
     /**

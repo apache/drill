@@ -77,6 +77,29 @@ public class SchemaUtilites {
     return findSchema(defaultSchema, schemaPathAsList);
   }
 
+  /**
+   * Utility function to get the commonPrefix schema between two supplied schemas.
+   *
+   * Eg: if the defaultSchema: dfs and the schemaPath is dfs.tmp.`cicks.json`
+   *     then this function returns dfs if (caseSensitive is not true
+   *     otherwise it returns empty string.
+   *
+   * @param defaultSchema default schema
+   * @param schemaPath current schema path
+   * @param isCaseSensitive true if caseSensitive comparision is required.
+   * @return common prefix schemaPath
+   */
+  public static String getPrefixSchemaPath(final String defaultSchema,
+                                           final String schemaPath,
+                                           final boolean isCaseSensitive) {
+    if (!isCaseSensitive) {
+      return Strings.commonPrefix(defaultSchema.toLowerCase(), schemaPath.toLowerCase());
+    }
+    else {
+      return Strings.commonPrefix(defaultSchema, schemaPath);
+    }
+  }
+
   /** Utility method to search for schema path starting from the given <i>schema</i> reference */
   private static SchemaPlus searchSchemaTree(SchemaPlus schema, final List<String> schemaPath) {
     for (String schemaName : schemaPath) {
@@ -93,7 +116,7 @@ public class SchemaUtilites {
    * @return true if the given <i>schema</i> is root schema. False otherwise.
    */
   public static boolean isRootSchema(SchemaPlus schema) {
-    return schema.getParentSchema() == null;
+    return schema == null || schema.getParentSchema() == null;
   }
 
   /**
@@ -147,6 +170,16 @@ public class SchemaUtilites {
         .addContext("Current default schema: ",
             isRootSchema(defaultSchema) ? "No default schema selected" : getSchemaPath(defaultSchema))
         .build(logger);
+  }
+
+  /** Utility method to throw {@link UserException} with context information */
+  public static void throwSchemaNotFoundException(final SchemaPlus defaultSchema, final List<String> givenSchemaPath) {
+    throw UserException.validationError()
+            .message("Schema [%s] is not valid with respect to either root schema or current default schema.",
+                    givenSchemaPath)
+            .addContext("Current default schema: ",
+                    isRootSchema(defaultSchema) ? "No default schema selected" : getSchemaPath(defaultSchema))
+            .build(logger);
   }
 
   /**
