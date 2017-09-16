@@ -116,6 +116,7 @@ public interface ExecConstants {
   String HTTP_ENABLE = "drill.exec.http.enabled";
   String HTTP_MAX_PROFILES = "drill.exec.http.max_profiles";
   String HTTP_PORT = "drill.exec.http.port";
+  String HTTP_PORT_HUNT = "drill.exec.http.porthunt";
   String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
   String HTTP_CORS_ENABLED = "drill.exec.http.cors.enabled";
   String HTTP_CORS_ALLOWED_ORIGINS = "drill.exec.http.cors.allowedOrigins";

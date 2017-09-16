@@ -39,6 +39,7 @@ public class StatusResourcesTest {
     FixtureBuilder builder = ClusterFixture.builder().
       configProperty(ExecConstants.HTTP_ENABLE, true).
       configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      configProperty(ExecConstants.HTTP_PORT_HUNT, true).
       putDefinition(optionDefinition);
 
     try (ClusterFixture cluster = builder.build();
@@ -60,6 +61,7 @@ public class StatusResourcesTest {
   public void testRetrievePublicOption() throws Exception {
     FixtureBuilder builder = ClusterFixture.builder().
       configProperty(ExecConstants.HTTP_ENABLE, true).
+      configProperty(ExecConstants.HTTP_PORT_HUNT, true).
       systemOption(ExecConstants.SLICE_TARGET, 20);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture();
