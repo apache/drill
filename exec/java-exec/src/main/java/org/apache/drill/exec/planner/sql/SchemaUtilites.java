@@ -77,6 +77,22 @@ public class SchemaUtilites {
     return findSchema(defaultSchema, schemaPathAsList);
   }
 
+  /**
+   * Utility function to get the commonPrefix schema between two supplied schemas.
+   * @param defaultSchema default schema
+   * @param schemaPath current schema path
+   * @param isCaseSensitive true if caseSensitive comparision is required.
+   * @return common prefix schemaPath
+   */
+  public static String getPrefixSchemaPath(final String defaultSchema, final String schemaPath, final boolean isCaseSensitive) {
+    if (!isCaseSensitive) {
+      return Strings.commonPrefix(defaultSchema.toLowerCase(), schemaPath.toLowerCase());
+    }
+    else {
+      return Strings.commonPrefix(defaultSchema, schemaPath);
+    }
+  }
+
   /** Utility method to search for schema path starting from the given <i>schema</i> reference */
   private static SchemaPlus searchSchemaTree(SchemaPlus schema, final List<String> schemaPath) {
     for (String schemaName : schemaPath) {
@@ -121,6 +137,9 @@ public class SchemaUtilites {
     return SCHEMA_PATH_JOINER.join(schemaPath);
   }
 
+  /** Utility method to get the schema path from one or more strings. */
+  public static String getSchemaPath(String s1, String s2, String... rest) { return SCHEMA_PATH_JOINER.join(s1,s2,rest); }
+
   /** Utility method to get the schema path as list for given schema instance. */
   public static List<String> getSchemaPathAsList(SchemaPlus schema) {
     if (isRootSchema(schema)) {
@@ -146,6 +165,16 @@ public class SchemaUtilites {
             givenSchemaPath)
         .addContext("Current default schema: ",
             isRootSchema(defaultSchema) ? "No default schema selected" : getSchemaPath(defaultSchema))
+        .build(logger);
+  }
+
+  /** Utility method to throw {@link UserException} with context information */
+  public static void throwSchemaNotFoundException(final String defaultSchema, final String givenSchemaPath) {
+    throw UserException.validationError()
+        .message("Schema [%s] is not valid with respect to either root schema or current default schema.",
+            givenSchemaPath)
+        .addContext("Current default schema: ",
+            defaultSchema.equals("") ? "No default schema selected" : defaultSchema)
         .build(logger);
   }
 

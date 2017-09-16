@@ -63,4 +63,17 @@ public class TestFileSelection extends BaseTestQuery {
     }
   }
 
+  @Test(expected = Exception.class)
+  public void testWrongSchemaThrowsSchemaNotFound() throws Exception {
+    final String table = String.format("%s/empty", TestTools.getTestResourcesPath());
+    final String query = String.format("select * from dfs1.`%s`", table);
+    try {
+      testNoResult(query);
+    } catch (Exception ex) {
+      final String pattern = String.format("[dfs1] is not valid with respect to either root schema or current default schema").toLowerCase();
+      final boolean isSchemaNotFound = ex.getMessage().toLowerCase().contains(pattern);
+      assertTrue(isSchemaNotFound);
+      throw ex;
+    }
+  }
 }

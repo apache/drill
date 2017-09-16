@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.CalciteSchemaImpl;
@@ -114,7 +115,7 @@ public class SqlConverter {
     this.session = context.getSession();
     this.drillConfig = context.getConfig();
     this.catalog = new DrillCalciteCatalogReader(
-        CalciteSchemaImpl.from(rootSchema),
+        this.rootSchema,
         parserConfig.caseSensitive(),
         CalciteSchemaImpl.from(defaultSchema).path(null),
         typeFactory,
@@ -281,7 +282,7 @@ public class SqlConverter {
     @Override
     public RelNode expandView(RelDataType rowType, String queryString, List<String> schemaPath) {
       final DrillCalciteCatalogReader catalogReader = new DrillCalciteCatalogReader(
-          CalciteSchemaImpl.from(rootSchema),
+          rootSchema,
           parserConfig.caseSensitive(),
           schemaPath,
           typeFactory,
@@ -294,7 +295,7 @@ public class SqlConverter {
     @Override
     public RelNode expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
       final DrillCalciteCatalogReader catalogReader = new DrillCalciteCatalogReader(
-          CalciteSchemaImpl.from(rootSchema), // new root schema
+          rootSchema, // new root schema
           parserConfig.caseSensitive(),
           schemaPath,
           typeFactory,
@@ -431,17 +432,20 @@ public class SqlConverter {
     private final DrillConfig drillConfig;
     private final UserSession session;
     private boolean allowTemporaryTables;
+    private final SchemaPlus rootSchema;
 
-    DrillCalciteCatalogReader(CalciteSchema rootSchema,
+
+    DrillCalciteCatalogReader(SchemaPlus rootSchema,
                               boolean caseSensitive,
                               List<String> defaultSchema,
                               JavaTypeFactory typeFactory,
                               DrillConfig drillConfig,
                               UserSession session) {
-      super(rootSchema, caseSensitive, defaultSchema, typeFactory);
+      super(CalciteSchemaImpl.from(rootSchema), caseSensitive, defaultSchema, typeFactory);
       this.drillConfig = drillConfig;
       this.session = session;
       this.allowTemporaryTables = true;
+      this.rootSchema = rootSchema;
     }
 
     /**
@@ -481,6 +485,19 @@ public class SqlConverter {
             .message("Temporary tables usage is disallowed. Used temporary table name: %s.", names)
             .build(logger);
       }
+
+      // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
+      String defaultSchema = session.getDefaultSchemaPath();
+      String schemaPath = SchemaUtilites.getSchemaPath(names.subList(0, names.size() - 1));
+      String commonPrefix = SchemaUtilites.getPrefixSchemaPath(defaultSchema, schemaPath, parserConfig.caseSensitive());
+      boolean isPrefixDefaultPath = commonPrefix.length() == defaultSchema.length();
+      String fullSchemaPath = Strings.isNullOrEmpty(defaultSchema) ? schemaPath :
+              isPrefixDefaultPath ? schemaPath : SchemaUtilites.getSchemaPath(defaultSchema, schemaPath);
+      if (names.size() > 1 && (SchemaUtilites.findSchema(this.rootSchema, fullSchemaPath) == null &&
+                               SchemaUtilites.findSchema(this.rootSchema, schemaPath) == null)) {
+        SchemaUtilites.throwSchemaNotFoundException(session.getDefaultSchemaPath(), schemaPath);
+      }
+
       return super.getTable(names);
     }
 
