@@ -22,6 +22,7 @@ import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.OperatorFixture;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -71,7 +72,8 @@ public class TestLimitWithExchanges extends BaseTestQuery {
       final String[] expectedPlan5 = {"(?s)Limit\\(fetch=\\[1\\].*UnionExchange.*Limit\\(fetch=\\[1\\]\\).*Join"};
       testLimitHelper(sql5, expectedPlan5, excludedPlan, 1);
     } finally {
-      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_OPTION.getDefault().getValue());
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `%s` = %s", ExecConstants.SLICE_TARGET, testOptionSet.getDefault(ExecConstants.SLICE_TARGET).getValue());
     }
   }
 
@@ -92,7 +94,8 @@ public class TestLimitWithExchanges extends BaseTestQuery {
 
       testLimitHelper(sql2, expectedPlan, excludedPlan2, 5);
     } finally {
-      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_OPTION.getDefault().getValue());
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `planner.slice_target` = " + testOptionSet.getDefault(ExecConstants.SLICE_TARGET).getValue());
     }
   }
 
@@ -121,7 +124,8 @@ public class TestLimitWithExchanges extends BaseTestQuery {
       testLimitHelper(sql3, expectedPlan2, excludedPlan2, 10);
       testLimitHelper(sql4, expectedPlan2, excludedPlan2, 10);
     } finally {
-      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_OPTION.getDefault().getValue());
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `planner.slice_target` = " + testOptionSet.getDefault(ExecConstants.SLICE_TARGET).getValue());
     }
   }
 
@@ -142,5 +146,4 @@ public class TestLimitWithExchanges extends BaseTestQuery {
     final int actualRecordCount = testSql(sql);
     assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s", expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
-
 }

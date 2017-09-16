@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.server.options.OptionDefinition;
 
 /**
  * Build a Drillbit and client with the options provided. The simplest
@@ -114,6 +115,11 @@ public class FixtureBuilder {
 
   public FixtureBuilder configProperty(String key, Object value) {
     configBuilder.put(key, value.toString());
+    return this;
+  }
+
+  public FixtureBuilder putDefinition(OptionDefinition definition) {
+    configBuilder.putDefinition(definition);
     return this;
   }
 

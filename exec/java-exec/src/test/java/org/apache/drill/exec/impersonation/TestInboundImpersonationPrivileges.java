@@ -22,7 +22,9 @@ import com.google.common.io.Files;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
+import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -46,10 +48,11 @@ public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
   }
 
   private static boolean checkPrivileges(final String proxyName, final String targetName) {
+    OptionDefinition optionDefinition = SystemOptionManager.createDefaultOptionDefinitions().get(ExecConstants.IMPERSONATION_POLICIES_KEY);
     ExecConstants.IMPERSONATION_POLICY_VALIDATOR.validate(
-        OptionValue.createString(OptionValue.OptionType.SYSTEM,
+        OptionValue.create(optionDefinition.getMetaData().getType(),
             ExecConstants.IMPERSONATION_POLICIES_KEY,
-            IMPERSONATION_POLICIES,OptionValue.OptionScope.SYSTEM), null);
+            IMPERSONATION_POLICIES,OptionValue.OptionScope.SYSTEM), optionDefinition.getMetaData(),null);
     try {
       return InboundImpersonationManager.hasImpersonationPrivileges(proxyName, targetName, IMPERSONATION_POLICIES);
     } catch (final Exception e) {

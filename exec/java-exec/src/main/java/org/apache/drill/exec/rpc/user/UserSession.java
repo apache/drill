@@ -40,13 +40,9 @@ import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionScope;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
 import com.google.common.collect.Maps;
-import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -60,7 +56,7 @@ public class UserSession implements AutoCloseable {
   private boolean supportComplexTypes = false;
   private UserCredentials credentials;
   private DrillProperties properties;
-  private OptionManager sessionOptions;
+  private SessionOptionManager sessionOptions;
   private final AtomicInteger queryCount;
   private final String sessionId;
 
@@ -156,7 +152,7 @@ public class UserSession implements AutoCloseable {
     return supportComplexTypes;
   }
 
-  public OptionManager getOptions() {
+  public SessionOptionManager getOptions() {
     return sessionOptions;
   }
 
@@ -249,9 +245,7 @@ public class UserSession implements AutoCloseable {
    * @param value option value
    */
   public void setSessionOption(String name, String value) {
-    OptionValue.Kind optionKind = ((SessionOptionManager) sessionOptions).getFallbackOptionManager().getValidator(name).getKind();
-    OptionValue optionValue = OptionValue.createOption(optionKind, OptionType.SESSION, name, value, OptionScope.SESSION);
-    sessionOptions.setOption(optionValue);
+    sessionOptions.setLocalOption(name, value);
   }
 
   /**

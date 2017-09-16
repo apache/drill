@@ -30,8 +30,6 @@ import org.junit.Test;
 public class TestPStoreProviders extends TestWithZookeeper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPStoreProviders.class);
 
-  static LocalPersistentStoreProvider provider;
-
   @Test
   public void verifyLocalStore() throws Exception {
     try(LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(DrillConfig.create())){
@@ -41,10 +39,11 @@ public class TestPStoreProviders extends TestWithZookeeper {
 
   @Test
   public void verifyZkStore() throws Exception {
-    DrillConfig config = getConfig();
-    String connect = config.getString(ExecConstants.ZK_CONNECTION);
+    String connect = zkHelper.getConnectionString();
+    DrillConfig config = zkHelper.getConfig();
+
     CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
-    .namespace(config.getString(ExecConstants.ZK_ROOT))
+    .namespace(zkHelper.getConfig().getString(ExecConstants.ZK_ROOT))
     .retryPolicy(new RetryNTimes(1, 100))
     .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
     .connectString(connect);

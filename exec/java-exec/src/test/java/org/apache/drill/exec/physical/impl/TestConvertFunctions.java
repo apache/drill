@@ -119,7 +119,7 @@ public class TestConvertFunctions extends BaseTestQuery {
           .run();
     } finally {
       // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption);
+      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
       test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }
   }
@@ -547,7 +547,7 @@ public class TestConvertFunctions extends BaseTestQuery {
       testBigIntVarCharReturnTripConvertLogical();
     } finally {
       // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption);
+      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
     }
   }
 
@@ -564,7 +564,7 @@ public class TestConvertFunctions extends BaseTestQuery {
     } catch(RpcException e) {
       caughtException = true;
     } finally {
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption);
+      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
     }
 
     // Yes: sometimes this works, sometimes it does not...
@@ -579,7 +579,7 @@ public class TestConvertFunctions extends BaseTestQuery {
       testBigIntVarCharReturnTripConvertLogical();
     } finally {
       // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption);
+      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
     }
   }
 
@@ -650,7 +650,7 @@ public class TestConvertFunctions extends BaseTestQuery {
 
     } finally {
       // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption);
+      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
     }
   }
 

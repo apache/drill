@@ -244,7 +244,7 @@ public class TestStarQueries extends BaseTestQuery{
 
   @Test  // select star for a SchemaTable.
   public void testSelStarSubQSchemaTable() throws Exception {
-    test("select name, kind, type from (select * from sys.options);");
+    test("select name, kind, accessibleScopes from (select * from sys.options);");
   }
 
   @Test  // Join a select star of SchemaTable, with a select star of Schema-less table.

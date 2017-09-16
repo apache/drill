@@ -41,7 +41,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionScope;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.util.VectorUtil;
 
 /**
@@ -188,11 +188,9 @@ public class QueryTestUtil {
       final Drillbit drillbit, final ClassTransformer.ScalarReplacementOption srOption) {
     // set the system option
     final DrillbitContext drillbitContext = drillbit.getContext();
-    final OptionManager optionManager = drillbitContext.getOptionManager();
+    final SystemOptionManager optionManager = drillbitContext.getOptionManager();
     final OptionValue originalOptionValue = optionManager.getOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION);
-    final OptionValue newOptionValue = OptionValue.createString(OptionValue.OptionType.SYSTEM,
-        ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase(), OptionScope.SYSTEM);
-    optionManager.setOption(newOptionValue);
+    optionManager.setLocalOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase());
 
     // flush the code cache
     drillbitContext.getCompiler().flushCache();
@@ -209,12 +207,12 @@ public class QueryTestUtil {
    * @param drillbit the drillbit
    * @param srOption the scalar replacement option value to use
    */
-  public static void restoreScalarReplacementOption(final Drillbit drillbit, final OptionValue srOption) {
+  public static void restoreScalarReplacementOption(final Drillbit drillbit, final String srOption) {
     @SuppressWarnings("resource")
     final DrillbitContext drillbitContext = drillbit.getContext();
     @SuppressWarnings("resource")
     final OptionManager optionManager = drillbitContext.getOptionManager();
-    optionManager.setOption(srOption);
+    optionManager.setLocalOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption);
 
     // flush the code cache
     drillbitContext.getCompiler().flushCache();

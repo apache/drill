@@ -90,7 +90,7 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
     updateClient(ADMIN_USER, ADMIN_USER_PASSWORD);
     final String setOptionQuery =
         String.format("ALTER SESSION SET `%s`='%s,%s'", ExecConstants.ADMIN_USERS_KEY, ADMIN_USER, PROCESS_USER);
-    errorMsgTestHelper(setOptionQuery, "Admin related settings can only be set at SYSTEM level scope");
+    errorMsgTestHelper(setOptionQuery, "PERMISSION ERROR: Cannot change option security.admin.users in scope SESSION");
   }
 
   @Test
@@ -98,14 +98,14 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
     updateClient(TEST_USER_2, TEST_USER_2_PASSWORD);
     final String setOptionQuery =
         String.format("ALTER SESSION SET `%s`='%s,%s'", ExecConstants.ADMIN_USERS_KEY, ADMIN_USER, PROCESS_USER);
-    errorMsgTestHelper(setOptionQuery, "Admin related settings can only be set at SYSTEM level scope");
+    errorMsgTestHelper(setOptionQuery, "PERMISSION ERROR: Cannot change option security.admin.users in scope SESSION");
   }
 
   private void setOptHelper() throws Exception {
     try {
       test(setSysOptionQuery);
       testBuilder()
-          .sqlQuery(String.format("SELECT num_val FROM sys.options WHERE name = '%s' AND type = 'SYSTEM'",
+          .sqlQuery(String.format("SELECT num_val FROM sys.options WHERE name = '%s' AND optionScope = 'SYSTEM'",
               ExecConstants.SLICE_TARGET))
           .unOrdered()
           .baselineColumns("num_val")

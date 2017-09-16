@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
@@ -42,11 +43,13 @@ import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.server.options.BaseOptionManager;
+import org.apache.drill.exec.server.options.BaseOptionSet;
+import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.HyperRowSetImpl;
@@ -111,16 +114,26 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
    * system and session option read interface.
    */
 
-  public static class TestOptionSet extends BaseOptionManager {
+  public static class TestOptionSet extends BaseOptionSet {
 
-    private Map<String,OptionValue> values = new HashMap<>();
+    private Map<String,OptionValue> values = CaseInsensitiveMap.newHashMap();
+    private Map<String,OptionValue> defaults = CaseInsensitiveMap.newHashMap();
 
     public TestOptionSet() {
+      DrillConfig defaultConfig = DrillConfig.create();
+      Map<String, OptionDefinition> definitions = SystemOptionManager.createDefaultOptionDefinitions();
+      CaseInsensitiveMap<OptionValue> defaultValues = SystemOptionManager.populateDefaultValues(definitions, defaultConfig);
+
+      for (Map.Entry<String, OptionValue> entry: defaultValues.entrySet()) {
+        String optionName = entry.getKey();
+        OptionValue optionValue = entry.getValue();
+        defaults.put(optionName, optionValue);
+      }
+
       // Crashes in FunctionImplementationRegistry if not set
       set(ExecConstants.CAST_TO_NULLABLE_NUMERIC, false);
       // Crashes in the Dynamic UDF code if not disabled
       set(ExecConstants.USE_DYNAMIC_UDFS_KEY, false);
-//      set(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR, false);
     }
 
     public void set(String key, int value) {
@@ -128,24 +141,35 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
 
     public void set(String key, long value) {
-      values.put(key, OptionValue.createLong(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
+      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     public void set(String key, boolean value) {
-      values.put(key, OptionValue.createBoolean(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
+      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     public void set(String key, double value) {
-      values.put(key, OptionValue.createDouble(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
+      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     public void set(String key, String value) {
-      values.put(key, OptionValue.createString(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
+      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     @Override
     public OptionValue getOption(String name) {
-      return values.get(name);
+      final OptionValue value = values.get(name);
+
+      if (value != null) {
+        return value;
+      }
+
+      return getDefault(name);
+    }
+
+    @Override
+    public OptionValue getDefault(String optionName) {
+      return defaults.get(optionName);
     }
   }
 

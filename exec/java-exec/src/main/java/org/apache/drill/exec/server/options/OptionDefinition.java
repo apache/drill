@@ -15,27 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+package org.apache.drill.exec.server.options;
 
-public class TestWithZookeeper extends ExecTest {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestWithZookeeper.class);
+import com.google.common.base.Preconditions;
 
-  protected ZookeeperHelper zkHelper;
+/**
+ * This holds all the information about an option.
+ */
+public class OptionDefinition {
+  private final OptionValidator validator;
+  private final OptionMetaData metaData;
 
-  @Before
-  public void setUp() throws Exception {
-    zkHelper = new ZookeeperHelper();
-    zkHelper.startZookeeper(1);
+  public OptionDefinition(OptionValidator validator) {
+    this.validator = Preconditions.checkNotNull(validator);
+    this.metaData = OptionMetaData.DEFAULT;
   }
 
-  @After
-  public void tearDown() throws Exception {
-    zkHelper.stopZookeeper();
+  public OptionDefinition(OptionValidator validator, OptionMetaData metaData) {
+    this.validator = Preconditions.checkNotNull(validator);
+    this.metaData = Preconditions.checkNotNull(metaData);
+  }
+
+  public OptionValidator getValidator() {
+    return validator;
+  }
+
+  public OptionMetaData getMetaData() {
+    return metaData;
   }
 }

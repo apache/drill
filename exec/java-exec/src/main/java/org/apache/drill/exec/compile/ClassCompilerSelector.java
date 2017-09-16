@@ -25,6 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.server.options.OptionMetaData;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -82,8 +83,8 @@ public class ClassCompilerSelector {
 
   public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION) {
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       try {
         CompilerPolicy.valueOf(v.string_val.toUpperCase());
       } catch (IllegalArgumentException e) {

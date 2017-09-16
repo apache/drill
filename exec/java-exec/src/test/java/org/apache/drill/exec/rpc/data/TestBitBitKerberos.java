@@ -51,6 +51,7 @@ import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
@@ -119,7 +120,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
     updateTestCluster(1, newConfig);
 
     ScanResult result = ClassPathScanner.fromPrescan(newConfig);
-    c1 = new BootStrapContext(newConfig, result);
+    c1 = new BootStrapContext(newConfig, SystemOptionManager.createDefaultOptionDefinitions(), result);
     setupFragmentContextAndManager();
   }
 

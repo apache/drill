@@ -28,16 +28,11 @@ public abstract class OptionValidator {
   // Stored here as well as in the option static class to allow insertion of option optionName into
   // the error messages produced by the validator
   private final String optionName;
-  private final boolean isAdminOption;
   public static final String OPTION_DEFAULTS_ROOT = "drill.exec.options.";
+
   /** By default, if admin option value is not specified, it would be set to false.*/
   public OptionValidator(String optionName) {
-    this(optionName, false);
-  }
-
-  public OptionValidator(String optionName, boolean isAdminOption) {
     this.optionName = optionName;
-    this.isAdminOption = isAdminOption;
   }
 
   /**
@@ -78,27 +73,13 @@ public abstract class OptionValidator {
   }
 
   /**
-   * @return true is option is system-level property that can be only specified by admin (not user).
-   */
-  public boolean isAdminOption() {
-    return isAdminOption;
-  }
-
-  /**
-   * Gets the default option value for this validator.
-   *
-   * @return default option value
-   */
-  public abstract OptionValue getDefault();
-
-  /**
    * Validates the option value.
    *
    * @param value the value to validate
    * @param manager the manager for accessing validation dependencies (options)
    * @throws UserException message to describe error with value, including range or list of expected values
    */
-  public abstract void validate(OptionValue value, OptionSet manager);
+  public abstract void validate(OptionValue value, OptionMetaData optionMetaData, OptionSet manager);
 
   /**
    * Gets the kind of this option value for this validator.
@@ -107,11 +88,7 @@ public abstract class OptionValidator {
    */
   public abstract Kind getKind();
 
-  /**
-   * Loads the default option value for this validator.
-   *
-   * @return  default option value
-   */
-  public abstract void loadDefault(DrillConfig bootConfig);
-
+  public String getConfigProperty() {
+    return OPTION_DEFAULTS_ROOT + getOptionName();
+  }
 }
