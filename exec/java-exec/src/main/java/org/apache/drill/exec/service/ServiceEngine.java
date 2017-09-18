@@ -61,6 +61,8 @@ public class ServiceEngine implements AutoCloseable {
   private final BufferAllocator controlAllocator;
   private final BufferAllocator dataAllocator;
 
+  private int userPort;
+
   public ServiceEngine(final WorkManager manager, final BootStrapContext context,
                        final boolean allowPortHunting, final boolean isDistributedMode)
       throws DrillbitStartupException {
@@ -95,7 +97,7 @@ public class ServiceEngine implements AutoCloseable {
       throw new DrillbitStartupException("Drillbit is disallowed to bind to loopback address in distributed mode.");
     }
 
-    final int userPort = userServer.bind(intialUserPort, allowPortHunting);
+    userPort = userServer.bind(intialUserPort, allowPortHunting);
     DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()
         .setAddress(hostName)
         .setUserPort(userPort)
@@ -104,6 +106,10 @@ public class ServiceEngine implements AutoCloseable {
 
     partialEndpoint = controller.start(partialEndpoint, allowPortHunting);
     return dataPool.start(partialEndpoint, allowPortHunting);
+  }
+
+  public int getUserPort() {
+    return userPort;
   }
 
   public DataConnectionCreator getDataConnectionCreator(){

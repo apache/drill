@@ -36,6 +36,7 @@ import org.apache.drill.BaseTestQuery;
 import org.apache.drill.DrillTestWrapper.TestServices;
 import org.apache.drill.QueryTestUtil;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -353,7 +354,9 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   public ClientFixture clientFixture() {
     if (clients.isEmpty()) {
-      clientBuilder().build();
+      clientBuilder()
+        .property(DrillProperties.DRILLBIT_CONNECTION, String.format("localhost:%s", drillbit().getUserPort()))
+        .build();
     }
     return clients.get(0);
   }

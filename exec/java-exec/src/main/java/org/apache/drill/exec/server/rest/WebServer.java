@@ -73,6 +73,7 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.BindException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -92,7 +93,7 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTI
 public class WebServer implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
 
-  private static final int PORT_HUNT_TRIES = 10;
+  private static final int PORT_HUNT_TRIES = 100;
 
   private final DrillConfig config;
 
@@ -103,6 +104,8 @@ public class WebServer implements AutoCloseable {
   private final BootStrapContext context;
 
   private Server embeddedJetty;
+
+  private int port;
 
   /**
    * Create Jetty based web server.
@@ -147,6 +150,38 @@ public class WebServer implements AutoCloseable {
       return;
     }
 
+    port = config.getInt(ExecConstants.HTTP_PORT);
+    boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
+    int retry = 0;
+
+    for (; retry < PORT_HUNT_TRIES; retry++) {
+      embeddedJetty = new Server();
+      embeddedJetty.setHandler(createServletContextHandler(authEnabled));
+      embeddedJetty.addConnector(createConnector(port));
+
+      try {
+        embeddedJetty.start();
+      } catch (BindException e) {
+        if (portHunt) {
+          int nextPort = port + 1;
+          logger.info("Failed to start on port {}, trying port {}", port, nextPort);
+          port = nextPort;
+          embeddedJetty.stop();
+          continue;
+        } else {
+          throw e;
+        }
+      }
+
+      break;
+    }
+
+    if (retry == PORT_HUNT_TRIES) {
+      throw new IOException("Failed to find a port");
+    }
+  }
+
+  private ServletContextHandler createServletContextHandler(final boolean authEnabled) {
     // Add resources
     final ErrorHandler errorHandler = new ErrorHandler();
     errorHandler.setShowStacks(true);
@@ -166,10 +201,10 @@ public class WebServer implements AutoCloseable {
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
     // Get resource URL for Drill static assets, based on where Drill icon is located
     String drillIconResourcePath =
-        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
+      Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
     staticHolder.setInitParameter(
-        "resourceBase",
-        drillIconResourcePath.substring(0,  drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
+      "resourceBase",
+      drillIconResourcePath.substring(0,  drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
@@ -188,49 +223,20 @@ public class WebServer implements AutoCloseable {
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
       FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
       holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM,
-              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
+        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM,
-              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
+        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM,
-              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
+        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
-              String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
+        String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
 
       for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*"}) {
         servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
       }
     }
 
-    int port = config.getInt(ExecConstants.HTTP_PORT);
-    boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
-    int retry = 0;
-
-    System.out.println("Port hunting " + portHunt);
-
-    for (; retry < PORT_HUNT_TRIES; retry++) {
-      embeddedJetty = new Server();
-      embeddedJetty.setHandler(servletContextHandler);
-      embeddedJetty.addConnector(createConnector(port));
-
-      try {
-        embeddedJetty.start();
-      } catch (Exception e) {
-        if (portHunt) {
-          int nextPort = port++;
-          logger.info("Failed to start on port {}, trying port {}", port, nextPort);
-          logger.error("Attempted port failure:", e);
-          embeddedJetty.stop();
-        } else {
-          throw e;
-        }
-      }
-
-      break;
-    }
-
-    if (retry == PORT_HUNT_TRIES) {
-      throw new IOException("Failed to find a port");
-    }
+    return servletContextHandler;
   }
 
   /**
@@ -286,6 +292,14 @@ public class WebServer implements AutoCloseable {
     security.setLoginService(new DrillRestLoginService(workManager.getContext()));
 
     return security;
+  }
+
+  public int getPort() {
+    if (!config.getBoolean(ExecConstants.HTTP_ENABLE)) {
+      throw new UnsupportedOperationException("Http is not enabled");
+    }
+
+    return port;
   }
 
   private ServerConnector createConnector(int port) throws Exception {
