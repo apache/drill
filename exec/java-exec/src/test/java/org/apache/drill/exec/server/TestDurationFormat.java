@@ -22,6 +22,7 @@ import org.apache.drill.test.DrillTest;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import java.util.Locale;
 
 /**
  * Test translation of millisecond durations into human readable format
@@ -33,6 +34,7 @@ public class TestDurationFormat extends DrillTest {
   }
 
   private void validateDurationFormat(long durationInMillisec, String expected, DurationFormat format) {
+    Locale.setDefault(new Locale("en", "US"));
     String formatted = null;
     if (format.equals(DurationFormat.COMPACT)) {
       formatted = new SimpleDurationFormat(0, durationInMillisec).compact();

@@ -25,6 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.Locale;
 
 import static org.apache.drill.common.expression.fn.JodaDateValidator.toJodaFormat;
 import static org.joda.time.DateTime.parse;
@@ -196,6 +197,7 @@ public class JodaDateValidatorTest {
   }
 
   private DateTime parseDateFromPostgres(String date, String pattern) {
+    Locale.setDefault(new Locale("en", "US"));
     String jodaFormat = toJodaFormat(pattern);
     DateTimeFormatter format = forPattern(jodaFormat);
     return parse(date, format).withZoneRetainFields(DateTimeZone.UTC);
