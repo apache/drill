@@ -438,7 +438,7 @@ public class RecordBatchSizer {
   public boolean hasSv2() { return hasSv2; }
   public int avgDensity() { return avgDensity; }
   public int netSize() { return netBatchSize; }
-  public int maxSize() { return maxSize; }
+  public int maxAvgColumnSize() { return maxSize / rowCount; }
 
   public static final int MAX_VECTOR_SIZE = 16 * 1024 * 1024; // 16 MiB
 

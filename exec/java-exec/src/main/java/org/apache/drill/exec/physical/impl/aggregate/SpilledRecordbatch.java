@@ -64,7 +64,9 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
 
     try {
       this.spillStream = this.spillSet.openForInput(spillFile);
-    } catch (IOException e) { throw new RuntimeException(e);}
+    } catch (IOException e) {
+      throw UserException.resourceError(e).build(HashAggBatch.logger);
+    }
 
     next(); // initialize the container
   }
@@ -124,6 +126,8 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
   @Override
   public IterOutcome next() {
 
+    if ( ! context.shouldContinue() ) { return IterOutcome.STOP; }
+
     if ( spilledBatches <= 0 ) { // no more batches to read in this partition
       this.close();
       return IterOutcome.NONE;
@@ -155,6 +159,9 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
     return IterOutcome.OK;
   }
 
+  /**
+   * Note: ignoring any IO errors (e.g. file not found)
+   */
   @Override
   public void close() {
     container.clear();
@@ -167,9 +174,8 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
       spillSet.delete(spillFile);
     }
     catch (IOException e) {
-      throw new RuntimeException(e);
+      /* ignore */
     } finally {
-      spillSet.close();
     }
   }
 }

@@ -141,6 +141,7 @@ public class ChainedHashTable {
     // This code is called from generated code, so to step into this code,
     // persist the code generated in HashAggBatch also.
     // top.saveCodeForDebugging(true);
+    top.preferPlainJava(true); // use a subclass
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 

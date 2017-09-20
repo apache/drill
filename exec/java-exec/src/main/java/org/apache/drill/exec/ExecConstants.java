@@ -93,18 +93,20 @@ public interface ExecConstants {
 
   // Hash Aggregate Options
 
-  String HASHAGG_NUM_PARTITIONS = "drill.exec.hashagg.num_partitions";
   String HASHAGG_NUM_PARTITIONS_KEY = "exec.hashagg.num_partitions";
   LongValidator HASHAGG_NUM_PARTITIONS_VALIDATOR = new RangeLongValidator(HASHAGG_NUM_PARTITIONS_KEY, 1, 128); // 1 means - no spilling
-  String HASHAGG_MAX_MEMORY = "drill.exec.hashagg.mem_limit";
   String HASHAGG_MAX_MEMORY_KEY = "exec.hashagg.mem_limit";
   LongValidator HASHAGG_MAX_MEMORY_VALIDATOR = new RangeLongValidator(HASHAGG_MAX_MEMORY_KEY, 0, Integer.MAX_VALUE);
   // min batches is used for tuning (each partition needs so many batches when planning the number of partitions,
   // or reserve this number when calculating whether the remaining available memory is too small and requires a spill.)
   // Low value may OOM (e.g., when incoming rows become wider), higher values use fewer partitions but are safer
-  String HASHAGG_MIN_BATCHES_PER_PARTITION = "drill.exec.hashagg.min_batches_per_partition";
-  String HASHAGG_MIN_BATCHES_PER_PARTITION_KEY = "drill.exec.hashagg.min_batches_per_partition";
-  LongValidator HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR = new RangeLongValidator(HASHAGG_MIN_BATCHES_PER_PARTITION_KEY, 2, 5);
+  String HASHAGG_MIN_BATCHES_PER_PARTITION_KEY = "exec.hashagg.min_batches_per_partition";
+  LongValidator HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR = new RangeLongValidator(HASHAGG_MIN_BATCHES_PER_PARTITION_KEY, 1, 5);
+  // Can be turned off mainly for testing. Memory prediction is used to decide on when to spill to disk; with this option off,
+  // spill would be triggered only by another mechanism -- "catch OOMs and then spill".
+  String HASHAGG_USE_MEMORY_PREDICTION_KEY = "exec.hashagg.use_memory_prediction";
+  BooleanValidator HASHAGG_USE_MEMORY_PREDICTION_VALIDATOR = new BooleanValidator(HASHAGG_USE_MEMORY_PREDICTION_KEY);
+
   String HASHAGG_SPILL_DIRS = "drill.exec.hashagg.spill.directories";
   String HASHAGG_SPILL_FILESYSTEM = "drill.exec.hashagg.spill.fs";
   String HASHAGG_FALLBACK_ENABLED_KEY = "drill.exec.hashagg.fallback.enabled";
