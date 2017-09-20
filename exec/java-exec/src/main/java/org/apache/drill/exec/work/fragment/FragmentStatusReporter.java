@@ -26,7 +26,6 @@ import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
-import org.apache.drill.exec.server.Drillbit;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -100,8 +99,7 @@ public class FragmentStatusReporter implements AutoCloseable {
       case FAILED:
         // shouldn't get here since fail() should be called.
       default:
-        throw new IllegalStateException(String.format("Received state changed event for unexpected state of %s.",
-            newState));
+        throw new IllegalStateException(String.format("Received state changed event for unexpected state of %s.", newState));
     }
   }
 
@@ -109,6 +107,7 @@ public class FragmentStatusReporter implements AutoCloseable {
   /**
    * Sends status to remote Foreman node using Control Tunnel or to Local Foreman bypassing
    * Control Tunnel and using WorkEventBus.
+   *
    * @param status
    */
   void sendStatus(final FragmentStatus status) {
@@ -116,8 +115,7 @@ public class FragmentStatusReporter implements AutoCloseable {
     DrillbitEndpoint foremanNode = foremanDrillbit.get();
 
     if (foremanNode == null) {
-      logger.warn("{}: State {} is not reported as {} is closed", QueryIdHelper.getQueryIdentifier(context.getHandle()),
-          status.getProfile().getState(), this);
+      logger.warn("{}: State {} is not reported as {} is closed", QueryIdHelper.getQueryIdentifier(context.getHandle()), status.getProfile().getState(), this);
       return;
     }
 
@@ -144,8 +142,7 @@ public class FragmentStatusReporter implements AutoCloseable {
   }
 
   @Override
-  public void close()
-  {
+  public void close() {
     final DrillbitEndpoint foremanNode = foremanDrillbit.getAndSet(null);
     if (foremanNode != null) {
       logger.debug("Closing {}", this);
