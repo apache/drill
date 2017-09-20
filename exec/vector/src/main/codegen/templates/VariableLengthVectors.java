@@ -362,7 +362,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     try {
       data = allocator.buffer(totalBytes);
       offsetVector.allocateNew(valueCount + 1);
-    } catch (DrillRuntimeException e) {
+    } catch (RuntimeException e) {
       clear();
       throw e;
     }

@@ -25,6 +25,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -251,6 +252,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       groupByOutFieldIds[i] = container.add(vv);
     }
 
+    int extraNonNullColumns = 0; // each of SUM, MAX and MIN gets an extra bigint column
     for (i = 0; i < numAggrExprs; i++) {
       NamedExpression ne = popConfig.getAggrExprs().get(i);
       final LogicalExpression expr =
@@ -268,6 +270,10 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         continue;
       }
 
+      if ( expr instanceof FunctionHolderExpression ) {
+         String funcName = ((FunctionHolderExpression) expr).getName();
+         if ( funcName.equals("sum") || funcName.equals("max") || funcName.equals("min") ) {extraNonNullColumns++;}
+      }
       final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), expr.getMajorType());
       @SuppressWarnings("resource")
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
@@ -288,12 +294,11 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         new HashTableConfig((int)context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
             HashTable.DEFAULT_LOAD_FACTOR, popConfig.getGroupByExprs(), null /* no probe exprs */, comparators);
 
-    agg.setup(popConfig, htConfig, context, this.stats,
-        oContext, incoming, this,
+    agg.setup(popConfig, htConfig, context, oContext, incoming, this,
         aggrExprs,
         cgInner.getWorkspaceTypes(),
         groupByOutFieldIds,
-        this.container);
+        this.container, extraNonNullColumns * 8 /* sizeof(BigInt) */);
 
     return agg;
   }

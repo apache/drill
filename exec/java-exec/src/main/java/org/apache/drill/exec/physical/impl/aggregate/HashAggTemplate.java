@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Named;
 
 import com.google.common.base.Stopwatch;
-
+import org.apache.drill.common.exceptions.RetryAfterSpillException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -59,8 +59,6 @@ import org.apache.drill.exec.physical.impl.spill.RecordBatchSizer;
 
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
-
-import org.apache.drill.exec.proto.UserBitShared;
 
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -109,14 +107,21 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   private boolean isTwoPhase = false; // 1 phase or 2 phase aggr?
   private boolean is2ndPhase = false;
-  private boolean canSpill = true; // make it false in case can not spill
+  private boolean is1stPhase = false;
+  private boolean canSpill = true; // make it false in case can not spill/return-early
   private ChainedHashTable baseHashTable;
   private boolean earlyOutput = false; // when 1st phase returns a partition due to no memory
   private int earlyPartition = 0; // which partition to return early
-
-  private long memoryLimit; // max memory to be used by this oerator
-  private long estMaxBatchSize = 0; // used for adjusting #partitions
-  private long estRowWidth = 0;
+  private boolean retrySameIndex = false; // in case put failed during 1st phase - need to output early, then retry
+  private boolean useMemoryPrediction = false; // whether to use memory prediction to decide when to spill
+  private long estMaxBatchSize = 0; // used for adjusting #partitions and deciding when to spill
+  private long estRowWidth = 0; // the size of the internal "row" (keys + values + extra columns)
+  private long estValuesRowWidth = 0; // the size of the internal values ( values + extra )
+  private long estOutputRowWidth = 0; // the size of the output "row" (no extra columns)
+  private long estValuesBatchSize = 0; // used for "reserving" memory for the Values batch to overcome an OOM
+  private long estOutgoingAllocSize = 0; // used for "reserving" memory for the Outgoing Output Values to overcome an OOM
+  private long reserveValueBatchMemory; // keep "reserve memory" for Values Batch
+  private long reserveOutgoingMemory; // keep "reserve memory" for the Outgoing (Values only) output
   private int maxColumnWidth = VARIABLE_MIN_WIDTH_VALUE_SIZE; // to control memory allocation for varchars
   private long minBatchesPerPartition; // for tuning - num partitions and spill decision
   private long plannedBatches = 0; // account for planned, but not yet allocated batches
@@ -297,10 +302,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   @Override
-  public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context,
-                    OperatorStats stats, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing,
-                    LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] groupByOutFieldIds,
-                    VectorContainer outContainer) throws SchemaChangeException, IOException {
+  public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing, LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException {
 
     if (valueExprs == null || valueFieldIds == null) {
       throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
@@ -310,25 +312,27 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     this.context = context;
-    this.stats = stats;
+    this.stats = oContext.getStats();
     this.allocator = oContext.getAllocator();
     this.oContext = oContext;
     this.incoming = incoming;
     this.outgoing = outgoing;
     this.outContainer = outContainer;
     this.operatorId = hashAggrConfig.getOperatorId();
+    this.useMemoryPrediction = context.getOptions().getOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_VALIDATOR);
 
     is2ndPhase = hashAggrConfig.getAggPhase() == AggPrelBase.OperatorPhase.PHASE_2of2;
     isTwoPhase = hashAggrConfig.getAggPhase() != AggPrelBase.OperatorPhase.PHASE_1of1;
+    is1stPhase = isTwoPhase && ! is2ndPhase ;
     canSpill = isTwoPhase; // single phase can not spill
 
     // Typically for testing - force a spill after a partition has more than so many batches
-    minBatchesPerPartition = context.getConfig().getLong(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION);
+    minBatchesPerPartition = context.getOptions().getOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR);
 
     // Set the memory limit
-    memoryLimit = allocator.getLimit();
+    long memoryLimit = allocator.getLimit();
     // Optional configured memory limit, typically used only for testing.
-    long configLimit = context.getConfig().getLong(ExecConstants.HASHAGG_MAX_MEMORY);
+    long configLimit = context.getOptions().getOption(ExecConstants.HASHAGG_MAX_MEMORY_VALIDATOR);
     if (configLimit > 0) {
       logger.warn("Memory limit was changed to {}",configLimit);
       memoryLimit = Math.min(memoryLimit, configLimit);
@@ -370,6 +374,10 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.groupByOutFieldIds = groupByOutFieldIds; // retain these for delayedSetup, and to allow recreating hash tables (after a spill)
     numGroupByOutFields = groupByOutFieldIds.length;
 
+    // Start calculating the row widths (with the extra columns; the rest would be done in updateEstMaxBatchSize() )
+    estRowWidth = extraRowBytes;
+    estValuesRowWidth = extraRowBytes;
+
     doSetup(incoming);
   }
 
@@ -382,19 +390,25 @@ public abstract class HashAggTemplate implements HashAggregator {
     final boolean fallbackEnabled = context.getOptions().getOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY).bool_val;
 
     // Set the number of partitions from the configuration (raise to a power of two, if needed)
-    numPartitions = context.getConfig().getInt(ExecConstants.HASHAGG_NUM_PARTITIONS);
-    if ( numPartitions == 1 ) {
+    numPartitions = (int)context.getOptions().getOption(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR);
+    if ( numPartitions == 1 && is2ndPhase  ) { // 1st phase can still do early return with 1 partition
       canSpill = false;
       logger.warn("Spilling is disabled due to configuration setting of num_partitions to 1");
     }
     numPartitions = BaseAllocator.nextPowerOfTwo(numPartitions); // in case not a power of 2
 
-    if ( schema == null ) { estMaxBatchSize = 0; } // incoming was an empty batch
+    if ( schema == null ) { estValuesBatchSize = estOutgoingAllocSize = estMaxBatchSize = 0; } // incoming was an empty batch
     else {
       // Estimate the max batch size; should use actual data (e.g. lengths of varchars)
       updateEstMaxBatchSize(incoming);
     }
-    long memAvail = memoryLimit - allocator.getAllocatedMemory();
+    // create "reserved memory" and adjust the memory limit down
+    reserveValueBatchMemory = reserveOutgoingMemory = estValuesBatchSize ;
+    long newMemoryLimit = allocator.getLimit() - reserveValueBatchMemory - reserveOutgoingMemory ;
+    long memAvail = newMemoryLimit - allocator.getAllocatedMemory();
+    if ( memAvail <= 0 ) { throw new OutOfMemoryException("Too little memory available"); }
+    allocator.setLimit(newMemoryLimit);
+
     if ( !canSpill ) { // single phase, or spill disabled by configuation
       numPartitions = 1; // single phase should use only a single partition (to save memory)
     } else { // two phase
@@ -464,6 +478,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
       this.batchHolders[i] = new ArrayList<BatchHolder>(); // First BatchHolder is created when the first put request is received.
     }
+    // Initialize the value vectors in the generated code (which point to the incoming or outgoing fields)
+    try { htables[0].updateBatches(); } catch (SchemaChangeException sc) { throw new UnsupportedOperationException(sc); };
   }
   /**
    * get new incoming: (when reading spilled files like an "incoming")
@@ -500,22 +516,45 @@ public abstract class HashAggTemplate implements HashAggregator {
    */
   private void updateEstMaxBatchSize(RecordBatch incoming) {
     if ( estMaxBatchSize > 0 ) { return; }  // no handling of a schema (or varchar) change
+    // Use the sizer to get the input row width and the length of the longest varchar column
     RecordBatchSizer sizer = new RecordBatchSizer(incoming);
     logger.trace("Incoming sizer: {}",sizer);
     // An empty batch only has the schema, can not tell actual length of varchars
     // else use the actual varchars length, each capped at 50 (to match the space allocation)
-    estRowWidth = sizer.rowCount() == 0 ? sizer.stdRowWidth() : sizer.netRowWidthCap50();
-    estMaxBatchSize = estRowWidth * MAX_BATCH_SIZE;
+    long estInputRowWidth = sizer.rowCount() == 0 ? sizer.stdRowWidth() : sizer.netRowWidthCap50();
 
     // Get approx max (varchar) column width to get better memory allocation
-    maxColumnWidth = Math.max(sizer.maxSize(), VARIABLE_MIN_WIDTH_VALUE_SIZE);
+    maxColumnWidth = Math.max(sizer.maxAvgColumnSize(), VARIABLE_MIN_WIDTH_VALUE_SIZE);
     maxColumnWidth = Math.min(maxColumnWidth, VARIABLE_MAX_WIDTH_VALUE_SIZE);
 
-    logger.trace("{} phase. Estimated row width: {}  batch size: {}  memory limit: {}  max column width: {}",
-        isTwoPhase?(is2ndPhase?"2nd":"1st"):"Single",estRowWidth,estMaxBatchSize,memoryLimit,maxColumnWidth);
+    //
+    // Calculate the estimated max (internal) batch (i.e. Keys batch + Values batch) size
+    // (which is used to decide when to spill)
+    // Also calculate the values batch size (used as a reserve to overcome an OOM)
+    //
+    Iterator<VectorWrapper<?>> outgoingIter = outContainer.iterator();
+    int fieldId = 0;
+    while (outgoingIter.hasNext()) {
+      ValueVector vv = outgoingIter.next().getValueVector();
+      MaterializedField mr = vv.getField();
+      int fieldSize = vv instanceof VariableWidthVector ? maxColumnWidth :
+          TypeHelper.getSize(mr.getType());
+      estRowWidth += fieldSize;
+      estOutputRowWidth += fieldSize;
+      if ( fieldId < numGroupByOutFields ) { fieldId++; }
+      else { estValuesRowWidth += fieldSize; }
+    }
+    // multiply by the max number of rows in a batch to get the final estimated max size
+    estMaxBatchSize = Math.max(estRowWidth, estInputRowWidth) * MAX_BATCH_SIZE;
+    // (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
+    estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_SIZE;
+    estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
 
-    if ( estMaxBatchSize > memoryLimit ) {
-      logger.warn("HashAggregate: Estimated max batch size {} is larger than the memory limit {}",estMaxBatchSize,memoryLimit);
+    logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}  max column width: {}",
+        isTwoPhase?(is2ndPhase?"2nd":"1st"):"Single",estRowWidth,estValuesRowWidth,estMaxBatchSize,allocator.getLimit(),maxColumnWidth);
+
+    if ( estMaxBatchSize > allocator.getLimit() ) {
+      logger.warn("HashAggregate: Estimated max batch size {} is larger than the memory limit {}",estMaxBatchSize,allocator.getLimit());
     }
   }
 
@@ -545,16 +584,19 @@ public abstract class HashAggTemplate implements HashAggregator {
       if (EXTRA_DEBUG_1) {
         logger.debug("Starting outer loop of doWork()...");
       }
-      for (; underlyingIndex < currentBatchRecordCount; incIndex()) {
+      while (underlyingIndex < currentBatchRecordCount) {
         if (EXTRA_DEBUG_2) {
           logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
         }
         checkGroupAndAggrValues(currentIndex);
+
+        if ( retrySameIndex ) { retrySameIndex = false; }  // need to retry this row (e.g. we had an OOM)
+        else { incIndex(); } // next time continue with the next incoming row
+
         // If adding a group discovered a memory pressure during 1st phase, then start
         // outputing some partition downstream in order to free memory.
         if ( earlyOutput ) {
           outputCurrentBatch();
-          incIndex(); // next time continue with the next incoming row
           return AggOutcome.RETURN_OUTCOME;
         }
       }
@@ -573,9 +615,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       // collecting stats on the spilled records)
       //
       long memAllocBeforeNext = allocator.getAllocatedMemory();
-
       if ( handlingSpills ) {
-        outcome = context.shouldContinue() ? incoming.next() : IterOutcome.STOP;
+        outcome = incoming.next(); // get it from the SpilledRecordBatch
       } else {
         // Get the next RecordBatch from the incoming (i.e. upstream operator)
         outcome = outgoing.next(0, incoming);
@@ -646,6 +687,46 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   /**
+   *   Use reserved values memory (if available) to try and preemp an OOM
+   */
+  private void useReservedValuesMemory() {
+    // try to preempt an OOM by using the reserved memory
+    long reservedMemory = reserveValueBatchMemory;
+    if ( reservedMemory > 0 ) { allocator.setLimit(allocator.getLimit() + reservedMemory); }
+
+    reserveValueBatchMemory = 0;
+  }
+  /**
+   *   Use reserved outgoing output memory (if available) to try and preemp an OOM
+   */
+  private void useReservedOutgoingMemory() {
+    // try to preempt an OOM by using the reserved memory
+    long reservedMemory = reserveOutgoingMemory;
+    if ( reservedMemory > 0 ) { allocator.setLimit(allocator.getLimit() + reservedMemory); }
+
+    reserveOutgoingMemory = 0;
+  }
+  /**
+   *  Restore the reserve memory (both)
+   *
+   */
+  private void restoreReservedMemory() {
+    if ( 0 == reserveOutgoingMemory ) { // always restore OutputValues first (needed for spilling)
+      long memAvail = allocator.getLimit() - allocator.getAllocatedMemory();
+      if ( memAvail > estOutgoingAllocSize) {
+        allocator.setLimit(allocator.getLimit() - estOutgoingAllocSize);
+        reserveOutgoingMemory = estOutgoingAllocSize;
+      }
+    }
+    if ( 0 == reserveValueBatchMemory ) {
+      long memAvail = allocator.getLimit() - allocator.getAllocatedMemory();
+      if ( memAvail > estValuesBatchSize) {
+        allocator.setLimit(allocator.getLimit() - estValuesBatchSize);
+        reserveValueBatchMemory = estValuesBatchSize;
+      }
+    }
+  }
+  /**
    *   Allocate space for the returned aggregate columns
    *   (Note DRILL-5588: Maybe can eliminate this allocation (and copy))
    * @param records
@@ -657,12 +738,25 @@ public abstract class HashAggTemplate implements HashAggregator {
     for (int i = 0; i < numGroupByOutFields; i++) {
       outgoingIter.next();
     }
+
+    // try to preempt an OOM by using the reserved memory
+    useReservedOutgoingMemory();
+    long allocatedBefore = allocator.getAllocatedMemory();
+
     while (outgoingIter.hasNext()) {
       @SuppressWarnings("resource")
       ValueVector vv = outgoingIter.next().getValueVector();
 
       AllocationHelper.allocatePrecomputedChildCount(vv, records, maxColumnWidth, 0);
     }
+
+    long memAdded = allocator.getAllocatedMemory() - allocatedBefore;
+    if ( memAdded > estOutgoingAllocSize ) {
+      logger.trace("Output values allocated {} but the estimate was only {}. Adjusting ...",memAdded,estOutgoingAllocSize);
+      estOutgoingAllocSize = memAdded;
+    }
+    // try to restore the reserve
+    restoreReservedMemory();
   }
 
   @Override
@@ -738,6 +832,9 @@ public abstract class HashAggTemplate implements HashAggregator {
       batchHolders[part].clear();
     }
     batchHolders[part] = new ArrayList<BatchHolder>(); // First BatchHolder is created when the first put request is received.
+
+    // in case the reserve memory was used, try to restore
+    restoreReservedMemory();
   }
 
   private final void incIndex() {
@@ -751,7 +848,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   private final void resetIndex() {
-    underlyingIndex = -1;
+    underlyingIndex = -1; // will become 0 in incIndex()
     incIndex();
   }
 
@@ -768,10 +865,11 @@ public abstract class HashAggTemplate implements HashAggregator {
    * Need to weigh the above three options.
    *
    *  @param currPart - The partition that hit the memory limit (gets a priority)
-   *  @return The partition (number) chosen to be spilled
+   *  @param tryAvoidCurr - When true, give negative priority to the current partition
+   * @return The partition (number) chosen to be spilled
    */
-  private int chooseAPartitionToFlush(int currPart) {
-    if ( ! is2ndPhase ) { return currPart; } // 1st phase: just use the current partition
+  private int chooseAPartitionToFlush(int currPart, boolean tryAvoidCurr) {
+    if ( is1stPhase && ! tryAvoidCurr) { return currPart; } // 1st phase: just use the current partition
     int currPartSize = batchHolders[currPart].size();
     if ( currPartSize == 1 ) { currPartSize = -1; } // don't pick current if size is 1
     // first find the largest spilled partition
@@ -784,7 +882,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
     }
     // Give the current (if already spilled) some priority
-    if ( isSpilled(currPart) && ( currPartSize + 1 >= maxSizeSpilled )) {
+    if ( ! tryAvoidCurr && isSpilled(currPart) && ( currPartSize + 1 >= maxSizeSpilled )) {
       maxSizeSpilled = currPartSize ;
       indexMaxSpilled = currPart;
     }
@@ -803,7 +901,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
     }
     // again - priority to the current partition
-    if ( ! isSpilled(currPart) && (currPartSize + 1 >= maxSize) ) {
+    if ( ! tryAvoidCurr && ! isSpilled(currPart) && (currPartSize + 1 >= maxSize) ) {
       return currPart;
     }
     if ( maxSize <= 1 ) { // Can not make progress by spilling a single batch!
@@ -898,7 +996,6 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     BatchHolder bh = newBatchHolder();
     batchHolders[part].add(bh);
-
     if (EXTRA_DEBUG_1) {
       logger.debug("HashAggregate: Added new batch; num batches = {}.", batchHolders[part].size());
     }
@@ -1117,7 +1214,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       errmsg = "Too little memory available to operator to facilitate spilling.";
     } else { // a bug ?
       errmsg = prefix + " OOM at " + (is2ndPhase ? "Second Phase" : "First Phase") + ". Partitions: " + numPartitions +
-      ". Estimated batch size: " + estMaxBatchSize + ". Planned batches: " + plannedBatches;
+      ". Estimated batch size: " + estMaxBatchSize + ". values size: " + estValuesBatchSize + ". Output alloc size: " + estOutgoingAllocSize;
+      if ( plannedBatches > 0 ) { errmsg += ". Planned batches: " + plannedBatches; }
       if ( rowsSpilled > 0 ) { errmsg += ". Rows spilled so far: " + rowsSpilled; }
     }
     errmsg += " Memory limit: " + allocator.getLimit() + " so far allocated: " + allocator.getAllocatedMemory() + ". ";
@@ -1129,10 +1227,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   // The htIdxHolder contains the index of the group in the hash table container; this same
   // index is also used for the aggregation values maintained by the hash aggregate.
   private void checkGroupAndAggrValues(int incomingRowIdx) {
-    if (incomingRowIdx < 0) {
-      throw new IllegalArgumentException("Invalid incoming row index.");
-    }
-
+    assert incomingRowIdx >= 0;
     assert ! earlyOutput;
 
     /** for debugging
@@ -1165,7 +1260,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     // partition to use, and the higher bits determine the location in the hash table.
     int hashCode;
     try {
-      htables[0].updateBatches();
+      // htables[0].updateBatches();
       hashCode = htables[0].getHashCode(incomingRowIdx);
     } catch (SchemaChangeException e) {
       throw new UnsupportedOperationException("Unexpected schema change", e);
@@ -1179,19 +1274,45 @@ public abstract class HashAggTemplate implements HashAggregator {
     HashTable.PutStatus putStatus = null;
     long allocatedBeforeHTput = allocator.getAllocatedMemory();
 
+    // Proactive spill - in case there is no reserve memory - spill and retry putting later
+    if ( reserveValueBatchMemory == 0 && canSpill ) {
+      logger.trace("Reserved memory runs short, trying to {} a partition and retry Hash Table put() again.",
+        is1stPhase ? "early return" : "spill");
+
+      doSpill(currentPartition); // spill to free some memory
+
+      retrySameIndex = true;
+      return; // to retry this put()
+    }
+
     // ==========================================
     // Insert the key columns into the hash table
     // ==========================================
     try {
-      putStatus = htables[currentPartition].put(incomingRowIdx, htIdxHolder, hashCode);
-    } catch (OutOfMemoryException exc) {
-      throw new OutOfMemoryException(getOOMErrorMsg("HT was: " + allocatedBeforeHTput), exc); // may happen when can not spill
-    } catch (SchemaChangeException e) {
-      throw new UnsupportedOperationException("Unexpected schema change", e);
-    }
 
-    boolean needToCheckIfSpillIsNeeded = false;
+      putStatus = htables[currentPartition].put(incomingRowIdx, htIdxHolder, hashCode);
+
+    } catch (RetryAfterSpillException re) {
+      if ( ! canSpill ) { throw new OutOfMemoryException(getOOMErrorMsg("Can not spill")); }
+
+      logger.trace("HT put failed with an OOM, trying to {} a partition and retry Hash Table put() again.",
+            is1stPhase ? "early return" : "spill");
+
+      // for debugging - in case there's a leak
+      long memDiff = allocator.getAllocatedMemory() - allocatedBeforeHTput;
+      if ( memDiff > 0 ) { logger.warn("Leak: HashTable put() OOM left behind {} bytes allocated",memDiff); }
+
+      doSpill(currentPartition); // spill to free some memory
+
+      retrySameIndex = true;
+      return; // to retry this put()
+    } catch (OutOfMemoryException exc) {
+        throw new OutOfMemoryException(getOOMErrorMsg("HT was: " + allocatedBeforeHTput), exc);
+    } catch (SchemaChangeException e) {
+        throw new UnsupportedOperationException("Unexpected schema change", e);
+    }
     long allocatedBeforeAggCol = allocator.getAllocatedMemory();
+    boolean needToCheckIfSpillIsNeeded = allocatedBeforeAggCol > allocatedBeforeHTput ;
 
     // Add an Aggr batch if needed:
     //
@@ -1201,32 +1322,38 @@ public abstract class HashAggTemplate implements HashAggregator {
     if ( putStatus == HashTable.PutStatus.NEW_BATCH_ADDED ) {
       try {
 
-        addBatchHolder(currentPartition);
+        useReservedValuesMemory(); // try to preempt an OOM by using the reserve
+
+        addBatchHolder(currentPartition);  // allocate a new (internal) values batch
+
+        restoreReservedMemory(); // restore the reserve, if possible
+        // A reason to check for a spill - In case restore-reserve failed
+        needToCheckIfSpillIsNeeded = ( 0 == reserveValueBatchMemory );
 
         if ( plannedBatches > 0 ) { plannedBatches--; } // just allocated a planned batch
         long totalAddedMem = allocator.getAllocatedMemory() - allocatedBeforeHTput;
-        logger.trace("MEMORY CHECK AGG: allocated now {}, added {}  total (with HT) added {}", allocator.getAllocatedMemory(),
-            allocator.getAllocatedMemory() - allocatedBeforeAggCol, totalAddedMem);
-        // resize the batch estimate if needed (e.g., varchars may take more memory than estimated)
+        long aggValuesAddedMem = allocator.getAllocatedMemory() - allocatedBeforeAggCol;
+        logger.trace("MEMORY CHECK AGG: allocated now {}, added {}, total (with HT) added {}", allocator.getAllocatedMemory(),
+            aggValuesAddedMem, totalAddedMem);
+        // resize the batch estimates if needed (e.g., varchars may take more memory than estimated)
         if (totalAddedMem > estMaxBatchSize) {
           logger.trace("Adjusting Batch size estimate from {} to {}", estMaxBatchSize, totalAddedMem);
           estMaxBatchSize = totalAddedMem;
-          needToCheckIfSpillIsNeeded = true; // better check the memory limits again now
+          needToCheckIfSpillIsNeeded = true;
+        }
+        if (aggValuesAddedMem > estValuesBatchSize) {
+          logger.trace("Adjusting Values Batch size from {} to {}",estValuesBatchSize, aggValuesAddedMem);
+          estValuesBatchSize = aggValuesAddedMem;
+          needToCheckIfSpillIsNeeded = true;
         }
       } catch (OutOfMemoryException exc) {
-        throw new OutOfMemoryException(getOOMErrorMsg("AGGR"), exc); // may happen when can not spill
+          throw new OutOfMemoryException(getOOMErrorMsg("AGGR"), exc);
       }
     } else if ( putStatus == HashTable.PutStatus.KEY_ADDED_LAST ) {
         // If a batch just became full (i.e. another batch would be allocated soon) -- then need to
         // check (later, see below) if the memory limits are too close, and if so -- then spill !
         plannedBatches++; // planning to allocate one more batch
         needToCheckIfSpillIsNeeded = true;
-    } else if ( allocatedBeforeAggCol > allocatedBeforeHTput ) {
-        // if HT put() allocated memory (other than a new batch; e.g. HT doubling, or buffer resizing)
-        // then better check again whether a spill is needed
-        needToCheckIfSpillIsNeeded = true;
-
-        logger.trace("MEMORY CHECK HT: was allocated {}  added {} partition {}",allocatedBeforeHTput, allocatedBeforeAggCol - allocatedBeforeHTput,currentPartition);
     }
 
     // =================================================================
@@ -1240,67 +1367,83 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     // ===================================================================================
-    // If the last batch just became full - that is the time to check the memory limits !!
-    // If exceeded, then need to spill (if 2nd phase) or output early (1st)
-    // (Skip this if cannot spill; in such case an OOM may be encountered later)
+    // If the last batch just became full, or other "memory growing" events happened, then
+    // this is the time to check the memory limits !!
+    // If the limits were exceeded, then need to spill (if 2nd phase) or output early (1st)
+    // (Skip this if cannot spill, or not checking memory limits; in such case an OOM may
+    // be encountered later - and some OOM cases are recoverable by spilling and retrying)
     // ===================================================================================
-    if ( needToCheckIfSpillIsNeeded && canSpill ) {
+    if ( needToCheckIfSpillIsNeeded && canSpill && useMemoryPrediction ) {
+      spillIfNeeded(currentPartition);
+    }
+  }
 
-      // calculate the (max) new memory needed now
-      // Plan ahead for at least MIN batches
-      long maxMemoryNeeded = minBatchesPerPartition * Math.max(1, plannedBatches) *
-          ( estMaxBatchSize + MAX_BATCH_SIZE * ( 4 + 4 /* links + hash-values */) );
+  private void spillIfNeeded(int currentPartition) { spillIfNeeded(currentPartition, false);}
+  private void doSpill(int currentPartition) { spillIfNeeded(currentPartition, true);}
+  /**
+   *  Spill (or return early, if 1st phase) if too little available memory is left
+   *  @param currentPartition - the preferred candidate for spilling
+   * @param forceSpill -- spill unconditionally (no memory checks)
+   */
+  private void spillIfNeeded(int currentPartition, boolean forceSpill) {
+    long maxMemoryNeeded = 0;
+    if ( !forceSpill ) { // need to check the memory in order to decide
+      // calculate the (max) new memory needed now; plan ahead for at least MIN batches
+      maxMemoryNeeded = minBatchesPerPartition * Math.max(1, plannedBatches) * (estMaxBatchSize + MAX_BATCH_SIZE * (4 + 4 /* links + hash-values */));
       // Add the (max) size of the current hash table, in case it will double
       int maxSize = 1;
-      for ( int insp = 0; insp < numPartitions; insp++) { maxSize = Math.max(maxSize, batchHolders[insp].size()); }
+      for (int insp = 0; insp < numPartitions; insp++) {
+        maxSize = Math.max(maxSize, batchHolders[insp].size());
+      }
       maxMemoryNeeded += MAX_BATCH_SIZE * 2 * 2 * 4 * maxSize; // 2 - double, 2 - max when %50 full, 4 - Uint4
 
       // log a detailed debug message explaining why a spill may be needed
-      logger.debug("MEMORY CHECK: Allocated mem: {}, agg phase: {}, trying to add to partition {} with {} batches. " +
-          "Max memory needed {}, Est batch size {}, mem limit {}",
-          allocator.getAllocatedMemory(), isTwoPhase?(is2ndPhase?"2ND":"1ST"):"Single", currentPartition,
-          batchHolders[currentPartition].size(), maxMemoryNeeded, estMaxBatchSize, memoryLimit);
-      //
-      //   Spill if the allocated memory plus the memory needed exceeds the memory limit.
-      //
-      if ( allocator.getAllocatedMemory() + maxMemoryNeeded > memoryLimit ) {
+      logger.trace("MEMORY CHECK: Allocated mem: {}, agg phase: {}, trying to add to partition {} with {} batches. " + "Max memory needed {}, Est batch size {}, mem limit {}",
+          allocator.getAllocatedMemory(), isTwoPhase ? (is2ndPhase ? "2ND" : "1ST") : "Single", currentPartition, batchHolders[currentPartition].size(), maxMemoryNeeded,
+          estMaxBatchSize, allocator.getLimit());
+    }
+    //
+    //   Spill if (forced, or) the allocated memory plus the memory needed exceed the memory limit.
+    //
+    if ( forceSpill || allocator.getAllocatedMemory() + maxMemoryNeeded > allocator.getLimit() ) {
 
-        // Pick a "victim" partition to spill or return
-        int victimPartition = chooseAPartitionToFlush(currentPartition);
+      // Pick a "victim" partition to spill or return
+      int victimPartition = chooseAPartitionToFlush(currentPartition, forceSpill);
 
-        // In case no partition has more than one batch -- try and "push the limits"; maybe next
-        // time the spill could work.
-        if ( victimPartition < 0 ) { return; }
+      // In case no partition has more than one batch -- try and "push the limits"; maybe next
+      // time the spill could work.
+      if ( victimPartition < 0 ) { return; }
 
-        if ( is2ndPhase ) {
-          long before = allocator.getAllocatedMemory();
+      if ( is2ndPhase ) {
+        long before = allocator.getAllocatedMemory();
 
-          spillAPartition(victimPartition);
-          logger.trace("RAN OUT OF MEMORY: Spilled partition {}",victimPartition);
+        spillAPartition(victimPartition);
+        logger.trace("RAN OUT OF MEMORY: Spilled partition {}",victimPartition);
 
-          // Re-initialize (free memory, then recreate) the partition just spilled/returned
-          reinitPartition(victimPartition);
+        // Re-initialize (free memory, then recreate) the partition just spilled/returned
+        reinitPartition(victimPartition);
 
-          // in some "edge" cases (e.g. testing), spilling one partition may not be enough
-          if ( allocator.getAllocatedMemory() + maxMemoryNeeded > memoryLimit ) {
-              int victimPartition2 = chooseAPartitionToFlush(victimPartition);
-              if ( victimPartition2 < 0 ) { return; }
-              long after = allocator.getAllocatedMemory();
-              spillAPartition(victimPartition2);
-              reinitPartition(victimPartition2);
-              logger.warn("A Second Spill was Needed: allocated before {}, after first spill {}, after second {}, memory needed {}",
-                  before, after, allocator.getAllocatedMemory(), maxMemoryNeeded);
-              logger.trace("Second Partition Spilled: {}",victimPartition2);
-          }
+        // In case spilling did not free enough memory to recover the reserves
+        boolean spillAgain = reserveOutgoingMemory == 0 || reserveValueBatchMemory == 0;
+        // in some "edge" cases (e.g. testing), spilling one partition may not be enough
+        if ( spillAgain || allocator.getAllocatedMemory() + maxMemoryNeeded > allocator.getLimit() ) {
+            int victimPartition2 = chooseAPartitionToFlush(victimPartition, true);
+            if ( victimPartition2 < 0 ) { return; }
+            long after = allocator.getAllocatedMemory();
+            spillAPartition(victimPartition2);
+            reinitPartition(victimPartition2);
+            logger.warn("A Second Spill was Needed: allocated before {}, after first spill {}, after second {}, memory needed {}",
+                before, after, allocator.getAllocatedMemory(), maxMemoryNeeded);
+            logger.trace("Second Partition Spilled: {}",victimPartition2);
         }
-        else {
-          // 1st phase need to return a partition early in order to free some memory
-          earlyOutput = true;
-          earlyPartition = victimPartition;
+      }
+      else {
+        // 1st phase need to return a partition early in order to free some memory
+        earlyOutput = true;
+        earlyPartition = victimPartition;
 
-          if ( EXTRA_DEBUG_SPILL ) {
-            logger.debug("picked partition {} for early output", victimPartition);
-          }
+        if ( EXTRA_DEBUG_SPILL ) {
+          logger.debug("picked partition {} for early output", victimPartition);
         }
       }
     }
@@ -1335,7 +1478,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
     if ( rowsReturnedEarly > 0 ) {
       stats.setLongStat(Metric.SPILL_MB, // update stats - est. total MB returned early
-          (int) Math.round( rowsReturnedEarly * estRowWidth / 1024.0D / 1024.0));
+          (int) Math.round( rowsReturnedEarly * estOutputRowWidth / 1024.0D / 1024.0));
     }
   }
 

@@ -198,7 +198,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     try {
       values.allocateNew(totalBytes, valueCount);
       bits.allocateNew(valueCount);
-    } catch(DrillRuntimeException e) {
+    } catch(RuntimeException e) {
       clear();
       throw e;
     }

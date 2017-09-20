@@ -36,7 +36,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.hadoop.conf.Configuration;
@@ -317,7 +316,8 @@ public class SpillSet {
 
     @Override
     public void deleteDir(String fragmentSpillDir) throws IOException {
-      new File(baseDir, fragmentSpillDir).delete();
+      boolean deleted = new File(baseDir, fragmentSpillDir).delete();
+      if ( ! deleted ) { throw new IOException("Failed to delete: " + fragmentSpillDir);}
     }
 
     @Override
@@ -359,17 +359,10 @@ public class SpillSet {
   private long writeBytes;
 
   public SpillSet(FragmentContext context, PhysicalOperator popConfig) {
-    this(context.getConfig(), context.getHandle(), popConfig,
-         // Endpoint appears to be null in some tests.
-         context.getDrillbitContext() == null ? null :
-         context.getDrillbitContext().getEndpoint());
+    this(context.getConfig(), context.getHandle(), popConfig);
   }
 
-  public SpillSet(FragmentContext context, PhysicalOperator popConfig, DrillbitEndpoint ep) {
-    this(context.getConfig(), context.getHandle(), popConfig, ep);
-  }
-
-  public SpillSet(DrillConfig config, FragmentHandle handle, PhysicalOperator popConfig, DrillbitEndpoint ep) {
+  public SpillSet(DrillConfig config, FragmentHandle handle, PhysicalOperator popConfig) {
     String operName;
 
     // Set the spill options from the configuration
@@ -421,15 +414,7 @@ public class SpillSet {
       fileManager = new HadoopFileManager(spillFs);
     }
 
-    // If provided with a prefix to identify the Drillbit, prepend that to the
-    // spill directory.
-
-    String nodeDir = "";
-    if (ep != null  &&  ep.getAddress() != null) {
-      nodeDir = ep.getAddress() + "-" + ep.getUserPort() + "_";
-    }
-    spillDirName = String.format("%s%s_%s_%s-%s-%s",
-        nodeDir,
+    spillDirName = String.format("%s_%s_%s-%s-%s",
         QueryIdHelper.getQueryId(handle.getQueryId()),
         operName, handle.getMajorFragmentId(), popConfig.getOperatorId(), handle.getMinorFragmentId());
   }
@@ -491,6 +476,7 @@ public class SpillSet {
           // since this is meant to be used in a batches's cleanup, we don't propagate the exception
           logger.warn("Unable to delete spill directory " + path,  e);
       }
+      currSpillDirs.clear(); // in case close() is called again
     }
   }
 
