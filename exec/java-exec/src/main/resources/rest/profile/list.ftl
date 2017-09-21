@@ -37,7 +37,15 @@
       <strong>No running queries.</strong>
     </div>
   </#if>
-  <h3>Completed Queries</h3>
+  <table width="100%">
+    <tr>
+      <td><h3>Completed Queries</h3></td>
+      <td align="right">
+        <form action="/profiles" method="get"><span title="Max number of profiles to list"># Profiles: </span>
+        <input type="text" size="7" name="max" value="20">
+        <input type="submit" value="Fetch">
+      </form></td>
+    </tr></table>
   <@list_queries queries=model.getFinishedQueries()/>
 </#macro>
 
