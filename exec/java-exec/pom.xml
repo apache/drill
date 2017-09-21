@@ -18,6 +18,9 @@
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
+  <properties>
+    <libpam4j.version>1.8-rev1</libpam4j.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -518,6 +521,11 @@
       <artifactId>javax.json</artifactId>
       <version>1.0.4</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kohsuke</groupId>
+      <artifactId>libpam4j</artifactId>
+      <version>${libpam4j.version}</version>
     </dependency>
   </dependencies>
 
