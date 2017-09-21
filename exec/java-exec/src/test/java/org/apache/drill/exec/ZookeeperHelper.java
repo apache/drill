@@ -25,9 +25,7 @@ import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.util.MiniZooKeeperCluster;
-import org.apache.drill.test.ClusterFixture;
 
 /**
  * Test utility for managing a Zookeeper instance.
@@ -95,7 +93,7 @@ public class ZookeeperHelper {
     }
 
     try {
-      ExecTest.setZookeeperSaslTestConfigProps();
+      ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
 
       zkCluster = new MiniZooKeeperCluster();
       zkCluster.setDefaultClientPort(MiniZooKeeperCluster.DEFAULT_PORT);

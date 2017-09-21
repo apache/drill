@@ -41,13 +41,12 @@ import org.apache.drill.exec.util.GuavaPatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.zookeeper.client.ZooKeeperSaslClient;
-import org.apache.zookeeper.server.ZooKeeperSaslServer;
 import org.junit.After;
 import org.junit.BeforeClass;
 
 import java.io.File;
 import java.io.IOException;
+
 
 public class ExecTest extends DrillTest {
 
@@ -99,14 +98,6 @@ public class ExecTest extends DrillTest {
       }
     });
     return dir.getAbsolutePath() + File.separator + dirName;
-  }
-
-  /**
-   * Sets zookeeper server and client SASL test config properties.
-   */
-  public static void setZookeeperSaslTestConfigProps() {
-    System.setProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY, "Test_server");
-    System.setProperty(ZooKeeperSaslClient.LOGIN_CONTEXT_NAME_KEY, "Test_client");
   }
 
   protected void mockDrillbitContext(final DrillbitContext bitContext) throws Exception {

@@ -74,6 +74,9 @@ public final class PathUtils {
 
   /**
    * Creates and returns path with the protocol at the beginning from specified {@code url}.
+   *
+   * @param url the source of path and protocol
+   * @return string with protocol and path divided by colon
    */
   public static String getPathWithProtocol(URL url) {
     if (url.getProtocol() != null) {

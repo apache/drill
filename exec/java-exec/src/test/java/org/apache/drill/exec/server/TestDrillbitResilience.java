@@ -21,7 +21,6 @@ import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET_DEFAULT;
 import static org.apache.drill.exec.planner.physical.PlannerSettings.HASHAGG;
 import static org.apache.drill.exec.planner.physical.PlannerSettings.PARTITION_SENDER_SET_THREADS;
-import static org.apache.zookeeper.Environment.JAAS_CONF_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -43,8 +42,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.RepeatTestRule.Repeat;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.coord.zk.PathUtils;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -99,8 +98,6 @@ import com.google.common.base.Preconditions;
  */
 public class TestDrillbitResilience extends DrillTest {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
-
-  public static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.conf";
 
   private static ZookeeperHelper zkHelper;
   private static RemoteServiceSet remoteServiceSet;
@@ -189,9 +186,7 @@ public class TestDrillbitResilience extends DrillTest {
     // turn off the HTTP server to avoid port conflicts between the drill bits
     System.setProperty(ExecConstants.HTTP_ENABLE, "false");
 
-    // Specifies JAAS configuration file
-    String configPath = PathUtils.getPathWithProtocol(ClassLoader.getSystemResource(LOGIN_CONF_RESOURCE_PATHNAME));
-    System.setProperty(JAAS_CONF_KEY, configPath);
+    ZookeeperTestUtil.setJaasTestConfigFile();
 
     // turn on error for failure in cancelled fragments
     zkHelper = new ZookeeperHelper(true, true);
