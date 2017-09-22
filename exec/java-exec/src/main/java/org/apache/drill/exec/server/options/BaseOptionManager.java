@@ -62,7 +62,7 @@ public abstract class BaseOptionManager extends BaseOptionSet implements OptionM
     final OptionDefinition definition = getOptionDefinition(name);
     final OptionValidator validator = definition.getValidator();
     final OptionMetaData metaData = definition.getMetaData();
-    final OptionValue.AccessibleScopes type = definition.getMetaData().getType();
+    final OptionValue.AccessibleScopes type = definition.getMetaData().getAccessibleScopes();
     final OptionValue.OptionScope scope = getScope();
     checkOptionPermissions(name, type, scope);
     final OptionValue optionValue = OptionValue.create(type, name, value, scope);

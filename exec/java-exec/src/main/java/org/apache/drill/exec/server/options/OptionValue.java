@@ -44,6 +44,14 @@ import java.util.EnumSet;
  */
 @JsonInclude(Include.NON_NULL)
 public class OptionValue implements Comparable<OptionValue> {
+  public static final String JSON_KIND = "kind";
+  public static final String JSON_ACCESSIBLE_SCOPES = "accessibleScopes";
+  public static final String JSON_NAME = "name";
+  public static final String JSON_NUM_VAL = "num_val";
+  public static final String JSON_STRING_VAL = "string_val";
+  public static final String JSON_BOOL_VAL = "bool_val";
+  public static final String JSON_FLOAT_VAL = "float_val";
+  public static final String JSON_SCOPE = "scope";
 
   /**
    * Defines where an option can be configured.
@@ -88,20 +96,36 @@ public class OptionValue implements Comparable<OptionValue> {
   public final Double float_val;
   public final OptionScope scope;
 
-  public static OptionValue create(AccessibleScopes type, String name, long val, OptionScope scope) {
-    return new OptionValue(Kind.LONG, type, name, val, null, null, null, scope);
+  public static OptionValue create(AccessibleScopes accessibleScopes, String name, long val, OptionScope scope) {
+    return new OptionValue(Kind.LONG, accessibleScopes, name, val, null, null, null, scope);
   }
 
-  public static OptionValue create(AccessibleScopes type, String name, boolean bool, OptionScope scope) {
-    return new OptionValue(Kind.BOOLEAN, type, name, null, null, bool, null, scope);
+  public static OptionValue create(AccessibleScopes accessibleScopes, String name, boolean bool, OptionScope scope) {
+    return new OptionValue(Kind.BOOLEAN, accessibleScopes, name, null, null, bool, null, scope);
   }
 
-  public static OptionValue create(AccessibleScopes type, String name, String val, OptionScope scope) {
-    return new OptionValue(Kind.STRING, type, name, null, val, null, null, scope);
+  public static OptionValue create(AccessibleScopes accessibleScopes, String name, String val, OptionScope scope) {
+    return new OptionValue(Kind.STRING, accessibleScopes, name, null, val, null, null, scope);
   }
 
-  public static OptionValue create(AccessibleScopes type, String name, double val, OptionScope scope) {
-    return new OptionValue(Kind.DOUBLE, type, name, null, null, null, val, scope);
+  public static OptionValue create(AccessibleScopes accessibleScopes, String name, double val, OptionScope scope) {
+    return new OptionValue(Kind.DOUBLE, accessibleScopes, name, null, null, null, val, scope);
+  }
+
+  public static OptionValue create(Kind kind, AccessibleScopes accessibleScopes,
+                                   String name, String val, OptionScope scope) {
+    switch (kind) {
+      case BOOLEAN:
+        return create(accessibleScopes, name, Boolean.valueOf(val), scope);
+      case STRING:
+        return create(accessibleScopes, name, val, scope);
+      case DOUBLE:
+        return create(accessibleScopes, name, Double.parseDouble(val), scope);
+      case LONG:
+        return create(accessibleScopes, name, Long.parseLong(val), scope);
+      default:
+        throw new IllegalArgumentException(String.format("Unsupported kind %s", kind));
+    }
   }
 
   public static OptionValue create(AccessibleScopes type, String name, Object val, OptionScope scope) {
@@ -119,14 +143,14 @@ public class OptionValue implements Comparable<OptionValue> {
   }
 
   @JsonCreator
-  private OptionValue(@JsonProperty("kind") Kind kind,
-                      @JsonProperty("accessibleScopes") AccessibleScopes accessibleScopes,
-                      @JsonProperty("name") String name,
-                      @JsonProperty("num_val") Long num_val,
-                      @JsonProperty("string_val") String string_val,
-                      @JsonProperty("bool_val") Boolean bool_val,
-                      @JsonProperty("float_val") Double float_val,
-                      @JsonProperty("scope") OptionScope scope) {
+  private OptionValue(@JsonProperty(JSON_KIND) Kind kind,
+                      @JsonProperty(JSON_ACCESSIBLE_SCOPES) AccessibleScopes accessibleScopes,
+                      @JsonProperty(JSON_NAME) String name,
+                      @JsonProperty(JSON_NUM_VAL) Long num_val,
+                      @JsonProperty(JSON_STRING_VAL) String string_val,
+                      @JsonProperty(JSON_BOOL_VAL) Boolean bool_val,
+                      @JsonProperty(JSON_FLOAT_VAL) Double float_val,
+                      @JsonProperty(JSON_SCOPE) OptionScope scope) {
     Preconditions.checkArgument(num_val != null || string_val != null || bool_val != null || float_val != null);
     this.kind = kind;
     this.accessibleScopes = accessibleScopes;
@@ -156,6 +180,10 @@ public class OptionValue implements Comparable<OptionValue> {
       default:
         return null;
     }
+  }
+
+  public PersistedOptionValue toPersisted() {
+    return new PersistedOptionValue(kind, name, num_val, string_val, bool_val, float_val);
   }
 
   @Override

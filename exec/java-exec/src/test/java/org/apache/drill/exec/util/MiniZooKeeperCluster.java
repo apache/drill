@@ -154,8 +154,6 @@ public class MiniZooKeeperCluster {
       NIOServerCnxnFactory standaloneServerFactory;
 
       while (true) {
-        System.out.println("Starting zookeeper " + tentativePort);
-
         try {
           standaloneServerFactory = new NIOServerCnxnFactory();
           standaloneServerFactory.configure(new InetSocketAddress(tentativePort), 1000);
@@ -171,7 +169,7 @@ public class MiniZooKeeperCluster {
         try {
           standaloneServerFactory.startup(server);
         } catch (IOException e) {
-          LOG.error("Zookeeper startupt error", e);
+          LOG.error("Zookeeper startup error", e);
           tentativePort++;
           continue;
         }

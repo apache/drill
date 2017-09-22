@@ -15,20 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.sys;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.TestWithZookeeper;
+import org.apache.drill.exec.coord.zk.PathUtils;
+import org.apache.drill.exec.coord.zk.ZookeeperClient;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.server.options.PersistedOptionValue;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.testutils.DirTestWatcher;
+import org.apache.zookeeper.CreateMode;
+import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.File;
 
 public class TestPStoreProviders extends TestWithZookeeper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPStoreProviders.class);
+
+  @Rule
+  public DirTestWatcher dirTestWatcher = new DirTestWatcher();
 
   @Test
   public void verifyLocalStore() throws Exception {
@@ -39,19 +58,103 @@ public class TestPStoreProviders extends TestWithZookeeper {
 
   @Test
   public void verifyZkStore() throws Exception {
+    try(CuratorFramework curator = createCurator()){
+      curator.start();
+      ZookeeperPersistentStoreProvider provider = new ZookeeperPersistentStoreProvider(zkHelper.getConfig(), curator);
+      PStoreTestUtil.test(provider);
+    }
+  }
+
+  /**
+   * DRILL-5809
+   * Note: If this test breaks you are probably breaking backward and forward compatibility. Verify with the community
+   * that breaking compatibility is acceptable and planned for.
+   * @throws Exception
+   */
+  @Test
+  public void localBackwardCompatabilityTest() throws Exception {
+    localLoadTestHelper("src/test/resources/options/store/local/old/sys.options");
+  }
+
+  private void localLoadTestHelper(String propertiesDir) throws Exception {
+    File localOptionsResources = new File(propertiesDir);
+
+    String optionsDirPath = String.format("%s/sys.options", dirTestWatcher.getDirPath());
+    File optionsDir = new File(optionsDirPath);
+    optionsDir.mkdirs();
+
+    org.apache.commons.io.FileUtils.copyDirectory(localOptionsResources, optionsDir);
+
+    FixtureBuilder builder = ClusterFixture.builder().
+      configProperty(ExecConstants.HTTP_ENABLE, false).
+      configProperty(ExecConstants.SYS_STORE_PROVIDER_CLASS, LocalPersistentStoreProvider.class.getCanonicalName()).
+      configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, String.format("file://%s", dirTestWatcher.getDirPath())).
+      configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String parquetPushdown = client.queryBuilder().
+        sql("SELECT val FROM sys.%s where name='%s'",
+          SystemTable.OPTION_VAL.getTableName(),
+          PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY).
+        singletonString();
+
+      String plannerWidth = client.queryBuilder().
+        sql("SELECT val FROM sys.%s where name='%s'",
+          SystemTable.OPTION_VAL.getTableName(),
+          ExecConstants.MAX_WIDTH_GLOBAL_KEY).
+        singletonString();
+
+      Assert.assertEquals("30000", parquetPushdown);
+      Assert.assertEquals("3333", plannerWidth);
+    }
+  }
+
+  /**
+   * DRILL-5809
+   * Note: If this test breaks you are probably breaking backward and forward compatibility. Verify with the community
+   * that breaking compatibility is acceptable and planned for.
+   * @throws Exception
+   */
+  @Test
+  public void zkBackwardCompatabilityTest() throws Exception {
+    final String oldName = "myOldOption";
+
+    try (CuratorFramework curator = createCurator()) {
+      curator.start();
+
+      PersistentStoreConfig<PersistedOptionValue> storeConfig =
+        PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), PersistedOptionValue.class).name("sys.test").build();
+
+      try (ZookeeperClient zkClient = new ZookeeperClient(curator,
+        PathUtils.join("/", storeConfig.getName()), CreateMode.PERSISTENT)) {
+        zkClient.start();
+        String oldOptionJson = FileUtils.getResourceAsString("/options/old_booleanopt.json");
+        zkClient.put(oldName, oldOptionJson.getBytes(), null);
+      }
+
+      try (ZookeeperPersistentStoreProvider provider =
+        new ZookeeperPersistentStoreProvider(zkHelper.getConfig(), curator)) {
+        PersistentStore<PersistedOptionValue> store = provider.getOrCreateStore(storeConfig);
+
+        PersistedOptionValue oldOptionValue = store.get(oldName, null);
+        PersistedOptionValue expectedValue = new PersistedOptionValue("true");
+
+        Assert.assertEquals(expectedValue, oldOptionValue);
+      }
+    }
+  }
+
+  private CuratorFramework createCurator() {
     String connect = zkHelper.getConnectionString();
     DrillConfig config = zkHelper.getConfig();
 
     CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
-    .namespace(zkHelper.getConfig().getString(ExecConstants.ZK_ROOT))
-    .retryPolicy(new RetryNTimes(1, 100))
-    .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
-    .connectString(connect);
+      .namespace(zkHelper.getConfig().getString(ExecConstants.ZK_ROOT))
+      .retryPolicy(new RetryNTimes(1, 100))
+      .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
+      .connectString(connect);
 
-    try(CuratorFramework curator = builder.build()){
-      curator.start();
-      ZookeeperPersistentStoreProvider provider = new ZookeeperPersistentStoreProvider(config, curator);
-      PStoreTestUtil.test(provider);
-    }
+    return builder.build();
   }
 }

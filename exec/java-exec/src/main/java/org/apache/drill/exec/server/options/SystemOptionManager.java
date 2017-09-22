@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.server.options;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -218,7 +216,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
     return map;
   }
 
-  private final PersistentStoreConfig<OptionValue> config;
+  private final PersistentStoreConfig<PersistedOptionValue> config;
 
   private final PersistentStoreProvider provider;
 
@@ -227,7 +225,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
    * Persistent store for options that have been changed from default.
    * NOTE: CRUD operations must use lowercase keys.
    */
-  private PersistentStore<OptionValue> options;
+  private PersistentStore<PersistedOptionValue> options;
   private CaseInsensitiveMap<OptionDefinition> definitions;
   private CaseInsensitiveMap<OptionValue> defaults;
 
@@ -239,7 +237,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
   public SystemOptionManager(final LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
                              final DrillConfig bootConfig, final CaseInsensitiveMap<OptionDefinition> definitions) {
     this.provider = provider;
-    this.config = PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
+    this.config = PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), PersistedOptionValue.class)
           .name("sys.options")
           .build();
     this.bootConfig = bootConfig;
@@ -256,7 +254,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
   public SystemOptionManager init() throws Exception {
     options = provider.getOrCreateStore(config);
     // if necessary, deprecate and replace options from persistent store
-    for (final Entry<String, OptionValue> option : Lists.newArrayList(options.getAll())) {
+    for (final Entry<String, PersistedOptionValue> option : Lists.newArrayList(options.getAll())) {
       final String name = option.getKey();
       final OptionDefinition definition = definitions.get(name);
       if (definition == null) {
@@ -269,7 +267,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
         if (!name.equals(canonicalName)) {
           // for backwards compatibility <= 1.1, rename to lower case.
           logger.warn("Changing option name to lower case `{}`", name);
-          final OptionValue value = option.getValue();
+          final PersistedOptionValue value = option.getValue();
           options.delete(name);
           options.put(canonicalName, value);
         }
@@ -287,8 +285,13 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       buildList.put(entry.getKey(), entry.getValue());
     }
     // override if changed
-    for (final Map.Entry<String, OptionValue> entry : Lists.newArrayList(options.getAll())) {
-      buildList.put(entry.getKey(), entry.getValue());
+    for (final Map.Entry<String, PersistedOptionValue> entry : Lists.newArrayList(options.getAll())) {
+      final String name = entry.getKey();
+      final OptionDefinition optionDefinition = getOptionDefinition(name);
+      final PersistedOptionValue persistedOptionValue = entry.getValue();
+      final OptionValue optionValue = persistedOptionValue
+        .toOptionValue(optionDefinition, OptionValue.OptionScope.SYSTEM);
+      buildList.put(name, optionValue);
     }
     return buildList.values().iterator();
   }
@@ -296,10 +299,11 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
   @Override
   public OptionValue getOption(final String name) {
     // check local space (persistent store)
-    final OptionValue value = options.get(name.toLowerCase());
+    final PersistedOptionValue persistedValue = options.get(name.toLowerCase());
 
-    if (value != null) {
-      return value;
+    if (persistedValue != null) {
+      final OptionDefinition optionDefinition = getOptionDefinition(name);
+      return persistedValue.toOptionValue(optionDefinition, OptionValue.OptionScope.SYSTEM);
     }
 
     // otherwise, return default set in the validator.
@@ -323,7 +327,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       return; // if the option is not overridden, ignore setting option to default
     }
 
-    options.put(name, value);
+    options.put(name, value.toPersisted());
   }
 
   @Override
@@ -340,7 +344,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
   @Override
   public void deleteAllLocalOptions() {
     final Set<String> names = Sets.newHashSet();
-    for (final Map.Entry<String, OptionValue> entry : Lists.newArrayList(options.getAll())) {
+    for (final Map.Entry<String, PersistedOptionValue> entry : Lists.newArrayList(options.getAll())) {
       names.add(entry.getKey());
     }
     for (final String name : names) {
@@ -355,7 +359,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
     for (final Map.Entry<String, OptionDefinition> entry : definitions.entrySet()) {
       final OptionDefinition definition = entry.getValue();
       final OptionMetaData metaData = definition.getMetaData();
-      final OptionValue.AccessibleScopes type = metaData.getType();
+      final OptionValue.AccessibleScopes type = metaData.getAccessibleScopes();
       final OptionValidator validator = definition.getValidator();
       final String name = validator.getOptionName();
       final String configName = validator.getConfigProperty();
