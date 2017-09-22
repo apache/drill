@@ -92,6 +92,8 @@ public class BaseTestQuery extends ExecTest {
     {
       put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
       put(ExecConstants.HTTP_ENABLE, "false");
+      // Increasing retry attempts for testing
+      put(ExecConstants.UDF_RETRY_ATTEMPTS, "10");
     }
   };
 
@@ -198,6 +200,10 @@ public class BaseTestQuery extends ExecTest {
   }
 
   private static void openClient(Properties properties) throws Exception {
+    if (properties == null) {
+      properties = new Properties();
+    }
+
     allocator = RootAllocatorFactory.newRoot(config);
     serviceSet = RemoteServiceSet.getLocalServiceSet();
 
@@ -213,7 +219,13 @@ public class BaseTestQuery extends ExecTest {
       TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
     }
 
-    client = QueryTestUtil.createClient(config,  serviceSet, MAX_WIDTH_PER_NODE, properties);
+    if (!properties.containsKey(DrillProperties.DRILLBIT_CONNECTION)) {
+      properties = new Properties(properties);
+      properties.setProperty(DrillProperties.DRILLBIT_CONNECTION,
+        String.format("localhost:%s", bits[0].getUserPort()));
+    }
+
+    client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, properties);
   }
 
   /**
