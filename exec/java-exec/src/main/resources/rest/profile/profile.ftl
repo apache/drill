@@ -226,6 +226,7 @@
       </div>
       <div id="fragment-overview" class="panel-collapse collapse">
         <div class="panel-body">
+          <svg id="fragment-overview-canvas" class="center-block"></svg>
           ${model.getFragmentsOverview()?no_esc}
         </div>
       </div>
