@@ -132,9 +132,8 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    * For example: There is only 1 DrillClient so encrypted connection count of UserRpcMetrics will be 1. Before
    * running any query there should not be any connection (control or data) between Drillbits, hence those counters
    * are 0. After running a simple query since there is only 1 fragment which is root fragment the Control Connection
-   * count is 2 (for unencrypted counter) based on connection for status update of fragment to Foreman. It is 2 because
-   * for Control and Data Server we count total number of client and server connections on a node. There is no
-   * Data Connection because there is no data exchange between multiple fragments.
+   * count is 0 (for unencrypted counter) since with DRILL-5721 status update of fragment to Foreman happens locally.
+   * There is no Data Connection because there is no data exchange between multiple fragments.
    *
    * @throws Exception
    */
@@ -164,7 +163,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
 
     // Check unencrypted counters value
     assertTrue(0 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-    assertTrue(2 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
     assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
   }
 
@@ -393,9 +392,8 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    * For example: There is only 1 DrillClient so encrypted connection count of UserRpcMetrics
    * will be 1. Before running any query there should not be any connection (control or data) between Drillbits,
    * hence those counters are 0. After running a simple query since there is only 1 fragment which is root fragment
-   * the Control Connection count is 2 (for encrypted counter) based on connection for status update of fragment to
-   * Foreman. It is 2 because for Control and Data Server we count total number of client and server connections on a
-   * node. There is no Data Connection because there is no data exchange between multiple fragments.
+   * the Control Connection count is 0 (for encrypted counter), since with DRILL-5721 status update of fragment to
+   * Foreman happens locally. There is no Data Connection because there is no data exchange between multiple fragments.
    */
 
   @Test
@@ -440,7 +438,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
 
     // Check encrypted counters value
     assertTrue(1 == UserRpcMetrics.getInstance().getEncryptedConnectionCount());
-    assertTrue(2 == ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
     assertTrue(0 == DataRpcMetrics.getInstance().getEncryptedConnectionCount());
 
     // Check unencrypted counters value
