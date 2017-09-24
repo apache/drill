@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.util.AssertionUtil;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 /**
@@ -30,8 +32,45 @@ import com.google.common.base.Preconditions;
  * operations are threadsafe (except for close).
  */
 @ThreadSafe
-class Accountant implements AutoCloseable {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Accountant.class);
+@VisibleForTesting
+public class Accountant implements AutoCloseable {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Accountant.class);
+
+  // See DRILL-5808
+  // Allow a "grace margin" above the allocator limit for those operators
+  // that are trying to stay within the limit, but are hindered by the
+  // current power-of-two allocations and random vector doublings. Instead
+  // of failing the query, the accountant allows an excess allocation within
+  // the grace, but issues a warning to the log.
+  //
+  // Grace is allowed only when requested, and then only in production
+  // code, or if enabled in debug code by setting the following system
+  // property.
+
+  public static final String STRICT_ALLOCATOR = "drill.memory.strict.allocator";
+
+  // Allow clients to allocate beyond the limit by this factor.
+  // If the limit is 10K, then with a margin of 1, the system
+  // will allow a grace of another 10K for a hard limit of 20K.
+  // Warnings are issued for allocations that use the grace.
+
+  public static final int GRACE_MARGIN = 1;
+
+  // In large-memory allocators, don't allow more than 100 MB
+  // grace.
+
+  public static final int MAX_GRACE = 100 * 1024 * 1024;
+
+  // Use the strictness set in a system property. If not set, then
+  // default to strict in debug mode, lenient in production mode.
+
+  public static final boolean STRICT = System.getProperty(STRICT_ALLOCATOR) == null
+      ? AssertionUtil.isAssertionsEnabled()
+      : Boolean.parseBoolean(System.getProperty(STRICT_ALLOCATOR));
+
+  // The global boolean allows tests to change the setting easily.
+
+  private boolean strict = true;
 
   /**
    * The parent allocator
@@ -77,6 +116,23 @@ class Accountant implements AutoCloseable {
                 + "Attempted to allocate %d bytes and received an outcome of %s.", reservation, outcome.name()));
       }
     }
+  }
+
+  /**
+   * Request lenient allocations: allows exceeding the allocation limit
+   * by the configured grace amount. The request is granted only if strict
+   * limits are not required.
+   *
+   * @param enable
+   */
+  public boolean setLenient() {
+    strict = STRICT;
+    return ! strict;
+  }
+
+  @VisibleForTesting
+  public void forceLenient() {
+    strict = false;
   }
 
   /**
@@ -148,7 +204,20 @@ class Accountant implements AutoCloseable {
   private AllocationOutcome allocate(final long size, final boolean incomingUpdatePeak, final boolean forceAllocation) {
     final long newLocal = locallyHeldMemory.addAndGet(size);
     final long beyondReservation = newLocal - reservation;
-    final boolean beyondLimit = newLocal > allocationLimit.get();
+    boolean beyondLimit = newLocal > allocationLimit.get();
+
+    // Non-strict allocation
+
+    if (beyondLimit && ! strict) {
+      long grace = Math.min(MAX_GRACE, allocationLimit.get() * GRACE_MARGIN);
+      long graceLimit = allocationLimit.get() + grace;
+      beyondLimit = newLocal > graceLimit;
+      if (! beyondLimit) {
+        logger.warn("Excess allocation of {} bytes beyond limit of {}, " +
+                    "within grace of {}, new total allocation: {}",
+            size, allocationLimit.get(), grace, newLocal);
+      }
+    }
     final boolean updatePeak = forceAllocation || (incomingUpdatePeak && !beyondLimit);
 
     AllocationOutcome parentOutcome = AllocationOutcome.SUCCESS;
@@ -201,6 +270,7 @@ class Accountant implements AutoCloseable {
   /**
    * Close this Accountant. This will release any reservation bytes back to a parent Accountant.
    */
+  @Override
   public void close() {
     // return memory reservation to parent allocator.
     if (parent != null) {

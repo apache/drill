@@ -97,6 +97,13 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       // nulls are equal in group by case
       comparators.add(Comparator.IS_NOT_DISTINCT_FROM);
     }
+
+    // This operator manages its memory use. Ask for leniency
+    // from the allocator to allow for slight errors due to the
+    // lumpiness of vector allocations beyond our control.
+
+    boolean allowed = oContext.getAllocator().setLenient();
+    logger.debug("Config: Is allocator lenient? {}", allowed);
   }
 
   @Override

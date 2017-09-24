@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -133,9 +133,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   }
 
   @Override
-  public String getName() {
-    return name;
-  }
+  public String getName() { return name; }
 
   @Override
   public DrillBuf getEmpty() {
@@ -233,7 +231,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     final int actualRequestSize = initialRequestSize < CHUNK_SIZE ?
         nextPowerOfTwo(initialRequestSize)
         : initialRequestSize;
-    AllocationOutcome outcome = this.allocateBytes(actualRequestSize);
+    AllocationOutcome outcome = allocateBytes(actualRequestSize);
     if (!outcome.isOk()) {
       throw new OutOfMemoryException(createErrorMsg(this, actualRequestSize, initialRequestSize));
     }
@@ -828,6 +826,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     }
   }
 
+  @Override
   public DrillBuf read(int length, InputStream in) throws IOException {
     DrillBuf buf = buffer(length);
     try {
