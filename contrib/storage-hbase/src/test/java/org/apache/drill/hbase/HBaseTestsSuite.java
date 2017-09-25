@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.util.GuavaPatcher;
 import org.apache.drill.hbase.test.Drill2130StorageHBaseHamcrestConfigurationTest;
 import org.apache.hadoop.conf.Configuration;
@@ -95,6 +96,8 @@ public class HBaseTestsSuite {
 
   @BeforeClass
   public static void initCluster() throws Exception {
+    ZookeeperTestUtil.setJaasTestConfigFile();
+
     if (initCount.get() == 0) {
       synchronized (HBaseTestsSuite.class) {
         if (initCount.get() == 0) {
