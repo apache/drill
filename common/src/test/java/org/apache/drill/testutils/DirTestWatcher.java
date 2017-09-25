@@ -24,12 +24,11 @@ import org.junit.runner.Description;
 
 import java.io.File;
 
-/**
+/*
  * This JUnit {@link TestWatcher} creates a unique directory for each JUnit test in the project's
  * target folder at the start of each test. This directory can be used as a temporary directory to store
  * files for the test. The directory and its contents are deleted at the end of the test.
  */
-
 public class DirTestWatcher extends TestWatcher {
   private String dirPath;
   private File dir;

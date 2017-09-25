@@ -65,12 +65,12 @@ public class TestPStoreProviders extends TestWithZookeeper {
     }
   }
 
-  @Test
-  public void localLoadTest() throws Exception {
-    localLoadTestHelper("src/test/resources/options/store/local/new/sys.options");
-  }
-
-  // DRILL-5809
+  /**
+   * DRILL-5809
+   * Note: If this test breaks you are probably breaking backward and forward compatibility. Verify with the community
+   * that breaking compatibility is acceptable and planned for.
+   * @throws Exception
+   */
   @Test
   public void localBackwardCompatabilityTest() throws Exception {
     localLoadTestHelper("src/test/resources/options/store/local/old/sys.options");
@@ -110,11 +110,15 @@ public class TestPStoreProviders extends TestWithZookeeper {
     }
   }
 
-  // DRILL-5809
+  /**
+   * DRILL-5809
+   * Note: If this test breaks you are probably breaking backward and forward compatibility. Verify with the community
+   * that breaking compatibility is acceptable and planned for.
+   * @throws Exception
+   */
   @Test
   public void zkBackwardCompatabilityTest() throws Exception {
     final String oldName = "myOldOption";
-    final String newName = "myNewOption";
 
     try (CuratorFramework curator = createCurator()) {
       curator.start();
@@ -126,9 +130,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
         PathUtils.join("/", storeConfig.getName()), CreateMode.PERSISTENT)) {
         zkClient.start();
         String oldOptionJson = FileUtils.getResourceAsString("/options/old_booleanopt.json");
-        String newOptionJson = FileUtils.getResourceAsString("/options/new_booleanopt.json");
         zkClient.put(oldName, oldOptionJson.getBytes(), null);
-        zkClient.put(newName, newOptionJson.getBytes(), null);
       }
 
       try (ZookeeperPersistentStoreProvider provider =
@@ -136,13 +138,9 @@ public class TestPStoreProviders extends TestWithZookeeper {
         PersistentStore<PersistedOptionValue> store = provider.getOrCreateStore(storeConfig);
 
         PersistedOptionValue oldOptionValue = store.get(oldName, null);
-        PersistedOptionValue newOptionValue = store.get(newName, null);
+        PersistedOptionValue expectedValue = new PersistedOptionValue("true");
 
-        PersistedOptionValue expectedOld = new PersistedOptionValue("true");
-        PersistedOptionValue expectedNew = new PersistedOptionValue("true");
-
-        Assert.assertEquals(expectedOld, oldOptionValue);
-        Assert.assertEquals(expectedNew, newOptionValue);
+        Assert.assertEquals(expectedValue, oldOptionValue);
       }
     }
   }

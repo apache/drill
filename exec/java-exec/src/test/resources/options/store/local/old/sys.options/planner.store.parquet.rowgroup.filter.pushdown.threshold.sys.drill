@@ -2,6 +2,5 @@
   "kind" : "LONG",
   "type" : "SYSTEM",
   "name" : "planner.store.parquet.rowgroup.filter.pushdown.threshold",
-  "num_val" : 30000,
-  "scope" : "SYSTEM"
+  "num_val" : 30000
 }

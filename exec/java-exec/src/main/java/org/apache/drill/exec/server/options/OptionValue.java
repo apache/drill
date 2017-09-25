@@ -183,7 +183,7 @@ public class OptionValue implements Comparable<OptionValue> {
   }
 
   public PersistedOptionValue toPersisted() {
-    return new PersistedOptionValue(getValue().toString());
+    return new PersistedOptionValue(kind, name, num_val, string_val, bool_val, float_val);
   }
 
   @Override
