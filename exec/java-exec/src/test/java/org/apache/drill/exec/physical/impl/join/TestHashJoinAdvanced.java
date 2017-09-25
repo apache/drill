@@ -19,10 +19,14 @@
 package org.apache.drill.exec.physical.impl.join;
 
 
+import com.google.common.collect.Maps;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.PlanTestBase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Map;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -159,6 +163,45 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
 
     } finally {
       org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
+  }
+
+  @Test // DRILL-1162
+  public void testHashJoinSwap() throws Exception {
+    Map<String, Integer> tables = Maps.newHashMap();
+    tables.put("first_table", 30);
+    tables.put("second_table", 20);
+    tables.put("third_table", 10);
+
+    try {
+      test("use dfs_test.tmp");
+
+      for (Map.Entry table : tables.entrySet()) {
+        test("create table %s as select * from cp.`tpch/nation.parquet` limit %s", table.getKey(), table.getValue());
+      }
+      String query = "select count(*) as c from third_table\n" +
+                      "inner join second_table on third_table.n_regionkey = second_table.n_regionkey\n" +
+                      "inner join first_table on third_table.n_regionkey = first_table.n_regionkey";
+
+      test("alter session set `exec.max_hash_table_size` = 100");
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c")
+        .baselineValues(200L)
+        .go();
+
+      PlanTestBase.testPlanMatchingPatterns(query,
+                                            new String[]{"(.\\n?)*second_table" +
+                                                          "(.\\n?)*third_table" +
+                                                          "(.\\n?)*first_table(.\\n?)*"},
+                                            new String[]{});
+    } finally {
+      test("alter session reset `exec.max_hash_table_size`");
+      for (String table : tables.keySet()) {
+        test("drop table if exists %s", table);
+      }
     }
   }
 }

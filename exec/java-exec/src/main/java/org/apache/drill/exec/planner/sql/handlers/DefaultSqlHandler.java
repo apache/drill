@@ -85,11 +85,12 @@ import org.apache.drill.exec.planner.physical.visitor.InsertLocalExchangeVisitor
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.MemoryEstimationVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
+import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinRegardingMaxRowCountVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RewriteProjectToFlatten;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.SplitUpComplexExpressions;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
-import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinVisitor;
+import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinRegardingRowCountVisitor;
 import org.apache.drill.exec.planner.physical.visitor.TopProjectVisitor;
 import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -491,10 +492,18 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     /*
      * 2.1) Swap left / right for INNER hash join, if left's row count is < (1 + margin) right's row count.
      * We want to have smaller dataset on the right side, since hash table builds on right side.
+     *
+     * If the maxRowCount() of right input is greater than exec.max_hash_table_size and greater than maxRowCount()
+     * of the left input, left / right will be swapped.
+     *
+     * If the maxRowCount() of left input is greater than exec.max_hash_table_size and greater than maxRowCount()
+     * of the right input, then swap will be prevented.
      */
     if (context.getPlannerSettings().isHashJoinSwapEnabled()) {
-      phyRelNode = SwapHashJoinVisitor.swapHashJoin(phyRelNode, new Double(context.getPlannerSettings()
-          .getHashJoinSwapMarginFactor()));
+      phyRelNode = SwapHashJoinRegardingRowCountVisitor.swapHashJoin(phyRelNode, context.getPlannerSettings().getHashJoinSwapMarginFactor());
+
+      phyRelNode = SwapHashJoinRegardingMaxRowCountVisitor.resolveSwapHashJoin(phyRelNode,
+                    new Double(context.getOption(ExecConstants.MAX_HASH_TABLE_SIZE_KEY).num_val));
     }
 
     /* Parquet row group filter pushdown in planning time */
