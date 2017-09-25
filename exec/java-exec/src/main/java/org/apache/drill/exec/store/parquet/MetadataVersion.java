@@ -141,7 +141,7 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
     public static final String V3_2 = "3.2";
 
     /**
-     * Version 3.2: Changed serialization of BINARY and FIXED_LEN_BYTE_ARRAY fields.<br>
+     * Version 3.3: Changed serialization of BINARY and FIXED_LEN_BYTE_ARRAY fields.<br>
      * See DRILL-4139
      */
     public static final String V3_3 = "3.3";

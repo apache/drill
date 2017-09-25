@@ -208,13 +208,13 @@ public class ParquetReaderUtility {
               setMinMaxValues(columnMetadata, rowCount);
             }
           }
-          // Setting Min/Max values for V2 and all V3 versions before V3_2
-          else if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 2)) < 0
+          // Setting Min/Max values for V2 and all V3 versions before V3_3
+          else if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 3)) < 0
                     && columnsNames.contains(Arrays.asList(columnMetadata.getName()))) {
             setMinMaxValues(columnMetadata, rowCount);
           }
-          // Setting Min/Max values for V3_2 and all younger versions
-          else if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 2)) >= 0
+          // Setting Min/Max values for V3_3 and all younger versions
+          else if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 3)) >= 0
                       && columnsNames.contains(Arrays.asList(columnMetadata.getName()))) {
             convertMinMaxValues(columnMetadata, rowCount);
           }
