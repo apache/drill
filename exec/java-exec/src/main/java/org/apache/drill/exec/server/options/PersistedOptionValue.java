@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,6 @@ import java.io.IOException;
  * <p>
  * <b>Contract:</b>
  * Only {@link PersistedOptionValue}s created from an {@link OptionValue} should be persisted.
- * {@link PersistedOptionValue}s retrieved from a persisted store should never be re-persisted.
  * And {@link OptionValue}s should only be created from {@link PersistedOptionValue}s that are
  * retrieved from a store.
  * </p>
