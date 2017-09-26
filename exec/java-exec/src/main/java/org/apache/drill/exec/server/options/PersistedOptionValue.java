@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.base.Preconditions;
@@ -270,6 +271,8 @@ public class PersistedOptionValue {
    * to be stored for an option.
    */
   public static class Deserializer extends StdDeserializer<PersistedOptionValue> {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Deserializer.class);
+
     private Deserializer() {
       super(PersistedOptionValue.class);
     }
@@ -302,6 +305,10 @@ public class PersistedOptionValue {
 
       if (node.has(OptionValue.JSON_FLOAT_VAL)) {
         value = node.get(OptionValue.JSON_FLOAT_VAL).asText();
+      }
+
+      if (value == null) {
+        logger.error("Invalid json stored {}.", new ObjectMapper().writeValueAsString(node));
       }
 
       return new PersistedOptionValue(value);
