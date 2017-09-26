@@ -34,7 +34,7 @@ public class OptionMetaData {
     this.internal = internal;
   }
 
-  public OptionValue.AccessibleScopes getType() {
+  public OptionValue.AccessibleScopes getAccessibleScopes() {
     return type;
   }
 

@@ -50,7 +50,7 @@ public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
   private static boolean checkPrivileges(final String proxyName, final String targetName) {
     OptionDefinition optionDefinition = SystemOptionManager.createDefaultOptionDefinitions().get(ExecConstants.IMPERSONATION_POLICIES_KEY);
     ExecConstants.IMPERSONATION_POLICY_VALIDATOR.validate(
-        OptionValue.create(optionDefinition.getMetaData().getType(),
+        OptionValue.create(optionDefinition.getMetaData().getAccessibleScopes(),
             ExecConstants.IMPERSONATION_POLICIES_KEY,
             IMPERSONATION_POLICIES,OptionValue.OptionScope.SYSTEM), optionDefinition.getMetaData(),null);
     try {
