@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Iterator;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -86,6 +87,7 @@ import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V2;
 import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V3;
 import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V3_1;
 import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V3_2;
+import static org.apache.drill.exec.store.parquet.MetadataVersion.Constants.V3_3;
 
 public class Metadata {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Metadata.class);
@@ -700,7 +702,8 @@ public class Metadata {
       @JsonSubTypes.Type(value = ParquetTableMetadata_v2.class, name = V2),
       @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = V3),
       @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = V3_1),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = V3_2)
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = V3_2),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = V3_3)
       })
   public static abstract class ParquetTableMetadataBase {
 
@@ -756,7 +759,7 @@ public class Metadata {
 
     public abstract Long getNulls();
 
-    public abstract boolean hasSingleValue();
+    public abstract boolean hasSingleValue(long rowCount);
 
     public abstract Object getMinValue();
 
@@ -1054,8 +1057,36 @@ public class Metadata {
       return nulls;
     }
 
-    @Override public boolean hasSingleValue() {
-      return (max != null && min != null && max.equals(min));
+    /**
+     * Checks that the column chunk has a single value.
+     * Returns {@code true} if {@code min} and {@code max} are the same but not null
+     * and nulls count is 0 or equal to the rows count.
+     * <p>
+     * Returns {@code true} if {@code min} and {@code max} are null and the number of null values
+     * in the column chunk is equal to the rows count.
+     * <p>
+     * Comparison of nulls and rows count is needed for the cases:
+     * <ul>
+     * <li>column with primitive type has single value and null values</li>
+     *
+     * <li>column <b>with primitive type</b> has only null values, min/max couldn't be null,
+     * but column has single value</li>
+     * </ul>
+     *
+     * @param rowCount rows count in column chunk
+     * @return true if column has single value
+     */
+    @Override
+    public boolean hasSingleValue(long rowCount) {
+      if (nulls != null) {
+        if (min != null) {
+          // Objects.deepEquals() is used here, since min and max may be byte arrays
+          return Objects.deepEquals(min, max) && (nulls == 0 || nulls == rowCount);
+        } else {
+          return nulls == rowCount && max == null;
+        }
+      }
+      return false;
     }
 
     @Override public Object getMinValue() {
@@ -1363,9 +1394,24 @@ public class Metadata {
       return nulls;
     }
 
+    /**
+     * Checks that the column chunk has a single value.
+     * Returns {@code true} if {@code mxValue} is not null
+     * and nulls count is 0 or if nulls count is equal to the rows count.
+     * <p>
+     * Comparison of nulls and rows count is needed for the cases:
+     * <ul>
+     * <li>column with primitive type has single value and null values</li>
+     *
+     * <li>column <b>with binary type</b> has only null values, so column has single value</li>
+     * </ul>
+     *
+     * @param rowCount rows count in column chunk
+     * @return true if column has single value
+     */
     @Override
-    public boolean hasSingleValue() {
-      return (mxValue != null);
+    public boolean hasSingleValue(long rowCount) {
+      return (mxValue != null && nulls == 0) || nulls == rowCount;
     }
 
     @Override public Object getMinValue() {
@@ -1426,7 +1472,7 @@ public class Metadata {
 
   }
 
-  @JsonTypeName(V3_2)
+  @JsonTypeName(V3_3)
   public static class ParquetTableMetadata_v3 extends ParquetTableMetadataBase {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     /*
@@ -1753,9 +1799,36 @@ public class Metadata {
       return nulls;
     }
 
+    /**
+     * Checks that the column chunk has a single value.
+     * Returns {@code true} if {@code minValue} and {@code maxValue} are the same but not null
+     * and nulls count is 0 or equal to the rows count.
+     * <p>
+     * Returns {@code true} if {@code minValue} and {@code maxValue} are null and the number of null values
+     * in the column chunk is equal to the rows count.
+     * <p>
+     * Comparison of nulls and rows count is needed for the cases:
+     * <ul>
+     * <li>column with primitive type has single value and null values</li>
+     *
+     * <li>column <b>with primitive type</b> has only null values, min/max couldn't be null,
+     * but column has single value</li>
+     * </ul>
+     *
+     * @param rowCount rows count in column chunk
+     * @return true if column has single value
+     */
     @Override
-    public boolean hasSingleValue() {
-      return (minValue !=null && maxValue != null && minValue.equals(maxValue));
+    public boolean hasSingleValue(long rowCount) {
+      if (nulls != null) {
+        if (minValue != null) {
+          // Objects.deepEquals() is used here, since min and max may be byte arrays
+          return Objects.deepEquals(minValue, maxValue) && (nulls == 0 || nulls == rowCount);
+        } else {
+          return nulls == rowCount && maxValue == null;
+        }
+      }
+      return false;
     }
 
     @Override public Object getMinValue() {
@@ -1795,8 +1868,9 @@ public class Metadata {
         jgen.writeEndArray();
         if (value.minValue != null) {
           Object val;
-          if (value.primitiveType == PrimitiveTypeName.BINARY && value.minValue != null) {
-            val = new String(((Binary) value.minValue).getBytes());
+          if (value.primitiveType == PrimitiveTypeName.BINARY
+              || value.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+            val = ((Binary) value.minValue).getBytes();
           } else {
             val = value.minValue;
           }
@@ -1804,8 +1878,9 @@ public class Metadata {
         }
         if (value.maxValue != null) {
           Object val;
-          if (value.primitiveType == PrimitiveTypeName.BINARY && value.maxValue != null) {
-            val = new String(((Binary) value.maxValue).getBytes());
+          if (value.primitiveType == PrimitiveTypeName.BINARY
+              || value.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+            val = ((Binary) value.maxValue).getBytes();
           } else {
             val = value.maxValue;
           }
