@@ -43,11 +43,22 @@ public class Accountant implements AutoCloseable {
   // of failing the query, the accountant allows an excess allocation within
   // the grace, but issues a warning to the log.
   //
-  // Grace is allowed only when requested, and then only in production
-  // code, or if enabled in debug code by setting the following system
-  // property.
+  // Normally, the "grace margin" (lenient) allocation is allowed only for
+  // operators that request leniency (because they attempt to manage memory)
+  // and only in production mode. Leniency is usually denied in a debug
+  // run (assertions enabled.) Use the following system option to force
+  // allowing lenient allocation in a debug run (or, to disable lenient
+  // allocation in a production run.)
+  //
+  // Force allowing lenient allocation:
+  //
+  // -Ddrill.memory.lenient.allocator=false
+  //
+  // Force strict allocation;
+  //
+  // -Ddrill.memory.lenient.allocator=false
 
-  public static final String STRICT_ALLOCATOR = "drill.memory.strict.allocator";
+  public static final String ALLOW_LENIENT_ALLOCATION = "drill.memory.lenient.allocator";
 
   // Allow clients to allocate beyond the limit by this factor.
   // If the limit is 10K, then with a margin of 1, the system
@@ -64,13 +75,14 @@ public class Accountant implements AutoCloseable {
   // Use the strictness set in a system property. If not set, then
   // default to strict in debug mode, lenient in production mode.
 
-  public static final boolean STRICT = System.getProperty(STRICT_ALLOCATOR) == null
-      ? AssertionUtil.isAssertionsEnabled()
-      : Boolean.parseBoolean(System.getProperty(STRICT_ALLOCATOR));
+  public static final boolean ALLOW_LENIENCY =
+      System.getProperty(ALLOW_LENIENT_ALLOCATION) == null
+      ? ! AssertionUtil.isAssertionsEnabled()
+      : Boolean.parseBoolean(System.getProperty(ALLOW_LENIENT_ALLOCATION));
 
-  // The global boolean allows tests to change the setting easily.
+  // Whether leniency has been requested, and granted for this allocator.
 
-  private boolean strict = true;
+  private boolean lenient = false;
 
   /**
    * The parent allocator
@@ -123,16 +135,24 @@ public class Accountant implements AutoCloseable {
    * by the configured grace amount. The request is granted only if strict
    * limits are not required.
    *
-   * @param enable
+   * @return true if the leniency was granted, false if the current
+   * execution mode, or system property, disallows leniency
    */
+
   public boolean setLenient() {
-    strict = STRICT;
-    return ! strict;
+    lenient = ALLOW_LENIENCY;
+    return lenient;
   }
+
+  /**
+   * Force lenient allocation. Used for testing to avoid the need to muck
+   * with global settings (assertions or system properties.) <b>Do not</b>
+   * use in production code!
+   */
 
   @VisibleForTesting
   public void forceLenient() {
-    strict = false;
+    lenient = true;
   }
 
   /**
@@ -208,7 +228,7 @@ public class Accountant implements AutoCloseable {
 
     // Non-strict allocation
 
-    if (beyondLimit && ! strict) {
+    if (beyondLimit && lenient) {
       long grace = Math.min(MAX_GRACE, allocationLimit.get() * GRACE_MARGIN);
       long graceLimit = allocationLimit.get() + grace;
       beyondLimit = newLocal > graceLimit;

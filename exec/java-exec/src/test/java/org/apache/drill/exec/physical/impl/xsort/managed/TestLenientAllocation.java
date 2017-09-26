@@ -38,7 +38,7 @@ import io.netty.buffer.DrillBuf;
  * by unexpected power-of-two buffer sizes and vector doubling.
  */
 
-public class TestAllocatorGrace extends SubOperatorTest {
+public class TestLenientAllocation extends SubOperatorTest {
 
   /**
    * Use a test-time hack to force the allocator to be lenient,
