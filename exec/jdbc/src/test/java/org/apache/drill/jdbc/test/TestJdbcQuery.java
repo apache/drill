@@ -370,7 +370,7 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
 
   @Test // DRILL-1051
   public void testOldDateTimeJulianCalendar() throws Exception {
-    // Should be work with any timezone
+    // Should work with any timezone
     JdbcAssert.withNoDefaultSchema()
         .sql("select cast(to_timestamp('1581-12-01 23:32:01', 'yyyy-MM-dd HH:mm:ss') as date) as `DATE`, " +
             "to_timestamp('1581-12-01 23:32:01', 'yyyy-MM-dd HH:mm:ss') as `TIMESTAMP`, " +
@@ -381,13 +381,20 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
 
   @Test // DRILL-1051
   public void testOldDateTimeLocalMeanTime() throws Exception {
-    // Should be work with any timezone
+    // Should work with any timezone
     JdbcAssert.withNoDefaultSchema()
         .sql("select cast(to_timestamp('1883-11-16 01:32:01', 'yyyy-MM-dd HH:mm:ss') as date) as `DATE`, " +
             "to_timestamp('1883-11-16 01:32:01', 'yyyy-MM-dd HH:mm:ss') as `TIMESTAMP`, " +
             "cast(to_timestamp('1883-11-16 01:32:01', 'yyyy-MM-dd HH:mm:ss') as time) as `TIME` " +
             "from (VALUES(1))")
         .returns("DATE=1883-11-16; TIMESTAMP=1883-11-16 01:32:01.0; TIME=01:32:01");
+  }
+
+  @Test // DRILL-5792
+  public void testConvertFromInEmptyInputSql() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT CONVERT_FROM(columns[1], 'JSON') as col1 from cp.`empty.csv`")
+        .returns("");
   }
 
 }

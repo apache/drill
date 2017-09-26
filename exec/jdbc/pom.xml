@@ -119,6 +119,7 @@
             <exclude>**/.checkstyle</exclude>
             <exclude>**/.buildpath</exclude>
             <exclude>**/*.json</exclude>
+            <exclude>**/*.csv</exclude>
             <exclude>**/*.iml</exclude>
             <exclude>**/git.properties</exclude>
             <exclude>**/donuts-output-data.txt</exclude>
