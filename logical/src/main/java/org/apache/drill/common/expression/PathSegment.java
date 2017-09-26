@@ -151,6 +151,15 @@ public abstract class PathSegment {
       return true;
     }
 
+    /**
+     * Checks that the path of this name segment is complex.
+     *
+     * @return true if the path of this name segment contains dots
+     */
+    public boolean isComplex() {
+      return path.contains(".");
+    }
+
     @Override
     public NameSegment getNameSegment() {
       return this;

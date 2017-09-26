@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -248,8 +248,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` b\n"
         + "WHERE\n"
-        + " b.`attributes.Ambience.casual` = false"
-        ;
+        + " b.attributes.Ambience.casual = false";
     runSQLAndVerifyCount(sql, 1);
 
     final String[] expectedPlan = {"condition=\\(attributes.Ambience.casual = false\\)"};
@@ -266,7 +265,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` b\n"
         + "WHERE\n"
-        + " b.`attributes.Attire` = 'casual'"
+        + " b.attributes.Attire = 'casual'"
         ;
     runSQLAndVerifyCount(sql, 4);
 
@@ -284,7 +283,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` business\n"
         + "WHERE\n"
-        + " business.`attributes.Ambience.casual` IS NULL"
+        + " business.attributes.Ambience.casual IS NULL"
         ;
     runSQLAndVerifyCount(sql, 7);
 
@@ -303,7 +302,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` b\n"
         + "WHERE\n"
-        + " b.`attributes.Ambience.casual` IS NOT NULL"
+        + " b.attributes.Ambience.casual IS NOT NULL"
         ;
     runSQLAndVerifyCount(sql, 3);
 
@@ -321,7 +320,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` b\n"
         + "WHERE\n"
-        + " b.`attributes.Accepts Credit Cards` IS NULL"
+        + " b.attributes.`Accepts Credit Cards` IS NULL"
         ;
     runSQLAndVerifyCount(sql, 3);
 
@@ -355,7 +354,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` business\n"
         + "WHERE\n"
-        + " business.`attributes.Good For.lunch` = true AND"
+        + " business.attributes.`Good For`.lunch = true AND"
         + " stars > 4.1"
         ;
     runSQLAndVerifyCount(sql, 1);
@@ -374,7 +373,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` business\n"
         + "WHERE\n"
-        + " business.`hours.Tuesday.open` < TIME '10:30:00'"
+        + " business.hours.Tuesday.`open` < TIME '10:30:00'"
         ;
     runSQLAndVerifyCount(sql, 1);
 
@@ -391,7 +390,7 @@ public class TestSimpleJson extends BaseJsonTest {
         + "FROM\n"
         + "  hbase.`business` business\n"
         + "WHERE\n"
-        + " business.`hours.Sunday.close` > TIME '20:30:00'"
+        + " business.hours.Sunday.`close` > TIME '20:30:00'"
         ;
     runSQLAndVerifyCount(sql, 3);
 
