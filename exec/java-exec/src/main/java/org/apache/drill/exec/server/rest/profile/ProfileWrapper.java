@@ -73,8 +73,8 @@ public class ProfileWrapper {
     this.majorFragmentTallyTotal = tallyMajorFragmentCost(majors);
 
     final List<OperatorWrapper> ows = new ArrayList<>();
-    // temporary map to store (major_id, operator_id) -> [(op_profile, minor_id)]
-    final Map<ImmutablePair<Integer, Integer>, List<ImmutablePair<OperatorProfile, Integer>>> opmap = new HashMap<>();
+    // temporary map to store (major_id, operator_id) -> [((op_profile, minor_id),minorFragHostname)]
+    final Map<ImmutablePair<Integer, Integer>, List<ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String>>> opmap = new HashMap<>();
 
     Collections.sort(majors, Comparators.majorId);
     for (final MajorFragmentProfile major : majors) {
@@ -82,18 +82,21 @@ public class ProfileWrapper {
       final List<MinorFragmentProfile> minors = new ArrayList<>(major.getMinorFragmentProfileList());
       Collections.sort(minors, Comparators.minorId);
       for (final MinorFragmentProfile minor : minors) {
-
+        String fragmentHostName = minor.getEndpoint().getAddress();
         final List<OperatorProfile> ops = new ArrayList<>(minor.getOperatorProfileList());
         Collections.sort(ops, Comparators.operatorId);
+
         for (final OperatorProfile op : ops) {
 
           final ImmutablePair<Integer, Integer> ip = new ImmutablePair<>(
               major.getMajorFragmentId(), op.getOperatorId());
           if (!opmap.containsKey(ip)) {
-            final List<ImmutablePair<OperatorProfile, Integer>> l = new ArrayList<>();
+            final List<ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String>> l = new ArrayList<>();
             opmap.put(ip, l);
           }
-          opmap.get(ip).add(new ImmutablePair<>(op, minor.getMinorFragmentId()));
+          opmap.get(ip).add(new ImmutablePair<>(
+              new ImmutablePair<>(op, minor.getMinorFragmentId()),
+              fragmentHostName));
         }
       }
     }
