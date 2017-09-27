@@ -47,10 +47,10 @@ public class Pam4jUserAuthenticator implements UserAuthenticator {
   public void authenticate(String user, String password) throws UserAuthenticationException {
     for (String profile : profiles) {
       PAM pam = null;
-      UnixUser unixUser;
+
       try {
         pam = new PAM(profile);
-        unixUser = pam.authenticate(user, password);
+        pam.authenticate(user, password);
       } catch (PAMException ex) {
         logger.error("PAM auth failed for user: {} against {} profile. Exception: {}", user, profile, ex.getMessage());
         throw new UserAuthenticationException(String.format("PAM auth failed for user: %s using profile: %s",
@@ -61,16 +61,8 @@ public class Pam4jUserAuthenticator implements UserAuthenticator {
         }
       }
 
-      if (!user.equals(unixUser.getUserName())) {
-        throw new UserAuthenticationException(String.format("Unexpected error from pam module. Input user %s is " +
-            "different from authenticated output user %s of pam module libpam4j", user, unixUser.getUserName()));
-      }
-
-      if (logger.isTraceEnabled()) {
-        // No need to check for null unixUser as in case of failure we will not reach here.
-        logger.trace("PAM authentication was successful for user: {} using profile: {}",
-            unixUser.getUserName(), profile);
-      }
+      // No need to check for null unixUser as in case of failure we will not reach here.
+      logger.trace("PAM authentication was successful for user: {} using profile: {}", user, profile);
     }
   }
 
