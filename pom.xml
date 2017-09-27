@@ -53,7 +53,7 @@
     <hbase.version>1.1.3</hbase.version>
     <fmpp.version>0.9.15</fmpp.version>
     <freemarker.version>2.3.26-incubating</freemarker.version>
-    <excludedGroups>org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest</excludedGroups>
+    <excludedGroups></excludedGroups>
   </properties>
 
   <scm>
