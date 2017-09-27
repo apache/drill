@@ -44,6 +44,7 @@ public class ITTestShadedJar {
 
   private static DrillbitClassLoader drillbitLoader;
   private static URLClassLoader rootClassLoader;
+  private static int userPort;
 
   private static URL getJdbcUrl() throws MalformedURLException {
     return new URL(
@@ -85,7 +86,7 @@ public class ITTestShadedJar {
     Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
     try {
       Driver driver = (Driver) clazz.newInstance();
-      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:" + userPort, null)) {
         DatabaseMetaData metadata = c.getMetaData();
         assertEquals("Apache Drill JDBC Driver", metadata.getDriverName());
         assertEquals("Apache Drill Server", metadata.getDatabaseProductName());
@@ -112,7 +113,7 @@ public class ITTestShadedJar {
     Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
     try {
       Driver driver = (Driver) clazz.newInstance();
-      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:" + userPort, null)) {
         String path = Paths.get("").toAbsolutePath().toString() + "/src/test/resources/types.json";
         printQuery(c, "select * from dfs.`" + path + "`");
       }
@@ -135,8 +136,6 @@ public class ITTestShadedJar {
     }
   }
 
-
-
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
     drillbitLoader = new DrillbitClassLoader();
@@ -147,6 +146,9 @@ public class ITTestShadedJar {
       printClassesLoaded("root", rootClassLoader);
       throw e;
     }
+
+    Class<?> clazz = drillbitLoader.loadClass("org.apache.drill.BaseTestQuery");
+    userPort = (Integer) clazz.getMethod("getUserPort").invoke(null);
 
     DrillbitStartThread.SEM.acquire();
   }
@@ -235,6 +237,7 @@ public class ITTestShadedJar {
       // execute a single query to make sure the drillbit is fully up
       clazz.getMethod("testNoResult", String.class, new Object[] {}.getClass())
           .invoke(null, "select * from (VALUES 1)", new Object[] {});
+
       SEM.release();
     }
 
