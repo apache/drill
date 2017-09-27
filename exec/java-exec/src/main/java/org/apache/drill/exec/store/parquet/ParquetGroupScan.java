@@ -76,6 +76,7 @@ import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableDateVector;
 import org.apache.drill.exec.vector.NullableDecimal18Vector;
@@ -477,6 +478,12 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     String f = Path.getPathWithoutSchemeAndAuthority(new Path(file)).toString();
     MinorType type = getTypeForColumn(column).getMinorType();
     switch (type) {
+      case BIT: {
+        NullableBitVector bitVector = (NullableBitVector) v;
+        Boolean value = (Boolean) partitionValueMap.get(f).get(column);
+        bitVector.getMutator().setSafe(index, value ? 1 : 0);
+        return;
+      }
       case INT: {
         NullableIntVector intVector = (NullableIntVector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
