@@ -45,7 +45,7 @@ import org.junit.rules.TestRule;
 public class TestSimpleExternalSort extends DrillTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(80_000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(160_000);
 
   @Test
   public void mergeSortWithSv2Managed() throws Exception {
