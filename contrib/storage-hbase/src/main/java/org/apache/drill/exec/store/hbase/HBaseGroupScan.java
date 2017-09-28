@@ -145,7 +145,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   public GroupScan clone(List<SchemaPath> columns) {
     HBaseGroupScan newScan = new HBaseGroupScan(this);
     newScan.columns = columns == null ? ALL_COLUMNS : columns;;
-    newScan.verifyColumnsAndConvertStar();
+    newScan.verifyColumns();
     return newScan;
   }
 
@@ -177,36 +177,18 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }
-    verifyColumnsAndConvertStar();
+    verifyColumns();
   }
 
-  private void verifyColumnsAndConvertStar() {
-    boolean hasStarCol = false;
-    LinkedHashSet<SchemaPath> requestedColumns = new LinkedHashSet<>();
-
-    for (SchemaPath column : columns) {
-      // convert * into [row_key, cf1, cf2, ..., cf_n].
-      if (column.equals(Utilities.STAR_COLUMN)) {
-        hasStarCol = true;
-        Set<byte[]> families = hTableDesc.getFamiliesKeys();
-        requestedColumns.add(ROW_KEY_PATH);
-        for (byte[] family : families) {
-          SchemaPath colFamily = SchemaPath.getSimplePath(Bytes.toString(family));
-          requestedColumns.add(colFamily);
-        }
-      } else {
-        if (!(column.equals(ROW_KEY_PATH) ||
-            hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-          DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
-              column.getRootSegment().getPath(), hTableDesc.getNameAsString());
-        }
-        requestedColumns.add(column);
-      }
+  private void verifyColumns() {
+    if (Utilities.isStarQuery(columns)) {
+      return;
     }
-
-    // since star column has been converted, reset this.cloumns.
-    if (hasStarCol) {
-      this.columns = new ArrayList<>(requestedColumns);
+    for (SchemaPath column : columns) {
+      if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
+        DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
+            column.getRootSegment().getPath(), hTableDesc.getNameAsString());
+      }
     }
   }
 
