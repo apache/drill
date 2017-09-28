@@ -20,6 +20,7 @@ package org.apache.drill.exec.util;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -42,7 +43,7 @@ public class VectorUtil {
     System.out.println(rows + " row(s):");
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getName());
+      columns.add(formatFieldSchema(vw.getValueVector().getField()));
     }
 
     int width = columns.size();
@@ -78,6 +79,14 @@ public class VectorUtil {
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
+  }
+
+  public static String formatFieldSchema(MaterializedField field) {
+    String colName = field.getName() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">";
+    if (field.getType().getMinorType() == MinorType.MAP) {
+      colName += expandMapSchema(field);
+    }
+    return colName;
   }
 
   public static void appendVectorAccessibleContent(VectorAccessible va, StringBuilder formattedResults,
@@ -135,9 +144,8 @@ public class VectorUtil {
       int columnWidth = getColumnWidth(columnWidths, columnIndex);
       width += columnWidth + 2;
       formats.add("| %-" + columnWidth + "s");
-      MaterializedField field = vw.getValueVector().getField();
-      columns.add(field.getName() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
       columnIndex++;
+      columns.add(formatFieldSchema(vw.getValueVector().getField()));
     }
 
     int rows = va.getRecordCount();
@@ -178,6 +186,19 @@ public class VectorUtil {
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
+  }
+
+  private static String expandMapSchema(MaterializedField mapField) {
+    StringBuilder buf = new StringBuilder();
+    buf.append("{");
+    String sep = "";
+    for (MaterializedField field : mapField.getChildren()) {
+      buf.append(sep);
+      sep = ",";
+      buf.append(formatFieldSchema(field));
+    }
+    buf.append("}");
+    return buf.toString();
   }
 
   public static void allocateVectors(Iterable<ValueVector> valueVectors, int count) {

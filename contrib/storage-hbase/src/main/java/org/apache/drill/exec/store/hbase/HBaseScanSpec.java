@@ -93,5 +93,4 @@ public class HBaseScanSpec {
         + ", filter=" + (filter == null ? null : filter.toString())
         + "]";
   }
-
 }

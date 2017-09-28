@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,7 +41,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 
-// Class containing information for reading a single HBase region
+/**
+ * Contains information for reading a single HBase region
+ */
+
 @JsonTypeName("hbase-region-scan")
 public class HBaseSubScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSubScan.class);
@@ -210,12 +213,10 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
           + ", filter=" + (getScanFilter() == null ? null : getScanFilter().toString())
           + ", regionServer=" + regionServer + "]";
     }
-
   }
 
   @Override
   public int getOperatorType() {
     return CoreOperatorType.HBASE_SUB_SCAN_VALUE;
   }
-
 }

@@ -183,6 +183,9 @@ public class DistributedQueryQueue implements QueryQueue {
      */
 
     public boolean isSameAs(ConfigSet otherSet) {
+      if (otherSet == null) {
+        return false;
+      }
       return queueThreshold == otherSet.queueThreshold &&
              queueTimeout == otherSet.queueTimeout &&
              largeQueueSize == otherSet.largeQueueSize &&
