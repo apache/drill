@@ -441,8 +441,9 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     // The following initial safety check should be revisited once we can lower the number of rows in a batch
     // In cases of very tight memory -- need at least memory to process one batch, plus overhead (e.g. hash table)
-    if ( numPartitions == 1 ) {
-      // if too little memory - behave like the old code -- no memory limit for hash aggregate
+    if ( numPartitions == 1 && ! canSpill ) {
+      // if too little memory - behave like the old code -- practically no memory limit for hash aggregate
+      // (but 1st phase can still spill, so it will maintain the original memory limit)
       allocator.setLimit(AbstractBase.MAX_ALLOCATION);  // 10_000_000_000L
     }
     // Based on the number of partitions: Set the mask and bit count
