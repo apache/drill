@@ -47,6 +47,9 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
   /** For logging/debuggability only. */
   private static volatile int instanceCount;
 
+  /** @see org.apache.drill.exec.physical.config.IteratorValidator */
+  private final boolean isRepeatable;
+
   /** For logging/debuggability only. */
   private final int instNum;
   {
@@ -102,12 +105,17 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
    */
   private boolean validateBatches;
 
-  public IteratorValidatorBatchIterator(RecordBatch incoming) {
+  public IteratorValidatorBatchIterator(RecordBatch incoming, boolean isRepeatable) {
     this.incoming = incoming;
     batchTypeName = incoming.getClass().getSimpleName();
+    this.isRepeatable = isRepeatable;
 
     // (Log construction and close() at same level to bracket instance's activity.)
-    logger.trace( "[#{}; on {}]: Being constructed.", instNum, batchTypeName);
+    logger.trace( "[#{}; on {}; repeatable: {}]: Being constructed.", instNum, batchTypeName, isRepeatable);
+  }
+
+  public IteratorValidatorBatchIterator(RecordBatch incoming) {
+    this(incoming, false);
   }
 
 
@@ -217,7 +225,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
                 instNum, batchTypeName, exceptionState, batchState));
       }
       // (Note:  This could use validationState.)
-      if (batchState == NONE || batchState == STOP) {
+      if ((!isRepeatable && batchState == NONE) || batchState == STOP) {
         throw new IllegalStateException(
             String.format(
                 "next() [on #%d, %s] called again after it returned %s."
@@ -256,8 +264,10 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
         case NONE:
           // NONE is allowed even without seeing a OK_NEW_SCHEMA. Such NONE is called
           // FAST NONE.
-          // NONE moves to terminal high-level state.
-          validationState = ValidationState.TERMINAL;
+          // NONE moves to TERMINAL high-level state if NOT repeatable.
+          if (!isRepeatable) {
+            validationState = ValidationState.TERMINAL;
+          }
           break;
         case STOP:
           // STOP is allowed at any time, except if already terminated (checked
