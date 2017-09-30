@@ -25,12 +25,24 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.IteratorValidator;
+import org.apache.drill.exec.physical.config.RowKeyJoinPOP;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class IteratorValidatorInjector extends
     AbstractPhysicalVisitor<PhysicalOperator, FragmentContext, ExecutionSetupException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorInjector.class);
+
+  /* This flag when set creates all the validators as repeatable validators */
+  private final boolean isRepeatablePipeline;
+
+  public IteratorValidatorInjector() {
+    this(false);
+  }
+
+  public IteratorValidatorInjector(boolean repeatablePipeline) {
+    this.isRepeatablePipeline = repeatablePipeline;
+  }
 
   public static FragmentRoot rewritePlanWithIteratorValidator(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     IteratorValidatorInjector inject = new IteratorValidatorInjector();
@@ -60,11 +72,24 @@ public class IteratorValidatorInjector extends
     List<PhysicalOperator> newChildren = Lists.newArrayList();
     PhysicalOperator newOp = op;
 
+    if (op instanceof RowKeyJoinPOP) {
+      /* create a RepeatablePipeline for the left side of RowKeyJoin */
+      PhysicalOperator left = new IteratorValidator(((RowKeyJoinPOP) op).getLeft()
+                                   .accept(new IteratorValidatorInjector(true), context), true);
+      left.setOperatorId(op.getOperatorId() + 1000);
+      newChildren.add(left);
+      /* right pipeline is not repeatable pipeline */
+      PhysicalOperator right = new IteratorValidator(((RowKeyJoinPOP) op).getRight()
+              .accept(this, context));
+      right.setOperatorId(op.getOperatorId() + 1000);
+      newChildren.add(right);
+    } else {
     /* Get the list of child operators */
-    for (PhysicalOperator child : op) {
-      PhysicalOperator validator = new IteratorValidator(child.accept(this, context));
-      validator.setOperatorId(op.getOperatorId() + 1000);
-      newChildren.add(validator);
+      for (PhysicalOperator child : op) {
+        PhysicalOperator validator = new IteratorValidator(child.accept(this, context), this.isRepeatablePipeline);
+        validator.setOperatorId(op.getOperatorId() + 1000);
+        newChildren.add(validator);
+      }
     }
 
     /* Inject trace operator */

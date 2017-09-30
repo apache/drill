@@ -37,7 +37,7 @@ public class IteratorValidatorCreator implements BatchCreator<IteratorValidator>
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     RecordBatch child = children.iterator().next();
-    IteratorValidatorBatchIterator iter = new IteratorValidatorBatchIterator(child);
+    IteratorValidatorBatchIterator iter = new IteratorValidatorBatchIterator(child, config.isRepeatable);
     boolean validateBatches = context.getOptions().getOption(ExecConstants.ENABLE_VECTOR_VALIDATOR) ||
                               context.getConfig().getBoolean(ExecConstants.ENABLE_VECTOR_VALIDATION);
     iter.enableBatchValidation(validateBatches);
