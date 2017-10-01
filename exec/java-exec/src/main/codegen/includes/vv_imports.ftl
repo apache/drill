@@ -73,6 +73,7 @@ import org.joda.time.Period;
 
 import org.apache.drill.exec.util.Text;
 
+import org.apache.drill.exec.vector.accessor.sql.DatePrintYear;
 import org.apache.drill.exec.vector.accessor.sql.TimePrintMillis;
 import javax.inject.Inject;
 

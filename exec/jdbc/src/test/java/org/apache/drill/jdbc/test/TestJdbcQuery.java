@@ -390,4 +390,11 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
         .returns("DATE=1883-11-16; TIMESTAMP=1883-11-16 01:32:01.0; TIME=01:32:01");
   }
 
+  @Test // DRILL-5377
+  public void testFiveDigitYear() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("select cast('11551-02-16' as date) as FUTURE_DATE from (VALUES(1))")
+        .returns("FUTURE_DATE=11551-02-16");
+  }
+
 }
