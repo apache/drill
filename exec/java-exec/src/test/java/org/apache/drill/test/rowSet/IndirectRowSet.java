@@ -118,7 +118,7 @@ public class IndirectRowSet extends AbstractSingleRowSet {
   public SingleRowSet toIndirect() { return this; }
 
   @Override
-  public int size() {
+  public long size() {
     RecordBatchSizer sizer = new RecordBatchSizer(container, sv2);
     return sizer.actualSize();
   }

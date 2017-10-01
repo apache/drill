@@ -75,9 +75,9 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
 
   public static class InputBatch extends BatchGroup {
     private final SelectionVector2 sv2;
-    private final int dataSize;
+    private final long dataSize;
 
-    public InputBatch(VectorContainer container, SelectionVector2 sv2, BufferAllocator allocator, int dataSize) {
+    public InputBatch(VectorContainer container, SelectionVector2 sv2, BufferAllocator allocator, long dataSize) {
       super(container, allocator);
       this.sv2 = sv2;
       this.dataSize = dataSize;
@@ -85,7 +85,7 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
 
     public SelectionVector2 getSv2() { return sv2; }
 
-    public int getDataSize() { return dataSize; }
+    public long getDataSize() { return dataSize; }
 
     @Override
     public int getRecordCount() {
