@@ -61,6 +61,7 @@ public class TypeHelper extends BasicTypeHelper {
     </#list>
     case MAP:
     case LIST:
+    case NULL:
       return new GenericAccessor(vector);
     }
     throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", type));
