@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import net.sf.jpam.Pam;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.jvnet.libpam.PAM;
+import org.jvnet.libpam.PAMException;
+import org.jvnet.libpam.UnixUser;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,37 +32,37 @@ import java.util.List;
  * Module (PAM) configuration. Configure the PAM profiles using "drill.exec.security.user.auth.pam_profiles" BOOT
  * option. Ex. value  <i>[ "login", "sudo" ]</i> (value is an array of strings).
  */
-@UserAuthenticatorTemplate(type = "pam")
-public class PamUserAuthenticator implements UserAuthenticator {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PamUserAuthenticator.class);
+@UserAuthenticatorTemplate(type = "pam4j")
+public class Pam4jUserAuthenticator implements UserAuthenticator {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Pam4jUserAuthenticator.class);
 
   private List<String> profiles;
 
   @Override
   public void setup(DrillConfig drillConfig) throws DrillbitStartupException {
     profiles = drillConfig.getStringList(ExecConstants.PAM_AUTHENTICATOR_PROFILES);
-
-    // Create a JPAM object so that it triggers loading of native "jpamlib" needed. Issues in loading/finding native
-    // "jpamlib" will be found it Drillbit start rather than when authenticating the first user.
-    try {
-      new Pam();
-    } catch(LinkageError e) {
-      final String errMsg = "Problem in finding the native library of JPAM (Pluggable Authenticator Module API). " +
-          "Make sure to set Drillbit JVM option 'java.library.path' to point to the directory where the native " +
-          "JPAM exists.";
-      logger.error(errMsg, e);
-      throw new DrillbitStartupException(errMsg + ":" + e.getMessage(), e);
-    }
   }
 
   @Override
   public void authenticate(String user, String password) throws UserAuthenticationException {
-    for (String pamProfile : profiles) {
-      Pam pam = new Pam(pamProfile);
-      if (!pam.authenticateSuccessful(user, password)) {
-        throw new UserAuthenticationException(String.format("PAM profile '%s' validation failed for user %s",
-            pamProfile, user));
+    for (String profile : profiles) {
+      PAM pam = null;
+
+      try {
+        pam = new PAM(profile);
+        pam.authenticate(user, password);
+      } catch (PAMException ex) {
+        logger.error("PAM auth failed for user: {} against {} profile. Exception: {}", user, profile, ex.getMessage());
+        throw new UserAuthenticationException(String.format("PAM auth failed for user: %s using profile: %s",
+            user, profile));
+      } finally {
+        if (pam != null) {
+          pam.dispose();
+        }
       }
+
+      // No need to check for null unixUser as in case of failure we will not reach here.
+      logger.trace("PAM authentication was successful for user: {} using profile: {}", user, profile);
     }
   }
 
