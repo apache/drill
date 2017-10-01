@@ -218,21 +218,24 @@ class AsyncPageReader extends PageReader {
     try {
       Stopwatch timer = Stopwatch.createStarted();
       parentColumnReader.parentReader.getOperatorContext().getStats().startWait();
-      asyncPageRead.poll().get(); // get the result of execution
-      synchronized (pageQueueSyncronize) {
-        boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
-        readStatus = pageQueue.take(); // get the data if no exception has been thrown
-        if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
-          throw new DrillRuntimeException("Unexpected end of data");
+      try {
+        asyncPageRead.poll().get(); // get the result of execution
+        synchronized (pageQueueSyncronize) {
+          boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
+          readStatus = pageQueue.take(); // get the data if no exception has been thrown
+          if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
+            throw new DrillRuntimeException("Unexpected end of data");
+          }
+          //if the queue was full before we took a page out, then there would
+          // have been no new read tasks scheduled. In that case, schedule a new read.
+          if (!parentColumnReader.isShuttingDown && pageQueueFull) {
+            asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+          }
         }
-        //if the queue was full before we took a page out, then there would
-        // have been no new read tasks scheduled. In that case, schedule a new read.
-        if (!parentColumnReader.isShuttingDown && pageQueueFull) {
-          asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
-        }
+      } finally {
+        parentColumnReader.parentReader.getOperatorContext().getStats().stopWait();
       }
       long timeBlocked = timer.elapsed(TimeUnit.NANOSECONDS);
-      parentColumnReader.parentReader.getOperatorContext().getStats().stopWait();
       stats.timeDiskScanWait.addAndGet(timeBlocked);
       stats.timeDiskScan.addAndGet(readStatus.getDiskScanTime());
       if (readStatus.isDictionaryPage) {
