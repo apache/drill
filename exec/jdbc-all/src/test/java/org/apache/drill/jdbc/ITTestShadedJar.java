@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.UUID;
 import java.util.Vector;
+import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -146,11 +147,15 @@ public class ITTestShadedJar {
       printClassesLoaded("root", rootClassLoader);
       throw e;
     }
+
+    DrillbitStartThread.SEM.acquire();
   }
 
   @AfterClass
   public static void closeClient() throws Exception {
     runWithLoader("DrillbitStopThread", drillbitLoader);
+
+    DrillbitStopThread.SEM.acquire();
   }
 
   private static int getClassesLoadedCount(ClassLoader classLoader) {
@@ -214,6 +219,7 @@ public class ITTestShadedJar {
   }
 
   public static class DrillbitStartThread extends AbstractLoaderThread {
+    public static final Semaphore SEM = new Semaphore(0);
 
     public DrillbitStartThread(ClassLoader loader) {
       super(loader);
@@ -229,12 +235,13 @@ public class ITTestShadedJar {
       // execute a single query to make sure the drillbit is fully up
       clazz.getMethod("testNoResult", String.class, new Object[] {}.getClass())
           .invoke(null, "select * from (VALUES 1)", new Object[] {});
-
+      SEM.release();
     }
 
   }
 
   public static class DrillbitStopThread extends AbstractLoaderThread {
+    public static final Semaphore SEM = new Semaphore(0);
 
     public DrillbitStopThread(ClassLoader loader) {
       super(loader);
@@ -243,7 +250,8 @@ public class ITTestShadedJar {
     @Override
     protected void internalRun() throws Exception {
       Class<?> clazz = loader.loadClass("org.apache.drill.BaseTestQuery");
-      clazz.getMethod("setupDefaultTestCluster").invoke(null);
+      clazz.getMethod("closeClient").invoke(null);
+      SEM.release();
     }
   }
 

@@ -84,6 +84,7 @@ public class ConnectTriesPropertyTestClusterBits {
   @AfterClass
   public static void testCleanUp() throws Exception {
     AutoCloseables.close(drillbits);
+    zkHelper.stopZookeeper();
   }
 
   @Test

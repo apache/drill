@@ -316,7 +316,8 @@ public class SpillSet {
 
     @Override
     public void deleteDir(String fragmentSpillDir) throws IOException {
-      new File(baseDir, fragmentSpillDir).delete();
+      boolean deleted = new File(baseDir, fragmentSpillDir).delete();
+      if ( ! deleted ) { throw new IOException("Failed to delete: " + fragmentSpillDir);}
     }
 
     @Override
@@ -413,7 +414,8 @@ public class SpillSet {
       fileManager = new HadoopFileManager(spillFs);
     }
 
-    spillDirName = String.format("%s_%s_%s-%s_minor%s", QueryIdHelper.getQueryId(handle.getQueryId()),
+    spillDirName = String.format("%s_%s_%s-%s-%s",
+        QueryIdHelper.getQueryId(handle.getQueryId()),
         operName, handle.getMajorFragmentId(), popConfig.getOperatorId(), handle.getMinorFragmentId());
   }
 
@@ -474,6 +476,7 @@ public class SpillSet {
           // since this is meant to be used in a batches's cleanup, we don't propagate the exception
           logger.warn("Unable to delete spill directory " + path,  e);
       }
+      currSpillDirs.clear(); // in case close() is called again
     }
   }
 

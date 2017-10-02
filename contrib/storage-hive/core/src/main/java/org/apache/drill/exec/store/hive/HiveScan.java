@@ -36,11 +36,11 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider.HiveStats;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider.InputSplitWrapper;
 import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -241,7 +241,7 @@ public class HiveScan extends AbstractGroupScan {
 
   protected int getSerDeOverheadFactor() {
     final int projectedColumnCount;
-    if (AbstractRecordReader.isStarQuery(columns)) {
+    if (Utilities.isStarQuery(columns)) {
       Table hiveTable = hiveReadEntry.getTable();
       projectedColumnCount = hiveTable.getSd().getColsSize() + hiveTable.getPartitionKeysSize();
     } else {

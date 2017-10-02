@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import static com.google.common.base.Throwables.propagate;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -32,7 +33,7 @@ import org.apache.drill.exec.util.MiniZooKeeperCluster;
  * <p>Tests that need a Zookeeper instance can initialize a static instance of this class in
  * their {@link org.junit.BeforeClass} section to set up Zookeeper.
  * <p>
- * Modified to also work in the {@link ClusterFixture} class. The "bare" use sets up a
+ * Modified to also work in the {@link org.apache.drill.test.ClusterFixture} class. The "bare" use sets up a
  * Drill config. The use in the cluster fixture delegates to the cluster fixture the task
  * of setting up the Drill config. In the "bare" case, the port number comes from the
  * Drill config. In the cluster fixture case, we let ZK choose the port and we learn
@@ -43,7 +44,7 @@ import org.apache.drill.exec.util.MiniZooKeeperCluster;
 public class ZookeeperHelper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZookeeperHelper.class);
 
-  private final File testDir = new File("target/test-data");
+  private final File testDir = new File("target/test-data/" + ManagementFactory.getRuntimeMXBean().getName());
   private final DrillConfig config;
   private String zkUrl;
   private MiniZooKeeperCluster zkCluster;
@@ -54,7 +55,7 @@ public class ZookeeperHelper {
    * <p>Will create a "test-data" directory for Zookeeper's use if one doesn't already exist.
    */
   public ZookeeperHelper() {
-    this(false);
+    this(false, true);
   }
 
   /**
@@ -63,7 +64,7 @@ public class ZookeeperHelper {
    * <p>Will create a "test-data" directory for Zookeeper's use if one doesn't already exist.
    * @param failureInCancelled pass true if you want failures in cancelled fragments to be reported as failures
    */
-  public ZookeeperHelper(boolean failureInCancelled) {
+  public ZookeeperHelper(boolean failureInCancelled, boolean autoPort) {
     final Properties overrideProps = new Properties();
     // Forced to disable this, because currently we leak memory which is a known issue for query cancellations.
     // Setting this causes unittests to fail.
@@ -71,21 +72,13 @@ public class ZookeeperHelper {
       overrideProps.setProperty(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS, "true");
     }
     config = DrillConfig.create(overrideProps);
-    zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
+
+    if (!autoPort) {
+      zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
+    }
 
     testDir.mkdirs();
   }
-
-  /**
-   * Constructor for the cluster fixture case. Don't create a Drill config.
-   * Let ZK choose the port.
-   */
-
-  public ZookeeperHelper(String dummy) {
-    zkUrl = null;
-    config = null;
-    testDir.mkdirs();
- }
 
   /**
    * Start the Zookeeper instance.
@@ -100,10 +93,15 @@ public class ZookeeperHelper {
     }
 
     try {
+      ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
+
       zkCluster = new MiniZooKeeperCluster();
+      zkCluster.setDefaultClientPort(MiniZooKeeperCluster.DEFAULT_PORT);
+
       if (zkUrl != null) {
         zkCluster.setDefaultClientPort(Integer.parseInt(zkUrl.split(":")[1]));
       }
+
       zkCluster.startup(testDir, numServers);
       if (zkUrl == null) {
         zkUrl = "localhost:" + zkCluster.getClientPort();
@@ -125,8 +123,13 @@ public class ZookeeperHelper {
     } catch (IOException e) {
       // since this is meant to be used in a test's cleanup, we don't propagate the exception
       final String message = "Unable to shutdown Zookeeper";
-      System.err.println(message + '.');
-      logger.warn(message, e);
+      logger.error(message, e);
+    } finally {
+      try {
+        org.apache.commons.io.FileUtils.deleteDirectory(testDir);
+      } catch (IOException e) {
+        logger.error("Unable to delete zookeeper directory", e);
+      }
     }
   }
 

@@ -38,7 +38,7 @@
     <calcite.version>1.4.0-drill-r21</calcite.version>
     <janino.version>2.7.6</janino.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
-    <jackson.version>2.7.1</jackson.version>
+    <jackson.version>2.7.8</jackson.version>
     <mapr.release.version>5.2.1-mapr</mapr.release.version>
     <ojai.version>1.1</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
@@ -52,7 +52,7 @@
     <hadoop.version>2.7.1</hadoop.version>
     <hbase.version>1.1.3</hbase.version>
     <fmpp.version>0.9.15</fmpp.version>
-    <freemarker.version>2.3.21</freemarker.version>
+    <freemarker.version>2.3.26-incubating</freemarker.version>
   </properties>
 
   <scm>
@@ -232,6 +232,7 @@
             <exclude>**/*.httpd</exclude>
             <exclude>**/*.autotools</exclude>
             <exclude>**/*.cproject</exclude>
+            <exclude>**/*.drill</exclude>
             <!-- TODO DRILL-4336: try to avoid the need to add this -->
             <exclude>dependency-reduced-pom.xml</exclude>
           </excludes>
@@ -271,7 +272,6 @@
         <configuration>
           <excludes>
             <exclude>**/logging.properties</exclude>
-            <exclude>**/logback-test.xml</exclude>
             <exclude>**/logback.out.xml</exclude>
             <exclude>**/logback.xml</exclude>
           </excludes>
@@ -556,6 +556,12 @@
     </pluginManagement>
   </build>
   <dependencies>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.10</version>
+    </dependency>
 
     <dependency>
       <groupId>io.netty</groupId>
@@ -971,7 +977,7 @@
             <configuration>
               <algorithms>
                 <algorithm>MD5</algorithm>
-                <algorithm>SHA-1</algorithm>
+                <algorithm>SHA-512</algorithm>
               </algorithms>
               <failOnError>false</failOnError>
             </configuration>
@@ -1620,6 +1626,10 @@
               <exclusion>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
               </exclusion>
             </exclusions>
           </dependency>

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -298,5 +298,19 @@ public class TestComplexTypeReader extends BaseTestQuery{
 
     Files.deleteIfExists(path1);
     Files.deleteIfExists(path2);
+  }
+
+  @Test
+  public void testNonExistentFieldConverting() throws Exception {
+    String query = "select employee_id, convert_to(`complex_field`, 'JSON') as complex_field from cp.`employee.json` " +
+        "where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("employee_id", "complex_field")
+        .baselineValues(1L, null)
+        .build()
+        .run();
   }
 }

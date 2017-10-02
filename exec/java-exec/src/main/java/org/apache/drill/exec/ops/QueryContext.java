@@ -40,7 +40,6 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
@@ -65,7 +64,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
 
   private final DrillbitContext drillbitContext;
   private final UserSession session;
-  private final OptionManager queryOptions;
+  private final QueryOptionManager queryOptions;
   private final PlannerSettings plannerSettings;
   private final ExecutionControls executionControls;
 
@@ -182,7 +181,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return session.getCredentials().getUserName();
   }
 
-  public OptionManager getOptions() {
+  public QueryOptionManager getOptions() {
     return queryOptions;
   }
 

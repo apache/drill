@@ -274,7 +274,7 @@ public class FileSelection {
     if (statuses == null) {
       return null;
     }
-    final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().toString());
+    final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().getPath());
     logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
     if (fileSel == null) {
       return null;
@@ -362,6 +362,10 @@ public class FileSelection {
       int idx = root.indexOf(WILD_CARD); // first wild card in the path
       idx = root.lastIndexOf('/', idx); // file separator right before the first wild card
       final String newRoot = root.substring(0, idx);
+      if (newRoot.length() == 0) {
+          // Ensure that we always return a valid root.
+          return new Path("/");
+      }
       return new Path(newRoot);
     } else {
       return new Path(root);

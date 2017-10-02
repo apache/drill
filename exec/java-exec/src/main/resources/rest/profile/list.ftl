@@ -28,55 +28,7 @@
   </#if>
   <#if (model.getRunningQueries()?size > 0) >
     <h3>Running Queries</h3>
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead>
-           <td>Time</td>
-           <!-- <td>Query Id</td> -->
-           <td>User</td>
-           <td>Query</td>
-           <td>State</td>
-           <td>Elapsed</td>
-           <td>Foreman</td>
-        </thead>
-        <tbody>
-          <#list model.getRunningQueries() as query>
-          <tr>
-            <td>${query.getTime()}</td>
-            <!--
-            <td>
-              <a href="/profiles/${query.getQueryId()}">
-                <div style="height:100%;width:100%">
-                  ${query.getQueryId()}
-                </div>
-              </a>
-            </td>
-            -->
-            <td>
-              <a href="/profiles/${query.getQueryId()}">
-              <div style="height:100%;width:100%;white-space:pre-line">${query.getUser()}</div>
-              </a>
-            </td> 
-            <td>
-              <a href="/profiles/${query.getQueryId()}">
-              <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
-              </a>
-            </td> 
-            <td>
-              <div style="height:100%;width:100%">${query.getState()}</div>
-            <td>
-              <div style="height:100%;width:100%">${query.getDuration()}</div>
-            <td>
-                <div style="height:100%;width:100%">
-                  ${query.getForeman()}
-                </div>
-            </td>
-            
-          </tr>
-          </#list>
-        </tbody>
-      </table>
-    </div>
+    <@list_queries queries=model.getRunningQueries()/>
     <div class="page-header">
     </div>
   <#else>
@@ -86,57 +38,40 @@
     </div>
   </#if>
   <h3>Completed Queries</h3>
-  <div class="table-responsive">
-    <table class="table table-hover">
-      <thead>
-         <td>Time</td>
-         <td>User</td>
-         <!-- <td>Query Id</td> -->
-         <td>Query</td>
-         <td>State</td>
-         <td>Duration</td>
-         <td>Foreman</td>
-      </thead>
-      <tbody>
-        <#list model.getFinishedQueries() as query>
-        <tr>
-          <td>${query.getTime()}</td>
-          <!--
-          <td>
-            <a href="/profiles/${query.getQueryId()}">
-              <div style="height:100%;width:100%">
-                ${query.getQueryId()}
-              </div>
-            </a>
-          </td>
-          -->
-          <td>
-            <a href="/profiles/${query.getQueryId()}">
-            <div style="height:100%;width:100%;white-space:pre-line">${query.getUser()}</div>
-            </a>
-          </td> 
-          
-          <td>
-            <a href="/profiles/${query.getQueryId()}">
-              <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
-            </a>
-          </td>      
-          <td>
-              <div style="height:100%;width:100%">${query.getState()}</div>
-          </td>
-          <td>
-              <div style="height:100%;width:100%">${query.getDuration()}</div>
-          </td>
-          <td>
-              <div style="height:100%;width:100%">
-                ${query.getForeman()}
-              </div>
-          </td>
-        </tr>
-        </#list>
-      </tbody>
-    </table>
-  </div>
+  <@list_queries queries=model.getFinishedQueries()/>
+</#macro>
+
+<#macro list_queries queries>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Query</th>
+                <th>State</th>
+                <th>Duration</th>
+                <th>Foreman</th>
+            </tr>
+            </thead>
+            <tbody>
+            <#list queries as query>
+            <tr>
+                <td>${query.getTime()}</td>
+                <td>${query.getUser()}</td>
+                <td>
+                    <a href="/profiles/${query.getQueryId()}">
+                        <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
+                    </a>
+                </td>
+                <td>${query.getState()}</td>
+                <td>${query.getDuration()}</td>
+                <td>${query.getForeman()}</td>
+            </tr>
+            </#list>
+            </tbody>
+        </table>
+    </div>
 </#macro>
 
 <@page_html/>

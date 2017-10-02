@@ -48,8 +48,20 @@ public interface TupleAccessor {
 
     MaterializedField column(int index);
 
+    /**
+     * Returns {@code MaterializedField} instance from schema using the name specified in param.
+     *
+     * @param name name of the column in the schema
+     * @return {@code MaterializedField} instance
+     */
     MaterializedField column(String name);
 
+    /**
+     * Returns index of the column in the schema with name specified in param.
+     *
+     * @param name name of the column in the schema
+     * @return index of the column in the schema
+     */
     int columnIndex(String name);
 
     int count();

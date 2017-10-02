@@ -80,7 +80,7 @@ public class PlanningBase extends ExecTest{
     provider.start();
     final ScanResult scanResult = ClassPathScanner.fromPrescan(config);
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
-    final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider);
+    final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider, config);
     systemOptions.init();
     @SuppressWarnings("resource")
     final UserSession userSession = UserSession.Builder.newBuilder().withOptionManager(systemOptions).build();

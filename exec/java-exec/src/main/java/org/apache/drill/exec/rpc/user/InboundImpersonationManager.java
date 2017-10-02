@@ -27,6 +27,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
+import org.apache.drill.exec.server.options.OptionMetaData;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
@@ -86,13 +87,13 @@ public class InboundImpersonationManager {
    */
   public static class InboundImpersonationPolicyValidator extends StringValidator {
 
-    public InboundImpersonationPolicyValidator(String name, String def) {
-      super(name, def, true);
+    public InboundImpersonationPolicyValidator(String name) {
+      super(name);
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionSet manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
 
       final List<ImpersonationPolicy> policies;
       try {

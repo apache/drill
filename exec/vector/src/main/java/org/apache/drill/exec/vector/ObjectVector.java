@@ -22,9 +22,11 @@ import io.netty.buffer.DrillBuf;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.exec.expr.holders.ObjectHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
@@ -204,6 +206,11 @@ public class ObjectVector extends BaseValueVector {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
+
   public final class Accessor extends BaseAccessor {
     @Override
     public Object getObject(int index) {
@@ -229,13 +236,10 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public int getAllocatedByteCount() {
-    // Values not stored in direct memory?
-    return 0;
-  }
+  public void collectLedgers(Set<BufferLedger> ledgers) {}
 
   @Override
-  public int getPayloadByteCount() {
+  public int getPayloadByteCount(int valueCount) {
     // Values not stored in direct memory?
     return 0;
   }

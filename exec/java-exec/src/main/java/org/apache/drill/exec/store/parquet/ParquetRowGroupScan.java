@@ -47,7 +47,7 @@ import com.google.common.collect.Iterators;
 public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRowGroupScan.class);
 
-  public final ParquetFormatConfig formatConfig;
+  private final ParquetFormatConfig formatConfig;
   private final ParquetFormatPlugin formatPlugin;
   private final List<RowGroupReadEntry> rowGroupReadEntries;
   private final List<SchemaPath> columns;
@@ -138,6 +138,13 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   @Override
   public int getOperatorType() {
     return CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE;
+  }
+
+  /**
+   * @return Parquet plugin format config
+   */
+  public ParquetFormatConfig getFormatConfig() {
+    return formatConfig;
   }
 
 }

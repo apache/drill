@@ -66,15 +66,13 @@
     Default is 10.
     </description>
   </property>
-<!--
-   <property>
+  <property>
     <name>hbase.master.info.port</name>
     <value>-1</value>
     <description>The port for the hbase master web UI
     Set to -1 if you do not want the info server to run.
     </description>
   </property>
--->
   <property>
     <name>hbase.regionserver.info.port</name>
     <value>-1</value>

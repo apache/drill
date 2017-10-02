@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class MapRDBScanBatchCreator implements BatchCreator<MapRDBSubScan>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBScanBatchCreator.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBScanBatchCreator.class);
 
   @Override
   public ScanBatch getBatch(FragmentContext context, MapRDBSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
@@ -43,16 +43,19 @@ public class MapRDBScanBatchCreator implements BatchCreator<MapRDBSubScan>{
     for(MapRDBSubScanSpec scanSpec : subScan.getRegionScanSpecList()){
       try {
         if (BinaryTableGroupScan.TABLE_BINARY.equals(subScan.getTableType())) {
-          readers.add(new HBaseRecordReader(subScan.getFormatPlugin().getConnection(),
-              getHBaseSubScanSpec(scanSpec), subScan.getColumns(), context));
+          readers.add(new HBaseRecordReader(
+              subScan.getFormatPlugin().getConnection(),
+              getHBaseSubScanSpec(scanSpec),
+              subScan.getColumns(),
+              context));
         } else {
           readers.add(new MaprDBJsonRecordReader(scanSpec, subScan.getFormatPluginConfig(), subScan.getColumns(), context));
         }
-      } catch (Exception e1) {
-        throw new ExecutionSetupException(e1);
+      } catch (Exception e) {
+        throw new ExecutionSetupException(e);
       }
     }
-    return new ScanBatch(subScan, context, readers.iterator());
+    return new ScanBatch(subScan, context, readers);
   }
 
   private HBaseSubScanSpec getHBaseSubScanSpec(MapRDBSubScanSpec scanSpec) {

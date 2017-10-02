@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+import org.apache.drill.exec.vector.UntypedNullHolder;
+import org.apache.drill.exec.vector.UntypedNullVector;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/BasicTypeHelper.java" />
 
@@ -108,6 +111,8 @@ public class BasicTypeHelper {
 </#list>
     case GENERIC_OBJECT      :
       return ObjectVector.class  ;
+    case NULL:
+      return UntypedNullVector.class;
     default:
       break;
     }
@@ -271,6 +276,8 @@ public class BasicTypeHelper {
 </#list>
     case GENERIC_OBJECT:
       return new ObjectVector(field, allocator)        ;
+    case NULL:
+      return new UntypedNullVector(field, allocator);
     default:
       break;
     }
@@ -348,6 +355,8 @@ public class BasicTypeHelper {
     case GENERIC_OBJECT:
       ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
       return;
+    case NULL:
+      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
     default:
       throw new UnsupportedOperationException(buildErrorMessage("set value", type));
     }
@@ -376,7 +385,9 @@ public class BasicTypeHelper {
       </#list>
       case GENERIC_OBJECT:
         ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
-      default:
+    case NULL:
+      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
+    default:
         throw new UnsupportedOperationException(buildErrorMessage("set value safe", type));
     }
   }
@@ -428,6 +439,8 @@ public class BasicTypeHelper {
       </#list>
       case GENERIC_OBJECT:
         return new ObjectHolder();
+    case NULL:
+        return new UntypedNullHolder();
       default:
         throw new UnsupportedOperationException(buildErrorMessage("create value holder", type));
     }
@@ -451,6 +464,8 @@ public class BasicTypeHelper {
       }
       </#list>
       </#list>
+    case NULL:
+      return true;
       default:
         throw new UnsupportedOperationException(buildErrorMessage("check is null", type));
     }
@@ -532,7 +547,9 @@ public class BasicTypeHelper {
       }
     </#list>
     </#list>
-
+    else if (holder instanceof UntypedNullHolder) {
+      return UntypedNullHolder.TYPE;
+    }
     throw new UnsupportedOperationException("ValueHolder is not supported for 'getValueHolderType' method.");
 
   }

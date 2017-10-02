@@ -69,8 +69,13 @@ public class TestCopier extends DrillTest {
     PriorityQueueCopierWrapper copier = SortTestUtilities.makeCopier(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED);
     VectorContainer dest = new VectorContainer();
     try {
+      // TODO: Create a vector allocator to pass as last parameter so
+      // that the test uses the same vector allocator as the production
+      // code. Only nuisance is that we don't have the required metadata
+      // readily at hand here...
+
       @SuppressWarnings({ "resource", "unused" })
-      BatchMerger merger = copier.startMerge(schema, batches, dest, 10);
+      BatchMerger merger = copier.startMerge(schema, batches, dest, 10, null);
       fail();
     } catch (AssertionError e) {
       // Expected

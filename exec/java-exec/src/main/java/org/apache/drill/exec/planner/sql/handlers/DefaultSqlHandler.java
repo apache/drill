@@ -93,7 +93,6 @@ import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinVisitor;
 import org.apache.drill.exec.planner.physical.visitor.TopProjectVisitor;
 import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
@@ -448,8 +447,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       log("Not enough memory for this plan", phyRelNode, logger, null);
       logger.debug("Re-planning without hash operations.");
 
-      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHJOIN.getOptionName(), false));
-      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHAGG.getOptionName(), false));
+      queryOptions.setLocalOption(PlannerSettings.HASHJOIN.getOptionName(), false);
+      queryOptions.setLocalOption(PlannerSettings.HASHAGG.getOptionName(), false);
 
       try {
         final RelNode relNode = transform(PlannerType.VOLCANO, PlannerPhase.PHYSICAL, drel, traits);

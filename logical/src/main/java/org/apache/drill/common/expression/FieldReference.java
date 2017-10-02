@@ -51,19 +51,8 @@ public class FieldReference extends SchemaPath {
     }
   }
 
-  private void checkSimpleString(CharSequence value) {
-    if (value.toString().contains(".")) {
-      throw new UnsupportedOperationException(
-          String.format(
-              "Unhandled field reference \"%s\"; a field reference identifier"
-              + " must not have the form of a qualified name (i.e., with \".\").",
-              value));
-    }
-  }
-
   public FieldReference(CharSequence value) {
     this(value, ExpressionPosition.UNKNOWN);
-    checkSimpleString(value);
   }
 
   /**
@@ -87,7 +76,6 @@ public class FieldReference extends SchemaPath {
     super(new NameSegment(value), pos);
     if (check) {
       checkData();
-      checkSimpleString(value);
     }
   }
 
@@ -117,7 +105,7 @@ public class FieldReference extends SchemaPath {
         JsonProcessingException {
       String ref = this._parseString(jp, ctxt);
       ref = ref.replace("`", "");
-      return new FieldReference(ref, ExpressionPosition.UNKNOWN, false);
+      return new FieldReference(ref, ExpressionPosition.UNKNOWN, true);
     }
   }
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.store.parquet;
 
 import static org.junit.Assert.assertEquals;
@@ -126,12 +126,12 @@ public class ParquetResultListener implements UserResultsListener {
 
     for (final VectorWrapper vw : batchLoader) {
       final ValueVector vv = vw.getValueVector();
-      currentField = props.fields.get(vv.getField().getPath());
-      if (!valuesChecked.containsKey(vv.getField().getPath())) {
-        valuesChecked.put(vv.getField().getPath(), 0);
+      currentField = props.fields.get(vv.getField().getName());
+      if (!valuesChecked.containsKey(vv.getField().getName())) {
+        valuesChecked.put(vv.getField().getName(), 0);
         columnValCounter = 0;
       } else {
-        columnValCounter = valuesChecked.get(vv.getField().getPath());
+        columnValCounter = valuesChecked.get(vv.getField().getName());
       }
       printColumnMajor(vv);
 
@@ -145,9 +145,9 @@ public class ParquetResultListener implements UserResultsListener {
         columnValCounter += vv.getAccessor().getValueCount();
       }
 
-      valuesChecked.remove(vv.getField().getPath());
+      valuesChecked.remove(vv.getField().getName());
       assertEquals("Mismatched value count for vectors in the same batch.", valueCount, vv.getAccessor().getValueCount());
-      valuesChecked.put(vv.getField().getPath(), columnValCounter);
+      valuesChecked.put(vv.getField().getName(), columnValCounter);
     }
 
     if (ParquetRecordReaderTest.VERBOSE_DEBUG){
@@ -184,7 +184,7 @@ public class ParquetResultListener implements UserResultsListener {
 
   public void printColumnMajor(ValueVector vv) {
     if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-      System.out.println("\n" + vv.getField().getPath());
+      System.out.println("\n" + vv.getField().getName());
     }
     for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
       if (ParquetRecordReaderTest.VERBOSE_DEBUG){
@@ -211,7 +211,7 @@ public class ParquetResultListener implements UserResultsListener {
         System.out.println();
         for (VectorWrapper vw : batchLoader) {
           ValueVector v = vw.getValueVector();
-          System.out.print(Strings.padStart(v.getField().getPath(), 20, ' ') + " ");
+          System.out.print(Strings.padStart(v.getField().getName(), 20, ' ') + " ");
 
         }
         System.out.println();

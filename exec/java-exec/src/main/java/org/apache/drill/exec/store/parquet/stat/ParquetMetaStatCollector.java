@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -95,8 +95,17 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
         primitiveType = this.parquetTableMetadata.getPrimitiveType(columnMetadata.getName());
         originalType = this.parquetTableMetadata.getOriginalType(columnMetadata.getName());
         final Integer repetitionLevel = this.parquetTableMetadata.getRepetitionLevel(columnMetadata.getName());
+        int precision = 0;
+        int scale = 0;
+        // ColumnTypeMetadata_v3 stores information about scale and precision
+        if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v3) {
+          Metadata.ColumnTypeMetadata_v3 columnTypeInfo = ((Metadata.ParquetTableMetadata_v3) parquetTableMetadata)
+                                                                          .getColumnTypeInfo(columnMetadata.getName());
+          scale = columnTypeInfo.scale;
+          precision = columnTypeInfo.precision;
+        }
 
-        statMap.put(schemaPath, getStat(min, max, numNull, primitiveType, originalType, repetitionLevel));
+        statMap.put(schemaPath, getStat(min, max, numNull, primitiveType, originalType, repetitionLevel, scale, precision));
       } else {
         final String columnName = schemaPath.getRootSegment().getPath();
         if (implicitColValues.containsKey(columnName)) {
@@ -117,20 +126,35 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
     return statMap;
   }
 
+  /**
+   * Builds column statistics using given primitiveType, originalType, repetitionLevel, scale,
+   * precision, numNull, min and max values.
+   *
+   * @param min             min value for statistics
+   * @param max             max value for statistics
+   * @param numNull         num_nulls for statistics
+   * @param primitiveType   type that determines statistics class
+   * @param originalType    type that determines statistics class
+   * @param repetitionLevel field repetition level
+   * @param scale           scale value (used for DECIMAL type)
+   * @param precision       precision value (used for DECIMAL type)
+   * @return column statistics
+   */
   private ColumnStatistics getStat(Object min, Object max, Long numNull,
-      PrimitiveType.PrimitiveTypeName primitiveType, OriginalType originalType, Integer repetitionLevel) {
+                                   PrimitiveType.PrimitiveTypeName primitiveType, OriginalType originalType,
+                                   Integer repetitionLevel, int scale, int precision) {
     Statistics stat = Statistics.getStatsBasedOnType(primitiveType);
     Statistics convertedStat = stat;
 
-    TypeProtos.MajorType type = ParquetGroupScan.getType(primitiveType, originalType);
+    TypeProtos.MajorType type = ParquetGroupScan.getType(primitiveType, originalType, scale, precision);
 
     // Change to repeated if repetitionLevel > 0
     if (repetitionLevel != null && repetitionLevel > 0) {
-      type = TypeProtos.MajorType.newBuilder().setMinorType(type.getMinorType()).setMode(TypeProtos.DataMode.REPEATED).build();
+      type = Types.withScaleAndPrecision(type.getMinorType(), TypeProtos.DataMode.REPEATED, scale, precision);
     }
 
     if (numNull != null) {
-      stat.setNumNulls(numNull.longValue());
+      stat.setNumNulls(numNull);
     }
 
     if (min != null && max != null ) {

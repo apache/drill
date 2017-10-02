@@ -51,7 +51,7 @@ public class KuduScanBatchCreator implements BatchCreator<KuduSubScan>{
         throw new ExecutionSetupException(e1);
       }
     }
-    return new ScanBatch(subScan, context, readers.iterator());
+    return new ScanBatch(subScan, context, readers);
   }
 
 }

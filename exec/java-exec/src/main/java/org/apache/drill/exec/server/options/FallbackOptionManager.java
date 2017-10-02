@@ -20,18 +20,14 @@ package org.apache.drill.exec.server.options;
 import java.util.Iterator;
 
 import com.google.common.collect.Iterables;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 /**
- * An {@link OptionManager} which allows for falling back onto another {@link OptionManager}. This way method calls can
- * be delegated to the fallback manager in case the current manager does not handle the specified option. Also, all
- * options do not need to be stored at every contextual level. For example, if an option isn't changed from its default
- * within a session, then we can get the option from system options.
+ * An {@link OptionManager} which allows for falling back onto another {@link OptionManager} when retrieving options.
  * <p/>
  * {@link FragmentOptionManager} and {@link SessionOptionManager} use {@link SystemOptionManager} as the fall back
  * manager. {@link QueryOptionManager} uses {@link SessionOptionManager} as the fall back manager.
  */
-public abstract class FallbackOptionManager extends BaseOptionManager implements OptionManager {
+public abstract class FallbackOptionManager extends BaseOptionManager {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
 
   protected final OptionManager fallback;
@@ -75,65 +71,9 @@ public abstract class FallbackOptionManager extends BaseOptionManager implements
    */
   abstract OptionValue getLocalOption(String name);
 
-  /**
-   * Sets the option value for this manager without falling back.
-   *
-   * @param value the option value
-   * @return true iff the value was successfully set
-   */
-  abstract boolean setLocalOption(OptionValue value);
-
-  /**
-   * Deletes all options for this manager without falling back.
-   *
-   * If no options are set, calling this method should be no-op. See {@link OptionManager#deleteAllOptions}.
-   *
-   * @param type option type
-   * @return true iff the option type is supported
-   */
-  abstract boolean deleteAllLocalOptions(OptionType type);
-
-  /**
-   * Deletes the option with given name for this manager without falling back.
-   *
-   * This method will be called with an option name that is guaranteed to have an option validator. Also, if option
-   * with {@param name} does not exist within the manager, calling this method should be a no-op. See
-   * {@link OptionManager#deleteOption}.
-   *
-   * @param name option name
-   * @param type option type
-   * @return true iff the option type is supported
-   */
-  abstract boolean deleteLocalOption(String name, OptionType type);
-
   @Override
-  public void setOption(OptionValue value) {
-    final OptionValidator validator = SystemOptionManager.getValidator(value.name);
-
-    validator.validate(value, this); // validate the option
-
-    // fallback if unable to set locally
-    if (!setLocalOption(value)) {
-      fallback.setOption(value);
-    }
-  }
-
-  @Override
-  public void deleteOption(final String name, final OptionType type) {
-    SystemOptionManager.getValidator(name); // ensure the option exists
-
-    // fallback if unable to delete locally
-    if (!deleteLocalOption(name, type)) {
-      fallback.deleteOption(name, type);
-    }
-  }
-
-  @Override
-  public void deleteAllOptions(final OptionType type) {
-    // fallback if unable to delete locally
-    if (!deleteAllLocalOptions(type)) {
-      fallback.deleteAllOptions(type);
-    }
+  public OptionDefinition getOptionDefinition(String name) {
+    return fallback.getOptionDefinition(name);
   }
 
   @Override

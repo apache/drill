@@ -338,15 +338,15 @@ namespace meta {
     _DL_INTERVAL_MINUTE_TO_SECOND = 1 << 16L
   };
 
-  template inline _DateTimeLiteralSupport operator&(_DateTimeLiteralSupport __a, _DateTimeLiteralSupport __b);
-  template inline _DateTimeLiteralSupport operator|(_DateTimeLiteralSupport __a, _DateTimeLiteralSupport __b);
-  template inline _DateTimeLiteralSupport operator^(_DateTimeLiteralSupport __a, _DateTimeLiteralSupport __b);
+  template  _DateTimeLiteralSupport operator&(_DateTimeLiteralSupport __a, _DateTimeLiteralSupport __b);
+  template  _DateTimeLiteralSupport operator|(_DateTimeLiteralSupport __a, _DateTimeLiteralSupport __b);
+  template  _DateTimeLiteralSupport operator^(_DateTimeLiteralSupport __a, _DateTimeLiteralSupport __b);
 
-  template inline _DateTimeLiteralSupport& operator&=(_DateTimeLiteralSupport& __a, _DateTimeLiteralSupport __b);
-  template inline _DateTimeLiteralSupport& operator|=(_DateTimeLiteralSupport& __a, _DateTimeLiteralSupport __b);
-  template inline _DateTimeLiteralSupport& operator^=(_DateTimeLiteralSupport& __a, _DateTimeLiteralSupport __b);
+  template  _DateTimeLiteralSupport& operator&=(_DateTimeLiteralSupport& __a, _DateTimeLiteralSupport __b);
+  template  _DateTimeLiteralSupport& operator|=(_DateTimeLiteralSupport& __a, _DateTimeLiteralSupport __b);
+  template  _DateTimeLiteralSupport& operator^=(_DateTimeLiteralSupport& __a, _DateTimeLiteralSupport __b);
 
-  template inline _DateTimeLiteralSupport operator~(_DateTimeLiteralSupport __a);
+  template  _DateTimeLiteralSupport operator~(_DateTimeLiteralSupport __a);
 
   /**
    * Date time literal support flags
@@ -396,15 +396,15 @@ namespace meta {
       _C_GROUPBY    = 1 << 1L
   };
 
-  template inline _CollateSupport operator&(_CollateSupport __a, _CollateSupport __b);
-  template inline _CollateSupport operator|(_CollateSupport __a, _CollateSupport __b);
-  template inline _CollateSupport operator^(_CollateSupport __a, _CollateSupport __b);
+  template  _CollateSupport operator&(_CollateSupport __a, _CollateSupport __b);
+  template  _CollateSupport operator|(_CollateSupport __a, _CollateSupport __b);
+  template  _CollateSupport operator^(_CollateSupport __a, _CollateSupport __b);
 
-  template inline _CollateSupport& operator&=(_CollateSupport& __a, _CollateSupport __b);
-  template inline _CollateSupport& operator|=(_CollateSupport& __a, _CollateSupport __b);
-  template inline _CollateSupport& operator^=(_CollateSupport& __a, _CollateSupport __b);
+  template  _CollateSupport& operator&=(_CollateSupport& __a, _CollateSupport __b);
+  template  _CollateSupport& operator|=(_CollateSupport& __a, _CollateSupport __b);
+  template  _CollateSupport& operator^=(_CollateSupport& __a, _CollateSupport __b);
 
-  template inline _CollateSupport operator~(_CollateSupport __a);
+  template  _CollateSupport operator~(_CollateSupport __a);
 
 
   /**
@@ -476,15 +476,15 @@ namespace meta {
       _OJ_ALL_COMPARISON_OPS    = 1 << 7L //!< _OJ_ALL_COMPARISON_OPS
   };
 
-  template inline _OuterJoinSupport operator&(_OuterJoinSupport __a, _OuterJoinSupport __b);
-  template inline _OuterJoinSupport operator|(_OuterJoinSupport __a, _OuterJoinSupport __b);
-  template inline _OuterJoinSupport operator^(_OuterJoinSupport __a, _OuterJoinSupport __b);
+  template  _OuterJoinSupport operator&(_OuterJoinSupport __a, _OuterJoinSupport __b);
+  template  _OuterJoinSupport operator|(_OuterJoinSupport __a, _OuterJoinSupport __b);
+  template  _OuterJoinSupport operator^(_OuterJoinSupport __a, _OuterJoinSupport __b);
 
-  template inline _OuterJoinSupport& operator&=(_OuterJoinSupport& __a, _OuterJoinSupport __b);
-  template inline _OuterJoinSupport& operator|=(_OuterJoinSupport& __a, _OuterJoinSupport __b);
-  template inline _OuterJoinSupport& operator^=(_OuterJoinSupport& __a, _OuterJoinSupport __b);
+  template  _OuterJoinSupport& operator&=(_OuterJoinSupport& __a, _OuterJoinSupport __b);
+  template  _OuterJoinSupport& operator|=(_OuterJoinSupport& __a, _OuterJoinSupport __b);
+  template  _OuterJoinSupport& operator^=(_OuterJoinSupport& __a, _OuterJoinSupport __b);
 
-  template inline _OuterJoinSupport operator~(_OuterJoinSupport __a);
+  template  _OuterJoinSupport operator~(_OuterJoinSupport __a);
 
   /**
    * Outer join support flags
@@ -541,15 +541,15 @@ namespace meta {
       _SQ_IN_QUANTIFIED = 1 << 5L
   };
 
-  template inline _SubQuerySupport operator&(_SubQuerySupport __a, _SubQuerySupport __b);
-  template inline _SubQuerySupport operator|(_SubQuerySupport __a, _SubQuerySupport __b);
-  template inline _SubQuerySupport operator^(_SubQuerySupport __a, _SubQuerySupport __b);
+  template  _SubQuerySupport operator&(_SubQuerySupport __a, _SubQuerySupport __b);
+  template  _SubQuerySupport operator|(_SubQuerySupport __a, _SubQuerySupport __b);
+  template  _SubQuerySupport operator^(_SubQuerySupport __a, _SubQuerySupport __b);
 
-  template inline _SubQuerySupport& operator&=(_SubQuerySupport& __a, _SubQuerySupport __b);
-  template inline _SubQuerySupport& operator|=(_SubQuerySupport& __a, _SubQuerySupport __b);
-  template inline _SubQuerySupport& operator^=(_SubQuerySupport& __a, _SubQuerySupport __b);
+  template  _SubQuerySupport& operator&=(_SubQuerySupport& __a, _SubQuerySupport __b);
+  template  _SubQuerySupport& operator|=(_SubQuerySupport& __a, _SubQuerySupport __b);
+  template  _SubQuerySupport& operator^=(_SubQuerySupport& __a, _SubQuerySupport __b);
 
-  template inline _SubQuerySupport operator~(_SubQuerySupport __a);
+  template  _SubQuerySupport operator~(_SubQuerySupport __a);
 
   /**
    * SubQuery support flags
@@ -579,15 +579,15 @@ namespace meta {
       _U_UNION_ALL  = 1 << 2L //!< _U_UNION_ALL
   };
 
-  template inline _UnionSupport operator&(_UnionSupport __a, _UnionSupport __b);
-  template inline _UnionSupport operator|(_UnionSupport __a, _UnionSupport __b);
-  template inline _UnionSupport operator^(_UnionSupport __a, _UnionSupport __b);
+  template  _UnionSupport operator&(_UnionSupport __a, _UnionSupport __b);
+  template  _UnionSupport operator|(_UnionSupport __a, _UnionSupport __b);
+  template  _UnionSupport operator^(_UnionSupport __a, _UnionSupport __b);
 
-  template inline _UnionSupport& operator&=(_UnionSupport& __a, _UnionSupport __b);
-  template inline _UnionSupport& operator|=(_UnionSupport& __a, _UnionSupport __b);
-  template inline _UnionSupport& operator^=(_UnionSupport& __a, _UnionSupport __b);
+  template  _UnionSupport& operator&=(_UnionSupport& __a, _UnionSupport __b);
+  template  _UnionSupport& operator|=(_UnionSupport& __a, _UnionSupport __b);
+  template  _UnionSupport& operator^=(_UnionSupport& __a, _UnionSupport __b);
 
-  template inline _UnionSupport operator~(_UnionSupport __a);
+  template  _UnionSupport operator~(_UnionSupport __a);
 
   /**
    * Union support flags

@@ -153,7 +153,7 @@ public abstract class AbstractRowSet implements RowSet {
   }
 
   @Override
-  public int size() {
+  public long size() {
     throw new UnsupportedOperationException("getSize");
   }
 

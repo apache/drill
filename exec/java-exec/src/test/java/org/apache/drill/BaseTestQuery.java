@@ -59,7 +59,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.VectorUtil;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -83,7 +82,8 @@ import org.apache.drill.exec.vector.ValueVector;
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
-  public static final String TEMP_SCHEMA = "dfs_test.tmp";
+  public static final String TEST_SCHEMA = "dfs_test";
+  public static final String TEMP_SCHEMA = TEST_SCHEMA + ".tmp";
 
   private static final int MAX_WIDTH_PER_NODE = 2;
 
@@ -92,6 +92,8 @@ public class BaseTestQuery extends ExecTest {
     {
       put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
       put(ExecConstants.HTTP_ENABLE, "false");
+      // Increasing retry attempts for testing
+      put(ExecConstants.UDF_RETRY_ATTEMPTS, "10");
     }
   };
 
@@ -138,9 +140,7 @@ public class BaseTestQuery extends ExecTest {
     // turns on the verbose errors in tests
     // sever side stacktraces are added to the message before sending back to the client
     test("ALTER SESSION SET `exec.errors.verbose` = true");
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(conf);
+    fs = getLocalFileSystem();
   }
 
   protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig) {
@@ -200,6 +200,10 @@ public class BaseTestQuery extends ExecTest {
   }
 
   private static void openClient(Properties properties) throws Exception {
+    if (properties == null) {
+      properties = new Properties();
+    }
+
     allocator = RootAllocatorFactory.newRoot(config);
     serviceSet = RemoteServiceSet.getLocalServiceSet();
 
@@ -215,7 +219,13 @@ public class BaseTestQuery extends ExecTest {
       TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
     }
 
-    client = QueryTestUtil.createClient(config,  serviceSet, MAX_WIDTH_PER_NODE, properties);
+    if (!properties.containsKey(DrillProperties.DRILLBIT_CONNECTION)) {
+      properties = new Properties(properties);
+      properties.setProperty(DrillProperties.DRILLBIT_CONNECTION,
+        String.format("localhost:%s", bits[0].getUserPort()));
+    }
+
+    client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, properties);
   }
 
   /**
@@ -462,6 +472,18 @@ public class BaseTestQuery extends ExecTest {
     return file.getPath();
   }
 
+  protected static void setSessionOption(final String option, final boolean value) {
+    setSessionOption(option, Boolean.toString(value));
+  }
+
+  protected static void setSessionOption(final String option, final long value) {
+    setSessionOption(option, Long.toString(value));
+  }
+
+  protected static void setSessionOption(final String option, final double value) {
+    setSessionOption(option, Double.toString(value));
+  }
+
   protected static void setSessionOption(final String option, final String value) {
     try {
       runSQL(String.format("alter session set `%s` = %s", option, value));
@@ -623,6 +645,16 @@ public class BaseTestQuery extends ExecTest {
         destination);
   }
 
+  protected static void copyMetaDataCacheToTempReplacingInternalPaths(String srcFileOnClassPath, String destFolderInTmp,
+      String metaFileName) throws IOException {
+    copyMetaDataCacheToTempWithReplacements(srcFileOnClassPath, destFolderInTmp, metaFileName, null);
+  }
+
+  protected static void copyMetaDataCacheToTempReplacingInternalPaths(Path srcFileOnClassPath, String destFolderInTmp,
+                                                                      String metaFileName) throws IOException {
+    copyMetaDataCacheToTempReplacingInternalPaths(srcFileOnClassPath.toUri().getPath(), destFolderInTmp, metaFileName);
+  }
+
   /**
    * Old metadata cache files include full paths to the files that have been scanned.
    * <p>
@@ -639,16 +671,20 @@ public class BaseTestQuery extends ExecTest {
    * @param srcFileOnClassPath the source path of metadata cache file, which should be replaced
    * @param destFolderInTmp  the parent folder name of the metadata cache file
    * @param metaFileName the name of metadata cache file depending on the type of the metadata
+   * @param customStringReplacement custom string to replace the "CUSTOM_REPLACED" target string in metadata file
    * @throws IOException if a create or write errors occur
    */
-  protected static void copyMetaDataCacheToTempReplacingInternalPaths(String srcFileOnClassPath, String destFolderInTmp,
-      String metaFileName) throws IOException {
+  protected static void copyMetaDataCacheToTempWithReplacements(String srcFileOnClassPath,
+      String destFolderInTmp, String metaFileName, String customStringReplacement) throws IOException {
     String metadataFileContents = getFile(srcFileOnClassPath);
     Path rootMeta = new Path(dfsTestTmpSchemaLocation, destFolderInTmp);
     Path newMetaCache = new Path(rootMeta, metaFileName);
-    FSDataOutputStream outSteam = fs.create(newMetaCache);
-    outSteam.writeBytes(metadataFileContents.replace("REPLACED_IN_TEST", dfsTestTmpSchemaLocation));
-    outSteam.close();
+    try (FSDataOutputStream outSteam = fs.create(newMetaCache)) {
+      if (customStringReplacement != null) {
+        metadataFileContents = metadataFileContents.replace("CUSTOM_STRING_REPLACEMENT", customStringReplacement);
+      }
+      outSteam.writeBytes(metadataFileContents.replace("REPLACED_IN_TEST", dfsTestTmpSchemaLocation));
+    }
   }
 
  }

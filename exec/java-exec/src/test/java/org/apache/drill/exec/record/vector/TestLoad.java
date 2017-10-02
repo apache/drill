@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,8 +24,6 @@ import io.netty.buffer.DrillBuf;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -68,14 +66,14 @@ public class TestLoad extends ExecTest {
     final RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
     final ByteBuf[] byteBufs = writableBatch.getBuffers();
     int bytes = 0;
-    for (int i = 0; i < byteBufs.length; i++) {
-      bytes += byteBufs[i].writerIndex();
+    for (ByteBuf buf : byteBufs) {
+      bytes += buf.writerIndex();
     }
     final DrillBuf byteBuf = allocator.buffer(bytes);
     int index = 0;
-    for (int i = 0; i < byteBufs.length; i++) {
-      byteBufs[i].readBytes(byteBuf, index, byteBufs[i].writerIndex());
-      index += byteBufs[i].writerIndex();
+    for (ByteBuf buf : byteBufs) {
+      buf.readBytes(byteBuf, index, buf.writerIndex());
+      index += buf.writerIndex();
     }
     byteBuf.writerIndex(bytes);
 
@@ -88,7 +86,7 @@ public class TestLoad extends ExecTest {
       } else {
         System.out.print("\t");
       }
-      System.out.print(v.getField().getPath());
+      System.out.print(v.getField().getName());
       System.out.print("[");
       System.out.print(v.getField().getType().getMinorType());
       System.out.print("]");

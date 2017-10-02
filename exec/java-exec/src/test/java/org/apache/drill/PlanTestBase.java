@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -349,7 +349,7 @@ public class PlanTestBase extends BaseTestQuery {
       }
 
       if (!silent) {
-        System.out.println(vw.getValueVector().getField().getPath());
+        System.out.println(vw.getValueVector().getField().getName());
       }
       final ValueVector vv = vw.getValueVector();
       for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {

@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.options;
 
 import com.google.common.collect.Maps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 import java.util.Map;
 
@@ -42,9 +41,27 @@ public class FragmentOptionManager extends InMemoryOptionManager {
   }
 
   @Override
-  boolean supportsOptionType(OptionType type) {
-    throw new UnsupportedOperationException("FragmentOptionManager does not support the given option value.");
+  public void deleteAllLocalOptions() {
+    throw new UnsupportedOperationException();
   }
 
+  @Override
+  public void deleteLocalOption(String name) {
+    throw new UnsupportedOperationException();
+  }
 
+  @Override
+  public OptionValue getDefault(String optionName) {
+    return fallback.getDefault(optionName);
+  }
+
+  @Override
+  protected OptionValue.OptionScope getScope() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setLocalOptionHelper(OptionValue value) {
+    throw new UnsupportedOperationException();
+  }
 }

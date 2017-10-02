@@ -37,6 +37,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -55,7 +56,6 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
-import org.apache.drill.exec.work.foreman.QueryManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.google.common.collect.Lists;
@@ -77,19 +77,19 @@ public class ProfileResources {
     private long startTime;
     private long endTime;
     private Date time;
-    private String location;
+    private String link;
     private String foreman;
     private String query;
     private String state;
     private String user;
 
-    public ProfileInfo(String queryId, long startTime, long endTime, String foreman, String query, String state, String user) {
+    public ProfileInfo(DrillConfig drillConfig, String queryId, long startTime, long endTime, String foreman, String query, String state, String user) {
       this.queryId = queryId;
       this.startTime = startTime;
       this.endTime = endTime;
       this.time = new Date(startTime);
       this.foreman = foreman;
-      this.location = "http://localhost:8047/profile/" + queryId + ".json";
+      this.link = generateLink(drillConfig, foreman, queryId);
       this.query = query.substring(0,  Math.min(query.length(), 150));
       this.state = state;
       this.user = user;
@@ -127,8 +127,8 @@ public class ProfileResources {
       return state;
     }
 
-    public String getLocation() {
-      return location;
+    public String getLink() {
+      return link;
     }
 
     @Override
@@ -138,6 +138,30 @@ public class ProfileResources {
 
     public String getForeman() {
       return foreman;
+    }
+
+    /**
+     * Generates link which will return query profile in json representation.
+     *
+     * @param drillConfig drill configuration
+     * @param foreman foreman hostname
+     * @param queryId query id
+     * @return link
+     */
+    private String generateLink(DrillConfig drillConfig, String foreman, String queryId) {
+      StringBuilder sb = new StringBuilder();
+      if (drillConfig.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
+        sb.append("https://");
+      } else {
+        sb.append("http://");
+      }
+      sb.append(foreman);
+      sb.append(":");
+      sb.append(drillConfig.getInt(ExecConstants.HTTP_PORT));
+      sb.append("/profiles/");
+      sb.append(queryId);
+      sb.append(".json");
+      return sb.toString();
     }
 
   }
@@ -195,7 +219,8 @@ public class ProfileResources {
           final Map.Entry<String, QueryInfo> runningEntry = runningEntries.next();
           final QueryInfo profile = runningEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            runningQueries.add(new ProfileInfo(runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            runningQueries.add(new ProfileInfo(work.getContext().getConfig(), runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(), profile.getForeman()
+              .getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -221,7 +246,8 @@ public class ProfileResources {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
           final QueryProfile profile = profileEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            finishedQueries.add(new ProfileInfo(profileEntry.getKey(), profile.getStart(), profile.getEnd(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            finishedQueries.add(new ProfileInfo(work.getContext().getConfig(), profileEntry.getKey(), profile.getStart(), profile.getEnd(), profile.getForeman().getAddress(),
+              profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());

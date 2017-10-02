@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -165,7 +165,7 @@ public class MongoFilterBuilder extends
       SchemaPath field, Object fieldValue) throws ClassNotFoundException,
       IOException {
     // extract the field name
-    String fieldName = field.getAsUnescapedPath();
+    String fieldName = field.getRootSegmentPath();
     MongoCompareOp compareOp = null;
     switch (functionName) {
     case "equal":

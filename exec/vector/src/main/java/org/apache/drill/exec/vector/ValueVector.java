@@ -18,10 +18,12 @@
 package org.apache.drill.exec.vector;
 
 import java.io.Closeable;
+import java.util.Set;
 
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -204,16 +206,19 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   void copyEntry(int toIndex, ValueVector from, int fromIndex);
 
   /**
-   * Return the total memory consumed by all buffers within this vector.
+   * Add the ledgers underlying the buffers underlying the components of the
+   * vector to the set provided. Used to determine actual memory allocation.
+   *
+   * @param ledgers set of ledgers to which to add ledgers for this vector
    */
 
-  int getAllocatedByteCount();
+  void collectLedgers(Set<BufferLedger> ledgers);
 
   /**
    * Return the number of value bytes consumed by actual data.
    */
 
-  int getPayloadByteCount();
+  int getPayloadByteCount(int valueCount);
 
   /**
    * Exchange state with another value vector of the same type.
@@ -221,6 +226,19 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
 
   void exchange(ValueVector other);
+
+  /**
+   * Convert a non-nullable vector to nullable by shuffling the data from
+   * one to the other. Avoids the need to generate copy code just to change
+   * mode. If this vector is non-nullable, accepts a nullable dual (same
+   * minor type, different mode.) If the vector is non-nullable, or non-scalar,
+   * then throws an exception.
+   *
+   * @param nullableVector nullable vector of the same minor type as
+   * this vector
+   */
+
+  void toNullable(ValueVector nullableVector);
 
   /**
    * An abstraction that is used to read from this vector instance.

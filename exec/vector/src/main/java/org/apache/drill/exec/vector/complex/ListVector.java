@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.vector.complex;
 
 import com.google.common.collect.ObjectArrays;
@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
@@ -41,6 +42,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 import java.util.List;
+import java.util.Set;
 
 public class ListVector extends BaseRepeatedValueVector {
 
@@ -257,7 +259,7 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   public UnionVector promoteToUnion() {
-    MaterializedField newField = MaterializedField.create(getField().getPath(), Types.optional(MinorType.UNION));
+    MaterializedField newField = MaterializedField.create(getField().getName(), Types.optional(MinorType.UNION));
     UnionVector vector = new UnionVector(newField, allocator, null);
     replaceDataVector(vector);
     reader = new UnionListReader(this);
@@ -323,12 +325,15 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
-  public int getAllocatedByteCount() {
-    return offsets.getAllocatedByteCount() + bits.getAllocatedByteCount() + super.getAllocatedByteCount();
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    offsets.collectLedgers(ledgers);
+    bits.collectLedgers(ledgers);
+    super.collectLedgers(ledgers);
   }
 
   @Override
-  public int getPayloadByteCount() {
-    return offsets.getPayloadByteCount() + bits.getPayloadByteCount() + super.getPayloadByteCount();
+  public int getPayloadByteCount(int valueCount) {
+    return offsets.getPayloadByteCount(valueCount) + bits.getPayloadByteCount(valueCount) +
+           super.getPayloadByteCount(valueCount);
   }
 }

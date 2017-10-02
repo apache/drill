@@ -51,60 +51,60 @@ public class PlannerSettings implements Context{
   // max off heap memory for planning (16G)
   private static final long MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 16l * 1024 * 1024 * 1024;
 
-  public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding", true);
-  public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
-  public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
-  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);
-  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);
-  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);
-  public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin", true);
-  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", true);
-  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", true);
-  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD, 10000000);
-  public static final OptionValidator BROADCAST_FACTOR = new RangeDoubleValidator("planner.broadcast_factor", 0, Double.MAX_VALUE, 1.0d);
-  public static final OptionValidator NESTEDLOOPJOIN_FACTOR = new RangeDoubleValidator("planner.nestedloopjoin_factor", 0, Double.MAX_VALUE, 100.0d);
-  public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only", true);
-  public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE, 1.0d);
-  public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange", true);
-  public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange", false);
-  public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor", 2);
-  public static final OptionValidator PARTITION_SENDER_MAX_THREADS = new LongValidator("planner.partitioner_sender_max_threads", 8);
-  public static final OptionValidator PARTITION_SENDER_SET_THREADS = new LongValidator("planner.partitioner_sender_set_threads", -1);
-  public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer", false);
-  public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size", 10);
-  public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key", true);
-  public static final OptionValidator HASH_JOIN_SWAP = new BooleanValidator("planner.enable_hashjoin_swap", true);
-  public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator("planner.join.hash_join_swap_margin_factor", 0, 100, 10d);
+  public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding");
+  public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges");
+  public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg");
+  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg");
+  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin");
+  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin");
+  public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin");
+  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg");
+  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join");
+  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD);
+  public static final OptionValidator BROADCAST_FACTOR = new RangeDoubleValidator("planner.broadcast_factor", 0, Double.MAX_VALUE);
+  public static final OptionValidator NESTEDLOOPJOIN_FACTOR = new RangeDoubleValidator("planner.nestedloopjoin_factor", 0, Double.MAX_VALUE);
+  public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only");
+  public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE);
+  public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange");
+  public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange");
+  public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor");
+  public static final OptionValidator PARTITION_SENDER_MAX_THREADS = new LongValidator("planner.partitioner_sender_max_threads");
+  public static final OptionValidator PARTITION_SENDER_SET_THREADS = new LongValidator("planner.partitioner_sender_set_threads");
+  public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer");
+  public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size");
+  public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key");
+  public static final OptionValidator HASH_JOIN_SWAP = new BooleanValidator("planner.enable_hashjoin_swap");
+  public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator("planner.join.hash_join_swap_margin_factor", 0, 100);
   public static final String ENABLE_DECIMAL_DATA_TYPE_KEY = "planner.enable_decimal_data_type";
-  public static final BooleanValidator ENABLE_DECIMAL_DATA_TYPE = new BooleanValidator(ENABLE_DECIMAL_DATA_TYPE_KEY, false);
-  public static final OptionValidator HEP_OPT = new BooleanValidator("planner.enable_hep_opt", true);
-  public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning", true);
+  public static final BooleanValidator ENABLE_DECIMAL_DATA_TYPE = new BooleanValidator(ENABLE_DECIMAL_DATA_TYPE_KEY);
+  public static final OptionValidator HEP_OPT = new BooleanValidator("planner.enable_hep_opt");
+  public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning");
   public static final OptionValidator PLANNER_MEMORY_LIMIT = new RangeLongValidator("planner.memory_limit",
-      INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES, DEFAULT_MAX_OFF_HEAP_ALLOCATION_IN_BYTES);
+      INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES);
   public static final String UNIONALL_DISTRIBUTE_KEY = "planner.enable_unionall_distribute";
-  public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY, false);
+  public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY);
 
   public static final OptionValidator IDENTIFIER_MAX_LENGTH =
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
-                              Integer.MAX_VALUE, DEFAULT_IDENTIFIER_MAX_LENGTH);
+                              Integer.MAX_VALUE);
 
   public static final DoubleValidator FILTER_MIN_SELECTIVITY_ESTIMATE_FACTOR =
           new MinRangeDoubleValidator("planner.filter.min_selectivity_estimate_factor",
-          0.0, 1.0, 0.0d, "planner.filter.max_selectivity_estimate_factor");
+          0.0, 1.0, "planner.filter.max_selectivity_estimate_factor");
   public static final DoubleValidator FILTER_MAX_SELECTIVITY_ESTIMATE_FACTOR =
           new MaxRangeDoubleValidator("planner.filter.max_selectivity_estimate_factor",
-          0.0, 1.0, 1.0d, "planner.filter.min_selectivity_estimate_factor");
+          0.0, 1.0, "planner.filter.min_selectivity_estimate_factor");
 
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
-  public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, true);
+  public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY);
   public static final LongValidator IN_SUBQUERY_THRESHOLD =
-      new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE, 20); /* Same as Calcite's default IN List subquery size */
+      new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE); /* Same as Calcite's default IN List subquery size */
 
-  public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY = "planner.store.parquet.rowgroup.filter.pushdown";
-  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY, true);
+  public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY = "planner.store.parquet.rowgroup.filter.pushdown.enabled";
+  public static final BooleanValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING = new BooleanValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY);
   public static final String PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY = "planner.store.parquet.rowgroup.filter.pushdown.threshold";
   public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY,
-      Long.MAX_VALUE, 10000);
+      Long.MAX_VALUE);
 
   public static final String QUOTING_IDENTIFIERS_KEY = "planner.parser.quoting_identifiers";
   public static final EnumeratedStringValidator QUOTING_IDENTIFIERS = new EnumeratedStringValidator(
@@ -132,10 +132,10 @@ public class PlannerSettings implements Context{
      Note: once hash and merge joins will allow non-equi join conditions,
      the need to turn off join optimization may go away.
    */
-  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization", true);
+  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization");
   // for testing purpose
   public static final String FORCE_2PHASE_AGGR_KEY = "planner.force_2phase_aggr";
-  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY, false);
+  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY);
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;

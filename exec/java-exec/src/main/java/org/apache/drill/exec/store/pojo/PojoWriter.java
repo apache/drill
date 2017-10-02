@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,40 @@ package org.apache.drill.exec.store.pojo;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 
-interface PojoWriter{
-  void writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException ;
+/**
+ * Pojo writer interface for writers based on types supported for pojo.
+ */
+public interface PojoWriter {
+
+  /**
+   * Writes given value to the given position of the bit to set.
+   *
+   * @param value values to be written
+   * @param outboundIndex position of the bit
+   */
+  void writeField(Object value, int outboundIndex);
+
+  /**
+   * Initializes value vector.
+   *
+   * @param output output mutator
+   */
   void init(OutputMutator output) throws SchemaChangeException;
+
+  /**
+   * Allocates new buffer for value vector.
+   */
   void allocate();
-  void setValueCount(int i);
+
+  /**
+   * Sets number of written records.
+   *
+   * @param recordCount record count
+   */
+  void setValueCount(int recordCount);
+
+  /**
+   * Performs clean up if needed.
+   */
   void cleanup();
 }

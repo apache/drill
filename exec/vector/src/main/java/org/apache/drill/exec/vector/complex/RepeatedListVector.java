@@ -23,6 +23,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -30,6 +31,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedListHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -415,6 +417,7 @@ public class RepeatedListVector extends AbstractContainerVector
   public void allocateNew(int valueCount, int innerValueCount) {
     clear();
     getOffsetVector().allocateNew(valueCount + 1);
+    getOffsetVector().getMutator().setSafe(0, 0);
     getMutator().reset();
   }
 
@@ -435,14 +438,13 @@ public class RepeatedListVector extends AbstractContainerVector
     copyFromSafe(fromIndex, toIndex, (RepeatedListVector) from);
   }
 
-  @Override
-  public int getAllocatedByteCount() {
-    return delegate.getAllocatedByteCount();
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    delegate.collectLedgers(ledgers);
   }
 
   @Override
-  public int getPayloadByteCount() {
-    return delegate.getPayloadByteCount();
+  public int getPayloadByteCount(int valueCount) {
+    return delegate.getPayloadByteCount(valueCount);
   }
 
   @Override
@@ -451,4 +453,8 @@ public class RepeatedListVector extends AbstractContainerVector
     throw new UnsupportedOperationException("Exchange() not yet supported for repeated lists");
   }
 
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
 }

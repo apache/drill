@@ -26,12 +26,15 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
 
-public class TestUnionAll extends BaseTestQuery{
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+public class TestUnionAll extends BaseTestQuery {
 
   private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
   private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
@@ -584,7 +587,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test
-  public void testUnionAllRightEmptyBatch() throws Exception {
+  public void testUnionAllRightEmptyDataBatch() throws Exception {
     String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
 
     String queryRightEmptyBatch = String.format(
@@ -604,7 +607,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test
-  public void testUnionAllLeftEmptyBatch() throws Exception {
+  public void testUnionAllLeftEmptyDataBatch() throws Exception {
     String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
 
     final String queryLeftBatch = String.format(
@@ -625,7 +628,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test
-  public void testUnionAllBothEmptyBatch() throws Exception {
+  public void testUnionAllBothEmptyDataBatch() throws Exception {
     String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
     final String query = String.format(
         "select key from dfs_test.`%s` where 1 = 0 " +
@@ -636,7 +639,7 @@ public class TestUnionAll extends BaseTestQuery{
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        .setMinorType(TypeProtos.MinorType.INT)
+        .setMinorType(TypeProtos.MinorType.BIT) // field "key" is boolean type
         .setMode(TypeProtos.DataMode.OPTIONAL)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
@@ -1190,4 +1193,41 @@ public class TestUnionAll extends BaseTestQuery{
         .go();
   }
 
+  @Test // DRILL-4264
+  public void testFieldWithDots() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "table.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+      }
+
+      String query = String.format("select * from (" +
+                                              "(select t.m.`a.b` as a,\n" +
+                                                      "t.m.a.b as b,\n" +
+                                                      "t.m['a.b'] as c,\n" +
+                                                      "t.rk.q as d,\n" +
+                                                      "t.`rk.q` as e\n" +
+                                              "from dfs_test.`%1$s/%2$s` t)\n" +
+                                            "union all\n" +
+                                              "(select t.m.`a.b` as a,\n" +
+                                                      "t.m.a.b as b,\n" +
+                                                      "t.m['a.b'] as c,\n" +
+                                                      "t.rk.q as d,\n" +
+                                                      "t.`rk.q` as e\n" +
+                                              "from dfs_test.`%1$s/%2$s` t))",
+                                  directory.toPath().toString(), fileName);
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a", "b", "c", "d", "e")
+        .baselineValues("1", "2", "1", null, "a")
+        .baselineValues("1", "2", "1", null, "a")
+        .go();
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
+  }
 }

@@ -187,19 +187,34 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   /**
-   * Allocate new buffer with double capacity, and copy data into the new buffer. Replace vector's buffer with new buffer, and release old one
+   * Allocate new buffer with double capacity, and copy data into the new
+   * buffer. Replace vector's buffer with new buffer, and release old one
    *
-   * @throws org.apache.drill.exec.memory.OutOfMemoryException if it can't allocate the new buffer
+   * @throws org.apache.drill.exec.memory.OutOfMemoryException
+   *           if it can't allocate the new buffer
    */
+
   public void reAlloc() {
-    final long newAllocationSize = allocationSizeInBytes * 2L;
+
+    // Avoid an infinite loop if we try to double the size of
+    // a zero-length buffer. Instead, just allocate a 256 byte
+    // buffer if we start at 0.
+
+    final long newAllocationSize = allocationSizeInBytes == 0
+        ? 256
+        : allocationSizeInBytes * 2L;
+
     // TODO: Replace this with MAX_BUFFER_SIZE once all
     // code is aware of the maximum vector size.
+
     if (newAllocationSize > MAX_ALLOCATION_SIZE)  {
       throw new OversizedAllocationException("Unable to expand the buffer. Max allowed buffer size is reached.");
     }
 
     logger.debug("Reallocating vector [{}]. # of bytes: [{}] -> [{}]", field, allocationSizeInBytes, newAllocationSize);
+    if (newAllocationSize == 0) {
+      throw new IllegalStateException("Attempt to reAlloc a zero-sized vector");
+    }
     final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
     newBuf.setBytes(0, data, 0, data.capacity());
     final int halfNewCapacity = newBuf.capacity() / 2;
@@ -220,7 +235,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    Preconditions.checkArgument(this.field.getPath().equals(metadata.getNamePart().getName()), "The field %s doesn't match the provided metadata %s.", this.field, metadata);
+    Preconditions.checkArgument(this.field.getName().equals(metadata.getNamePart().getName()),
+                                "The field %s doesn't match the provided metadata %s.", this.field, metadata);
     final int actualLength = metadata.getBufferLength();
     final int valueCount = metadata.getValueCount();
     final int expectedLength = valueCount * VALUE_WIDTH;
@@ -266,8 +282,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   @Override
-  public int getPayloadByteCount() {
-    return getAccessor().getValueCount() * VALUE_WIDTH;
+  public int getPayloadByteCount(int valueCount) {
+    return valueCount * ${type.width};
   }
 
   private class TransferImpl implements TransferPair{
@@ -333,6 +349,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   private void incrementAllocationMonitor() {
     ++allocationMonitor;
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    Nullable${minor.class}Vector dest = (Nullable${minor.class}Vector) nullableVector;
+    dest.getMutator().fromNotNullable(this);
   }
 
   public final class Accessor extends BaseDataValueVector.BaseAccessor {

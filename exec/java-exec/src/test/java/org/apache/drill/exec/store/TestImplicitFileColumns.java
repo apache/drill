@@ -20,9 +20,13 @@ package org.apache.drill.exec.store;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.Text;
+import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,6 +40,9 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   public static final String MAIN = "main";
   public static final String NESTED = "nested";
   public static final String CSV = "csv";
+  public final String JSON_TBL = "/scan/jsonTbl"; // 1990/1.json : {id:100, name: "John"}, 1991/2.json : {id: 1000, name : "Joe"}
+  public final String PARQUET_TBL = "/multilevel/parquet/";  // 1990/Q1/orders_1990_q1.parquet, ...
+  public final String CSV_TBL = "/multilevel/csv";  // 1990/Q1/orders_1990_q1.csv, ..
 
   private static final JsonStringArrayList<Text> mainColumnValues = new JsonStringArrayList<Text>() {{
     add(new Text(MAIN));
@@ -145,6 +152,68 @@ public class TestImplicitFileColumns extends BaseTestQuery {
     } finally {
       test("alter session set `planner.enable_decimal_data_type` = false");
     }
+  }
+
+  @Test
+  public void testStarColumnJson() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile(JSON_TBL).toURI().toString();
+    final String query1 = String.format("select * from dfs_test.`%s` ", rootEmpty);
+
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
+        .addNullable("id", TypeProtos.MinorType.BIGINT)
+        .addNullable("name", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    testBuilder()
+        .sqlQuery(query1)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testStarColumnParquet() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile(PARQUET_TBL).toURI().toString();
+    final String query1 = String.format("select * from dfs_test.`%s` ", rootEmpty);
+
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
+        .addNullable("dir1", TypeProtos.MinorType.VARCHAR)
+        .add("o_orderkey", TypeProtos.MinorType.INT)
+        .add("o_custkey", TypeProtos.MinorType.INT)
+        .add("o_orderstatus", TypeProtos.MinorType.VARCHAR)
+        .add("o_totalprice", TypeProtos.MinorType.FLOAT8)
+        .add("o_orderdate", TypeProtos.MinorType.DATE)
+        .add("o_orderpriority", TypeProtos.MinorType.VARCHAR)
+        .add("o_clerk", TypeProtos.MinorType.VARCHAR)
+        .add("o_shippriority", TypeProtos.MinorType.INT)
+        .add("o_comment", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    testBuilder()
+        .sqlQuery(query1)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testStarColumnCsv() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile(CSV_TBL).toURI().toString();
+    final String query1 = String.format("select * from dfs_test.`%s` ", rootEmpty);
+
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
+        .addNullable("dir1", TypeProtos.MinorType.VARCHAR)
+        .addArray("columns", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    testBuilder()
+        .sqlQuery(query1)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
   }
 
 }

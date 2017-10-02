@@ -22,6 +22,12 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.slf4j.Logger;
 
+import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.lang.management.ManagementFactory;
+
+import static java.lang.Thread.sleep;
 /**
  * Base class for all user exception. The goal is to separate out common error conditions where we can give users
  * useful feedback.
@@ -536,6 +542,36 @@ public class UserException extends DrillRuntimeException {
      * @return user exception
      */
     public UserException build(final Logger logger) {
+
+      // To allow for debugging:
+      //
+      //   A spinner code to make the execution stop here while the file '/tmp/drill/spin' exists
+      // Can be used to attach a debugger, use jstack, etc
+      // (do "clush -a touch /tmp/drill/spin" to turn this on across all the cluster nodes, and to
+      //  release the spinning threads do "clush -a rm /tmp/drill/spin")
+      // The processID of the spinning thread (along with the error message) should then be found
+      // in a file like  /tmp/drill/spin4148663301172491613.tmp
+      File spinFile = new File("/tmp/drill/spin");
+      if ( spinFile.exists() ) {
+        File tmpDir = new File("/tmp/drill");
+        File outErr = null;
+        try {
+          outErr = File.createTempFile("spin", ".tmp", tmpDir);
+          BufferedWriter bw = new BufferedWriter(new FileWriter(outErr));
+          bw.write("Spinning process: " + ManagementFactory.getRuntimeMXBean().getName()
+          /* After upgrading to JDK 9 - replace with: ProcessHandle.current().getPid() */);
+          bw.write("\nError cause: " +
+            (errorType == DrillPBError.ErrorType.SYSTEM ? ("SYSTEM ERROR: " + ErrorHelper.getRootMessage(cause)) : message));
+          bw.close();
+        } catch (Exception ex) {
+          logger.warn("Failed creating a spinner tmp message file: {}", ex);
+        }
+        while (spinFile.exists()) {
+          try { sleep(1_000); } catch (Exception ex) { /* ignore interruptions */ }
+        }
+        try { outErr.delete(); } catch (Exception ex) { } // cleanup - remove err msg file
+      }
+
       if (uex != null) {
         return uex;
       }

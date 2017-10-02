@@ -43,12 +43,14 @@ import org.apache.drill.exec.vector.complex.writer.*;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 
 import java.util.Arrays;
 import java.util.Random;
 import java.util.List;
+import java.util.Set;
 
 import java.io.Closeable;
 import java.io.InputStream;

@@ -157,6 +157,967 @@ public class TestStringFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testLikeStartsWith() throws Exception {
+
+    // all ASCII.
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('ABC$XYZ'), (''),('abcd')," +
+            "('x'), ('xyz'), ('%')) tbl(id) " +
+            "where id like 'ABC%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC")
+        .baselineValues("ABCD")
+        .baselineValues("ABCDE")
+        .baselineValues("ABC$XYZ")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD')," +
+            "('ABCD'),('ABCDE'),('AABCD'),('ABAB CD'),('ABC$XYZ')," +
+            "(''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like 'AB%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("AB")
+        .baselineValues("ABC")
+        .baselineValues("ABD")
+        .baselineValues("ABCD")
+        .baselineValues("ABCDE")
+        .baselineValues("ABAB CD")
+        .baselineValues("ABC$XYZ")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'), ('ABC'), ('ABD'), ('ABCD')," +
+            "('ABCDE'),('AABCD'),('ABAB CD'),('ABC$XYZ'), ('')," +
+            "('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like 'A%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A")
+        .baselineValues("AB")
+        .baselineValues("ABC")
+        .baselineValues("ABD")
+        .baselineValues("ABCD")
+        .baselineValues("ABCDE")
+        .baselineValues("AABCD")
+        .baselineValues("ABAB CD")
+        .baselineValues("ABC$XYZ")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE')," +
+            "('AABCD'), ('ABABCD'),('ABC$XYZ'), (''),('abcd')," +
+            "('x'), ('xyz'), ('%')) tbl(id)" +
+            " where id like 'z%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // patternLength > txtLength
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD')," +
+            "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like 'ABCDEXYZRST%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // non ASCII
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~')," +
+            " ('xyz'), ('%')) tbl(id)" +
+            " where id like '¤%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), " +
+            "('xyz'), ('%')) tbl(id)" +
+            " where id like 'ABC¤%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), ('xyz'), ('%')) tbl(id)" +
+            " where id like 'A%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC")
+        .baselineValues("ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), ('xyz'), ('%')) tbl(id) " +
+            "where id like 'Z%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testLikeEndsWith() throws Exception {
+
+    // all ASCII. End with multiple characters
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('ABC$XYZ'), (''),('abcd'), " +
+            "('x'), ('xyz'), ('%')) tbl(id) " +
+            "where id like '%BCD'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABCD")
+        .baselineValues("AABCD")
+        .baselineValues("ABABCD")
+        .build()
+        .run();
+
+    // all ASCII. End with single character.
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('ABC$XYZ'), (''),('abcd'), " +
+            "('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%D'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABD")
+        .baselineValues("ABCD")
+        .baselineValues("AABCD")
+        .baselineValues("ABABCD")
+        .build()
+        .run();
+
+    // all ASCII. End with nothing. Should match all.
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('ABC$XYZ'), (''),('abcd'), " +
+            "('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A")
+        .baselineValues("AB")
+        .baselineValues("ABC")
+        .baselineValues("ABD")
+        .baselineValues("ABCD")
+        .baselineValues("ABCDE")
+        .baselineValues("AABCD")
+        .baselineValues("ABABCD")
+        .baselineValues("ABC$XYZ")
+        .baselineValues("")
+        .baselineValues("abcd")
+        .baselineValues("x")
+        .baselineValues("xyz")
+        .baselineValues("%")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD')," +
+            "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%F'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // patternLength > txtLength
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD'),('ABABCD')," +
+            "('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+            "where id like '%ABCDEXYZRST'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // patternLength == txtLength
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD'),('ABABCD')," +
+            "('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+            "where id like '%ABC'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC")
+        .build()
+        .run();
+
+    // non ASCII. End with single character
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), ('')," +
+            "('¶TÆU2~~'), ('xyz'), ('%')) tbl(id) " +
+            "where id like '%~~'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .baselineValues("¶TÆU2~~")
+        .build()
+        .run();
+
+    // non ASCII. End with multiple characters
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), " +
+            "(''), ('¶TÆU2~~'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%¶TÆU2~~'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .baselineValues("¶TÆU2~~")
+        .build()
+        .run();
+
+    // non ASCII, no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), ('')," +
+            "('xyz'), ('%')) tbl(id)" +
+            "where id like '%E'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testLikeContains() throws Exception {
+
+    // all ASCII. match at the beginning, middle and end.
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('DEABC')," +
+            "('AABCD'), ('ABABCDEF'),('AABC$XYZ'), (''),('abcd'), ('x'), " +
+            "('xyz'), ('%')) tbl(id) " +
+            "where id like '%ABC%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC")
+        .baselineValues("ABCD")
+        .baselineValues("DEABC")
+        .baselineValues("AABCD")
+        .baselineValues("ABABCDEF")
+        .baselineValues("AABC$XYZ")
+        .build()
+        .run();
+
+    // all ASCII. match at the beginning, middle and end, single character.
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('CAB$XYZ'), (''),('abcd'), ('x'), " +
+            "('xyz'), ('%')) tbl(id)" +
+            "where id like '%C%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC")
+        .baselineValues("ABCD")
+        .baselineValues("ABCDE")
+        .baselineValues("AABCD")
+        .baselineValues("ABABCD")
+        .baselineValues("CAB$XYZ")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('CAB$XYZ'), (''),('abcd'), ('x')," +
+            "('xyz'), ('%')) tbl(id)" +
+            "where id like '%FGH%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // patternLength > txtLength
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD'),('ABABCD')," +
+            "('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%ABCDEXYZRST%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // all match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD'),('ABABCD')," +
+            "('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A")
+        .baselineValues("AB")
+        .baselineValues("ABC")
+        .baselineValues("ABCD")
+        .baselineValues("ABCDE")
+        .baselineValues("AABCD")
+        .baselineValues("ABABCD")
+        .baselineValues("ABC$XYZ")
+        .baselineValues("")
+        .baselineValues("abcd")
+        .baselineValues("x")
+        .baselineValues("xyz")
+        .baselineValues("%")
+        .build()
+        .run();
+
+    // non ASCII
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), " +
+            "(''), ('¶TÆU2~~'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%ÆU2%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .baselineValues("¶TÆU2~~")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), " +
+            "(''), ('¶TÆU2~~'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%EÀsÆW%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), ('')," +
+            "('xyz'), ('%')) tbl(id) where id like '%¶T¶T%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testLikeConstant() throws Exception {
+
+    // all ASCII
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), " +
+            "('ABCD'),('ABCDE'),('AABCD'),('ABABCD'),('ABC$XYZ'), ('')," +
+            "('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+            "where id like 'ABC'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC")
+        .build()
+        .run();
+
+
+    // Multiple same values
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABC')," +
+            "('ABD'), ('ABCD'),('ABCDE'),('AABCD'),('ABABCD'),('ABC$XYZ')," +
+            "(''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like 'ABC'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC")
+        .baselineValues("ABC")
+        .build()
+        .run();
+
+    // match empty string
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x')," +
+            " ('xyz'), ('%')) tbl(id)" +
+            "where id like ''")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD')," +
+            "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz')," +
+            "('%')) tbl(id) where id like 'EFGH'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // patternLength > txtLength
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD'),('ABABCD')," +
+            "('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            " where id like 'ABCDEXYZRST'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+
+    // non ASCII
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), (''), " +
+            "('¶TÆU2~~'), ('xyz'), ('%')) tbl(id)" +
+            " where id like '¶TÆU2~~'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("¶TÆU2~~")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), ('')," +
+            "('¶TÆU2~~'), ('xyz'), ('%')) tbl(id)" +
+            "where id like 'ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), (''), " +
+            "('xyz'), ('%')) tbl(id) where id like '¶T¶T'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testLikeWithEscapeStartsWith() throws Exception {
+
+    // all ASCII
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC%'), ('ABD'), ('ABCD'),('ABCDE')," +
+            "('AABCD'),('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x')," +
+            "('xyz'), ('%')) tbl(id) " +
+            "where id like 'ABC#%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC%")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('A%B'),('A%B%C%'), ('ABD'), ('ABCD')," +
+            "('ABCDE'),('AABCD'),('A%BABCD'),('ABC$XYZ'), ('')," +
+            "('abcd'), ('x'), ('xyz'), ('%')) tbl (id)" +
+            "where id like 'A#%B%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A%B")
+        .baselineValues("A%B%C%")
+        .baselineValues("A%BABCD")
+        .build()
+        .run();
+
+    // Multiple escape characters
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('A_BC%D_')," +
+            "('ABCDE'), ('A_BC%D_XYZ'),('ABABCD'),('A_BC%D_$%XYZ')," +
+            " (''),('abcd'), ('x'), ('%')) tbl(id)" +
+            "where id like 'A#_BC#%D#_%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A_BC%D_")
+        .baselineValues("A_BC%D_XYZ")
+        .baselineValues("A_BC%D_$%XYZ")
+        .build()
+        .run();
+
+    // Escape character followed by escape character
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('ABC%D_')," +
+            "('A#BC%D_E'),('A_BC%D_XYZ'),('ABABCD'),('A#BC%D_$%XYZ')," +
+            " (''),('abcd'), ('x'), ('%')) tbl(id)" +
+            "where id like 'A##BC#%D#_%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A#BC%D_E")
+        .baselineValues("A#BC%D_$%XYZ")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD')," +
+            "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            " where id like 'z#%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // patternLength > txtLength
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB'),('ABC'),('ABCD'),('ABCDE'),('AABCD')," +
+            "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            " where id like 'ABCDEXYZRST#_%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    // non ASCII
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤E_ÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~')," +
+            " ('xyz'), ('%')) tbl(id)" +
+            " where id like '¤E#_%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("¤E_ÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀ%sÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), " +
+            "('xyz'), ('%')) tbl(id)" +
+            " where id like 'ABC¤EÀ#%sÆW%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC¤EÀ%sÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('AB%C'), " +
+            "('AB%C¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~'), ('xyz'), ('%')) tbl(id)" +
+            " where id like 'AB#%C%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("AB%C")
+        .baselineValues("AB%C¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~')," +
+            " ('xyz'), ('%')) tbl(id)" +
+            "where id like 'Z$%%' escape '$'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testLikeWithEscapeEndsWith() throws Exception {
+
+    // all ASCII
+    testBuilder().sqlQuery(" SELECT  id FROM (" +
+        "VALUES('A'),('AB'),('ABC'),('AB%C'),('ABCDE'),('AABCD')," +
+        "('ABAB%C'),('ABC$XYZAB%C'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+        "where id like '%AB$%C' escape '$'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("AB%C")
+        .baselineValues("ABAB%C")
+        .baselineValues("ABC$XYZAB%C")
+        .build()
+        .run();
+
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB_'),('AB%C%AB_'), ('ABD'), ('ABCD')," +
+            "('ABCDE'), ('AABCD'),('AB%ABCD'),('ABC$XYZAB_'), ('')," +
+            "('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%AB#_' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("AB_")
+        .baselineValues("AB%C%AB_")
+        .baselineValues("ABC$XYZAB_")
+        .build()
+        .run();
+
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('A_BCD'),('ABCDEA_')," +
+            "('A_ABCD'),('ABABCDA_'),('A_BC$XYZA_'), (''),('abcd')," +
+            " ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%A#_' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues(("A_"))
+        .baselineValues("ABCDEA_")
+        .baselineValues("ABABCDA_")
+        .baselineValues("A_BC$XYZA_")
+        .build()
+        .run();
+
+    // Multiple escape characters
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('A_BC%D_'),('ABCDE')," +
+            "('XYZA_BC%D_'),('ABABCD'),('$%XYZA_BC%D_'), ('')," +
+            "('abcd'), ('x'), ('%')) tbl(id)" +
+            " where id like '%A#_BC#%D#_' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A_BC%D_")
+        .baselineValues("XYZA_BC%D_")
+        .baselineValues("$%XYZA_BC%D_")
+        .build()
+        .run();
+
+
+    // Escape character followed by escape character
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('A#BC%D_'),('A#BC%D_E')," +
+            "('A_BC%D_XYZ'),('ABABCD'),('$%XYZA#BC%D_'), ('')," +
+            "('abcd'), ('x'), ('%')) tbl(id)" +
+            " where id like '%A##BC#%D#_' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A#BC%D_")
+        .baselineValues("$%XYZA#BC%D_")
+        .build()
+        .run();
+
+    // non ASCII
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤E_ÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2_~~')," +
+            " ('xyz'), ('%')) tbl(id)" +
+            " where id like '%2#_~~' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("¤E_ÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2_~~")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('ABC¤EÀ%sÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~ABC¤EÀ%sÆW'), " +
+            "('xyz'), ('%')) tbl(id)" +
+            " where id like '%ABC¤EÀ#%sÆW' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC¤EÀ%sÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~ABC¤EÀ%sÆW")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('AB%C'), " +
+            "('AB%C¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~AB%C'), ('xyz'), ('%')) tbl(id)" +
+            " where id like '%AB#%C' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("AB%C")
+        .baselineValues("AB%C¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~AB%C")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('ABC'), ('¤EÀsÆW°ê»Ú®i¶T¤¤¤ß3¼Ó®i¶TÆU2~~')," +
+            " ('xyz'), ('%')) tbl(id)" +
+            "where id like '%$%' escape '$'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("%")
+        .build()
+        .run();
+
+  }
+
+  @Test
+  public void testLikeWithEscapeContains() throws Exception {
+
+    // test EndsWith
+    testBuilder().sqlQuery(" SELECT  id FROM (" +
+        "VALUES('A'),('AB'),('ABC'),('AB%C'),('ABCDE'),('AB%AB%CDED')," +
+        "('ABAB%CDE'),('ABC$XYZAB%C'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+        "where id like '%AB$%C%' escape '$'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABAB%CDE")
+        .baselineValues("AB%AB%CDED")
+        .baselineValues("AB%C")
+        .baselineValues("ABC$XYZAB%C")
+        .build()
+        .run();
+
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB_'),('%AB%C%AB_'), ('%AB%D'), ('ABCD')," +
+            "('AB%AC%AB%DE'), ('AABCD'),('AB%AB%CD'),('ABC$XYZAB_')," +
+            "(''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%#%AB#%%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("%AB%C%AB_")
+        .baselineValues("%AB%D")
+        .baselineValues("AB%AB%CD")
+        .baselineValues("AB%AC%AB%DE")
+        .build()
+        .run();
+
+    // no match
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A'),('AB_'),('%AB%C%AB_'), ('%AB%D'), ('ABCD')," +
+            "('AB%AC%AB%DE'), ('AABCD'),('AB%AB%CD'),('ABC$XYZAB_')," +
+            "(''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%#%A#_B#%%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('A_BCD'),('ABA_CDEA_')," +
+            "('A_ABCD'),('ABABCDA_'),('A_BC$XYZA_'), ('')," +
+            "('abcd'), ('x'), ('xyz'), ('%')) tbl(id)" +
+            "where id like '%A#_%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues(("A_"))
+        .baselineValues("A_BCD")
+        .baselineValues("ABA_CDEA_")
+        .baselineValues("A_ABCD")
+        .baselineValues("A_BC$XYZA_")
+        .baselineValues("ABABCDA_")
+        .build()
+        .run();
+
+
+    // Multiple escape characters
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('A_BC%D_'),('ABCDE')," +
+            "('XYZA_BC%D_'),('ABABCD'),('$%XYZA_BC%D_'), ('')," +
+            "('abcd'), ('x'), ('%')) tbl" +
+            "(id) where id like '%A#_BC#%D#_' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A_BC%D_")
+        .baselineValues("XYZA_BC%D_")
+        .baselineValues("$%XYZA_BC%D_")
+        .build()
+        .run();
+
+
+    // Escape character followed by escape character
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABDA#BC%D_'), ('A#BC%D_')," +
+            "('A#BC%BC%D_E'),('A_BC%D_XYZ'),('ABABCD'),('$%XYZA#BC%D_')," +
+            " (''),('abcd'), ('x'), ('%')) tbl(id)" +
+            " where id like '%A##BC#%D#_%' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A#BC%D_")
+        .baselineValues("$%XYZA#BC%D_")
+        .baselineValues("ABDA#BC%D_")
+        .build()
+        .run();
+
+  }
+
+  @Test
+  public void testLikeWithEscapeConstant() throws Exception {
+
+    // test startsWith
+    testBuilder().sqlQuery(" SELECT  id FROM (" +
+        "VALUES('A'),('AB'),('ABC%'),('ABCD'),('ABCDE'),('AABCD')," +
+        "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+        "where id like 'ABC%%' escape '%' ")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("ABC%")
+        .build()
+        .run();
+
+    testBuilder().sqlQuery(" SELECT  id FROM (" +
+        "VALUES('A'),('AB'),('%ABC'),('ABCD'),('ABCDE'),('AABCD')," +
+        "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+        "where id like '%%ABC' escape '%' ")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("%ABC")
+        .build()
+        .run();
+
+    testBuilder().sqlQuery(" SELECT  id FROM (" +
+        "VALUES('A'),('AB'),('AB%C'),('ABCD'),('ABCDE'),('AABCD'),('ABABCD')," +
+        "('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+        "where id like 'AB%%C' escape '%' ")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("AB%C")
+        .build()
+        .run();
+
+    // Multiple escape characters
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABD'), ('%_BC%D_'),('ABCDE')," +
+            "('XYZA_BC%D_'),('ABABCD'),('$%XYZA_BC%D_'), (''),('abcd'), ('x'), ('%')) tbl(id)" +
+            " where id like '%%_BC%%D%_' escape '%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("%_BC%D_")
+        .build()
+        .run();
+
+    // Escape character followed by escape character
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('A_'),('AB'),('ABC'), ('ABDA#BC%D_'), ('A#BC%D_'),('A#BA#BC%D_E')," +
+            "('A_BC%D_XYZ'),('ABABCD'),('$%XYZA#BC%D_'), (''),('abcd'), ('x'), ('%')) tbl(id)" +
+            " where id like 'A##BC#%D#_' escape '#'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("A#BC%D_")
+        .build()
+        .run();
+
+    // no match
+    testBuilder().sqlQuery(" SELECT  id FROM (" +
+        "VALUES('A'),('AB'),('ABC%'),('ABCD'),('ABCDE'),('AABCD')," +
+        "('ABABCD'),('ABC$XYZ'), (''),('abcd'), ('x'), ('xyz'), ('%')) tbl(id) " +
+        "where id like '%_ABC%%' escape '%' ")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+  }
+
+  @Test
+  public void testLikeRandom() throws Exception {
+
+    // test Random queries with like
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('aeiou'),('abcdef'),('afdrgt'),('abcdt'),('aaaa'),('a'),('aeiou'),(''),('a aa')) tbl(id)" +
+            "where id not like 'a %'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("aeiou")
+        .baselineValues("abcdef")
+        .baselineValues("afdrgt")
+        .baselineValues("abcdt")
+        .baselineValues("aaaa")
+        .baselineValues("a")
+        .baselineValues("aeiou")
+        .baselineValues("")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('aeiou'),('abcdefizu'),('afdrgt'),('abcdt'),('aaaa'),('a'),('aeiou'),(''),('a aa')) tbl(id)" +
+            "where id like 'a%i_u'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("aeiou")
+        .baselineValues("aeiou")
+        .baselineValues("abcdefizu")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('xyzaeioughbcd'),('abcdefizu'),('afdrgt'),('abcdt'),('aaaa'),('a'),('aeiou'),(''),('a aa')) tbl(id)" +
+            "where id like '%a_i_u%bcd%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("xyzaeioughbcd")
+        .build()
+        .run();
+
+  }
+
+  @Test
   public void testILike() throws Exception {
     testBuilder()
         .sqlQuery("select n_name from cp.`tpch/nation.parquet` where ilike(n_name, '%united%') = true")

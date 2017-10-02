@@ -92,7 +92,7 @@ public class FragmentExecutor implements Runnable {
    * @param rootOperator
    */
   public FragmentExecutor(final FragmentContext context, final PlanFragment fragment,
-      final FragmentStatusReporter statusReporter, final FragmentRoot rootOperator) {
+                          final FragmentStatusReporter statusReporter, final FragmentRoot rootOperator) {
     this.fragmentContext = context;
     this.statusReporter = statusReporter;
     this.fragment = fragment;
@@ -202,7 +202,7 @@ public class FragmentExecutor implements Runnable {
 
       // if we didn't get the root operator when the executor was created, create it now.
       final FragmentRoot rootOperator = this.rootOperator != null ? this.rootOperator :
-          drillbitContext.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
+          drillbitContext.getPlanReader().readFragmentRoot(fragment.getFragmentJson());
 
           root = ImplCreator.getExec(fragmentContext, rootOperator);
           if (root == null) {
@@ -261,6 +261,9 @@ public class FragmentExecutor implements Runnable {
       eventProcessor.start();
 
       // here we could be in FAILED, RUNNING, or CANCELLATION_REQUESTED
+      // FAILED state will be because of any Exception in execution loop root.next()
+      // CANCELLATION_REQUESTED because of a CANCEL request received by Foreman.
+      // ELSE will be in FINISHED state.
       cleanup(FragmentState.FINISHED);
 
       clusterCoordinator.removeDrillbitStatusListener(drillbitStatusListener);
@@ -300,6 +303,7 @@ public class FragmentExecutor implements Runnable {
     } else {
       statusReporter.stateChanged(outcome);
     }
+    statusReporter.close();
   }
 
 
@@ -444,6 +448,7 @@ public class FragmentExecutor implements Runnable {
         logger.warn("Foreman {} no longer active.  Cancelling fragment {}.",
                     foremanEndpoint.getAddress(),
                     QueryIdHelper.getQueryIdentifier(fragmentContext.getHandle()));
+        statusReporter.close();
         FragmentExecutor.this.cancel();
       }
     }

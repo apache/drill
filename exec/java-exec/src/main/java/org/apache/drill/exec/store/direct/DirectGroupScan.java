@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,10 +33,9 @@ import java.util.List;
 
 @JsonTypeName("direct-scan")
 public class DirectGroupScan extends AbstractGroupScan {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectGroupScan.class);
 
-  private final RecordReader reader;
-  private final ScanStats stats;
+  protected final RecordReader reader;
+  protected final ScanStats stats;
 
   public DirectGroupScan(RecordReader reader) {
     this(reader, ScanStats.TRIVIAL_TABLE);

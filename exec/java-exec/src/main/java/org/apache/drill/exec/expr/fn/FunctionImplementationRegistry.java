@@ -343,7 +343,9 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    */
   @SuppressWarnings("resource")
   public boolean syncWithRemoteRegistry(long version) {
-    if (isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localFunctionRegistry.getVersion())) {
+    // Do the version check only if a remote registry exists. It does
+    // not exist for some JMockit-based unit tests.
+    if (isRegistrySyncNeeded()) {
       synchronized (this) {
         long localRegistryVersion = localFunctionRegistry.getVersion();
         if (isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localRegistryVersion))  {
@@ -388,6 +390,11 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     }
 
     return version != localFunctionRegistry.getVersion();
+  }
+
+  private boolean isRegistrySyncNeeded() {
+    return remoteFunctionRegistry.hasRegistry() &&
+           isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localFunctionRegistry.getVersion());
   }
 
   /**

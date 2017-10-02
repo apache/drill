@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -239,7 +238,7 @@ public class DrillTestWrapper {
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
       for (VectorWrapper<?> w : loader) {
-        String field = SchemaPath.getSimplePath(w.getField().getPath()).toExpr();
+        String field = SchemaPath.getSimplePath(w.getField().getName()).toExpr();
         if (!combinedVectors.containsKey(field)) {
           MaterializedField mf = w.getField();
           ValueVector[] vvList = (ValueVector[]) Array.newInstance(mf.getValueClass(), 1);
@@ -317,7 +316,9 @@ public class DrillTestWrapper {
    */
   public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches)
       throws SchemaChangeException, UnsupportedEncodingException {
-    return addToCombinedVectorResults(batches, null);
+    Map<String, List<Object>> combinedVectors = new TreeMap<>();
+    addToCombinedVectorResults(batches, null, combinedVectors);
+    return combinedVectors;
   }
 
   /**
@@ -325,18 +326,20 @@ public class DrillTestWrapper {
    * @param batches
    * @param  expectedSchema: the expected schema the batches should contain. Through SchemaChangeException
    *                       if encounter different batch schema.
-   * @return
+   * @param combinedVectors: the vectors to hold the values when iterate the batches.
+   *
+   * @return number of batches
    * @throws SchemaChangeException
    * @throws UnsupportedEncodingException
    */
-  public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches, BatchSchema expectedSchema)
+  public static int addToCombinedVectorResults(Iterable<VectorAccessible> batches, BatchSchema expectedSchema, Map<String, List<Object>> combinedVectors)
        throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
-    Map<String, List<Object>> combinedVectors = new TreeMap<>();
-
+    int numBatch = 0;
     long totalRecords = 0;
     BatchSchema schema = null;
     for (VectorAccessible loader : batches)  {
+      numBatch++;
       if (expectedSchema != null) {
         if (! expectedSchema.equals(loader.getSchema())) {
           throw new SchemaChangeException(String.format("Batch schema does not match expected schema\n" +
@@ -350,7 +353,7 @@ public class DrillTestWrapper {
       if (schema == null) {
         schema = loader.getSchema();
         for (MaterializedField mf : schema) {
-          combinedVectors.put(SchemaPath.getSimplePath(mf.getPath()).toExpr(), new ArrayList<Object>());
+          combinedVectors.put(SchemaPath.getSimplePath(mf.getName()).toExpr(), new ArrayList<>());
         }
       } else {
         // TODO - actually handle schema changes, this is just to get access to the SelectionVectorMode
@@ -361,7 +364,7 @@ public class DrillTestWrapper {
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
       for (VectorWrapper<?> w : loader) {
-        String field = SchemaPath.getSimplePath(w.getField().getPath()).toExpr();
+        String field = SchemaPath.getSimplePath(w.getField().getName()).toExpr();
         ValueVector[] vectors;
         if (w.isHyper()) {
           vectors = w.getValueVectors();
@@ -413,12 +416,12 @@ public class DrillTestWrapper {
         }
       }
     }
-    return combinedVectors;
+    return numBatch;
   }
 
   protected void compareSchemaOnly() throws Exception {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    List<QueryDataBatch> actual;
+    List<QueryDataBatch> actual = null;
     QueryDataBatch batch = null;
     try {
       test(testOptionSettingQueries);
@@ -428,18 +431,18 @@ public class DrillTestWrapper {
 
       final BatchSchema schema = loader.getSchema();
       final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = testBuilder.getExpectedSchema();
-      if(schema.getFieldCount() != expectedSchema.size()) {
+      if (schema.getFieldCount() != expectedSchema.size()) {
         throw new Exception("Expected and actual numbers of columns do not match.");
       }
 
-      for(int i = 0; i < schema.getFieldCount(); ++i) {
-        final String actualSchemaPath = schema.getColumn(i).getPath();
+      for (int i = 0; i < schema.getFieldCount(); ++i) {
+        final String actualSchemaPath = schema.getColumn(i).getName();
         final TypeProtos.MajorType actualMajorType = schema.getColumn(i).getType();
 
-        final String expectedSchemaPath = expectedSchema.get(i).getLeft().getAsUnescapedPath();
+        final String expectedSchemaPath = expectedSchema.get(i).getLeft().getRootSegmentPath();
         final TypeProtos.MajorType expectedMajorType = expectedSchema.get(i).getValue();
 
-        if(!actualSchemaPath.equals(expectedSchemaPath)
+        if (!actualSchemaPath.equals(expectedSchemaPath)
             || !actualMajorType.equals(expectedMajorType)) {
           throw new Exception(String.format("Schema path or type mismatch for column #%d:\n" +
                   "Expected schema path: %s\nActual   schema path: %s\nExpected type: %s\nActual   type: %s",
@@ -448,9 +451,11 @@ public class DrillTestWrapper {
         }
       }
 
-    }  finally {
-      if(batch != null) {
-        batch.release();
+    } finally {
+      if (actual != null) {
+        for (QueryDataBatch b : actual) {
+          b.release();
+        }
       }
       loader.clear();
     }
@@ -609,7 +614,7 @@ public class DrillTestWrapper {
   private Map<SchemaPath, TypeProtos.MajorType> getTypeMapFromBatch(QueryDataBatch batch) {
     Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
     for (int i = 0; i < batch.getHeader().getDef().getFieldCount(); i++) {
-      typeMap.put(SchemaPath.getSimplePath(MaterializedField.create(batch.getHeader().getDef().getField(i)).getPath()),
+      typeMap.put(SchemaPath.getSimplePath(MaterializedField.create(batch.getHeader().getDef().getField(i)).getName()),
           batch.getHeader().getDef().getField(i).getMajorType());
     }
     return typeMap;
@@ -646,9 +651,9 @@ public class DrillTestWrapper {
             if (obj instanceof Text) {
               obj = obj.toString();
             }
-            record.put(SchemaPath.getSimplePath(w.getField().getPath()).toExpr(), obj);
+            record.put(SchemaPath.getSimplePath(w.getField().getName()).toExpr(), obj);
           }
-          record.put(SchemaPath.getSimplePath(w.getField().getPath()).toExpr(), obj);
+          record.put(SchemaPath.getSimplePath(w.getField().getName()).toExpr(), obj);
         }
         materializedRecords.add(record);
       }

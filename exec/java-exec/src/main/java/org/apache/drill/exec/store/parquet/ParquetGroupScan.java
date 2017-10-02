@@ -36,6 +36,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -54,7 +55,7 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.ImplicitColumnExplorer;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -75,13 +76,16 @@ import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableDateVector;
 import org.apache.drill.exec.vector.NullableDecimal18Vector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.NullableIntervalVector;
 import org.apache.drill.exec.vector.NullableSmallIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
@@ -119,6 +123,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
   private final DrillFileSystem fs;
+  private final MetadataContext metaContext;
   private String selectionRoot;
 
   private boolean usedMetadataCache = false;
@@ -172,26 +177,23 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.selectionRoot = selectionRoot;
     this.cacheFileRoot = cacheFileRoot;
     this.filter = filter;
+    this.metaContext = new MetadataContext();
 
-    init(null);
+    init();
   }
 
   public ParquetGroupScan( //
       String userName,
       FileSelection selection, //
       ParquetFormatPlugin formatPlugin, //
-      String selectionRoot,
-      String cacheFileRoot,
-      List<SchemaPath> columns) throws IOException{
-    this(userName, selection, formatPlugin, selectionRoot, cacheFileRoot, columns, ValueExpressions.BooleanExpression.TRUE);
+      List<SchemaPath> columns) throws IOException {
+    this(userName, selection, formatPlugin, columns, ValueExpressions.BooleanExpression.TRUE);
   }
 
   public ParquetGroupScan( //
       String userName,
       FileSelection selection, //
       ParquetFormatPlugin formatPlugin, //
-      String selectionRoot,
-      String cacheFileRoot,
       List<SchemaPath> columns,
       LogicalExpression filter) //
       throws IOException {
@@ -201,19 +203,18 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.formatConfig = formatPlugin.getConfig();
     this.fs = ImpersonationUtil.createFileSystem(userName, formatPlugin.getFsConf());
 
-    this.selectionRoot = selectionRoot;
-    this.cacheFileRoot = cacheFileRoot;
+    this.selectionRoot = selection.getSelectionRoot();
+    this.cacheFileRoot = selection.getCacheFileRoot();
+
+    MetadataContext metadataContext = selection.getMetaContext();
+    this.metaContext = metadataContext != null ? metadataContext : new MetadataContext();
 
     final FileSelection fileSelection = expandIfNecessary(selection);
 
     this.entries = Lists.newArrayList();
-    if (fileSelection.getMetaContext() != null &&
-        (fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_STARTED ||
-          fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_PRUNED)) {
-      // if pruning was not applicable or was attempted and nothing was pruned, initialize the
-      // entries with just the selection root instead of the fully expanded list to reduce overhead.
-      // The fully expanded list is already stored as part of the fileSet.
-      // TODO: at some point we should examine whether the list of entries is absolutely needed.
+
+    if (checkForInitializingEntriesWithSelectionRoot()) {
+      // The fully expanded list is already stored as part of the fileSet
       entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
     } else {
       for (String fileName : fileSelection.getFiles()) {
@@ -223,13 +224,20 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     this.filter = filter;
 
-    init(fileSelection.getMetaContext());
+    init();
   }
 
   /*
    * This is used to clone another copy of the group scan.
    */
   private ParquetGroupScan(ParquetGroupScan that) {
+    this(that, null);
+  }
+
+  /*
+   * This is used to clone another copy of the group scan, but keep the metadata caching info from the file selection
+   */
+  private ParquetGroupScan(ParquetGroupScan that, FileSelection selection) {
     super(that);
     this.columns = that.columns == null ? null : Lists.newArrayList(that.columns);
     this.endpointAffinities = that.endpointAffinities == null ? null : Lists.newArrayList(that.endpointAffinities);
@@ -248,7 +256,14 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.usedMetadataCache = that.usedMetadataCache;
     this.parquetTableMetadata = that.parquetTableMetadata;
     this.filter = that.filter;
-    this.cacheFileRoot = that.cacheFileRoot;
+    if (selection != null) {
+      this.cacheFileRoot = selection.getCacheFileRoot();
+      MetadataContext metaContext = selection.getMetaContext();
+      this.metaContext = metaContext != null ? metaContext : that.metaContext;
+    } else {
+      this.cacheFileRoot = that.cacheFileRoot;
+      this.metaContext = that.metaContext;
+    }
   }
 
   /**
@@ -268,11 +283,31 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     // use the cacheFileRoot if provided (e.g after partition pruning)
     Path metaFilePath = new Path(cacheFileRoot != null ? cacheFileRoot : selectionRoot, Metadata.METADATA_FILENAME);
     if (!fs.exists(metaFilePath)) { // no metadata cache
+      if (selection.isExpandedPartial()) {
+        logger.error("'{}' metadata file does not exist, but metadata directories cache file is present", metaFilePath);
+        metaContext.setMetadataCacheCorrupted(true);
+      }
+
       return selection;
     }
 
-    FileSelection expandedSelection = initFromMetadataCache(selection, metaFilePath);
-    return expandedSelection;
+    return expandSelectionFromMetadataCache(selection, metaFilePath);
+  }
+
+  /**
+   * For two cases the entries should be initialized with just the selection root instead of the fully expanded list:
+   * <ul>
+   *   <li> When metadata caching is corrupted (to use correct file selection)
+   *   <li> Metadata caching is correct and used, but pruning was not applicable or was attempted and nothing was pruned
+   *        (to reduce overhead in parquet group scan).
+   * </ul>
+   *
+   * @return true if entries should be initialized with selection root, false otherwise
+   */
+  private boolean checkForInitializingEntriesWithSelectionRoot() {
+    // TODO: at some point we should examine whether the list of entries is absolutely needed.
+    return metaContext.isMetadataCacheCorrupted() || (parquetTableMetadata != null &&
+        (metaContext.getPruneStatus() == PruneStatus.NOT_STARTED || metaContext.getPruneStatus() == PruneStatus.NOT_PRUNED));
   }
 
   public List<ReadEntryWithPath> getEntries() {
@@ -328,11 +363,20 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
    * potential partition column now no longer qualifies, so it needs to be removed from the list.
    * @return whether column is a potential partition column
    */
-  private boolean checkForPartitionColumn(ColumnMetadata columnMetadata, boolean first) {
+  private boolean checkForPartitionColumn(ColumnMetadata columnMetadata, boolean first, long rowCount) {
     SchemaPath schemaPath = SchemaPath.getCompoundPath(columnMetadata.getName());
     final PrimitiveTypeName primitiveType;
     final OriginalType originalType;
+    int precision = 0;
+    int scale = 0;
     if (this.parquetTableMetadata.hasColumnMetadata()) {
+      // only ColumnTypeMetadata_v3 stores information about scale and precision
+      if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v3) {
+        Metadata.ColumnTypeMetadata_v3 columnTypeInfo = ((Metadata.ParquetTableMetadata_v3) parquetTableMetadata)
+                                                                          .getColumnTypeInfo(columnMetadata.getName());
+        scale = columnTypeInfo.scale;
+        precision = columnTypeInfo.precision;
+      }
       primitiveType = this.parquetTableMetadata.getPrimitiveType(columnMetadata.getName());
       originalType = this.parquetTableMetadata.getOriginalType(columnMetadata.getName());
     } else {
@@ -340,8 +384,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       originalType = columnMetadata.getOriginalType();
     }
     if (first) {
-      if (hasSingleValue(columnMetadata)) {
-        partitionColTypeMap.put(schemaPath, getType(primitiveType, originalType));
+      if (hasSingleValue(columnMetadata, rowCount)) {
+        partitionColTypeMap.put(schemaPath, getType(primitiveType, originalType, scale, precision));
         return true;
       } else {
         return false;
@@ -350,11 +394,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       if (!partitionColTypeMap.keySet().contains(schemaPath)) {
         return false;
       } else {
-        if (!hasSingleValue(columnMetadata)) {
+        if (!hasSingleValue(columnMetadata, rowCount)) {
           partitionColTypeMap.remove(schemaPath);
           return false;
         }
-        if (!getType(primitiveType, originalType).equals(partitionColTypeMap.get(schemaPath))) {
+        if (!getType(primitiveType, originalType, scale, precision).equals(partitionColTypeMap.get(schemaPath))) {
           partitionColTypeMap.remove(schemaPath);
           return false;
         }
@@ -363,11 +407,21 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return true;
   }
 
-  public static MajorType getType(PrimitiveTypeName type, OriginalType originalType) {
+  /**
+   * Builds major type using given {@code OriginalType originalType} or {@code PrimitiveTypeName type}.
+   * For DECIMAL will be returned major type with scale and precision.
+   *
+   * @param type         parquet primitive type
+   * @param originalType parquet original type
+   * @param scale        type scale (used for DECIMAL type)
+   * @param precision    type precision (used for DECIMAL type)
+   * @return major type
+   */
+  public static MajorType getType(PrimitiveTypeName type, OriginalType originalType, int scale, int precision) {
     if (originalType != null) {
       switch (originalType) {
         case DECIMAL:
-          return Types.optional(MinorType.DECIMAL18);
+          return Types.withScaleAndPrecision(MinorType.DECIMAL18, TypeProtos.DataMode.OPTIONAL, scale, precision);
         case DATE:
           return Types.optional(MinorType.DATE);
         case TIME_MILLIS:
@@ -388,6 +442,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
           return Types.optional(MinorType.TINYINT);
         case INT_16:
           return Types.optional(MinorType.SMALLINT);
+        case INTERVAL:
+          return Types.optional(MinorType.INTERVAL);
       }
     }
 
@@ -412,10 +468,17 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
   }
 
-  private boolean hasSingleValue(ColumnMetadata columnChunkMetaData) {
+  /**
+   * Checks that the column chunk has a single value.
+   *
+   * @param columnChunkMetaData metadata to check
+   * @param rowCount            rows count in column chunk
+   * @return true if column has single value
+   */
+  private boolean hasSingleValue(ColumnMetadata columnChunkMetaData, long rowCount) {
     // ColumnMetadata will have a non-null value iff the minValue and the maxValue for the
     // rowgroup are the same
-    return (columnChunkMetaData != null) && (columnChunkMetaData.hasSingleValue());
+    return (columnChunkMetaData != null) && (columnChunkMetaData.hasSingleValue(rowCount));
   }
 
   @Override public void modifyFileSelection(FileSelection selection) {
@@ -444,121 +507,231 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
   public void populatePruningVector(ValueVector v, int index, SchemaPath column, String file) {
     String f = Path.getPathWithoutSchemeAndAuthority(new Path(file)).toString();
-    MinorType type = getTypeForColumn(column).getMinorType();
+    MajorType majorType = getTypeForColumn(column);
+    MinorType type = majorType.getMinorType();
     switch (type) {
+      case BIT: {
+        NullableBitVector bitVector = (NullableBitVector) v;
+        Boolean value = (Boolean) partitionValueMap.get(f).get(column);
+        if (value == null) {
+          bitVector.getMutator().setNull(index);
+        } else {
+          bitVector.getMutator().setSafe(index, value ? 1 : 0);
+        }
+        return;
+      }
       case INT: {
         NullableIntVector intVector = (NullableIntVector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        intVector.getMutator().setSafe(index, value);
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, value);
+        }
         return;
       }
       case SMALLINT: {
         NullableSmallIntVector smallIntVector = (NullableSmallIntVector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        smallIntVector.getMutator().setSafe(index, value.shortValue());
+        if (value == null) {
+          smallIntVector.getMutator().setNull(index);
+        } else {
+          smallIntVector.getMutator().setSafe(index, value.shortValue());
+        }
         return;
       }
       case TINYINT: {
         NullableTinyIntVector tinyIntVector = (NullableTinyIntVector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        tinyIntVector.getMutator().setSafe(index, value.byteValue());
+        if (value == null) {
+          tinyIntVector.getMutator().setNull(index);
+        } else {
+          tinyIntVector.getMutator().setSafe(index, value.byteValue());
+        }
         return;
       }
       case UINT1: {
         NullableUInt1Vector intVector = (NullableUInt1Vector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        intVector.getMutator().setSafe(index, value.byteValue());
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, value.byteValue());
+        }
         return;
       }
       case UINT2: {
         NullableUInt2Vector intVector = (NullableUInt2Vector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        intVector.getMutator().setSafe(index, (char) value.shortValue());
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, (char) value.shortValue());
+        }
         return;
       }
       case UINT4: {
         NullableUInt4Vector intVector = (NullableUInt4Vector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        intVector.getMutator().setSafe(index, value);
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, value);
+        }
         return;
       }
       case BIGINT: {
         NullableBigIntVector bigIntVector = (NullableBigIntVector) v;
         Long value = (Long) partitionValueMap.get(f).get(column);
-        bigIntVector.getMutator().setSafe(index, value);
+        if (value == null) {
+          bigIntVector.getMutator().setNull(index);
+        } else {
+          bigIntVector.getMutator().setSafe(index, value);
+        }
         return;
       }
       case FLOAT4: {
         NullableFloat4Vector float4Vector = (NullableFloat4Vector) v;
         Float value = (Float) partitionValueMap.get(f).get(column);
-        float4Vector.getMutator().setSafe(index, value);
+        if (value == null) {
+          float4Vector.getMutator().setNull(index);
+        } else {
+          float4Vector.getMutator().setSafe(index, value);
+        }
         return;
       }
       case FLOAT8: {
         NullableFloat8Vector float8Vector = (NullableFloat8Vector) v;
         Double value = (Double) partitionValueMap.get(f).get(column);
-        float8Vector.getMutator().setSafe(index, value);
+        if (value == null) {
+          float8Vector.getMutator().setNull(index);
+        } else {
+          float8Vector.getMutator().setSafe(index, value);
+        }
         return;
       }
       case VARBINARY: {
         NullableVarBinaryVector varBinaryVector = (NullableVarBinaryVector) v;
         Object s = partitionValueMap.get(f).get(column);
         byte[] bytes;
-        if (s instanceof Binary) {
-          bytes = ((Binary) s).getBytes();
-        } else if (s instanceof String) {
-          bytes = ((String) s).getBytes();
-        } else if (s instanceof byte[]) {
-          bytes = (byte[]) s;
+        if (s == null) {
+          varBinaryVector.getMutator().setNull(index);
+          return;
         } else {
-          throw new UnsupportedOperationException("Unable to create column data for type: " + type);
+          bytes = getBytes(type, s);
         }
         varBinaryVector.getMutator().setSafe(index, bytes, 0, bytes.length);
         return;
       }
       case DECIMAL18: {
         NullableDecimal18Vector decimalVector = (NullableDecimal18Vector) v;
-        Long value = (Long) partitionValueMap.get(f).get(column);
+        Object s = partitionValueMap.get(f).get(column);
+        byte[] bytes;
+        if (s == null) {
+          decimalVector.getMutator().setNull(index);
+          return;
+        } else if (s instanceof Integer) {
+          long value = DecimalUtility.getBigDecimalFromPrimitiveTypes(
+                          (Integer) s,
+                          majorType.getScale(),
+                          majorType.getPrecision()).longValue();
+          decimalVector.getMutator().setSafe(index, value);
+          return;
+        } else if (s instanceof Long) {
+          long value = DecimalUtility.getBigDecimalFromPrimitiveTypes(
+                          (Long) s,
+                          majorType.getScale(),
+                          majorType.getPrecision()).longValue();
+          decimalVector.getMutator().setSafe(index, value);
+          return;
+        } else {
+          bytes = getBytes(type, s);
+        }
+        long value = DecimalUtility.getBigDecimalFromByteArray(bytes, 0, bytes.length, majorType.getScale()).longValue();
         decimalVector.getMutator().setSafe(index, value);
         return;
       }
       case DATE: {
         NullableDateVector dateVector = (NullableDateVector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        dateVector.getMutator().setSafe(index, value * (long) DateTimeConstants.MILLIS_PER_DAY);
+        if (value == null) {
+          dateVector.getMutator().setNull(index);
+        } else {
+          dateVector.getMutator().setSafe(index, value * (long) DateTimeConstants.MILLIS_PER_DAY);
+        }
         return;
       }
       case TIME: {
         NullableTimeVector timeVector = (NullableTimeVector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        timeVector.getMutator().setSafe(index, value);
+        if (value == null) {
+          timeVector.getMutator().setNull(index);
+        } else {
+          timeVector.getMutator().setSafe(index, value);
+        }
         return;
       }
       case TIMESTAMP: {
         NullableTimeStampVector timeStampVector = (NullableTimeStampVector) v;
         Long value = (Long) partitionValueMap.get(f).get(column);
-        timeStampVector.getMutator().setSafe(index, value);
+        if (value == null) {
+          timeStampVector.getMutator().setNull(index);
+        } else {
+          timeStampVector.getMutator().setSafe(index, value);
+        }
         return;
       }
       case VARCHAR: {
         NullableVarCharVector varCharVector = (NullableVarCharVector) v;
         Object s = partitionValueMap.get(f).get(column);
         byte[] bytes;
-        if (s instanceof String) { // if the metadata was read from a JSON cache file it maybe a string type
-          bytes = ((String) s).getBytes();
-        } else if (s instanceof Binary) {
-          bytes = ((Binary) s).getBytes();
-        } else if (s instanceof byte[]) {
-          bytes = (byte[]) s;
+        if (s == null) {
+          varCharVector.getMutator().setNull(index);
+          return;
         } else {
-          throw new UnsupportedOperationException("Unable to create column data for type: " + type);
+          bytes = getBytes(type, s);
         }
         varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+        return;
+      }
+      case INTERVAL: {
+        NullableIntervalVector intervalVector = (NullableIntervalVector) v;
+        Object s = partitionValueMap.get(f).get(column);
+        byte[] bytes;
+        if (s == null) {
+          intervalVector.getMutator().setNull(index);
+          return;
+        } else {
+          bytes = getBytes(type, s);
+        }
+        intervalVector.getMutator().setSafe(index, 1,
+          ParquetReaderUtility.getIntFromLEBytes(bytes, 0),
+          ParquetReaderUtility.getIntFromLEBytes(bytes, 4),
+          ParquetReaderUtility.getIntFromLEBytes(bytes, 8));
         return;
       }
       default:
         throw new UnsupportedOperationException("Unsupported type: " + type);
     }
+  }
+
+  /**
+   * Returns the sequence of bytes received from {@code Object source}.
+   *
+   * @param type   the column type
+   * @param source the source of the bytes sequence
+   * @return bytes sequence obtained from {@code Object source}
+   */
+  private byte[] getBytes(MinorType type, Object source) {
+    byte[] bytes;
+    if (source instanceof Binary) {
+      bytes = ((Binary) source).getBytes();
+    } else if (source instanceof byte[]) {
+      bytes = (byte[]) source;
+    } else {
+      throw new UnsupportedOperationException("Unable to create column data for type: " + type);
+    }
+    return bytes;
   }
 
   public static class RowGroupInfo extends ReadEntryFromHDFS implements CompleteWork, FileWork {
@@ -633,16 +806,20 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
    * @throws UserException when the updated selection is empty, this happens if the user selects an empty folder.
    */
   private FileSelection
-  initFromMetadataCache(FileSelection selection, Path metaFilePath) throws IOException {
+  expandSelectionFromMetadataCache(FileSelection selection, Path metaFilePath) throws IOException {
     // get the metadata for the root directory by reading the metadata file
     // parquetTableMetadata contains the metadata for all files in the selection root folder, but we need to make sure
     // we only select the files that are part of selection (by setting fileSet appropriately)
 
     // get (and set internal field) the metadata for the directory by reading the metadata file
-    this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString(), selection.getMetaContext(), formatConfig);
-    if (formatConfig.autoCorrectCorruptDates) {
+    parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath, metaContext, formatConfig);
+    if (ignoreExpandingSelection(parquetTableMetadata)) {
+      return selection;
+    }
+    if (formatConfig.areCorruptDatesAutoCorrected()) {
       ParquetReaderUtility.correctDatesInMetadataCache(this.parquetTableMetadata);
     }
+    ParquetReaderUtility.correctBinaryInMetadataCache(parquetTableMetadata);
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
 
     if (fileSet == null) {
@@ -656,8 +833,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         fileSet.add(file.getPath());
       }
 
-    } else if (selection.isExpandedPartial() && !selection.hadWildcard() &&
-        cacheFileRoot != null) {
+    } else if (selection.isExpandedPartial() && !selection.hadWildcard() && cacheFileRoot != null) {
       if (selection.wasAllPartitionsPruned()) {
         // if all partitions were previously pruned, we only need to read 1 file (for the schema)
         fileSet.add(this.parquetTableMetadata.getFiles().get(0).getPath());
@@ -677,7 +853,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         if (status.isDirectory()) {
           //TODO [DRILL-4496] read the metadata cache files in parallel
           final Path metaPath = new Path(cacheFileRoot, Metadata.METADATA_FILENAME);
-          final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath.toString(), selection.getMetaContext(), formatConfig);
+          final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
+          if (ignoreExpandingSelection(metadata)) {
+            return selection;
+          }
           for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
             fileSet.add(file.getPath());
           }
@@ -710,11 +889,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         cacheFileRoot, selection.wasAllPartitionsPruned());
 
     newSelection.setExpandedFully();
-    newSelection.setMetaContext(selection.getMetaContext());
+    newSelection.setMetaContext(metaContext);
     return newSelection;
   }
 
-  private void init(MetadataContext metaContext) throws IOException {
+  private void init() throws IOException {
     Path metaPath = null;
     if (entries.size() == 1 && parquetTableMetadata == null) {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
@@ -723,24 +902,31 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         // if querying a single file we can look up the metadata directly from the file
         metaPath = new Path(p, Metadata.METADATA_FILENAME);
       }
-      if (metaPath != null && fs.exists(metaPath)) {
-        usedMetadataCache = true;
-        parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
-      } else {
+      if (!metaContext.isMetadataCacheCorrupted() && metaPath != null && fs.exists(metaPath)) {
+        parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
+        if (parquetTableMetadata != null) {
+          usedMetadataCache = true;
+        }
+      }
+      if (!usedMetadataCache) {
         parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString(), formatConfig);
       }
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
       metaPath = new Path(p, Metadata.METADATA_FILENAME);
-      if (fs.isDirectory(new Path(selectionRoot)) && fs.exists(metaPath)) {
-        usedMetadataCache = true;
+      if (!metaContext.isMetadataCacheCorrupted() && fs.isDirectory(new Path(selectionRoot))
+          && fs.exists(metaPath)) {
         if (parquetTableMetadata == null) {
-          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
+          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
         }
-        if (fileSet != null) {
-          parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
+        if (parquetTableMetadata != null) {
+          usedMetadataCache = true;
+          if (fileSet != null) {
+            parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
+          }
         }
-      } else {
+      }
+      if (!usedMetadataCache) {
         final List<FileStatus> fileStatuses = Lists.newArrayList();
         for (ReadEntryWithPath entry : entries) {
           fileStatuses.addAll(DrillFileSystemUtil.listFiles(fs, Path.getPathWithoutSchemeAndAuthority(new Path(entry.getPath())), true));
@@ -807,7 +993,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
               columnValueCounts.put(schemaPath, GroupScan.NO_COLUMN_STATS);
             }
           }
-          boolean partitionColumn = checkForPartitionColumn(column, first);
+          boolean partitionColumn = checkForPartitionColumn(column, first, rowCount);
           if (partitionColumn) {
             Map<SchemaPath, Object> map = partitionValueMap.get(file.getPath());
             if (map == null) {
@@ -821,7 +1007,13 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
                 partitionColTypeMap.remove(schemaPath);
               }
             } else {
-              map.put(schemaPath, currentValue);
+              // the value of a column with primitive type can not be null,
+              // so checks that there are really null value and puts it to the map
+              if (rowCount == column.getNulls()) {
+                map.put(schemaPath, null);
+              } else {
+                map.put(schemaPath, currentValue);
+              }
             }
           } else {
             partitionColTypeMap.remove(schemaPath);
@@ -913,10 +1105,6 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return toString();
   }
 
-  public void setCacheFileRoot(String cacheFileRoot) {
-    this.cacheFileRoot = cacheFileRoot;
-  }
-
   @Override
   public String toString() {
     String cacheFileString = "";
@@ -972,10 +1160,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
   @Override
   public ParquetGroupScan clone(FileSelection selection) throws IOException {
-    ParquetGroupScan newScan = new ParquetGroupScan(this);
+    ParquetGroupScan newScan = new ParquetGroupScan(this, selection);
     newScan.modifyFileSelection(selection);
-    newScan.setCacheFileRoot(selection.cacheFileRoot);
-    newScan.init(selection.getMetaContext());
+    newScan.init();
     return newScan;
   }
 
@@ -1063,7 +1250,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     ParquetFilterPredicate filterPredicate = null;
 
     for (ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
-      final ImplicitColumnExplorer columnExplorer = new ImplicitColumnExplorer(optionManager, this.columns);
+      final ColumnExplorer columnExplorer = new ColumnExplorer(optionManager, this.columns);
       Map<String, String> implicitColValues = columnExplorer.populateImplicitColumns(file.getPath(), selectionRoot);
 
       for (RowGroupMetadata rowGroup : file.getRowGroups()) {
@@ -1121,6 +1308,22 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       logger.warn("Could not apply filter prune due to Exception : {}", e);
       return null;
     }
+  }
+
+  /**
+   * If metadata is corrupted, ignore expanding selection and reset parquetTableMetadata and fileSet fields
+   *
+   * @param metadata parquet table metadata
+   * @return true if parquet metadata is corrupted, false otherwise
+   */
+  private boolean ignoreExpandingSelection(ParquetTableMetadataBase metadata) {
+    if (metadata == null || metaContext.isMetadataCacheCorrupted()) {
+      logger.debug("Selection can't be expanded since metadata file is corrupted or metadata version is not supported");
+      this.parquetTableMetadata = null;
+      this.fileSet = null;
+      return true;
+    }
+    return false;
   }
 
 }

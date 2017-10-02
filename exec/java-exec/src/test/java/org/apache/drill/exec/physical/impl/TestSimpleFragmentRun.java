@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
   public void runNoExchangeFragment() throws Exception {
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
         final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
     // run query.
     bit.run();
@@ -72,7 +72,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           } else {
             System.out.print("\t");
           }
-          System.out.print(value.getField().getPath());
+          System.out.print(value.getField().getName());
           System.out.print("[");
           System.out.print(value.getField().getType().getMinorType());
           System.out.print("]");
@@ -147,7 +147,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           } else {
             System.out.print("\t");
           }
-          System.out.print(v.getField().getPath());
+          System.out.print(v.getField().getName());
           System.out.print("[");
           System.out.print(v.getField().getType().getMinorType());
           System.out.print("]");

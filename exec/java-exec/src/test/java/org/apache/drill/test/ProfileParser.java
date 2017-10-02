@@ -545,7 +545,7 @@ public class ProfileParser {
 
       p = Pattern.compile("rowcount = ([\\d.E]+), cumulative cost = \\{([\\d.E]+) rows, ([\\d.E]+) cpu, ([\\d.E]+) io, ([\\d.E]+) network, ([\\d.E]+) memory\\}, id = (\\d+)");
       m = p.matcher(tail);
-      if (! m.matches()) {
+      if (! m.find()) {
         throw new IllegalStateException("Could not parse costs: " + tail);
       }
       estRows = Double.parseDouble(m.group(1));

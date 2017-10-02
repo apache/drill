@@ -47,10 +47,49 @@ public class RegexpUtil {
       "[:alnum:]", "\\p{Alnum}"
   };
 
+  // type of pattern string.
+  public enum SqlPatternType {
+    STARTS_WITH, // Starts with a constant string followed by any string values (ABC%)
+    ENDS_WITH, // Ends with a constant string, starts with any string values (%ABC)
+    CONTAINS, // Contains a constant string, starts and ends with any string values (%ABC%)
+    CONSTANT, // Is a constant string (ABC)
+    COMPLEX // Not a simple pattern. Needs regex evaluation.
+  };
+
+  public static class SqlPatternInfo {
+    private final SqlPatternType patternType; // type of pattern
+
+    // simple pattern with like meta characters(% and _) and escape characters removed.
+    // Used for simple pattern matching.
+    private final String simplePatternString;
+
+    // javaPatternString used for regex pattern match.
+    private final String javaPatternString;
+
+    public SqlPatternInfo(final SqlPatternType patternType, final String javaPatternString, final String simplePatternString) {
+      this.patternType = patternType;
+      this.simplePatternString = simplePatternString;
+      this.javaPatternString = javaPatternString;
+    }
+
+    public SqlPatternType getPatternType() {
+      return patternType;
+    }
+
+    public String getSimplePatternString() {
+      return simplePatternString;
+    }
+
+    public String getJavaPatternString() {
+      return javaPatternString;
+    }
+
+  }
+
   /**
    * Translates a SQL LIKE pattern to Java regex pattern. No escape char.
    */
-  public static String sqlToRegexLike(String sqlPattern) {
+  public static SqlPatternInfo sqlToRegexLike(String sqlPattern) {
     return sqlToRegexLike(sqlPattern, (char)0);
   }
 
@@ -58,7 +97,7 @@ public class RegexpUtil {
    * Translates a SQL LIKE pattern to Java regex pattern, with optional
    * escape string.
    */
-  public static String sqlToRegexLike(
+  public static SqlPatternInfo sqlToRegexLike(
       String sqlPattern,
       CharSequence escapeStr) {
     final char escapeChar;
@@ -76,12 +115,22 @@ public class RegexpUtil {
   /**
    * Translates a SQL LIKE pattern to Java regex pattern.
    */
-  public static String sqlToRegexLike(
+  public static SqlPatternInfo sqlToRegexLike(
       String sqlPattern,
       char escapeChar) {
     int i;
     final int len = sqlPattern.length();
     final StringBuilder javaPattern = new StringBuilder(len + len);
+    final StringBuilder simplePattern = new StringBuilder(len);
+
+    // Figure out the pattern type and build simplePatternString
+    // as we are going through the sql pattern string
+    // to build java regex pattern string. This is better instead of using
+    // regex later for determining if a pattern is simple or not.
+    // Saves CPU cycles.
+    // Start with patternType as CONSTANT
+    SqlPatternType patternType = SqlPatternType.CONSTANT;
+
     for (i = 0; i < len; i++) {
       char c = sqlPattern.charAt(i);
       if (JAVA_REGEX_SPECIALS.indexOf(c) >= 0) {
@@ -96,20 +145,40 @@ public class RegexpUtil {
             || (nextChar == '%')
             || (nextChar == escapeChar)) {
           javaPattern.append(nextChar);
+          simplePattern.append(nextChar);
           i++;
         } else {
           throw invalidEscapeSequence(sqlPattern, i);
         }
       } else if (c == '_') {
+        // if we find _, it is not simple pattern, we are looking for only %
+        patternType = SqlPatternType.COMPLEX;
         javaPattern.append('.');
       } else if (c == '%') {
+        if (i == 0) {
+          // % at the start could potentially be one of the simple cases i.e. ENDS_WITH.
+          patternType = SqlPatternType.ENDS_WITH;
+        } else if (i == (len-1)) {
+          if (patternType == SqlPatternType.ENDS_WITH) {
+            // Starts and Ends with %. This is contains.
+            patternType = SqlPatternType.CONTAINS;
+          } else if (patternType == SqlPatternType.CONSTANT) {
+            // % at the end with constant string in the beginning i.e. STARTS_WITH
+            patternType = SqlPatternType.STARTS_WITH;
+          }
+        } else {
+          // If we find % anywhere other than start or end, it is not a simple case.
+          patternType = SqlPatternType.COMPLEX;
+        }
         javaPattern.append(".");
         javaPattern.append('*');
       } else {
         javaPattern.append(c);
+        simplePattern.append(c);
       }
     }
-    return javaPattern.toString();
+
+    return new SqlPatternInfo(patternType, javaPattern.toString(), simplePattern.toString());
   }
 
   private static RuntimeException invalidEscapeCharacter(String s) {

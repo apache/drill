@@ -64,6 +64,11 @@ bin=`cd -P "$bin">/dev/null; pwd`
 base=`basename "${BASH_SOURCE-$0}"`
 command=${base/.*/}
 
+# Environment variable to indicate Drillbit is being setup. Later drill-env.sh
+# and distrib-env.sh can consume this to set common environment variable differently
+# for Drillbit and Sqlline.
+export DRILLBIT_CONTEXT=1
+
 # Setup environment. This parses, and removes, the
 # options --config conf-dir parameters.
 

@@ -90,8 +90,8 @@ public class TestSortImpl extends DrillTest {
           .setQueryId(queryId)
           .build();
     SortConfig sortConfig = new SortConfig(opContext.getConfig());
-    SpillSet spillSet = new SpillSet(opContext.getConfig(), handle,
-                                     popConfig);
+
+    SpillSet spillSet = new SpillSet(opContext.getConfig(), handle, popConfig);
     PriorityQueueCopierWrapper copierHolder = new PriorityQueueCopierWrapper(opContext);
     SpilledRuns spilledRuns = new SpilledRuns(opContext, spillSet, copierHolder);
     return new SortImpl(opContext, sortConfig, spilledRuns, outputBatch);

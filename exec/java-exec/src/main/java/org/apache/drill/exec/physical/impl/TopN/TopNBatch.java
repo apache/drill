@@ -52,6 +52,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaUtil;
+import org.apache.drill.exec.record.SimpleRecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
@@ -65,6 +66,8 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import com.google.common.base.Stopwatch;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
+
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.l;
 
 public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
@@ -290,8 +293,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     VectorContainer newContainer = new VectorContainer(oContext);
     @SuppressWarnings("resource")
     SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
-    SimpleRecordBatch batch = new SimpleRecordBatch(c, selectionVector4, context);
-    SimpleRecordBatch newBatch = new SimpleRecordBatch(newContainer, null, context);
+    SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
+    SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     if (copier == null) {
       copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch, null);
     } else {
@@ -391,8 +394,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     final VectorContainer newContainer = new VectorContainer(oContext);
     @SuppressWarnings("resource")
     final SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
-    final SimpleRecordBatch batch = new SimpleRecordBatch(c, selectionVector4, context);
-    final SimpleRecordBatch newBatch = new SimpleRecordBatch(newContainer, null, context);
+    final SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
+    final SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch, null);
     @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
@@ -440,26 +443,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
 
-  public static class SimpleRecordBatch implements RecordBatch {
-
-    private VectorContainer container;
+  public static class SimpleSV4RecordBatch extends SimpleRecordBatch {
     private SelectionVector4 sv4;
-    private FragmentContext context;
 
-    public SimpleRecordBatch(VectorContainer container, SelectionVector4 sv4, FragmentContext context) {
-      this.container = container;
+    public SimpleSV4RecordBatch(VectorContainer container, SelectionVector4 sv4, FragmentContext context) {
+      super(container, context);
       this.sv4 = sv4;
-      this.context = context;
-    }
-
-    @Override
-    public FragmentContext getContext() {
-      return context;
-    }
-
-    @Override
-    public BatchSchema getSchema() {
-      return container.getSchema();
     }
 
     @Override
@@ -467,54 +456,14 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       if (sv4 != null) {
         return sv4.getCount();
       } else {
-        return container.getRecordCount();
+        return super.getRecordCount();
       }
-    }
-
-    @Override
-    public void kill(boolean sendUpstream) {
-    }
-
-    @Override
-    public SelectionVector2 getSelectionVector2() {
-      throw new UnsupportedOperationException();
     }
 
     @Override
     public SelectionVector4 getSelectionVector4() {
       return sv4;
     }
-
-    @Override
-    public TypedFieldId getValueVectorId(SchemaPath path) {
-      return container.getValueVectorId(path);
-    }
-
-    @Override
-    public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
-      return container.getValueAccessorById(clazz, ids);
-    }
-
-    @Override
-    public IterOutcome next() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public WritableBatch getWritableBatch() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Iterator<VectorWrapper<?>> iterator() {
-      return container.iterator();
-    }
-
-    @Override
-    public VectorContainer getOutgoingContainer() {
-      throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
-    }
-
   }
 
 }

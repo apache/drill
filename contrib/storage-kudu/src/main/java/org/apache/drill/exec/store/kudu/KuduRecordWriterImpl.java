@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -76,7 +76,7 @@ public class KuduRecordWriterImpl extends KuduRecordWriter {
       if (!checkForTable(name)) {
         List<ColumnSchema> columns = new ArrayList<>();
         for (MaterializedField f : schema) {
-          columns.add(new ColumnSchema.ColumnSchemaBuilder(f.getLastName(), getType(f.getType()))
+          columns.add(new ColumnSchema.ColumnSchemaBuilder(f.getName(), getType(f.getType()))
               .nullable(f.getType().getMode() == DataMode.OPTIONAL)
               .key(i == 0).build());
           i++;

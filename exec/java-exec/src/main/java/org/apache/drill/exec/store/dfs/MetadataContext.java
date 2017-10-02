@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,22 +27,16 @@ import com.google.common.collect.Maps;
  */
 public class MetadataContext {
 
-  /** Map of directory path to the status of whether modification time was already checked.
+  /**
+   *  Map of directory path to the status of whether modification time was already checked.
    *  Note: the #directories is typically a small percentage of the #files, so the memory footprint
    *  is expected to be relatively small.
    */
   private Map<String, Boolean> dirModifCheckMap = Maps.newHashMap();
 
-  public enum PruneStatus {
-    NOT_STARTED,         // initial state
-    PRUNED,              // partitions were pruned
-    NOT_PRUNED           // partitions did not get pruned
-  }
-
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 
-  public MetadataContext() {
-  }
+  private boolean metadataCacheCorrupted;
 
   public void setStatus(String dir) {
     dirModifCheckMap.put(dir,  true);
@@ -61,6 +55,7 @@ public class MetadataContext {
 
   public void clear() {
     dirModifCheckMap.clear();
+    metadataCacheCorrupted = false;
   }
 
   public void setPruneStatus(PruneStatus status) {
@@ -69,6 +64,28 @@ public class MetadataContext {
 
   public PruneStatus getPruneStatus() {
     return pruneStatus;
+  }
+
+  /**
+   * @return true if parquet metadata cache files are missing or corrupted, false otherwise
+   */
+  public boolean isMetadataCacheCorrupted() {
+    return metadataCacheCorrupted;
+  }
+
+  /**
+   * Setting this as true allows to avoid double reading of corrupted, unsupported or missing metadata files
+   *
+   * @param metadataCacheCorrupted metadata corruption status
+   */
+  public void setMetadataCacheCorrupted(boolean metadataCacheCorrupted) {
+    this.metadataCacheCorrupted = metadataCacheCorrupted;
+  }
+
+  public enum PruneStatus {
+    NOT_STARTED,         // initial state
+    PRUNED,              // partitions were pruned
+    NOT_PRUNED           // partitions did not get pruned
   }
 
 }

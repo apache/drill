@@ -837,11 +837,11 @@ static Drill::meta::DateTimeLiteralSupport dateTimeLiteralsSupport(const google:
 				break;
 
 			case exec::user::DL_INTERVAL_MINUTE:
-				result |= Drill::meta::DL_TIMESTAMP;
+				result |= Drill::meta::DL_INTERVAL_MINUTE;
 				break;
 
 			case exec::user::DL_INTERVAL_MINUTE_TO_SECOND:
-				result |= Drill::meta::DL_TIMESTAMP;
+				result |= Drill::meta::DL_INTERVAL_MINUTE_TO_SECOND;
 				break;
 
 			case exec::user::DL_INTERVAL_SECOND:

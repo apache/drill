@@ -84,7 +84,6 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
     if(!err){
         if(b!=NULL){
             b->print(std::cout, 0); // print all rows
-            std::cout << "DATA RECEIVED ..." << std::endl;
             delete b; // we're done with this batch, we can delete it
             if(bTestCancel){
                 return Drill::QRY_FAILURE;
@@ -92,7 +91,6 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
                 return Drill::QRY_SUCCESS ;
             }
         }else{
-            std::cout << "Query Complete." << std::endl;
             return Drill::QRY_SUCCESS;
 		}
     }else{
@@ -153,7 +151,7 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
             sprintf((char*)printBuffer, "NIY");
             break;
     }
-    printf("%s\t", (char*)printBuffer);
+    printf("%s ,", (char*)printBuffer);
     return;
 }
 
@@ -397,7 +395,6 @@ int main(int argc, char* argv[]) {
             std::cerr<< "Failed to connect with error: "<< client.getError() << " (Using:"<<connectStr<<")"<<std::endl;
             return -1;
         }
-        std::cout<< "Connected!\n" << std::endl;
         if(api=="meta") {
         	Drill::Metadata* metadata = client.getMetadata();
         	if (metadata) {

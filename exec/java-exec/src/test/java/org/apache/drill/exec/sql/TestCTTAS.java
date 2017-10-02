@@ -30,7 +30,6 @@ import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.util.TestUtilities;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -40,8 +39,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
@@ -56,9 +53,8 @@ import static org.junit.Assert.assertTrue;
 public class TestCTTAS extends BaseTestQuery {
 
   private static final UUID session_id = UUID.nameUUIDFromBytes("sessionId".getBytes());
-  private static final String test_schema = "dfs_test";
   private static final String temp2_wk = "tmp2";
-  private static final String temp2_schema = String.format("%s.%s", test_schema, temp2_wk);
+  private static final String temp2_schema = String.format("%s.%s", TEST_SCHEMA, temp2_wk);
 
   private static FileSystem fs;
   private static FsPermission expectedFolderPermission;
@@ -73,11 +69,11 @@ public class TestCTTAS extends BaseTestQuery {
     uuidMockUp.tearDown();
 
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(test_schema).getConfig();
+    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(TEST_SCHEMA).getConfig();
     pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(TestUtilities.createTempDir(), true, null));
-    pluginRegistry.createOrUpdate(test_schema, pluginConfig, true);
+    pluginRegistry.createOrUpdate(TEST_SCHEMA, pluginConfig, true);
 
-    fs = FileSystem.get(new Configuration());
+    fs = getLocalFileSystem();
     expectedFolderPermission = new FsPermission(StorageStrategy.TEMPORARY.getFolderPermission());
     expectedFilePermission = new FsPermission(StorageStrategy.TEMPORARY.getFilePermission());
   }
@@ -149,7 +145,7 @@ public class TestCTTAS extends BaseTestQuery {
   @Test
   public void testResolveTemporaryTableWithPartialSchema() throws Exception {
     String temporaryTableName = "temporary_table_with_partial_schema";
-    test("use %s", test_schema);
+    test("use %s", TEST_SCHEMA);
     test("create temporary table tmp.%s as select 'A' as c1 from (values(1))", temporaryTableName);
 
     testBuilder()
@@ -438,9 +434,9 @@ public class TestCTTAS extends BaseTestQuery {
   }
 
   private void checkPermission(String tmpTableName) throws IOException {
-    File[] files = findTemporaryTableLocation(tmpTableName);
-    assertEquals("Only one directory should match temporary table name " + tmpTableName, 1, files.length);
-    Path tmpTablePath = new Path(files[0].toURI().getPath());
+    List<Path> matchingPath = findTemporaryTableLocation(tmpTableName);
+    assertEquals("Only one directory should match temporary table name " + tmpTableName, 1, matchingPath.size());
+    Path tmpTablePath = matchingPath.get(0);
     assertEquals("Directory permission should match",
         expectedFolderPermission, fs.getFileStatus(tmpTablePath).getPermission());
     RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(tmpTablePath, false);
@@ -449,19 +445,22 @@ public class TestCTTAS extends BaseTestQuery {
     }
   }
 
-  private File[] findTemporaryTableLocation(String tableName) throws IOException {
-    File sessionTempLocation = new File(getDfsTestTmpSchemaLocation(), session_id.toString());
-    Path sessionTempLocationPath = new Path(sessionTempLocation.toURI().getPath());
-    assertTrue("Session temporary location must exist", fs.exists(sessionTempLocationPath));
+  private List<Path> findTemporaryTableLocation(String tableName) throws IOException {
+    Path sessionTempLocation = new Path(getDfsTestTmpSchemaLocation(), session_id.toString());
+    assertTrue("Session temporary location must exist", fs.exists(sessionTempLocation));
     assertEquals("Session temporary location permission should match",
-        expectedFolderPermission, fs.getFileStatus(sessionTempLocationPath).getPermission());
-    final String tableUUID =  UUID.nameUUIDFromBytes(tableName.getBytes()).toString();
-    return sessionTempLocation.listFiles(new FileFilter() {
-      @Override
-      public boolean accept(File path) {
-        return path.isDirectory() && path.getName().equals(tableUUID);
+        expectedFolderPermission, fs.getFileStatus(sessionTempLocation).getPermission());
+    String tableUUID =  UUID.nameUUIDFromBytes(tableName.getBytes()).toString();
+
+    RemoteIterator<LocatedFileStatus> pathList = fs.listLocatedStatus(sessionTempLocation);
+    List<Path> matchingPath = Lists.newArrayList();
+    while (pathList.hasNext()) {
+      LocatedFileStatus path = pathList.next();
+      if (path.isDirectory() && path.getPath().getName().equals(tableUUID)) {
+        matchingPath.add(path.getPath());
       }
-    });
+    }
+    return matchingPath;
   }
 
 }

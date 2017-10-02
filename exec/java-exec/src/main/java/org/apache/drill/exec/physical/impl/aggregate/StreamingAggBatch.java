@@ -43,6 +43,7 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggregator.AggOutcome;
+import org.apache.drill.exec.physical.impl.xsort.managed.ExternalSortBatch;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -87,6 +88,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
+
+    // Sorry. Horrible hack. To release memory after an in-memory sort,
+    // the External Sort normally frees in-memory sorted batches just
+    // before returning NONE. But, this operator needs the batches to
+    // be present, even after NONE. This call puts the ESB into the proper
+    // "mode". A later call explicitly releases the batches.
+
+    ExternalSortBatch.retainSv4OnNone(incoming);
   }
 
   @Override
@@ -111,6 +120,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       case STOP:
         state = BatchState.STOP;
         return;
+      default:
+        break;
     }
 
     this.incomingSchema = incoming.getSchema();
@@ -176,6 +187,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         container.zeroVectors();
       }
       done = true;
+      ExternalSortBatch.releaseBatches(incoming);
       // fall through
     case RETURN_OUTCOME:
       IterOutcome outcome = aggregator.getOutcome();
@@ -281,7 +293,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         continue;
       }
       keyExprs[i] = expr;
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
       @SuppressWarnings("resource")
       final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       keyOutputIds[i] = container.add(vector);
@@ -297,7 +310,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         continue;
       }
 
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
       @SuppressWarnings("resource")
       ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       TypedFieldId id = container.add(vector);
@@ -413,17 +427,17 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     case FOUR_BYTE: {
       JVar var = g.declareClassField("sv4_", g.getModel()._ref(SelectionVector4.class));
       g.getBlock("setupInterior").assign(var, JExpr.direct("incoming").invoke("getSelectionVector4"));
-      g.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));;
+      g.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));
       return;
     }
     case NONE: {
-      g.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));;
+      g.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));
       return;
     }
     case TWO_BYTE: {
       JVar var = g.declareClassField("sv2_", g.getModel()._ref(SelectionVector2.class));
       g.getBlock("setupInterior").assign(var, JExpr.direct("incoming").invoke("getSelectionVector2"));
-      g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));;
+      g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));
       return;
     }
 

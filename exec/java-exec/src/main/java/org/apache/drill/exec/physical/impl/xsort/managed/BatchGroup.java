@@ -75,9 +75,9 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
 
   public static class InputBatch extends BatchGroup {
     private final SelectionVector2 sv2;
-    private final int dataSize;
+    private final long dataSize;
 
-    public InputBatch(VectorContainer container, SelectionVector2 sv2, BufferAllocator allocator, int dataSize) {
+    public InputBatch(VectorContainer container, SelectionVector2 sv2, BufferAllocator allocator, long dataSize) {
       super(container, allocator);
       this.sv2 = sv2;
       this.dataSize = dataSize;
@@ -85,7 +85,7 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
 
     public SelectionVector2 getSv2() { return sv2; }
 
-    public int getDataSize() { return dataSize; }
+    public long getDataSize() { return dataSize; }
 
     @Override
     public int getRecordCount() {
@@ -212,11 +212,16 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
         reader = VectorSerializer.reader(allocator, inputStream);
       }
       Stopwatch watch = Stopwatch.createStarted();
+      long start = allocator.getAllocatedMemory();
       VectorContainer c =  reader.read();
+      long end = allocator.getAllocatedMemory();
+      logger.trace("Read {} records in {} us; size = {}, memory = {}",
+                   c.getRecordCount(),
+                   watch.elapsed(TimeUnit.MICROSECONDS),
+                   (end - start), end);
       if (schema != null) {
         c = SchemaUtil.coerceContainer(c, schema, allocator);
       }
-      logger.trace("Read {} records in {} us", c.getRecordCount(), watch.elapsed(TimeUnit.MICROSECONDS));
       spilledBatches--;
       currentContainer.zeroVectors();
       Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();

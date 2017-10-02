@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.server.options.OptionDefinition;
 
 /**
  * Build a Drillbit and client with the options provided. The simplest
@@ -49,6 +50,7 @@ public class FixtureBuilder {
   public static final int DEFAULT_ZK_REFRESH = 500; // ms
   public static final int DEFAULT_SERVER_RPC_THREADS = 10;
   public static final int DEFAULT_SCAN_THREADS = 8;
+  public static final String OPTION_DEFAULTS_ROOT = "drill.exec.options.";
 
   protected ConfigBuilder configBuilder = new ConfigBuilder();
   protected List<RuntimeOption> sessionOptions;
@@ -97,6 +99,14 @@ public class FixtureBuilder {
   }
 
   /**
+   *
+   */
+   public FixtureBuilder setOptionDefault(String key, Object value) {
+     String option_name = OPTION_DEFAULTS_ROOT + key;
+     configBuilder().put(option_name, value.toString());
+     return this;
+   }
+  /**
    * Add an additional boot-time property for the embedded Drillbit.
    * @param key config property name
    * @param value property value
@@ -105,6 +115,11 @@ public class FixtureBuilder {
 
   public FixtureBuilder configProperty(String key, Object value) {
     configBuilder.put(key, value.toString());
+    return this;
+  }
+
+  public FixtureBuilder putDefinition(OptionDefinition definition) {
+    configBuilder.putDefinition(definition);
     return this;
   }
 

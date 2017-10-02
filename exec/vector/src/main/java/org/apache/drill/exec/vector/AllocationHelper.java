@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,41 +21,63 @@ import org.apache.drill.exec.vector.complex.RepeatedFixedWidthVectorLike;
 import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
 
 public class AllocationHelper {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocationHelper.class);
 
-  public static void allocate(ValueVector v, int valueCount, int bytesPerValue) {
-    allocate(v, valueCount, bytesPerValue, 5);
+  public static void allocate(ValueVector vector, int valueCount, int bytesPerValue) {
+    allocate(vector, valueCount, bytesPerValue, 5);
   }
 
-  public static void allocatePrecomputedChildCount(ValueVector v, int valueCount, int bytesPerValue, int childValCount){
-    if(v instanceof FixedWidthVector) {
-      ((FixedWidthVector) v).allocateNew(valueCount);
-    } else if (v instanceof VariableWidthVector) {
-      ((VariableWidthVector) v).allocateNew(valueCount * bytesPerValue, valueCount);
-    } else if(v instanceof RepeatedFixedWidthVectorLike) {
-      ((RepeatedFixedWidthVectorLike) v).allocateNew(valueCount, childValCount);
-    } else if(v instanceof RepeatedVariableWidthVectorLike) {
-      ((RepeatedVariableWidthVectorLike) v).allocateNew(childValCount * bytesPerValue, valueCount, childValCount);
+  public static void allocatePrecomputedChildCount(ValueVector vector, int valueCount, int bytesPerValue, int childValCount) {
+
+    // Don't fail if given a 0-sized array. Assume at least one value.
+    childValCount = Math.max(1, childValCount);
+    valueCount = Math.max(1, valueCount);
+    bytesPerValue = Math.max(1, bytesPerValue);
+
+    if (vector instanceof FixedWidthVector) {
+      ((FixedWidthVector) vector).allocateNew(valueCount);
+    } else if (vector instanceof VariableWidthVector) {
+      ((VariableWidthVector) vector).allocateNew(valueCount * bytesPerValue, valueCount);
+    } else if (vector instanceof RepeatedFixedWidthVectorLike) {
+      ((RepeatedFixedWidthVectorLike) vector).allocateNew(valueCount, childValCount);
+    } else if (vector instanceof RepeatedVariableWidthVectorLike && childValCount > 0 && bytesPerValue > 0) {
+      // Assertion thrown if byte count is zero in the full allocateNew,
+      // so use default version instead.
+      ((RepeatedVariableWidthVectorLike) vector).allocateNew(childValCount * bytesPerValue, valueCount, childValCount);
     } else {
-      v.allocateNew();
+      vector.allocateNew();
     }
   }
 
-  public static void allocate(ValueVector v, int valueCount, int bytesPerValue, int repeatedPerTop){
-    allocatePrecomputedChildCount(v, valueCount, bytesPerValue, repeatedPerTop * valueCount);
+  public static void allocate(ValueVector vector, int valueCount, int bytesPerValue, int repeatedPerTop){
+    allocatePrecomputedChildCount(vector, valueCount, bytesPerValue, repeatedPerTop * valueCount);
+  }
+
+  /**
+   * Allocate an array, but with a fractional value for the number of elements
+   * per array. This form is useful when the number comes from observations and
+   * represents an average.
+   *
+   * @param vector the vector to allocate
+   * @param valueCount the number of top-level values
+   * @param bytesPerValue the width of each value
+   * @param repeatedPerTop the number of array elements per value.
+   */
+  public static void allocate(ValueVector vector, int valueCount, int bytesPerValue, float repeatedPerTop){
+    allocatePrecomputedChildCount(vector, valueCount, bytesPerValue,
+        (int) Math.ceil(repeatedPerTop * valueCount));
   }
 
   /**
    * Allocates the exact amount if v is fixed width, otherwise falls back to dynamic allocation
-   * @param v value vector we are trying to allocate
+   * @param vector value vector we are trying to allocate
    * @param valueCount  size we are trying to allocate
    * @throws org.apache.drill.exec.memory.OutOfMemoryException if it can't allocate the memory
    */
-  public static void allocateNew(ValueVector v, int valueCount) {
-    if (v instanceof  FixedWidthVector) {
-      ((FixedWidthVector) v).allocateNew(valueCount);
+  public static void allocateNew(ValueVector vector, int valueCount) {
+    if (vector instanceof  FixedWidthVector) {
+      ((FixedWidthVector) vector).allocateNew(valueCount);
     } else {
-      v.allocateNew();
+      vector.allocateNew();
     }
   }
 }

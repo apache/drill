@@ -99,7 +99,7 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
         // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
         // SchemaChangeException, so check/clean catch clause below.
         for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
-          columns.add(loader.getSchema().getColumn(i).getPath());
+          columns.add(loader.getSchema().getColumn(i).getName());
         }
         for (int i = 0; i < rows; ++i) {
           final Map<String, String> record = Maps.newHashMap();

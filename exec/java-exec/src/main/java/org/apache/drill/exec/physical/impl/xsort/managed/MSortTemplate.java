@@ -58,7 +58,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
   @Override
   public void setup(final FragmentExecContext context, final BufferAllocator allocator, final SelectionVector4 vector4,
-                    final VectorContainer hyperBatch, int outputBatchSize) throws SchemaChangeException{
+                    final VectorContainer hyperBatch, int outputBatchSize, int desiredBatchSize) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
     this.vector4 = vector4.createNewWrapperCurrent();
@@ -89,7 +89,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
     @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
-    desiredRecordBatchCount = Math.min(outputBatchSize, Character.MAX_VALUE);
+    desiredRecordBatchCount = Math.min(outputBatchSize, desiredBatchSize);
     desiredRecordBatchCount = Math.min(desiredRecordBatchCount, totalCount);
     aux = new SelectionVector4(drillBuf, totalCount, desiredRecordBatchCount);
   }

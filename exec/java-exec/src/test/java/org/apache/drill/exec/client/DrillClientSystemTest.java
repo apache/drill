@@ -38,8 +38,8 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
   private static String plan;
 
   @BeforeClass
-  public static void setUp() throws Exception {
-    DrillSystemTestBase.setUp();
+  public void setUp() throws Exception {
+    this.setUp();
     plan = Resources.toString(Resources.getResource("simple_plan.json"), Charsets.UTF_8);
 
   }

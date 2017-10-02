@@ -30,7 +30,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.Text;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -196,53 +195,43 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
 
   @Test // DRILL-4720
   public void testDirectoryUDFsWithAndWithoutMetadataCache() throws Exception {
-    FileSystem fs = null;
-    try {
-      fs = FileSystem.get(new Configuration());
+    FileSystem fs = getLocalFileSystem();
+    // prepare test table with partitions
+    Path table = new Path(getTempDir("table_with_partitions"));
+    String tablePath = table.toUri().getPath();
+    Path dataFile = new Path(TestTools.getWorkingPath(),"src/test/resources/parquet/alltypes_required.parquet");
+    createPartitions(fs, table, dataFile, 2);
 
-      // prepare test table with partitions
-      Path table = new Path(getTempDir("table_with_partitions"));
-      String tablePath = table.toUri().getPath();
-      Path dataFile = new Path(TestTools.getWorkingPath(),"src/test/resources/parquet/alltypes_required.parquet");
-      createPartitions(fs, table, dataFile, 2);
+    Map<String, String> configurations = ImmutableMap.<String, String>builder()
+        .put("mindir", "part_1")
+        .put("imindir", "part_1")
+        .put("maxdir", "part_2")
+        .put("imaxdir", "part_2")
+        .build();
 
-      Map<String, String> configurations = ImmutableMap.<String, String>builder()
-          .put("mindir", "part_1")
-          .put("imindir", "part_1")
-          .put("maxdir", "part_2")
-          .put("imaxdir", "part_2")
-          .build();
+    String query = "select dir0 from dfs.`%s` where dir0 = %s('dfs', '%s') limit 1";
 
-      String query = "select dir0 from dfs.`%s` where dir0 = %s('dfs', '%s') limit 1";
+    // run tests without metadata cache
+    for (Map.Entry<String, String> entry : configurations.entrySet()) {
+      testBuilder()
+          .sqlQuery(query, tablePath, entry.getKey(), tablePath)
+          .unOrdered()
+          .baselineColumns("dir0")
+          .baselineValues(entry.getValue())
+          .go();
+    }
 
-      // run tests without metadata cache
-      for (Map.Entry<String, String> entry : configurations.entrySet()) {
-        testBuilder()
-            .sqlQuery(query, tablePath, entry.getKey(), tablePath)
-            .unOrdered()
-            .baselineColumns("dir0")
-            .baselineValues(entry.getValue())
-            .go()
-        ;
-      }
+    // generate metadata
+    test("refresh table metadata dfs.`%s`", tablePath);
 
-      // generate metadata
-      test("refresh table metadata dfs.`%s`", tablePath);
-
-      // run tests with metadata cache
-      for (Map.Entry<String, String> entry : configurations.entrySet()) {
-        testBuilder()
-            .sqlQuery(query, tablePath, entry.getKey(), tablePath)
-            .unOrdered()
-            .baselineColumns("dir0")
-            .baselineValues(entry.getValue())
-            .go();
-      }
-
-    } finally {
-      if (fs != null) {
-        fs.close();
-      }
+    // run tests with metadata cache
+    for (Map.Entry<String, String> entry : configurations.entrySet()) {
+      testBuilder()
+          .sqlQuery(query, tablePath, entry.getKey(), tablePath)
+          .unOrdered()
+          .baselineColumns("dir0")
+          .baselineValues(entry.getValue())
+          .go();
     }
   }
 

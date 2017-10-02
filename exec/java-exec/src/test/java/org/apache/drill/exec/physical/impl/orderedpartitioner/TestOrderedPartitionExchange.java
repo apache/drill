@@ -35,6 +35,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
@@ -82,7 +83,7 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
           int rows = b.getHeader().getRowCount();
           count += rows;
           DrillConfig config = DrillConfig.create();
-          RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(config, ClassPathScanner.fromPrescan(config)).getAllocator());
+          RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(config, SystemOptionManager.createDefaultOptionDefinitions(), ClassPathScanner.fromPrescan(config)).getAllocator());
           loader.load(b.getHeader().getDef(), b.getData());
           BigIntVector vv1 = (BigIntVector)loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(
                   new SchemaPath("col1", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,6 +27,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
@@ -40,12 +42,12 @@ public class VectorUtil {
     System.out.println(rows + " row(s):");
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getPath());
+      columns.add(vw.getValueVector().getField().getName());
     }
 
     int width = columns.size();
     for (String column : columns) {
-      System.out.printf("%s%s",column, column == columns.get(width - 1) ? "\n" : delimiter);
+      System.out.printf("%s%s",column, column.equals(columns.get(width - 1)) ? "\n" : delimiter);
     }
     for (int row = 0; row < rows; row++) {
       int columnCounter = 0;
@@ -54,8 +56,8 @@ public class VectorUtil {
         Object o ;
         try{
           o = vw.getValueVector().getAccessor().getObject(row);
-        }catch(Exception e){
-          throw new RuntimeException("failure while trying to read column " + vw.getField().getPath());
+        } catch (Exception e) {
+          throw new RuntimeException("failure while trying to read column " + vw.getField().getName());
         }
         if (o == null) {
           //null value
@@ -83,7 +85,7 @@ public class VectorUtil {
     if (includeHeader) {
       List<String> columns = Lists.newArrayList();
       for (VectorWrapper<?> vw : va) {
-        columns.add(vw.getValueVector().getField().getPath());
+        columns.add(vw.getValueVector().getField().getName());
       }
 
       formattedResults.append(Joiner.on(delimiter).join(columns));
@@ -134,7 +136,7 @@ public class VectorUtil {
       width += columnWidth + 2;
       formats.add("| %-" + columnWidth + "s");
       MaterializedField field = vw.getValueVector().getField();
-      columns.add(field.getPath() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
+      columns.add(field.getName() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
       columnIndex++;
     }
 
@@ -178,9 +180,20 @@ public class VectorUtil {
     }
   }
 
+  public static void allocateVectors(Iterable<ValueVector> valueVectors, int count) {
+    for (final ValueVector v : valueVectors) {
+      AllocationHelper.allocateNew(v, count);
+    }
+  }
+
+  public static void setValueCount(Iterable<ValueVector> valueVectors, int count) {
+    for (final ValueVector v : valueVectors) {
+      v.getMutator().setValueCount(count);
+    }
+  }
+
   private static int getColumnWidth(int[] columnWidths, int columnIndex) {
     return (columnWidths == null) ? DEFAULT_COLUMN_WIDTH
         : (columnWidths.length > columnIndex) ? columnWidths[columnIndex] : columnWidths[0];
   }
-
 }

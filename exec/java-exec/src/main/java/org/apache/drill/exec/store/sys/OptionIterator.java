@@ -28,14 +28,20 @@ import org.apache.drill.exec.server.options.DrillConfigIterator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
+import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
 
 public class OptionIterator implements Iterator<Object> {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OptionIterator.class);
 
   enum Mode {
-    BOOT, SYS_SESS, BOTH
+    BOOT,
+    // These represent System/Session options that are public. These are available for everyone to change and are considered safe to change.
+    SYS_SESS_PUBLIC,
+    // These represent System/Session options that are internal. These are segregated from the public options and are not visible in the same tables and rest endpoints as public
+    // options. These are technically available for anyone to change, but users are discouraged from doing so unless they absolutely know what they are doing. The general purpose
+    // for internal options is to enable support to easily debug.
+    SYS_SESS_INTERNAL
   };
 
   private final OptionManager fragmentOptions;
@@ -49,8 +55,11 @@ public class OptionIterator implements Iterator<Object> {
     case BOOT:
       optionList = configOptions.iterator();
       break;
-    case SYS_SESS:
-      optionList = fragmentOptions.iterator();
+    case SYS_SESS_PUBLIC:
+      optionList = fragmentOptions.getPublicOptionList().iterator();
+      break;
+    case SYS_SESS_INTERNAL:
+      optionList = fragmentOptions.getInternalOptionList().iterator();
       break;
     default:
       optionList = Iterators.concat(configOptions.iterator(), fragmentOptions.iterator());
@@ -71,21 +80,22 @@ public class OptionIterator implements Iterator<Object> {
   public OptionValueWrapper next() {
     final OptionValue value = mergedOptions.next();
     final Status status;
-    if (value.type == OptionType.BOOT) {
+
+    if (value.accessibleScopes == AccessibleScopes.BOOT) {
       status = Status.BOOT;
     } else {
-      final OptionValue def = SystemOptionManager.getValidator(value.name).getDefault();
+      final OptionValue def = fragmentOptions.getDefault(value.name);
       if (value.equalsIgnoreType(def)) {
         status = Status.DEFAULT;
         } else {
         status = Status.CHANGED;
         }
       }
-    return new OptionValueWrapper(value.name, value.kind, value.type, value.num_val, value.string_val,
+    return new OptionValueWrapper(value.name, value.kind, value.accessibleScopes, value.scope, value.num_val, value.string_val,
         value.bool_val, value.float_val, status);
   }
 
-  public static enum Status {
+  public enum Status {
     BOOT, DEFAULT, CHANGED
   }
 
@@ -96,19 +106,21 @@ public class OptionIterator implements Iterator<Object> {
 
     public final String name;
     public final Kind kind;
-    public final OptionType type;
+    public final AccessibleScopes accessibleScopes;
+    public final OptionScope optionScope;
     public final Status status;
     public final Long num_val;
     public final String string_val;
     public final Boolean bool_val;
     public final Double float_val;
 
-    public OptionValueWrapper(final String name, final Kind kind, final OptionType type, final Long num_val,
-        final String string_val, final Boolean bool_val, final Double float_val,
-        final Status status) {
+    public OptionValueWrapper(final String name, final Kind kind, final OptionValue.AccessibleScopes type, final OptionScope scope, final Long num_val,
+                              final String string_val, final Boolean bool_val, final Double float_val,
+                              final Status status) {
       this.name = name;
       this.kind = kind;
-      this.type = type;
+      this.accessibleScopes = type;
+      this.optionScope = scope;
       this.num_val = num_val;
       this.string_val = string_val;
       this.bool_val = bool_val;

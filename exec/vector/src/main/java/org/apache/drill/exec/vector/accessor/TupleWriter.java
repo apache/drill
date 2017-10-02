@@ -29,6 +29,13 @@ package org.apache.drill.exec.vector.accessor;
 
 public interface TupleWriter extends TupleAccessor {
   ColumnWriter column(int colIndex);
+
+  /**
+   * Returns column writer for the column with name specified in param.
+   *
+   * @param colName name of the column in the schema
+   * @return column writer
+   */
   ColumnWriter column(String colName);
   void set(int colIndex, Object value);
 }

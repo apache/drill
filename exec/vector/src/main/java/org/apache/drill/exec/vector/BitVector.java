@@ -221,7 +221,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    Preconditions.checkArgument(this.field.getPath().equals(metadata.getNamePart().getName()), "The field %s doesn't match the provided metadata %s.", this.field, metadata);
+    Preconditions.checkArgument(this.field.getName().equals(metadata.getNamePart().getName()),
+                                "The field %s doesn't match the provided metadata %s.", this.field, metadata);
     final int valueCount = metadata.getValueCount();
     final int expectedLength = getSizeFromCount(valueCount);
     final int actualLength = metadata.getBufferLength();
@@ -280,7 +281,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       if (target.data != null) {
         target.data.release();
       }
-      target.data = (DrillBuf) data.slice(firstByte, byteSize);
+      target.data = data.slice(firstByte, byteSize);
       target.data.retain(1);
     } else {
       // Copy data
@@ -528,8 +529,13 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public int getPayloadByteCount() {
-    // One byte per value
-    return valueCount;
+  public int getPayloadByteCount(int valueCount) {
+    return getSizeFromCount(valueCount);
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    NullableBitVector dest = (NullableBitVector) nullableVector;
+    dest.getMutator().fromNotNullable(this);
   }
 }

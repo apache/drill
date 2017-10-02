@@ -39,10 +39,13 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.util.GuavaPatcher;
 import org.apache.drill.test.DrillTest;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.junit.After;
 import org.junit.BeforeClass;
 
 import java.io.File;
+import java.io.IOException;
 
 
 public class ExecTest extends DrillTest {
@@ -65,8 +68,19 @@ public class ExecTest extends DrillTest {
   public static void setupOptionManager() throws Exception{
     final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(c);
     provider.start();
-    optionManager = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), provider);
+    optionManager = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), provider,c);
     optionManager.init();
+  }
+
+  /**
+   * Creates instance of local file system.
+   *
+   * @return local file system
+   */
+  public static FileSystem getLocalFileSystem() throws IOException {
+    Configuration configuration = new Configuration();
+    configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
+    return FileSystem.get(configuration);
   }
 
   /**

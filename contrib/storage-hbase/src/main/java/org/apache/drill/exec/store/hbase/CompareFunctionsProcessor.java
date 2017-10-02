@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -50,7 +50,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {
+public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {
   private byte[] value;
   private boolean success;
   private boolean isEqualityFn;
@@ -62,31 +62,37 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
   // If the query is on row-key prefix, we cannot use a standard template to identify startRow, stopRow and filter
   // Hence, we use these local variables(set depending upon the encoding type in user query)
   private boolean isRowKeyPrefixComparison;
-  byte[] rowKeyPrefixStartRow;
-  byte[] rowKeyPrefixStopRow;
-  Filter rowKeyPrefixFilter;
+  private byte[] rowKeyPrefixStartRow;
+  private byte[] rowKeyPrefixStopRow;
+  private Filter rowKeyPrefixFilter;
 
   public static boolean isCompareFunction(String functionName) {
     return COMPARE_FUNCTIONS_TRANSPOSE_MAP.keySet().contains(functionName);
   }
 
-  public static CompareFunctionsProcessor process(FunctionCall call, boolean nullComparatorSupported) {
+  public static CompareFunctionsProcessor createFunctionsProcessorInstance(FunctionCall call, boolean nullComparatorSupported) {
     String functionName = call.getName();
-    LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
     CompareFunctionsProcessor evaluator = new CompareFunctionsProcessor(functionName);
 
+    return createFunctionsProcessorInstanceInternal(call, nullComparatorSupported, evaluator);
+  }
+
+  protected static <T extends CompareFunctionsProcessor> T createFunctionsProcessorInstanceInternal(FunctionCall call,
+                                                                                                    boolean nullComparatorSupported,
+                                                                                                    T evaluator) {
+    LogicalExpression nameArg = call.args.get(0);
+    LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
     if (valueArg != null) { // binary function
       if (VALUE_EXPRESSION_CLASSES.contains(nameArg.getClass())) {
         LogicalExpression swapArg = valueArg;
         valueArg = nameArg;
         nameArg = swapArg;
-        evaluator.functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
+        evaluator.setFunctionName(COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(evaluator.getFunctionName()));
       }
-      evaluator.success = nameArg.accept(evaluator, valueArg);
+      evaluator.setSuccess(nameArg.accept(evaluator, valueArg));
     } else if (nullComparatorSupported && call.args.get(0) instanceof SchemaPath) {
-      evaluator.success = true;
-      evaluator.path = (SchemaPath) nameArg;
+      evaluator.setSuccess(true);
+      evaluator.setPath((SchemaPath) nameArg);
     }
 
     return evaluator;
@@ -109,12 +115,24 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     return success;
   }
 
+  protected void setSuccess(boolean success) {
+    this.success = success;
+  }
+
   public SchemaPath getPath() {
     return path;
   }
 
+  protected void setPath(SchemaPath path) {
+    this.path = path;
+  }
+
   public String getFunctionName() {
     return functionName;
+  }
+
+  protected void setFunctionName(String functionName) {
+    this.functionName = functionName;
   }
 
   public boolean isRowKeyPrefixComparison() {
@@ -137,6 +155,10 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     return sortOrderAscending;
   }
 
+  protected void setSortOrderAscending(boolean sortOrderAscending) {
+    this.sortOrderAscending = sortOrderAscending;
+  }
+
   @Override
   public Boolean visitCastExpression(CastExpression e, LogicalExpression valueArg) throws RuntimeException {
     if (e.getInput() instanceof CastExpression || e.getInput() instanceof SchemaPath) {
@@ -147,10 +169,10 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
 
   @Override
   public Boolean visitConvertExpression(ConvertExpression e, LogicalExpression valueArg) throws RuntimeException {
-    if (e.getConvertFunction() == ConvertExpression.CONVERT_FROM) {
+    if (ConvertExpression.CONVERT_FROM.equals(e.getConvertFunction())) {
 
       String encodingType = e.getEncodingType();
-      int prefixLength    = 0;
+      int prefixLength;
 
       // Handle scan pruning in the following scenario:
       // The row-key is a composite key and the CONVERT_FROM() function has byte_substr() as input function which is
@@ -160,7 +182,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       if (e.getInput() instanceof FunctionCall) {
 
         // We can prune scan range only for big-endian encoded data
-        if (encodingType.endsWith("_BE") == false) {
+        if (!encodingType.endsWith("_BE")) {
           return false;
         }
 
@@ -174,21 +196,21 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         LogicalExpression valueArg1 = call.args.size() >= 2 ? call.args.get(1) : null;
         LogicalExpression valueArg2 = call.args.size() >= 3 ? call.args.get(2) : null;
 
-        if (((nameArg instanceof SchemaPath) == false) ||
-             (valueArg1 == null) || ((valueArg1 instanceof IntExpression) == false) ||
-             (valueArg2 == null) || ((valueArg2 instanceof IntExpression) == false)) {
+        if (!(nameArg instanceof SchemaPath)
+            || (valueArg1 == null) || !(valueArg1 instanceof IntExpression)
+            || (valueArg2 == null) || !(valueArg2 instanceof IntExpression)) {
           return false;
         }
 
-        boolean isRowKey = ((SchemaPath)nameArg).getAsUnescapedPath().equals(DrillHBaseConstants.ROW_KEY);
-        int offset = ((IntExpression)valueArg1).getInt();
+        boolean isRowKey = ((SchemaPath) nameArg).getRootSegmentPath().equals(DrillHBaseConstants.ROW_KEY);
+        int offset = ((IntExpression) valueArg1).getInt();
 
-        if (!isRowKey || (offset != 1)) {
+        if (!isRowKey || offset != 1) {
           return false;
         }
 
-        this.path    = (SchemaPath)nameArg;
-        prefixLength = ((IntExpression)valueArg2).getInt();
+        this.path = (SchemaPath) nameArg;
+        prefixLength = ((IntExpression) valueArg2).getInt();
         this.isRowKeyPrefixComparison = true;
         return visitRowKeyPrefixConvertExpression(e, prefixLength, valueArg);
       }
@@ -196,123 +218,125 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       if (e.getInput() instanceof SchemaPath) {
         ByteBuf bb = null;
         switch (encodingType) {
-        case "INT_BE":
-        case "INT":
-        case "UINT_BE":
-        case "UINT":
-        case "UINT4_BE":
-        case "UINT4":
-          if (valueArg instanceof IntExpression
-              && (isEqualityFn || encodingType.startsWith("U"))) {
-            bb = newByteBuf(4, encodingType.endsWith("_BE"));
-            bb.writeInt(((IntExpression)valueArg).getInt());
-          }
-          break;
-        case "BIGINT_BE":
-        case "BIGINT":
-        case "UINT8_BE":
-        case "UINT8":
-          if (valueArg instanceof LongExpression
-              && (isEqualityFn || encodingType.startsWith("U"))) {
-            bb = newByteBuf(8, encodingType.endsWith("_BE"));
-            bb.writeLong(((LongExpression)valueArg).getLong());
-          }
-          break;
-        case "FLOAT":
-          if (valueArg instanceof FloatExpression && isEqualityFn) {
-          bb = newByteBuf(4, true);
-            bb.writeFloat(((FloatExpression)valueArg).getFloat());
-          }
-          break;
-        case "DOUBLE":
-          if (valueArg instanceof DoubleExpression && isEqualityFn) {
-            bb = newByteBuf(8, true);
-            bb.writeDouble(((DoubleExpression)valueArg).getDouble());
-          }
-          break;
-        case "TIME_EPOCH":
-        case "TIME_EPOCH_BE":
-          if (valueArg instanceof TimeExpression) {
-            bb = newByteBuf(8, encodingType.endsWith("_BE"));
-            bb.writeLong(((TimeExpression)valueArg).getTime());
-          }
-          break;
-        case "DATE_EPOCH":
-        case "DATE_EPOCH_BE":
-          if (valueArg instanceof DateExpression) {
-            bb = newByteBuf(8, encodingType.endsWith("_BE"));
-            bb.writeLong(((DateExpression)valueArg).getDate());
-          }
-          break;
-        case "BOOLEAN_BYTE":
-          if (valueArg instanceof BooleanExpression) {
-            bb = newByteBuf(1, false /* does not matter */);
-            bb.writeByte(((BooleanExpression)valueArg).getBoolean() ? 1 : 0);
-          }
-          break;
-        case "DOUBLE_OB":
-        case "DOUBLE_OBD":
-          if (valueArg instanceof DoubleExpression) {
-            bb = newByteBuf(9, true);
-            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 9);
-            if (encodingType.endsWith("_OBD")) {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br,
-                  ((DoubleExpression)valueArg).getDouble(), Order.DESCENDING);
-              this.sortOrderAscending = false;
-            } else {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br,
-                  ((DoubleExpression)valueArg).getDouble(), Order.ASCENDING);
+          case "INT_BE":
+          case "INT":
+          case "UINT_BE":
+          case "UINT":
+          case "UINT4_BE":
+          case "UINT4":
+            if (valueArg instanceof IntExpression
+                && (isEqualityFn || encodingType.startsWith("U"))) {
+              bb = newByteBuf(4, encodingType.endsWith("_BE"));
+              bb.writeInt(((IntExpression) valueArg).getInt());
             }
-          }
-          break;
-        case "FLOAT_OB":
-        case "FLOAT_OBD":
-          if (valueArg instanceof FloatExpression) {
-            bb = newByteBuf(5, true);
-            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 5);
-            if (encodingType.endsWith("_OBD")) {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br,
-                  ((FloatExpression)valueArg).getFloat(), Order.DESCENDING);
-              this.sortOrderAscending = false;
-            } else {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br,
-                        ((FloatExpression)valueArg).getFloat(), Order.ASCENDING);
+            break;
+          case "BIGINT_BE":
+          case "BIGINT":
+          case "UINT8_BE":
+          case "UINT8":
+            if (valueArg instanceof LongExpression
+                && (isEqualityFn || encodingType.startsWith("U"))) {
+              bb = newByteBuf(8, encodingType.endsWith("_BE"));
+              bb.writeLong(((LongExpression) valueArg).getLong());
             }
-          }
-          break;
-        case "BIGINT_OB":
-        case "BIGINT_OBD":
-          if (valueArg instanceof LongExpression) {
-            bb = newByteBuf(9, true);
-            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 9);
-            if (encodingType.endsWith("_OBD")) {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br,
-                        ((LongExpression)valueArg).getLong(), Order.DESCENDING);
-              this.sortOrderAscending = false;
-            } else {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br,
-                  ((LongExpression)valueArg).getLong(), Order.ASCENDING);
+            break;
+          case "FLOAT":
+            if (valueArg instanceof FloatExpression && isEqualityFn) {
+              bb = newByteBuf(4, true);
+              bb.writeFloat(((FloatExpression) valueArg).getFloat());
             }
-          }
-          break;
-        case "INT_OB":
-        case "INT_OBD":
-          if (valueArg instanceof IntExpression) {
-            bb = newByteBuf(5, true);
-            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 5);
-            if (encodingType.endsWith("_OBD")) {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br,
-                  ((IntExpression)valueArg).getInt(), Order.DESCENDING);
-              this.sortOrderAscending = false;
-            } else {
-              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br,
-                        ((IntExpression)valueArg).getInt(), Order.ASCENDING);
+            break;
+          case "DOUBLE":
+            if (valueArg instanceof DoubleExpression && isEqualityFn) {
+              bb = newByteBuf(8, true);
+              bb.writeDouble(((DoubleExpression) valueArg).getDouble());
             }
-          }
-          break;
-        case "UTF8":
-          // let visitSchemaPath() handle this.
-          return e.getInput().accept(this, valueArg);
+            break;
+          case "TIME_EPOCH":
+          case "TIME_EPOCH_BE":
+            if (valueArg instanceof TimeExpression) {
+              bb = newByteBuf(8, encodingType.endsWith("_BE"));
+              bb.writeLong(((TimeExpression) valueArg).getTime());
+            }
+            break;
+          case "DATE_EPOCH":
+          case "DATE_EPOCH_BE":
+            if (valueArg instanceof DateExpression) {
+              bb = newByteBuf(8, encodingType.endsWith("_BE"));
+              bb.writeLong(((DateExpression) valueArg).getDate());
+            }
+            break;
+          case "BOOLEAN_BYTE":
+            if (valueArg instanceof BooleanExpression) {
+              bb = newByteBuf(1, false /* does not matter */);
+              bb.writeByte(((BooleanExpression) valueArg).getBoolean() ? 1 : 0);
+            }
+            break;
+          case "DOUBLE_OB":
+          case "DOUBLE_OBD":
+            if (valueArg instanceof DoubleExpression) {
+              bb = newByteBuf(9, true);
+              PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 9);
+              if (encodingType.endsWith("_OBD")) {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br,
+                  ((DoubleExpression) valueArg).getDouble(), Order.DESCENDING);
+                this.sortOrderAscending = false;
+              } else {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br,
+                  ((DoubleExpression) valueArg).getDouble(), Order.ASCENDING);
+              }
+            }
+            break;
+          case "FLOAT_OB":
+          case "FLOAT_OBD":
+            if (valueArg instanceof FloatExpression) {
+              bb = newByteBuf(5, true);
+              PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 5);
+              if (encodingType.endsWith("_OBD")) {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br,
+                  ((FloatExpression) valueArg).getFloat(), Order.DESCENDING);
+                this.sortOrderAscending = false;
+              } else {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br,
+                          ((FloatExpression) valueArg).getFloat(), Order.ASCENDING);
+              }
+            }
+            break;
+          case "BIGINT_OB":
+          case "BIGINT_OBD":
+            if (valueArg instanceof LongExpression) {
+              bb = newByteBuf(9, true);
+              PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 9);
+              if (encodingType.endsWith("_OBD")) {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br,
+                          ((LongExpression) valueArg).getLong(), Order.DESCENDING);
+                this.sortOrderAscending = false;
+              } else {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br,
+                  ((LongExpression) valueArg).getLong(), Order.ASCENDING);
+              }
+            }
+            break;
+          case "INT_OB":
+          case "INT_OBD":
+            if (valueArg instanceof IntExpression) {
+              bb = newByteBuf(5, true);
+              PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 5);
+              if (encodingType.endsWith("_OBD")) {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br,
+                  ((IntExpression) valueArg).getInt(), Order.DESCENDING);
+                this.sortOrderAscending = false;
+              } else {
+                org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br,
+                          ((IntExpression) valueArg).getInt(), Order.ASCENDING);
+              }
+            }
+            break;
+          case "UTF8":
+            // let visitSchemaPath() handle this.
+            return e.getInput().accept(this, valueArg);
+          default:
+            bb = getByteBuf(valueArg, encodingType);
         }
 
         if (bb != null) {
@@ -325,53 +349,57 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     return false;
   }
 
+  protected ByteBuf getByteBuf(LogicalExpression valueArg, String encodingType) {
+    return null;
+  }
+
   private Boolean visitRowKeyPrefixConvertExpression(ConvertExpression e,
-    int prefixLength, LogicalExpression valueArg) {
+                                                     int prefixLength, LogicalExpression valueArg) {
     String encodingType = e.getEncodingType();
     rowKeyPrefixStartRow = HConstants.EMPTY_START_ROW;
-    rowKeyPrefixStopRow  = HConstants.EMPTY_START_ROW;
-    rowKeyPrefixFilter   = null;
+    rowKeyPrefixStopRow = HConstants.EMPTY_START_ROW;
+    rowKeyPrefixFilter = null;
 
-    if ((encodingType.compareTo("UINT4_BE") == 0) ||
-        (encodingType.compareTo("UINT_BE") == 0)) {
+    if ((encodingType.compareTo("UINT4_BE") == 0)
+        || (encodingType.compareTo("UINT_BE") == 0)) {
       if (prefixLength != 4) {
         throw new RuntimeException("Invalid length(" + prefixLength + ") of row-key prefix");
       }
 
       int val;
-      if ((valueArg instanceof IntExpression) == false) {
+      if (!(valueArg instanceof IntExpression)) {
         return false;
       }
 
-      val = ((IntExpression)valueArg).getInt();
+      val = ((IntExpression) valueArg).getInt();
 
       // For TIME_EPOCH_BE/BIGINT_BE encoding, the operators that we push-down are =, <>, <, <=, >, >=
       switch (functionName) {
-      case "equal":
-      rowKeyPrefixFilter = new PrefixFilter(ByteBuffer.allocate(4).putInt(val).array());
-      rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val).array();
-      rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val + 1).array();
-      return true;
-    case "greater_than_or_equal_to":
-      rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val).array();
-        return true;
-      case "greater_than":
-      rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val + 1).array();
-        return true;
-      case "less_than_or_equal_to":
-        rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val + 1).array();
-        return true;
-      case "less_than":
-        rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val).array();
-        return true;
+        case "equal":
+          rowKeyPrefixFilter = new PrefixFilter(ByteBuffer.allocate(4).putInt(val).array());
+          rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val).array();
+          rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val + 1).array();
+          return true;
+        case "greater_than_or_equal_to":
+          rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val).array();
+          return true;
+        case "greater_than":
+          rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val + 1).array();
+          return true;
+        case "less_than_or_equal_to":
+          rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val + 1).array();
+          return true;
+        case "less_than":
+          rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val).array();
+          return true;
       }
 
       return false;
     }
 
-    if ((encodingType.compareTo("TIMESTAMP_EPOCH_BE") == 0) ||
-        (encodingType.compareTo("TIME_EPOCH_BE") == 0) ||
-        (encodingType.compareTo("UINT8_BE") == 0)) {
+    if ((encodingType.compareTo("TIMESTAMP_EPOCH_BE") == 0)
+        || (encodingType.compareTo("TIME_EPOCH_BE") == 0)
+        || (encodingType.compareTo("UINT8_BE") == 0)) {
 
       if (prefixLength != 8) {
         throw new RuntimeException("Invalid length(" + prefixLength + ") of row-key prefix");
@@ -379,23 +407,23 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
 
       long val;
       if (encodingType.compareTo("TIME_EPOCH_BE") == 0) {
-        if ((valueArg instanceof TimeExpression) == false) {
+        if (!(valueArg instanceof TimeExpression)) {
           return false;
         }
 
-        val = ((TimeExpression)valueArg).getTime();
-      } else if (encodingType.compareTo("UINT8_BE") == 0){
-        if ((valueArg instanceof LongExpression) == false) {
+        val = ((TimeExpression) valueArg).getTime();
+      } else if (encodingType.compareTo("UINT8_BE") == 0) {
+        if (!(valueArg instanceof LongExpression)) {
           return false;
         }
 
-        val = ((LongExpression)valueArg).getLong();
+        val = ((LongExpression) valueArg).getLong();
       } else if (encodingType.compareTo("TIMESTAMP_EPOCH_BE") == 0) {
-        if ((valueArg instanceof TimeStampExpression) == false) {
+        if (!(valueArg instanceof TimeStampExpression)) {
           return false;
         }
 
-        val = ((TimeStampExpression)valueArg).getTimeStamp();
+        val = ((TimeStampExpression) valueArg).getTimeStamp();
       } else {
         // Should not reach here.
         return false;
@@ -403,30 +431,30 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
 
       // For TIME_EPOCH_BE/BIGINT_BE encoding, the operators that we push-down are =, <>, <, <=, >, >=
       switch (functionName) {
-      case "equal":
-        rowKeyPrefixFilter = new PrefixFilter(ByteBuffer.allocate(8).putLong(val).array());
-        rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val).array();
-        rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val + 1).array();
-        return true;
-      case "greater_than_or_equal_to":
-        rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val).array();
-        return true;
-      case "greater_than":
-        rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val + 1).array();
-        return true;
-      case "less_than_or_equal_to":
-        rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val + 1).array();
-        return true;
-      case "less_than":
-        rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val).array();
-        return true;
+        case "equal":
+          rowKeyPrefixFilter = new PrefixFilter(ByteBuffer.allocate(8).putLong(val).array());
+          rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val).array();
+          rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val + 1).array();
+          return true;
+        case "greater_than_or_equal_to":
+          rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val).array();
+          return true;
+        case "greater_than":
+          rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val + 1).array();
+          return true;
+        case "less_than_or_equal_to":
+          rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val + 1).array();
+          return true;
+        case "less_than":
+          rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val).array();
+          return true;
       }
 
       return false;
     }
 
     if (encodingType.compareTo("DATE_EPOCH_BE") == 0) {
-      if ((valueArg instanceof DateExpression) == false) {
+      if (!(valueArg instanceof DateExpression)) {
         return false;
       }
 
@@ -434,41 +462,41 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         throw new RuntimeException("Invalid length(" + prefixLength + ") of row-key prefix");
       }
 
-      final long MILLISECONDS_IN_A_DAY  = (long)1000 * 60 * 60 * 24;
+      final long MILLISECONDS_IN_A_DAY = 1000 * 60 * 60 * 24;
       long dateToSet;
       // For DATE encoding, the operators that we push-down are =, <>, <, <=, >, >=
       switch (functionName) {
-      case "equal":
-        long startDate = ((DateExpression)valueArg).getDate();
-        rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(startDate).array();
-        long stopDate  = ((DateExpression)valueArg).getDate() + MILLISECONDS_IN_A_DAY;
-        rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(stopDate).array();
-        return true;
-      case "greater_than_or_equal_to":
-        dateToSet = ((DateExpression)valueArg).getDate();
-        rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
-        return true;
-      case "greater_than":
-        dateToSet = ((DateExpression)valueArg).getDate() + MILLISECONDS_IN_A_DAY;
-        rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
-        return true;
-      case "less_than_or_equal_to":
-        dateToSet = ((DateExpression)valueArg).getDate() + MILLISECONDS_IN_A_DAY;
-        rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
-        return true;
-      case "less_than":
-        dateToSet = ((DateExpression)valueArg).getDate();
-        rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
-        return true;
+        case "equal":
+          long startDate = ((DateExpression) valueArg).getDate();
+          rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(startDate).array();
+          long stopDate = ((DateExpression) valueArg).getDate() + MILLISECONDS_IN_A_DAY;
+          rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(stopDate).array();
+          return true;
+        case "greater_than_or_equal_to":
+          dateToSet = ((DateExpression) valueArg).getDate();
+          rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
+          return true;
+        case "greater_than":
+          dateToSet = ((DateExpression) valueArg).getDate() + MILLISECONDS_IN_A_DAY;
+          rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
+          return true;
+        case "less_than_or_equal_to":
+          dateToSet = ((DateExpression) valueArg).getDate() + MILLISECONDS_IN_A_DAY;
+          rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
+          return true;
+        case "less_than":
+          dateToSet = ((DateExpression) valueArg).getDate();
+          rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
+          return true;
       }
 
       return false;
+    }
+
+    return false;
   }
 
-  return false;
-}
-
-@Override
+  @Override
   public Boolean visitUnknown(LogicalExpression e, LogicalExpression valueArg) throws RuntimeException {
     return false;
   }
@@ -483,7 +511,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     return false;
   }
 
-  private static ByteBuf newByteBuf(int size, boolean bigEndian) {
+  protected static ByteBuf newByteBuf(int size, boolean bigEndian) {
     return Unpooled.wrappedBuffer(new byte[size])
         .order(bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN)
         .writerIndex(0);
@@ -525,5 +553,4 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         .put("less_than", "greater_than")
         .build();
   }
-
 }

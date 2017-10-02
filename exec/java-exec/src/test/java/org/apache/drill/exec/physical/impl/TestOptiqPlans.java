@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -142,7 +142,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().getPath());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -171,7 +171,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().getPath());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -200,7 +200,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().getPath());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -239,7 +239,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper vw : loader) {
-          System.out.println(vw.getValueVector().getField().getPath());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -278,7 +278,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper vw : loader) {
-          System.out.println(vw.getValueVector().getField().getPath());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);

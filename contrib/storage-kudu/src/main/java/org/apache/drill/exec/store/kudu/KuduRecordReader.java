@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -106,7 +106,7 @@ public class KuduRecordReader extends AbstractRecordReader {
       if (!isStarQuery()) {
         List<String> colNames = Lists.newArrayList();
         for (SchemaPath p : this.getColumns()) {
-          colNames.add(p.getAsUnescapedPath());
+          colNames.add(p.getRootSegmentPath());
         }
         builder.setProjectedColumnNames(colNames);
       }
@@ -199,7 +199,7 @@ public class KuduRecordReader extends AbstractRecordReader {
         majorType = Types.required(minorType);
       }
       MaterializedField field = MaterializedField.create(name, majorType);
-      final Class<? extends ValueVector> clazz = (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(
+      final Class<? extends ValueVector> clazz = TypeHelper.getValueVectorClass(
           minorType, majorType.getMode());
       ValueVector vector = output.addField(field, clazz);
       vector.allocateNew();

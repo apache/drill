@@ -17,8 +17,10 @@
  */
 
 import java.lang.Override;
+import java.util.Set;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
@@ -247,27 +249,26 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public int getAllocatedByteCount() {
-    return offsetVector.getAllocatedByteCount() + super.getAllocatedByteCount();
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    offsetVector.collectLedgers(ledgers);
+    super.collectLedgers(ledgers);
   }
 
   @Override
-  public int getPayloadByteCount() {
-    UInt${type.width}Vector.Accessor a = offsetVector.getAccessor();
-    int count = a.getValueCount();
-    if (count == 0) {
+  public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
       return 0;
-    } else {
-      // If 1 or more values, then the last value is set to
-      // the offset of the next value, which is the same as
-      // the length of existing values.
-      // In addition to the actual data bytes, we must also
-      // include the "overhead" bytes: the offset vector entries
-      // that accompany each column value. Thus, total payload
-      // size is consumed text bytes + consumed offset vector
-      // bytes.
-      return a.get(count-1) + offsetVector.getPayloadByteCount();
     }
+    // If 1 or more values, then the last value is set to
+    // the offset of the next value, which is the same as
+    // the length of existing values.
+    // In addition to the actual data bytes, we must also
+    // include the "overhead" bytes: the offset vector entries
+    // that accompany each column value. Thus, total payload
+    // size is consumed text bytes + consumed offset vector
+    // bytes.
+    return offsetVector.getAccessor().get(valueCount) +
+           offsetVector.getPayloadByteCount(valueCount);
   }
 
   private class TransferImpl implements TransferPair{
@@ -308,7 +309,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     if (size > MAX_ALLOCATION_SIZE) {
       throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
-    allocationSizeInBytes = (int)size;
+    allocationSizeInBytes = (int) size;
     offsetVector.setInitialCapacity(valueCount + 1);
   }
 
@@ -361,7 +362,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     try {
       data = allocator.buffer(totalBytes);
       offsetVector.allocateNew(valueCount + 1);
-    } catch (DrillRuntimeException e) {
+    } catch (RuntimeException e) {
       clear();
       throw e;
     }
@@ -385,7 +386,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       throw new OversizedAllocationException("Unable to expand the buffer. Max allowed buffer size is reached.");
     }
 
-    logger.trace("Reallocating VarChar, new size {}",newAllocationSize);
+    logger.trace("Reallocating VarChar, new size {}", newAllocationSize);
     final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();
@@ -419,6 +420,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     super.exchange(other);
     ${minor.class}Vector target = (${minor.class}Vector) other;
     offsetVector.exchange(target.offsetVector);
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    Nullable${minor.class}Vector dest = (Nullable${minor.class}Vector) nullableVector;
+    dest.getMutator().fromNotNullable(this);
   }
 
   public final class Accessor extends BaseValueVector.BaseAccessor implements VariableWidthAccessor {
