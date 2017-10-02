@@ -176,19 +176,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }
-    verifyColumns();
-  }
-
-  private void verifyColumns() {
-    if (Utilities.isStarQuery(columns)) {
-      return;
-    }
-    for (SchemaPath column : columns) {
-      if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-        DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
-            column.getRootSegment().getPath(), hTableDesc.getNameAsString());
-      }
-    }
+    HBaseUtils.verifyColumns(columns, hTableDesc);
   }
 
   @Override

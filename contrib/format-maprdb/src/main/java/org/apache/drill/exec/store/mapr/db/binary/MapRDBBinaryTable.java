@@ -15,15 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.hbase;
+package org.apache.drill.exec.store.mapr.db.binary;
 
 
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
+import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.hbase.AbstractHBaseDrillTable;
+import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 
-public class DrillHBaseTable extends AbstractHBaseDrillTable {
+public class MapRDBBinaryTable extends AbstractHBaseDrillTable {
 
-  public DrillHBaseTable(String storageEngineName, HBaseStoragePlugin plugin, HBaseScanSpec scanSpec) {
-    super(storageEngineName, plugin, scanSpec);
-    setTableDesc(plugin.getConnection(), scanSpec.getTableName());
+  public MapRDBBinaryTable(String storageEngineName, FileSystemPlugin storagePlugin, MapRDBFormatPlugin formatPlugin,
+      FormatSelection selection) {
+    super(storageEngineName, storagePlugin, selection);
+    setTableDesc(formatPlugin.getConnection(), formatPlugin.getTableName(selection.getSelection()));
   }
 
 }
