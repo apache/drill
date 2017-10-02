@@ -292,9 +292,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       testParquetFilterPD(query1, 9, 3, false);
 
     } finally {
-      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
-      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY  + "` = " +
-        testOptionSet.getDefault(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY).bool_val);
+      resetSessionOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY);
       deleteTableIfExists(tableName);
     }
   }
@@ -317,9 +315,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       testParquetFilterPD(query1, 9, 3, false);
 
     } finally {
-      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
-      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY + "` = " +
-        testOptionSet.getDefault(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY).num_val);
+      resetSessionOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY);
       deleteTableIfExists(tableName);
     }
   }

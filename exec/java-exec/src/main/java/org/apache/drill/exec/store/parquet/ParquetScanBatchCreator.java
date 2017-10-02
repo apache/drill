@@ -57,6 +57,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   private static final String ENABLE_BYTES_TOTAL_COUNTER = "parquet.benchmark.bytes.total";
   private static final String ENABLE_TIME_READ_COUNTER = "parquet.benchmark.time.read";
 
+  @SuppressWarnings("resource")
   @Override
   public ScanBatch getBatch(FragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children)
       throws ExecutionSetupException {
@@ -119,7 +120,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
         if (logger.isDebugEnabled()) {
           logger.debug(containsCorruptDates.toString());
         }
-        if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
+        if (!context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER) && !isComplex(footers.get(e.getPath()))) {
           readers.add(
               new ParquetRecordReader(
                   context, e.getPath(), e.getRowGroupIndex(), e.getNumRecordsToRead(), fs,

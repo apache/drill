@@ -32,10 +32,7 @@ public class InMemoryStoreProvider implements PersistentStoreProvider {
   }
 
   @Override
-  public void close() throws Exception {
-    // TODO Auto-generated method stub
-
-  }
+  public void close() throws Exception { }
 
   @Override
   public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) throws StoreException {
@@ -43,9 +40,5 @@ public class InMemoryStoreProvider implements PersistentStoreProvider {
   }
 
   @Override
-  public void start() throws Exception {
-    // TODO Auto-generated method stub
-
-  }
-
+  public void start() throws Exception { }
 }

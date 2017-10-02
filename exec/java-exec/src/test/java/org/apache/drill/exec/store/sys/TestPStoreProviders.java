@@ -34,7 +34,7 @@ import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvid
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.testutils.DirTestWatcher;
 import org.apache.zookeeper.CreateMode;
 import org.junit.Assert;
@@ -85,7 +85,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
 
     org.apache.commons.io.FileUtils.copyDirectory(localOptionsResources, optionsDir);
 
-    FixtureBuilder builder = ClusterFixture.builder().
+    ClusterFixtureBuilder builder = ClusterFixture.builder().
       configProperty(ExecConstants.HTTP_ENABLE, false).
       configProperty(ExecConstants.SYS_STORE_PROVIDER_CLASS, LocalPersistentStoreProvider.class.getCanonicalName()).
       configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, String.format("file://%s", dirTestWatcher.getDirPath())).

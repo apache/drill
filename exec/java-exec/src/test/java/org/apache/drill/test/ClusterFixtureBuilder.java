@@ -32,7 +32,7 @@ import org.apache.drill.exec.server.options.OptionDefinition;
  * a max width (parallelization) of 2.
  */
 
-public class FixtureBuilder {
+public class ClusterFixtureBuilder {
 
   public static class RuntimeOption {
     public String key;
@@ -88,7 +88,7 @@ public class FixtureBuilder {
    * @see {@link #configProperty(String, Object)}
    */
 
-  public FixtureBuilder configResource(String configResource) {
+  public ClusterFixtureBuilder configResource(String configResource) {
 
     // TypeSafe gets unhappy about a leading slash, but other functions
     // require it. Silently discard the leading slash if given to
@@ -101,7 +101,7 @@ public class FixtureBuilder {
   /**
    *
    */
-   public FixtureBuilder setOptionDefault(String key, Object value) {
+   public ClusterFixtureBuilder setOptionDefault(String key, Object value) {
      String option_name = OPTION_DEFAULTS_ROOT + key;
      configBuilder().put(option_name, value.toString());
      return this;
@@ -113,12 +113,12 @@ public class FixtureBuilder {
    * @return this builder
    */
 
-  public FixtureBuilder configProperty(String key, Object value) {
+  public ClusterFixtureBuilder configProperty(String key, Object value) {
     configBuilder.put(key, value.toString());
     return this;
   }
 
-  public FixtureBuilder putDefinition(OptionDefinition definition) {
+  public ClusterFixtureBuilder putDefinition(OptionDefinition definition) {
     configBuilder.putDefinition(definition);
     return this;
   }
@@ -130,7 +130,7 @@ public class FixtureBuilder {
    * @param value property value
    * @return this builder
    */
-  public FixtureBuilder configClientProperty(String key, Object value) {
+  public ClusterFixtureBuilder configClientProperty(String key, Object value) {
     if (clientProps == null) {
       clientProps = new Properties();
     }
@@ -148,7 +148,7 @@ public class FixtureBuilder {
    * @see {@link ClusterFixture#alterSession(String, Object)}
    */
 
-  public FixtureBuilder sessionOption(String key, Object value) {
+  public ClusterFixtureBuilder sessionOption(String key, Object value) {
     if (sessionOptions == null) {
       sessionOptions = new ArrayList<>();
     }
@@ -166,7 +166,7 @@ public class FixtureBuilder {
    * @see {@link ClusterFixture#alterSystem(String, Object)}
    */
 
-  public FixtureBuilder systemOption(String key, Object value) {
+  public ClusterFixtureBuilder systemOption(String key, Object value) {
     if (systemOptions == null) {
       systemOptions = new ArrayList<>();
     }
@@ -181,7 +181,7 @@ public class FixtureBuilder {
    * @param n the "max width per node" parallelization option.
    * @return this builder
    */
-  public FixtureBuilder maxParallelization(int n) {
+  public ClusterFixtureBuilder maxParallelization(int n) {
     return sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, n);
   }
 
@@ -191,7 +191,7 @@ public class FixtureBuilder {
    * @param n the desired cluster size
    * @return this builder
    */
-  public FixtureBuilder clusterSize(int n) {
+  public ClusterFixtureBuilder clusterSize(int n) {
     bitCount = n;
     bitNames = null;
     return this;
@@ -204,7 +204,7 @@ public class FixtureBuilder {
    * @param bitNames array of (unique) Drillbit names
    * @return this builder
    */
-  public FixtureBuilder withBits(String bitNames[]) {
+  public ClusterFixtureBuilder withBits(String bitNames[]) {
     this.bitNames = bitNames;
     bitCount = bitNames.length;
     return this;
@@ -216,11 +216,11 @@ public class FixtureBuilder {
    * Drillbits.
    * @return this builder
    */
-  public FixtureBuilder withLocalZk() {
+  public ClusterFixtureBuilder withLocalZk() {
     return withLocalZk(1);
   }
 
-  public FixtureBuilder withLocalZk(int count) {
+  public ClusterFixtureBuilder withLocalZk(int count) {
     localZkCount = count;
     usingZk = true;
 
@@ -229,7 +229,7 @@ public class FixtureBuilder {
     return configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
   }
 
-  public FixtureBuilder withRemoteZk(String connStr) {
+  public ClusterFixtureBuilder withRemoteZk(String connStr) {
     usingZk = true;
     return configProperty(ExecConstants.ZK_CONNECTION, connStr);
   }
@@ -242,7 +242,7 @@ public class FixtureBuilder {
    * @param zk the global Zookeeper to use
    * @return this builder
    */
-  public FixtureBuilder withZk(ZookeeperHelper zk) {
+  public ClusterFixtureBuilder withZk(ZookeeperHelper zk) {
     zkHelper = zk;
     usingZk = true;
 
@@ -252,7 +252,7 @@ public class FixtureBuilder {
     return this;
   }
 
-  public FixtureBuilder tempDir(File path) {
+  public ClusterFixtureBuilder tempDir(File path) {
     this.tempDir = path;
     return this;
   }
@@ -274,7 +274,7 @@ public class FixtureBuilder {
    * @return this builder
    */
 
-  public FixtureBuilder keepLocalFiles() {
+  public ClusterFixtureBuilder keepLocalFiles() {
     preserveLocalFiles = true;
     return this;
   }
@@ -290,7 +290,7 @@ public class FixtureBuilder {
    * @return this builder
    */
 
-  public FixtureBuilder saveProfiles() {
+  public ClusterFixtureBuilder saveProfiles() {
     configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
     systemOption(ExecConstants.ENABLE_QUERY_PROFILE_OPTION, true);
     systemOption(ExecConstants.QUERY_PROFILE_DEBUG_OPTION, true);

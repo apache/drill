@@ -132,14 +132,12 @@ public class ClientFixture implements AutoCloseable {
    * @param key
    */
 
-  public void resetSystem(String key) {
-    String sql = "ALTER SYSTEM RESET `" + key + "`";
-    runSqlSilently(sql);
+  public void resetSession(String key) {
+    runSqlSilently("ALTER SESSION RESET `" + key + "`");
   }
 
-  public void resetSession(String key) {
-    String sql = "ALTER SESSION RESET `" + key + "`";
-    runSqlSilently(sql);
+  public void resetSystem(String key) {
+    runSqlSilently("ALTER SYSTEM RESET `" + key + "`");
   }
 
   /**

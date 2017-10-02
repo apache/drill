@@ -97,8 +97,7 @@ public class TestParquetWriterEmptyFiles extends BaseTestQuery {
         .go();
     } finally {
       // restore the session option
-      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
-      test("ALTER SESSION SET `store.parquet.block-size` = %d", optionSet.getDefault(ExecConstants.PARQUET_BLOCK_SIZE).num_val);
+      resetSessionOption(ExecConstants.PARQUET_BLOCK_SIZE);
       deleteTableIfExists(outputFile);
     }
   }

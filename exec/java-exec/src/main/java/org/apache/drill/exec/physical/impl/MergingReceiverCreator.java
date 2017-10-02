@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ import org.apache.drill.exec.work.batch.RawBatchBuffer;
 public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingReceiverCreator.class);
 
+  @SuppressWarnings("resource")
   @Override
   public MergingRecordBatch getBatch(FragmentContext context,
                               MergingReceiverPOP receiver,
@@ -45,6 +46,4 @@ public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> 
 
     return new MergingRecordBatch(context, receiver, buffers);
   }
-
-
 }

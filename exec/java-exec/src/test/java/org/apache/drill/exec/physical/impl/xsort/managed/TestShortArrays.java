@@ -83,7 +83,7 @@ public class TestShortArrays extends SubOperatorTest {
     assertEquals(bHint.elementCount, bCol.estElementCountPerArray, 0.001);
 
     // Create a new batch, and new vector, using the sizer and
-    // intializer inferred from the previoius batch.
+    // initializer inferred from the previous batch.
 
     SingleRowSet empty = fixture.rowSet(schema);
     vi.allocateBatch(empty.container(), 100);
