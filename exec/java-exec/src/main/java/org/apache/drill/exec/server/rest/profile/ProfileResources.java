@@ -194,6 +194,10 @@ public class ProfileResources {
       return finishedQueries;
     }
 
+    public int getMaxFetchedQueries() {
+      return work.getContext().getConfig().getInt(ExecConstants.HTTP_MAX_PROFILES);
+    }
+
     public List<String> getErrors() { return errors; }
   }
 
