@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -144,8 +144,8 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     HBaseGroupScan newScan = new HBaseGroupScan(this);
-    newScan.columns = columns == null ? ALL_COLUMNS : columns;;
-    newScan.verifyColumns();
+    newScan.columns = columns == null ? ALL_COLUMNS : columns;
+    HBaseUtils.verifyColumns(columns, hTableDesc);
     return newScan;
   }
 
@@ -177,19 +177,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }
-    verifyColumns();
-  }
-
-  private void verifyColumns() {
-    if (Utilities.isStarQuery(columns)) {
-      return;
-    }
-    for (SchemaPath column : columns) {
-      if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-        DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
-            column.getRootSegment().getPath(), hTableDesc.getNameAsString());
-      }
-    }
+    HBaseUtils.verifyColumns(columns, hTableDesc);
   }
 
   @Override
