@@ -20,7 +20,7 @@
  * tests and ad-hoc tests created while developing features. Key components
  * include:
  * <ul>
- * <li>{@link FixtureBuilder}: Builder pattern to create an embedded Drillbit,
+ * <li>{@link ClusterFixtureBuilder}: Builder pattern to create an embedded Drillbit,
  * or cluster of Drillbits, using a specified set of configuration, session
  * and system options.</li>
  * <li>{@link ClusterFixture}: The cluster created by the builder.</li>

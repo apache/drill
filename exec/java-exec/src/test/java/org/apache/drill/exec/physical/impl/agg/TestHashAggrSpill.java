@@ -28,7 +28,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.ProfileParser;
 import org.apache.drill.test.QueryBuilder;
@@ -94,7 +94,7 @@ public class TestHashAggrSpill {
           .logger("org.apache.drill", Level.WARN)
           ;
 
-        FixtureBuilder builder = ClusterFixture.builder()
+        ClusterFixtureBuilder builder = ClusterFixture.builder()
           .sessionOption(ExecConstants.HASHAGG_MAX_MEMORY_KEY,maxMem)
           .sessionOption(ExecConstants.HASHAGG_NUM_PARTITIONS_KEY,numPartitions)
           .sessionOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_KEY,minBatches)

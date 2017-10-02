@@ -78,6 +78,7 @@ import java.util.regex.Pattern;
 
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.test.ClusterFixture;
 
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
@@ -215,6 +216,7 @@ public class BaseTestQuery extends ExecTest {
       bits[i] = new Drillbit(config, serviceSet, classpathScan);
       bits[i].run();
 
+      @SuppressWarnings("resource")
       final StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();
       TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, dfsTestTmpSchemaLocation);
       TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
@@ -377,6 +379,25 @@ public class BaseTestQuery extends ExecTest {
     testNoResult(1, query, args);
   }
 
+  public static void alterSession(String option, Object value) {
+    String valueStr = ClusterFixture.stringify(value);
+    try {
+      test("ALTER SESSION SET `%s` = %s", option, valueStr);
+    } catch(final Exception e) {
+      fail(String.format("Failed to set session option `%s` = %s, Error: %s",
+          option, valueStr, e.toString()));
+    }
+  }
+
+  public static void resetSessionOption(String option) {
+    try {
+      test("ALTER SESSION RESET `%s`", option);
+    } catch(final Exception e) {
+      fail(String.format("Failed to reset session option `%s`, Error: %s",
+          option, e.toString()));
+    }
+  }
+
   protected static void testNoResult(int interation, String query, Object... args) throws Exception {
     query = String.format(query, args);
     logger.debug("Running query:\n--------------\n" + query);
@@ -440,8 +461,8 @@ public class BaseTestQuery extends ExecTest {
       } catch (AssertionError e) {
         e.addSuppressed(actualException);
         throw e;
+      }
     }
-  }
   }
 
   /**
@@ -479,23 +500,19 @@ public class BaseTestQuery extends ExecTest {
   }
 
   protected static void setSessionOption(final String option, final boolean value) {
-    setSessionOption(option, Boolean.toString(value));
+    alterSession(option, value);
   }
 
   protected static void setSessionOption(final String option, final long value) {
-    setSessionOption(option, Long.toString(value));
+    alterSession(option, value);
   }
 
   protected static void setSessionOption(final String option, final double value) {
-    setSessionOption(option, Double.toString(value));
+    alterSession(option, value);
   }
 
   protected static void setSessionOption(final String option, final String value) {
-    try {
-      runSQL(String.format("alter session set `%s` = %s", option, value));
-    } catch(final Exception e) {
-      fail(String.format("Failed to set session option `%s` = %s, Error: %s", option, value, e.toString()));
-    }
+    alterSession(option, value);
   }
 
   public static class SilentListener implements UserResultsListener {

@@ -131,11 +131,13 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   private void addOutputContainerData() {
+    @SuppressWarnings("resource")
     final VarCharVector fragmentIdVector = (VarCharVector) container.getValueAccessorById(
         VarCharVector.class,
         container.getValueVectorId(SchemaPath.getSimplePath("Fragment")).getFieldIds())
       .getValueVector();
     AllocationHelper.allocate(fragmentIdVector, 1, 50);
+    @SuppressWarnings("resource")
     final BigIntVector summaryVector = (BigIntVector) container.getValueAccessorById(BigIntVector.class,
             container.getValueVectorId(SchemaPath.getSimplePath("Number of records written")).getFieldIds())
           .getValueVector();

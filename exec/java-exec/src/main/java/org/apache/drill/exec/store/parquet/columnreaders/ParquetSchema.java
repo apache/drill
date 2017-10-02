@@ -118,7 +118,7 @@ public class ParquetSchema {
     loadParquetSchema();
     computeFixedPart();
 
-    if (! selectedColumnMetadata.isEmpty()  && allFieldsFixedLength) {
+    if (! selectedColumnMetadata.isEmpty() && allFieldsFixedLength) {
       recordsPerBatch = (int) Math.min(Math.min(batchSize / bitWidthAllFixedFields,
           footer.getBlocks().get(0).getColumns().get(0).getValueCount()), ParquetRecordReader.DEFAULT_RECORDS_TO_READ_IF_FIXED_WIDTH);
     }

@@ -88,7 +88,7 @@ public class ExampleTest {
 
   @Test
   public void secondTest() throws Exception {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .configProperty(ExecConstants.SLICE_TARGET, 10)
         ;
 
@@ -159,7 +159,7 @@ public class ExampleTest {
         // And trace messages for one class.
         .logger(ExternalSortBatch.class, Level.TRACE)
         ;
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         // Easy way to run single threaded for easy debugging
         .maxParallelization(1)
         // Set some session options
@@ -203,7 +203,7 @@ public class ExampleTest {
 
   @Test
   public void fifthTest() throws Exception {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .maxParallelization(1)
         .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true)
         ;

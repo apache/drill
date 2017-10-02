@@ -74,4 +74,48 @@ public interface OptionSet {
    * @return the string value
    */
   String getOption(TypeValidators.StringValidator validator);
+
+  /**
+   * Return the value of a Boolean option.
+   *
+   * @param name option name
+   * @return the Boolean value
+   * @throws IllegalArgumentException if the option is undefined or
+   * is not of the correct data type
+   */
+
+  boolean getBoolean(String name);
+
+  /**
+   * Return the value of a long option.
+   *
+   * @param name option name
+   * @return the long value
+   * @throws IllegalArgumentException if the option is undefined or
+   * is not of the correct data type
+   */
+
+  long getLong(String name);
+
+  /**
+   * Return the value of a double option.
+   *
+   * @param name option name
+   * @return the double value
+   * @throws IllegalArgumentException if the option is undefined or
+   * is not of the correct data type
+   */
+
+  double getDouble(String name);
+
+  /**
+   * Return the value of a String option.
+   *
+   * @param name option name
+   * @return the String value
+   * @throws IllegalArgumentException if the option is undefined or
+   * is not of the correct data type
+   */
+
+  String getString(String name);
 }

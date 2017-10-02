@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
+import java.util.Collection;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-
 import org.apache.parquet.io.api.GroupConverter;
 import org.apache.parquet.io.api.RecordMaterializer;
 import org.apache.parquet.schema.MessageType;
-
-import java.util.Collection;
-import java.util.List;
 
 public class DrillParquetRecordMaterializer extends RecordMaterializer<Void> {
 

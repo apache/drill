@@ -24,7 +24,7 @@ import org.apache.drill.exec.store.easy.text.compliant.CompliantTextRecordReader
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.LogFixture;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -59,7 +59,7 @@ public class TestValidationOptions extends DrillTest {
 
   @Test
   public void testOptions() throws Exception {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .maxParallelization(1)
         .configProperty(ExecConstants.ENABLE_ITERATOR_VALIDATION, false)
         .configProperty(ExecConstants.ENABLE_VECTOR_VALIDATION, false)
@@ -93,7 +93,7 @@ public class TestValidationOptions extends DrillTest {
 
   @Test
   public void testConfig() throws Exception {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .maxParallelization(1)
         .configProperty(ExecConstants.ENABLE_ITERATOR_VALIDATION, true)
         .configProperty(ExecConstants.ENABLE_VECTOR_VALIDATION, true)
@@ -119,7 +119,7 @@ public class TestValidationOptions extends DrillTest {
 
   @Test
   public void testDefaults() throws Exception {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .maxParallelization(1)
         ;
     try (ClusterFixture cluster = builder.build();

@@ -18,12 +18,12 @@
 package org.apache.drill.test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
@@ -43,14 +43,10 @@ import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.server.options.BaseOptionSet;
-import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionSet;
-import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
-import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.test.ClusterFixtureBuilder.RuntimeOption;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.HyperRowSetImpl;
 import org.apache.drill.test.rowSet.IndirectRowSet;
@@ -92,84 +88,29 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
   public static class OperatorFixtureBuilder
   {
-    ConfigBuilder configBuilder = new ConfigBuilder();
-    TestOptionSet options = new TestOptionSet();
+    protected ConfigBuilder configBuilder = new ConfigBuilder();
+    protected List<RuntimeOption> systemOptions;
+    protected ExecutionControls controls;
 
     public ConfigBuilder configBuilder() {
       return configBuilder;
     }
 
-    public TestOptionSet options() {
-      return options;
+    public OperatorFixtureBuilder systemOption(String key, Object value) {
+      if (systemOptions == null) {
+        systemOptions = new ArrayList<>();
+      }
+      systemOptions.add(new RuntimeOption(key, value));
+      return this;
+    }
+
+    public OperatorFixtureBuilder setControls(ExecutionControls controls) {
+      this.controls = controls;
+      return this;
     }
 
     public OperatorFixture build() {
       return new OperatorFixture(this);
-    }
-  }
-
-  /**
-   * Test-time implementation of the system and session options. Provides
-   * a simple storage and a simple set interface, then implements the standard
-   * system and session option read interface.
-   */
-
-  public static class TestOptionSet extends BaseOptionSet {
-
-    private Map<String,OptionValue> values = CaseInsensitiveMap.newHashMap();
-    private Map<String,OptionValue> defaults = CaseInsensitiveMap.newHashMap();
-
-    public TestOptionSet() {
-      DrillConfig defaultConfig = DrillConfig.create();
-      Map<String, OptionDefinition> definitions = SystemOptionManager.createDefaultOptionDefinitions();
-      CaseInsensitiveMap<OptionValue> defaultValues = SystemOptionManager.populateDefaultValues(definitions, defaultConfig);
-
-      for (Map.Entry<String, OptionValue> entry: defaultValues.entrySet()) {
-        String optionName = entry.getKey();
-        OptionValue optionValue = entry.getValue();
-        defaults.put(optionName, optionValue);
-      }
-
-      // Crashes in FunctionImplementationRegistry if not set
-      set(ExecConstants.CAST_TO_NULLABLE_NUMERIC, false);
-      // Crashes in the Dynamic UDF code if not disabled
-      set(ExecConstants.USE_DYNAMIC_UDFS_KEY, false);
-    }
-
-    public void set(String key, int value) {
-      set(key, (long) value);
-    }
-
-    public void set(String key, long value) {
-      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
-    }
-
-    public void set(String key, boolean value) {
-      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
-    }
-
-    public void set(String key, double value) {
-      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
-    }
-
-    public void set(String key, String value) {
-      values.put(key, OptionValue.create(AccessibleScopes.SYSTEM, key, value, OptionScope.SYSTEM));
-    }
-
-    @Override
-    public OptionValue getOption(String name) {
-      final OptionValue value = values.get(name);
-
-      if (value != null) {
-        return value;
-      }
-
-      return getDefault(name);
-    }
-
-    @Override
-    public OptionValue getDefault(String optionName) {
-      return defaults.get(optionName);
     }
   }
 
@@ -255,7 +196,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
   public static class MockStats implements OperatorStatReceiver {
 
-    public Map<Integer,Double> stats = new HashMap<>();
+    public Map<Integer, Double> stats = new HashMap<>();
 
     @Override
     public void addLongStat(MetricDef metric, long value) {
@@ -295,26 +236,39 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  private final TestOptionSet options;
+  private final SystemOptionManager options;
   private final TestCodeGenContext context;
   private final OperatorStatReceiver stats;
 
   protected OperatorFixture(OperatorFixtureBuilder builder) {
     config = builder.configBuilder().build();
     allocator = RootAllocatorFactory.newRoot(config);
-    options = builder.options();
+    options = new SystemOptionManager(config);
+    try {
+      options.init();
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to initialize the system option manager", e);
+    }
+    if (builder.systemOptions != null) {
+      applySystemOptions(builder.systemOptions);
+    }
     context = new TestCodeGenContext(config, options);
     stats = new MockStats();
    }
 
-  public TestOptionSet options() { return options; }
+  private void applySystemOptions(List<RuntimeOption> systemOptions) {
+    for (RuntimeOption option : systemOptions) {
+      options.setLocalOption(option.key, option.value);
+    }
+  }
 
-
-  public FragmentExecContext codeGenContext() { return context; }
+  public SystemOptionManager options() { return options; }
+  public FragmentExecContext fragmentExecContext() { return context; }
 
   @Override
   public void close() throws Exception {
     allocator.close();
+    options.close();
   }
 
   public static OperatorFixtureBuilder builder() {

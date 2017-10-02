@@ -33,8 +33,8 @@ public class TestQueryMemoryAlloc extends DrillTest {
   @Test
   public void testDefaultOptions() throws Exception {
     OperatorFixtureBuilder builder = OperatorFixture.builder();
-    builder.options().set(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.05);
-    builder.options().set(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
+    builder.systemOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.05);
+    builder.systemOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
 
     try (OperatorFixture fixture = builder.build()) {
 
@@ -58,8 +58,8 @@ public class TestQueryMemoryAlloc extends DrillTest {
   @Test
   public void testCustomFloor() throws Exception {
     OperatorFixtureBuilder builder = OperatorFixture.builder();
-    builder.options().set(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.05);
-    builder.options().set(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 3 * ONE_GB);
+    builder.systemOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.05);
+    builder.systemOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 3 * ONE_GB);
 
     try (OperatorFixture fixture = builder.build()) {
 
@@ -83,8 +83,8 @@ public class TestQueryMemoryAlloc extends DrillTest {
   @Test
   public void testCustomPercent() throws Exception {
     OperatorFixtureBuilder builder = OperatorFixture.builder();
-    builder.options().set(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.10);
-    builder.options().set(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
+    builder.systemOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.10);
+    builder.systemOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
 
     try (OperatorFixture fixture = builder.build()) {
 
@@ -117,9 +117,9 @@ public class TestQueryMemoryAlloc extends DrillTest {
   @Test
   public void testOpMemory() throws Exception {
     OperatorFixtureBuilder builder = OperatorFixture.builder();
-    builder.options().set(ExecConstants.CPU_LOAD_AVERAGE_KEY, 0.7);
-    builder.options().set(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 10);
-    builder.options().set(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP_KEY, 40 * ONE_MB);
+    builder.systemOption(ExecConstants.CPU_LOAD_AVERAGE_KEY, 0.7);
+    builder.systemOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 10);
+    builder.systemOption(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP_KEY, 40 * ONE_MB);
 
     try (OperatorFixture fixture = builder.build()) {
 

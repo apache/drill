@@ -18,14 +18,86 @@
 package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.server.options.OptionValue.Kind;
 
 import java.util.Iterator;
 
 /**
- * This {@link OptionManager} implements some the basic methods and should be extended by concrete implementations.
+ * This {@link OptionManager} implements some the basic methods and should be
+ * extended by concrete implementations.
  */
-public abstract class BaseOptionManager extends BaseOptionSet implements OptionManager {
+
+public abstract class BaseOptionManager implements OptionManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseOptionManager.class);
+
+  /**
+   * Gets the current option value given a validator.
+   *
+   * @param validator the validator
+   * @return option value
+   * @throws IllegalArgumentException - if the validator is not found
+   */
+  private OptionValue getOptionSafe(OptionValidator validator) {
+    final String optionName = validator.getOptionName();
+    OptionValue value = getOption(optionName);
+    return value == null ? getDefault(optionName) : value;
+  }
+
+  @Override
+  public boolean getOption(TypeValidators.BooleanValidator validator) {
+    return getOptionSafe(validator).bool_val;
+  }
+
+  @Override
+  public double getOption(TypeValidators.DoubleValidator validator) {
+    return getOptionSafe(validator).float_val;
+  }
+
+  @Override
+  public long getOption(TypeValidators.LongValidator validator) {
+    return getOptionSafe(validator).num_val;
+  }
+
+  @Override
+  public String getOption(TypeValidators.StringValidator validator) {
+    return getOptionSafe(validator).string_val;
+  }
+
+  @Override
+  public boolean getBoolean(String name) {
+    return getByType(name, Kind.BOOLEAN).bool_val;
+  }
+
+  @Override
+  public long getLong(String name) {
+    return getByType(name, Kind.LONG).num_val;
+  }
+
+  @Override
+  public double getDouble(String name) {
+    return getByType(name, Kind.DOUBLE).float_val;
+  }
+
+  @Override
+  public String getString(String name) {
+    return getByType(name, Kind.STRING).string_val;
+  }
+
+  private OptionValue getByType(String name, Kind dataType) {
+    OptionValue value = getOption(name);
+    if (value == null) {
+      throw UserException.systemError(null)
+        .addContext("Undefined option: " + name)
+        .build(logger);
+    }
+    if (value.kind != dataType) {
+      throw UserException.systemError(null)
+          .addContext("Option " + name + " is of data type " +
+              value.kind + " but was requested as " + dataType)
+          .build(logger);
+    }
+    return value;
+  }
 
   @Override
   public OptionList getInternalOptionList() {

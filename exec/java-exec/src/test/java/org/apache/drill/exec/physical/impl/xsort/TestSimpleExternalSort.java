@@ -34,7 +34,7 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.categories.SlowTest;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,7 +69,7 @@ public class TestSimpleExternalSort extends DrillTest {
    */
 
   private void mergeSortWithSv2(boolean testLegacy) throws Exception {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
          ;
     try (ClusterFixture cluster = builder.build();
@@ -96,7 +96,7 @@ public class TestSimpleExternalSort extends DrillTest {
   }
 
   private void sortOneKeyDescendingMergeSort(boolean testLegacy) throws Throwable {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
          ;
     try (ClusterFixture cluster = builder.build();
@@ -147,7 +147,7 @@ public class TestSimpleExternalSort extends DrillTest {
   }
 
   private void sortOneKeyDescendingExternalSort(boolean testLegacy) throws Throwable {
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, 4)
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, 4)
         .configProperty(ExecConstants.EXTERNAL_SORT_BATCH_LIMIT, 4)
@@ -173,7 +173,7 @@ public class TestSimpleExternalSort extends DrillTest {
   }
 
   private void outOfMemoryExternalSort(boolean testLegacy) throws Throwable{
-    FixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder()
         // Probably do nothing in modern Drill
         .configProperty("drill.memory.fragment.max", 50_000_000)
         .configProperty("drill.memory.fragment.initial", 2_000_000)

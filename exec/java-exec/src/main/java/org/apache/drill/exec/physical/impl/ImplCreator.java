@@ -105,6 +105,7 @@ public class ImplCreator {
   }
 
   /** Create RootExec and its children (RecordBatches) for given FragmentRoot */
+  @SuppressWarnings("unchecked")
   private RootExec getRootExec(final FragmentRoot root, final FragmentContext context) throws ExecutionSetupException {
     final List<RecordBatch> childRecordBatches = getChildren(root, context);
 
@@ -141,6 +142,7 @@ public class ImplCreator {
         return proxyUgi.doAs(new PrivilegedExceptionAction<RecordBatch>() {
           @Override
           public RecordBatch run() throws Exception {
+            @SuppressWarnings("unchecked")
             final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
                 context, op, childRecordBatches);
             operators.addFirst(batch);
@@ -153,6 +155,7 @@ public class ImplCreator {
         throw new ExecutionSetupException(errMsg, e);
       }
     } else {
+      @SuppressWarnings("unchecked")
       final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context,
           op, childRecordBatches);
       operators.addFirst(batch);

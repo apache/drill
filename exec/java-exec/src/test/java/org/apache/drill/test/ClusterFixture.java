@@ -147,7 +147,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   private List<File> tempDirs = new ArrayList<>();
 
-  ClusterFixture(FixtureBuilder builder) {
+  ClusterFixture(ClusterFixtureBuilder builder) {
 
     setClientProps(builder);
     configureZk(builder);
@@ -166,9 +166,9 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   /**
    * Set the client properties to be used by client fixture.
-   * @param builder {@link FixtureBuilder#clientProps}
+   * @param builder {@link ClusterFixtureBuilder#clientProps}
    */
-  private void setClientProps(FixtureBuilder builder) {
+  private void setClientProps(ClusterFixtureBuilder builder) {
       clientProps = builder.clientProps;
   }
 
@@ -176,7 +176,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     return clientProps;
   }
 
-  private void configureZk(FixtureBuilder builder) {
+  private void configureZk(ClusterFixtureBuilder builder) {
 
     // Start ZK if requested.
 
@@ -213,7 +213,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  private void createConfig(FixtureBuilder builder) throws Exception {
+  private void createConfig(ClusterFixtureBuilder builder) throws Exception {
 
     // Create a config
     // Because of the way DrillConfig works, we can set the ZK
@@ -235,7 +235,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  private void startDrillbits(FixtureBuilder builder) throws Exception {
+  private void startDrillbits(ClusterFixtureBuilder builder) throws Exception {
 //    // Ensure that Drill uses the log directory determined here rather than
 //    // it's hard-coded defaults. WIP: seems to be needed some times but
 //    // not others.
@@ -319,12 +319,12 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     ((StoragePluginRegistryImpl) pluginRegistry).definePlugin(MockStorageEngineConfig.NAME, config, plugin);
   }
 
-  private void applyOptions(FixtureBuilder builder) throws Exception {
+  private void applyOptions(ClusterFixtureBuilder builder) throws Exception {
 
     // Apply system options
 
     if (builder.systemOptions != null) {
-      for (FixtureBuilder.RuntimeOption option : builder.systemOptions) {
+      for (ClusterFixtureBuilder.RuntimeOption option : builder.systemOptions) {
         clientFixture().alterSystem(option.key, option.value);
       }
     }
@@ -332,7 +332,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     // Apply session options.
 
     if (builder.sessionOptions != null) {
-      for (FixtureBuilder.RuntimeOption option : builder.sessionOptions) {
+      for (ClusterFixtureBuilder.RuntimeOption option : builder.sessionOptions) {
         clientFixture().alterSession(option.key, option.value);
       }
     }
@@ -584,8 +584,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public static final String EXPLAIN_PLAN_TEXT = "text";
   public static final String EXPLAIN_PLAN_JSON = "json";
 
-  public static FixtureBuilder builder() {
-    FixtureBuilder builder = new FixtureBuilder()
+  public static ClusterFixtureBuilder builder() {
+    ClusterFixtureBuilder builder = new ClusterFixtureBuilder()
          .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE);
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
@@ -604,8 +604,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @return a fixture builder with no default properties set
    */
 
-  public static FixtureBuilder bareBuilder() {
-    return new FixtureBuilder();
+  public static ClusterFixtureBuilder bareBuilder() {
+    return new ClusterFixtureBuilder();
   }
 
   /**
