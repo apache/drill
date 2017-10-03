@@ -1,12 +1,11 @@
-package org.apache.drill.exec.fn.impl;
-
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -17,76 +16,84 @@ package org.apache.drill.exec.fn.impl;
  * limitations under the License.
  */
 
+package org.apache.drill.exec.fn.impl;
+
 import org.apache.drill.BaseTestQuery;
 import org.junit.Test;
 
 public class TestNetworkFunctions extends BaseTestQuery {
 
   @Test
-  public void testMD5() throws Exception {
-    final String query = "select md5('testing') as md5Hash from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("md5Hash").baselineValues("ae2b1fca515949e5d54fb22b8ed95575").go();
+  public void testInetAton() throws Exception {
+    final String query = "select inet_aton( '192.168.0.1') as inet from (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues( "3232235521").go();
   }
 
   @Test
-  public void testMD2() throws Exception {
-    final String query = "select md2('testing') as md2Hash from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("md2Hash").baselineValues("fc134df10d6ecafceb5c75861d01b41f").go();
-  }
-
-
-  @Test
-  public void testSHA1() throws Exception {
-    final String query = "select sha('testing') as shaHash from (values(1))";
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("shaHash")
-      .baselineValues("dc724af18fbdd4e59189f5fe768a5f8311527050")
-      .go();
+  public void testInetNtoa() throws Exception {
+    final String query = "select inet_aton( 3232235521 ) as inet from (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues("192.168.0.1").go();
   }
 
   @Test
-  public void testSHA384() throws Exception {
-    final String query = "select sha384('testing') as shaHash from (values(1))";
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("shaHash")
-      .baselineValues("cf4811d74fd40504674fc3273f824fa42f755b9660a2e902b57f1df74873db1a91a037bcee65f1a88ecd1ef57ff254c9")
-      .go();
+  public void testInNetwork() throws Exception {
+    final String query = "select in_network( '192.168.0.1', '192.168.0.0/28' ) as in_net FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("in_net").baselineValues(true).go();
   }
 
   @Test
-  public void testSHA512() throws Exception {
-    final String query = "select sha512('testing') as shaHash from (values(1))";
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("shaHash")
-      .baselineValues("521b9ccefbcd14d179e7a1bb877752870a6d620938b28a66a107eac6e6805b9d0989f45b5730508041aa5e710847d439ea74cd312c9355f1f2dae08d40e41d50")
-      .go();
+  public void testAddressCount() throws Exception {
+    final String query = "select getAddressCount( '192.168.0.0/28' ) AS addressCount FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("addressCount").baselineValues(14).go();
   }
 
   @Test
-  public void testAESEncrypt() throws Exception {
-    final String query = "select aes_encrypt('testing', 'secret_key') as encrypted FROM (VALUES(1))";
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("encrypted")
-      .baselineValues("ICf+zdOrLitogB8HUDru0w==")
-      .go();
+  public void testBroadcastAddress() throws Exception {
+    final String query = "select getBroadcastAddress( '192.168.0.0/28' ) AS broadcastAddress FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("broadcastAddress").baselineValues("192.168.0.15").go();
+  }
+  @Test
+  public void testNetmask() throws Exception {
+    final String query = "select getNetmask( '192.168.0.0/28' ) AS netmask FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("netmask").baselineValues("255.255.255.240").go();
+  }
+  @Test
+  public void testFunctions() throws Exception {
+    final String query = "SELECT getLowAddress( '192.168.0.0/28' ) AS low," +
+      "getHighAddress( '192.168.0.0/28' ) AS high," +
+      "urlencode( 'http://www.test.com/login.php?username=Charles&password=12345' ) AS encoded_url," +
+      "urldecode( 'http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345' ) AS decoded_url," +
+      "is_private_ip( '8.8.8.8' ) AS is_private_ip," +
+      "is_valid_IP('258.257.234.23' ) AS isValidIP," +
+      "is_valid_IPv4( '192.168.0.1' ) AS isValidIP4," +
+      "is_valid_IPv6('1050:0:0:0:5:600:300c:326b') as isValidIPv6" +
+      "FROM (values(1))";
+
+    testBuilder().
+      sqlQuery(query).
+      ordered().
+      baselineColumns(
+        "low",
+        "high",
+        "encoded_url",
+        "decoded_url",
+        "is_private_ip",
+        "isValidIP",
+        "IsValidIP4",
+        "IsValidIPv6"
+      ).
+      baselineValues(
+        "192.168.0.1",
+        "192.168.0.14",
+        "http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345",
+        "http://www.test.com/login.php?username=Charles&password=12345",
+        false,
+        false,
+        true,
+        true
+      ).go();
   }
 
-  @Test
-  public void testAESDecrypt() throws Exception {
-    final String query = "select aes_decrypt('ICf+zdOrLitogB8HUDru0w==', 'secret_key') as decrypt from (values(1))";
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("decrypt")
-      .baselineValues("testing")
-      .go();
-  }
+
+
 }

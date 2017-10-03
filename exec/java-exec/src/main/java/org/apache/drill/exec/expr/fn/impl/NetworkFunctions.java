@@ -28,7 +28,6 @@ import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.commons.net.util.SubnetUtils;
-
 import javax.inject.Inject;
 
 public class NetworkFunctions{
@@ -376,7 +375,7 @@ public class NetworkFunctions{
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public class InetNtoaFunction implements DrillSimpleFunc {
+  public static class InetNtoaFunction implements DrillSimpleFunc {
 
     @Param
     BigIntHolder in1;
@@ -428,7 +427,7 @@ public class NetworkFunctions{
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public class IsPrivateIP implements DrillSimpleFunc {
+  public static class IsPrivateIP implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputTextA;
@@ -487,7 +486,7 @@ public class NetworkFunctions{
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public class InetAtonFunction implements DrillSimpleFunc {
+  public static class InetAtonFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputTextA;
@@ -525,11 +524,11 @@ public class NetworkFunctions{
    * Returns true if the input string is a valid IP address
    */
   @FunctionTemplate(
-    name = "isValidIP",
+    name = "is_valid_IP",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public class IsValidIPFunction implements DrillSimpleFunc {
+  public static class IsValidIPFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputIP;
@@ -566,11 +565,11 @@ public class NetworkFunctions{
    * Returns true if the input string is a valid IPv4 address
    */
   @FunctionTemplate(
-    name = "isValidIPv4",
+    name = "is_valid_IPv4",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public class IsValidIPV4Function implements DrillSimpleFunc {
+  public static class IsValidIPV4Function implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputIP;
@@ -607,11 +606,11 @@ public class NetworkFunctions{
    * Returns true if the input string is a valid IP address
    */
   @FunctionTemplate(
-    name = "isValidIPv6",
+    name = "is_valid_IPv6",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public class IsValidIPv6Function implements DrillSimpleFunc {
+  public static class IsValidIPv6Function implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputIP;

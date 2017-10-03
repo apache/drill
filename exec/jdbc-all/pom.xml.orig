@@ -152,16 +152,13 @@
           <artifactId>jersey-media-json-jackson</artifactId>
         </exclusion>
         <exclusion>
+<<<<<<< HEAD
           <groupId>org.kohsuke</groupId>
           <artifactId>libpam4j</artifactId>
-        </exclusion>
-        <exclusion>
+=======
           <groupId>commons-validator</groupId>
           <artifactId>commons-validator</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-net</groupId>
-          <artifactId>commons-net</artifactId>
+>>>>>>> 545edce3d... Added Network Analyis Functions
         </exclusion>
       </exclusions>
     </dependency>
@@ -336,7 +333,6 @@
               <exclude>commons-io:commons-io</exclude>
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
-              <exclude>io.netty:netty-tcnative:jar:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
