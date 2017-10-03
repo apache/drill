@@ -34,12 +34,16 @@ public class TableBuilder {
   private int width;
 
   public TableBuilder(final String[] columns, final String[] columnTooltip) {
+    this(columns, columnTooltip, false);
+  }
+
+  public TableBuilder(final String[] columns, final String[] columnTooltip, final boolean isSortable) {
     sb = new StringBuilder();
     width = columns.length;
 
     format.setMaximumFractionDigits(3);
 
-    sb.append("<table class=\"table table-bordered text-right\">\n<tr>");
+    sb.append("<table class=\"table table-bordered text-right"+(isSortable? " sortable" : "")+"\">\n<thead><tr>");
     for (int i = 0; i < columns.length; i++) {
       String cn = columns[i];
       String ctt = "";
@@ -51,7 +55,7 @@ public class TableBuilder {
       }
       sb.append("<th" + ctt + ">" + cn + "</th>");
     }
-    sb.append("</tr>\n");
+    sb.append("</tr></thead>\n<tbody>\n");
   }
 
   public void appendCell(final String s) {
@@ -208,7 +212,7 @@ public class TableBuilder {
 
   public String build() {
     String rv;
-    rv = sb.append("\n</table>").toString();
+    rv = sb.append("\n</tbody>\n</table>").toString();
     sb = null;
     return rv;
   }

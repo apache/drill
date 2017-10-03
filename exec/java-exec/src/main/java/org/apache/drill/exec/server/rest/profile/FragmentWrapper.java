@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.server.rest.profile;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
@@ -205,14 +202,23 @@ public class FragmentWrapper {
     tb.appendBytes(maxMem.getMaxMemoryUsed());
   }
 
-  public static final String[] FRAGMENT_COLUMNS = {"Minor Fragment ID", "Host Name", "Start", "End",
-      "Runtime", "Max Records", "Max Batches", "Last Update", "Last Progress", "Peak Memory", "State"};
+  public static final String[] FRAGMENT_COLUMNS = {
+      FragmentTblTxt.MINOR_FRAGMENT, FragmentTblTxt.HOSTNAME, FragmentTblTxt.START_TIME, FragmentTblTxt.END_TIME,
+      FragmentTblTxt.RUNTIME, FragmentTblTxt.MAX_RECORDS, FragmentTblTxt.MAX_BATCHES, FragmentTblTxt.LAST_UPDATE,
+      FragmentTblTxt.LAST_PROGRESS, FragmentTblTxt.PEAK_MEMORY, FragmentTblTxt.STATE
+  };
+
+  public static final String[] FRAGMENT_COLUMNS_TOOLTIP = {
+      FragmentTblTooltip.MINOR_FRAGMENT, FragmentTblTooltip.HOSTNAME, FragmentTblTooltip.START_TIME, FragmentTblTooltip.END_TIME,
+      FragmentTblTooltip.RUNTIME, FragmentTblTooltip.MAX_RECORDS, FragmentTblTooltip.MAX_BATCHES, FragmentTblTooltip.LAST_UPDATE,
+      FragmentTblTooltip.LAST_PROGRESS, FragmentTblTooltip.PEAK_MEMORY, FragmentTblTooltip.STATE
+  };
 
   // Not including minor fragment ID
   private static final int NUM_NULLABLE_FRAGMENTS_COLUMNS = FRAGMENT_COLUMNS.length - 1;
 
   public String getContent() {
-    final TableBuilder builder = new TableBuilder(FRAGMENT_COLUMNS, null);
+    final TableBuilder builder = new TableBuilder(FRAGMENT_COLUMNS, FRAGMENT_COLUMNS_TOOLTIP, true);
 
     // Use only minor fragments that have complete profiles
     // Complete iff the fragment profile has at least one operator profile, and start and end times.
@@ -261,6 +267,34 @@ public class FragmentWrapper {
     return builder.build();
   }
 
+  private class FragmentTblTxt {
+    static final String MINOR_FRAGMENT = "Minor Fragment";
+    static final String HOSTNAME = "Hostname";
+    static final String START_TIME = "Start";
+    static final String END_TIME = "End";
+    static final String RUNTIME = "Runtime";
+    static final String MAX_BATCHES = "Max Batches";
+    static final String MAX_RECORDS = "Max Records";
+    static final String LAST_UPDATE = "Last Update";
+    static final String LAST_PROGRESS = "Last Progress";
+    static final String PEAK_MEMORY = "Peak Memory";
+    static final String STATE = "State";
+  }
+
+  private class FragmentTblTooltip {
+    static final String MINOR_FRAGMENT = "Minor Fragment ID";
+    static final String HOSTNAME = "Host on which the fragment ran";
+    static final String START_TIME = "Fragment Start Time";
+    static final String END_TIME = "Fragment End Time";
+    static final String RUNTIME = "Duration of the Fragment";
+    static final String MAX_BATCHES = "Max Records processed by the fragment";
+    static final String MAX_RECORDS = "Max Batches processed by the fragment";
+    static final String LAST_UPDATE = "Last time fragment reported heartbeat";
+    static final String LAST_PROGRESS = "Last time fragment reported back metrics";
+    static final String PEAK_MEMORY = "Fragment Peak Memory Usage";
+    static final String STATE = "State of the fragment";
+  }
+
   private class OverviewTblTxt {
     static final String MAJOR_FRAGMENT = "Major Fragment";
     static final String MINOR_FRAGMENTS_REPORTING = "Minor Fragments Reporting";
@@ -293,5 +327,4 @@ public class FragmentWrapper {
     static final String MAX_PEAK_MEMORY = "Highest memory consumption by a fragment";
   }
 }
-
 
