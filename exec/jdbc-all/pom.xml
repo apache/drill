@@ -155,6 +155,10 @@
           <groupId>org.kohsuke</groupId>
           <artifactId>libpam4j</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>commons-validator</groupId>
+          <artifactId>commons-validator</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
