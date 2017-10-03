@@ -19,6 +19,7 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.DrillBuf;
+import org.apache.commons.net.util.SubnetUtils;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -27,7 +28,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.commons.net.util.SubnetUtils;
+
 import javax.inject.Inject;
 
 public class NetworkFunctions{
@@ -575,11 +576,15 @@ public class NetworkFunctions{
 
     @Output BitHolder out;
 
+    //@Workspace
+    //java.util.regex.Pattern p;
+
     @Inject
     DrillBuf buffer;
 
-
     public void setup() {
+      //String regex = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+      //p = java.util.regex.Pattern.compile(regex);
     }
 
 
@@ -595,6 +600,13 @@ public class NetworkFunctions{
         } else {
           out.value = 0;
         }
+        /*
+        java.util.regex.Matcher ipV4Matcher = p.matcher(ipString);
+        if( ipV4Matcher.find()){
+          out.value = 1;
+        } else {
+          out.value = 0;
+        }*/
 
       }
 

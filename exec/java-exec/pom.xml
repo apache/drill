@@ -166,6 +166,10 @@
           <groupId>org.eclipse.jetty.toolchain</groupId>
           <artifactId>jetty-test-helper</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
