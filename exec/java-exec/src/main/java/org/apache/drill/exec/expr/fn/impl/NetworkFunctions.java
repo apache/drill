@@ -36,7 +36,7 @@ public class NetworkFunctions{
   private NetworkFunctions() {}
 
   /**
-   * This function takes two arguments, an input IPv4 and a CIDR, and returns true if the IP is in the given CIDR block  
+   * This function takes two arguments, an input IPv4 and a CIDR, and returns true if the IP is in the given CIDR block
    *
    */
   @FunctionTemplate(
@@ -123,7 +123,6 @@ public class NetworkFunctions{
   /**
    * This function returns the broadcast address of a given CIDR block.
    */
-  
   @FunctionTemplate(
     name = "getBroadcastAddress",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
