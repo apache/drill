@@ -166,10 +166,6 @@
           <groupId>org.eclipse.jetty.toolchain</groupId>
           <artifactId>jetty-test-helper</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -437,11 +433,6 @@
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>2.9</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-validator</groupId>
-      <artifactId>commons-validator</artifactId>
-      <version>LATEST</version>
     </dependency>
     <dependency>
       <groupId>commons-net</groupId>

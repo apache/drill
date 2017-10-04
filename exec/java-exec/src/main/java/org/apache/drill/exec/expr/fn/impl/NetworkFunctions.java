@@ -535,11 +535,22 @@ public class NetworkFunctions{
 
     @Output BitHolder out;
 
+    @Workspace
+    java.util.regex.Pattern ipv4;
+
+    @Workspace
+    java.util.regex.Pattern ipv6;
+
     @Inject
     DrillBuf buffer;
 
 
     public void setup() {
+      String ipv4Regex = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+      ipv4 = java.util.regex.Pattern.compile(ipv4Regex);
+
+      String ipv6Regex = "(^\\d{20}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff:(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})(\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})){3}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff(:[a-fA-F0-9]{1,4}){2}$)|(^([a-fA-F0-9]{1,4}) (:[a-fA-F0-9]{1,4}){7}$)|(^:(:[a-fA-F0-9]{1,4}(::)?){1,6}$)|(^((::)?[a-fA-F0-9]{1,4}:){1,6}:$)|(^::$)";
+      ipv6 = java.util.regex.Pattern.compile(ipv6Regex);
     }
 
 
@@ -548,14 +559,13 @@ public class NetworkFunctions{
       if( ipString == null || ipString.isEmpty() || ipString.length() == 0 ){
         out.value = 0;
       } else {
-        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
-        boolean result = validator.isValid(ipString);
-        if( result == true ){
+        java.util.regex.Matcher ipV4Matcher = ipv4.matcher(ipString);
+        java.util.regex.Matcher ipV6Matcher = ipv6.matcher(ipString);
+        if( ipV4Matcher.find() || ipV6Matcher.find()){
           out.value = 1;
         } else {
           out.value = 0;
         }
-
       }
 
     }
@@ -576,15 +586,15 @@ public class NetworkFunctions{
 
     @Output BitHolder out;
 
-    //@Workspace
-    //java.util.regex.Pattern p;
+    @Workspace
+    java.util.regex.Pattern p;
 
     @Inject
     DrillBuf buffer;
 
     public void setup() {
-      //String regex = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
-      //p = java.util.regex.Pattern.compile(regex);
+      String regex = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+      p = java.util.regex.Pattern.compile(regex);
     }
 
 
@@ -593,20 +603,20 @@ public class NetworkFunctions{
       if( ipString == null || ipString.isEmpty() || ipString.length() == 0 ){
         out.value = 0;
       } else {
-        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+        /*org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
         boolean result = validator.isValidInet4Address(ipString);
         if( result == true ){
           out.value = 1;
         } else {
           out.value = 0;
         }
-        /*
+        */
         java.util.regex.Matcher ipV4Matcher = p.matcher(ipString);
         if( ipV4Matcher.find()){
           out.value = 1;
         } else {
           out.value = 0;
-        }*/
+        }
 
       }
 
@@ -628,27 +638,29 @@ public class NetworkFunctions{
 
     @Output BitHolder out;
 
+    @Workspace
+    java.util.regex.Pattern p;
+
     @Inject
     DrillBuf buffer;
 
 
     public void setup() {
+      String regex = "(^\\d{20}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff:(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})(\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})){3}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff(:[a-fA-F0-9]{1,4}){2}$)|(^([a-fA-F0-9]{1,4}) (:[a-fA-F0-9]{1,4}){7}$)|(^:(:[a-fA-F0-9]{1,4}(::)?){1,6}$)|(^((::)?[a-fA-F0-9]{1,4}:){1,6}:$)|(^::$)";
+      p = java.util.regex.Pattern.compile(regex);
     }
-
 
     public void eval() {
       String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputIP.start, inputIP.end, inputIP.buffer);
       if( ipString == null || ipString.isEmpty() || ipString.length() == 0 ){
         out.value = 0;
       } else {
-        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
-        boolean result = validator.isValidInet6Address(ipString);
-        if( result == true ){
+        java.util.regex.Matcher ipV6Matcher = p.matcher(ipString);
+        if( ipV6Matcher.find()){
           out.value = 1;
         } else {
           out.value = 0;
         }
-
       }
 
     }
