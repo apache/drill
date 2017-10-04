@@ -21,6 +21,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 
 public class TypeValidators {
@@ -242,6 +243,10 @@ public class TypeValidators {
     @Override
     public Kind getKind() {
       return kind;
+    }
+
+    public String getConfigProperty() {
+      return ExecConstants.bootDefaultFor(getOptionName());
     }
   }
 }

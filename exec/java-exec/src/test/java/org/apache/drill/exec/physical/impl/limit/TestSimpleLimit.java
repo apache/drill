@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.limit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
@@ -42,7 +43,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestSimpleLimit extends ExecTest {
   private final DrillConfig c = DrillConfig.create();
 

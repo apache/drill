@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.record;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 
@@ -24,7 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class TestMaterializedField {
 
   private static final String PARENT_NAME = "parent";

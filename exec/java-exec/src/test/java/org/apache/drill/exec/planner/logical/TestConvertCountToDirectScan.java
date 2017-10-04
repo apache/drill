@@ -18,9 +18,12 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(PlannerTest.class)
 public class TestConvertCountToDirectScan extends PlanTestBase {
 
   @Test

@@ -20,14 +20,18 @@ package org.apache.drill.exec.fn.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.FileUtils;
 import org.joda.time.DateTime;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+@Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestCastFunctions extends BaseTestQuery {
 
   @Test

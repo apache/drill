@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeAction;
@@ -29,7 +30,9 @@ import org.apache.drill.test.ConfigBuilder;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestExternalSortInternals extends DrillTest {
 
   private static final int ONE_MEG = 1024 * 1024;

@@ -19,8 +19,10 @@ package org.apache.drill.exec.fn.hive;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.QueryTestUtil;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.compile.ClassTransformer;
@@ -28,9 +30,11 @@ import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.joda.time.DateTime;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestInbuiltHiveUDFs extends HiveTestBase {
 
   @Test // DRILL-3273

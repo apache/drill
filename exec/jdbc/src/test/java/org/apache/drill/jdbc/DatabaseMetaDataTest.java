@@ -33,15 +33,18 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test for Drill's implementation of DatabaseMetaData's methods (other than
  * those tested separately, e.g., {@code getColumn(...)}, tested in
  * {@link DatabaseMetaDataGetColumnsTest})).
  */
+@Category(JdbcTest.class)
 public class DatabaseMetaDataTest {
 
   protected static Connection connection;

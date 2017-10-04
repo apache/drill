@@ -17,8 +17,12 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.SqlTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SqlTest.class, OperatorTest.class})
 public class TestCorrelation extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCorrelation.class);
 

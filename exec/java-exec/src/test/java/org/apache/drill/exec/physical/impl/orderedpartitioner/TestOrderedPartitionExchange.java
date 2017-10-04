@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
@@ -46,11 +47,13 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests the OrderedPartitionExchange Operator
  */
 @Ignore("Disabled until alternative to distributed cache provided.")
+@Category(OperatorTest.class)
 public class TestOrderedPartitionExchange extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOrderedPartitionExchange.class);
 

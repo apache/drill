@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 
 /**
@@ -28,7 +29,6 @@ public abstract class OptionValidator {
   // Stored here as well as in the option static class to allow insertion of option optionName into
   // the error messages produced by the validator
   private final String optionName;
-  public static final String OPTION_DEFAULTS_ROOT = "drill.exec.options.";
 
   /** By default, if admin option value is not specified, it would be set to false.*/
   public OptionValidator(String optionName) {
@@ -89,6 +89,6 @@ public abstract class OptionValidator {
   public abstract Kind getKind();
 
   public String getConfigProperty() {
-    return OPTION_DEFAULTS_ROOT + getOptionName();
+    return ExecConstants.bootDefaultFor(getOptionName());
   }
 }

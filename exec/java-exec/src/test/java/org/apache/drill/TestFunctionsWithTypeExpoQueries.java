@@ -19,13 +19,16 @@ package org.apache.drill;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
+@Category(SqlFunctionTest.class)
 public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
   @Test
   public void testConcatWithMoreThanTwoArgs() throws Exception {

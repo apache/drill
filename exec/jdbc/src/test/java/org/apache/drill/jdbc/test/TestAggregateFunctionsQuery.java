@@ -22,12 +22,14 @@ import java.sql.Date;
 
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.jdbc.Driver;
+import org.apache.drill.categories.JdbcTest;
 import org.joda.time.chrono.ISOChronology;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-
+@Category(JdbcTest.class)
 public class TestAggregateFunctionsQuery extends JdbcTestQueryBase {
 
   // enable decimal data type

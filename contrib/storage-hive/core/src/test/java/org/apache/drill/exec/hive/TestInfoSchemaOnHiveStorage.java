@@ -18,10 +18,14 @@
 package org.apache.drill.exec.hive;
 
 import com.google.common.base.Strings;
+import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
   private static final String[] baselineCols = new String[] {"COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE"};
   private static final Object[] expVal1 = new Object[] {"key", "INTEGER", "YES"};

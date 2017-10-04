@@ -17,16 +17,18 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.PlanTestBase;
 
 import org.joda.time.DateTime;
 
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 
 /**
  * JDBC storage plugin tests against MySQL.
  */
+@Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
 
   @Test

@@ -17,9 +17,12 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.SlowTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SlowTest.class)
 public class TestTpchDistributed extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributed.class);
 

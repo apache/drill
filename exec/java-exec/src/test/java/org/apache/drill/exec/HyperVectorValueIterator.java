@@ -19,10 +19,13 @@ package org.apache.drill.exec;
 
 import java.util.Iterator;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.exec.record.HyperVectorWrapper;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class HyperVectorValueIterator implements Iterator<Object> {
   private MaterializedField mf;
   private HyperVectorWrapper<?> hyperVector;

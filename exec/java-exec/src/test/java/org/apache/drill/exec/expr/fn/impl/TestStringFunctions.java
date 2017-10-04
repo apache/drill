@@ -26,11 +26,13 @@ import org.apache.calcite.util.ConversionUtil;
 import org.apache.calcite.util.Util;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.util.Text;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import java.io.BufferedWriter;
@@ -39,6 +41,7 @@ import java.io.FileWriter;
 import java.nio.charset.Charset;
 
 @RunWith(JMockit.class)
+@Category(SqlFunctionTest.class)
 public class TestStringFunctions extends BaseTestQuery {
 
   @Test

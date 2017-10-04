@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrapper.BatchMerger;
@@ -38,6 +39,7 @@ import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Light-weight sanity test of the copier class. The implementation has
@@ -48,6 +50,7 @@ import org.junit.Test;
  * then additional tests should be added to re-validate the code.
  */
 
+@Category(OperatorTest.class)
 public class TestCopier extends DrillTest {
 
   public static OperatorFixture fixture;

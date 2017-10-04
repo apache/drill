@@ -19,10 +19,13 @@ package org.apache.drill.exec.memory;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.categories.MemoryTest;
 import org.apache.drill.exec.memory.Accountant.AllocationOutcome;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(MemoryTest.class)
 public class TestAccountant {
 
   @Test

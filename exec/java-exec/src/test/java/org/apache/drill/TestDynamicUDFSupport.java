@@ -19,6 +19,8 @@ package org.apache.drill;
 
 import com.google.common.collect.Lists;
 import mockit.Deencapsulation;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -39,6 +41,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -66,6 +69,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
+@Category({SlowTest.class, SqlFunctionTest.class})
 public class TestDynamicUDFSupport extends BaseTestQuery {
 
   private static final Path jars = new Path(TestTools.getWorkingPath(), "src/test/resources/jars");

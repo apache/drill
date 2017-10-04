@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -27,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import java.io.BufferedWriter;
@@ -35,6 +37,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
+@Category(OperatorTest.class)
 public class TestMergeJoinAdvanced extends BaseTestQuery {
   @Rule
   public final TestRule TIMEOUT = TestTools.getTimeoutRule(120000); // Longer timeout than usual.

@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
@@ -34,6 +35,7 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.FixtureBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Testing External Sort's spilling to disk.
@@ -43,6 +45,7 @@ import org.junit.Test;
  * <br>
  * {@link ExecConstants#EXTERNAL_SORT_SPILL_GROUP_SIZE} = 1
  */
+@Category(OperatorTest.class)
 public class TestSortSpillWithException extends ClusterTest {
   private static final String TEST_RES_PATH = TestTools.getWorkingPath() + "/src/test/resources";
 

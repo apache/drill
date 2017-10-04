@@ -19,13 +19,17 @@
 package org.apache.drill.exec;
 
 
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.test.ConfigBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Category(SecurityTest.class)
 public class TestSSLConfig {
 
   @Test
