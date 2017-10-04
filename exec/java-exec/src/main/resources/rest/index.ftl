@@ -97,6 +97,28 @@
       </div>
   </div>
 
+   <#if model.shouldShowUserInfo()>
+       <div class="row">
+            <div class="col-md-12">
+              <h3>User Info </h3>
+              <div class="table-responsive">
+                <table class="table table-hover" style="width: auto;">
+                  <tbody>
+                      <tr>
+                        <td>Admin Users</td>
+                        <td class="list-value">${model.getAdminUsers()}</td>
+                      </tr>
+                      <tr>
+                        <td>Admin User Groups</td>
+                        <td class="list-value">${model.getAdminUserGroups()}</td>
+                      </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+   </#if>
+
   <#assign queueInfo = model.queueInfo() />
   <div class="row">
       <div class="col-md-12">

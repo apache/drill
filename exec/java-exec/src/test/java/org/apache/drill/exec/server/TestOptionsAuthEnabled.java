@@ -23,8 +23,14 @@ import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_GROUP;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER;
@@ -35,6 +41,9 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
+
+
+
 
 import java.util.Properties;
 
@@ -115,4 +124,59 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
       test(String.format("ALTER SYSTEM SET `%s` = %d;", ExecConstants.SLICE_TARGET, ExecConstants.SLICE_TARGET_DEFAULT));
     }
   }
+
+  @Test
+  public void testAdminUserOptions() throws Exception {
+    FixtureBuilder builder = ClusterFixture.builder();
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      OptionManager optionManager = cluster.drillbit().getContext().getOptionManager();
+
+      // Admin Users Tests
+      // config file should have the 'fake' default admin user and it should be returned
+      // by the option manager if the option has not been set by the user
+      String configAdminUser =  optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR);;
+      assertEquals(configAdminUser, ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
+
+      // Option accessor should never return the 'fake' default from the config
+      String adminUser1 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+      assertNotEquals(adminUser1, ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
+
+      // Change TEST_ADMIN_USER if necessary
+      String TEST_ADMIN_USER = "ronswanson";
+      if (adminUser1.equals(TEST_ADMIN_USER)) {
+        TEST_ADMIN_USER += "thefirst";
+      }
+      // Check if the admin option accessor honors a user-supplied values
+      String sql = String.format("ALTER SYSTEM SET `%s`='%s'", ExecConstants.ADMIN_USERS_KEY, TEST_ADMIN_USER);
+      client.queryBuilder().sql(sql).run();
+      String adminUser2 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+      assertEquals(adminUser2, TEST_ADMIN_USER);
+
+      // Admin User Groups Tests
+
+      // config file should have the 'fake' default admin user and it should be returned
+      // by the option manager if the option has not been set by the user
+      String configAdminUserGroups =  optionManager.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR);
+      assertEquals(configAdminUserGroups, ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.DEFAULT_ADMIN_USER_GROUPS);
+
+      // Option accessor should never return the 'fake' default from the config
+      String adminUserGroups1 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+      assertNotEquals(adminUserGroups1, ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.DEFAULT_ADMIN_USER_GROUPS);
+
+      // Change TEST_ADMIN_USER_GROUPS if necessary
+      String TEST_ADMIN_USER_GROUPS = "yakshavers";
+      if (adminUserGroups1.equals(TEST_ADMIN_USER_GROUPS)) {
+        TEST_ADMIN_USER_GROUPS += ",wormracers";
+      }
+      // Check if the admin option accessor honors a user-supplied values
+      sql = String.format("ALTER SYSTEM SET `%s`='%s'", ExecConstants.ADMIN_USER_GROUPS_KEY, TEST_ADMIN_USER_GROUPS);
+      client.queryBuilder().sql(sql).run();
+      String adminUserGroups2 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+      assertEquals(adminUserGroups2, TEST_ADMIN_USER_GROUPS);
+    }
+  }
+
+
 }

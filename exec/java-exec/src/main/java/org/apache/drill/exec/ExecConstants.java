@@ -31,6 +31,8 @@ import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.server.options.TypeValidators.MaxWidthValidator;
+import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
+import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
 
 public final class ExecConstants {
@@ -439,16 +441,15 @@ public final class ExecConstants {
    * Option whose value is a comma separated list of admin usernames. Admin users are users who have special privileges
    * such as changing system options.
    */
-
   public static final String ADMIN_USERS_KEY = "security.admin.users";
-  public static final StringValidator ADMIN_USERS_VALIDATOR = new StringValidator(ADMIN_USERS_KEY);
+  public static final AdminUsersValidator ADMIN_USERS_VALIDATOR = new AdminUsersValidator(ADMIN_USERS_KEY);
 
   /**
    * Option whose value is a comma separated list of admin usergroups.
    */
-
   public static final String ADMIN_USER_GROUPS_KEY = "security.admin.user_groups";
-  public static final StringValidator ADMIN_USER_GROUPS_VALIDATOR = new StringValidator(ADMIN_USER_GROUPS_KEY);
+  public static final AdminUserGroupsValidator ADMIN_USER_GROUPS_VALIDATOR =
+          new AdminUserGroupsValidator(ADMIN_USER_GROUPS_KEY);
   /**
    * Option whose value is a string representing list of inbound impersonation policies.
    *

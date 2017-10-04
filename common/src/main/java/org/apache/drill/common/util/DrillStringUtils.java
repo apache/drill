@@ -200,4 +200,59 @@ public class DrillStringUtils {
     return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
   }
 
+
+  /**
+   * Concatenates the individual strings into a single string,
+   * where each individual string is separated by the provided separator.
+   * Copied from org.apache.commons.lang3.StringUtils (to avoid
+   * bringing in the entire package)
+   * @param array - array holding the strings to be concatenated
+   * @param separator - separator to be used in the concatenation
+   * @return The separator separated concatenated string
+   */
+
+  public static String join(Object[] array, String separator) {
+    return array == null?null:join(array, separator, 0, array.length);
+  }
+
+  /**
+   * Concatenates the individual strings into a single string,
+   * where each individual string is separated by the provided separator.
+   * Copied from org.apache.commons.lang3.StringUtils (to avoid
+   * bringing in the entire package)
+   * @param array - array holding the strings to be concatenated
+   * @param separator - separator to be used in the concatenation
+   * @param startIndex - index for first string to be concatenated
+   * @param endIndex - index for the last string to be u
+   * @return The separator separated concatenated string
+   */
+  public static String join(Object[] array, String separator, int startIndex, int endIndex) {
+    if(array == null) {
+      return null;
+    } else {
+      if(separator == null) {
+        separator = "";
+      }
+
+      int noOfItems = endIndex - startIndex;
+      if(noOfItems <= 0) {
+        return "";
+      } else {
+        StringBuilder buf = new StringBuilder(noOfItems * 16);
+
+        for(int i = startIndex; i < endIndex; ++i) {
+          if(i > startIndex) {
+            buf.append(separator);
+          }
+
+          if(array[i] != null) {
+            buf.append(array[i]);
+          }
+        }
+
+        return buf.toString();
+      }
+    }
+  }
+
 }
