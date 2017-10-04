@@ -156,10 +156,6 @@
           <artifactId>libpam4j</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>commons-validator</groupId>
-          <artifactId>commons-validator</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>commons-net</groupId>
           <artifactId>commons-net</artifactId>
         </exclusion>

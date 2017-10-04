@@ -26,12 +26,12 @@ public class TestNetworkFunctions extends BaseTestQuery {
   @Test
   public void testInetAton() throws Exception {
     final String query = "select inet_aton( '192.168.0.1') as inet from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues( "3232235521").go();
+    testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues( Long.parseLong("3232235521") ).go();
   }
 
   @Test
   public void testInetNtoa() throws Exception {
-    final String query = "select inet_aton( 3232235521 ) as inet from (values(1))";
+    final String query = "select inet_ntoa( 3232235521 ) as inet from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues("192.168.0.1").go();
   }
 
@@ -39,12 +39,6 @@ public class TestNetworkFunctions extends BaseTestQuery {
   public void testInNetwork() throws Exception {
     final String query = "select in_network( '192.168.0.1', '192.168.0.0/28' ) as in_net FROM (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("in_net").baselineValues(true).go();
-  }
-
-  @Test
-  public void testAddressCount() throws Exception {
-    final String query = "select getAddressCount( '192.168.0.0/28' ) AS addressCount FROM (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("addressCount").baselineValues(14).go();
   }
 
   @Test
@@ -59,14 +53,14 @@ public class TestNetworkFunctions extends BaseTestQuery {
   }
   @Test
   public void testFunctions() throws Exception {
-    final String query = "SELECT getLowAddress( '192.168.0.0/28' ) AS low," +
-      "getHighAddress( '192.168.0.0/28' ) AS high," +
-      "urlencode( 'http://www.test.com/login.php?username=Charles&password=12345' ) AS encoded_url," +
-      "urldecode( 'http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345' ) AS decoded_url," +
-      "is_private_ip( '8.8.8.8' ) AS is_private_ip," +
-      "is_valid_IP('258.257.234.23' ) AS isValidIP," +
-      "is_valid_IPv4( '192.168.0.1' ) AS isValidIP4," +
-      "is_valid_IPv6('1050:0:0:0:5:600:300c:326b') as isValidIPv6" +
+    final String query = "SELECT getLowAddress( '192.168.0.0/28' ) AS low, " +
+      "getHighAddress( '192.168.0.0/28' ) AS high, " +
+      "urlencode( 'http://www.test.com/login.php?username=Charles&password=12345' ) AS encoded_url, " +
+      "urldecode( 'http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345' ) AS decoded_url, " +
+      "is_private_ip( '8.8.8.8' ) AS is_private_ip, " +
+      "is_valid_IP('258.257.234.23' ) AS isValidIP, " +
+      "is_valid_IPv4( '192.168.0.1' ) AS isValidIP4, " +
+      "is_valid_IPv6('1050:0:0:0:5:600:300c:326b') as isValidIPv6 " +
       "FROM (values(1))";
 
     testBuilder().
