@@ -19,10 +19,13 @@ package org.apache.drill.exec.server.options;
 
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 public class TypeValidators {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
@@ -195,6 +198,54 @@ public class TypeValidators {
             .message(String.format("Option %s must be one of: %s.", getOptionName(), valuesSet))
             .build(logger);
       }
+    }
+  }
+
+  /**
+   * Unless explicitly changed by the user previously, the admin user
+   * can only be determined at runtime
+   */
+  public static class AdminUsersValidator extends StringValidator {
+
+    public final String DEFAULT_ADMIN_USERS = "%drill_process_user%";
+
+    public AdminUsersValidator(String name) {
+      super(name);
+    }
+
+    public String getAdminUsers(OptionManager optionManager) {
+      String adminUsers = optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR);
+      // if this option has not been changed by the user then return the
+      // process user
+      if (adminUsers.equals(DEFAULT_ADMIN_USERS)) {
+        adminUsers = ImpersonationUtil.getProcessUserName();
+      }
+      adminUsers = DrillStringUtils.sanitizeCSV(adminUsers);
+      return adminUsers;
+    }
+  }
+
+  /**
+   * Unless explicitly changed by the user previously, the admin user
+   * groups can only be determined at runtime
+   */
+  public static class AdminUserGroupsValidator extends StringValidator {
+
+    public final String DEFAULT_ADMIN_USER_GROUPS = "%drill_process_user_groups%";
+
+    public AdminUserGroupsValidator(String name) {
+      super(name);
+    }
+
+    public String getAdminUserGroups(OptionManager optionManager) {
+      String adminUserGroups = optionManager.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR);
+      // if this option has not been changed by the user then return the
+      // process user groups
+      if (adminUserGroups.equals(DEFAULT_ADMIN_USER_GROUPS)) {
+        adminUserGroups = Joiner.on(",").join(ImpersonationUtil.getProcessUserGroupNames());
+      }
+      adminUserGroups = DrillStringUtils.sanitizeCSV(adminUserGroups);
+      return adminUserGroups;
     }
   }
 

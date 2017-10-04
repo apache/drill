@@ -27,13 +27,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue;
 import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue.ZKQueueInfo;
@@ -75,6 +79,29 @@ public class DrillRoot {
     final DrillConfig config = dbContext.getConfig();
     final boolean userEncryptionEnabled = config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED);
     final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
+    // If the user is logged in and is admin user then show the admin user info
+    // For all other cases the user info need-not or should-not be displayed
+    OptionManager optionManager = work.getContext().getOptionManager();
+    final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
+    String adminUsers = isUserLoggedIn ?
+            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager) : null;
+    String adminUserGroups = isUserLoggedIn ?
+            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager) : null;
+
+    // separate groups by comma + space
+    if (adminUsers != null) {
+      String[] groups = adminUsers.split(",");
+      adminUsers = Joiner.on(", ").join(groups);
+    }
+
+    // separate groups by comma + space
+    if (adminUserGroups != null) {
+      String[] groups = adminUserGroups.split(",");
+      adminUserGroups = Joiner.on(", ").join(groups);
+    }
+
+    final boolean shouldShowUserInfo = isUserLoggedIn &&
+            ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
 
     for (DrillbitEndpoint endpoint : work.getContext().getBits()) {
       final DrillbitInfo drillbit = new DrillbitInfo(endpoint,
@@ -85,9 +112,11 @@ public class DrillRoot {
       }
       drillbits.add(drillbit);
     }
+    logger.debug("Admin info: user: "  + adminUsers +  " user group: " + adminUserGroups +
+            " userLoggedIn "  + isUserLoggedIn + " shouldShowUserInfo: " + shouldShowUserInfo );
 
-     return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
-      userEncryptionEnabled, bitEncryptionEnabled,
+    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
+      userEncryptionEnabled, bitEncryptionEnabled, adminUsers, adminUserGroups, shouldShowUserInfo,
       QueueInfo.build(dbContext.getResourceManager()));
   }
 
@@ -179,6 +208,9 @@ public class DrillRoot {
     private final Collection<String> mismatchedVersions;
     private final boolean userEncryptionEnabled;
     private final boolean bitEncryptionEnabled;
+    private final String adminUsers;
+    private final String adminUserGroups;
+    private final boolean shouldShowUserInfo;
     private final QueueInfo queueInfo;
 
     @JsonCreator
@@ -187,12 +219,18 @@ public class DrillRoot {
                        Collection<String> mismatchedVersions,
                        boolean userEncryption,
                        boolean bitEncryption,
+                       String adminUsers,
+                       String adminUserGroups,
+                       boolean shouldShowUserInfo,
                        QueueInfo queueInfo) {
       this.drillbits = Sets.newTreeSet(drillbits);
       this.currentVersion = currentVersion;
       this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
       this.userEncryptionEnabled = userEncryption;
       this.bitEncryptionEnabled = bitEncryption;
+      this.adminUsers = adminUsers;
+      this.adminUserGroups = adminUserGroups;
+      this.shouldShowUserInfo = shouldShowUserInfo;
       this.queueInfo = queueInfo;
     }
 
@@ -211,6 +249,12 @@ public class DrillRoot {
     public boolean isUserEncryptionEnabled() { return userEncryptionEnabled; }
 
     public boolean isBitEncryptionEnabled() { return bitEncryptionEnabled; }
+
+    public String getAdminUsers() { return adminUsers; }
+
+    public String getAdminUserGroups() { return adminUserGroups; }
+
+    public boolean shouldShowUserInfo() { return shouldShowUserInfo; }
 
     public QueueInfo queueInfo() { return queueInfo; }
   }
