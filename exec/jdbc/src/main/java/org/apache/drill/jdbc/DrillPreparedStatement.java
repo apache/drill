@@ -31,6 +31,6 @@ import java.sql.PreparedStatement;
  * </p>
  * @see #unwrap
  */
-public interface DrillPreparedStatement extends PreparedStatement {
+public interface DrillPreparedStatement extends DrillStatement, PreparedStatement {
 
 }

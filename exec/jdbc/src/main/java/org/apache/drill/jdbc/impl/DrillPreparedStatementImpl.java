@@ -23,6 +23,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
+import java.util.concurrent.Future;
 
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.AvaticaPreparedStatement;
@@ -31,6 +32,8 @@ import org.apache.calcite.avatica.Meta.StatementHandle;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatement;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillPreparedStatement;
+import org.apache.drill.jdbc.InvalidParameterSqlException;
+import org.apache.drill.jdbc.SqlTimeoutException;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement} for Drill.
@@ -46,6 +49,8 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
                DrillRemoteStatement {
 
   private final PreparedStatement preparedStatementHandle;
+  private TimeoutTrigger timeoutTrigger;
+  private Future<?> timeoutTriggerHandle;
 
   protected DrillPreparedStatementImpl(DrillConnectionImpl connection,
                                        StatementHandle h,
@@ -66,16 +71,46 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
 
   /**
+   * Throws {@link SqlTimeoutException} or {@link AlreadyClosedSqlException} <i>iff</i> this PreparedStatement is closed.
+   * @throws SqlTimeoutException        if PreparedStatement has closed due to timeout
+   * @throws AlreadyClosedSqlException  if PreparedStatement is closed
+   * @throws SQLException               Other unaccounted SQL exceptions
+   */
+  private void throwIfTimedOutOrClosed() throws SqlTimeoutException, AlreadyClosedSqlException, SQLException {
+    throwIfTimedOut();
+    throwIfClosed();
+  }
+
+  /**
    * Throws AlreadyClosedSqlException <i>iff</i> this PreparedStatement is closed.
-   *
    * @throws  AlreadyClosedSqlException  if PreparedStatement is closed
+   * @throws  SQLException               Other unaccounted SQL exceptions
    */
   private void throwIfClosed() throws AlreadyClosedSqlException {
-    if (isClosed()) {
-      throw new AlreadyClosedSqlException("PreparedStatement is already closed.");
+    if ( isClosed() ) {
+      throw new AlreadyClosedSqlException( "PreparedStatement is already closed." );
     }
   }
 
+  /**
+   * Throws {@link SqlTimeoutException} <i>iff</i> this PreparedStatement had closed due to timeout.
+   *
+   * @throws  SqlTimeoutException  if PreparedStatement has closed due to timeout
+   * @throws  SQLException         Other unaccounted SQL exceptions
+   */
+  private void throwIfTimedOut() throws SqlTimeoutException, SQLException {
+    if ( isTimedOut() ) {
+      throw new SqlTimeoutException(getQueryTimeout());
+    }
+  }
+
+  @Override
+  public boolean isTimedOut() {
+    if (timeoutTrigger != null && timeoutTriggerHandle.isDone()) {
+      return true;
+    }
+    return false;
+  }
 
   // Note:  Using dynamic proxies would reduce the quantity (450?) of method
   // overrides by eliminating those that exist solely to check whether the
@@ -88,7 +123,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public DrillConnectionImpl getConnection() {
     try {
       throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
+    } catch (SQLException e) {
       // Can't throw any SQLException because AvaticaConnection's
       // getConnection() is missing "throws SQLException".
       throw new RuntimeException(e.getMessage(), e);
@@ -109,6 +144,10 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void cleanUp() {
+    //Cancel Timeout trigger
+    if (this.timeoutTrigger != null) {
+      timeoutTriggerHandle.cancel(true);
+    }
     final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
     connection1.openStatementsRegistry.removeStatement(this);
   }
@@ -122,9 +161,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public ResultSet executeQuery(String sql) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.executeQuery(sql);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -133,9 +178,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public long executeLargeUpdate(String sql) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.executeLargeUpdate(sql);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -155,7 +206,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void setMaxFieldSize(int max) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.setMaxFieldSize(max);
     }
@@ -168,7 +219,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public long getLargeMaxRows() {
     try {
       throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
+    } catch (SQLException e) {
       // Can't throw any SQLException because AvaticaConnection's
       // getLargeMaxRows() is missing "throws SQLException".
       throw new RuntimeException(e.getMessage(), e);
@@ -178,13 +229,13 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void setLargeMaxRows(long max) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.setLargeMaxRows(max);
   }
 
   @Override
   public void setEscapeProcessing(boolean enable) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.setEscapeProcessing(enable);
     }
@@ -201,14 +252,40 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void setQueryTimeout(int seconds) throws SQLException {
-    throwIfClosed();
-    super.setQueryTimeout(seconds);
+    throwIfTimedOutOrClosed();
+    if ( seconds < 0 ) {
+      throw new InvalidParameterSqlException(
+          "Invalid (negative) \"seconds\" parameter to setQueryTimeout(...)"
+              + " (" + seconds + ")" );
+    }
+    else {
+      if ( 0 < seconds ) {
+        timeoutTrigger = new TimeoutTrigger(this, seconds);
+      } else {
+        //Reset timeout to 0 (i.e. no timeout)
+        if (timeoutTrigger != null) {
+          //Cancelling existing triggered timeout
+          if (timeoutTriggerHandle != null) {
+            timeoutTriggerHandle.cancel(true);
+          }
+          timeoutTrigger = null;
+        }
+      }
+      super.setQueryTimeout(seconds);
+    }
   }
 
   @Override
   public void cancel() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.cancel();
+  }
+
+  @Override
+  public void cancelDueToTimeout() throws SQLException {
+    throwIfTimedOutOrClosed();
+    cancel();
+    throw new SqlTimeoutException(this.getQueryTimeout());
   }
 
   @Override
@@ -219,13 +296,13 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void clearWarnings() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.clearWarnings();
   }
 
   @Override
   public void setCursorName(String name) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.setCursorName(name);
     }
@@ -237,12 +314,24 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   @Override
   public boolean execute(String sql) throws SQLException {
     throwIfClosed();
-    return super.execute(sql);
+    try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
+      return super.execute(sql);
+    }
+    catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    throwIfClosed();
+    //This getter is checked for timeout
+    throwIfTimedOutOrClosed();
     return super.getResultSet();
   }
 
@@ -265,7 +354,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void setFetchDirection(int direction) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.setFetchDirection(direction);
   }
 
@@ -273,7 +362,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public int getFetchDirection(){
     try {
       throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
+    } catch (SQLException e) {
       // Can't throw any SQLException because AvaticaConnection's
       // getFetchDirection() is missing "throws SQLException".
       throw new RuntimeException(e.getMessage(), e);
@@ -283,7 +372,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void setFetchSize(int rows) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.setFetchSize(rows);
   }
 
@@ -291,7 +380,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public int getFetchSize() {
     try {
       throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
+    } catch (SQLException e) {
       // Can't throw any SQLException because AvaticaConnection's
       // getFetchSize() is missing "throws SQLException".
       throw new RuntimeException(e.getMessage(), e);
@@ -323,7 +412,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void addBatch(String sql) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.addBatch(sql);
     }
@@ -334,7 +423,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void clearBatch() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.clearBatch();
     }
@@ -347,9 +436,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public int[] executeBatch() throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.executeBatch();
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -367,7 +462,8 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    throwIfClosed();
+    //This getter is checked for timeout
+    throwIfTimedOutOrClosed();
     try {
       return super.getGeneratedKeys();
     }
@@ -380,9 +476,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.executeUpdate(sql, autoGeneratedKeys);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -391,9 +493,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public int executeUpdate(String sql, int columnIndexes[]) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.executeUpdate(sql, columnIndexes);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -402,9 +510,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public int executeUpdate(String sql, String columnNames[]) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.executeUpdate(sql, columnNames);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -413,9 +527,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.execute(sql, autoGeneratedKeys);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -424,9 +544,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public boolean execute(String sql, int columnIndexes[]) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.execute(sql, columnIndexes);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -435,9 +561,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public boolean execute(String sql, String columnNames[]) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.execute(sql, columnNames);
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -465,7 +597,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void setPoolable(boolean poolable) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.setPoolable(poolable);
     }
@@ -487,29 +619,46 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void closeOnCompletion() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.closeOnCompletion();
   }
 
   @Override
   public boolean isCloseOnCompletion() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.isCloseOnCompletion();
   }
 
   @Override
   public ResultSet executeQuery() throws SQLException {
     throwIfClosed();
-    return super.executeQuery();
+    try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
+      return super.executeQuery();
+    }
+    catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public long executeLargeUpdate() throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.executeLargeUpdate();
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
@@ -535,7 +684,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public void clearParameters() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.clearParameters();
     }
@@ -552,16 +701,22 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   public boolean execute() throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        timeoutTriggerHandle = timeoutTrigger.startCountdown();
+      }
       return super.execute();
     }
     catch (UnsupportedOperationException e) {
+      if ( isTimedOut() ) {
+        throw new SqlTimeoutException(getQueryTimeout());
+      }
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
   }
 
   @Override
   public void addBatch() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.addBatch();
     }
@@ -580,8 +735,8 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   @Override
   public ResultSetMetaData getMetaData() {
     try {
-      throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
+      throwIfTimedOutOrClosed();
+    } catch (SQLException e) {
       // Can't throw any SQLException because AvaticaConnection's
       // getMetaData() is missing "throws SQLException".
       throw new RuntimeException(e.getMessage(), e);
@@ -598,7 +753,7 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
 
   @Override
   public ParameterMetaData getParameterMetaData() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getParameterMetaData();
   }
 

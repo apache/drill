@@ -42,9 +42,11 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
@@ -60,6 +62,8 @@ import com.google.common.collect.ImmutableList;
  * Test for Drill's implementation of PreparedStatement's methods.
  */
 public class PreparedStatementTest extends JdbcTestBase {
+
+  private static final String SYS_VERSION_SQL = "select * from sys.version";
 
   /** Fuzzy matcher for parameters-not-supported message assertions.  (Based on
    *  current "Prepared-statement dynamic parameters are not supported.") */
@@ -280,6 +284,102 @@ public class PreparedStatementTest extends JdbcTestBase {
         throw e;
       }
     }
+  }
+
+  /**
+   * Test for reading of default query timeout
+   */
+  @Test
+  public void testDefaultGetQueryTimeout() throws SQLException {
+    PreparedStatement stmt = connection.prepareStatement(SYS_VERSION_SQL);
+    int timeoutValue = stmt.getQueryTimeout();
+    assert( 0 == timeoutValue );
+  }
+
+  /**
+   * Test Invalid parameter by giving negative timeout
+   */
+  @Test ( expected = InvalidParameterSqlException.class )
+  public void testInvalidSetQueryTimeout() throws SQLException {
+    PreparedStatement stmt = connection.prepareStatement(SYS_VERSION_SQL);
+    //Setting negative value
+    int valueToSet = -10;
+    if (0L == valueToSet) {
+      valueToSet--;
+    }
+    stmt.setQueryTimeout(valueToSet);
+  }
+
+  /**
+   * Test setting a valid timeout
+   */
+  @Test
+  public void testValidSetQueryTimeout() throws SQLException {
+    PreparedStatement stmt = connection.prepareStatement(SYS_VERSION_SQL);
+    //Setting positive value
+    int valueToSet = new Random(System.currentTimeMillis()).nextInt(60);
+    if (0L == valueToSet) {
+      valueToSet++;
+    }
+    stmt.setQueryTimeout(valueToSet);
+    assert( valueToSet == stmt.getQueryTimeout() );
+  }
+
+  /**
+   * Test setting timeout for a query that actually times out
+   */
+  @Test ( expected = SqlTimeoutException.class )
+  public void testTriggeredQueryTimeout() throws SQLException {
+    PreparedStatement stmt = null;
+    //Setting to a very low value (3sec)
+    int timeoutDuration = 3;
+    try {
+      stmt = connection.prepareStatement(SYS_VERSION_SQL);
+      stmt.setQueryTimeout(timeoutDuration);
+      System.out.println("Set a timeout of "+ stmt.getQueryTimeout() +" seconds");
+      ResultSet rs = stmt.executeQuery();
+      //Pause briefly (a second beyond the timeout) before attempting to fetch rows
+      try {
+        Thread.sleep( (timeoutDuration + 1) * 1000L );
+      } catch (InterruptedException e) {/*DoNothing*/}
+      //Fetch rows
+      while (rs.next()) {
+        rs.getBytes(1);
+      }
+    } catch (SQLException sqlEx) {
+      if (sqlEx instanceof SqlTimeoutException) {
+        throw (SqlTimeoutException) sqlEx;
+      }
+      if (sqlEx instanceof SQLTimeoutException) {
+        System.out.println("Unexpected Timeout:: " + sqlEx.getMessage());
+        throw new SqlTimeoutException(timeoutDuration);
+      }
+      if (stmt.isClosed()) {
+        //The statement is assumed to be closed by timeout, since we didn't call it explicitly
+        throw new SqlTimeoutException(timeoutDuration);
+      }
+    }
+    if (stmt != null) {
+      stmt.close();
+    }
+  }
+
+  /**
+   * Test setting timeout that never gets triggered
+   */
+  @Test
+  public void testNonTriggeredQueryTimeout() throws SQLException {
+    PreparedStatement stmt = connection.prepareStatement(SYS_VERSION_SQL);
+    stmt.setQueryTimeout(60);
+    stmt.executeQuery();
+    ResultSet rs = stmt.getResultSet();
+    int rowCount = 0;
+    while (rs.next()) {
+      rs.getBytes(1);
+      rowCount++;
+    }
+    stmt.close();
+    assert( 1 == rowCount );
   }
 
 }

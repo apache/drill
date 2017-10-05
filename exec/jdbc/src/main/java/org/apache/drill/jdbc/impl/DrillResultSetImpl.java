@@ -52,7 +52,9 @@ import org.apache.calcite.avatica.util.Cursor;
 import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillResultSet;
+import org.apache.drill.jdbc.DrillStatement;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
+import org.apache.drill.jdbc.SqlTimeoutException;
 
 
 /**
@@ -64,13 +66,16 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
       org.slf4j.LoggerFactory.getLogger(DrillResultSetImpl.class);
 
   private final DrillConnectionImpl connection;
+  private final AvaticaStatement statement;
+
   private volatile boolean hasPendingCancelationNotification = false;
 
-  DrillResultSetImpl(AvaticaStatement statement, Meta.Signature signature,
+  DrillResultSetImpl(AvaticaStatement avaticaStatement, Meta.Signature signature,
                      ResultSetMetaData resultSetMetaData, TimeZone timeZone,
                      Meta.Frame firstFrame) {
-    super(statement, signature, resultSetMetaData, timeZone, firstFrame);
-    connection = (DrillConnectionImpl) statement.getConnection();
+    super(avaticaStatement, signature, resultSetMetaData, timeZone, firstFrame);
+    statement = avaticaStatement;
+    connection = (DrillConnectionImpl) avaticaStatement.getConnection();
   }
 
   /**
@@ -98,6 +103,34 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
     }
   }
 
+  /**
+   * Throws SqlTimeoutException if the statement has already timed out
+   * @throws AlreadyClosedSqlException   if Connection is closed
+   * @throws SqlTimeoutException         if Statement is already timed out
+   */
+  private void throwIfTimedOut() throws AlreadyClosedSqlException,
+                                        SqlTimeoutException,
+                                        SQLException {
+    if ( ((DrillStatement) statement).isTimedOut() ) {
+      //TODO
+//    if ( (statement instanceof DrillStatementImpl && ((DrillStatementImpl) statement).isTimedOut()) ||
+//         (statement instanceof DrillPreparedStatementImpl && ((DrillPreparedStatementImpl) statement).isTimedOut()) ) {
+      throw new SqlTimeoutException( statement.getQueryTimeout() );
+    }
+  }
+
+  /**
+   * Throws {@link SqlTimeoutException} or {@link AlreadyClosedSqlException} <i>iff</i> this Statement is closed.
+   * @throws ExecutionCanceledSqlException
+   * @throws SqlTimeoutException
+   * @throws SQLException
+   */
+  private void throwIfTimedOutOrClosed() throws ExecutionCanceledSqlException,
+                                                SqlTimeoutException,
+                                                SQLException {
+    throwIfTimedOut();
+    throwIfClosed();
+  }
 
   // Note:  Using dynamic proxies would reduce the quantity (450?) of method
   // overrides by eliminating those that exist solely to check whether the
@@ -125,7 +158,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   // (Not delegated.)
   @Override
   public boolean next() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     // TODO:  Resolve following comments (possibly obsolete because of later
     // addition of preceding call to throwIfClosed.  Also, NOTE that the
     // following check, and maybe some throwIfClosed() calls, probably must
@@ -137,8 +170,14 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
     // before we call next.
     // TODO: handle next() after close is called in the Avatica code.
     if (cursor != null) {
-      return super.next();
+      //Intercepting the boolean call because the Statement might have timed out and we'll miss that with DrillCursor.next()=false
+      boolean next;
+      if ( !( next = super.next() ) ) {
+        throwIfTimedOut();
+      }
+      return next;
     } else {
+      throwIfTimedOut();
       return false;
     }
   }
@@ -151,7 +190,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean wasNull() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.wasNull();
   }
 
@@ -164,209 +203,209 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean getBoolean( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBoolean( columnIndex );
   }
 
   @Override
   public byte getByte( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getByte( columnIndex );
   }
 
   @Override
   public short getShort( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getShort( columnIndex );
   }
 
   @Override
   public int getInt( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getInt( columnIndex );
   }
 
   @Override
   public long getLong( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getLong( columnIndex );
   }
 
   @Override
   public float getFloat( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getFloat( columnIndex );
   }
 
   @Override
   public double getDouble( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getDouble( columnIndex );
   }
 
   @Override
   public BigDecimal getBigDecimal( int columnIndex,
-                                   int scale ) throws SQLException {
-    throwIfClosed();
+      int scale ) throws SQLException {
+    throwIfTimedOutOrClosed();
     return super.getBigDecimal( columnIndex, scale );
   }
 
   @Override
   public byte[] getBytes( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBytes( columnIndex );
   }
 
   @Override
   public Date getDate( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getDate( columnIndex );
   }
 
   @Override
   public Time getTime( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getTime( columnIndex );
   }
 
   @Override
   public Timestamp getTimestamp( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getTimestamp( columnIndex );
   }
 
   @Override
   public InputStream getAsciiStream( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getAsciiStream( columnIndex );
   }
 
   @Override
   public InputStream getUnicodeStream( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getUnicodeStream( columnIndex );
   }
 
   @Override
   public InputStream getBinaryStream( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBinaryStream( columnIndex );
   }
 
   // Methods for accessing results by column label
   @Override
   public String getString( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getString( columnLabel );
   }
 
   @Override
   public boolean getBoolean( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBoolean( columnLabel );
   }
 
   @Override
   public byte getByte( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getByte( columnLabel );
   }
 
   @Override
   public short getShort( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getShort( columnLabel );
   }
 
   @Override
   public int getInt( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getInt( columnLabel );
   }
 
   @Override
   public long getLong( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getLong( columnLabel );
   }
 
   @Override
   public float getFloat( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getFloat( columnLabel );
   }
 
   @Override
   public double getDouble( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getDouble( columnLabel );
   }
 
   @Override
   public BigDecimal getBigDecimal( String columnLabel,
-                                   int scale ) throws SQLException {
-    throwIfClosed();
+      int scale ) throws SQLException {
+    throwIfTimedOutOrClosed();
     return super.getBigDecimal( columnLabel, scale );
   }
 
   @Override
   public byte[] getBytes( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBytes( columnLabel );
   }
 
   @Override
   public Date getDate( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getDate( columnLabel );
   }
 
   @Override
   public Time getTime( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getTime( columnLabel );
   }
 
   @Override
   public Timestamp getTimestamp( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getTimestamp( columnLabel );
   }
 
   @Override
   public InputStream getAsciiStream( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getAsciiStream( columnLabel );
   }
 
   @Override
   public InputStream getUnicodeStream( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getUnicodeStream( columnLabel );
   }
 
   @Override
   public InputStream getBinaryStream( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBinaryStream( columnLabel );
   }
 
   // Advanced features:
   @Override
   public SQLWarning getWarnings() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getWarnings();
   }
 
   @Override
   public void clearWarnings() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.clearWarnings();
   }
 
   @Override
   public String getCursorName() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.getCursorName();
     }
@@ -378,13 +417,13 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   // (Not delegated.)
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getMetaData();
   }
 
   @Override
   public Object getObject( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
 
     final Cursor.Accessor accessor;
     try {
@@ -400,14 +439,14 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public Object getObject( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getObject( columnLabel );
   }
 
   //----------------------------------------------------------------
   @Override
   public int findColumn( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.findColumn( columnLabel );
   }
 
@@ -417,25 +456,25 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //---------------------------------------------------------------------
   @Override
   public Reader getCharacterStream( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getCharacterStream( columnIndex );
   }
 
   @Override
   public Reader getCharacterStream( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getCharacterStream( columnLabel );
   }
 
   @Override
   public BigDecimal getBigDecimal( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBigDecimal( columnIndex );
   }
 
   @Override
   public BigDecimal getBigDecimal( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBigDecimal( columnLabel );
   }
 
@@ -444,25 +483,25 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //---------------------------------------------------------------------
   @Override
   public boolean isBeforeFirst() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.isBeforeFirst();
   }
 
   @Override
   public boolean isAfterLast() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.isAfterLast();
   }
 
   @Override
   public boolean isFirst() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.isFirst();
   }
 
   @Override
   public boolean isLast() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.isLast();
     }
@@ -473,7 +512,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void beforeFirst() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.beforeFirst();
     }
@@ -484,7 +523,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void afterLast() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.afterLast();
     }
@@ -495,7 +534,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean first() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.first();
     }
@@ -506,7 +545,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean last() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.last();
     }
@@ -517,7 +556,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public int getRow() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     // Map Avatica's erroneous zero-based row numbers to 1-based, and return 0
     // after end, per JDBC:
     return isAfterLast() ? 0 : 1 + super.getRow();
@@ -525,7 +564,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean absolute( int row ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.absolute( row );
     }
@@ -536,7 +575,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean relative( int rows ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.relative( rows );
     }
@@ -547,7 +586,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean previous() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.previous();
     }
@@ -562,37 +601,37 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void setFetchDirection( int direction ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.setFetchDirection( direction );
   }
 
   @Override
   public int getFetchDirection() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getFetchDirection();
   }
 
   @Override
   public void setFetchSize( int rows ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     super.setFetchSize( rows );
   }
 
   @Override
   public int getFetchSize() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getFetchSize();
   }
 
   @Override
   public int getType() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getType();
   }
 
   @Override
   public int getConcurrency() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getConcurrency();
   }
 
@@ -601,25 +640,25 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //---------------------------------------------------------------------
   @Override
   public boolean rowUpdated() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.rowUpdated();
   }
 
   @Override
   public boolean rowInserted() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.rowInserted();
   }
 
   @Override
   public boolean rowDeleted() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.rowDeleted();
   }
 
   @Override
   public void updateNull( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateNull( columnIndex );
     }
@@ -630,7 +669,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateBoolean( int columnIndex, boolean x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateBoolean( columnIndex, x );
     }
@@ -641,7 +680,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateByte( int columnIndex, byte x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateByte( columnIndex, x );
     }
@@ -652,7 +691,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateShort( int columnIndex, short x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateShort( columnIndex, x );
     }
@@ -663,7 +702,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateInt( int columnIndex, int x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateInt( columnIndex, x );
     }
@@ -674,7 +713,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateLong( int columnIndex, long x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateLong( columnIndex, x );
     }
@@ -685,7 +724,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateFloat( int columnIndex, float x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateFloat( columnIndex, x );
     }
@@ -696,7 +735,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateDouble( int columnIndex, double x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateDouble( columnIndex, x );
     }
@@ -706,9 +745,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBigDecimal( int columnIndex,
-                                BigDecimal x ) throws SQLException {
-    throwIfClosed();
+  public void updateBigDecimal( int columnIndex, BigDecimal x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBigDecimal( columnIndex, x );
     }
@@ -719,7 +757,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateString( int columnIndex, String x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateString( columnIndex, x );
     }
@@ -730,7 +768,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateBytes( int columnIndex, byte[] x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateBytes( columnIndex, x );
     }
@@ -741,7 +779,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateDate( int columnIndex, Date x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateDate( columnIndex, x );
     }
@@ -752,7 +790,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateTime( int columnIndex, Time x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateTime( columnIndex, x );
     }
@@ -763,7 +801,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateTimestamp( int columnIndex, Timestamp x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateTimestamp( columnIndex, x );
     }
@@ -773,9 +811,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateAsciiStream( int columnIndex, InputStream x,
-                                 int length ) throws SQLException {
-    throwIfClosed();
+  public void updateAsciiStream( int columnIndex, InputStream x, int length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateAsciiStream( columnIndex, x, length );
     }
@@ -785,9 +822,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBinaryStream( int columnIndex, InputStream x,
-                                  int length ) throws SQLException {
-    throwIfClosed();
+  public void updateBinaryStream( int columnIndex, InputStream x, int length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBinaryStream( columnIndex, x, length );
     }
@@ -797,9 +833,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateCharacterStream( int columnIndex, Reader x,
-                                     int length ) throws SQLException {
-    throwIfClosed();
+  public void updateCharacterStream( int columnIndex, Reader x, int length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateCharacterStream( columnIndex, x, length );
     }
@@ -809,9 +844,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateObject( int columnIndex, Object x,
-                            int scaleOrLength ) throws SQLException {
-    throwIfClosed();
+  public void updateObject( int columnIndex, Object x, int scaleOrLength ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateObject( columnIndex, x, scaleOrLength );
     }
@@ -822,7 +856,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateObject( int columnIndex, Object x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateObject( columnIndex, x );
     }
@@ -833,7 +867,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateNull( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateNull( columnLabel );
     }
@@ -844,7 +878,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateBoolean( String columnLabel, boolean x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateBoolean( columnLabel, x );
     }
@@ -855,7 +889,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateByte( String columnLabel, byte x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateByte( columnLabel, x );
     }
@@ -866,7 +900,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateShort( String columnLabel, short x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateShort( columnLabel, x );
     }
@@ -877,7 +911,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateInt( String columnLabel, int x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateInt( columnLabel, x );
     }
@@ -888,7 +922,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateLong( String columnLabel, long x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateLong( columnLabel, x );
     }
@@ -899,7 +933,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateFloat( String columnLabel, float x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateFloat( columnLabel, x );
     }
@@ -910,7 +944,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateDouble( String columnLabel, double x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateDouble( columnLabel, x );
     }
@@ -921,8 +955,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateBigDecimal( String columnLabel,
-                                BigDecimal x ) throws SQLException {
-    throwIfClosed();
+      BigDecimal x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBigDecimal( columnLabel, x );
     }
@@ -933,7 +967,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateString( String columnLabel, String x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateString( columnLabel, x );
     }
@@ -944,7 +978,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateBytes( String columnLabel, byte[] x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateBytes( columnLabel, x );
     }
@@ -955,7 +989,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateDate( String columnLabel, Date x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateDate( columnLabel, x );
     }
@@ -966,7 +1000,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateTime( String columnLabel, Time x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateTime( columnLabel, x );
     }
@@ -977,7 +1011,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateTimestamp( String columnLabel, Timestamp x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateTimestamp( columnLabel, x );
     }
@@ -987,9 +1021,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateAsciiStream( String columnLabel, InputStream x,
-                                 int length ) throws SQLException {
-    throwIfClosed();
+  public void updateAsciiStream( String columnLabel, InputStream x, int length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateAsciiStream( columnLabel, x, length );
     }
@@ -999,9 +1032,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBinaryStream( String columnLabel, InputStream x,
-                                  int length ) throws SQLException {
-    throwIfClosed();
+  public void updateBinaryStream( String columnLabel, InputStream x, int length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBinaryStream( columnLabel, x, length );
     }
@@ -1011,9 +1043,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateCharacterStream( String columnLabel, Reader reader,
-                                     int length ) throws SQLException {
-    throwIfClosed();
+  public void updateCharacterStream( String columnLabel, Reader reader, int length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateCharacterStream( columnLabel, reader, length );
     }
@@ -1023,9 +1054,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateObject( String columnLabel, Object x,
-                            int scaleOrLength ) throws SQLException {
-    throwIfClosed();
+  public void updateObject( String columnLabel, Object x, int scaleOrLength ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateObject( columnLabel, x, scaleOrLength );
     }
@@ -1036,7 +1066,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateObject( String columnLabel, Object x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateObject( columnLabel, x );
     }
@@ -1047,7 +1077,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void insertRow() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.insertRow();
     }
@@ -1058,7 +1088,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateRow() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateRow();
     }
@@ -1069,7 +1099,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void deleteRow() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.deleteRow();
     }
@@ -1080,7 +1110,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void refreshRow() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.refreshRow();
     }
@@ -1091,7 +1121,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void cancelRowUpdates() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.cancelRowUpdates();
     }
@@ -1102,7 +1132,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void moveToInsertRow() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.moveToInsertRow();
     }
@@ -1113,7 +1143,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void moveToCurrentRow() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.moveToCurrentRow();
     }
@@ -1125,7 +1155,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public AvaticaStatement getStatement() {
     try {
-      throwIfClosed();
+      throwIfTimedOutOrClosed();
     } catch (AlreadyClosedSqlException e) {
       // Can't throw any SQLException because AvaticaConnection's
       // getStatement() is missing "throws SQLException".
@@ -1138,100 +1168,98 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public Object getObject( int columnIndex,
-                           Map<String, Class<?>> map ) throws SQLException {
-    throwIfClosed();
+      Map<String, Class<?>> map ) throws SQLException {
+    throwIfTimedOutOrClosed();
     return super.getObject( columnIndex, map );
   }
 
   @Override
   public Ref getRef( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getRef( columnIndex );
   }
 
   @Override
   public Blob getBlob( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBlob( columnIndex );
   }
 
   @Override
   public Clob getClob( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getClob( columnIndex );
   }
 
   @Override
   public Array getArray( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getArray( columnIndex );
   }
 
   @Override
-  public Object getObject( String columnLabel,
-                           Map<String,Class<?>> map ) throws SQLException {
-    throwIfClosed();
+  public Object getObject( String columnLabel, Map<String,Class<?>> map ) throws SQLException {
+    throwIfTimedOutOrClosed();
     return super.getObject( columnLabel, map );
   }
 
   @Override
   public Ref getRef( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getRef( columnLabel );
   }
 
   @Override
   public Blob getBlob( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getBlob( columnLabel );
   }
 
   @Override
   public Clob getClob( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getClob( columnLabel );
   }
 
   @Override
   public Array getArray( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getArray( columnLabel );
   }
 
   @Override
   public Date getDate( int columnIndex, Calendar cal ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getDate( columnIndex, cal );
   }
 
   @Override
   public Date getDate( String columnLabel, Calendar cal ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getDate( columnLabel, cal );
   }
 
   @Override
   public Time getTime( int columnIndex, Calendar cal ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getTime( columnIndex, cal );
   }
 
   @Override
   public Time getTime( String columnLabel, Calendar cal ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getTime( columnLabel, cal );
   }
 
   @Override
   public Timestamp getTimestamp( int columnIndex, Calendar cal ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getTimestamp( columnIndex, cal );
   }
 
   @Override
-  public Timestamp getTimestamp( String columnLabel,
-                                 Calendar cal ) throws SQLException {
-    throwIfClosed();
+  public Timestamp getTimestamp( String columnLabel, Calendar cal ) throws SQLException {
+    throwIfTimedOutOrClosed();
     return super.getTimestamp( columnLabel, cal );
   }
 
@@ -1239,19 +1267,19 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public URL getURL( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getURL( columnIndex );
   }
 
   @Override
   public URL getURL( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getURL( columnLabel );
   }
 
   @Override
   public void updateRef( int columnIndex, Ref x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateRef( columnIndex, x );
     }
@@ -1262,7 +1290,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateRef( String columnLabel, Ref x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateRef( columnLabel, x );
     }
@@ -1273,7 +1301,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateBlob( int columnIndex, Blob x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateBlob( columnIndex, x );
     }
@@ -1284,7 +1312,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateBlob( String columnLabel, Blob x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateBlob( columnLabel, x );
     }
@@ -1295,7 +1323,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateClob( int columnIndex, Clob x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateClob( columnIndex, x );
     }
@@ -1306,7 +1334,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateClob( String columnLabel, Clob x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateClob( columnLabel, x );
     }
@@ -1317,7 +1345,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateArray( int columnIndex, Array x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateArray( columnIndex, x );
     }
@@ -1328,7 +1356,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateArray( String columnLabel, Array x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateArray( columnLabel, x );
     }
@@ -1340,7 +1368,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //------------------------- JDBC 4.0 -----------------------------------
   @Override
   public RowId getRowId( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.getRowId( columnIndex );
     }
@@ -1351,7 +1379,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public RowId getRowId( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       return super.getRowId( columnLabel );
     }
@@ -1362,7 +1390,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateRowId( int columnIndex, RowId x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateRowId( columnIndex, x );
     }
@@ -1373,7 +1401,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateRowId( String columnLabel, RowId x ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateRowId( columnLabel, x );
     }
@@ -1384,7 +1412,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public int getHoldability() throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getHoldability();
   }
 
@@ -1396,7 +1424,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateNString( int columnIndex, String nString ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateNString( columnIndex, nString );
     }
@@ -1406,9 +1434,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateNString( String columnLabel,
-                             String nString ) throws SQLException {
-    throwIfClosed();
+  public void updateNString( String columnLabel, String nString ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateNString( columnLabel, nString );
     }
@@ -1419,7 +1446,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateNClob( int columnIndex, NClob nClob ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateNClob( columnIndex, nClob );
     }
@@ -1430,7 +1457,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateNClob( String columnLabel, NClob nClob ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateNClob( columnLabel, nClob );
     }
@@ -1441,32 +1468,31 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public NClob getNClob( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getNClob( columnIndex );
   }
 
   @Override
   public NClob getNClob( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getNClob( columnLabel );
   }
 
   @Override
   public SQLXML getSQLXML( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getSQLXML( columnIndex );
   }
 
   @Override
   public SQLXML getSQLXML( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getSQLXML( columnLabel );
   }
 
   @Override
-  public void updateSQLXML( int columnIndex,
-                            SQLXML xmlObject ) throws SQLException {
-    throwIfClosed();
+  public void updateSQLXML( int columnIndex, SQLXML xmlObject ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateSQLXML( columnIndex, xmlObject );
     }
@@ -1476,9 +1502,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateSQLXML( String columnLabel,
-                            SQLXML xmlObject ) throws SQLException {
-    throwIfClosed();
+  public void updateSQLXML( String columnLabel, SQLXML xmlObject ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateSQLXML( columnLabel, xmlObject );
     }
@@ -1489,32 +1514,31 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public String getNString( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getNString( columnIndex );
   }
 
   @Override
   public String getNString( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getNString( columnLabel );
   }
 
   @Override
   public Reader getNCharacterStream( int columnIndex ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getNCharacterStream( columnIndex );
   }
 
   @Override
   public Reader getNCharacterStream( String columnLabel ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getNCharacterStream( columnLabel );
   }
 
   @Override
-  public void updateNCharacterStream( int columnIndex, Reader x,
-                                      long length ) throws SQLException {
-    throwIfClosed();
+  public void updateNCharacterStream( int columnIndex, Reader x, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateNCharacterStream( columnIndex, x, length );
     }
@@ -1524,9 +1548,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateNCharacterStream( String columnLabel, Reader reader,
-                                      long length ) throws SQLException {
-    throwIfClosed();
+  public void updateNCharacterStream( String columnLabel, Reader reader, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateNCharacterStream( columnLabel, reader, length );
     }
@@ -1536,9 +1559,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateAsciiStream( int columnIndex, InputStream x,
-                                 long length ) throws SQLException {
-    throwIfClosed();
+  public void updateAsciiStream( int columnIndex, InputStream x, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateAsciiStream( columnIndex, x, length );
     }
@@ -1548,9 +1570,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBinaryStream( int columnIndex, InputStream x,
-                                  long length ) throws SQLException {
-    throwIfClosed();
+  public void updateBinaryStream( int columnIndex, InputStream x, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBinaryStream( columnIndex, x, length );
     }
@@ -1560,9 +1581,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateCharacterStream( int columnIndex, Reader x,
-                                     long length ) throws SQLException {
-    throwIfClosed();
+  public void updateCharacterStream( int columnIndex, Reader x, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateCharacterStream( columnIndex, x, length );
     }
@@ -1572,9 +1592,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateAsciiStream( String columnLabel, InputStream x,
-                                 long length ) throws SQLException {
-    throwIfClosed();
+  public void updateAsciiStream( String columnLabel, InputStream x, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateAsciiStream( columnLabel, x, length );
     }
@@ -1584,9 +1603,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBinaryStream( String columnLabel, InputStream x,
-                                  long length ) throws SQLException {
-    throwIfClosed();
+  public void updateBinaryStream( String columnLabel, InputStream x, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBinaryStream( columnLabel, x, length );
     }
@@ -1596,9 +1614,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateCharacterStream( String columnLabel, Reader reader,
-                                     long length ) throws SQLException {
-    throwIfClosed();
+  public void updateCharacterStream( String columnLabel, Reader reader, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateCharacterStream( columnLabel, reader, length );
     }
@@ -1608,9 +1625,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBlob( int columnIndex, InputStream inputStream,
-                          long length ) throws SQLException {
-    throwIfClosed();
+  public void updateBlob( int columnIndex, InputStream inputStream, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBlob( columnIndex, inputStream, length );
     }
@@ -1620,9 +1636,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBlob( String columnLabel, InputStream inputStream,
-                          long length ) throws SQLException {
-    throwIfClosed();
+  public void updateBlob( String columnLabel, InputStream inputStream, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBlob( columnLabel, inputStream, length );
     }
@@ -1632,9 +1647,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateClob( int columnIndex,  Reader reader,
-                          long length ) throws SQLException {
-    throwIfClosed();
+  public void updateClob( int columnIndex,  Reader reader, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateClob( columnIndex, reader, length );
     }
@@ -1644,9 +1658,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateClob( String columnLabel,  Reader reader,
-                          long length ) throws SQLException {
-    throwIfClosed();
+  public void updateClob( String columnLabel,  Reader reader, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateClob( columnLabel, reader, length );
     }
@@ -1656,9 +1669,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateNClob( int columnIndex,  Reader reader,
-                           long length ) throws SQLException {
-    throwIfClosed();
+  public void updateNClob( int columnIndex,  Reader reader, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateNClob( columnIndex, reader, length );
     }
@@ -1668,9 +1680,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateNClob( String columnLabel,  Reader reader,
-                           long length ) throws SQLException {
-    throwIfClosed();
+  public void updateNClob( String columnLabel,  Reader reader, long length ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateNClob( columnLabel, reader, length );
     }
@@ -1681,9 +1692,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   //---
   @Override
-  public void updateNCharacterStream( int columnIndex,
-                                      Reader x ) throws SQLException {
-    throwIfClosed();
+  public void updateNCharacterStream( int columnIndex, Reader x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateNCharacterStream( columnIndex, x );
     }
@@ -1693,9 +1703,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateNCharacterStream( String columnLabel,
-                                      Reader reader ) throws SQLException {
-    throwIfClosed();
+  public void updateNCharacterStream( String columnLabel, Reader reader ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateNCharacterStream( columnLabel, reader );
     }
@@ -1705,9 +1714,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateAsciiStream( int columnIndex,
-                                 InputStream x ) throws SQLException {
-    throwIfClosed();
+  public void updateAsciiStream( int columnIndex, InputStream x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateAsciiStream( columnIndex, x );
     }
@@ -1717,9 +1725,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBinaryStream( int columnIndex,
-                                  InputStream x ) throws SQLException {
-    throwIfClosed();
+  public void updateBinaryStream( int columnIndex, InputStream x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBinaryStream( columnIndex, x );
     }
@@ -1729,9 +1736,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateCharacterStream( int columnIndex,
-                                     Reader x ) throws SQLException {
-    throwIfClosed();
+  public void updateCharacterStream( int columnIndex, Reader x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateCharacterStream( columnIndex, x );
     }
@@ -1741,9 +1747,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateAsciiStream( String columnLabel,
-                                 InputStream x ) throws SQLException {
-    throwIfClosed();
+  public void updateAsciiStream( String columnLabel, InputStream x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateAsciiStream( columnLabel, x );
     }
@@ -1753,9 +1758,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBinaryStream( String columnLabel,
-                                  InputStream x ) throws SQLException {
-    throwIfClosed();
+  public void updateBinaryStream( String columnLabel, InputStream x ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBinaryStream( columnLabel, x );
     }
@@ -1765,9 +1769,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateCharacterStream( String columnLabel,
-                                     Reader reader ) throws SQLException {
-    throwIfClosed();
+  public void updateCharacterStream( String columnLabel, Reader reader ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateCharacterStream( columnLabel, reader );
     }
@@ -1777,9 +1780,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBlob( int columnIndex,
-                          InputStream inputStream ) throws SQLException {
-    throwIfClosed();
+  public void updateBlob( int columnIndex, InputStream inputStream ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBlob( columnIndex, inputStream );
     }
@@ -1789,9 +1791,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public void updateBlob( String columnLabel,
-                          InputStream inputStream ) throws SQLException {
-    throwIfClosed();
+  public void updateBlob( String columnLabel, InputStream inputStream ) throws SQLException {
+    throwIfTimedOutOrClosed();
     try {
       super.updateBlob( columnLabel, inputStream );
     }
@@ -1802,7 +1803,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateClob( int columnIndex,  Reader reader ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateClob( columnIndex, reader );
     }
@@ -1813,7 +1814,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateClob( String columnLabel,  Reader reader ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateClob( columnLabel, reader );
     }
@@ -1824,7 +1825,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateNClob( int columnIndex,  Reader reader ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateNClob( columnIndex, reader );
     }
@@ -1835,7 +1836,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateNClob( String columnLabel,  Reader reader ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     try {
       super.updateNClob( columnLabel, reader );
     }
@@ -1847,13 +1848,13 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //------------------------- JDBC 4.1 -----------------------------------
   @Override
   public <T> T getObject( int columnIndex, Class<T> type ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getObject( columnIndex, type );
   }
 
   @Override
   public <T> T getObject( String columnLabel, Class<T> type ) throws SQLException {
-    throwIfClosed();
+    throwIfTimedOutOrClosed();
     return super.getObject( columnLabel, type );
   }
 
@@ -1874,7 +1875,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   ////////////////////////////////////////
 
   @Override
-  protected DrillResultSetImpl execute() throws SQLException{
+  protected DrillResultSetImpl execute() throws SQLException {
     connection.getDriver().handler.onStatementExecute(statement, null);
 
     if (signature.cursorFactory != null) {
