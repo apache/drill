@@ -81,7 +81,7 @@ public class HashAggPrel extends AggPrelBase implements Prel{
 
   @Override
   public SelectionVectorMode[] getSupportedEncodings() {
-    return SelectionVectorMode.DEFAULT;
+    return SelectionVectorMode.ALL;
   }
 
   @Override

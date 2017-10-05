@@ -19,11 +19,13 @@
 package org.apache.drill.exec.physical.impl.agg;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.PlanTestBase;
+import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
 
 
-public class TestHashAggr extends BaseTestQuery{
+public class TestHashAggr extends BaseTestQuery {
 
   @Test
   public void testQ6() throws Exception{
@@ -57,4 +59,39 @@ public class TestHashAggr extends BaseTestQuery{
     testPhysicalFromFile("agg/hashagg/q8.json");
   }
 
+  @Test
+  public void testHashAggrWithSV2() throws Exception {
+    final String query = "select sum(l_orderkey) as total from cp.`tpch/lineitem.parquet` where l_orderkey >0 group by l_linenumber";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("total")
+        .baselineValues(449872500l)
+        .baselineValues(386605746l)
+        .baselineValues(320758616l)
+        .baselineValues(257351397l)
+        .baselineValues(193070044l)
+        .baselineValues(129743302l)
+        .baselineValues(65357968l)
+        .build().run();
+    PlanTestBase.testPlanMatchingPatterns(query,
+            new String[]{"Filter", "HashAgg", "Scan"},
+            new String[]{"SelectionVectorRemover"});
+  }
+
+  @Test
+  public void testHashAggrWtihSV2EmptyRecordBatches() throws Exception {
+    final String WORKING_PATH = TestTools.getWorkingPath();
+    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+    final String query = "select count(foo) total from dfs_test.`%s/agg/hashagg/three-batches.json` where foo > 8192 group by type";
+    testBuilder()
+        .sqlQuery(String.format(query, TEST_RES_PATH, 2))
+        .unOrdered()
+        .baselineColumns("total")
+        .baselineValues(1024l)
+        .baselineValues(1024l)
+        .baselineValues(1024l)
+        .baselineValues(1024l)
+        .go();
+  }
 }
