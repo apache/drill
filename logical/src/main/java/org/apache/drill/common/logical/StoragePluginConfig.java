@@ -40,4 +40,40 @@ public abstract class StoragePluginConfig{
   @Override
   public abstract int hashCode();
 
+  /**
+   * Function to enable the security setting for storage plugin and return true/false
+   * based on any modification was done in config or not.
+   * @return - true - if there was any modification
+   *         - false - if no modification was done
+   */
+  public boolean enableSecurity() {
+    // no-op by default
+    return false;
+  }
+
+  /**
+   * Function to disable the security setting for storage plugin and return true/false
+   * based on any modification was done in config or not.
+   *
+   * @return - true - if there was any modification
+   *         - false - if no modification was done
+   */
+  public boolean disableSecurity() {
+    // no-op by default
+    return false;
+  }
+
+  /**
+   * Verify if security is enabled/disabled in StoragePluginConfig as compared to
+   * Drill config to enable/disable security of StoragePlugin
+   * @param enablePluginSecurity - flag to indicate if Drill is configured to enable security
+   *                             for StoragePlugins.
+   * @return true -  Plugin security config matches enablePluginSecurity. i.e. plugin security is enabled
+   *                 when enablePluginSecurity is true and disabled when enablePluginSecurity is false
+   *         false - Plugin security config doesn't matches enablePluginSecurity. Opposite of above case.
+   */
+  public boolean isValidSecurityConfig(boolean enablePluginSecurity) {
+    return true;
+  }
+
 }

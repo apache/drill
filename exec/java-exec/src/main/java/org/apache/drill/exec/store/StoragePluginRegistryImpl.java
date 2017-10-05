@@ -130,6 +130,8 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   @SuppressWarnings("resource")
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
+    final boolean secureStoragePlugin = context.getConfig().getBoolean(ExecConstants.SECURITY_STORAGE_PLUGIN_ENABLED);
+
     try {
       /*
        * Check if the storage plugins system table has any entries. If not, load the boostrap-storage-plugin file into
@@ -146,12 +148,16 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
             String pluginsData = Resources.toString(url, Charsets.UTF_8);
             StoragePlugins plugins = lpPersistence.getMapper().readValue(pluginsData, StoragePlugins.class);
             for (Map.Entry<String, StoragePluginConfig> config : plugins) {
-              if (!definePluginConfig(config.getKey(), config.getValue())) {
+
+              final String pluginName = config.getKey();
+              final StoragePluginConfig pluginConfig = config.getValue();
+
+              if (!definePluginConfig(pluginName, pluginConfig)) {
                 logger.warn("Duplicate plugin instance '{}' defined in [{}, {}], ignoring the later one.",
-                    config.getKey(), pluginURLMap.get(config.getKey()), url);
+                    config.getKey(), pluginURLMap.get(pluginName), url);
                 continue;
               }
-              pluginURLMap.put(config.getKey(), url);
+              pluginURLMap.put(pluginName, url);
             }
           }
         } else {
@@ -159,10 +165,20 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         }
       }
 
-      Map<String, StoragePlugin> activePlugins = new HashMap<String, StoragePlugin>();
+      final Map<String, StoragePlugin> activePlugins = new HashMap<String, StoragePlugin>();
       for (Map.Entry<String, StoragePluginConfig> entry : Lists.newArrayList(pluginSystemTable.getAll())) {
-        String name = entry.getKey();
-        StoragePluginConfig config = entry.getValue();
+        final String name = entry.getKey();
+        final StoragePluginConfig config = entry.getValue();
+
+        // Update the security setting inside StoragePluginConfig based on secureStoragePlugin flag
+        final boolean isConfigUpdated = secureStoragePlugin ? config.enableSecurity() : config.disableSecurity();
+
+        // If there was change in security setting of the StorageConfig then update the config in store too. We
+        // should do it here since later we create a local cache for drill for all active plugins using this config.
+        if (isConfigUpdated) {
+          pluginSystemTable.put(name, config);
+        }
+
         if (config.isEnabled()) {
           try {
             StoragePlugin plugin = create(name, config);
@@ -233,6 +249,10 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   @Override
   public StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist)
       throws ExecutionSetupException {
+
+    // Check Drill config to enable storage plugin security
+    final boolean secureStoragePlugin = context.getConfig().getBoolean(ExecConstants.SECURITY_STORAGE_PLUGIN_ENABLED);
+
     for (;;) {
       final StoragePlugin oldPlugin = plugins.get(name);
       final StoragePlugin newPlugin = create(name, config);
@@ -240,16 +260,25 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       try {
         if (oldPlugin != null) {
           if (config.isEnabled()) {
+            // case when something other than enabled setting is changed for the plugin which was already present in
+            // Drill's active plugin cache
             done = plugins.replace(name, oldPlugin, newPlugin);
+
           } else {
+            // case when plugin is already there in Drill's active plugin cache and now config is changed to disable
+            // the plugin.
             done = plugins.remove(name, oldPlugin);
           }
           if (done) {
             closePlugin(oldPlugin);
           }
         } else if (config.isEnabled()) {
+          // case when plugin was not in Drill's active plugin cache but now is enabled.
           done = (null == plugins.putIfAbsent(name, newPlugin));
         } else {
+          // case when Plugin is not there in Drill's active plugin cache and new plugin setting is also not enabled
+          // so don't put inside Drill's cache. For example: A disabled plugin config setting (other than to enable) is
+          // changed
           done = true;
         }
       } finally {
@@ -260,6 +289,10 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
       if (done) {
         if (persist) {
+          if (!config.isValidSecurityConfig(secureStoragePlugin)) {
+            logger.warn("Security setting for {} plugin is not recommended one. It should be set to: {}",
+                name, String.valueOf(secureStoragePlugin));
+          }
           pluginSystemTable.put(name, config);
         }
 
