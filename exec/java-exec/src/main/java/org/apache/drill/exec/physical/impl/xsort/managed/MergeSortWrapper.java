@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.ops.OperExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
@@ -87,7 +87,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
   private State state = State.FIRST;
   private final VectorContainer destContainer;
 
-  public MergeSortWrapper(OperExecContext opContext, VectorContainer destContainer) {
+  public MergeSortWrapper(OperatorContext opContext, VectorContainer destContainer) {
     super(opContext);
     this.destContainer = destContainer;
   }
@@ -123,7 +123,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
       sv4 = builder.getSv4();
       Sort popConfig = context.getOperatorDefn();
       mSorter = createNewMSorter(popConfig.getOrderings(), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
-      mSorter.setup(context, context.getAllocator(), sv4, destContainer, sv4.getCount(), outputBatchSize);
+      mSorter.setup(context.getFragmentContext(), context.getAllocator(), sv4, destContainer, sv4.getCount(), outputBatchSize);
     } catch (SchemaChangeException e) {
       throw UserException.unsupportedError(e)
             .message("Unexpected schema change - likely code error.")
@@ -142,7 +142,9 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
   }
 
   private MSorter createNewMSorter(List<Ordering> orderings, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping) {
-    CodeGenerator<MSorter> cg = CodeGenerator.get(MSorter.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptionSet());
+    CodeGenerator<MSorter> cg = CodeGenerator.get(MSorter.TEMPLATE_DEFINITION,
+        context.getFragmentContext().getFunctionRegistry(),
+        context.getFragmentContext().getOptionSet());
     cg.plainJavaCapable(true);
 
     // Uncomment out this line to debug the generated code.
@@ -153,7 +155,8 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
     for (Ordering od : orderings) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), destContainer, collector, context.getFunctionRegistry());
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), destContainer, collector,
+          context.getFragmentContext().getFunctionRegistry());
       if (collector.hasErrors()) {
         throw UserException.unsupportedError()
               .message("Failure while materializing expression. " + collector.toErrorString())
@@ -168,7 +171,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
-                                                         context.getFunctionRegistry());
+                                                         context.getFragmentContext().getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 

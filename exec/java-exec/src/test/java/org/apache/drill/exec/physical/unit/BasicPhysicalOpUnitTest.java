@@ -75,6 +75,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
         .go();
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void testSimpleHashJoin() {
     HashJoinPOP joinConf = new HashJoinPOP(null, null, Lists.newArrayList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT);
@@ -100,6 +101,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
         .go();
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void testSimpleMergeJoin() {
     MergeJoinPOP joinConf = new MergeJoinPOP(null, null, Lists.newArrayList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT);
@@ -293,6 +295,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
 
   // TODO(DRILL-4439) - doesn't expect incoming batches, uses instead RawFragmentBatch
   // need to figure out how to mock these
+  @SuppressWarnings("unchecked")
   @Ignore
   @Test
   public void testSimpleMergingReceiver() {

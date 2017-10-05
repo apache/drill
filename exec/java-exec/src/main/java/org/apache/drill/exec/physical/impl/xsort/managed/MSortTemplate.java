@@ -24,7 +24,7 @@ import javax.inject.Named;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentExecContext;
+import org.apache.drill.exec.ops.FragmentContextInterface;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -49,7 +49,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
    */
 
   private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
-  private FragmentExecContext context;
+  private FragmentContextInterface context;
 
   /**
    * Controls the maximum size of batches exposed to downstream
@@ -57,7 +57,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   private int desiredRecordBatchCount;
 
   @Override
-  public void setup(final FragmentExecContext context, final BufferAllocator allocator, final SelectionVector4 vector4,
+  public void setup(final FragmentContextInterface context, final BufferAllocator allocator, final SelectionVector4 vector4,
                     final VectorContainer hyperBatch, int outputBatchSize, int desiredBatchSize) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
@@ -233,7 +233,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     }
   }
 
-  public abstract void doSetup(@Named("context") FragmentExecContext context,
+  public abstract void doSetup(@Named("context") FragmentContextInterface context,
                                @Named("incoming") VectorContainer incoming,
                                @Named("outgoing") RecordBatch outgoing)
                        throws SchemaChangeException;

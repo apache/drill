@@ -28,7 +28,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.ops.OperExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.VectorAccessible;
 
@@ -45,7 +45,7 @@ public abstract class BaseSortWrapper extends BaseWrapper {
   protected static final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
   protected static final MappingSet RIGHT_MAPPING = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
 
-  public BaseSortWrapper(OperExecContext opContext) {
+  public BaseSortWrapper(OperatorContext opContext) {
     super(opContext);
   }
 
@@ -56,7 +56,8 @@ public abstract class BaseSortWrapper extends BaseWrapper {
     for (Ordering od : popConfig.getOrderings()) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,
+          context.getFragmentContext().getFunctionRegistry());
       if (collector.hasErrors()) {
         throw UserException.unsupportedError()
               .message("Failure while materializing expression. " + collector.toErrorString())
@@ -71,7 +72,7 @@ public abstract class BaseSortWrapper extends BaseWrapper {
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
-                                                         context.getFunctionRegistry());
+                                                         context.getFragmentContext().getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 

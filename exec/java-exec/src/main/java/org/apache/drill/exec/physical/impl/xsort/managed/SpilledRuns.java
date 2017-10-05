@@ -23,13 +23,13 @@ import java.util.List;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ops.OperExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.SpilledRun;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.VectorInitializer;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorInitializer;
 
 import com.google.common.collect.Lists;
 
@@ -56,9 +56,9 @@ public class SpilledRuns {
   private final PriorityQueueCopierWrapper copierHolder;
   private BatchSchema schema;
 
-  private final OperExecContext context;
+  private final OperatorContext context;
 
-  public SpilledRuns(OperExecContext opContext, SpillSet spillSet, PriorityQueueCopierWrapper copier) {
+  public SpilledRuns(OperatorContext opContext, SpillSet spillSet, PriorityQueueCopierWrapper copier) {
     this.context = opContext;
     this.spillSet = spillSet;
 //    copierHolder = new PriorityQueueCopierWrapper(opContext);

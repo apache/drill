@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.xsort.managed;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentExecContext;
+import org.apache.drill.exec.ops.FragmentContextInterface;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
@@ -30,7 +30,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  */
 
 public interface MSorter {
-  public void setup(FragmentExecContext context, BufferAllocator allocator, SelectionVector4 vector4,
+  public void setup(FragmentContextInterface context, BufferAllocator allocator, SelectionVector4 vector4,
                     VectorContainer hyperBatch, int outputBatchSize, int desiredBatchSize) throws SchemaChangeException;
   public void sort();
   public SelectionVector4 getSV4();

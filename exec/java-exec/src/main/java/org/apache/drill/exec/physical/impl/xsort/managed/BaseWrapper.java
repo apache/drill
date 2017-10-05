@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.ops.OperExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 
 /**
  * Base class for code-generation-based tasks.
@@ -30,15 +30,15 @@ import org.apache.drill.exec.ops.OperExecContext;
 
 public abstract class BaseWrapper {
 
-  protected OperExecContext context;
+  protected OperatorContext context;
 
-  public BaseWrapper(OperExecContext context) {
+  public BaseWrapper(OperatorContext context) {
     this.context = context;
   }
 
   protected <T> T getInstance(CodeGenerator<T> cg, org.slf4j.Logger logger) {
     try {
-      return context.getImplementationClass(cg);
+      return context.getFragmentContext().getImplementationClass(cg);
     } catch (ClassTransformationException e) {
       throw UserException.unsupportedError(e)
             .message("Code generation error - likely code error.")

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -38,13 +39,13 @@ import java.util.EnumSet;
 public class DrillFSDataInputStream extends FSDataInputStream {
   private final FSDataInputStream underlyingIs;
   private final OpenFileTracker openFileTracker;
-  private final OperatorStats operatorStats;
+  private final OperatorStatReceiver operatorStats;
 
-  public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats) throws IOException {
+  public DrillFSDataInputStream(FSDataInputStream in, OperatorStatReceiver operatorStats) throws IOException {
     this(in, operatorStats, null);
   }
 
-  public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats,
+  public DrillFSDataInputStream(FSDataInputStream in, OperatorStatReceiver operatorStats,
       OpenFileTracker openFileTracker) throws IOException {
     super(new WrappedInputStream(in, operatorStats));
     underlyingIs = in;
@@ -193,9 +194,9 @@ public class DrillFSDataInputStream extends FSDataInputStream {
    */
   private static class WrappedInputStream extends InputStream implements Seekable, PositionedReadable {
     final FSDataInputStream is;
-    final OperatorStats operatorStats;
+    final OperatorStatReceiver operatorStats;
 
-    WrappedInputStream(FSDataInputStream is, OperatorStats operatorStats) {
+    WrappedInputStream(FSDataInputStream is, OperatorStatReceiver operatorStats) {
       this.is = is;
       this.operatorStats = operatorStats;
     }

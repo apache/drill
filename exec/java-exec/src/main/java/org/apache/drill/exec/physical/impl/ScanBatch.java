@@ -32,7 +32,6 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.OperatorExecContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -319,9 +318,9 @@ public class ScanBatch implements CloseableRecordBatch {
 
     private final VectorContainer container;
 
-    private final OperatorExecContext oContext;
+    private final OperatorContext oContext;
 
-    public Mutator(OperatorExecContext oContext, BufferAllocator allocator, VectorContainer container) {
+    public Mutator(OperatorContext oContext, BufferAllocator allocator, VectorContainer container) {
       this.oContext = oContext;
       this.allocator = allocator;
       this.container = container;

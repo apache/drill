@@ -17,33 +17,23 @@
  */
 package org.apache.drill.exec.ops;
 
-import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.work.WorkManager;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-class OperatorContextImpl extends AbstractOperatorExecContext implements OperatorContext, AutoCloseable {
+class OperatorContextImpl extends BaseOperatorContext implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContextImpl.class);
 
   private boolean closed = false;
   private final OperatorStats stats;
-  private DrillFileSystem fs;
-  private final ExecutorService executor;
-  private final ExecutorService scanExecutor;
-  private final ExecutorService scanDecodeExecutor;
 
   /**
    * This lazily initialized executor service is used to submit a {@link Callable task} that needs a proxy user. There
@@ -59,9 +49,10 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
 
   public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats)
       throws OutOfMemoryException {
-    super(context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
-          popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation()),
-          popConfig, context.getExecutionControls(), stats);
+    super(context,
+          context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
+              popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation()),
+          popConfig);
     if (stats != null) {
       this.stats = stats;
     } else {
@@ -70,25 +61,6 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
                            OperatorUtilities.getChildCount(popConfig));
       this.stats = context.getStats().newOperatorStats(def, allocator);
     }
-    executor = context.getDrillbitContext().getExecutor();
-    scanExecutor = context.getDrillbitContext().getScanExecutor();
-    scanDecodeExecutor = context.getDrillbitContext().getScanDecodeExecutor();
-  }
-
-  // Allow an operator to use the thread pool
-  @Override
-  public ExecutorService getExecutor() {
-    return executor;
-  }
-
-  @Override
-  public ExecutorService getScanExecutor() {
-    return scanExecutor;
-  }
-
-  @Override
-  public ExecutorService getScanDecodeExecutor() {
-    return scanDecodeExecutor;
   }
 
   public boolean isClosed() {
@@ -98,23 +70,15 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
   @Override
   public void close() {
     if (closed) {
-      logger.debug("Attempted to close Operator context for {}, but context is already closed", popConfig != null ? popConfig.getClass().getName() : null);
+      logger.debug("Attempted to close Operator context for {}, but context is already closed", popConfig != null ? getName() : null);
       return;
     }
-    logger.debug("Closing context for {}", popConfig != null ? popConfig.getClass().getName() : null);
+    logger.debug("Closing context for {}", popConfig != null ? getName() : null);
 
-    closed = true;
     try {
       super.close();
     } finally {
-      if (fs != null) {
-        try {
-          fs.close();
-          fs = null;
-        } catch (IOException e) {
-          throw new DrillRuntimeException(e);
-        }
-      }
+      closed = true;
     }
   }
 
@@ -124,11 +88,16 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
   }
 
   @Override
+  public OperatorStatReceiver getStatsWriter() {
+    return stats;
+  }
+
+  @Override
   public <RESULT> ListenableFuture<RESULT> runCallableAs(final UserGroupInformation proxyUgi,
                                                          final Callable<RESULT> callable) {
     synchronized (this) {
       if (delegatePool == null) {
-        delegatePool = MoreExecutors.listeningDecorator(executor);
+        delegatePool = MoreExecutors.listeningDecorator(getExecutor());
       }
     }
     return delegatePool.submit(new Callable<RESULT>() {
@@ -151,22 +120,5 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
         return result;
       }
     });
-  }
-
-  @Override
-  public DrillFileSystem newFileSystem(Configuration conf) throws IOException {
-    Preconditions.checkState(fs == null, "Tried to create a second FileSystem. Can only be called once per OperatorContext");
-    fs = new DrillFileSystem(conf, getStats());
-    return fs;
-  }
-
-  /**
-   * Creates a DrillFileSystem that does not automatically track operator stats.
-   */
-  @Override
-  public DrillFileSystem newNonTrackingFileSystem(Configuration conf) throws IOException {
-    Preconditions.checkState(fs == null, "Tried to create a second FileSystem. Can only be called once per OperatorContext");
-    fs = new DrillFileSystem(conf, null);
-    return fs;
   }
 }

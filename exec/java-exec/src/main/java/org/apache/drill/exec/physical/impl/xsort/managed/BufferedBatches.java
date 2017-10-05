@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.OperExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.InputBatch;
 import org.apache.drill.exec.record.BatchSchema;
@@ -55,9 +55,9 @@ public class BufferedBatches {
 
   private BatchSchema schema;
 
-  private final OperExecContext context;
+  private final OperatorContext context;
 
-  public BufferedBatches(OperExecContext opContext) {
+  public BufferedBatches(OperatorContext opContext) {
     context = opContext;
     sorterWrapper = new SorterWrapper(opContext);
   }

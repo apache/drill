@@ -169,6 +169,7 @@ public class OperatorStats implements OperatorStatReceiver {
     inProcessing = false;
   }
 
+  @Override
   public synchronized void startWait() {
     assert !inWait : assertionError("starting waiting");
     stopProcessing();
@@ -176,6 +177,7 @@ public class OperatorStats implements OperatorStatReceiver {
     waitMark = System.nanoTime();
   }
 
+  @Override
   public synchronized void stopWait() {
     assert inWait : assertionError("stopping waiting");
     startProcessing();

@@ -17,32 +17,33 @@
  */
 package org.apache.drill.test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.CodeCompiler;
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.ops.AbstractOperatorExecContext;
-import org.apache.drill.exec.ops.FragmentExecContext;
+import org.apache.drill.exec.ops.BaseFragmentContext;
+import org.apache.drill.exec.ops.BaseOperatorContext;
+import org.apache.drill.exec.ops.BufferManager;
+import org.apache.drill.exec.ops.BufferManagerImpl;
+import org.apache.drill.exec.ops.FragmentContextInterface;
 import org.apache.drill.exec.ops.MetricDef;
-import org.apache.drill.exec.ops.OperExecContext;
-import org.apache.drill.exec.ops.OperExecContextImpl;
-import org.apache.drill.exec.ops.OperatorExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStatReceiver;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
@@ -53,6 +54,9 @@ import org.apache.drill.test.rowSet.IndirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.hadoop.security.UserGroupInformation;
+
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Test fixture for operator and (especially) "sub-operator" tests.
@@ -120,20 +124,26 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
    * provide test-specific versions of various other services.
    */
 
-  public static class TestCodeGenContext implements FragmentExecContext {
+  public static class TestFragmentContext extends BaseFragmentContext {
 
     private final DrillConfig config;
     private final OptionSet options;
     private final CodeCompiler compiler;
-    private final FunctionImplementationRegistry functionRegistry;
     private ExecutionControls controls;
+    private final BufferManagerImpl bufferManager;
 
-    public TestCodeGenContext(DrillConfig config, OptionSet options) {
+    public TestFragmentContext(DrillConfig config, OptionSet options, BufferAllocator allocator) {
+      super(newFunctionRegistry(config, options));
       this.config = config;
       this.options = options;
-      ScanResult classpathScan = ClassPathScanner.fromPrescan(config);
-      functionRegistry = new FunctionImplementationRegistry(config, classpathScan, options);
       compiler = new CodeCompiler(config, options);
+      bufferManager = new BufferManagerImpl(allocator);
+    }
+
+    private static FunctionImplementationRegistry newFunctionRegistry(
+        DrillConfig config, OptionSet options) {
+      ScanResult classpathScan = ClassPathScanner.fromPrescan(config);
+      return new FunctionImplementationRegistry(config, classpathScan, options);
     }
 
     public void setExecutionControls(ExecutionControls controls) {
@@ -141,35 +151,8 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
 
     @Override
-    public FunctionImplementationRegistry getFunctionRegistry() {
-      return functionRegistry;
-    }
-
-    @Override
     public OptionSet getOptionSet() {
       return options;
-    }
-
-    @Override
-    public <T> T getImplementationClass(final ClassGenerator<T> cg)
-        throws ClassTransformationException, IOException {
-      return getImplementationClass(cg.getCodeGenerator());
-    }
-
-    @Override
-    public <T> T getImplementationClass(final CodeGenerator<T> cg)
-        throws ClassTransformationException, IOException {
-      return compiler.createInstance(cg);
-    }
-
-    @Override
-    public <T> List<T> getImplementationClass(final ClassGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
-      return getImplementationClass(cg.getCodeGenerator(), instanceCount);
-    }
-
-    @Override
-    public <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
-      return compiler.createInstances(cg, instanceCount);
     }
 
     @Override
@@ -185,6 +168,21 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     @Override
     public DrillConfig getConfig() {
       return config;
+    }
+
+    @Override
+    public DrillbitContext getDrillbitContext() {
+      throw new UnsupportedOperationException("Drillbit context not available for operator unit tests");
+    }
+
+    @Override
+    protected CodeCompiler getCompiler() {
+       return compiler;
+    }
+
+    @Override
+    protected BufferManager getBufferManager() {
+      return bufferManager;
     }
   }
 
@@ -234,10 +232,17 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     private void setStat(int metricId, double value) {
       stats.put(metricId, value);
     }
+
+    // Timing stats not supported for test.
+    @Override
+    public void startWait() { }
+
+    @Override
+    public void stopWait() {  }
   }
 
   private final SystemOptionManager options;
-  private final TestCodeGenContext context;
+  private final TestFragmentContext context;
   private final OperatorStatReceiver stats;
 
   protected OperatorFixture(OperatorFixtureBuilder builder) {
@@ -252,7 +257,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     if (builder.systemOptions != null) {
       applySystemOptions(builder.systemOptions);
     }
-    context = new TestCodeGenContext(config, options);
+    context = new TestFragmentContext(config, options, allocator);
     stats = new MockStats();
    }
 
@@ -263,7 +268,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
   }
 
   public SystemOptionManager options() { return options; }
-  public FragmentExecContext fragmentExecContext() { return context; }
+  public FragmentContextInterface fragmentExecContext() { return context; }
 
   @Override
   public void close() throws Exception {
@@ -282,10 +287,6 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
   public static OperatorFixture standardFixture() {
     return builder().build();
-  }
-
-  public OperExecContext newOperExecContext(PhysicalOperator opDefn) {
-    return new OperExecContextImpl(context, allocator, stats, opDefn, null);
   }
 
   public RowSetBuilder rowSetBuilder(BatchSchema schema) {
@@ -309,7 +310,36 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  public OperatorExecContext operatorContext(PhysicalOperator config) {
-    return new AbstractOperatorExecContext(allocator(), config, context.getExecutionControls(), stats);
+  public static class TestOperatorContext extends BaseOperatorContext {
+
+    private final OperatorStatReceiver stats;
+
+    public TestOperatorContext(FragmentContextInterface fragContext,
+        BufferAllocator allocator,
+        PhysicalOperator config,
+        OperatorStatReceiver stats) {
+      super(fragContext, allocator, config);
+      this.stats = stats;
+    }
+
+    @Override
+    public OperatorStatReceiver getStatsWriter() {
+      return stats;
+    }
+
+    @Override
+    public OperatorStats getStats() {
+      throw new UnsupportedOperationException("getStats() not supported for tests");
+    }
+
+    @Override
+    public <RESULT> ListenableFuture<RESULT> runCallableAs(
+        UserGroupInformation proxyUgi, Callable<RESULT> callable) {
+      throw new UnsupportedOperationException("Not yet");
+    }
+  }
+
+  public OperatorContext operatorContext(PhysicalOperator config) {
+    return new TestOperatorContext(context, allocator(), config, stats);
   }
 }

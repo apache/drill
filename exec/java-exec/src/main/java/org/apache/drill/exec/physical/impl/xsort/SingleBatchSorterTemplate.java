@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentExecContext;
+import org.apache.drill.exec.ops.FragmentContextInterface;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -38,7 +38,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
   private SelectionVector2 vector2;
 
   @Override
-  public void setup(FragmentExecContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException{
+  public void setup(FragmentContextInterface context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException{
     Preconditions.checkNotNull(vector2);
     this.vector2 = vector2;
     try {
@@ -76,7 +76,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
     }
   }
 
-  public abstract void doSetup(@Named("context") FragmentExecContext context,
+  public abstract void doSetup(@Named("context") FragmentContextInterface context,
                                @Named("incoming") VectorAccessible incoming,
                                @Named("outgoing") RecordBatch outgoing)
                        throws SchemaChangeException;

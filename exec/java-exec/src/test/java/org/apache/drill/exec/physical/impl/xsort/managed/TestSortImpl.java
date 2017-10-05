@@ -30,7 +30,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.OperExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
@@ -82,7 +82,7 @@ public class TestSortImpl extends DrillTest {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);
     Sort popConfig = new Sort(null, Lists.newArrayList(ordering), false);
-    OperExecContext opContext = fixture.newOperExecContext(popConfig);
+    OperatorContext opContext = fixture.operatorContext(popConfig);
     QueryId queryId = QueryId.newBuilder()
         .setPart1(1234)
         .setPart2(5678)
@@ -92,9 +92,9 @@ public class TestSortImpl extends DrillTest {
           .setMinorFragmentId(3)
           .setQueryId(queryId)
           .build();
-    SortConfig sortConfig = new SortConfig(opContext.getConfig());
+    SortConfig sortConfig = new SortConfig(opContext.getFragmentContext().getConfig());
 
-    SpillSet spillSet = new SpillSet(opContext.getConfig(), handle, popConfig);
+    SpillSet spillSet = new SpillSet(opContext.getFragmentContext().getConfig(), handle, popConfig);
     PriorityQueueCopierWrapper copierHolder = new PriorityQueueCopierWrapper(opContext);
     SpilledRuns spilledRuns = new SpilledRuns(opContext, spillSet, copierHolder);
     return new SortImpl(opContext, sortConfig, spilledRuns, outputBatch);

@@ -44,6 +44,7 @@ public class SortMetrics {
   private long writeBytes;
 
   public SortMetrics(OperatorStatReceiver stats) {
+    assert stats != null;
     this.stats = stats;
   }
 

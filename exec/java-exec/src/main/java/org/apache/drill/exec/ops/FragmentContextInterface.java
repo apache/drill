@@ -25,20 +25,32 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.testing.ExecutionControls;
 
+import io.netty.buffer.DrillBuf;
+
 /**
- * Services passed to fragments that deal only with execution details
- * such as the function registry, options, code generation and the like.
- * Does not include top-level services such as network endpoints. Code
- * written to use this interface can be unit tested quite easily using
- * the {@link OperatorContext} class. Code that uses the wider,
- * more global {@link FragmentContext} must be tested in the context
- * of the entire Drill server, or using mocks for the global services.
+ * Fragment context interface: separates implementation from definition.
+ * Allows unit testing by mocking or reimplementing services with
+ * test-time versions. The name is awkward, chosen to avoid renaming
+ * the implementation class which is used in many places in legacy code.
+ * New code should use this interface, and the names should eventually
+ * be swapped with <tt>FragmentContext</tt> becoming
+ * <tt>FragmentContextImpl</tt> and this interface becoming
+ * <tt>FragmentContext</tt>.
  */
 
-public interface FragmentExecContext {
+public interface FragmentContextInterface {
+
+  /**
+   * Drillbit context. Valid only in production; returns null in
+   * operator test environments.
+   */
+
+  DrillbitContext getDrillbitContext();
+
   /**
    * Returns the UDF registry.
    * @return the UDF registry
@@ -128,4 +140,10 @@ public interface FragmentExecContext {
    */
 
   DrillConfig getConfig();
+
+  DrillBuf replace(DrillBuf old, int newSize);
+
+  DrillBuf getManagedBuffer();
+
+  DrillBuf getManagedBuffer(int size);
 }

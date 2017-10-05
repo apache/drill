@@ -29,7 +29,7 @@ import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.OperExecContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.DrillTest;
@@ -82,7 +82,7 @@ public class TestSorter extends DrillTest {
   }
 
   public void runSorterTest(Sort popConfig, SingleRowSet rowSet, SingleRowSet expected) throws Exception {
-    OperExecContext opContext = fixture.newOperExecContext(popConfig);
+    OperatorContext opContext = fixture.operatorContext(popConfig);
     SorterWrapper sorter = new SorterWrapper(opContext);
 
     sorter.sortBatch(rowSet.container(), rowSet.getSv2());
@@ -149,7 +149,7 @@ public class TestSorter extends DrillTest {
       Sort popConfig = makeSortConfig("key", sortOrder, nullOrder);
       this.nullable = nullable;
 
-      OperExecContext opContext = fixture.newOperExecContext(popConfig);
+      OperatorContext opContext = fixture.operatorContext(popConfig);
       sorter = new SorterWrapper(opContext);
     }
   }

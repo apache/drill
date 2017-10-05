@@ -19,12 +19,12 @@ package org.apache.drill.exec.physical.impl.xsort;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentExecContext;
+import org.apache.drill.exec.ops.FragmentContextInterface;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
 public interface SingleBatchSorter {
-  public void setup(FragmentExecContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException;
+  public void setup(FragmentContextInterface context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException;
   public void sort(SelectionVector2 vector2) throws SchemaChangeException;
 
   public static TemplateClassDefinition<SingleBatchSorter> TEMPLATE_DEFINITION =

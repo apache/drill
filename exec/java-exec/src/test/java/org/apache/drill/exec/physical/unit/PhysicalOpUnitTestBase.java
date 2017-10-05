@@ -78,8 +78,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
-
 /**
  * Look! Doesn't extend BaseTestQuery!!
  */
@@ -195,11 +193,12 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     private long initReservation = AbstractBase.INIT_ALLOCATION;
     private long maxAllocation = AbstractBase.MAX_ALLOCATION;
 
+    @SuppressWarnings({ "unchecked", "resource" })
     public void go() {
       BatchCreator<PhysicalOperator> opCreator;
       RecordBatch testOperator;
       try {
-        mockOpContext(initReservation, maxAllocation);
+        mockOpContext(popConfig, initReservation, maxAllocation);
 
         opCreator = (BatchCreator<PhysicalOperator>)
             opCreatorReg.getOperatorCreator(popConfig.getClass());
@@ -297,12 +296,14 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 //        optManager.getOption(withAny(new TypeValidators.StringValidator("", "try"))); result = "try";
 //        optManager.getOption(withAny(new TypeValidators.PositiveLongValidator("", 1l, 1l))); result = 10;
         fragContext.getOptions(); result = optionManager;
+        fragContext.getOptionSet(); result = optionManager;
         fragContext.getManagedBuffer(); result = bufManager.getManagedBuffer();
         fragContext.shouldContinue(); result = true;
         fragContext.getExecutionControls(); result = executionControls;
         fragContext.getFunctionRegistry(); result = funcReg;
         fragContext.getConfig(); result = drillConf;
         fragContext.getHandle(); result = ExecProtos.FragmentHandle.getDefaultInstance();
+        fragContext.getFunctionRegistry(); result = funcReg;
         try {
           CodeGenerator<?> cg = CodeGenerator.get(templateClassDefinition, funcReg);
           cg.plainJavaCapable(true);
@@ -332,13 +333,16 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     };
   }
 
-  protected void mockOpContext(long initReservation, long maxAllocation) throws Exception{
+  protected void mockOpContext(final PhysicalOperator popConfig, long initReservation, long maxAllocation) throws Exception{
     final BufferAllocator allocator = this.allocator.newChildAllocator("allocator_for_operator_test", initReservation, maxAllocation);
     new NonStrictExpectations() {
       {
         opContext.getStats();result = opStats;
+        opContext.getStatsWriter(); result = opStats;
         opContext.getAllocator(); result = allocator;
-        fragContext.newOperatorContext(withAny(popConf));result = opContext;
+        opContext.getFragmentContext(); result = fragContext;
+        opContext.getOperatorDefn(); result = popConfig;
+        fragContext.newOperatorContext(withAny(popConf)); result = opContext;
       }
     };
   }

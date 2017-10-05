@@ -67,4 +67,8 @@ public interface OperatorStatReceiver {
    */
 
   void setDoubleStat(MetricDef metric, double value);
+
+  void startWait();
+
+  void stopWait();
 }

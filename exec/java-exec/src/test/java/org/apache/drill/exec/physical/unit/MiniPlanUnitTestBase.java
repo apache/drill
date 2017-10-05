@@ -158,7 +158,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
           return; // successful
         }
       }
-      Map<String, List<Object>> actualSuperVectors = new TreeMap();
+      Map<String, List<Object>> actualSuperVectors = new TreeMap<String, List<Object>>();
 
       int actualBatchNum = DrillTestWrapper.addToCombinedVectorResults(batchIterator, expectSchema, actualSuperVectors);
       if (expectBatchNum != null) {
@@ -234,7 +234,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
    */
 
   public class PopBuilder  {
-    private PhysicalOperator popConfig;
+    protected PhysicalOperator popConfig;
     protected long initReservation = INIT_ALLOCATION;
     protected long maxAllocation = MAX_ALLOCATION;
 
@@ -307,21 +307,24 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       return this;
     }
 
+    @SuppressWarnings("resource")
     public PopBuilder buildAddAsInput() throws Exception {
-      mockOpContext(initReservation, maxAllocation);
+      mockOpContext(popConfig, initReservation, maxAllocation);
+      @SuppressWarnings("unchecked")
       BatchCreator<PhysicalOperator> opCreator =  (BatchCreator<PhysicalOperator>) getOpCreatorReg().getOperatorCreator(popConfig.getClass());
       RecordBatch batch= opCreator.getBatch(fragContext, popConfig, inputs);
       return parent.addInput(batch);
     }
 
     public RecordBatch build() throws Exception {
-      mockOpContext(initReservation, maxAllocation);
+      mockOpContext(popConfig, initReservation, maxAllocation);
+      @SuppressWarnings("unchecked")
       BatchCreator<PhysicalOperator> opCreator =  (BatchCreator<PhysicalOperator>) getOpCreatorReg().getOperatorCreator(popConfig.getClass());
       return opCreator.getBatch(fragContext, popConfig, inputs);
     }
   }
 
-  public abstract class ScanPopBuider<T extends ScanPopBuider> extends PopBuilder {
+  public abstract class ScanPopBuider<T extends ScanPopBuider<?>> extends PopBuilder {
     List<SchemaPath> columnsToRead = Collections.singletonList(SchemaPath.getSimplePath("*"));
     DrillFileSystem fs = null;
 
@@ -333,16 +336,19 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       super(parent);
     }
 
+    @SuppressWarnings("unchecked")
     public T fileSystem(DrillFileSystem fs) {
       this.fs = fs;
       return (T) this;
     }
 
+    @SuppressWarnings("unchecked")
     public T columnsToRead(SchemaPath ... columnsToRead) {
       this.columnsToRead = Lists.newArrayList(columnsToRead);
       return (T) this;
     }
 
+    @SuppressWarnings("unchecked")
     public T columnsToRead(String ... columnsToRead) {
       this.columnsToRead = Lists.newArrayList();
 
@@ -360,7 +366,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
    */
   public class JsonScanBuilder extends ScanPopBuider<JsonScanBuilder> {
     List<String> jsonBatches = null;
-    List<String> inputPaths = Collections.EMPTY_LIST;
+    List<String> inputPaths = Collections.emptyList();
 
     public JsonScanBuilder(PopBuilder parent) {
       super(parent);
@@ -380,14 +386,16 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       return this;
     }
 
+    @Override
     public PopBuilder buildAddAsInput() throws Exception {
-      mockOpContext(this.initReservation, this.maxAllocation);
+      mockOpContext(popConfig, this.initReservation, this.maxAllocation);
       RecordBatch scanBatch = getScanBatch();
       return parent.addInput(scanBatch);
     }
 
+    @Override
     public RecordBatch build() throws Exception {
-      mockOpContext(this.initReservation, this.maxAllocation);
+      mockOpContext(popConfig, this.initReservation, this.maxAllocation);
       return getScanBatch();
     }
 
@@ -414,7 +422,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
    * Builder for parquet Scan RecordBatch.
    */
   public class ParquetScanBuilder extends ScanPopBuider<ParquetScanBuilder> {
-    List<String> inputPaths = Collections.EMPTY_LIST;
+    List<String> inputPaths = Collections.emptyList();
 
     public ParquetScanBuilder() {
       super();
@@ -429,14 +437,16 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       return this;
     }
 
+    @Override
     public PopBuilder buildAddAsInput() throws Exception {
-      mockOpContext(this.initReservation, this.maxAllocation);
+      mockOpContext(popConfig, this.initReservation, this.maxAllocation);
       RecordBatch scanBatch = getScanBatch();
       return parent.addInput(scanBatch);
     }
 
+    @Override
     public RecordBatch build() throws Exception {
-      mockOpContext(this.initReservation, this.maxAllocation);
+      mockOpContext(popConfig, this.initReservation, this.maxAllocation);
       return getScanBatch();
     }
 
@@ -465,8 +475,8 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
   } // end of ParquetScanBuilder
 
   @Override
-  protected void mockOpContext(long initReservation, long maxAllocation) throws Exception {
-    super.mockOpContext(initReservation, maxAllocation);
+  protected void mockOpContext(PhysicalOperator popConfig, long initReservation, long maxAllocation) throws Exception {
+    super.mockOpContext(popConfig, initReservation, maxAllocation);
 
     // mock ScanExecutor used by parquet reader.
     new NonStrictExpectations() {

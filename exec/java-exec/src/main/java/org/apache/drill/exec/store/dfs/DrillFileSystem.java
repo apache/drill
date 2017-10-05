@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -80,14 +80,14 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   private final ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
 
   private final FileSystem underlyingFs;
-  private final OperatorStats operatorStats;
+  private final OperatorStatReceiver operatorStats;
   private final CompressionCodecFactory codecFactory;
 
   public DrillFileSystem(Configuration fsConf) throws IOException {
     this(fsConf, null);
   }
 
-  public DrillFileSystem(Configuration fsConf, OperatorStats operatorStats) throws IOException {
+  public DrillFileSystem(Configuration fsConf, OperatorStatReceiver operatorStats) throws IOException {
     this.underlyingFs = FileSystem.get(fsConf);
     this.codecFactory = new CompressionCodecFactory(fsConf);
     this.operatorStats = operatorStats;
