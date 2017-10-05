@@ -40,6 +40,7 @@ public interface ExecConstants {
   String ZK_TIMEOUT = "drill.exec.zk.timeout";
   String ZK_ROOT = "drill.exec.zk.root";
   String ZK_REFRESH = "drill.exec.zk.refresh";
+  String ZK_SECURE_ACL = "drill.exec.zk.use.secure_acl";
   String BIT_RETRY_TIMES = "drill.exec.rpc.bit.server.retry.count";
   String BIT_RETRY_DELAY = "drill.exec.rpc.bit.server.retry.delay";
   String BIT_TIMEOUT = "drill.exec.bit.timeout" ;
