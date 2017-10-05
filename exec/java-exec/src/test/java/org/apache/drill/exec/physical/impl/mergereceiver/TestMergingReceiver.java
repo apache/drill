@@ -149,4 +149,83 @@ public class TestMergingReceiver extends PopUnitTestBase {
       assertEquals(100000, count);
     }
   }
+
+  @Test
+  public void handleEmptyBatchNoSchema() throws Exception {
+    @SuppressWarnings("resource")
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      bit2.run();
+      client.connect();
+      final List<QueryDataBatch> results =
+          client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/mergerecv/empty_batch_noschema.json"),
+                  Charsets.UTF_8));
+      int count = 0;
+      final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+      // print the results
+      for (final QueryDataBatch b : results) {
+        final QueryData queryData = b.getHeader();
+        batchLoader.load(queryData.getDef(), b.getData()); // loaded but not used, for testing
+        count += queryData.getRowCount();
+        b.release();
+        batchLoader.clear();
+      }
+      assertEquals(100000, count);
+    }
+  }
+
+  @Test
+  public void testMultipleProvidersEmptyBatches() throws Exception {
+    @SuppressWarnings("resource")
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+      bit1.run();
+      bit2.run();
+      client.connect();
+      final List<QueryDataBatch> results =
+          client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/mergerecv/multiple_providers_empty_batches.json"),
+                  Charsets.UTF_8));
+      int count = 0;
+      final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+      // print the results
+      Long lastBlueValue = null;
+      for (final QueryDataBatch b : results) {
+        final QueryData queryData = b.getHeader();
+        final int batchRowCount = queryData.getRowCount();
+        count += batchRowCount;
+        batchLoader.load(queryData.getDef(), b.getData());
+        for (final VectorWrapper<?> vw : batchLoader) {
+          @SuppressWarnings("resource")
+          final ValueVector vv = vw.getValueVector();
+          final ValueVector.Accessor va = vv.getAccessor();
+          final MaterializedField materializedField = vv.getField();
+          final int numValues = va.getValueCount();
+          for (int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
+            if (materializedField.getName().equals("blue")) {
+              final long longValue = (Long) va.getObject(valueIdx);
+              // check that order is ascending
+              if (lastBlueValue != null) {
+                assertTrue(longValue >= lastBlueValue);
+              }
+              lastBlueValue = longValue;
+            }
+          }
+        }
+        b.release();
+        batchLoader.clear();
+      }
+      assertEquals(300000, count);
+    }
+  }
 }
