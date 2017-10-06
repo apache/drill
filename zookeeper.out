@@ -1,0 +1,31 @@
+2017-10-05 20:21:32,418 [myid:] - INFO  [main:QuorumPeerConfig@124] - Reading configuration from: /Users/paulrogers/bin/zookeeper-3.4.9/bin/../conf/zoo.cfg
+2017-10-05 20:21:32,423 [myid:] - INFO  [main:DatadirCleanupManager@78] - autopurge.snapRetainCount set to 3
+2017-10-05 20:21:32,423 [myid:] - INFO  [main:DatadirCleanupManager@79] - autopurge.purgeInterval set to 0
+2017-10-05 20:21:32,424 [myid:] - INFO  [main:DatadirCleanupManager@101] - Purge task is not scheduled.
+2017-10-05 20:21:32,424 [myid:] - WARN  [main:QuorumPeerMain@113] - Either no config or no quorum defined in config, running  in standalone mode
+2017-10-05 20:21:32,442 [myid:] - INFO  [main:QuorumPeerConfig@124] - Reading configuration from: /Users/paulrogers/bin/zookeeper-3.4.9/bin/../conf/zoo.cfg
+2017-10-05 20:21:32,442 [myid:] - INFO  [main:ZooKeeperServerMain@96] - Starting server
+2017-10-05 20:21:32,454 [myid:] - INFO  [main:Environment@100] - Server environment:zookeeper.version=3.4.9-1757313, built on 08/23/2016 06:50 GMT
+2017-10-05 20:21:32,454 [myid:] - INFO  [main:Environment@100] - Server environment:host.name=172.16.10.107
+2017-10-05 20:21:32,454 [myid:] - INFO  [main:Environment@100] - Server environment:java.version=1.8.0_102
+2017-10-05 20:21:32,454 [myid:] - INFO  [main:Environment@100] - Server environment:java.vendor=Oracle Corporation
+2017-10-05 20:21:32,454 [myid:] - INFO  [main:Environment@100] - Server environment:java.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre
+2017-10-05 20:21:32,454 [myid:] - INFO  [main:Environment@100] - Server environment:java.class.path=/Users/paulrogers/bin/zookeeper-3.4.9/bin/../build/classes:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../build/lib/*.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../lib/slf4j-log4j12-1.6.1.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../lib/slf4j-api-1.6.1.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../lib/netty-3.10.5.Final.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../lib/log4j-1.2.16.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../lib/jline-0.9.94.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../zookeeper-3.4.9.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../src/java/lib/*.jar:/Users/paulrogers/bin/zookeeper-3.4.9/bin/../conf:
+2017-10-05 20:21:32,454 [myid:] - INFO  [main:Environment@100] - Server environment:java.library.path=/Users/paulrogers/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+2017-10-05 20:21:32,455 [myid:] - INFO  [main:Environment@100] - Server environment:java.io.tmpdir=/var/folders/5m/47szvn315_jg71wstvm78p300000gp/T/
+2017-10-05 20:21:32,455 [myid:] - INFO  [main:Environment@100] - Server environment:java.compiler=<NA>
+2017-10-05 20:21:32,456 [myid:] - INFO  [main:Environment@100] - Server environment:os.name=Mac OS X
+2017-10-05 20:21:32,456 [myid:] - INFO  [main:Environment@100] - Server environment:os.arch=x86_64
+2017-10-05 20:21:32,456 [myid:] - INFO  [main:Environment@100] - Server environment:os.version=10.12.6
+2017-10-05 20:21:32,456 [myid:] - INFO  [main:Environment@100] - Server environment:user.name=paulrogers
+2017-10-05 20:21:32,457 [myid:] - INFO  [main:Environment@100] - Server environment:user.home=/Users/paulrogers
+2017-10-05 20:21:32,457 [myid:] - INFO  [main:Environment@100] - Server environment:user.dir=/Users/paulrogers/git/drill
+2017-10-05 20:21:32,467 [myid:] - INFO  [main:ZooKeeperServer@815] - tickTime set to 2000
+2017-10-05 20:21:32,467 [myid:] - INFO  [main:ZooKeeperServer@824] - minSessionTimeout set to -1
+2017-10-05 20:21:32,467 [myid:] - INFO  [main:ZooKeeperServer@833] - maxSessionTimeout set to -1
+2017-10-05 20:21:32,494 [myid:] - INFO  [main:NIOServerCnxnFactory@89] - binding to port 0.0.0.0/0.0.0.0:2181
+2017-10-05 20:21:33,555 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxnFactory@192] - Accepted socket connection from /0:0:0:0:0:0:0:1:51723
+2017-10-05 20:21:33,609 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@921] - Client attempting to renew session 0x15ee57335bb0015 at /0:0:0:0:0:0:0:1:51723
+2017-10-05 20:21:33,613 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@673] - Established session 0x15ee57335bb0015 with negotiated timeout 40000 for client /0:0:0:0:0:0:0:1:51723
+2017-10-05 20:21:33,626 [myid:] - INFO  [ProcessThread(sid:0 cport:2181)::PrepRequestProcessor@649] - Got user-level KeeperException when processing sessionid:0x15ee57335bb0015 type:create cxid:0x24 zxid:0x8c3 txntype:-1 reqpath:n/a Error Path:/drill-debug/drillbits1/42daeb25-88db-44c9-84ee-220f8133227c Error:KeeperErrorCode = NodeExists for /drill-debug/drillbits1/42daeb25-88db-44c9-84ee-220f8133227c
+2017-10-05 20:21:33,626 [myid:] - INFO  [SyncThread:0:FileTxnLog@203] - Creating new log file: log.8c3

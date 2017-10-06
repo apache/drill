@@ -150,6 +150,14 @@ public class DistributedQueryQueue implements QueryQueue {
     public ConfigSet(SystemOptionManager optionManager) {
       queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
       queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
+
+      // Option manager supports only long values, but we do not expect
+      // more than 2 billion active queries, so queue size is stored as
+      // an int.
+      // TODO: Once DRILL-5832 is available, add an getInt() method to
+      // the option system to get the value as an int and do a range
+      // check.
+
       largeQueueSize = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
       smallQueueSize = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
       largeToSmallRatio = optionManager.getOption(ExecConstants.QUEUE_MEMORY_RATIO);
@@ -177,7 +185,7 @@ public class DistributedQueryQueue implements QueryQueue {
   private SystemOptionManager optionManager;
   private ConfigSet configSet;
   private ClusterCoordinator clusterCoordinator;
-  private long refreshTime;
+  private long nextRefreshTime;
   private long memoryPerSmallQuery;
   private long memoryPerLargeQuery;
   private final StatusAdapter statusAdapter;
@@ -207,13 +215,14 @@ public class DistributedQueryQueue implements QueryQueue {
   /**
    * This limits the number of "small" and "large" queries that a Drill cluster will run
    * simultaneously, if queuing is enabled. If the query is unable to run, this will block
-   * until it can. Beware that this is called under run(), and so will consume a Thread
+   * until it can. Beware that this is called under run(), and so will consume a thread
    * while it waits for the required distributed semaphore.
    *
    * @param queryId query identifier
-   * @param totalCost the query plan
-   * @throws QueryQueueException
-   * @throws QueueTimeoutException
+   * @param cost the query plan
+   * @throws QueryQueueException if the underlying ZK queuing mechanism fails
+   * @throws QueueTimeoutException if the query waits too long in the
+   * queue
    */
 
   @SuppressWarnings("resource")
@@ -261,10 +270,10 @@ public class DistributedQueryQueue implements QueryQueue {
 
   private synchronized void refreshConfig() {
     long now = System.currentTimeMillis();
-    if (now < refreshTime) {
+    if (now < nextRefreshTime) {
       return;
     }
-    refreshTime = now + 5000;
+    nextRefreshTime = now + 5000;
 
     // Only update numbers, and log changes, if something
     // actually changes.

@@ -87,9 +87,8 @@ public class DefaultResourceManager implements ResourceManager {
     public String queueName() { return null; }
   }
 
-  BootStrapContext bootStrapContext;
-  public long memoryPerNode;
-  public int cpusPerNode;
+  public final long memoryPerNode;
+  public final int cpusPerNode;
 
   public DefaultResourceManager() {
     memoryPerNode = DrillConfig.getMaxDirectMemory();

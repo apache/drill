@@ -11,6 +11,11 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
+<style>
+.list-value {
+    text-align: right !important;
+}
+</style>
 </#macro>
 
 <#macro page_body>
@@ -79,12 +84,12 @@
           <table class="table table-hover" style="width: auto;">
             <tbody>
                 <tr>
-                  <td>Client to Bit Encryption:</td>
-                  <td>${model.isUserEncryptionEnabled()?string("Enabled", "Disabled")}</td>
+                  <td>Client to Bit Encryption</td>
+                  <td class="list-value"	>${model.isUserEncryptionEnabled()?string("Enabled", "Disabled")}</td>
                 </tr>
                 <tr>
-                  <td>Bit to Bit Encryption:</td>
-                  <td>${model.isBitEncryptionEnabled()?string("Enabled", "Disabled")}</td>
+                  <td>Bit to Bit Encryption</td>
+                  <td class="list-value">${model.isBitEncryptionEnabled()?string("Enabled", "Disabled")}</td>
                 </tr>
             </tbody>
           </table>
@@ -100,33 +105,33 @@
           <table class="table table-hover" style="width: auto;">
             <tbody>
                <tr>
-                  <td>Queue Status:</td>
-                  <td>${queueInfo.isEnabled()?string("Enabled", "Disabled")}</td>
+                  <td>Queue Status</td>
+                  <td class="list-value">${queueInfo.isEnabled()?string("Enabled", "Disabled")}</td>
                 </tr>
   <#if queueInfo.isEnabled() >
                 <tr>
-                  <td>Maximum Concurrent "Small" Queries:</td>
-                  <td>${queueInfo.smallQueueSize()}</td>
+                  <td>Maximum Concurrent "Small" Queries</td>
+                  <td class="list-value">${queueInfo.smallQueueSize()}</td>
                  </tr>
                  <tr>
-                  <td>Maximum Concurrent "Large" Queries:</td>
-                  <td>${queueInfo.largeQueueSize()}</td>
+                  <td>Maximum Concurrent "Large" Queries</td>
+                  <td class="list-value">${queueInfo.largeQueueSize()}</td>
                 </tr>
                   <tr>
-                  <td>Cost Threshhold for Large vs. Small Queries:</td>
-                  <td>${queueInfo.threshold()}</td>
+                  <td>Cost Threshhold for Large vs. Small Queries</td>
+                  <td class="list-value">${queueInfo.threshold()}</td>
                 </tr>
                 <tr>
-                  <td>Total Memory:</td>
-                  <td>${queueInfo.totalMemory()}</td>
+                  <td>Total Memory</td>
+                  <td class="list-value">${queueInfo.totalMemory()}</td>
                 </tr>
                 <tr>
-                  <td>Memory per Small Query:</td>
-                  <td>${queueInfo.smallQueueMemory()}</td>
+                  <td>Memory per Small Query</td>
+                  <td class="list-value">${queueInfo.smallQueueMemory()}</td>
                 </tr>
                 <tr>
-                  <td>Memory per Large Query:</td>
-                  <td>${queueInfo.largeQueueMemory()}</td>
+                  <td>Memory per Large Query</td>
+                  <td class="list-value">${queueInfo.largeQueueMemory()}</td>
                 </tr>
   </#if>
             </tbody>

@@ -390,8 +390,8 @@ public interface ExecConstants {
   // running distributed, enables the Zookeeper-based distributed queue.
 
   BooleanValidator ENABLE_QUEUE = new BooleanValidator("exec.queue.enable");
-  LongValidator LARGE_QUEUE_SIZE = new PositiveLongValidator("exec.queue.large", 1000);
-  LongValidator SMALL_QUEUE_SIZE = new PositiveLongValidator("exec.queue.small", 100000);
+  LongValidator LARGE_QUEUE_SIZE = new PositiveLongValidator("exec.queue.large", 10_000);
+  LongValidator SMALL_QUEUE_SIZE = new PositiveLongValidator("exec.queue.small", 100_000);
   LongValidator QUEUE_THRESHOLD_SIZE = new PositiveLongValidator("exec.queue.threshold", Long.MAX_VALUE);
   LongValidator QUEUE_TIMEOUT = new PositiveLongValidator("exec.queue.timeout_millis", Long.MAX_VALUE);
 

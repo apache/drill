@@ -59,9 +59,9 @@ public interface QueryQueue {
   @SuppressWarnings("serial")
   public class QueueTimeoutException extends Exception {
 
-    private QueryId queryId;
-    private String queueName;
-    private int timeoutMs;
+    private final QueryId queryId;
+    private final String queueName;
+    private final int timeoutMs;
 
     public QueueTimeoutException(QueryId queryId, String queueName, int timeoutMs) {
       super( String.format(

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman.rm;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -37,8 +38,8 @@ public class DynamicResourceManager implements ResourceManager {
   private ResourceManager defaultRm;
   private ResourceManager queueingRm;
   private ResourceManager activeRm;
-  public long lastUpdateTime;
-  public int recheckDelayMs = 5000;
+  public long nextUpdateTime;
+  public final int recheckDelayMs = 5000;
 
   public DynamicResourceManager(final DrillbitContext context) {
     this.context = context;
@@ -74,10 +75,10 @@ public class DynamicResourceManager implements ResourceManager {
 
   private void refreshRM() {
     long now = System.currentTimeMillis();
-    if (lastUpdateTime + recheckDelayMs >= now) {
+    if (now < nextUpdateTime) {
       return;
     }
-    lastUpdateTime = now;
+    nextUpdateTime = now + recheckDelayMs;
     @SuppressWarnings("resource")
     SystemOptionManager systemOptions = context.getOptionManager();
     if (systemOptions.getOption(ExecConstants.ENABLE_QUEUE)) {
@@ -85,8 +86,8 @@ public class DynamicResourceManager implements ResourceManager {
         StatusAdapter statusAdapter = new StatusAdapter() {
           @Override
           public boolean inShutDown() {
-            // Drill provides no shutdown state at present. Once
-            // DRILL-4286 (graceful shutdown) is merged, use the
+            // Drill provides no shutdown state at present.
+            // TODO: Once DRILL-4286 (graceful shutdown) is merged, use the
             // new Drillbit status to determine when the Drillbit
             // is shutting down.
             return false;
@@ -112,14 +113,34 @@ public class DynamicResourceManager implements ResourceManager {
 
   @Override
   public void close() {
-    if (defaultRm != null) {
-      defaultRm.close();
+    RuntimeException ex = null;
+    try {
+      if (defaultRm != null) {
+        defaultRm.close();
+      }
+    } catch (RuntimeException e) {
+      ex = e;
+    } finally {
       defaultRm = null;
     }
-    if (queueingRm != null) {
-      queueingRm.close();
+    try {
+      if (queueingRm != null) {
+        queueingRm.close();
+      }
+    } catch (RuntimeException e) {
+      ex = ex == null ? e : ex;
+    } finally {
       queueingRm = null;
     }
     activeRm = null;
+    if (ex == null) {
+      return;
+    } else if (ex instanceof UserException) {
+      throw (UserException) ex;
+    } else {
+      throw UserException.systemError(ex)
+        .addContext("Failure closing resource managers.")
+        .build(logger);
+    }
   }
 }

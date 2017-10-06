@@ -26,6 +26,8 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.DrillbitContext;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * Query queue to be used in an embedded Drillbit. This queue has scope of only
  * the one Drillbit (not even multiple Drillbits in the same process.) Primarily
@@ -66,12 +68,11 @@ public class EmbeddedQueryQueue implements QueryQueue {
 
     @Override
     public String toString( ) {
-      String msg = "Embedded queue lease for " +
-          QueryIdHelper.getQueryId(queryId);
-      if (released) {
-        msg += " (released)";
-      }
-      return msg;
+      return new StringBuilder()
+          .append("Embedded queue lease for ")
+          .append(QueryIdHelper.getQueryId(queryId))
+          .append(released ? " (released)" : "")
+          .toString();
     }
 
     @Override
@@ -82,7 +83,11 @@ public class EmbeddedQueryQueue implements QueryQueue {
     @Override
     public void release() {
       EmbeddedQueryQueue.this.release(this);
+      released = true;
     }
+
+    @VisibleForTesting
+    boolean isReleased() { return released; }
 
     @Override
     public String queueName() { return "local-queue"; }
@@ -129,9 +134,8 @@ public class EmbeddedQueryQueue implements QueryQueue {
     return new EmbeddedQueueLease(queryId, memoryPerQuery);
   }
 
-  private void release(QueueLease lease) {
-    EmbeddedQueueLease theLease = (EmbeddedQueueLease) lease;
-    assert ! theLease.released;
+  private void release(EmbeddedQueueLease lease) {
+    assert ! lease.released;
     semaphore.release();
   }
 
