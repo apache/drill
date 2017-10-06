@@ -149,7 +149,9 @@ public class WorkManager implements AutoCloseable {
       }
     }
 
-    getContext().close();
+    if (getContext() != null) {
+      getContext().close();
+    }
   }
 
   public DrillbitContext getContext() {

@@ -112,7 +112,7 @@ public class TestUtilities {
    * @param jsonBatches : list of input strings, each element represent a batch. Each string could either
    *                    be in the form of "[{...}, {...}, ..., {...}]", or in the form of "{...}".
    * @param fragContext : fragment context
-   * @param columnsToRead : list of schema pathes to read from JSON reader.
+   * @param columnsToRead : list of schema paths to read from JSON reader.
    * @return
    */
   public static Iterator<RecordReader> getJsonReadersFromBatchString(List<String> jsonBatches, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
@@ -145,5 +145,4 @@ public class TestUtilities {
     }
     return readers.iterator();
   }
-
 }

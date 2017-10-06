@@ -34,7 +34,7 @@ import com.google.common.collect.Lists;
 public class BatchPrinter {
   public static void printHyperBatch(VectorAccessible batch, SelectionVector4 sv4) {
     List<String> columns = Lists.newArrayList();
-    for (VectorWrapper vw : batch) {
+    for (VectorWrapper<?> vw : batch) {
       columns.add(vw.getValueVectors()[0].getField().getName());
     }
     int width = columns.size();
@@ -47,7 +47,7 @@ public class BatchPrinter {
         System.out.printf("|\n");
         System.out.println(StringUtils.repeat("-", width * 17 + 1));
       }
-      for (VectorWrapper vw : batch) {
+      for (VectorWrapper<?> vw : batch) {
         Object o = vw.getValueVectors()[sv4.get(j) >>> 16].getAccessor().getObject(sv4.get(j) & 65535);
         String value;
         if (o == null) {
@@ -67,7 +67,7 @@ public class BatchPrinter {
   public static void printBatch(VectorAccessible batch) {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
-    for (VectorWrapper vw : batch) {
+    for (VectorWrapper<?> vw : batch) {
       columns.add(vw.getValueVector().getField().getName());
       vectors.add(vw.getValueVector());
     }
@@ -101,7 +101,7 @@ public class BatchPrinter {
   public static void printBatch(VectorAccessible batch, SelectionVector2 sv2) {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
-    for (VectorWrapper vw : batch) {
+    for (VectorWrapper<?> vw : batch) {
       columns.add(vw.getValueVector().getField().getName());
       vectors.add(vw.getValueVector());
     }

@@ -138,6 +138,7 @@ public class WebServer implements AutoCloseable {
    * Start the web server including setup.
    * @throws Exception
    */
+  @SuppressWarnings("resource")
   public void start() throws Exception {
     if (!config.getBoolean(ExecConstants.HTTP_ENABLE)) {
       return;
@@ -266,6 +267,7 @@ public class WebServer implements AutoCloseable {
         }
 
         // Clear all the resources allocated for this session
+        @SuppressWarnings("resource")
         final WebSessionResources webSessionResources =
             (WebSessionResources) session.getAttribute(WebSessionResources.class.getSimpleName());
 
@@ -322,7 +324,7 @@ public class WebServer implements AutoCloseable {
    * Create an HTTPS connector for given jetty server instance. If the admin has specified keystore/truststore settings
    * they will be used else a self-signed certificate is generated and used.
    *
-   * @return Initialized {@link ServerConnector} for HTTPS connectios.
+   * @return Initialized {@link ServerConnector} for HTTPS connections.
    * @throws Exception
    */
   private ServerConnector createHttpsConnector(int port) throws Exception {

@@ -12140,6 +12140,31 @@ public final class UserBitShared {
      */
     com.google.protobuf.ByteString
         getOptionsJsonBytes();
+
+    // optional double total_cost = 7;
+    /**
+     * <code>optional double total_cost = 7;</code>
+     */
+    boolean hasTotalCost();
+    /**
+     * <code>optional double total_cost = 7;</code>
+     */
+    double getTotalCost();
+
+    // optional string queue_name = 8 [default = "-"];
+    /**
+     * <code>optional string queue_name = 8 [default = "-"];</code>
+     */
+    boolean hasQueueName();
+    /**
+     * <code>optional string queue_name = 8 [default = "-"];</code>
+     */
+    java.lang.String getQueueName();
+    /**
+     * <code>optional string queue_name = 8 [default = "-"];</code>
+     */
+    com.google.protobuf.ByteString
+        getQueueNameBytes();
   }
   /**
    * Protobuf type {@code exec.shared.QueryInfo}
@@ -12234,6 +12259,16 @@ public final class UserBitShared {
             case 50: {
               bitField0_ |= 0x00000020;
               optionsJson_ = input.readBytes();
+              break;
+            }
+            case 57: {
+              bitField0_ |= 0x00000040;
+              totalCost_ = input.readDouble();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              queueName_ = input.readBytes();
               break;
             }
           }
@@ -12459,6 +12494,65 @@ public final class UserBitShared {
       }
     }
 
+    // optional double total_cost = 7;
+    public static final int TOTAL_COST_FIELD_NUMBER = 7;
+    private double totalCost_;
+    /**
+     * <code>optional double total_cost = 7;</code>
+     */
+    public boolean hasTotalCost() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional double total_cost = 7;</code>
+     */
+    public double getTotalCost() {
+      return totalCost_;
+    }
+
+    // optional string queue_name = 8 [default = "-"];
+    public static final int QUEUE_NAME_FIELD_NUMBER = 8;
+    private java.lang.Object queueName_;
+    /**
+     * <code>optional string queue_name = 8 [default = "-"];</code>
+     */
+    public boolean hasQueueName() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional string queue_name = 8 [default = "-"];</code>
+     */
+    public java.lang.String getQueueName() {
+      java.lang.Object ref = queueName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          queueName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string queue_name = 8 [default = "-"];</code>
+     */
+    public com.google.protobuf.ByteString
+        getQueueNameBytes() {
+      java.lang.Object ref = queueName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        queueName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       query_ = "";
       start_ = 0L;
@@ -12466,6 +12560,8 @@ public final class UserBitShared {
       user_ = "-";
       foreman_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       optionsJson_ = "";
+      totalCost_ = 0D;
+      queueName_ = "-";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -12496,6 +12592,12 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(6, getOptionsJsonBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeDouble(7, totalCost_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, getQueueNameBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -12529,6 +12631,14 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, getOptionsJsonBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(7, totalCost_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, getQueueNameBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -12663,6 +12773,10 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00000010);
         optionsJson_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
+        totalCost_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        queueName_ = "-";
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -12719,6 +12833,14 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00000020;
         }
         result.optionsJson_ = optionsJson_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.totalCost_ = totalCost_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.queueName_ = queueName_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -12757,6 +12879,14 @@ public final class UserBitShared {
         if (other.hasOptionsJson()) {
           bitField0_ |= 0x00000020;
           optionsJson_ = other.optionsJson_;
+          onChanged();
+        }
+        if (other.hasTotalCost()) {
+          setTotalCost(other.getTotalCost());
+        }
+        if (other.hasQueueName()) {
+          bitField0_ |= 0x00000080;
+          queueName_ = other.queueName_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -13194,6 +13324,113 @@ public final class UserBitShared {
         return this;
       }
 
+      // optional double total_cost = 7;
+      private double totalCost_ ;
+      /**
+       * <code>optional double total_cost = 7;</code>
+       */
+      public boolean hasTotalCost() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional double total_cost = 7;</code>
+       */
+      public double getTotalCost() {
+        return totalCost_;
+      }
+      /**
+       * <code>optional double total_cost = 7;</code>
+       */
+      public Builder setTotalCost(double value) {
+        bitField0_ |= 0x00000040;
+        totalCost_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double total_cost = 7;</code>
+       */
+      public Builder clearTotalCost() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        totalCost_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional string queue_name = 8 [default = "-"];
+      private java.lang.Object queueName_ = "-";
+      /**
+       * <code>optional string queue_name = 8 [default = "-"];</code>
+       */
+      public boolean hasQueueName() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string queue_name = 8 [default = "-"];</code>
+       */
+      public java.lang.String getQueueName() {
+        java.lang.Object ref = queueName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          queueName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string queue_name = 8 [default = "-"];</code>
+       */
+      public com.google.protobuf.ByteString
+          getQueueNameBytes() {
+        java.lang.Object ref = queueName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          queueName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string queue_name = 8 [default = "-"];</code>
+       */
+      public Builder setQueueName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        queueName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string queue_name = 8 [default = "-"];</code>
+       */
+      public Builder clearQueueName() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        queueName_ = getDefaultInstance().getQueueName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string queue_name = 8 [default = "-"];</code>
+       */
+      public Builder setQueueNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        queueName_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.shared.QueryInfo)
     }
 
@@ -13460,6 +13697,31 @@ public final class UserBitShared {
      * <code>optional int64 queueWaitEnd = 19;</code>
      */
     long getQueueWaitEnd();
+
+    // optional double total_cost = 20;
+    /**
+     * <code>optional double total_cost = 20;</code>
+     */
+    boolean hasTotalCost();
+    /**
+     * <code>optional double total_cost = 20;</code>
+     */
+    double getTotalCost();
+
+    // optional string queue_name = 21 [default = "-"];
+    /**
+     * <code>optional string queue_name = 21 [default = "-"];</code>
+     */
+    boolean hasQueueName();
+    /**
+     * <code>optional string queue_name = 21 [default = "-"];</code>
+     */
+    java.lang.String getQueueName();
+    /**
+     * <code>optional string queue_name = 21 [default = "-"];</code>
+     */
+    com.google.protobuf.ByteString
+        getQueueNameBytes();
   }
   /**
    * Protobuf type {@code exec.shared.QueryProfile}
@@ -13636,6 +13898,16 @@ public final class UserBitShared {
             case 152: {
               bitField0_ |= 0x00020000;
               queueWaitEnd_ = input.readInt64();
+              break;
+            }
+            case 161: {
+              bitField0_ |= 0x00040000;
+              totalCost_ = input.readDouble();
+              break;
+            }
+            case 170: {
+              bitField0_ |= 0x00080000;
+              queueName_ = input.readBytes();
               break;
             }
           }
@@ -14233,6 +14505,65 @@ public final class UserBitShared {
       return queueWaitEnd_;
     }
 
+    // optional double total_cost = 20;
+    public static final int TOTAL_COST_FIELD_NUMBER = 20;
+    private double totalCost_;
+    /**
+     * <code>optional double total_cost = 20;</code>
+     */
+    public boolean hasTotalCost() {
+      return ((bitField0_ & 0x00040000) == 0x00040000);
+    }
+    /**
+     * <code>optional double total_cost = 20;</code>
+     */
+    public double getTotalCost() {
+      return totalCost_;
+    }
+
+    // optional string queue_name = 21 [default = "-"];
+    public static final int QUEUE_NAME_FIELD_NUMBER = 21;
+    private java.lang.Object queueName_;
+    /**
+     * <code>optional string queue_name = 21 [default = "-"];</code>
+     */
+    public boolean hasQueueName() {
+      return ((bitField0_ & 0x00080000) == 0x00080000);
+    }
+    /**
+     * <code>optional string queue_name = 21 [default = "-"];</code>
+     */
+    public java.lang.String getQueueName() {
+      java.lang.Object ref = queueName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          queueName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string queue_name = 21 [default = "-"];</code>
+     */
+    public com.google.protobuf.ByteString
+        getQueueNameBytes() {
+      java.lang.Object ref = queueName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        queueName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       id_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
@@ -14253,6 +14584,8 @@ public final class UserBitShared {
       optionsJson_ = "";
       planEnd_ = 0L;
       queueWaitEnd_ = 0L;
+      totalCost_ = 0D;
+      queueName_ = "-";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -14322,6 +14655,12 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00020000) == 0x00020000)) {
         output.writeInt64(19, queueWaitEnd_);
+      }
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+        output.writeDouble(20, totalCost_);
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        output.writeBytes(21, getQueueNameBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -14407,6 +14746,14 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00020000) == 0x00020000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(19, queueWaitEnd_);
+      }
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(20, totalCost_);
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(21, getQueueNameBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -14577,6 +14924,10 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00020000);
         queueWaitEnd_ = 0L;
         bitField0_ = (bitField0_ & ~0x00040000);
+        totalCost_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00080000);
+        queueName_ = "-";
+        bitField0_ = (bitField0_ & ~0x00100000);
         return this;
       }
 
@@ -14694,6 +15045,14 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00020000;
         }
         result.queueWaitEnd_ = queueWaitEnd_;
+        if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
+          to_bitField0_ |= 0x00040000;
+        }
+        result.totalCost_ = totalCost_;
+        if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+          to_bitField0_ |= 0x00080000;
+        }
+        result.queueName_ = queueName_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -14805,6 +15164,14 @@ public final class UserBitShared {
         }
         if (other.hasQueueWaitEnd()) {
           setQueueWaitEnd(other.getQueueWaitEnd());
+        }
+        if (other.hasTotalCost()) {
+          setTotalCost(other.getTotalCost());
+        }
+        if (other.hasQueueName()) {
+          bitField0_ |= 0x00100000;
+          queueName_ = other.queueName_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -16165,6 +16532,113 @@ public final class UserBitShared {
       public Builder clearQueueWaitEnd() {
         bitField0_ = (bitField0_ & ~0x00040000);
         queueWaitEnd_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional double total_cost = 20;
+      private double totalCost_ ;
+      /**
+       * <code>optional double total_cost = 20;</code>
+       */
+      public boolean hasTotalCost() {
+        return ((bitField0_ & 0x00080000) == 0x00080000);
+      }
+      /**
+       * <code>optional double total_cost = 20;</code>
+       */
+      public double getTotalCost() {
+        return totalCost_;
+      }
+      /**
+       * <code>optional double total_cost = 20;</code>
+       */
+      public Builder setTotalCost(double value) {
+        bitField0_ |= 0x00080000;
+        totalCost_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double total_cost = 20;</code>
+       */
+      public Builder clearTotalCost() {
+        bitField0_ = (bitField0_ & ~0x00080000);
+        totalCost_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional string queue_name = 21 [default = "-"];
+      private java.lang.Object queueName_ = "-";
+      /**
+       * <code>optional string queue_name = 21 [default = "-"];</code>
+       */
+      public boolean hasQueueName() {
+        return ((bitField0_ & 0x00100000) == 0x00100000);
+      }
+      /**
+       * <code>optional string queue_name = 21 [default = "-"];</code>
+       */
+      public java.lang.String getQueueName() {
+        java.lang.Object ref = queueName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          queueName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string queue_name = 21 [default = "-"];</code>
+       */
+      public com.google.protobuf.ByteString
+          getQueueNameBytes() {
+        java.lang.Object ref = queueName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          queueName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string queue_name = 21 [default = "-"];</code>
+       */
+      public Builder setQueueName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00100000;
+        queueName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string queue_name = 21 [default = "-"];</code>
+       */
+      public Builder clearQueueName() {
+        bitField0_ = (bitField0_ & ~0x00100000);
+        queueName_ = getDefaultInstance().getQueueName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string queue_name = 21 [default = "-"];</code>
+       */
+      public Builder setQueueNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00100000;
+        queueName_ = value;
         onChanged();
         return this;
       }
@@ -23469,79 +23943,82 @@ public final class UserBitShared {
       "ENQUEUED\020\006\"p\n\tQueryData\022&\n\010query_id\030\001 \001(" +
       "\0132\024.exec.shared.QueryId\022\021\n\trow_count\030\002 \001" +
       "(\005\022(\n\003def\030\003 \001(\0132\033.exec.shared.RecordBatc" +
-      "hDef\"\255\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005sta" +
+      "hDef\"\330\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005sta" +
       "rt\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#.exec.shared.Qu",
       "eryResult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n" +
       "\007foreman\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024" +
-      "\n\014options_json\030\006 \001(\t\"\367\003\n\014QueryProfile\022 \n" +
-      "\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030" +
-      "\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003" +
-      " \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan" +
-      "\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitE" +
-      "ndpoint\0222\n\005state\030\010 \001(\0162#.exec.shared.Que" +
-      "ryResult.QueryState\022\027\n\017total_fragments\030\t" +
-      " \001(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020frag",
-      "ment_profile\030\013 \003(\0132!.exec.shared.MajorFr" +
-      "agmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005error\030" +
-      "\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_id\030" +
-      "\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\022\024\n\014options_jso" +
-      "n\030\021 \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd" +
-      "\030\023 \001(\003\"t\n\024MajorFragmentProfile\022\031\n\021major_" +
-      "fragment_id\030\001 \001(\005\022A\n\026minor_fragment_prof" +
-      "ile\030\002 \003(\0132!.exec.shared.MinorFragmentPro" +
-      "file\"\350\002\n\024MinorFragmentProfile\022)\n\005state\030\001" +
-      " \001(\0162\032.exec.shared.FragmentState\022(\n\005erro",
-      "r\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n\021mi" +
-      "nor_fragment_id\030\003 \001(\005\0226\n\020operator_profil" +
-      "e\030\004 \003(\0132\034.exec.shared.OperatorProfile\022\022\n" +
-      "\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013m" +
-      "emory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(" +
-      "\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpo" +
-      "int\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progres" +
-      "s\030\013 \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_pro" +
-      "file\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023" +
-      "\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001",
-      "(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos" +
-      "\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007 " +
-      "\001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metric" +
-      "Value\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfi" +
-      "le\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007" +
-      "schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_i" +
-      "d\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_va" +
-      "lue\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exe" +
-      "c.shared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022fun" +
-      "ction_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\t",
-      "mechanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030" +
-      "\003 \001(\0162\027.exec.shared.SaslStatus*5\n\nRpcCha" +
-      "nnel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004U" +
-      "SER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002" +
-      "\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARE" +
-      "D_STATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDI" +
-      "NG\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING" +
-      "\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILE" +
-      "D\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Core" +
-      "OperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROAD",
-      "CAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREG" +
-      "ATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025" +
-      "HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020ME" +
-      "RGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SE" +
-      "NDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVE" +
-      "R\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SEL" +
-      "ECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGG" +
-      "REGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SOR" +
-      "T\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022" +
-      "\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_",
-      "SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SU" +
-      "B_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_S" +
-      "UB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_S" +
-      "CAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_" +
-      "SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODU" +
-      "CER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WI" +
-      "NDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB" +
-      "_SCAN\020$*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022" +
-      "\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n" +
-      "\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.",
-      "apache.drill.exec.protoB\rUserBitSharedH\001"
+      "\n\014options_json\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001" +
+      "\022\025\n\nqueue_name\030\010 \001(\t:\001-\"\242\004\n\014QueryProfile" +
+      "\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004ty" +
+      "pe\030\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005star" +
+      "t\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004p" +
+      "lan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.Drillb" +
+      "itEndpoint\0222\n\005state\030\010 \001(\0162#.exec.shared." +
+      "QueryResult.QueryState\022\027\n\017total_fragment",
+      "s\030\t \001(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020f" +
+      "ragment_profile\030\013 \003(\0132!.exec.shared.Majo" +
+      "rFragmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005err" +
+      "or\030\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_" +
+      "id\030\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\022\024\n\014options_" +
+      "json\030\021 \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWait" +
+      "End\030\023 \001(\003\022\022\n\ntotal_cost\030\024 \001(\001\022\025\n\nqueue_n" +
+      "ame\030\025 \001(\t:\001-\"t\n\024MajorFragmentProfile\022\031\n\021" +
+      "major_fragment_id\030\001 \001(\005\022A\n\026minor_fragmen" +
+      "t_profile\030\002 \003(\0132!.exec.shared.MinorFragm",
+      "entProfile\"\350\002\n\024MinorFragmentProfile\022)\n\005s" +
+      "tate\030\001 \001(\0162\032.exec.shared.FragmentState\022(" +
+      "\n\005error\030\002 \001(\0132\031.exec.shared.DrillPBError" +
+      "\022\031\n\021minor_fragment_id\030\003 \001(\005\0226\n\020operator_" +
+      "profile\030\004 \003(\0132\034.exec.shared.OperatorProf" +
+      "ile\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(" +
+      "\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max_memory_use" +
+      "d\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.Drillbi" +
+      "tEndpoint\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_p" +
+      "rogress\030\013 \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinp",
+      "ut_profile\030\001 \003(\0132\032.exec.shared.StreamPro" +
+      "file\022\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_ty" +
+      "pe\030\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess" +
+      "_nanos\030\006 \001(\003\022#\n\033peak_local_memory_alloca" +
+      "ted\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared." +
+      "MetricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStrea" +
+      "mProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001" +
+      "(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tme" +
+      "tric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014dou" +
+      "ble_value\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\013",
+      "2\020.exec.shared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022" +
+      "\032\n\022function_signature\030\002 \003(\t\"W\n\013SaslMessa" +
+      "ge\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006s" +
+      "tatus\030\003 \001(\0162\027.exec.shared.SaslStatus*5\n\n" +
+      "RpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020" +
+      "\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOG" +
+      "ICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022P" +
+      "REPARED_STATEMENT\020\005*\207\001\n\rFragmentState\022\013\n" +
+      "\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007R" +
+      "UNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n",
+      "\006FAILED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\360\005" +
+      "\n\020CoreOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n" +
+      "\020BROADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_" +
+      "AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN" +
+      "\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007" +
+      "\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTIT" +
+      "ION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_R" +
+      "ECEIVER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022" +
+      "\034\n\030SELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMI" +
+      "NG_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERN",
+      "AL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_S" +
+      "ORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIV" +
+      "E_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rM" +
+      "OCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DI" +
+      "RECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT" +
+      "_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_S" +
+      "CHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n" +
+      "\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!" +
+      "\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAV" +
+      "RO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_SCAN\020%*g\n\nSasl",
+      "Status\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001" +
+      "\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003" +
+      "\022\017\n\013SASL_FAILED\020\004B.\n\033org.apache.drill.ex" +
+      "ec.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -23625,13 +24102,13 @@ public final class UserBitShared {
           internal_static_exec_shared_QueryInfo_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryInfo_descriptor,
-              new java.lang.String[] { "Query", "Start", "State", "User", "Foreman", "OptionsJson", });
+              new java.lang.String[] { "Query", "Start", "State", "User", "Foreman", "OptionsJson", "TotalCost", "QueueName", });
           internal_static_exec_shared_QueryProfile_descriptor =
             getDescriptor().getMessageTypes().get(13);
           internal_static_exec_shared_QueryProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryProfile_descriptor,
-              new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", });
+              new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", "TotalCost", "QueueName", });
           internal_static_exec_shared_MajorFragmentProfile_descriptor =
             getDescriptor().getMessageTypes().get(14);
           internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable = new
