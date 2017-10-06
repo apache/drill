@@ -26,6 +26,8 @@ import com.google.common.base.Functions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -37,12 +39,14 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 
@@ -119,7 +123,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
         if (logger.isDebugEnabled()) {
           logger.debug(containsCorruptDates.toString());
         }
-        if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
+        if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()), rowGroupScan.getColumns())) {
           readers.add(
               new ParquetRecordReader(
                   context, e.getPath(), e.getRowGroupIndex(), e.getNumRecordsToRead(), fs,
@@ -156,18 +160,39 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     return new ScanBatch(rowGroupScan, context, oContext, readers, implicitColumns);
   }
 
-  private static boolean isComplex(ParquetMetadata footer) {
-    MessageType schema = footer.getFileMetaData().getSchema();
+  private static boolean isComplex(ParquetMetadata footer, List<SchemaPath> columns) {
+    if (Utilities.isStarQuery(columns)) {
+      MessageType schema = footer.getFileMetaData().getSchema();
 
-    for (Type type : schema.getFields()) {
-      if (!type.isPrimitive()) {
-        return true;
+      for (Type type : schema.getFields()) {
+        if (!type.isPrimitive()) {
+          return true;
+        }
       }
+      for (ColumnDescriptor col : schema.getColumns()) {
+        if (col.getMaxRepetitionLevel() > 0) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      for (SchemaPath column : columns) {
+        if (isColumnComplex(footer.getFileMetaData().getSchema(), column)) {
+          return true;
+        }
+      }
+      return false;
     }
-    for (ColumnDescriptor col : schema.getColumns()) {
-      if (col.getMaxRepetitionLevel() > 0) {
-        return true;
-      }
+  }
+
+  private static boolean isColumnComplex(GroupType grouptype, SchemaPath column) {
+    PathSegment.NameSegment root = column.getRootSegment();
+    if (!grouptype.containsField(root.getPath().toLowerCase())) {
+      return false;
+    }
+    Type type = grouptype.getType(root.getPath().toLowerCase());
+    if (type.isRepetition(Type.Repetition.REPEATED) || !type.isPrimitive()) {
+      return true;
     }
     return false;
   }
