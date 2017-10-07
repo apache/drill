@@ -94,9 +94,21 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     setColumns(projectedColumns);
   }
 
+  /**
+   * Provides the projected columns information to the Hbase Scan instance. If the
+   * projected columns list contains a column family and also a column in the
+   * column family, only the column family is passed to the Scan instance.
+   *
+   * For example, if the projection list is {cf1, cf1.col1, cf2.col1} then we only
+   * pass {cf1, cf2.col1} to the Scan instance.
+   *
+   * @param columns collection of projected columns
+   * @return collection of projected column family names
+   */
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    Set<String> completeFamilies = Sets.newHashSet();
     rowKeyOnly = true;
     if (!isStarQuery()) {
       for (SchemaPath column : columns) {
@@ -109,11 +121,14 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         byte[] family = root.getPath().getBytes();
         transformed.add(SchemaPath.getSimplePath(root.getPath()));
         PathSegment child = root.getChild();
-        if (child != null && child.isNamed()) {
-          byte[] qualifier = child.getNameSegment().getPath().getBytes();
-          hbaseScan.addColumn(family, qualifier);
-        } else {
-          hbaseScan.addFamily(family);
+        if (!completeFamilies.contains(new String(family, StandardCharsets.UTF_8).toLowerCase())) {
+          if (child != null && child.isNamed()) {
+            byte[] qualifier = child.getNameSegment().getPath().getBytes();
+            hbaseScan.addColumn(family, qualifier);
+          } else {
+            hbaseScan.addFamily(family);
+            completeFamilies.add(new String(family, StandardCharsets.UTF_8).toLowerCase());
+          }
         }
       }
       /* if only the row key was requested, add a FirstKeyOnlyFilter to the scan
