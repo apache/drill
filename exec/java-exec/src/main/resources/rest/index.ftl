@@ -85,7 +85,7 @@
             <tbody>
                 <tr>
                   <td>Client to Bit Encryption</td>
-                  <td class="list-value"	>${model.isUserEncryptionEnabled()?string("Enabled", "Disabled")}</td>
+                  <td class="list-value">${model.isUserEncryptionEnabled()?string("Enabled", "Disabled")}</td>
                 </tr>
                 <tr>
                   <td>Bit to Bit Encryption</td>

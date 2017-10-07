@@ -165,12 +165,24 @@ public class DistributedQueryQueue implements QueryQueue {
       minimumOperatorMemory = optionManager.getOption(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP);
     }
 
-    @Override
-    public boolean equals(Object other) {
-      if (other == null || ! (other instanceof ConfigSet)) {
-        return false;
-      }
-      ConfigSet otherSet = (ConfigSet) other;
+    /**
+     * Determine if this config set is the same as another one. Detects
+     * whether the configuration has changed between one sync point and
+     * another.
+     * <p>
+     * Note that we cannot use <tt>equals()</tt> here as, according to
+     * Drill practice, <tt>equals()</tt> is for use in collections and
+     * must be accompanied by a <tt>hashCode()</tt> method. Since this
+     * class will never be used in a collection, and does not need a
+     * hash function, we cannot use <tt>equals()</tt>.
+     *
+     * @param otherSet another snapshot taken at another time
+     * @return true if this configuration is the same as another
+     * (no update between the two snapshots), false if the config has
+     * changed between the snapshots
+     */
+
+    public boolean isSameAs(ConfigSet otherSet) {
       return queueThreshold == otherSet.queueThreshold &&
              queueTimeout == otherSet.queueTimeout &&
              largeQueueSize == otherSet.largeQueueSize &&
@@ -279,7 +291,7 @@ public class DistributedQueryQueue implements QueryQueue {
     // actually changes.
 
     ConfigSet newSet = new ConfigSet(optionManager);
-    if (newSet.equals(configSet)) {
+    if (newSet.isSameAs(configSet)) {
       return;
     }
 
