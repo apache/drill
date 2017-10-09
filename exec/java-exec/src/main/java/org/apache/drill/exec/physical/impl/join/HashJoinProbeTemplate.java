@@ -136,7 +136,9 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
           case OK_NEW_SCHEMA:
             if (probeBatch.getSchema().equals(probeSchema)) {
               doSetup(outgoingJoinBatch.getContext(), buildBatch, probeBatch, outgoingJoinBatch);
-              hashTable.updateBatches();
+              if (hashTable != null) {
+                hashTable.updateBatches();
+              }
             } else {
               throw SchemaChangeException.schemaChanged("Hash join does not support schema changes in probe side.",
                   probeSchema,
@@ -155,7 +157,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
       // Check if we need to drain the next row in the probe side
       if (getNextRecord) {
-        if (hashTable != null) {
+        if (hashTable != null && !hashTable.isEmpty()) {
           probeIndex = hashTable.containsKey(recordsProcessed, true);
         }
 

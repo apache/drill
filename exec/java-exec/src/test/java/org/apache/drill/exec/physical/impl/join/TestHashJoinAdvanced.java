@@ -19,20 +19,22 @@
 package org.apache.drill.exec.physical.impl.join;
 
 
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
+
 @Category(OperatorTest.class)
-public class TestHashJoinAdvanced extends BaseTestQuery {
+public class TestHashJoinAdvanced extends JoinTestBase {
+
+  private static final String HJ_PATTERN = "HashJoin";
+
 
   // Have to disable merge join, if this testcase is to test "HASH-JOIN".
   @BeforeClass
@@ -159,5 +161,20 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
       .baselineColumns("a", "b", "c", "d", "e")
       .baselineValues("1", "2", "1", null, "a")
       .go();
+  }
+
+  @Test
+  public void testHashLeftJoinWithEmptyTable() throws Exception {
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "left outer", HJ_PATTERN, 1155L);
+  }
+
+  @Test
+  public void testHashInnerJoinWithEmptyTable() throws Exception {
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", HJ_PATTERN, 0L);
+  }
+
+  @Test
+  public void testHashRightJoinWithEmptyTable() throws Exception {
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", HJ_PATTERN, 0L);
   }
 }
