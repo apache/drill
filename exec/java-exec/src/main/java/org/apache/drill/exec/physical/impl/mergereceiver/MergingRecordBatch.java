@@ -224,6 +224,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         if (rawBatch == null) {
           createDummyBatch = true;
           rawBatches.add(rawBatch);
+          p++; // move to next sender
           continue;
         }
 
