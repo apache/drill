@@ -139,7 +139,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
             v.clear();
           }
         }
-        c = VectorContainer.canonicalize(c);
         for (VectorWrapper<?> w : c) {
           @SuppressWarnings("resource")
           ValueVector v = container.addOrGet(w.getField());

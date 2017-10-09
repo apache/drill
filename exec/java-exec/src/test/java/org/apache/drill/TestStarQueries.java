@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,6 +24,8 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -510,6 +512,23 @@ public class TestStarQueries extends BaseTestQuery{
     expectedRecordCount = 25;
     assertEquals(String.format("Received unexpected number of rows in output for query:\n%s\n expected=%d, received=%s",
         query2, expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+  }
+
+  @Test // DRILL-5845
+  public void testSchemaForStarOrderByLimit() throws Exception {
+    final String query = "select * from cp.`tpch/nation.parquet` order by n_name limit 1";
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .add("n_nationkey", TypeProtos.MinorType.INT)
+        .add("n_name",TypeProtos.MinorType.VARCHAR)
+        .add("n_regionkey", TypeProtos.MinorType.INT)
+        .add("n_comment", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
   }
 
 }
