@@ -181,7 +181,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       hyperContainer = new ExpandableHyperContainer(vectors);
       hjHelper.addNewBatch(0);
       buildBatchIndex++;
-      setupHashTable();
+      if (isFurtherProcessingRequired(rightUpstream) && this.right.getRecordCount() > 0) {
+        setupHashTable();
+      }
       hashJoinProbe = setupHashJoinProbe();
       // Build the container schema and set the counts
       for (final VectorWrapper<?> w : container) {
@@ -212,7 +214,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       }
 
       // Store the number of records projected
-      if (!hashTable.isEmpty() || joinType != JoinRelType.INNER) {
+      if ((hashTable != null && !hashTable.isEmpty()) || joinType != JoinRelType.INNER) {
 
         // Allocate the memory for the vectors in the output container
         allocateVectors();
@@ -305,11 +307,15 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     //Setup the underlying hash table
 
     // skip first batch if count is zero, as it may be an empty schema batch
-    if (right.getRecordCount() == 0) {
+    if (isFurtherProcessingRequired(rightUpstream) && right.getRecordCount() == 0) {
       for (final VectorWrapper<?> w : right) {
         w.clear();
       }
       rightUpstream = next(right);
+      if (isFurtherProcessingRequired(rightUpstream) &&
+          right.getRecordCount() > 0 && hashTable == null) {
+        setupHashTable();
+      }
     }
 
     boolean moreData = true;
@@ -534,5 +540,14 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       hashTable.clear();
     }
     super.close();
+  }
+
+  /**
+   * This method checks to see if join processing should be continued further.
+   * @param upStream up stream operator status.
+   * @@return true if up stream status is OK or OK_NEW_SCHEMA otherwise false.
+   */
+  private boolean isFurtherProcessingRequired(IterOutcome upStream) {
+    return upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA;
   }
 }
