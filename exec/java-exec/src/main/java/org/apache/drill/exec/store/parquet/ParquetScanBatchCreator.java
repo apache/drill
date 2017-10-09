@@ -46,6 +46,7 @@ import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.io.InvalidRecordException;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
@@ -161,6 +162,12 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   }
 
   private static boolean isComplex(ParquetMetadata footer, List<SchemaPath> columns) {
+    /*
+    ParquetRecordReader is not able to read any nested columns and is not able to handle repeated columns.
+    It only handles flat column and optional column.
+    If it is a wildcard query, we check every columns in the metadata.
+    If not, we only check the projected columns.
+    */
     if (Utilities.isStarQuery(columns)) {
       MessageType schema = footer.getFileMetaData().getSchema();
 
@@ -186,15 +193,14 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   }
 
   private static boolean isColumnComplex(GroupType grouptype, SchemaPath column) {
-    PathSegment.NameSegment root = column.getRootSegment();
-    if (!grouptype.containsField(root.getPath().toLowerCase())) {
+    try {
+      Type type = grouptype.getType(column.getRootSegment().getPath().toLowerCase());
+      return type.isRepetition(Type.Repetition.REPEATED) || !type.isPrimitive();
+    }
+    catch(InvalidRecordException e) {
+      //if the type does exist, we will fill with null so it is a simple type.
       return false;
     }
-    Type type = grouptype.getType(root.getPath().toLowerCase());
-    if (type.isRepetition(Type.Repetition.REPEATED) || !type.isPrimitive()) {
-      return true;
-    }
-    return false;
   }
 
 }
