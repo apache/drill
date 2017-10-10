@@ -65,8 +65,8 @@ public interface QueryQueue {
 
     public QueueTimeoutException(QueryId queryId, String queueName, int timeoutMs) {
       super( String.format(
-          "Query timed out of the %s queue after %d ms.",
-          queueName, timeoutMs ));
+          "Query timed out of the %s queue after %,d ms. (%d seconds)",
+          queueName, timeoutMs, (int) Math.round(timeoutMs/1000.0) ));
       this.queryId = queryId;
       this.queueName = queueName;
       this.timeoutMs = timeoutMs;
