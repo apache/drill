@@ -140,7 +140,7 @@ public class DistributedQueryQueue implements QueryQueue {
 
   private static class ConfigSet {
     private final long queueThreshold;
-    private final long queueTimeout;
+    private final int queueTimeout;
     private final int largeQueueSize;
     private final int smallQueueSize;
     private final double largeToSmallRatio;
@@ -149,7 +149,7 @@ public class DistributedQueryQueue implements QueryQueue {
 
     public ConfigSet(SystemOptionManager optionManager) {
       queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
-      queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
+      queueTimeout = (int) optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
 
       // Option manager supports only long values, but we do not expect
       // more than 2 billion active queries, so queue size is stored as
@@ -274,8 +274,9 @@ public class DistributedQueryQueue implements QueryQueue {
 
     if (lease == null) {
       int timeoutSecs = (int) Math.round(configSet.queueTimeout/1000.0);
-      logger.warn("Queue timeout: {} after {} seconds.", queueName, timeoutSecs);
-      throw new QueueTimeoutException(queryId, queueName, timeoutSecs);
+      logger.warn("Queue timeout: {} after {} ms. ({} seconds)", queueName,
+        String.format("%,d", configSet.queueTimeout), timeoutSecs);
+      throw new QueueTimeoutException(queryId, queueName, configSet.queueTimeout);
     }
     return new DistributedQueueLease(queryId, queueName, lease, queryMemory);
   }

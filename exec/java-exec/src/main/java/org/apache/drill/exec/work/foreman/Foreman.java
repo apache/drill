@@ -455,9 +455,10 @@ public class Foreman implements Runnable {
           .build(logger);
     } catch (QueryQueueException e) {
       throw new ForemanSetupException(e.getMessage(), e);
+    } finally {
+      queryManager.markQueueWaitEndTime();
     }
     moveToState(QueryState.STARTING, null);
-    queryManager.markQueueWaitEndTime();
   }
 
   /**
