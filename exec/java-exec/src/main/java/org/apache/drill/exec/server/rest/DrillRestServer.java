@@ -29,6 +29,9 @@ import freemarker.cache.TemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.core.HTMLOutputFormat;
 import freemarker.template.Configuration;
+import io.netty.channel.ChannelPromise;
+import io.netty.channel.DefaultChannelPromise;
+import io.netty.util.concurrent.EventExecutor;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -108,10 +111,17 @@ public class DrillRestServer extends ResourceConfig {
     provider.setMapper(workManager.getContext().getLpPersistence().getMapper());
     register(provider);
 
+    // Get an EventExecutor out of the BitServer EventLoopGroup to notify listeners for WebUserConnection. For
+    // actual connections between Drillbits this EventLoopGroup is used to handle network related events. Though
+    // there is no actual network connection associated with WebUserConnection but we need a CloseFuture in
+    // WebSessionResources, so we are using EvenExecutor from network EventLoopGroup pool.
+    final EventExecutor executor = workManager.getContext().getBitLoopGroup().next();
+
     register(new AbstractBinder() {
       @Override
       protected void configure() {
         bind(workManager).to(WorkManager.class);
+        bind(executor).to(EventExecutor.class);
         bind(workManager.getContext().getLpPersistence().getMapper()).to(ObjectMapper.class);
         bind(workManager.getContext().getStoreProvider()).to(PersistentStoreProvider.class);
         bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
@@ -159,6 +169,9 @@ public class DrillRestServer extends ResourceConfig {
     @Inject
     WorkManager workManager;
 
+    @Inject
+    EventExecutor executor;
+
     @SuppressWarnings("resource")
     @Override
     public WebUserConnection provide() {
@@ -204,9 +217,15 @@ public class DrillRestServer extends ResourceConfig {
                 config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
                 config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
 
+        // Create a dummy close future which is needed by Foreman only. Foreman uses this future to add a close
+        // listener to known about channel close event from underlying layer. We use this future to notify Foreman
+        // listeners when the Web connection between Web Client and WebServer is closed. This will help Foreman to cancel
+        // all the running queries for this Web Client.
+        final ChannelPromise closeFuture = new DefaultChannelPromise(null, executor);
+
         // Create a WebSessionResource instance which owns the lifecycle of all the session resources.
-        // Set this instance as an attribute of HttpSession, since it will be used until session is destroyed.
-        webSessionResources = new WebSessionResources(sessionAllocator, remoteAddress, drillUserSession);
+        // Set this instance as an attribute of HttpSession, since it will be used until session is destroyed
+        webSessionResources = new WebSessionResources(sessionAllocator, remoteAddress, drillUserSession, closeFuture);
         session.setAttribute(WebSessionResources.class.getSimpleName(), webSessionResources);
       }
       // Create a new WebUserConnection for the request
@@ -226,6 +245,9 @@ public class DrillRestServer extends ResourceConfig {
 
     @Inject
     WorkManager workManager;
+
+    @Inject
+    EventExecutor executor;
 
     @SuppressWarnings("resource")
     @Override
@@ -260,8 +282,14 @@ public class DrillRestServer extends ResourceConfig {
         logger.trace("Failed to get the remote address of the http session request", ex);
       }
 
-      final WebSessionResources webSessionResources = new WebSessionResources(sessionAllocator,
-              remoteAddress, drillUserSession);
+      // Create a dummy close future which is needed by Foreman only. Foreman uses this future to add a close
+      // listener to known about channel close event from underlying layer. We use this future to notify Foreman
+      // listeners when the Web connection between Web Client and WebServer is closed. This will help Foreman to cancel
+      // all the running queries if at all for this Web Client.
+      final ChannelPromise closeFuture = new DefaultChannelPromise(null, executor);
+
+      final WebSessionResources webSessionResources = new WebSessionResources(sessionAllocator, remoteAddress,
+          drillUserSession, closeFuture);
 
       // Create a AnonWenUserConnection for this request
       return new AnonWebUserConnection(webSessionResources);

@@ -124,6 +124,13 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
     }
   }
 
+  /**
+   * Returns a DefaultChannelPromise which doesn't have reference to any actual channel but has an EventExecutor
+   * associated with it. In this case we use EventExecutor out of BitServer EventLoopGroup. Since there is no actual
+   * connection established using this class, hence the close event will never be fired by underlying layer and close
+   * future is set only when the WebSessionResources are closed.
+   * @return
+   */
   @Override
   public ChannelFuture getChannelClosureFuture() {
     return webSessionResources.getCloseFuture();
