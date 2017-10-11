@@ -15,7 +15,8 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>14</version>
+    <version>18</version>
+    <relativePath/>
   </parent>
 
   <groupId>org.apache.drill</groupId>
