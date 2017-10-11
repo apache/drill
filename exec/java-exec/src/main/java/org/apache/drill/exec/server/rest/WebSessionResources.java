@@ -19,7 +19,6 @@
 package org.apache.drill.exec.server.rest;
 
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelPromise;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.ChannelClosedException;
@@ -43,11 +42,12 @@ public class WebSessionResources implements AutoCloseable {
 
   private ChannelPromise closeFuture;
 
-  WebSessionResources(BufferAllocator allocator, SocketAddress remoteAddress, UserSession userSession) {
+  WebSessionResources(BufferAllocator allocator, SocketAddress remoteAddress,
+                      UserSession userSession, ChannelPromise closeFuture) {
     this.allocator = allocator;
     this.remoteAddress = remoteAddress;
     this.webUserSession = userSession;
-    closeFuture = new DefaultChannelPromise(null);
+    this.closeFuture = closeFuture;
   }
 
   public UserSession getSession() {
@@ -68,16 +68,20 @@ public class WebSessionResources implements AutoCloseable {
 
   @Override
   public void close() {
-
     try {
       AutoCloseables.close(webUserSession, allocator);
     } catch (Exception ex) {
       logger.error("Failure while closing the session resources", ex);
     }
 
-    // Set the close future associated with this session.
+    // Notify all the listeners of this closeFuture for failure events so that listeners can do cleanup related to this
+    // WebSession. This will be called after every query execution by AnonymousWebUserConnection::cleanupSession and
+    // for authenticated user it is called when session is invalidated.
+    // For authenticated user it will cancel the in-flight queries based on session invalidation. Whereas for
+    // unauthenticated user it's a no-op since there is no session associated with it. We don't have mechanism currently
+    // to call this close future upon Http connection close.
     if (closeFuture != null) {
-      closeFuture.setFailure(new ChannelClosedException("Http Session of the user is closed."));
+      closeFuture.setFailure(new ChannelClosedException("Http connection is closed by Web Client"));
       closeFuture = null;
     }
   }
