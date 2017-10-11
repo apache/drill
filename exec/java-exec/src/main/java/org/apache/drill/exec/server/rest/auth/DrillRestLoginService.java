@@ -82,8 +82,8 @@ public class DrillRestLoginService implements LoginService {
       final SystemOptionManager sysOptions = drillbitContext.getOptionManager();
 
       final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(username,
-          sysOptions.getOption(ExecConstants.ADMIN_USERS_KEY).string_val,
-          sysOptions.getOption(ExecConstants.ADMIN_USER_GROUPS_KEY).string_val);
+              ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(sysOptions),
+              ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(sysOptions));
 
       // Create the UserPrincipal corresponding to logged in user.
       final Principal userPrincipal = new DrillUserPrincipal(username, isAdmin);
