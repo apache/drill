@@ -345,6 +345,10 @@ public class QueryBuilder {
     }
   }
 
+  public QueryRowSetIterator rowSetIterator( ) {
+    return new QueryRowSetIterator(client.allocator(), withEventListener());
+  }
+
   /**
    * Run the query that is expected to return (at least) one row
    * with the only (or first) column returning a long value.

@@ -38,7 +38,7 @@ import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
 
-  private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
+  public static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 
   protected static Configuration conf = HBaseConfiguration.create();
 

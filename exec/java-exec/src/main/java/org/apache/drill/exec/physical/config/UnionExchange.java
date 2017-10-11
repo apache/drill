@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,9 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("union-exchange")
-public class UnionExchange extends AbstractExchange{
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionExchange.class);
+public class UnionExchange extends AbstractExchange {
 
   public UnionExchange(@JsonProperty("child") PhysicalOperator child) {
     super(child);
@@ -76,5 +74,4 @@ public class UnionExchange extends AbstractExchange{
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new UnionExchange(child);
   }
-
 }
