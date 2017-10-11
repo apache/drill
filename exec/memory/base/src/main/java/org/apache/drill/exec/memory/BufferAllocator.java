@@ -102,6 +102,19 @@ public interface BufferAllocator extends AutoCloseable {
   public void setLimit(long newLimit);
 
   /**
+   * Request lenient enforcement of the allocation limits. Use for
+   * memory-managed operators to prevent minor math errors from killing
+   * queries. This is temporary until Drill manages memory better.
+   * Leniency is allowed only in production code (no assertions),
+   * not in debug mode (assertions enabled).
+   *
+   * @return true if leniency was granted, false if the allocator will
+   * enforce strict limits despite the request
+   */
+
+  public boolean setLenient();
+
+  /**
    * Return the current maximum limit this allocator imposes.
    *
    * @return Limit in number of bytes.
