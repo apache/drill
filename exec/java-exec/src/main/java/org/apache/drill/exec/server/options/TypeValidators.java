@@ -219,6 +219,7 @@ public class TypeValidators {
       if (adminUsers.equals(DEFAULT_ADMIN_USERS)) {
         adminUsers = ImpersonationUtil.getProcessUserName();
       }
+      adminUsers = DrillStringUtils.sanitizeCSV(adminUsers);
       return adminUsers;
     }
   }
@@ -242,6 +243,7 @@ public class TypeValidators {
       if (adminUserGroups.equals(DEFAULT_ADMIN_USER_GROUPS)) {
         adminUserGroups = DrillStringUtils.join(ImpersonationUtil.getProcessUserGroupNames(), ",");
       }
+      adminUserGroups = DrillStringUtils.sanitizeCSV(adminUserGroups);
       return adminUserGroups;
     }
   }

@@ -255,4 +255,28 @@ public class DrillStringUtils {
     }
   }
 
+  /**
+   * Removes extra spaces and empty values in a CSV String
+   * @param csv The CSV string to be sanitized
+   * @return The sanitized CSV string
+   */
+  public static String sanitizeCSV(String csv) {
+    // tokenize
+    String[] tokens = csv.split(",");
+    String[] sanitizedTokens = new String[tokens.length];
+    int sanitizedTokenCount = 0;
+    // check for empties
+    for (String s : tokens) {
+      String trimmedToken = s.trim();
+      if (trimmedToken.length() != 0) {
+        sanitizedTokens[sanitizedTokenCount++] = trimmedToken;
+      }
+    }
+    String result = "";
+    if (sanitizedTokenCount != 0) {
+      result = join(sanitizedTokens, ",", 0, sanitizedTokenCount);
+    }
+    return result;
+  }
+
 }
