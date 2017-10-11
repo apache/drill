@@ -40,7 +40,6 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HRegionLocation;
@@ -50,7 +49,6 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.RegionLocator;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,7 +56,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -144,8 +141,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     HBaseGroupScan newScan = new HBaseGroupScan(this);
-    newScan.columns = columns == null ? ALL_COLUMNS : columns;;
-    newScan.verifyColumnsAndConvertStar();
+    newScan.columns = HBaseUtils.verifyColumnsAndConvertStar(columns == null ? ALL_COLUMNS : columns, hTableDesc);
     return newScan;
   }
 
@@ -177,37 +173,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }
-    verifyColumnsAndConvertStar();
-  }
-
-  private void verifyColumnsAndConvertStar() {
-    boolean hasStarCol = false;
-    LinkedHashSet<SchemaPath> requestedColumns = new LinkedHashSet<>();
-
-    for (SchemaPath column : columns) {
-      // convert * into [row_key, cf1, cf2, ..., cf_n].
-      if (column.equals(Utilities.STAR_COLUMN)) {
-        hasStarCol = true;
-        Set<byte[]> families = hTableDesc.getFamiliesKeys();
-        requestedColumns.add(ROW_KEY_PATH);
-        for (byte[] family : families) {
-          SchemaPath colFamily = SchemaPath.getSimplePath(Bytes.toString(family));
-          requestedColumns.add(colFamily);
-        }
-      } else {
-        if (!(column.equals(ROW_KEY_PATH) ||
-            hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-          DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
-              column.getRootSegment().getPath(), hTableDesc.getNameAsString());
-        }
-        requestedColumns.add(column);
-      }
-    }
-
-    // since star column has been converted, reset this.cloumns.
-    if (hasStarCol) {
-      this.columns = new ArrayList<>(requestedColumns);
-    }
+    columns = HBaseUtils.verifyColumnsAndConvertStar(columns, hTableDesc);
   }
 
   @Override
