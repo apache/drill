@@ -27,10 +27,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -38,7 +38,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
-import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue;
 import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue.ZKQueueInfo;
@@ -92,13 +91,13 @@ public class DrillRoot {
     // separate groups by comma + space
     if (adminUsers != null) {
       String[] groups = adminUsers.split(",");
-      adminUsers = DrillStringUtils.join(groups, ", ");
+      adminUsers = Joiner.on(", ").join(groups);
     }
 
     // separate groups by comma + space
     if (adminUserGroups != null) {
       String[] groups = adminUserGroups.split(",");
-      adminUserGroups = DrillStringUtils.join(groups, ", ");
+      adminUserGroups = Joiner.on(", ").join(groups);
     }
 
     final boolean shouldShowUserInfo = isUserLoggedIn &&

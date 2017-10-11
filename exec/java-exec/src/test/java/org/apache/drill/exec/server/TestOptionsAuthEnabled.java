@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
+import com.google.common.base.Joiner;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillProperties;
@@ -28,8 +29,6 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.FixtureBuilder;
-import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -159,7 +158,7 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
       client.resetSystem(ExecConstants.ADMIN_USER_GROUPS_KEY);
       String systemAdminUsersList0 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
       String systemAdminUserGroupsList0 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
-      for (String user :  systemAdminUsersList0.split(",")) {
+      for (String user : systemAdminUsersList0.split(",")) {
         assertTrue(ImpersonationUtil.hasAdminPrivileges(user, systemAdminUsersList0, systemAdminUserGroupsList0));
       }
 
@@ -167,7 +166,9 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
       // test if we can handle a user-supplied list that is not well formatted
       String crummyTestAdminUsersList = " alice, bob bob, charlie  ,, dave ";
       client.alterSystem(ExecConstants.ADMIN_USERS_KEY, crummyTestAdminUsersList);
-      String[] sanitizedAdminUsers = DrillStringUtils.sanitizeCSV(crummyTestAdminUsersList).split(",");
+      String[] sanitizedAdminUsers = {"alice", "bob bob", "charlie", "dave"};
+      // also test the CSV sanitizer
+      assertEquals(Joiner.on(",").join(sanitizedAdminUsers), DrillStringUtils.sanitizeCSV(crummyTestAdminUsersList));
       String systemAdminUsersList1 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
       String systemAdminUserGroupsList1 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
       for (String user : sanitizedAdminUsers) {

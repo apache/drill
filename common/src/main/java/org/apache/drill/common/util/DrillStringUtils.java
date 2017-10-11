@@ -17,10 +17,13 @@
  */
 package org.apache.drill.common.util;
 
+import com.google.common.base.Joiner;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
 
 public class DrillStringUtils {
 
@@ -200,61 +203,6 @@ public class DrillStringUtils {
     return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
   }
 
-
-  /**
-   * Concatenates the individual strings into a single string,
-   * where each individual string is separated by the provided separator.
-   * Copied from org.apache.commons.lang3.StringUtils (to avoid
-   * bringing in the entire package)
-   * @param array - array holding the strings to be concatenated
-   * @param separator - separator to be used in the concatenation
-   * @return The separator separated concatenated string
-   */
-
-  public static String join(Object[] array, String separator) {
-    return array == null?null:join(array, separator, 0, array.length);
-  }
-
-  /**
-   * Concatenates the individual strings into a single string,
-   * where each individual string is separated by the provided separator.
-   * Copied from org.apache.commons.lang3.StringUtils (to avoid
-   * bringing in the entire package)
-   * @param array - array holding the strings to be concatenated
-   * @param separator - separator to be used in the concatenation
-   * @param startIndex - index for first string to be concatenated
-   * @param endIndex - index for the last string to be u
-   * @return The separator separated concatenated string
-   */
-  public static String join(Object[] array, String separator, int startIndex, int endIndex) {
-    if(array == null) {
-      return null;
-    } else {
-      if(separator == null) {
-        separator = "";
-      }
-
-      int noOfItems = endIndex - startIndex;
-      if(noOfItems <= 0) {
-        return "";
-      } else {
-        StringBuilder buf = new StringBuilder(noOfItems * 16);
-
-        for(int i = startIndex; i < endIndex; ++i) {
-          if(i > startIndex) {
-            buf.append(separator);
-          }
-
-          if(array[i] != null) {
-            buf.append(array[i]);
-          }
-        }
-
-        return buf.toString();
-      }
-    }
-  }
-
   /**
    * Removes extra spaces and empty values in a CSV String
    * @param csv The CSV string to be sanitized
@@ -263,18 +211,17 @@ public class DrillStringUtils {
   public static String sanitizeCSV(String csv) {
     // tokenize
     String[] tokens = csv.split(",");
-    String[] sanitizedTokens = new String[tokens.length];
-    int sanitizedTokenCount = 0;
+    ArrayList<String> sanitizedTokens = new ArrayList<String>(tokens.length);
     // check for empties
     for (String s : tokens) {
       String trimmedToken = s.trim();
       if (trimmedToken.length() != 0) {
-        sanitizedTokens[sanitizedTokenCount++] = trimmedToken;
+        sanitizedTokens.add(trimmedToken);
       }
     }
     String result = "";
-    if (sanitizedTokenCount != 0) {
-      result = join(sanitizedTokens, ",", 0, sanitizedTokenCount);
+    if (sanitizedTokens.size() != 0) {
+      result = Joiner.on(",").join(sanitizedTokens);
     }
     return result;
   }
