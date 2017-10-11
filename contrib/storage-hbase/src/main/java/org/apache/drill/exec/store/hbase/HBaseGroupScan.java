@@ -144,7 +144,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   public GroupScan clone(List<SchemaPath> columns) {
     HBaseGroupScan newScan = new HBaseGroupScan(this);
     newScan.columns = columns == null ? ALL_COLUMNS : columns;
-    newScan.verifyColumns();
+    HBaseUtils.verifyColumns(columns, hTableDesc);
     return newScan;
   }
 
