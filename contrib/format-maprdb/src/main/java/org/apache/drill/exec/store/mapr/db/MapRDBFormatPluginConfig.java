@@ -32,6 +32,12 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   public boolean ignoreSchemaChange = false;
   public boolean readAllNumbersAsDouble = false;
   public boolean disableCountOptimization = false;
+  /* This flag is a switch to do special handling in case of
+   * no columns in the query exists in the maprdb table. This flag
+   * can get deprecated once it is observed that this special handling
+   * is not regressing performance of reading maprdb table.
+   */
+  public boolean nonExistentFieldSupport = true;
 
   @Override
   public int hashCode() {
@@ -40,6 +46,7 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
     result = 31 * result + (ignoreSchemaChange ? 1231 : 1237);
     result = 31 * result + (readAllNumbersAsDouble ? 1231 : 1237);
     result = 31 * result + (disableCountOptimization ? 1231 : 1237);
+    result = 31 * result + (nonExistentFieldSupport ? 1231 : 1237);
     return result;
   }
 
@@ -55,6 +62,8 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
     } else if (enablePushdown != other.enablePushdown) {
       return false;
     } else if (disableCountOptimization != other.disableCountOptimization) {
+      return false;
+    } else if (nonExistentFieldSupport != other.nonExistentFieldSupport) {
       return false;
     }
     return true;
@@ -75,6 +84,8 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   public boolean isEnablePushdown() {
     return enablePushdown;
   }
+
+  public boolean isNonExistentFieldSupport() { return nonExistentFieldSupport; }
 
   public boolean isIgnoreSchemaChange() {
     return ignoreSchemaChange;

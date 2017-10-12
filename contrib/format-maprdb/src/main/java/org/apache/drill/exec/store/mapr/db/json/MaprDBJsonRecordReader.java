@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -44,6 +45,7 @@ import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.fn.JsonReaderUtils;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.ojai.DocumentReader;
 import org.ojai.DocumentReader.EventType;
@@ -95,6 +97,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private final boolean allTextMode;
   private final boolean ignoreSchemaChange;
   private final boolean disableCountOptimization;
+  private final boolean nonExistentColumnsProjection;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
       MapRDBFormatPluginConfig formatPluginConfig,
@@ -119,6 +122,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     allTextMode = formatPluginConfig.isAllTextMode();
     ignoreSchemaChange = formatPluginConfig.isIgnoreSchemaChange();
     disablePushdown = !formatPluginConfig.isEnablePushdown();
+    nonExistentColumnsProjection = formatPluginConfig.isNonExistentFieldSupport();
   }
 
   @Override
@@ -230,6 +234,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       }
     }
 
+    if (nonExistentColumnsProjection && recordCount > 0) {
+      JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), allTextMode, Collections.EMPTY_LIST);
+    }
     vectorWriter.setValueCount(recordCount);
     logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), recordCount);
     return recordCount;
