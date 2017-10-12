@@ -41,12 +41,13 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -63,13 +64,14 @@ public class PcapRecordReader extends AbstractRecordReader {
 
   private PacketDecoder decoder;
   private ImmutableList<ProjectedColumnInfo> projectedCols;
+  private FileSystem fs;
 
   private byte[] buffer;
   private int offset = 0;
-  private InputStream in;
+  private FSDataInputStream in;
   private int validBytes;
 
-  private String inputPath;
+  private final Path pathToFile;
   private List<SchemaPath> projectedColumns;
 
   private static final Map<PcapTypes, MinorType> TYPES;
@@ -88,9 +90,11 @@ public class PcapRecordReader extends AbstractRecordReader {
         .build();
   }
 
-  public PcapRecordReader(final String inputPath,
+  public PcapRecordReader(final String pathToFile,
+                          final FileSystem fileSystem,
                           final List<SchemaPath> projectedColumns) {
-    this.inputPath = inputPath;
+    this.fs = fileSystem;
+    this.pathToFile = fs.makeQualified(new Path(pathToFile));
     this.projectedColumns = projectedColumns;
   }
 
@@ -100,14 +104,14 @@ public class PcapRecordReader extends AbstractRecordReader {
 
       this.output = output;
       this.buffer = new byte[100000];
-      this.in = new FileInputStream(inputPath);
+      this.in = fs.open(pathToFile);
       this.decoder = new PacketDecoder(in);
       this.validBytes = in.read(buffer);
       this.projectedCols = getProjectedColsIfItNull();
       setColumns(projectedColumns);
     } catch (IOException io) {
       throw UserException.dataReadError(io)
-          .addContext("File name:", inputPath)
+          .addContext("File name:", pathToFile.toUri().getPath())
           .build(logger);
     }
   }
@@ -125,8 +129,7 @@ public class PcapRecordReader extends AbstractRecordReader {
 
   @Override
   public void close() throws Exception {
-//    buffer = null;
-//    in.close();
+    in.close();
   }
 
   private ImmutableList<ProjectedColumnInfo> getProjectedColsIfItNull() {
