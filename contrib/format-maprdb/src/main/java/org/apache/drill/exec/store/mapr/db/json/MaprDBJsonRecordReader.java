@@ -157,6 +157,10 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       transformed.add(column);
     }
 
+    if (!transformed.contains(ID_PATH)) {
+      transformed.add(ID_PATH);
+    }
+
     if (projectedFieldsSet.size() > 0) {
       projectedFields = projectedFieldsSet.toArray(new FieldPath[projectedFieldsSet.size()]);
     }
