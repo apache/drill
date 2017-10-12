@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -308,6 +309,27 @@ fi
 
 CP="$CP:$DRILL_HOME/jars/3rdparty/*"
 CP="$CP:$DRILL_HOME/jars/classb/*"
+
+#Followed by OS Specific jars
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  # Linux
+  # check for Fedora. netty-tcnative has a Fedora variant
+  linuxvariant=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
+  if [[ "$linuxvariant" == "Fedora" ]]; then
+    CP="$CP:$DRILL_HOME/jars/3rdparty/fedora/*"
+  else
+    CP="$CP:$DRILL_HOME/jars/3rdparty/linux/*"
+  fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  # Mac OSX
+  CP="$CP:$DRILL_HOME/jars/3rdparty/osx/*"
+elif [[ "$OSTYPE" == "cygwin" ]]; then
+  # Cygwin
+  CP="$CP:$DRILL_HOME/jars/3rdparty/windows/*"
+elif [[ "$OSTYPE" == "msys" ]]; then
+  # Msys env on MinGW
+  CP="$CP:$DRILL_HOME/jars/3rdparty/windows/*"
+fi
 
 # Finally any user specified
 # Allow user jars to appear in $DRILL_CONF_DIR/jars to avoid mixing

@@ -168,6 +168,8 @@
         <exclude>org.eclipse.jdt</exclude>
         <exclude>com.github.stephenc.high-scale-lib</exclude>
 
+        <exclude>io.netty:netty-tcnative</exclude>
+
         <exclude>org.jamon</exclude>
 
       </excludes>
@@ -190,6 +192,42 @@
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
         <include>com.google.protobuf:protobuf-java:jar:2.5</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/linux</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64:2.0.1.Final</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/fedora</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:2.0.1.Final</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/windows</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:windows-x86_64:2.0.1.Final</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/osx</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:osx-x86_64:2.0.1.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>

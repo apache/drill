@@ -157,14 +157,14 @@ class DrillConnectionImpl extends AvaticaConnection
       this.client.setClientName("Apache Drill JDBC Driver");
       this.client.connect(connect, info);
     } catch (OutOfMemoryException e) {
-      throw new SQLException("Failure creating root allocator", e);
+      throw new SQLNonTransientConnectionException("Failure creating root allocator", e);
     } catch (InvalidConnectionInfoException e) {
-      throw new SQLException("Invalid parameter in connection string: " + e.getMessage(), e);
+      throw new SQLNonTransientConnectionException("Invalid parameter in connection string: " + e.getMessage(), e);
     } catch (RpcException e) {
       // (Include cause exception's text in wrapping exception's text so
       // it's more likely to get to user (e.g., via SQLLine), and use
       // toString() since getMessage() text doesn't always mention error:)
-      throw new SQLException("Failure in connecting to Drill: " + e, e);
+      throw new SQLNonTransientConnectionException("Failure in connecting to Drill: " + e, e);
     }
   }
 

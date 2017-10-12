@@ -26,12 +26,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.SSLConfig;
+import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
+import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -331,12 +333,18 @@ public class WebServer implements AutoCloseable {
     logger.info("Setting up HTTPS connector for web server");
 
     final SslContextFactory sslContextFactory = new SslContextFactory();
-    SSLConfig ssl = new SSLConfig(config);
+    SSLConfig ssl = new SSLConfigBuilder()
+        .config(config)
+        .mode(SSLFactory.Mode.SERVER)
+        .initializeSSLContext(false)
+        .validateKeyStore(true)
+        .build();
     if(ssl.isSslValid()){
       logger.info("Using configured SSL settings for web server");
 
       sslContextFactory.setKeyStorePath(ssl.getKeyStorePath());
       sslContextFactory.setKeyStorePassword(ssl.getKeyStorePassword());
+      sslContextFactory.setKeyManagerPassword(ssl.getKeyPassword());
       if(ssl.hasTrustStorePath()){
         sslContextFactory.setTrustStorePath(ssl.getTrustStorePath());
         if(ssl.hasTrustStorePassword()){

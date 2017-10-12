@@ -77,7 +77,9 @@ public class DrillRoot {
     final String currentVersion = currentDrillbit.getVersion();
 
     final DrillConfig config = dbContext.getConfig();
-    final boolean userEncryptionEnabled = config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED);
+    final boolean userEncryptionEnabled =
+        config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED) ||
+            config .getBoolean(ExecConstants.USER_SSL_ENABLED);
     final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
     // If the user is logged in and is admin user then show the admin user info
     // For all other cases the user info need-not or should-not be displayed

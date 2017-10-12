@@ -226,8 +226,10 @@
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
             <exclude>**/*.linux</exclude>
-            <exclude>**/client/build/**</exclude>
+            <exclude>**/client/*build*/**</exclude>
+            <exclude>**/client/tags</exclude>
             <exclude>**/cmake_install.cmake</exclude>
+            <exclude>**/ssl/*.csr</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
             <exclude>**/*.autotools</exclude>
@@ -567,7 +569,13 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
-      <version>4.0.27.Final</version>
+      <version>4.0.48.Final</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-common</artifactId>
+      <version>4.0.48.Final</version>
     </dependency>
 
     <dependency>
@@ -769,6 +777,14 @@
             <groupId>org.apache.curator</groupId>
             <artifactId>apache-curator</artifactId>
           </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -842,6 +858,14 @@
           <exclusion>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-common</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -923,6 +947,14 @@
             <groupId>org.mortbay.jetty</groupId>
             <artifactId>servlet-api-2.5</artifactId>
           </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -946,6 +978,14 @@
             <artifactId>slf4j-log4j12</artifactId>
             <groupId>org.slf4j</groupId>
           </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -956,6 +996,14 @@
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1110,6 +1158,10 @@
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1203,6 +1255,10 @@
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1293,6 +1349,10 @@
               <exclusion>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1420,6 +1480,10 @@
             <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
               </exclusion>
@@ -1492,6 +1556,14 @@
             <version>${hbase.version}</version>
             <scope>test</scope>
             <exclusions>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
@@ -1607,6 +1679,14 @@
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <!-- Test Dependencies -->
@@ -1636,6 +1716,14 @@
               <exclusion>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1743,6 +1831,14 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-core</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1838,6 +1934,14 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-core</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1886,6 +1990,14 @@
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1918,8 +2030,12 @@
             <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
-                <artifactId>netty-all</artifactId>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
@@ -1968,6 +2084,10 @@
             <artifactId>hbase-server</artifactId>
             <version>${hbase.version}</version>
             <exclusions>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
@@ -2041,6 +2161,14 @@
             <version>${hbase.version}</version>
             <scope>test</scope>
             <exclusions>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
@@ -2131,6 +2259,14 @@
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -2153,6 +2289,14 @@
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2189,6 +2333,14 @@
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -2211,6 +2363,14 @@
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
               </exclusion>
             </exclusions>
           </dependency>

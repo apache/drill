@@ -21,11 +21,19 @@ package org.apache.drill.exec;
 
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.exec.ssl.SSLConfig;
+import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.test.ConfigBuilder;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+
+import java.text.MessageFormat;
+
 import static junit.framework.TestCase.fail;
+import static org.apache.drill.exec.ssl.SSLConfig.HADOOP_SSL_CONF_TPL_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -38,8 +46,15 @@ public class TestSSLConfig {
     ConfigBuilder config = new ConfigBuilder();
     config.put(ExecConstants.HTTP_KEYSTORE_PATH, "");
     config.put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "root");
+    config.put(ExecConstants.SSL_USE_HADOOP_CONF, false);
+    config.put(ExecConstants.USER_SSL_ENABLED, true);
     try {
-      SSLConfig sslv = new SSLConfig(config.build());
+      SSLConfig sslv = new SSLConfigBuilder()
+          .config(config.build())
+          .mode(SSLFactory.Mode.SERVER)
+          .initializeSSLContext(false)
+          .validateKeyStore(true)
+          .build();
       fail();
       //Expected
     } catch (Exception e) {
@@ -53,8 +68,15 @@ public class TestSSLConfig {
     ConfigBuilder config = new ConfigBuilder();
     config.put(ExecConstants.HTTP_KEYSTORE_PATH, "/root");
     config.put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "");
+    config.put(ExecConstants.SSL_USE_HADOOP_CONF, false);
+    config.put(ExecConstants.USER_SSL_ENABLED, true);
     try {
-      SSLConfig sslv = new SSLConfig(config.build());
+      SSLConfig sslv = new SSLConfigBuilder()
+          .config(config.build())
+          .mode(SSLFactory.Mode.SERVER)
+          .initializeSSLContext(false)
+          .validateKeyStore(true)
+          .build();
       fail();
       //Expected
     } catch (Exception e) {
@@ -69,7 +91,12 @@ public class TestSSLConfig {
     config.put(ExecConstants.HTTP_KEYSTORE_PATH, "/root");
     config.put(ExecConstants.HTTP_KEYSTORE_PASSWORD, "root");
     try {
-      SSLConfig sslv = new SSLConfig(config.build());
+      SSLConfig sslv = new SSLConfigBuilder()
+          .config(config.build())
+          .mode(SSLFactory.Mode.SERVER)
+          .initializeSSLContext(false)
+          .validateKeyStore(true)
+          .build();
       assertEquals("/root", sslv.getKeyStorePath());
       assertEquals("root", sslv.getKeyStorePassword());
     } catch (Exception e) {
@@ -84,7 +111,12 @@ public class TestSSLConfig {
     ConfigBuilder config = new ConfigBuilder();
     config.put("javax.net.ssl.keyStore", "/root");
     config.put("javax.net.ssl.keyStorePassword", "root");
-    SSLConfig sslv = new SSLConfig(config.build());
+    SSLConfig sslv = new SSLConfigBuilder()
+        .config(config.build())
+        .mode(SSLFactory.Mode.SERVER)
+        .initializeSSLContext(false)
+        .validateKeyStore(true)
+        .build();
     assertEquals("/root",sslv.getKeyStorePath());
     assertEquals("root", sslv.getKeyStorePassword());
   }
@@ -95,10 +127,41 @@ public class TestSSLConfig {
     ConfigBuilder config = new ConfigBuilder();
     config.put(ExecConstants.HTTP_TRUSTSTORE_PATH, "/root");
     config.put(ExecConstants.HTTP_TRUSTSTORE_PASSWORD, "root");
-    SSLConfig sslv = new SSLConfig(config.build());
+    config.put(ExecConstants.SSL_USE_HADOOP_CONF, false);
+    SSLConfig sslv = new SSLConfigBuilder()
+        .config(config.build())
+        .mode(SSLFactory.Mode.SERVER)
+        .initializeSSLContext(false)
+        .validateKeyStore(true)
+        .build();
     assertEquals(true, sslv.hasTrustStorePath());
     assertEquals(true,sslv.hasTrustStorePassword());
     assertEquals("/root",sslv.getTrustStorePath());
     assertEquals("root",sslv.getTrustStorePassword());
   }
+
+  @Test
+  public void testInvalidHadoopKeystore() throws Exception {
+    Configuration hadoopConfig = new Configuration();
+    String hadoopSSLFileProp = MessageFormat
+        .format(HADOOP_SSL_CONF_TPL_KEY, SSLFactory.Mode.SERVER.toString().toLowerCase());
+    hadoopConfig.set(hadoopSSLFileProp, "ssl-server-invalid.xml");
+    ConfigBuilder config = new ConfigBuilder();
+    config.put(ExecConstants.USER_SSL_ENABLED, true);
+    config.put(ExecConstants.SSL_USE_HADOOP_CONF, true);
+    SSLConfig sslv;
+    try {
+      sslv = new SSLConfigBuilder()
+          .config(config.build())
+          .mode(SSLFactory.Mode.SERVER)
+          .initializeSSLContext(false)
+          .validateKeyStore(true)
+          .hadoopConfig(hadoopConfig)
+          .build();
+      fail();
+    } catch (Exception e) {
+      assertTrue(e instanceof DrillException);
+    }
+  }
+
 }
