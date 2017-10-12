@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -76,12 +77,14 @@ public class OperatorWrapper {
   public String getContent() {
     TableBuilder builder = new TableBuilder(OPERATOR_COLUMNS, OPERATOR_COLUMNS_TOOLTIP, true);
 
+    Map<String, String> attributeMap = new HashMap<String, String>(); //Reusing for different fragments
     for (ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String> ip : opsAndHosts) {
       int minor = ip.getLeft().getRight();
       OperatorProfile op = ip.getLeft().getLeft();
 
+      attributeMap.put("data-order", String.valueOf(minor)); //Overwrite values from previous fragments
       String path = new OperatorPathBuilder().setMajor(major).setMinor(minor).setOperator(op).build();
-      builder.appendCell(path);
+      builder.appendCell(path, attributeMap);
       builder.appendCell(ip.getRight());
       builder.appendNanos(op.getSetupNanos());
       builder.appendNanos(op.getProcessNanos());
