@@ -39,7 +39,6 @@ import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.List;
@@ -66,8 +65,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
 
   @Override
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork, List<SchemaPath> columns, String userName) throws ExecutionSetupException {
-    String path = dfs.makeQualified(new Path(fileWork.getPath())).toUri().getPath();
-    return new PcapRecordReader(path, columns);
+    return new PcapRecordReader(fileWork.getPath(), dfs, columns);
   }
 
   @Override
