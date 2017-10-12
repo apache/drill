@@ -419,8 +419,9 @@ public class Foreman implements Runnable {
     queryRM.visitAbstractPlan(plan);
     final QueryWorkUnit work = getQueryWorkUnit(plan);
     queryRM.visitPhysicalPlan(work);
-    queryRM.setCost(plan.totalCost());
-    queryManager.setTotalCost(plan.totalCost());
+    final double totalCost = plan.totalCost();
+    queryRM.setCost(totalCost);
+    queryManager.setTotalCost(totalCost);
     work.applyPlan(drillbitContext.getPlanReader());
     logWorkUnit(work);
     admit(work);
