@@ -62,7 +62,9 @@ public class HBaseTestsSuite {
   private static final boolean IS_DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
   protected static final TableName TEST_TABLE_1 = TableName.valueOf("TestTable1");
+  protected static final TableName TEST_TABLE_2 = TableName.valueOf("TestTable2");
   protected static final TableName TEST_TABLE_3 = TableName.valueOf("TestTable3");
+  protected static final TableName TEST_TABLE_MULTI_CF_DIFFERENT_CASE = TableName.valueOf("TestTableMultiCF");
   protected static final TableName TEST_TABLE_COMPOSITE_DATE = TableName.valueOf("TestTableCompositeDate");
   protected static final TableName TEST_TABLE_COMPOSITE_TIME = TableName.valueOf("TestTableCompositeTime");
   protected static final TableName TEST_TABLE_COMPOSITE_INT = TableName.valueOf("TestTableCompositeInt");
@@ -164,7 +166,9 @@ public class HBaseTestsSuite {
   }
 
   private static boolean tablesExist() throws IOException {
-    return admin.tableExists(TEST_TABLE_1) && admin.tableExists(TEST_TABLE_3)
+    return admin.tableExists(TEST_TABLE_1) && admin.tableExists(TEST_TABLE_2)
+           && admin.tableExists(TEST_TABLE_3)
+           && admin.tableExists(TEST_TABLE_MULTI_CF_DIFFERENT_CASE)
            && admin.tableExists(TEST_TABLE_COMPOSITE_DATE)
            && admin.tableExists(TEST_TABLE_COMPOSITE_TIME)
            && admin.tableExists(TEST_TABLE_COMPOSITE_INT)
@@ -188,7 +192,9 @@ public class HBaseTestsSuite {
      * Will revert to multiple region once the issue is resolved.
      */
     TestTableGenerator.generateHBaseDataset1(conn, admin, TEST_TABLE_1, 2);
+    TestTableGenerator.generateHBaseDatasetSingleSchema(conn, admin, TEST_TABLE_2, 1);
     TestTableGenerator.generateHBaseDataset3(conn, admin, TEST_TABLE_3, 1);
+    TestTableGenerator.generateHBaseDatasetMultiCF(conn, admin, TEST_TABLE_MULTI_CF_DIFFERENT_CASE, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyDate(conn, admin, TEST_TABLE_COMPOSITE_DATE, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyTime(conn, admin, TEST_TABLE_COMPOSITE_TIME, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyInt(conn, admin, TEST_TABLE_COMPOSITE_INT, 1);
@@ -206,8 +212,12 @@ public class HBaseTestsSuite {
   private static void cleanupTestTables() throws IOException {
     admin.disableTable(TEST_TABLE_1);
     admin.deleteTable(TEST_TABLE_1);
+    admin.disableTable(TEST_TABLE_2);
+    admin.deleteTable(TEST_TABLE_2);
     admin.disableTable(TEST_TABLE_3);
     admin.deleteTable(TEST_TABLE_3);
+    admin.disableTable(TEST_TABLE_MULTI_CF_DIFFERENT_CASE);
+    admin.deleteTable(TEST_TABLE_MULTI_CF_DIFFERENT_CASE);
     admin.disableTable(TEST_TABLE_COMPOSITE_DATE);
     admin.deleteTable(TEST_TABLE_COMPOSITE_DATE);
     admin.disableTable(TEST_TABLE_COMPOSITE_TIME);

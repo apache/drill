@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.util;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -54,6 +55,13 @@ public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
       if (this.get(key) == null ) {
         if (other.get(key) == null) {
           continue;
+        } else {
+          return false;
+        }
+      }
+      if (this.get(key) instanceof byte[]) {
+        if (other.get(key) instanceof byte[]) {
+          return Arrays.equals((byte[]) this.get(key), (byte[]) other.get(key));
         } else {
           return false;
         }

@@ -133,6 +133,81 @@ public class TestTableGenerator {
     table.close();
   }
 
+  public static void generateHBaseDatasetSingleSchema(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor("f"));
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions - 1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    BufferedMutator table = conn.getBufferedMutator(tableName);
+
+    Put p = new Put("a1".getBytes());
+    p.addColumn("f".getBytes(), "c1".getBytes(), "21".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "22".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "23".getBytes());
+    table.mutate(p);
+
+    p = new Put("a2".getBytes());
+    p.addColumn("f".getBytes(), "c1".getBytes(), "11".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "12".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "13".getBytes());
+    table.mutate(p);
+
+    p = new Put("a3".getBytes());
+    p.addColumn("f".getBytes(), "c1".getBytes(), "31".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "32".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "33".getBytes());
+    table.mutate(p);
+
+    table.close();
+  }
+
+  public static void generateHBaseDatasetMultiCF(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor("f"));
+    desc.addFamily(new HColumnDescriptor("F"));
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions - 1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    BufferedMutator table = conn.getBufferedMutator(tableName);
+
+    Put p = new Put("a1".getBytes());
+    p.addColumn("f".getBytes(), "c1".getBytes(), "21".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "22".getBytes());
+    p.addColumn("F".getBytes(), "c3".getBytes(), "23".getBytes());
+    table.mutate(p);
+
+    p = new Put("a2".getBytes());
+    p.addColumn("f".getBytes(), "c1".getBytes(), "11".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "12".getBytes());
+    p.addColumn("F".getBytes(), "c3".getBytes(), "13".getBytes());
+    table.mutate(p);
+
+    p = new Put("a3".getBytes());
+    p.addColumn("f".getBytes(), "c1".getBytes(), "31".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "32".getBytes());
+    p.addColumn("F".getBytes(), "c3".getBytes(), "33".getBytes());
+    table.mutate(p);
+
+    table.close();
+  }
+
   public static void generateHBaseDataset2(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
