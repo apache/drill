@@ -22,7 +22,10 @@
     <libpam4j.version>1.8-rev1</libpam4j.version>
     <!-- Configure the os-maven-plugin extension to expand the classifier on -->
     <!-- Fedora-"like" systems. Used for netty-tcnative inclusion -->
+    <!-- Uncomment the following to get a debug build that allows openssl support -->
+    <!--
     <os.detection.classifierWithLikes>fedora</os.detection.classifierWithLikes>
+    -->
   </properties>
 
   <dependencies>
@@ -587,6 +590,8 @@
       <artifactId>libpam4j</artifactId>
       <version>${libpam4j.version}</version>
     </dependency>
+    <!-- Uncomment the following to get a debug build that allows openssl support -->
+    <!--
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-tcnative</artifactId>
@@ -594,6 +599,7 @@
       <scope>provided</scope>
       <classifier>${os.detected.classifier}</classifier>
     </dependency>
+    -->
 
   </dependencies>
 
@@ -701,18 +707,21 @@
       <!--
       Include the os-maven-plugin to get os.detected.classifier
       -->
-      <extension>
-        <groupId>kr.motd.maven</groupId>
-        <artifactId>os-maven-plugin</artifactId>
-        <version>1.5.0.Final</version>
-      </extension>
-    </extensions>
+      <!-- Uncomment the following to get a debug build that allows openssl support -->
+      <!--
+        <extension>
+          <groupId>kr.motd.maven</groupId>
+          <artifactId>os-maven-plugin</artifactId>
+          <version>1.5.0.Final</version>
+        </extension>
+      -->
+      </extensions>
 
-    <plugins>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution> <!-- copy all templates/data in the same location to compile them at once -->
+      <plugins>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <executions>
+            <execution> <!-- copy all templates/data in the same location to compile them at once -->
             <id>copy-fmpp-resources</id>
             <phase>initialize</phase>
             <goals><goal>copy-resources</goal></goals>
