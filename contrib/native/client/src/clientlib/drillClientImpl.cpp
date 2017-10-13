@@ -678,7 +678,10 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
         m_io_service.reset();
         return CONN_SUCCESS;
     } else {
-        logMsg << m_encryptionCtxt << ", Error: " << m_saslResultCode;
+        logMsg << m_encryptionCtxt
+               << ", Mechanism: " << m_saslAuthenticator->getAuthMechanismName()
+               << ", Error: " << m_saslResultCode
+               << ", Cause: " << m_saslAuthenticator->getErrorMessage(m_saslResultCode);
         DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
 
         // shuts down socket as well
