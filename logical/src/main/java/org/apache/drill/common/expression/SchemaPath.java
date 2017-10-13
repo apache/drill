@@ -264,56 +264,6 @@ public class SchemaPath extends LogicalExpressionBase {
     return rootSegment.getPath();
   }
 
-  /**
-   * Returns {@code String} representation of this schema path,
-   * quoting all name segments if specified {@code quote} is true or quoting
-   * only those name segments which have a complex name (their name contains dots).
-   *
-   * @param quoted is name segment should be quoted
-   * @return the {@code String} representation of this {@code SchemaPath}
-   * @throws IllegalStateException if root segment is {@code ArraySegment}
-   */
-  public String asPathString(boolean quoted) throws RuntimeException {
-    StringBuilder sb = new StringBuilder();
-    PathSegment seg = rootSegment;
-    if (seg.isArray()) {
-      throw new IllegalStateException("Drill doesn't currently support top level arrays");
-    }
-    NameSegment nameSegment = seg.getNameSegment();
-    writeQuoted(sb, nameSegment.getPath(), quoted || nameSegment.isComplex());
-
-    while ((seg = seg.getChild()) != null) {
-      if (seg.isNamed()) {
-        nameSegment = seg.getNameSegment();
-        sb.append('.');
-        writeQuoted(sb, nameSegment.getPath(), quoted || nameSegment.isComplex());
-      } else {
-        sb.append('[');
-        sb.append(seg.getArraySegment().getIndex());
-        sb.append(']');
-      }
-    }
-    return sb.toString();
-  }
-
-  /**
-   * Writes specified string to the string builder quoting the sting
-   * if {@code quoted} is true.
-   *
-   * @param stringBuilder string builder where the specified string will be written
-   * @param name          string which will be written
-   * @param quoted        is string should be written with quotes
-   */
-  private void writeQuoted(StringBuilder stringBuilder, String name, boolean quoted) {
-    if (quoted) {
-      stringBuilder.append("`");
-    }
-    stringBuilder.append(name);
-    if (quoted) {
-      stringBuilder.append("`");
-    }
-  }
-
   public static class De extends StdDeserializer<SchemaPath> {
 
     public De() {

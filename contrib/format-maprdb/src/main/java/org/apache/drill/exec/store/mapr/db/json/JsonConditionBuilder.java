@@ -20,9 +20,9 @@ package org.apache.drill.exec.store.mapr.db.json;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
+import org.apache.drill.exec.store.mapr.db.util.FieldPathHelper;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
 import org.ojai.store.QueryCondition.Op;
@@ -159,7 +159,7 @@ public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void
   private JsonScanSpec createJsonScanSpec(FunctionCall call,
       CompareFunctionsProcessor processor) {
     String functionName = processor.getFunctionName();
-    String fieldPath = processor.getPath().asPathString(false);
+    String fieldPath = FieldPathHelper.schemaPathToFieldPath(processor.getPath()).asPathString();
     Value fieldValue = processor.getValue();
 
     QueryCondition cond = null;
