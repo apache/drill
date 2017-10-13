@@ -55,6 +55,10 @@ public:
 
     int unwrap(const char* dataToUnWrap, const int& dataToUnWrapLen, const char** output, uint32_t& unWrappedLen);
 
+    const std::string &getAuthMechanismName() const;
+
+    const char *getErrorMessage(int errorCode);
+
 private:
 
     static const std::map<std::string, std::string> MECHANISM_MAPPING;
@@ -67,10 +71,13 @@ private:
     std::string m_username;
     sasl_secret_t *m_ppwdSecret;
     EncryptionContext *m_pEncryptCtxt;
+    std::string m_authMechanismName; // used for debugging/error messages
 
+private:
     static int passwordCallback(sasl_conn_t *conn, void *context, int id, sasl_secret_t **psecret);
 
     static int userNameCallback(void *context, int id, const char **result, unsigned int *len);
+
 
     void setSecurityProps() const;
 };

@@ -156,8 +156,8 @@ void EncryptionContext::reset() {
 
 std::ostream& operator<<(std::ostream &contextStream, const EncryptionContext& context) {
     contextStream << " Encryption: " << (context.isEncryptionReqd() ? "enabled" : "disabled");
-    contextStream << " ,MaxWrappedSize: " << context.getMaxWrappedSize();
-    contextStream << " ,WrapSizeLimit: " << context.getWrapSizeLimit();
+    contextStream << ", MaxWrappedSize: " << context.getMaxWrappedSize();
+    contextStream << ", WrapSizeLimit: " << context.getWrapSizeLimit();
     return contextStream;
 }
 
