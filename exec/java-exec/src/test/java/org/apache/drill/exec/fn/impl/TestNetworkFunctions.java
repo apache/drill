@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,69 +25,109 @@ public class TestNetworkFunctions extends BaseTestQuery {
 
   @Test
   public void testInetAton() throws Exception {
-    final String query = "select inet_aton( '192.168.0.1') as inet from (values(1))";
+    final String query = "select inet_aton('192.168.0.1') as inet from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues( Long.parseLong("3232235521") ).go();
   }
 
   @Test
   public void testInetNtoa() throws Exception {
-    final String query = "select inet_ntoa( 3232235521 ) as inet from (values(1))";
+    final String query = "select inet_ntoa(3232235521) as inet from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues("192.168.0.1").go();
   }
 
   @Test
   public void testInNetwork() throws Exception {
-    final String query = "select in_network( '192.168.0.1', '192.168.0.0/28' ) as in_net FROM (values(1))";
+    final String query = "select in_network('192.168.0.1', '192.168.0.0/28') as in_net FROM (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("in_net").baselineValues(true).go();
   }
 
   @Test
+  public void testNotInNetwork() throws Exception {
+    final String query = "select in_network('10.10.10.10', '192.168.0.0/28') as in_net FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("in_net").baselineValues(false).go();
+  }
+
+  @Test
   public void testBroadcastAddress() throws Exception {
-    final String query = "select getBroadcastAddress( '192.168.0.0/28' ) AS broadcastAddress FROM (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("broadcastAddress").baselineValues("192.168.0.15").go();
+    final String query = "select broadcast_address( '192.168.0.0/28' ) AS broadcast_address FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("broadcast_address").baselineValues("192.168.0.15").go();
   }
   @Test
   public void testNetmask() throws Exception {
-    final String query = "select getNetmask( '192.168.0.0/28' ) AS netmask FROM (values(1))";
+    final String query = "select netmask('192.168.0.0/28') AS netmask FROM (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("netmask").baselineValues("255.255.255.240").go();
   }
-  @Test
-  public void testFunctions() throws Exception {
-    final String query = "SELECT getLowAddress( '192.168.0.0/28' ) AS low, " +
-      "getHighAddress( '192.168.0.0/28' ) AS high, " +
-      "urlencode( 'http://www.test.com/login.php?username=Charles&password=12345' ) AS encoded_url, " +
-      "urldecode( 'http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345' ) AS decoded_url, " +
-      "is_private_ip( '8.8.8.8' ) AS is_private_ip, " +
-      "is_valid_IP('258.257.234.23' ) AS isValidIP, " +
-      "is_valid_IPv4( '192.168.0.1' ) AS isValidIP4, " +
-      "is_valid_IPv6('1050:0:0:0:5:600:300c:326b') as isValidIPv6 " +
-      "FROM (values(1))";
 
-    testBuilder().
-      sqlQuery(query).
-      ordered().
-      baselineColumns(
-        "low",
-        "high",
-        "encoded_url",
-        "decoded_url",
-        "is_private_ip",
-        "isValidIP",
-        "IsValidIP4",
-        "IsValidIPv6"
-      ).
-      baselineValues(
-        "192.168.0.1",
-        "192.168.0.14",
-        "http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345",
-        "http://www.test.com/login.php?username=Charles&password=12345",
-        false,
-        false,
-        true,
-        true
-      ).go();
+  @Test
+  public void testLowAddress() throws Exception {
+    final String query = "SELECT low_address('192.168.0.0/28') AS low FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("low").baselineValues("192.168.0.1").go();
   }
 
+  @Test
+  public void testHighAddress() throws Exception {
+    final String query = "SELECT high_address('192.168.0.0/28') AS high FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("high").baselineValues("192.168.0.14").go();
+  }
 
+  @Test
+  public void testEncodeUrl() throws Exception {
+    final String query = "SELECT url_encode('http://www.test.com/login.php?username=Charles&password=12345') AS encoded_url FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("encoded_url").baselineValues("http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345").go();
+  }
+
+  @Test
+  public void testDecodeUrl() throws Exception {
+    final String query = "SELECT url_decode('http%3A%2F%2Fwww.test.com%2Flogin.php%3Fusername%3DCharles%26password%3D12345') AS decoded_url FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("decoded_url").baselineValues("http://www.test.com/login.php?username=Charles&password=12345").go();
+  }
+
+  @Test
+  public void testNotPrivateIP() throws Exception {
+    final String query = "SELECT is_private_ip('8.8.8.8') AS is_private_ip FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_private_ip").baselineValues(false).go();
+  }
+
+  @Test
+  public void testPrivateIP() throws Exception {
+    final String query = "SELECT is_private_ip('192.168.0.1') AS is_private_ip FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_private_ip").baselineValues(true).go();
+  }
+
+  @Test
+  public void testNotValidIP() throws Exception {
+    final String query = "SELECT is_valid_IP('258.257.234.23') AS is_valid_IP FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_valid_IP").baselineValues(false).go();
+  }
+
+  @Test
+  public void testIsValidIP() throws Exception {
+    final String query = "SELECT is_valid_IP('10.10.10.10') AS is_valid_IP FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_valid_IP").baselineValues(true).go();
+  }
+
+  @Test
+  public void testNotValidIPv4() throws Exception {
+    final String query = "SELECT is_valid_IPv4( '192.168.0.257') AS is_valid_IP4 FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_valid_IP4").baselineValues(false).go();
+  }
+
+  @Test
+  public void testIsValidIPv4() throws Exception {
+    final String query = "SELECT is_valid_IPv4( '192.168.0.1') AS is_valid_IP4 FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_valid_IP4").baselineValues(true).go();
+  }
+
+  @Test
+  public void testIsValidIPv6() throws Exception {
+    final String query = "SELECT is_valid_IPv6('1050:0:0:0:5:600:300c:326b') AS is_valid_IP6 FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_valid_IP6").baselineValues(true).go();
+  }
+
+  @Test
+  public void testNotValidIPv6() throws Exception {
+    final String query = "SELECT is_valid_IPv6('1050:0:0:0:5:600:300c:326g') AS is_valid_IP6 FROM (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("is_valid_IP6").baselineValues(false).go();
+  }
 
 }

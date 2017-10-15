@@ -159,6 +159,10 @@
           <groupId>commons-net</groupId>
           <artifactId>commons-net</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>commons-validator</groupId>
+          <artifactId>commons-validator</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
