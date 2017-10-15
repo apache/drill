@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,19 +19,17 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.DrillBuf;
-import org.apache.commons.net.util.SubnetUtils;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import javax.inject.Inject;
 
-public class NetworkFunctions{
+public class NetworkFunctions {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NetworkFunctions.class);
 
   private NetworkFunctions() {}
@@ -59,9 +57,6 @@ public class NetworkFunctions{
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    SubnetUtils utils;
-
     public void setup() {
     }
 
@@ -72,14 +67,12 @@ public class NetworkFunctions{
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
 
       int result = 0;
-      utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
 
-      if( utils.getInfo().isInRange( ipString ) ){
+      if(utils.getInfo().isInRange(ipString) ){
         result = 1;
       }
-      else{
-        result = 0;
-      }
+
       out.value = result;
     }
   }
@@ -89,11 +82,11 @@ public class NetworkFunctions{
    * This function retunrs the number of IP addresses in the input CIDR block.
    */
   @FunctionTemplate(
-    name = "getAddressCount",
+    name = "address_count",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public static class getAddressCountFunction implements DrillSimpleFunc {
+  public static class AddressCountFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputCIDR;
@@ -104,16 +97,13 @@ public class NetworkFunctions{
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    SubnetUtils utils;
-
     public void setup() {
     }
 
     public void eval() {
 
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
 
       out.value = utils.getInfo().getAddressCount();
 
@@ -125,11 +115,11 @@ public class NetworkFunctions{
    * This function returns the broadcast address of a given CIDR block.
    */
   @FunctionTemplate(
-    name = "getBroadcastAddress",
+    name = "broadcast_address",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public static class getBroadcastAddressFunction implements DrillSimpleFunc {
+  public static class BroadcastAddressFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputCIDR;
@@ -140,16 +130,13 @@ public class NetworkFunctions{
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    SubnetUtils utils;
-
     public void setup() {
     }
 
     public void eval() {
 
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
 
       String outputValue = utils.getInfo().getBroadcastAddress();
 
@@ -167,11 +154,11 @@ public class NetworkFunctions{
    */
 
   @FunctionTemplate(
-    name = "getNetmask",
+    name = "netmask",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public static class getNetmaskFunction implements DrillSimpleFunc {
+  public static class NetmaskFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputCIDR;
@@ -182,16 +169,13 @@ public class NetworkFunctions{
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    SubnetUtils utils;
-
     public void setup() {
     }
 
     public void eval() {
 
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
 
       String outputValue = utils.getInfo().getNetmask();
 
@@ -208,11 +192,11 @@ public class NetworkFunctions{
    * This function gets the numerically lowest IP address in an input CIDR block.
    */
   @FunctionTemplate(
-    name = "getLowAddress",
+    name = "low_address",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public static class getLowAddressFunction implements DrillSimpleFunc {
+  public static class LowAddressFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputCIDR;
@@ -223,16 +207,13 @@ public class NetworkFunctions{
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    SubnetUtils utils;
-
     public void setup() {
     }
 
     public void eval() {
 
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
 
       String outputValue = utils.getInfo().getLowAddress();
 
@@ -249,11 +230,11 @@ public class NetworkFunctions{
    * This function gets the numerically highest IP address in an input CIDR block.
    */
   @FunctionTemplate(
-    name = "getHighAddress",
+    name = "high_address",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
-  public static class getHighddressFunction implements DrillSimpleFunc {
+  public static class HighAddressFunction implements DrillSimpleFunc {
 
     @Param
     VarCharHolder inputCIDR;
@@ -264,16 +245,13 @@ public class NetworkFunctions{
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    SubnetUtils utils;
-
     public void setup() {
     }
 
     public void eval() {
 
       String cidrString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputCIDR.start, inputCIDR.end, inputCIDR.buffer);
-      utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
+      org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
 
       String outputValue = utils.getInfo().getHighAddress();
 
@@ -289,7 +267,7 @@ public class NetworkFunctions{
    * This function encodes URL strings.
    */
   @FunctionTemplate(
-    name = "urlencode",
+    name = "url_encode",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
@@ -329,7 +307,7 @@ public class NetworkFunctions{
    * This function decodes URL strings.
    */
   @FunctionTemplate(
-    name = "urldecode",
+    name = "url_decode",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
   )
@@ -378,7 +356,7 @@ public class NetworkFunctions{
   public static class InetNtoaFunction implements DrillSimpleFunc {
 
     @Param
-    BigIntHolder in1;
+    BigIntHolder in;
 
     @Output
     VarCharHolder out;
@@ -394,7 +372,7 @@ public class NetworkFunctions{
     public void eval() {
       StringBuilder result = new StringBuilder(15);
 
-      long inputInt = in1.value;
+      long inputInt = in.value;
 
       for (int i = 0; i < 4; i++) {
 
@@ -535,22 +513,11 @@ public class NetworkFunctions{
 
     @Output BitHolder out;
 
-    @Workspace
-    java.util.regex.Pattern ipv4;
-
-    @Workspace
-    java.util.regex.Pattern ipv6;
-
     @Inject
     DrillBuf buffer;
 
 
     public void setup() {
-      String ipv4Regex = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
-      ipv4 = java.util.regex.Pattern.compile(ipv4Regex);
-
-      String ipv6Regex = "(^\\d{20}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff:(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})(\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})){3}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff(:[a-fA-F0-9]{1,4}){2}$)|(^([a-fA-F0-9]{1,4}) (:[a-fA-F0-9]{1,4}){7}$)|(^:(:[a-fA-F0-9]{1,4}(::)?){1,6}$)|(^((::)?[a-fA-F0-9]{1,4}:){1,6}:$)|(^::$)";
-      ipv6 = java.util.regex.Pattern.compile(ipv6Regex);
     }
 
 
@@ -559,9 +526,10 @@ public class NetworkFunctions{
       if( ipString == null || ipString.isEmpty() || ipString.length() == 0 ){
         out.value = 0;
       } else {
-        java.util.regex.Matcher ipV4Matcher = ipv4.matcher(ipString);
-        java.util.regex.Matcher ipV6Matcher = ipv6.matcher(ipString);
-        if( ipV4Matcher.find() || ipV6Matcher.find()){
+        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+
+        boolean result = validator.isValid(ipString);
+        if( result == true ){
           out.value = 1;
         } else {
           out.value = 0;
@@ -586,15 +554,10 @@ public class NetworkFunctions{
 
     @Output BitHolder out;
 
-    @Workspace
-    java.util.regex.Pattern p;
-
     @Inject
     DrillBuf buffer;
 
     public void setup() {
-      String regex = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
-      p = java.util.regex.Pattern.compile(regex);
     }
 
 
@@ -603,23 +566,15 @@ public class NetworkFunctions{
       if( ipString == null || ipString.isEmpty() || ipString.length() == 0 ){
         out.value = 0;
       } else {
-        /*org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+
         boolean result = validator.isValidInet4Address(ipString);
         if( result == true ){
           out.value = 1;
         } else {
           out.value = 0;
         }
-        */
-        java.util.regex.Matcher ipV4Matcher = p.matcher(ipString);
-        if( ipV4Matcher.find()){
-          out.value = 1;
-        } else {
-          out.value = 0;
-        }
-
       }
-
     }
   }
 
@@ -638,16 +593,11 @@ public class NetworkFunctions{
 
     @Output BitHolder out;
 
-    @Workspace
-    java.util.regex.Pattern p;
-
     @Inject
     DrillBuf buffer;
 
 
     public void setup() {
-      String regex = "(^\\d{20}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff:(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})(\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})){3}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff(:[a-fA-F0-9]{1,4}){2}$)|(^([a-fA-F0-9]{1,4}) (:[a-fA-F0-9]{1,4}){7}$)|(^:(:[a-fA-F0-9]{1,4}(::)?){1,6}$)|(^((::)?[a-fA-F0-9]{1,4}:){1,6}:$)|(^::$)";
-      p = java.util.regex.Pattern.compile(regex);
     }
 
     public void eval() {
@@ -655,14 +605,15 @@ public class NetworkFunctions{
       if( ipString == null || ipString.isEmpty() || ipString.length() == 0 ){
         out.value = 0;
       } else {
-        java.util.regex.Matcher ipV6Matcher = p.matcher(ipString);
-        if( ipV6Matcher.find()){
+        org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
+
+        boolean result = validator.isValidInet6Address(ipString);
+        if (result == true) {
           out.value = 1;
         } else {
           out.value = 0;
         }
       }
-
     }
   }
 }
