@@ -230,6 +230,8 @@
             <exclude>**/client/tags</exclude>
             <exclude>**/cmake_install.cmake</exclude>
             <exclude>**/ssl/*.csr</exclude>
+            <exclude>**/ssl/*.pem</exclude>
+            <exclude>**/ssl/*.p12</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
             <exclude>**/*.autotools</exclude>
