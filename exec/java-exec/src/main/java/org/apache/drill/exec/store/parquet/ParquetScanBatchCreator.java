@@ -168,9 +168,8 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     If it is a wildcard query, we check every columns in the metadata.
     If not, we only check the projected columns.
     */
+    MessageType schema = footer.getFileMetaData().getSchema();
     if (Utilities.isStarQuery(columns)) {
-      MessageType schema = footer.getFileMetaData().getSchema();
-
       for (Type type : schema.getFields()) {
         if (!type.isPrimitive()) {
           return true;
@@ -184,7 +183,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       return false;
     } else {
       for (SchemaPath column : columns) {
-        if (isColumnComplex(footer.getFileMetaData().getSchema(), column)) {
+        if (isColumnComplex(schema, column)) {
           return true;
         }
       }
