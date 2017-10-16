@@ -19,12 +19,12 @@ package org.apache.drill.exec;
 
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
-import org.apache.drill.exec.server.options.OptionMetaData;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
+import org.apache.drill.exec.server.options.TypeValidators.MaxWidthValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
@@ -358,12 +358,41 @@ public final class ExecConstants {
   public static final OptionValidator ENABLE_MEMORY_ESTIMATION = new BooleanValidator(ENABLE_MEMORY_ESTIMATION_KEY);
 
   /**
-   * Maximum query memory per node (in MB). Re-plan with cheaper operators if memory estimation exceeds this limit.
+   * Maximum query memory per node (in MB). Re-plan with cheaper operators if
+   * memory estimation exceeds this limit.
    * <p/>
    * DEFAULT: 2048 MB
    */
   public static final String MAX_QUERY_MEMORY_PER_NODE_KEY = "planner.memory.max_query_memory_per_node";
   public static final LongValidator MAX_QUERY_MEMORY_PER_NODE = new RangeLongValidator(MAX_QUERY_MEMORY_PER_NODE_KEY, 1024 * 1024, Long.MAX_VALUE);
+
+  /**
+   * Alternative way to compute per-query-per-node memory as a percent
+   * of the total available system memory.
+   * <p>
+   * Suggestion for computation.
+   * <ul>
+   * <li>Assume an allowance for non-managed operators. Default assumption:
+   * 50%</li>
+   * <li>Assume a desired number of concurrent queries. Default assumption:
+   * 10.</li>
+   * <li>The value of this parameter is<br>
+   * (1 - non-managed allowance) / concurrency</li>
+   * </ul>
+   * Doing the math produces the default 5% number. The actual number
+   * given is no less than the <tt>max_query_memory_per_node</tt>
+   * amount.
+   * <p>
+   * This number is used only when throttling is disabled. Setting the
+   * number to 0 effectively disables this technique as it will always
+   * produce values lower than <tt>max_query_memory_per_node</tt>.
+   * <p>
+   * DEFAULT: 5%
+   */
+
+  public static String PERCENT_MEMORY_PER_QUERY_KEY = "planner.memory.percent_per_query";
+  public static DoubleValidator PERCENT_MEMORY_PER_QUERY = new RangeDoubleValidator(
+      PERCENT_MEMORY_PER_QUERY_KEY, 0, 1.0);
 
   /**
    * Minimum memory allocated to each buffered operator instance.

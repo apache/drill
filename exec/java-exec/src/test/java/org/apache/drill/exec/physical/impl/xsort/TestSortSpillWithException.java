@@ -55,6 +55,8 @@ public class TestSortSpillWithException extends ClusterTest {
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, 1) // Unmanaged
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, 1) // Unmanaged
         .sessionOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 60 * 1024 * 1024) // Spill early
+        // Prevent the percent-based memory rule from second-guessing the above.
+        .sessionOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.0)
         .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
         .maxParallelization(1)
         ;
