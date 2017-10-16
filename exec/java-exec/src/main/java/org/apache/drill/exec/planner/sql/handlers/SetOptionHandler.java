@@ -91,8 +91,8 @@ public class SetOptionHandler extends AbstractSqlHandler {
       if (context.isUserAuthenticationEnabled() &&
           !ImpersonationUtil.hasAdminPrivileges(
             context.getQueryUserName(),
-            options.getOption(ExecConstants.ADMIN_USERS_VALIDATOR),
-            options.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR))) {
+            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
         throw UserException.permissionError()
             .message("Not authorized to change SYSTEM options.")
             .build(logger);

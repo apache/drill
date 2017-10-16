@@ -86,7 +86,6 @@ public class DrillRestServer extends ResourceConfig {
     register(MultiPartFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
 
-
     final boolean isAuthEnabled =
         workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
 
@@ -152,7 +151,6 @@ public class DrillRestServer extends ResourceConfig {
     return configuration;
   }
 
-
   public static class AuthWebUserConnectionProvider implements Factory<WebUserConnection> {
 
     @Inject
@@ -161,6 +159,7 @@ public class DrillRestServer extends ResourceConfig {
     @Inject
     WorkManager workManager;
 
+    @SuppressWarnings("resource")
     @Override
     public WebUserConnection provide() {
       final HttpSession session = request.getSession();
@@ -228,6 +227,7 @@ public class DrillRestServer extends ResourceConfig {
     @Inject
     WorkManager workManager;
 
+    @SuppressWarnings("resource")
     @Override
     public WebUserConnection provide() {
       final DrillbitContext drillbitContext = workManager.getContext();

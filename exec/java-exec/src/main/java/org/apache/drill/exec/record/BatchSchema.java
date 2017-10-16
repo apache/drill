@@ -136,6 +136,21 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return true;
   }
 
+  public boolean isEquivalent(BatchSchema other) {
+    if (fields == null || other.fields == null) {
+      return fields == other.fields;
+    }
+    if (fields.size() != other.fields.size()) {
+      return false;
+    }
+    for (int i = 0; i < fields.size(); i++) {
+      if (! fields.get(i).isEquivalent(other.fields.get(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /**
    * We treat fields with same set of Subtypes as equal, even if they are in a different order
    * @param t1

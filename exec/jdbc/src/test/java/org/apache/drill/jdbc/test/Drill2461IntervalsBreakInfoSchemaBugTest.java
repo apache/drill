@@ -20,15 +20,17 @@ package org.apache.drill.jdbc.test;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-
+@Category(JdbcTest.class)
 public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTestBase {
 
   private static final String VIEW_NAME =

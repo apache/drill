@@ -35,7 +35,9 @@ import java.util.Map;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.common.util.TestTools;
@@ -56,11 +58,13 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
+@Category({SlowTest.class, ParquetTest.class})
 public class TestParquetWriter extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetWriter.class);
 
@@ -596,6 +600,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test // DRILL-2341
+  @Category(UnlikelyTest.class)
   public void tableSchemaWhenSelectFieldsInDef_SelectFieldsInView() throws Exception {
     final String newTblName = "testTableOutputSchema";
 
@@ -975,6 +980,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test // DRILL-5097
+  @Category(UnlikelyTest.class)
   public void testInt96TimeStampValueWidth() throws Exception {
     try {
       testBuilder()

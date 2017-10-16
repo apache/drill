@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc.user.security;
 
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -26,6 +27,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Properties;
 
@@ -38,6 +40,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+@Category(SecurityTest.class)
 public class TestCustomUserAuthenticator extends BaseTestQuery {
 
   @BeforeClass

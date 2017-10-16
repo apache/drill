@@ -18,8 +18,12 @@
 package org.apache.drill.exec.physical.impl.flatten;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class, PlannerTest.class})
 public class TestFlattenPlanning extends PlanTestBase {
 
   @Test

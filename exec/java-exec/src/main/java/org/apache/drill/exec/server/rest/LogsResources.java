@@ -111,6 +111,7 @@ public class LogsResources {
     final int maxLines = work.getContext().getOptionManager().getOption(ExecConstants.WEB_LOGS_MAX_LINES).num_val.intValue();
 
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      @SuppressWarnings("serial")
       Map<Integer, String> cache = new LinkedHashMap<Integer, String>(maxLines, .75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Integer, String> eldest) {

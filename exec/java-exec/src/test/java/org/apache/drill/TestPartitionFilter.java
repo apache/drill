@@ -20,11 +20,16 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SqlTest.class, PlannerTest.class})
 public class TestPartitionFilter extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPartitionFilter.class);
 
@@ -257,6 +262,7 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test // see DRILL-2712
+  @Category(UnlikelyTest.class)
   public void testMainQueryFalseCondition() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query = String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994') t where 1 = 0", root);
@@ -265,6 +271,7 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test // see DRILL-2712
+  @Category(UnlikelyTest.class)
   public void testMainQueryTrueCondition() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query =  String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994' ) t where 0 = 0", root);
@@ -280,6 +287,7 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test // see DRILL-2852 and DRILL-3591
+  @Category(UnlikelyTest.class)
   public void testPartitionFilterWithCast() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query = String.format("select myyear, myquarter, o_totalprice from (select cast(dir0 as varchar(10)) as myyear, "
@@ -307,6 +315,7 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test // DRILL-3702
+  @Category(UnlikelyTest.class)
   public void testPartitionFilterWithNonNullabeFilterExpr() throws Exception {
     String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/parquet` where concat(dir0, '') = '1994' and concat(dir1, '') = 'Q1'", TEST_RES_PATH);
     testExcludeFilter(query, 1, "Filter", 10);
@@ -333,6 +342,7 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test  //DRILL-4021: Json with complex type and nested flatten functions: dir0 and dir1 filters plus filter involves filter refering to output from nested flatten functions.
+  @Category(UnlikelyTest.class)
   public void testPartitionFilter_Json_WithFlatten() throws Exception {
     // this query expects to have the partition filter pushded.
     // With partition pruning, we will end with one file, and one row returned from the query.

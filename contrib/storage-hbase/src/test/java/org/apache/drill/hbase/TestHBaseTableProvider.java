@@ -24,16 +24,20 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map.Entry;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.categories.HbaseStorageTest;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.store.hbase.config.HBasePersistentStoreProvider;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.categories.SlowTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HbaseStorageTest.class})
 public class TestHBaseTableProvider extends BaseHBaseTest {
 
   private static HBasePersistentStoreProvider provider;

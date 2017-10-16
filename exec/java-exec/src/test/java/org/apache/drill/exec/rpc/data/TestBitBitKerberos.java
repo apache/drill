@@ -27,6 +27,7 @@ import mockit.Mock;
 import mockit.MockUp;
 import mockit.NonStrictExpectations;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -66,6 +67,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -78,6 +80,7 @@ import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertTrue;
 
 @Ignore("See DRILL-5387")
+@Category(SecurityTest.class)
 public class TestBitBitKerberos extends BaseTestQuery {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitBitKerberos.class);
 

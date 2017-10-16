@@ -41,6 +41,7 @@ import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -51,11 +52,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
+import org.junit.experimental.categories.Category;
 
 /** Unit tests for Drill's JDBC driver. */
 
-
 @Ignore // ignore for now.
+@Category(JdbcTest.class)
 public class JdbcDataTest extends JdbcTestBase {
   private static String MODEL;
   private static String EXPECTED;

@@ -19,6 +19,7 @@ package org.apache.drill.vector;
 
 import static org.junit.Assert.*;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -38,6 +39,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test the setScalar() methods in the various generated vector
@@ -45,6 +47,7 @@ import io.netty.buffer.DrillBuf;
  * rely on the fact that code is generated from a common template.
  */
 
+@Category(VectorTest.class)
 public class TestVectorLimits extends DrillTest {
 
   public static OperatorFixture fixture;

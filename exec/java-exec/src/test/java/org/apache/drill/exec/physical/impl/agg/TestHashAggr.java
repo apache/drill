@@ -19,10 +19,12 @@
 package org.apache.drill.exec.physical.impl.agg;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-
+@Category(OperatorTest.class)
 public class TestHashAggr extends BaseTestQuery{
 
   @Test

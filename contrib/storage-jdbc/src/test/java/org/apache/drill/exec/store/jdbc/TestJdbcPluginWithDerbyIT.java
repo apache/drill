@@ -17,18 +17,21 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.proto.UserBitShared;
 
 import org.joda.time.DateTime;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * JDBC storage plugin tests against Derby.
  */
+@Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
 
   @Test

@@ -51,6 +51,10 @@ public class MockRecordReader extends AbstractRecordReader {
   }
 
   private int getEstimatedRecordSize(MockColumn[] types) {
+    if (types == null) {
+      return 0;
+    }
+
     int x = 0;
     for (int i = 0; i < types.length; i++) {
       x += TypeHelper.getSize(types[i].getMajorType());
@@ -68,6 +72,9 @@ public class MockRecordReader extends AbstractRecordReader {
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     try {
       final int estimateRowSize = getEstimatedRecordSize(config.getTypes());
+      if (config.getTypes() == null) {
+        return;
+      }
       valueVectors = new ValueVector[config.getTypes().length];
       batchRecordCount = 250000 / estimateRowSize;
 
@@ -90,6 +97,11 @@ public class MockRecordReader extends AbstractRecordReader {
 
     final int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
     recordsRead += recordSetSize;
+
+    if (valueVectors == null) {
+      return recordSetSize;
+    }
+
     for (final ValueVector v : valueVectors) {
       final ValueVector.Mutator m = v.getMutator();
       m.generateTestData(recordSetSize);

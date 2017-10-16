@@ -17,6 +17,7 @@
 #
 cmake_minimum_required(VERSION 2.6)
 
+project(drillclient)
 cmake_policy(SET CMP0043 NEW)
 cmake_policy(SET CMP0048 NEW)
 enable_testing()
@@ -93,7 +94,7 @@ else()
     #    of boost. Arbirtarily, we choose the new namspace to be drill_boost.
     #    See the instructions in the readme for linux/macos and rebuild boost. Then
     #    uncomment the line below to build
-        set(Boost_NAMESPACE drill_boost)
+    #    set(Boost_NAMESPACE drill_boost)
 endif()
 
 find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
@@ -116,11 +117,23 @@ if(MSVC)
     add_definitions(-DUSE_STATIC_LIB)
 else()
     add_definitions(-DBOOST_ALL_DYN_LINK)
+    #suppress boost warnings (clang, gcc)
+    add_definitions ("-Wno-unused-local-typedefs")
 endif()
+
 
 # Find Protobufs
 find_package(Protobuf REQUIRED )
 include_directories(${PROTOBUF_INCLUDE_DIR})
+
+if (MSVC)
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+endif()
+#Find SSL
+find_package(OpenSSL REQUIRED )
+if(OPENSSL_FOUND)
+    add_definitions("-DIS_SSL_ENABLED=1")
+endif()
 
 #Find Zookeeper
 find_package(Zookeeper REQUIRED )
@@ -166,6 +179,12 @@ set_property(
 
 # Link directory
 link_directories(/usr/local/lib)
+
+#test programs
+add_subdirectory("${CMAKE_SOURCE_DIR}/test")
+message("Open SSL Include = ${OPENSSL_INCLUDE_DIR}")
+message("Open SSL Libraries = ${OPENSSL_LIBRARIES}")
+message("Open SSL = ${OPENSSL_ROOT_DIR}")
 
 add_executable(querySubmitter example/querySubmitter.cpp )
 

@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OptionsTest;
 import org.apache.drill.exec.proto.UserProtos.CatalogMetadata;
 import org.apache.drill.exec.proto.UserProtos.ColumnMetadata;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
@@ -40,10 +41,12 @@ import org.apache.drill.exec.proto.UserProtos.SchemaMetadata;
 import org.apache.drill.exec.proto.UserProtos.TableMetadata;
 import org.apache.drill.exec.store.sys.SystemTable;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for metadata provider APIs.
  */
+@Category(OptionsTest.class)
 public class TestMetadataProvider extends BaseTestQuery {
 
   @Test

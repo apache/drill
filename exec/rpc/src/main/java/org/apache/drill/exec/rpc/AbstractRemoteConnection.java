@@ -271,17 +271,26 @@ public abstract class AbstractRemoteConnection implements RemoteConnection, Encr
   public void addSecurityHandlers() {
 
     final ChannelPipeline channelPipeline = getChannel().pipeline();
-    channelPipeline.addFirst(RpcConstants.SASL_DECRYPTION_HANDLER,
-        new SaslDecryptionHandler(saslCodec, getMaxWrappedSize(), OutOfMemoryHandler.DEFAULT_INSTANCE));
+    if (channelPipeline.names().contains(RpcConstants.SSL_HANDLER)) {
+      channelPipeline.addAfter(RpcConstants.SSL_HANDLER, RpcConstants.SASL_DECRYPTION_HANDLER,
+          new SaslDecryptionHandler(saslCodec, getMaxWrappedSize(), OutOfMemoryHandler.DEFAULT_INSTANCE));
 
-    channelPipeline.addFirst(RpcConstants.LENGTH_DECODER_HANDLER,
-        new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE,
-            RpcConstants.LENGTH_FIELD_OFFSET, RpcConstants.LENGTH_FIELD_LENGTH,
-            RpcConstants.LENGTH_ADJUSTMENT, RpcConstants.INITIAL_BYTES_TO_STRIP, true));
+      channelPipeline.addAfter(RpcConstants.SSL_HANDLER, RpcConstants.LENGTH_DECODER_HANDLER,
+          new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE,
+              RpcConstants.LENGTH_FIELD_OFFSET, RpcConstants.LENGTH_FIELD_LENGTH,
+              RpcConstants.LENGTH_ADJUSTMENT, RpcConstants.INITIAL_BYTES_TO_STRIP, true));
+    } else {
+      channelPipeline.addFirst(RpcConstants.SASL_DECRYPTION_HANDLER,
+          new SaslDecryptionHandler(saslCodec, getMaxWrappedSize(), OutOfMemoryHandler.DEFAULT_INSTANCE));
 
+      channelPipeline.addFirst(RpcConstants.LENGTH_DECODER_HANDLER,
+          new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE,
+              RpcConstants.LENGTH_FIELD_OFFSET, RpcConstants.LENGTH_FIELD_LENGTH,
+              RpcConstants.LENGTH_ADJUSTMENT, RpcConstants.INITIAL_BYTES_TO_STRIP, true));
+
+    }
     channelPipeline.addAfter(RpcConstants.MESSAGE_DECODER, RpcConstants.SASL_ENCRYPTION_HANDLER,
-        new SaslEncryptionHandler(saslCodec, getWrapSizeLimit(),
-            OutOfMemoryHandler.DEFAULT_INSTANCE));
+        new SaslEncryptionHandler(saslCodec, getWrapSizeLimit(), OutOfMemoryHandler.DEFAULT_INSTANCE));
 
     channelPipeline.addAfter(RpcConstants.SASL_ENCRYPTION_HANDLER, RpcConstants.CHUNK_CREATION_HANDLER,
         new ChunkCreationHandler(getWrapSizeLimit()));

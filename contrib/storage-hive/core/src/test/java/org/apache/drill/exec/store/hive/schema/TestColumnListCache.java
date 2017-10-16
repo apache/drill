@@ -18,14 +18,17 @@ package org.apache.drill.exec.store.hive.schema;
 
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.store.hive.ColumnListsCache;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+@Category(SlowTest.class)
 public class TestColumnListCache {
 
   @Test

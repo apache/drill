@@ -18,9 +18,12 @@
 package org.apache.drill.exec.store.dfs;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(UnlikelyTest.class)
 public class TestGlob extends BaseTestQuery {
 
     String MULTILEVEL = TestTools.getWorkingPath() + "/../java-exec/src/test/resources/multilevel";

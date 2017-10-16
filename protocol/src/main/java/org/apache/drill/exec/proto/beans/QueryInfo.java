@@ -48,6 +48,7 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
     static final QueryInfo DEFAULT_INSTANCE = new QueryInfo();
 
     static final String DEFAULT_USER = ByteString.stringDefaultValue("-");
+    static final String DEFAULT_QUEUE_NAME = ByteString.stringDefaultValue("-");
     
     private String query;
     private long start;
@@ -55,6 +56,8 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
     private String user = DEFAULT_USER;
     private DrillbitEndpoint foreman;
     private String optionsJson;
+    private double totalCost;
+    private String queueName = DEFAULT_QUEUE_NAME;
 
     public QueryInfo()
     {
@@ -141,6 +144,32 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
         return this;
     }
 
+    // totalCost
+
+    public double getTotalCost()
+    {
+        return totalCost;
+    }
+
+    public QueryInfo setTotalCost(double totalCost)
+    {
+        this.totalCost = totalCost;
+        return this;
+    }
+
+    // queueName
+
+    public String getQueueName()
+    {
+        return queueName;
+    }
+
+    public QueryInfo setQueueName(String queueName)
+    {
+        this.queueName = queueName;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -214,6 +243,12 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
                 case 6:
                     message.optionsJson = input.readString();
                     break;
+                case 7:
+                    message.totalCost = input.readDouble();
+                    break;
+                case 8:
+                    message.queueName = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -241,6 +276,12 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
 
         if(message.optionsJson != null)
             output.writeString(6, message.optionsJson, false);
+
+        if(message.totalCost != 0)
+            output.writeDouble(7, message.totalCost, false);
+
+        if(message.queueName != null && message.queueName != DEFAULT_QUEUE_NAME)
+            output.writeString(8, message.queueName, false);
     }
 
     public String getFieldName(int number)
@@ -253,6 +294,8 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
             case 4: return "user";
             case 5: return "foreman";
             case 6: return "optionsJson";
+            case 7: return "totalCost";
+            case 8: return "queueName";
             default: return null;
         }
     }
@@ -272,6 +315,8 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
         __fieldMap.put("user", 4);
         __fieldMap.put("foreman", 5);
         __fieldMap.put("optionsJson", 6);
+        __fieldMap.put("totalCost", 7);
+        __fieldMap.put("queueName", 8);
     }
     
 }

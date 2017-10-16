@@ -28,16 +28,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.drill.jdbc.Driver;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-
-/**
+ /**
  * Tests from DRILL-2288, in which schema information wasn't propagated when a
  * scan yielded an empty (zero-row) result set.
  */
+@Category(JdbcTest.class)
 public class Drill2288GetColumnsMetadataWhenNoRowsTest {
 
   private static Connection connection;

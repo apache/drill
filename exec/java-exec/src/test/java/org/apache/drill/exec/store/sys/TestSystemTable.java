@@ -18,9 +18,11 @@
 package org.apache.drill.exec.store.sys;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestSystemTable extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSystemTable.class);
@@ -53,6 +55,7 @@ public class TestSystemTable extends BaseTestQuery {
 
   // DRILL-2670
   @Test
+  @Category(UnlikelyTest.class)
   public void optionsOrderBy() throws Exception {
     test("select * from sys.options order by name");
   }

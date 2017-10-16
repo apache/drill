@@ -14,12 +14,35 @@
 <script src="/static/js/d3.v3.js"></script>
 <script src="/static/js/dagre-d3.min.js"></script>
 <script src="/static/js/graph.js"></script>
+<script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
+
 <script>
     var globalconfig = {
         "queryid" : "${model.getQueryId()}",
         "operators" : ${model.getOperatorsJSON()?no_esc}
     };
+
+    $(document).ready(function() {
+      $(".sortable").DataTable( {
+        "searching": false,
+        "lengthChange": false,
+        "paging": false,
+        "info": false
+      }
+    );} );
 </script>
+<style>
+/* DataTables Sorting: inherited via sortable class */
+table.sortable thead .sorting,.sorting_asc,.sorting_desc {
+  background-repeat: no-repeat;
+  background-position: center right;
+  cursor: pointer;
+}
+/* Sorting Symbols */
+table.sortable thead .sorting { background-image: url("/static/img/black-unsorted.gif"); }
+table.sortable thead .sorting_asc { background-image: url("/static/img/black-asc.gif"); }
+table.sortable thead .sorting_desc { background-image: url("/static/img/black-desc.gif"); }
+</style>
 </#macro>
 
 <#macro page_body>
@@ -110,6 +133,8 @@
 
   </div>
 
+  <#assign queueName = model.getProfile().getQueueName() />
+  <#assign queued = queueName != "" && queueName != "-" />
   <div class="page-header"></div>
   <h3>Query Profile</h3>
   <div class="panel-group" id="query-profile-accordion">
@@ -129,6 +154,10 @@
                 <th>State</th>
                 <th>Foreman</th>
                 <th>Total Fragments</th>
+     <#if queued>
+                <th>Total Cost</th>
+                <th>Queue</th>
+     </#if>
             </tr>
             </thead>
             <tbody>
@@ -136,12 +165,17 @@
                   <td>${model.getProfile().getState().name()}</td>
                   <td>${model.getProfile().getForeman().getAddress()}</td>
                   <td>${model.getProfile().getTotalFragments()}</td>
+     <#if queued>
+                  <td>${model.getProfile().getTotalCost()}</td>
+                  <td>${queueName}</td>
+     </#if>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
+
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
@@ -156,7 +190,9 @@
             <thead>
               <tr>
                 <th>Planning</th>
+     <#if queued>
                 <th>Queued</th>
+     </#if>
                 <th>Execution</th>
                 <th>Total</th>
               </tr>
@@ -164,7 +200,9 @@
             <tbody>
               <tr>
                 <td>${model.getPlanningDuration()}</td>
+     <#if queued>
                 <td>${model.getQueuedDuration()}</td>
+     </#if>
                 <td>${model.getExecutionDuration()}</td>
                 <td>${model.getProfileDuration()}</td>
               </tr>

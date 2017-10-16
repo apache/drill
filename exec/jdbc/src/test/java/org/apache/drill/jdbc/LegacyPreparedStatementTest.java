@@ -35,14 +35,17 @@ import java.sql.Statement;
 import java.util.Properties;
 
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.categories.JdbcTest;
 import org.hamcrest.Matcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test that prepared statements works even if not supported on server, to some extent.
  */
+@Category(JdbcTest.class)
 public class LegacyPreparedStatementTest extends JdbcTestBase {
   /** Fuzzy matcher for parameters-not-supported message assertions.  (Based on
    *  current "Prepared-statement dynamic parameters are not supported.") */

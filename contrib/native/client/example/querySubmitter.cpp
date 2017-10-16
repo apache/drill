@@ -1,4 +1,3 @@
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -25,7 +24,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include "drill/drillc.hpp"
 
-int nOptions=19;
+int nOptions=25;
 
 struct Option{
     char name[32];
@@ -50,7 +49,14 @@ struct Option{
     {"service_host", "Service host for Kerberos", false},
     {"service_name", "Service name for Kerberos", false},
     {"auth", "Authentication mechanism to use", false},
-    {"sasl_encrypt", "Negotiate for encrypted connection", false}
+    {"sasl_encrypt", "Negotiate for encrypted connection", false},
+    {"enableSSL", "Enable SSL", false},
+    {"TLSProtocol", "TLS protocol version", false},
+    {"certFilePath", "Path to SSL certificate file", false},
+    {"disableHostnameVerification", "disable host name verification", false},
+    {"disableCertVerification", "disable certificate verification", false},
+    {"useSystemTrustStore", "[Windows only]. Use the system truststore.", false }
+
 };
 
 std::map<std::string, std::string> qsOptionValues;
@@ -84,6 +90,7 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
     if(!err){
         if(b!=NULL){
             b->print(std::cout, 0); // print all rows
+            std::cout << "DATA RECEIVED ..." << std::endl;
             delete b; // we're done with this batch, we can delete it
             if(bTestCancel){
                 return Drill::QRY_FAILURE;
@@ -91,6 +98,7 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
                 return Drill::QRY_SUCCESS ;
             }
         }else{
+            std::cout << "Query Complete." << std::endl;
             return Drill::QRY_SUCCESS;
 		}
     }else{
@@ -151,7 +159,7 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
             sprintf((char*)printBuffer, "NIY");
             break;
     }
-    printf("%s ,", (char*)printBuffer);
+    printf("%s\t", (char*)printBuffer);
     return;
 }
 
@@ -302,6 +310,12 @@ int main(int argc, char* argv[]) {
         std::string serviceHost=qsOptionValues["service_host"];
         std::string serviceName=qsOptionValues["service_name"];
         std::string auth=qsOptionValues["auth"];
+        std::string enableSSL=qsOptionValues["enableSSL"];
+        std::string tlsProtocol=qsOptionValues["TLSProtocol"];
+        std::string certFilePath=qsOptionValues["certFilePath"];
+        std::string disableHostnameVerification=qsOptionValues["disableHostnameVerification"];
+        std::string disableCertVerification=qsOptionValues["disableCertVerification"];
+        std::string useSystemTrustStore = qsOptionValues["useSystemTrustStore"];
 
         Drill::QueryType type;
 
@@ -390,11 +404,26 @@ int main(int argc, char* argv[]) {
         if(auth.length()>0){
             props.setProperty(USERPROP_AUTH_MECHANISM, auth);
         }
+        if(enableSSL.length()>0){
+            props.setProperty(USERPROP_USESSL, enableSSL);
+			if (enableSSL == "true" && certFilePath.length() <= 0 && useSystemTrustStore.length() <= 0){
+                std::cerr<< "SSL is enabled but no certificate or truststore provided. " << std::endl;
+                return -1;
+            }
+            props.setProperty(USERPROP_TLSPROTOCOL, tlsProtocol);
+            props.setProperty(USERPROP_CERTFILEPATH, certFilePath);
+            props.setProperty(USERPROP_DISABLE_HOSTVERIFICATION, disableHostnameVerification);
+            props.setProperty(USERPROP_DISABLE_CERTVERIFICATION, disableCertVerification);
+			if (useSystemTrustStore.length() > 0){
+				props.setProperty(USERPROP_USESYSTEMTRUSTSTORE, useSystemTrustStore);
+			}
+        }
 
         if(client.connect(connectStr.c_str(), &props)!=Drill::CONN_SUCCESS){
             std::cerr<< "Failed to connect with error: "<< client.getError() << " (Using:"<<connectStr<<")"<<std::endl;
             return -1;
         }
+        std::cout<< "Connected!\n" << std::endl;
         if(api=="meta") {
         	Drill::Metadata* metadata = client.getMetadata();
         	if (metadata) {
@@ -545,3 +574,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+

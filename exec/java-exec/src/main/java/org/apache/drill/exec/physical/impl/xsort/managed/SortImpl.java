@@ -203,15 +203,16 @@ public class SortImpl {
     metrics = new SortMetrics(opContext.getStats());
     bufferedBatches = new BufferedBatches(opContext);
 
-    // Reset the allocator to allow a 10% safety margin. This is done because
-    // the memory manager will enforce the original limit. Changing the hard
-    // limit will reduce the probability that random chance causes the allocator
+    // Request leniency from the allocator. Leniency
+    // will reduce the probability that random chance causes the allocator
     // to kill the query because of a small, spurious over-allocation.
 
-    long maxMem = memManager.getMemoryLimit();
-    long newMax = (long)(maxMem * 1.10);
-    allocator.setLimit(newMax);
-    logger.debug("Config: Resetting allocator to 10% safety margin: {}", newMax);
+//    long maxMem = memManager.getMemoryLimit();
+//    long newMax = (long)(maxMem * 1.10);
+//    allocator.setLimit(newMax);
+//    logger.debug("Config: Resetting allocator to 10% safety margin: {}", newMax);
+    boolean allowed = allocator.setLenient();
+    logger.debug("Config: Is allocator lenient? {}", allowed);
   }
 
   public void setSchema(BatchSchema schema) {

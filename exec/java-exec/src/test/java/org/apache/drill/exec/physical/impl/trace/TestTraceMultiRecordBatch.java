@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.trace;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
@@ -40,6 +41,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
 /*
  * This test uses a physical plan with the mock scan that generates 100k records.
@@ -49,6 +51,7 @@ import mockit.Injectable;
  * multiple record batches and when there is a selection vector present in the
  * incoming container of the trace operator.
  */
+@Category(OperatorTest.class)
 public class TestTraceMultiRecordBatch extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
   private final DrillConfig c = DrillConfig.create();

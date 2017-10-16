@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -180,9 +180,6 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
       if (context.isOverMemoryLimit()) {
         return IterOutcome.OUT_OF_MEMORY;
       }
-
-
-//      logger.debug("Next received batch {}", batch);
 
       final RecordBatchDef rbd = batch.getHeader().getDef();
       final boolean schemaChanged = batchLoader.load(rbd, batch.getBody());

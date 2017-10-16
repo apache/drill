@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -54,12 +55,14 @@ import org.junit.Test;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests the external sort implementation: the "guts" of the sort stripped of the
  * Volcano-protocol layer. Assumes the individual components are already tested.
  */
 
+@Category(OperatorTest.class)
 public class TestSortImpl extends DrillTest {
 
   /**

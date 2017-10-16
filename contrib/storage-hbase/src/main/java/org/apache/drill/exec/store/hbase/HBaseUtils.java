@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,10 @@ import java.nio.charset.CharacterCodingException;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.ParseFilter;
@@ -137,6 +140,28 @@ public class HBaseUtils {
       return (left == null || left.length == 0) ? right : left;
     }
     return Bytes.compareTo(left, right) < 0 ? left : right;
+  }
+
+
+  /**
+   * Verify the presence of a column family in the schema path of the hbase table or whether the schema path is
+   * the row key column.
+   *
+   * @param columns List of the selected columns
+   * @param hTableDesc HTableDescriptor of HBase/MapR-DB_binary table (consists the details about that table)
+   * @throws DrillRuntimeException if column family does not exist, or is not row_key column.
+   */
+  public static void verifyColumns(List<SchemaPath> columns, HTableDescriptor hTableDesc) {
+    if (Utilities.isStarQuery(columns)) {
+      return;
+    }
+    for (SchemaPath column : columns) {
+      if (!(column.equals(DrillHBaseConstants.ROW_KEY_PATH) ||
+          hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
+        DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
+            column.getRootSegment().getPath(), hTableDesc.getNameAsString());
+      }
+    }
   }
 
 }

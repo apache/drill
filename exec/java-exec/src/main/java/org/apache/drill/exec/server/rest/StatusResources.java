@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -80,6 +82,7 @@ public class StatusResources {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, getStatusJSON());
   }
 
+  @SuppressWarnings("resource")
   private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal)
   {
     List<OptionWrapper> options = new LinkedList<>();
@@ -90,6 +93,12 @@ public class StatusResources {
       options.add(new OptionWrapper(option.name, option.getValue(), option.accessibleScopes, option.kind, option.scope));
     }
 
+    Collections.sort(options, new Comparator<OptionWrapper>() {
+      @Override
+      public int compare(OptionWrapper o1, OptionWrapper o2) {
+         return o1.name.compareTo(o2.name);
+      }
+    });
     return options;
   }
 
@@ -132,6 +141,7 @@ public class StatusResources {
     return getSystemOptionsHelper(true);
   }
 
+  @SuppressWarnings("resource")
   @POST
   @Path("option/{optionName}")
   @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)

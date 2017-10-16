@@ -134,7 +134,7 @@ public class VectorContainer implements VectorAccessible {
     return addOrGet(field, null);
   }
 
-  @SuppressWarnings({ "resource", "unchecked" })
+  @SuppressWarnings("unchecked")
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
     final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getName()));
     final ValueVector vector;

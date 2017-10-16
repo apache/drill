@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.trace;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
@@ -48,6 +49,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
 /*
  * This test uses a simple physical plan with a mock-scan that
@@ -63,6 +65,7 @@ import mockit.Injectable;
  * the record that is dumped (Integer.MIN_VALUE) so we compare it with this
  * known value.
  */
+@Category(OperatorTest.class)
 public class TestTraceOutputDump extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
   private final DrillConfig c = DrillConfig.create();

@@ -38,6 +38,7 @@ public class RpcConstants {
   public static final String SASL_ENCRYPTION_HANDLER = "sasl-encryption-handler";
   public static final String LENGTH_DECODER_HANDLER = "length-decoder";
   public static final String CHUNK_CREATION_HANDLER = "chunk-creation-handler";
+  public static final String SSL_HANDLER = "ssl-handler";
 
 
 

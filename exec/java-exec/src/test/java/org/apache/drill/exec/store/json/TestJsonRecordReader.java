@@ -18,12 +18,14 @@
 package org.apache.drill.exec.store.json;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Assert;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -96,6 +98,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // DRILL-1832
   public void testJsonWithNulls1() throws Exception {
     final String query = "select * from cp.`jsoninput/twitter_43.json`";
@@ -104,6 +107,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // DRILL-1832
   public void testJsonWithNulls2() throws Exception {
     final String query = "select SUM(1) as `sum_Number_of_Records_ok` from cp.`/jsoninput/twitter_43.json` having (COUNT(1) > 0)";
@@ -167,6 +171,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // See DRILL-3476
   public void testNestedFilter() throws Exception {
     String query = "select a from cp.`jsoninput/nestedFilter.json` t where t.a.b = 1";
@@ -176,6 +181,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // See DRILL-4653
   /* Test for CountingJSONReader */
   public void testCountingQuerySkippingInvalidJSONRecords() throws Exception {
@@ -199,6 +205,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // See DRILL-4653
   /* Test for CountingJSONReader */
   public void testCountingQueryNotSkippingInvalidJSONRecords() throws Exception {
@@ -214,6 +221,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // See DRILL-4653
   /* Test for JSONReader */
   public void testNotCountingQuerySkippingInvalidJSONRecords() throws Exception {
@@ -238,6 +246,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // See DRILL-4653
   /* Test for JSONReader */
   public void testNotCountingQueryNotSkippingInvalidJSONRecords()

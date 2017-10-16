@@ -21,15 +21,18 @@ package org.apache.drill.exec;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
+@Category(UnlikelyTest.class)
 public class TestEmptyInputSql extends BaseTestQuery {
 
   public final String SINGLE_EMPTY_JSON = "/scan/emptyInput/emptyJson/empty.json";

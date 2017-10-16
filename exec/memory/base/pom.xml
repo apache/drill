@@ -20,7 +20,6 @@
   <name>exec/memory/base</name>
 
   <dependencies>
-
     <dependency>
       <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-core</artifactId>
@@ -38,12 +37,18 @@
       <artifactId>hppc</artifactId>
       <version>0.7.1</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 
   <build>
   </build>
-
-
 
 </project>
