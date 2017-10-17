@@ -162,12 +162,16 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   }
 
   private static boolean isComplex(ParquetMetadata footer, List<SchemaPath> columns) {
-    /*
-    ParquetRecordReader is not able to read any nested columns and is not able to handle repeated columns.
-    It only handles flat column and optional column.
-    If it is a wildcard query, we check every columns in the metadata.
-    If not, we only check the projected columns.
-    */
+    /**
+     * ParquetRecordReader is not able to read any nested columns and is not able to handle repeated columns.
+     * It only handles flat column and optional column.
+     * If it is a wildcard query, we check every columns in the metadata.
+     * If not, we only check the projected columns.
+     * We only check the first level columns because :
+     *   - if we need a.b, it means a is a complex type, no need to check b as we don't handle complex type.
+     *   - if we need a[10], a is repeated, ie its repetiton level is greater than 0
+     *   - if we need a, it is at the first level of the schema.
+     */
     MessageType schema = footer.getFileMetaData().getSchema();
     if (Utilities.isStarQuery(columns)) {
       for (Type type : schema.getFields()) {
