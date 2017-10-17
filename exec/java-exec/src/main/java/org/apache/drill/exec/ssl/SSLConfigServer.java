@@ -93,8 +93,8 @@ public class SSLConfigServer extends SSLConfig {
     keyPassword = keyPass.isEmpty() ? keyStorePassword : keyPass;
     protocol = getConfigParamWithDefault(ExecConstants.SSL_PROTOCOL, DEFAULT_SSL_PROTOCOL);
     // If provider is OPENSSL then to debug or run this code in an IDE, you will need to enable
-    // the dependency on netty-tcnative. In exec/java-exec/pom.xml search for 'openssl support'
-    // and uncomment the required lines
+    // the dependency on netty-tcnative.
+    // Enable the openssl profile in the java-exec project
     // If the IDE is Eclipse, you will require an additional Eclipse plugin available here:
     // http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
     // Note that this plugin requires you to start with a new workspace
