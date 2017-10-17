@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -80,6 +81,8 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   private final PersistentStore<StoragePluginConfig> pluginSystemTable;
   private final LogicalPlanPersistence lpPersistence;
   private final ScanResult classpathScan;
+  private final ConcurrentHashMap<String, Integer> manuallyAddedPlugins = new ConcurrentHashMap<>();
+
   private final LoadingCache<StoragePluginConfig, StoragePlugin> ephemeralPlugins;
 
   public StoragePluginRegistryImpl(DrillbitContext context) {
@@ -177,7 +180,9 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
       activePlugins.put(INFORMATION_SCHEMA_PLUGIN, new InfoSchemaStoragePlugin(new InfoSchemaConfig(), context,
           INFORMATION_SCHEMA_PLUGIN));
+      manuallyAddedPlugins.put(INFORMATION_SCHEMA_PLUGIN, 0);
       activePlugins.put(SYS_PLUGIN, new SystemTablePlugin(SystemTablePluginConfig.INSTANCE, context, SYS_PLUGIN));
+      manuallyAddedPlugins.put(SYS_PLUGIN, 0);
 
       return activePlugins;
     } catch (IOException e) {
@@ -207,6 +212,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   @Override
   public void addPlugin(String name, StoragePlugin plugin) {
     plugins.put(name, plugin);
+    manuallyAddedPlugins.put(name, 0);
   }
 
   @Override
@@ -214,7 +220,9 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     @SuppressWarnings("resource")
     StoragePlugin plugin = plugins.remove(name);
     closePlugin(plugin);
-    pluginSystemTable.delete(name);
+    if(manuallyAddedPlugins.remove(name) == null){
+      pluginSystemTable.delete(name);
+    }
   }
 
   private void closePlugin(StoragePlugin plugin) {
@@ -271,7 +279,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   @Override
   public StoragePlugin getPlugin(String name) throws ExecutionSetupException {
     StoragePlugin plugin = plugins.get(name);
-    if (name.equals(SYS_PLUGIN) || name.equals(INFORMATION_SCHEMA_PLUGIN)) {
+    if (manuallyAddedPlugins.containsKey(name)) {
       return plugin;
     }
 
@@ -385,7 +393,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         }
         // remove those which are no longer in the registry
         for (String pluginName : currentPluginNames) {
-          if (pluginName.equals(SYS_PLUGIN) || pluginName.equals(INFORMATION_SCHEMA_PLUGIN)) {
+          if (manuallyAddedPlugins.containsKey(pluginName)) {
             continue;
           }
           plugins.remove(pluginName);

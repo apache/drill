@@ -64,6 +64,7 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.planner.PlannerCallback;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.PlannerType;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
@@ -361,6 +362,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       boolean log) {
     final Stopwatch watch = Stopwatch.createStarted();
     final RuleSet rules = config.getRules(phase);
+    final PlannerCallback callback = config.getPlannerCallback(phase);
     final RelTraitSet toTraits = targetTraits.simplify();
 
     final RelNode output;
@@ -376,6 +378,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       }
 
       final HepPlanner planner = new HepPlanner(hepPgmBldr.build(), context.getPlannerSettings());
+      callback.initializePlanner(planner);
 
       JaninoRelMetadataProvider relMetadataProvider = JaninoRelMetadataProvider.of(DrillDefaultRelMetadataProvider.INSTANCE);
       RelMetadataQuery.THREAD_PROVIDERS.set(relMetadataProvider);
@@ -394,6 +397,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       // as weird as it seems, the cluster's only planner is the volcano planner.
       final RelOptPlanner planner = input.getCluster().getPlanner();
       final Program program = Programs.of(rules);
+      callback.initializePlanner(planner);
+
       Preconditions.checkArgument(planner instanceof VolcanoPlanner,
           "Cluster is expected to be constructed using VolcanoPlanner. Was actually of type %s.", planner.getClass()
               .getName());

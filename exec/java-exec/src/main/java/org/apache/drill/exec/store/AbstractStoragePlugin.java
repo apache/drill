@@ -25,7 +25,9 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerCallback;
 import org.apache.drill.exec.planner.PlannerPhase;
 
 import com.google.common.collect.ImmutableSet;
@@ -93,6 +95,18 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     default:
       return ImmutableSet.of();
     }
+  }
+
+  /**
+   * Return a planner callback for this storage plugin (or null if one doesn't exist).
+   * @param queryContext The query context associated with the current planning process.
+   * @param phase The phase of query planning that this callback will be registered in.
+   * @return A callback or null if the plugin doesn't have any callbacks to include.
+   *
+   * Note: Move this method to {@link StoragePlugin} interface in next major version release.
+   */
+  public PlannerCallback getPlannerCallback(QueryContext queryContext, PlannerPhase phase) {
+    return null;
   }
 
   @Override
