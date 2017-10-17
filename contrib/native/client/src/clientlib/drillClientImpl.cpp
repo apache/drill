@@ -657,8 +657,11 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
         // Check the negotiated SSF value and change the handlers.
         if(m_encryptionCtxt.isEncryptionReqd()) {
             if(SASL_OK != m_saslAuthenticator->verifyAndUpdateSaslProps()) {
-                logMsg << m_encryptionCtxt << "]. Negotiated Parameter is invalid."
-                       << " Error: " << m_saslResultCode;
+                logMsg << m_encryptionCtxt
+                       << ", Mechanism: " << m_saslAuthenticator->getAuthMechanismName()
+                       << ", Error: " << m_saslResultCode
+                       << ", Cause: " << m_saslAuthenticator->getErrorMessage(m_saslResultCode);
+                logMsg << "]. Negotiated Parameter is invalid.";
                 DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
                 return handleConnError(CONN_AUTH_FAILED, logMsg.str().c_str());
             }
@@ -682,10 +685,10 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
                << ", Mechanism: " << m_saslAuthenticator->getAuthMechanismName()
                << ", Error: " << m_saslResultCode
                << ", Cause: " << m_saslAuthenticator->getErrorMessage(m_saslResultCode);
+        logMsg << "]. Check connection parameters?";
         DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
 
         // shuts down socket as well
-        logMsg << "]. Check connection parameters?";
         return handleConnError(CONN_AUTH_FAILED, logMsg.str().c_str());
     }
 }
