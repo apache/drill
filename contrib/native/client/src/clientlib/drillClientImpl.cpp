@@ -649,7 +649,7 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
 
     // Check if client needs encryption and server is configured for encryption or not before starting handshake
     if(clientNeedsEncryption(userProperties) && !m_encryptionCtxt.isEncryptionReqd()) {
-    	return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERENC));
+        return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERENC));
     }
 
     try {
