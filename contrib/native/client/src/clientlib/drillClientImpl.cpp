@@ -612,9 +612,6 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
         case exec::user::SUCCESS:
             // Check if client needs auth/encryption and server is not requiring it
             if(clientNeedsAuthentication(properties) || clientNeedsEncryption(properties)) {
-//                return handleConnError(CONN_AUTH_FAILED, "Client needs authentication but server does not"
-//                  " support any security mechanisms. Please contact an administrator. [Warn: This"
-//                  " could be due to a bad configuration or a security attack is in progress.]");
                 return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERAUTH));
             }
             // reset io_service after handshake is validated before running queries
@@ -652,8 +649,6 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
 
     // Check if client needs encryption and server is configured for encryption or not before starting handshake
     if(clientNeedsEncryption(userProperties) && !m_encryptionCtxt.isEncryptionReqd()) {
-//        return handleConnError(CONN_AUTH_FAILED, "Client needs encryption but on server side encryption is disabled."
-//                                                 " Please check connection parameters or contact administrator?");
     	return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERENC));
     }
 
