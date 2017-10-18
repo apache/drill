@@ -73,6 +73,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     out.start =  in.start;
     if (charCount <= length.value || length.value == 0 ) {
       out.end = in.end;
+      if (charCount == (out.end-out.start)) {
+        out.asciiMode = 1; // we can conclude this string is ASCII
+      }
     } else {
       out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(in.buffer, in.start, in.end, (int)length.value);
     }
@@ -91,7 +94,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     }
   </#if>
 
-  }      
+  }
 }
 
 </#if> <#-- type.major -->

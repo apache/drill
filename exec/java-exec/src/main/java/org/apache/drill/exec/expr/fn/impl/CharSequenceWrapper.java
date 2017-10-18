@@ -37,7 +37,7 @@ import io.netty.buffer.DrillBuf;
  * string objects.
  *
  */
-public class CharSequenceWrapper implements CharSequence {
+public final class CharSequenceWrapper implements CharSequence {
 
   // The adapted drill buffer (in the case of US-ASCII)
   private DrillBuf buffer;
@@ -53,13 +53,13 @@ public class CharSequenceWrapper implements CharSequence {
   // The end offset into the drill buffer
   private int end;
   // Indicates that the current byte buffer contains only ascii chars
-  private boolean usAscii;
+  private boolean useAscii;
 
   public CharSequenceWrapper() {
   }
 
   public CharSequenceWrapper(int start, int end, DrillBuf buffer) {
-    setBuffer(start, end, buffer);
+    setBuffer(start, end, buffer, -1);
   }
 
   @Override
@@ -69,9 +69,9 @@ public class CharSequenceWrapper implements CharSequence {
 
   @Override
   public char charAt(int index) {
-    if (usAscii) {
+    if (useAscii) {
       // Each byte is a char, the index is relative to the start of the original buffer
-      return (char) (buffer.getByte(start + index) & 0x00FF);
+      return (char) buffer.getByte(start + index);
     } else {
       // The char buffer is a copy so the index directly corresponds
       return charBuffer.charAt(index);
@@ -93,42 +93,53 @@ public class CharSequenceWrapper implements CharSequence {
   }
 
   /**
+   * @return true if current string is ASCII; false otherwise
+   */
+  public boolean isAscii() {
+    return useAscii;
+  }
+
+  /**
    * Set the DrillBuf to adapt to a CharSequence. This method can be used to
    * replace any previous DrillBuf thus avoiding recreating the
    * CharSequenceWrapper and thus re-using the CharSequenceWrapper object.
    *
-   * @param start
-   * @param end
-   * @param buffer
+   * @param start start offset
+   * @param end end offset
+   * @param buffer input byte buffer
+   * @param asciiMode -1: ASCII mode unknown, 0: not ASCII, 1: is ASCII
    */
-  public void setBuffer(int start, int end, DrillBuf buffer) {
-    // Test if buffer is an ASCII string or not.
-    usAscii = isAscii(start, end, buffer);
+  public void setBuffer(int start, int end, DrillBuf buffer, int asciiMode) {
+      this.start       = start;
+      this.end         = end;
+      this.buffer      = buffer;
 
-    if (usAscii) {
-      // each byte equals one char
-      this.start = start;
-      this.end = end;
-      this.buffer = buffer;
-    } else {
-      initCharBuffer();
-      // Wrap with java byte buffer
-      ByteBuffer byteBuf = buffer.nioBuffer(start, end - start);
-      while (charBuffer.capacity() < Integer.MAX_VALUE) {
-        byteBuf.mark();
-        if (decodeUT8(byteBuf)) {
-          break;
-        }
-        // Failed to convert because the char buffer was not large enough
-        growCharBuffer();
-        // Make sure to reset the byte buffer we need to reprocess it
-        byteBuf.reset();
+      if (asciiMode == 1) { // We know it is ASCII
+        useAscii = true;
+      } else if (asciiMode == -1) { // We don't know whether it is ASCII
+        // Test if buffer is an ASCII string or not.
+        useAscii = isAscii(start, end, buffer);
       }
-      this.start = 0;
-      this.end = charBuffer.position();
-      // reset the char buffer so the index are relative to the start of the buffer
-      charBuffer.rewind();
-    }
+
+      if (!useAscii) {
+        initCharBuffer();
+        // Wrap with java byte buffer
+        ByteBuffer byteBuf = buffer.nioBuffer(start, end - start);
+        while (charBuffer.capacity() < Integer.MAX_VALUE) {
+          byteBuf.mark();
+          if (decodeUT8(byteBuf)) {
+            break;
+          }
+          // Failed to convert because the char buffer was not large enough
+          growCharBuffer();
+          // Make sure to reset the byte buffer we need to reprocess it
+          byteBuf.reset();
+        }
+        this.start = 0;
+        this.end   = charBuffer.position();
+        // reset the char buffer so the index are relative to the start of the buffer
+        charBuffer.rewind();
+      }
   }
 
   /**
@@ -138,7 +149,7 @@ public class CharSequenceWrapper implements CharSequence {
    * @param buffer
    * @return
    */
-  private boolean isAscii(int start, int end, DrillBuf buffer) {
+  private boolean isAscii(final int start, final int end, final DrillBuf buffer) {
     for (int i = start; i < end; i++) {
       byte bb = buffer.getByte(i);
       if (bb < 0) {

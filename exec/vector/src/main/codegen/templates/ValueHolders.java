@@ -33,34 +33,40 @@ package org.apache.drill.exec.expr.holders;
  * This class is generated using freemarker and the ${.template_name} template.
  */
 public final class ${className} implements ValueHolder{
-  
+
   public static final MajorType TYPE = Types.${mode.name?lower_case}(MinorType.${minor.class?upper_case});
+  public MajorType getType() {return TYPE;}
 
     <#if mode.name == "Repeated">
-    
+
     /** The first index (inclusive) into the Vector. **/
     public int start;
-    
+
     /** The last index (exclusive) into the Vector. **/
     public int end;
-    
+
     /** The Vector holding the actual values. **/
     public ${minor.class}Vector vector;
-    
+
     <#else>
     public static final int WIDTH = ${type.width};
-    
+
     <#if mode.name == "Optional">public int isSet;</#if>
     <#assign fields = minor.fields!type.fields />
     <#list fields as field>
     public ${field.type} ${field.name};
     </#list>
-    
+
+    <#if minor.class == "VarChar">
+    // -1: unknown, 0: not ascii, 1: is ascii
+    public int asciiMode = -1;
+    </#if>
+
     <#if minor.class.startsWith("Decimal")>
     public static final int maxPrecision = ${minor.maxPrecisionDigits};
     <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
     public static final int nDecimalDigits = ${minor.nDecimalDigits};
-    
+
     public static int getInteger(int index, int start, DrillBuf buffer) {
       int value = buffer.getInt(start + (index * 4));
 
@@ -78,7 +84,7 @@ public final class ${className} implements ValueHolder{
     public static void setInteger(int index, int value, int start, DrillBuf buffer) {
         buffer.setInt(start + (index * 4), value);
     }
-  
+
     public static void setSign(boolean sign, int start, DrillBuf buffer) {
       // Set MSB to 1 if sign is negative
       if (sign == true) {
@@ -86,13 +92,12 @@ public final class ${className} implements ValueHolder{
         setInteger(0, (value | 0x80000000), start, buffer);
       }
     }
-  
+
     public static boolean getSign(int start, DrillBuf buffer) {
       return ((buffer.getInt(start) & 0x80000000) != 0);
     }
     </#if></#if>
 
-    public MajorType getType() {return TYPE;}
 
     @Deprecated
     public int hashCode(){
@@ -108,10 +113,10 @@ public final class ${className} implements ValueHolder{
       throw new UnsupportedOperationException();
     }
     </#if>
-    
-    
-    
-    
+
+
+
+
 }
 
 </#list>
