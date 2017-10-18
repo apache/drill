@@ -26,7 +26,6 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.ssl.SSLFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -54,7 +53,7 @@ public class SSLConfigServer extends SSLConfig {
 
   public SSLConfigServer(DrillConfig config, Configuration hadoopConfig) throws DrillException {
     this.config = config;
-    SSLFactory.Mode mode = SSLFactory.Mode.SERVER;
+    Mode mode = Mode.SERVER;
     httpsEnabled =
         config.hasPath(ExecConstants.HTTP_ENABLE_SSL) && config.getBoolean(ExecConstants.HTTP_ENABLE_SSL);
     // For testing we will mock up a hadoop configuration, however for regular use, we find the actual hadoop config.
@@ -227,7 +226,7 @@ public class SSLConfigServer extends SSLConfig {
     return value;
   }
 
-  private String resolveHadoopPropertyName(String nameTemplate, SSLFactory.Mode mode) {
+  private String resolveHadoopPropertyName(String nameTemplate, Mode mode) {
     return MessageFormat.format(nameTemplate, mode.toString().toLowerCase());
   }
 
@@ -304,8 +303,8 @@ public class SSLConfigServer extends SSLConfig {
   }
 
   @Override
-  public SSLFactory.Mode getMode() {
-    return SSLFactory.Mode.SERVER;
+  public Mode getMode() {
+    return Mode.SERVER;
   }
 
   @Override

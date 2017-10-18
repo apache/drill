@@ -93,7 +93,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     try {
       this.sslConfig = new SSLConfigBuilder()
           .config(context.getConfig())
-          .mode(SSLFactory.Mode.SERVER)
+          .mode(SSLConfig.Mode.SERVER)
           .initializeSSLContext(true)
           .validateKeyStore(true)
           .build();

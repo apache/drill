@@ -51,7 +51,7 @@ public class TestSSLConfig {
     try {
       SSLConfig sslv = new SSLConfigBuilder()
           .config(config.build())
-          .mode(SSLFactory.Mode.SERVER)
+          .mode(SSLConfig.Mode.SERVER)
           .initializeSSLContext(false)
           .validateKeyStore(true)
           .build();
@@ -73,7 +73,7 @@ public class TestSSLConfig {
     try {
       SSLConfig sslv = new SSLConfigBuilder()
           .config(config.build())
-          .mode(SSLFactory.Mode.SERVER)
+          .mode(SSLConfig.Mode.SERVER)
           .initializeSSLContext(false)
           .validateKeyStore(true)
           .build();
@@ -93,7 +93,7 @@ public class TestSSLConfig {
     try {
       SSLConfig sslv = new SSLConfigBuilder()
           .config(config.build())
-          .mode(SSLFactory.Mode.SERVER)
+          .mode(SSLConfig.Mode.SERVER)
           .initializeSSLContext(false)
           .validateKeyStore(true)
           .build();
@@ -113,7 +113,7 @@ public class TestSSLConfig {
     config.put("javax.net.ssl.keyStorePassword", "root");
     SSLConfig sslv = new SSLConfigBuilder()
         .config(config.build())
-        .mode(SSLFactory.Mode.SERVER)
+        .mode(SSLConfig.Mode.SERVER)
         .initializeSSLContext(false)
         .validateKeyStore(true)
         .build();
@@ -130,7 +130,7 @@ public class TestSSLConfig {
     config.put(ExecConstants.SSL_USE_HADOOP_CONF, false);
     SSLConfig sslv = new SSLConfigBuilder()
         .config(config.build())
-        .mode(SSLFactory.Mode.SERVER)
+        .mode(SSLConfig.Mode.SERVER)
         .initializeSSLContext(false)
         .validateKeyStore(true)
         .build();
@@ -153,7 +153,7 @@ public class TestSSLConfig {
     try {
       sslv = new SSLConfigBuilder()
           .config(config.build())
-          .mode(SSLFactory.Mode.SERVER)
+          .mode(SSLConfig.Mode.SERVER)
           .initializeSSLContext(false)
           .validateKeyStore(true)
           .hadoopConfig(hadoopConfig)

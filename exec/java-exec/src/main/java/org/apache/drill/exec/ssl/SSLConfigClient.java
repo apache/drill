@@ -247,8 +247,8 @@ public class SSLConfigClient extends SSLConfig {
   }
 
   @Override
-  public SSLFactory.Mode getMode() {
-    return SSLFactory.Mode.CLIENT;
+  public Mode getMode() {
+    return Mode.CLIENT;
   }
 
   @Override

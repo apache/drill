@@ -335,7 +335,7 @@ public class WebServer implements AutoCloseable {
     final SslContextFactory sslContextFactory = new SslContextFactory();
     SSLConfig ssl = new SSLConfigBuilder()
         .config(config)
-        .mode(SSLFactory.Mode.SERVER)
+        .mode(SSLConfig.Mode.SERVER)
         .initializeSSLContext(false)
         .validateKeyStore(true)
         .build();

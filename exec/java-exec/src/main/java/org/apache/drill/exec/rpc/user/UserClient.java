@@ -128,7 +128,7 @@ public class UserClient
     this.allocator = allocator;
     this.supportComplexTypes = supportComplexTypes;
     try {
-      this.sslConfig = new SSLConfigBuilder().properties(properties).mode(SSLFactory.Mode.CLIENT)
+      this.sslConfig = new SSLConfigBuilder().properties(properties).mode(SSLConfig.Mode.CLIENT)
           .initializeSSLContext(true).validateKeyStore(false).build();
     } catch (DrillException e) {
       throw new InvalidConnectionInfoException(e.getMessage());
