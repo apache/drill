@@ -56,7 +56,8 @@ static Drill::ErrorMessages errorMessages[]={
         " support any security mechanisms. Please contact an administrator. [Warn: This"
         " could be due to a bad configuration or a security attack is in progress.]"},
     {ERR_CONN_NOSERVERENC, ERR_CATEGORY_CONN, 0, "Client needs encryption but encryption is disabled on the server."
-        " Please check connection parameters or contact administrator."},
+        " Please check connection parameters or contact administrator. [Warn: This"
+        " could be due to a bad configuration or a security attack is in progress.]"},
     {ERR_QRY_OUTOFMEM, ERR_CATEGORY_QRY, 0, "Out of memory."},
     {ERR_QRY_COMMERR, ERR_CATEGORY_QRY, 0, "Communication error. %s"},
     {ERR_QRY_INVREADLEN, ERR_CATEGORY_QRY, 0, "Internal Error: Received a message with an invalid read length."},
