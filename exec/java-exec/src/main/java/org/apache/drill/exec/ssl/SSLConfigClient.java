@@ -20,12 +20,9 @@ package org.apache.drill.exec.ssl;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.ssl.SSLFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -247,8 +244,8 @@ public class SSLConfigClient extends SSLConfig {
   }
 
   @Override
-  public SSLFactory.Mode getMode() {
-    return SSLFactory.Mode.CLIENT;
+  public Mode getMode() {
+    return Mode.CLIENT;
   }
 
   @Override

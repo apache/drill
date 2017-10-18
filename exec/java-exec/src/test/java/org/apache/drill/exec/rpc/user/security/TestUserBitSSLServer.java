@@ -24,7 +24,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.ssl.SSLFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
