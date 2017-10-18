@@ -520,19 +520,18 @@ bool DrillClientImpl::clientNeedsEncryption(const DrillUserProperties* userPrope
 
 /*
  * Checks if the client has explicitly expressed interest in authenticated connections only.
- * If the USERPROP_PASSWORD or USERPROP_AUTH_MECHANISM connection string properties are set,
- * then it is implied that the client wants authentication.
+ * If the USERPROP_PASSWORD or USERPROP_AUTH_MECHANISM connection string properties are
+ * non-empty, then it is implied that the client wants authentication.
  */
 bool DrillClientImpl::clientNeedsAuthentication(const DrillUserProperties* userProperties) {
     bool needsAuthentication = false;
-    if(!userProperties) {
-        return false;
-    }
-    needsAuthentication = userProperties->isPropSet(USERPROP_PASSWORD) ||
-        userProperties->isPropSet(USERPROP_AUTH_MECHANISM);
-    return needsAuthentication;
+    if(!userProperties) { return false; }
+    std::string passwd = "";
+    userProperties->getProp(USERPROP_PASSWORD, passwd);
+    std::string authMech = "";
+    userProperties->getProp(USERPROP_AUTH_MECHANISM, authMech);
+    return !passwd.empty() || !authMech.empty();
 }
-
 
 connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* properties){
 
@@ -613,9 +612,10 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
         case exec::user::SUCCESS:
             // Check if client needs auth/encryption and server is not requiring it
             if(clientNeedsAuthentication(properties) || clientNeedsEncryption(properties)) {
-                return handleConnError(CONN_AUTH_FAILED, "Client needs authentication but server does not"
-                  " support any security mechanisms. Please contact an administrator. [Warn: This"
-                  " could be due to a bad configuration or a security attack is in progress.]");
+//                return handleConnError(CONN_AUTH_FAILED, "Client needs authentication but server does not"
+//                  " support any security mechanisms. Please contact an administrator. [Warn: This"
+//                  " could be due to a bad configuration or a security attack is in progress.]");
+                return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERAUTH));
             }
             // reset io_service after handshake is validated before running queries
             m_io_service.reset();
@@ -652,8 +652,9 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
 
     // Check if client needs encryption and server is configured for encryption or not before starting handshake
     if(clientNeedsEncryption(userProperties) && !m_encryptionCtxt.isEncryptionReqd()) {
-        return handleConnError(CONN_AUTH_FAILED, "Client needs encryption but on server side encryption is disabled."
-                                                 " Please check connection parameters or contact administrator?");
+//        return handleConnError(CONN_AUTH_FAILED, "Client needs encryption but on server side encryption is disabled."
+//                                                 " Please check connection parameters or contact administrator?");
+    	return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERENC));
     }
 
     try {

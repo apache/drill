@@ -145,7 +145,7 @@ int SaslAuthenticatorImpl::init(const std::vector<std::string>& mechanisms, exec
             authMechanismToUse = value;
         }
     }
-    // clientNeedsAuth cannot be false if the code above picks an authMechanism
+    // clientNeedsAuthentication() cannot be false if the code above picks an authMechanism
     assert (authMechanismToUse.empty() || DrillClientImpl::clientNeedsAuthentication(m_pUserProperties));
     if (authMechanismToUse.empty()) return SASL_NOMECH;
 
