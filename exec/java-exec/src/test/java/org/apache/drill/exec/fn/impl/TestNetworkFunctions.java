@@ -26,7 +26,7 @@ public class TestNetworkFunctions extends BaseTestQuery {
   @Test
   public void testInetAton() throws Exception {
     final String query = "select inet_aton('192.168.0.1') as inet from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues( Long.parseLong("3232235521") ).go();
+    testBuilder().sqlQuery(query).ordered().baselineColumns("inet").baselineValues(Long.parseLong("3232235521")).go();
   }
 
   @Test
@@ -52,6 +52,7 @@ public class TestNetworkFunctions extends BaseTestQuery {
     final String query = "select broadcast_address( '192.168.0.0/28' ) AS broadcast_address FROM (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("broadcast_address").baselineValues("192.168.0.15").go();
   }
+
   @Test
   public void testNetmask() throws Exception {
     final String query = "select netmask('192.168.0.0/28') AS netmask FROM (values(1))";
