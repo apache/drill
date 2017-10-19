@@ -202,7 +202,8 @@ public class UserClient
             .checkedGet(sslConfig.getHandshakeTimeout(), TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
         String msg = new StringBuilder().append(
-            "Connecting to the server timed out. This is sometimes due to a mismatch in the SSL configuration between client and server. [ Exception: ")
+            "Connecting to the server timed out. This is sometimes due to a mismatch in the SSL configuration between" +
+                " client and server. [ Exception: ")
             .append(e.getMessage()).append("]").toString();
         throw new NonTransientRpcException(msg);
       }
@@ -210,15 +211,8 @@ public class UserClient
       connect(hsBuilder.build(), endpoint).checkedGet();
     }
 
-    // Check if client needs encryption and server is not configured for encryption.
-    final boolean clientNeedsEncryption = properties.containsKey(DrillProperties.SASL_ENCRYPT) && Boolean
-        .parseBoolean(properties.getProperty(DrillProperties.SASL_ENCRYPT));
-
-    if (clientNeedsEncryption && !connection.isEncryptionEnabled()) {
-      throw new NonTransientRpcException(
-          "Client needs encrypted connection but server is not configured for "
-              + "encryption. Please check connection parameter or contact your administrator");
-    }
+    // Validate if both client and server are compatible in their security requirements for the connection
+    validateSaslCompatibility(properties);
 
     if (serverAuthMechanisms != null) {
       try {
@@ -227,6 +221,61 @@ public class UserClient
         throw new NonTransientRpcException(e);
       }
     }
+  }
+
+  /**
+   * Validate that security requirements from client and Drillbit side is compatible. For example: It verifies if one
+   * side needs authentication / encryption then other side is also configured to support that security properties.
+   * @param properties - DrillClient connection parameters
+   * @throws NonTransientRpcException - When DrillClient security requirements doesn't match Drillbit side of security
+   *                                    configurations.
+   */
+  private void validateSaslCompatibility(DrillProperties properties) throws NonTransientRpcException {
+
+    final boolean clientNeedsEncryption = properties.containsKey(DrillProperties.SASL_ENCRYPT)
+        && Boolean.parseBoolean(properties.getProperty(DrillProperties.SASL_ENCRYPT));
+
+    // Check if client needs encryption and server is not configured for encryption.
+    if (clientNeedsEncryption && !connection.isEncryptionEnabled()) {
+      throw new NonTransientRpcException(
+          "Client needs encrypted connection but server is not configured for encryption." +
+              " Please contact your administrator. [Warn: It may be due to wrong config or a security attack in" +
+              " progress.]");
+    }
+
+    // Check if client needs encryption and server doesn't support any security mechanisms.
+    if (clientNeedsEncryption && serverAuthMechanisms == null) {
+      throw new NonTransientRpcException(
+          "Client needs encrypted connection but server doesn't support any security mechanisms." +
+              " Please contact your administrator. [Warn: It may be due to wrong config or a security attack in" +
+              " progress.]");
+    }
+
+    // Check if client needs authentication and server doesn't support any security mechanisms.
+    if (clientNeedsAuth(properties) && serverAuthMechanisms == null) {
+      throw new NonTransientRpcException(
+          "Client needs authentication but server doesn't support any security mechanisms." +
+              " Please contact your administrator. [Warn: It may be due to wrong config or a security attack in" +
+              " progress.]");
+    }
+  }
+
+  /**
+   * Determine if client needs authenticated connection or not. It checks for following as an indication of
+   * requiring authentication from client side:
+   * 1) Any auth mechanism is provided in connection properties with DrillProperties.AUTH_MECHANISM parameter.
+   * 2) A service principal is provided in connection properties in which case we treat AUTH_MECHANISM as Kerberos
+   * 3) Username and Password is provided in connection properties in which case we treat AUTH_MECHANISM as Plain
+   * @param props - DrillClient connection parameters
+   * @return - true  - If any of above 3 checks is successful.
+   *         - false - If all the above 3 checks failed.
+   */
+  private boolean clientNeedsAuth(DrillProperties props) {
+
+    return !Strings.isNullOrEmpty(props.getProperty(DrillProperties.AUTH_MECHANISM)) ||
+        !Strings.isNullOrEmpty(props.getProperty(DrillProperties.SERVICE_PRINCIPAL)) ||
+        (props.containsKey(DrillProperties.USER) && !Strings.isNullOrEmpty(props.getProperty(DrillProperties.PASSWORD)));
+
   }
 
   private CheckedFuture<Void, RpcException> connect(final UserToBitHandshake handshake,
