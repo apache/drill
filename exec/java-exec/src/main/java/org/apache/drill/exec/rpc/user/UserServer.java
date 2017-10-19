@@ -62,7 +62,6 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.user.UserWorker;
 import org.apache.hadoop.security.HadoopKerberosName;
-import org.apache.hadoop.security.ssl.SSLFactory;
 import org.slf4j.Logger;
 
 import com.google.protobuf.MessageLite;

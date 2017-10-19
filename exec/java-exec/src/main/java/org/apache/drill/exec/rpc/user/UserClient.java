@@ -83,7 +83,6 @@ import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.rpc.security.SaslProperties;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.ssl.SSLFactory;
 import org.slf4j.Logger;
 
 import com.google.common.base.Strings;
