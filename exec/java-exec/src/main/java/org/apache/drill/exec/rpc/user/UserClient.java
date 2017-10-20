@@ -83,7 +83,6 @@ import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.rpc.security.SaslProperties;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.ssl.SSLFactory;
 import org.slf4j.Logger;
 
 import com.google.common.base.Strings;
@@ -128,7 +127,7 @@ public class UserClient
     this.allocator = allocator;
     this.supportComplexTypes = supportComplexTypes;
     try {
-      this.sslConfig = new SSLConfigBuilder().properties(properties).mode(SSLFactory.Mode.CLIENT)
+      this.sslConfig = new SSLConfigBuilder().properties(properties).mode(SSLConfig.Mode.CLIENT)
           .initializeSSLContext(true).validateKeyStore(false).build();
     } catch (DrillException e) {
       throw new InvalidConnectionInfoException(e.getMessage());

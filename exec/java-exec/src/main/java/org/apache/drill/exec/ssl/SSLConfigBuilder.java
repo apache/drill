@@ -21,7 +21,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.ssl.SSLFactory;
 
 import java.util.Properties;
 
@@ -34,7 +33,7 @@ public class SSLConfigBuilder {
   private DrillConfig config = null;
   private Configuration hadoopConfig = null;
   private Properties properties;
-  private SSLFactory.Mode mode = SSLFactory.Mode.SERVER;
+  private SSLConfig.Mode mode = SSLConfig.Mode.SERVER;
   private boolean initializeSSLContext = false;
   private boolean validateKeyStore = false;
 
@@ -43,12 +42,12 @@ public class SSLConfigBuilder {
   }
 
   public SSLConfig build() throws DrillException {
-    if (mode == SSLFactory.Mode.SERVER && config == null) {
+    if (mode == SSLConfig.Mode.SERVER && config == null) {
       throw new DrillConfigurationException(
           "Cannot create SSL configuration from null Drill configuration.");
     }
     SSLConfig sslConfig;
-    if (mode == SSLFactory.Mode.SERVER) {
+    if (mode == SSLConfig.Mode.SERVER) {
       sslConfig = new SSLConfigServer(config, hadoopConfig);
     } else {
       sslConfig = new SSLConfigClient(properties);
@@ -77,7 +76,7 @@ public class SSLConfigBuilder {
     return this;
   }
 
-  public SSLConfigBuilder mode(SSLFactory.Mode mode) {
+  public SSLConfigBuilder mode(SSLConfig.Mode mode) {
     this.mode = mode;
     return this;
   }
