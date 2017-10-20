@@ -20,9 +20,6 @@
   <name>exec/Java Execution Engine</name>
   <properties>
     <libpam4j.version>1.8-rev1</libpam4j.version>
-    <!-- Configure the os-maven-plugin extension to expand the classifier on -->
-    <!-- Fedora-"like" systems. Used for netty-tcnative inclusion -->
-    <os.detection.classifierWithLikes>fedora</os.detection.classifierWithLikes>
   </properties>
 
   <dependencies>
@@ -590,11 +587,8 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-tcnative</artifactId>
-      <version>2.0.1.Final</version>
-      <scope>provided</scope>
-      <classifier>${os.detected.classifier}</classifier>
+      <classifier>${netty.tcnative.classifier}</classifier>
     </dependency>
-
   </dependencies>
 
   <profiles>
@@ -696,18 +690,6 @@
   </profiles>
 
   <build>
-
-    <extensions>
-      <!--
-      Include the os-maven-plugin to get os.detected.classifier
-      -->
-      <extension>
-        <groupId>kr.motd.maven</groupId>
-        <artifactId>os-maven-plugin</artifactId>
-        <version>1.5.0.Final</version>
-      </extension>
-    </extensions>
-
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
