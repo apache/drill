@@ -31,6 +31,12 @@ public class FieldIdUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldIdUtil.class);
 
   public static TypedFieldId getFieldIdIfMatchesUnion(UnionVector unionVector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
+    if (seg == null) {
+      if (addToBreadCrumb) {
+        builder.intermediateType(unionVector.getField().getType());
+      }
+      return builder.finalType(unionVector.getField().getType()).build();
+    }
     if (seg.isNamed()) {
       ValueVector v = unionVector.getMap();
       if (v != null) {

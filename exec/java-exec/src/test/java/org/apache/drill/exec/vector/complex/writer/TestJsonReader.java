@@ -527,6 +527,25 @@ public class TestJsonReader extends BaseTestQuery {
   }
 
   @Test
+  public void testNestedUnionExpression() throws Exception {
+    String query = "select typeof(t.a.b) c from cp.`jsoninput/union/nestedUnion.json` t";
+    try {
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("c")
+              .baselineValues("BIGINT")
+              .baselineValues("VARCHAR")
+              .baselineValues("MAP")
+              .go();
+
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
+
+  @Test
   public void testSumMultipleBatches() throws Exception {
     String dfs_temp = getDfsTestTmpSchemaLocation();
     File table_dir = new File(dfs_temp, "multi_batch");
