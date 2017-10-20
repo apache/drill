@@ -25,7 +25,6 @@ import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.test.ConfigBuilder;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.ssl.SSLFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -144,7 +143,7 @@ public class TestSSLConfig {
   public void testInvalidHadoopKeystore() throws Exception {
     Configuration hadoopConfig = new Configuration();
     String hadoopSSLFileProp = MessageFormat
-        .format(HADOOP_SSL_CONF_TPL_KEY, SSLFactory.Mode.SERVER.toString().toLowerCase());
+        .format(HADOOP_SSL_CONF_TPL_KEY, SSLConfig.Mode.SERVER.toString().toLowerCase());
     hadoopConfig.set(hadoopSSLFileProp, "ssl-server-invalid.xml");
     ConfigBuilder config = new ConfigBuilder();
     config.put(ExecConstants.USER_SSL_ENABLED, true);
