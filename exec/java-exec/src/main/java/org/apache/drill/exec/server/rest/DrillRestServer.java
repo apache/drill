@@ -219,8 +219,8 @@ public class DrillRestServer extends ResourceConfig {
 
         // Create a dummy close future which is needed by Foreman only. Foreman uses this future to add a close
         // listener to known about channel close event from underlying layer. We use this future to notify Foreman
-        // listeners when the Web connection between Web Client and WebServer is closed. This will help Foreman to cancel
-        // all the running queries for this Web Client.
+        // listeners when the Web session (not connection) between Web Client and WebServer is closed. This will help
+        // Foreman to cancel all the running queries for this Web Client.
         final ChannelPromise closeFuture = new DefaultChannelPromise(null, executor);
 
         // Create a WebSessionResource instance which owns the lifecycle of all the session resources.
@@ -283,9 +283,10 @@ public class DrillRestServer extends ResourceConfig {
       }
 
       // Create a dummy close future which is needed by Foreman only. Foreman uses this future to add a close
-      // listener to known about channel close event from underlying layer. We use this future to notify Foreman
-      // listeners when the Web connection between Web Client and WebServer is closed. This will help Foreman to cancel
-      // all the running queries if at all for this Web Client.
+      // listener to known about channel close event from underlying layer.
+      //
+      // The invocation of this close future is no-op as it will be triggered after query completion in unsecure case.
+      // But we need this close future as it's expected by Foreman.
       final ChannelPromise closeFuture = new DefaultChannelPromise(null, executor);
 
       final WebSessionResources webSessionResources = new WebSessionResources(sessionAllocator, remoteAddress,

@@ -76,9 +76,10 @@ public class WebSessionResources implements AutoCloseable {
 
     // Notify all the listeners of this closeFuture for failure events so that listeners can do cleanup related to this
     // WebSession. This will be called after every query execution by AnonymousWebUserConnection::cleanupSession and
-    // for authenticated user it is called Session is destroyed.
-    // In case when all queries are successfully completed it's a no-op operation whereas in cases
-    // when there are queries still running for this session, it will help listener (Foreman) to cancel the queries.
+    // for authenticated user it is called when session is invalidated.
+    // For authenticated user it will cancel the in-flight queries based on session invalidation. Whereas for
+    // unauthenticated user it's a no-op since there is no session associated with it. We don't have mechanism currently
+    // to call this close future upon Http connection close.
     if (closeFuture != null) {
       closeFuture.setFailure(new ChannelClosedException("Http connection is closed by Web Client"));
       closeFuture = null;

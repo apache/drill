@@ -36,6 +36,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+/**
+ * Validates {@link WebSessionResources} close works as expected w.r.t {@link io.netty.channel.AbstractChannel.CloseFuture}
+ * associated with it.
+ */
 public class WebSessionResourcesTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebSessionResourcesTest.class);
 
@@ -47,7 +51,7 @@ public class WebSessionResourcesTest {
 
   private EventExecutor executor;
 
-
+  // A close listener added in close future in one of the test to see if it's invoked correctly.
   private class TestClosedListener implements GenericFutureListener<Future<Void>> {
     @Override
     public void operationComplete(Future<Void> future) throws Exception {
@@ -56,6 +60,11 @@ public class WebSessionResourcesTest {
     }
   }
 
+  /**
+   * Validates {@link WebSessionResources#close()} throws NPE when closefuture passed to WebSessionResources doesn't
+   * have a valid channel and EventExecutor associated with it.
+   * @throws Exception
+   */
   @Test
   public void testChannelPromiseWithNullExecutor() throws Exception {
     try {
@@ -71,6 +80,10 @@ public class WebSessionResourcesTest {
     }
   }
 
+  /**
+   * Validates successful {@link WebSessionResources#close()} with valid CloseFuture and other parameters.
+   * @throws Exception
+   */
   @Test
   public void testChannelPromiseWithValidExecutor() throws Exception {
     try {
@@ -90,6 +103,10 @@ public class WebSessionResourcesTest {
     }
   }
 
+  /**
+   * Validates double call to {@link WebSessionResources#close()} doesn't throw any exception.
+   * @throws Exception
+   */
   @Test
   public void testDoubleClose() throws Exception {
     try {
@@ -108,6 +125,11 @@ public class WebSessionResourcesTest {
     }
   }
 
+  /**
+   * Validates successful {@link WebSessionResources#close()} with valid CloseFuture and {@link TestClosedListener}
+   * getting invoked which is added to the close future.
+   * @throws Exception
+   */
   @Test
   public void testCloseWithListener() throws Exception {
     try {
