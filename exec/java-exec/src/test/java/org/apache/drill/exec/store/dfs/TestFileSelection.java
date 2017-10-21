@@ -70,7 +70,7 @@ public class TestFileSelection extends BaseTestQuery {
     try {
       testNoResult(query);
     } catch (Exception ex) {
-      final String pattern = String.format("[dfs1] is not valid with respect to either root schema or current default schema").toLowerCase();
+      final String pattern = String.format("[[dfs1]] is not valid with respect to either root schema or current default schema").toLowerCase();
       final boolean isSchemaNotFound = ex.getMessage().toLowerCase().contains(pattern);
       assertTrue(isSchemaNotFound);
       throw ex;

@@ -109,7 +109,7 @@ public class SchemaUtilites {
    * @return true if the given <i>schema</i> is root schema. False otherwise.
    */
   public static boolean isRootSchema(SchemaPlus schema) {
-    return schema.getParentSchema() == null;
+    return schema == null || schema.getParentSchema() == null;
   }
 
   /**
@@ -136,9 +136,6 @@ public class SchemaUtilites {
   public static String getSchemaPath(List<String> schemaPath) {
     return SCHEMA_PATH_JOINER.join(schemaPath);
   }
-
-  /** Utility method to get the schema path from one or more strings. */
-  public static String getSchemaPath(String s1, String s2, String... rest) { return SCHEMA_PATH_JOINER.join(s1,s2,rest); }
 
   /** Utility method to get the schema path as list for given schema instance. */
   public static List<String> getSchemaPathAsList(SchemaPlus schema) {
@@ -169,13 +166,13 @@ public class SchemaUtilites {
   }
 
   /** Utility method to throw {@link UserException} with context information */
-  public static void throwSchemaNotFoundException(final String defaultSchema, final String givenSchemaPath) {
+  public static void throwSchemaNotFoundException(final SchemaPlus defaultSchema, final List<String> givenSchemaPath) {
     throw UserException.validationError()
-        .message("Schema [%s] is not valid with respect to either root schema or current default schema.",
-            givenSchemaPath)
-        .addContext("Current default schema: ",
-            defaultSchema.equals("") ? "No default schema selected" : defaultSchema)
-        .build(logger);
+            .message("Schema [%s] is not valid with respect to either root schema or current default schema.",
+                    givenSchemaPath)
+            .addContext("Current default schema: ",
+                    isRootSchema(defaultSchema) ? "No default schema selected" : getSchemaPath(defaultSchema))
+            .build(logger);
   }
 
   /**

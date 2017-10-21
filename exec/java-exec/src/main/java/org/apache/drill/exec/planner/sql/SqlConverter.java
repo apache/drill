@@ -54,6 +54,8 @@ import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.calcite.util.Util;
+import org.apache.commons.collections.ListUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.Types;
@@ -487,15 +489,19 @@ public class SqlConverter {
       }
 
       // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
-      String defaultSchema = session.getDefaultSchemaPath();
-      String schemaPath = SchemaUtilites.getSchemaPath(names.subList(0, names.size() - 1));
-      String commonPrefix = SchemaUtilites.getPrefixSchemaPath(defaultSchema, schemaPath, parserConfig.caseSensitive());
-      boolean isPrefixDefaultPath = commonPrefix.length() == defaultSchema.length();
-      String fullSchemaPath = Strings.isNullOrEmpty(defaultSchema) ? schemaPath :
-              isPrefixDefaultPath ? schemaPath : SchemaUtilites.getSchemaPath(defaultSchema, schemaPath);
+      SchemaPlus defaultSchema = session.getDefaultSchema(this.rootSchema);
+      String defaultSchemaCombinedPath = SchemaUtilites.getSchemaPath(defaultSchema);
+      List<String> schemaPath = Util.skipLast(names);
+      String schemaPathCombined = SchemaUtilites.getSchemaPath(schemaPath);
+      String commonPrefix = SchemaUtilites.getPrefixSchemaPath(defaultSchemaCombinedPath,
+                                                               schemaPathCombined,
+                                                               parserConfig.caseSensitive());
+      boolean isPrefixDefaultPath = commonPrefix.length() == defaultSchemaCombinedPath.length();
+      List<String> fullSchemaPath = Strings.isNullOrEmpty(defaultSchemaCombinedPath) ? schemaPath :
+              isPrefixDefaultPath ? schemaPath : ListUtils.union(SchemaUtilites.getSchemaPathAsList(defaultSchema), schemaPath);
       if (names.size() > 1 && (SchemaUtilites.findSchema(this.rootSchema, fullSchemaPath) == null &&
                                SchemaUtilites.findSchema(this.rootSchema, schemaPath) == null)) {
-        SchemaUtilites.throwSchemaNotFoundException(session.getDefaultSchemaPath(), schemaPath);
+        SchemaUtilites.throwSchemaNotFoundException(defaultSchema, schemaPath);
       }
 
       return super.getTable(names);
