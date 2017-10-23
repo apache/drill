@@ -23,6 +23,8 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.util.regex.Matcher;
 
+import org.apache.drill.exec.expr.holders.VarCharHolder;
+
 import io.netty.buffer.DrillBuf;
 
 /**
@@ -107,16 +109,16 @@ public final class CharSequenceWrapper implements CharSequence {
    * @param start start offset
    * @param end end offset
    * @param buffer input byte buffer
-   * @param asciiMode -1: ASCII mode unknown, 0: not ASCII, 1: is ASCII
+   * @param asciiMode values set using {@link VarCharHolder}
    */
   public void setBuffer(int start, int end, DrillBuf buffer, int asciiMode) {
-      this.start       = start;
-      this.end         = end;
-      this.buffer      = buffer;
+      this.start  = start;
+      this.end    = end;
+      this.buffer = buffer;
 
-      if (asciiMode == 1) { // We know it is ASCII
+      if (asciiMode == VarCharHolder.CHAR_MODE_IS_ASCII) { // We know it is ASCII
         useAscii = true;
-      } else if (asciiMode == -1) { // We don't know whether it is ASCII
+      } else if (asciiMode == VarCharHolder.CHAR_MODE_UNKNOWN) { // We don't know whether it is ASCII
         // Test if buffer is an ASCII string or not.
         useAscii = isAscii(start, end, buffer);
       }

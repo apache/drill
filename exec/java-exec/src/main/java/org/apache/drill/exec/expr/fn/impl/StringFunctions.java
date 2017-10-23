@@ -72,7 +72,7 @@ public class StringFunctions{
       // Reusing same charSequenceWrapper, no need to pass it in.
       charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       out.value       = sqlPatternMatcher.match();
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -101,7 +101,7 @@ public class StringFunctions{
       // Reusing same charSequenceWrapper, no need to pass it in.
       charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       out.value       = sqlPatternMatcher.match();
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -130,7 +130,7 @@ public class StringFunctions{
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
       out.value       = matcher.matches()? 1:0;
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -161,7 +161,7 @@ public class StringFunctions{
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
       out.value       = matcher.matches()? 1:0;
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -189,7 +189,7 @@ public class StringFunctions{
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
       out.value       = matcher.matches()? 1:0;
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -218,7 +218,7 @@ public class StringFunctions{
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
       out.value       = matcher.matches()? 1:0;
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -272,7 +272,7 @@ public class StringFunctions{
           out.buffer.setBytes(0, input.buffer, input.start, input.end - input.start);
           out.end = input.end - input.start;
       }
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -305,7 +305,7 @@ public class StringFunctions{
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
       out.value       = matcher.matches()? 1:0;
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -650,7 +650,7 @@ public class StringFunctions{
         out.start = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.start());
         out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.end());
       }
-      input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -688,7 +688,7 @@ public class StringFunctions{
         } else {
           out.isSet = 0;
         }
-        input.asciiMode = charSequenceWrapper.isAscii() ? 1 : 0;
+        input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
       }
     }
   }
