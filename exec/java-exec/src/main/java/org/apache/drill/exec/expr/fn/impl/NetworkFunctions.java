@@ -479,7 +479,7 @@ public class NetworkFunctions {
         org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
 
         boolean valid = validator.isValid(ipString);
-        if (valid == true) {
+        if (valid) {
           out.value = 1;
         } else {
           out.value = 0;
@@ -516,7 +516,7 @@ public class NetworkFunctions {
         org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
 
         boolean valid = validator.isValidInet4Address(ipString);
-        if (valid == true) {
+        if (valid) {
           out.value = 1;
         } else {
           out.value = 0;
@@ -552,7 +552,7 @@ public class NetworkFunctions {
         org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
 
         boolean valid = validator.isValidInet6Address(ipString);
-        if (valid == true) {
+        if (valid) {
           out.value = 1;
         } else {
           out.value = 0;
