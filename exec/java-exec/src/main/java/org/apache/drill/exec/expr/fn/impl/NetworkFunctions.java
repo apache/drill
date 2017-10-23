@@ -392,9 +392,6 @@ public class NetworkFunctions {
 
       for (int i = 0; i < 3; i++) {
         octets[i] = Integer.parseInt(ipAddressInArray[i]);
-        if (octets[i] > 255 || octets[i] < 0) {
-          result = 0;
-        }
       }
 
       if (octets[0] == 192 && octets[1] == 168) {
@@ -481,8 +478,8 @@ public class NetworkFunctions {
       } else {
         org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
 
-        boolean result = validator.isValid(ipString);
-        if (result == true) {
+        boolean valid = validator.isValid(ipString);
+        if (valid == true) {
           out.value = 1;
         } else {
           out.value = 0;
@@ -518,8 +515,8 @@ public class NetworkFunctions {
       } else {
         org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
 
-        boolean result = validator.isValidInet4Address(ipString);
-        if (result == true) {
+        boolean valid = validator.isValidInet4Address(ipString);
+        if (valid == true) {
           out.value = 1;
         } else {
           out.value = 0;
@@ -554,8 +551,8 @@ public class NetworkFunctions {
       } else {
         org.apache.commons.validator.routines.InetAddressValidator validator = org.apache.commons.validator.routines.InetAddressValidator.getInstance();
 
-        boolean result = validator.isValidInet6Address(ipString);
-        if (result == true) {
+        boolean valid = validator.isValidInet6Address(ipString);
+        if (valid == true) {
           out.value = 1;
         } else {
           out.value = 0;
