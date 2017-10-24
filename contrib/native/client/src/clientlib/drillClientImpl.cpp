@@ -518,6 +518,21 @@ bool DrillClientImpl::clientNeedsEncryption(const DrillUserProperties* userPrope
     return needsEncryption;
 }
 
+/*
+ * Checks if the client has explicitly expressed interest in authenticated connections only.
+ * If the USERPROP_PASSWORD or USERPROP_AUTH_MECHANISM connection string properties are
+ * non-empty, then it is implied that the client wants authentication.
+ */
+bool DrillClientImpl::clientNeedsAuthentication(const DrillUserProperties* userProperties) {
+    bool needsAuthentication = false;
+    if(!userProperties) { return false; }
+    std::string passwd = "";
+    userProperties->getProp(USERPROP_PASSWORD, passwd);
+    std::string authMech = "";
+    userProperties->getProp(USERPROP_AUTH_MECHANISM, authMech);
+    return !passwd.empty() || !authMech.empty();
+}
+
 connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* properties){
 
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "validateHandShake\n";)
@@ -595,6 +610,10 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
 
     switch(this->m_handshakeStatus) {
         case exec::user::SUCCESS:
+            // Check if client needs auth/encryption and server is not requiring it
+            if(clientNeedsAuthentication(properties) || clientNeedsEncryption(properties)) {
+                return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERAUTH));
+            }
             // reset io_service after handshake is validated before running queries
             m_io_service.reset();
             return CONN_SUCCESS;
@@ -630,8 +649,7 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
 
     // Check if client needs encryption and server is configured for encryption or not before starting handshake
     if(clientNeedsEncryption(userProperties) && !m_encryptionCtxt.isEncryptionReqd()) {
-        return handleConnError(CONN_AUTH_FAILED, "Client needs encryption but on server side encryption is disabled."
-                                                 " Please check connection parameters or contact administrator?");
+        return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_NOSERVERENC));
     }
 
     try {
@@ -657,8 +675,11 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
         // Check the negotiated SSF value and change the handlers.
         if(m_encryptionCtxt.isEncryptionReqd()) {
             if(SASL_OK != m_saslAuthenticator->verifyAndUpdateSaslProps()) {
-                logMsg << m_encryptionCtxt << "]. Negotiated Parameter is invalid."
-                       << " Error: " << m_saslResultCode;
+                logMsg << m_encryptionCtxt
+                       << ", Mechanism: " << m_saslAuthenticator->getAuthMechanismName()
+                       << ", Error: " << m_saslResultCode
+                       << ", Cause: " << m_saslAuthenticator->getErrorMessage(m_saslResultCode);
+                logMsg << "]. Negotiated Parameter is invalid.";
                 DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
                 return handleConnError(CONN_AUTH_FAILED, logMsg.str().c_str());
             }
@@ -678,11 +699,14 @@ connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperti
         m_io_service.reset();
         return CONN_SUCCESS;
     } else {
-        logMsg << m_encryptionCtxt << ", Error: " << m_saslResultCode;
+        logMsg << m_encryptionCtxt
+               << ", Mechanism: " << m_saslAuthenticator->getAuthMechanismName()
+               << ", Error: " << m_saslResultCode
+               << ", Cause: " << m_saslAuthenticator->getErrorMessage(m_saslResultCode);
+        logMsg << "]. Check connection parameters?";
         DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
 
         // shuts down socket as well
-        logMsg << "]. Check connection parameters?";
         return handleConnError(CONN_AUTH_FAILED, logMsg.str().c_str());
     }
 }

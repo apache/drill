@@ -145,6 +145,9 @@ int SaslAuthenticatorImpl::init(const std::vector<std::string>& mechanisms, exec
             authMechanismToUse = value;
         }
     }
+    // clientNeedsAuthentication() cannot be false if the code above picks an authMechanism
+    assert (authMechanismToUse.empty() || DrillClientImpl::clientNeedsAuthentication(m_pUserProperties));
+    m_authMechanismName = authMechanismToUse;
     if (authMechanismToUse.empty()) return SASL_NOMECH;
 
     // check if requested mechanism is supported by server
@@ -316,5 +319,17 @@ int SaslAuthenticatorImpl::unwrap(const char* dataToUnWrap, const int& dataToUnW
     return sasl_decode(m_pConnection, dataToUnWrap, dataToUnWrapLen, output, &unWrappedLen);
 }
 
+const char* SaslAuthenticatorImpl::getErrorMessage(int errorCode) {
+    switch (errorCode) {
+        case SASL_NOMECH:
+            return "No mechanism found that meets requested properties ";
+        default:
+            return sasl_errdetail(m_pConnection);
+    }
+}
+
+    const std::string &SaslAuthenticatorImpl::getAuthMechanismName() const {
+        return m_authMechanismName;
+    }
 
 } /* namespace Drill */

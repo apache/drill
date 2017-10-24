@@ -328,6 +328,7 @@
               <exclude>commons-io:commons-io</exclude>
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative:jar:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>

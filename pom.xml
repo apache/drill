@@ -15,7 +15,8 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>14</version>
+    <version>18</version>
+    <relativePath/>
   </parent>
 
   <groupId>org.apache.drill</groupId>
@@ -33,7 +34,7 @@
     <dep.junit.version>4.11</dep.junit.version>
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
     <dep.guava.version>18.0</dep.guava.version>
-    <forkCount>1C</forkCount>
+    <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
     <calcite.version>1.4.0-drill-r22</calcite.version>
     <janino.version>2.7.6</janino.version>
@@ -43,6 +44,7 @@
     <ojai.version>1.1</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
     <findbugs.version>3.0.0</findbugs.version>
+    <netty.tcnative.classifier></netty.tcnative.classifier>
 
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
@@ -1008,6 +1010,14 @@
             <artifactId>netty-all</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative</artifactId>
+        <version>2.0.1.Final</version>
+        <classifier>${netty.tcnative.classifier}</classifier>
+        <scope>runtime</scope>
+        <optional>true</optional>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -2407,6 +2417,28 @@
       <modules>
         <module>contrib</module>
       </modules>
+    </profile>
+    <profile>
+      <!--
+        If the IDE is Eclipse, it requires you to install an additional Eclipse plugin available here:
+        http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        or from your local maven repository:
+        ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        Note that installing this plugin may require you to start with a new workspace
+      -->
+      <id>openssl</id>
+      <activation>
+        <property>
+          <name>enableOpenSSL</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <!-- Configure the os-maven-plugin extension to expand the classifier on -->
+        <!-- Fedora-"like" systems. Used for netty-tcnative inclusion -->
+        <os.detection.classifierWithLikes>fedora</os.detection.classifierWithLikes>
+        <netty.tcnative.classifier>${os.detected.classifier}</netty.tcnative.classifier>
+      </properties>
     </profile>
     <profile>
       <id>findbugs</id>

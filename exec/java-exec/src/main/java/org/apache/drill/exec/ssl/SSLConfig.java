@@ -22,7 +22,6 @@ import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.hadoop.security.ssl.SSLFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -57,6 +56,12 @@ public abstract class SSLConfig {
   public static final String HADOOP_SSL_TRUSTSTORE_LOCATION_TPL_KEY = "ssl.{0}.truststore.location";
   public static final String HADOOP_SSL_TRUSTSTORE_PASSWORD_TPL_KEY = "ssl.{0}.truststore.password";
   public static final String HADOOP_SSL_TRUSTSTORE_TYPE_TPL_KEY = "ssl.{0}.truststore.type";
+
+  // copy of Hadoop's SSLFactory.Mode. Done so that we do not
+  // need to include hadoop-common as a dependency in
+  // jdbc-all-jar.
+  public enum Mode { CLIENT, SERVER };
+
 
   public SSLConfig() {
   }
@@ -101,7 +106,7 @@ public abstract class SSLConfig {
 
   public abstract int getHandshakeTimeout();
 
-  public abstract SSLFactory.Mode getMode();
+  public abstract Mode getMode();
 
   public abstract boolean disableHostVerification();
 

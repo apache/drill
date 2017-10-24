@@ -474,6 +474,9 @@ class DrillClientImpl : public DrillClientImplBase{
 
         void freeMetadata(meta::DrillMetadata* metadata);
 
+        static bool clientNeedsAuthentication(const DrillUserProperties* userProperties);
+
+
     private:
         friend class meta::DrillMetadata;
         friend class DrillClientQueryHandle;

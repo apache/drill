@@ -254,6 +254,7 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
 
     if (connection != null) {
       connection.close();
+      connection = null;
     }
   }
 }
