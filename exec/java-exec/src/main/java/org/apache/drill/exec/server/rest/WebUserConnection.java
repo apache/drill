@@ -42,9 +42,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * WebUserConnectionWrapper which represents the UserClientConnection for the WebUser submitting the query. It provides
- * access to the UserSession executing the query. There is no actual physical channel corresponding to this connection
- * wrapper.
+ * WebUserConnectionWrapper which represents the UserClientConnection between WebServer and Foreman, for the WebUser
+ * submitting the query. It provides access to the UserSession executing the query. There is no actual physical
+ * channel corresponding to this connection wrapper.
+ *
+ * It returns a close future with no actual underlying {@link io.netty.channel.Channel} associated with it but do have an
+ * EventExecutor out of BitServer EventLoopGroup. Since there is no actual connection established using this class,
+ * hence the close event will never be fired by underlying layer and close future is set only when the
+ * {@link WebSessionResources} are closed.
  */
 
 public class WebUserConnection extends AbstractDisposableUserClientConnection implements ConnectionThrottle {
