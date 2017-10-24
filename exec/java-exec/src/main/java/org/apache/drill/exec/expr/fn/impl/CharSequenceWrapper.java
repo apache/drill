@@ -61,7 +61,7 @@ public final class CharSequenceWrapper implements CharSequence {
   }
 
   public CharSequenceWrapper(int start, int end, DrillBuf buffer) {
-    setBuffer(start, end, buffer, -1);
+    setBuffer(start, end, buffer, VarCharHolder.CHAR_MODE_UNKNOWN);
   }
 
   @Override
