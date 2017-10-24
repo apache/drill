@@ -254,8 +254,22 @@ public class BootStrapContext implements AutoCloseable {
 
     try {
       AutoCloseables.close(allocator, authProvider);
+      shutdown(loop);
+      shutdown(loop2);
+
     } catch (final Exception e) {
       logger.error("Error while closing", e);
+    }
+  }
+
+  private static void shutdown(EventLoopGroup loopGroup) {
+    if (loopGroup != null && !(loopGroup.isShutdown() || loopGroup.isShuttingDown())) {
+      try {
+        loopGroup.shutdownGracefully();
+
+      } catch (final Exception e) {
+        logger.error("Error while closing", e);
+      }
     }
   }
 }
