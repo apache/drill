@@ -352,5 +352,9 @@
       <source>src/resources/core-site-example.xml</source>
       <outputDirectory>conf</outputDirectory>
     </file>
+    <file>
+      <source>src/resources/saffron.properties</source>
+      <outputDirectory>conf</outputDirectory>
+    </file>
   </files>
 </assembly>
