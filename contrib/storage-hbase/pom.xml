@@ -39,7 +39,7 @@
       <version>3.20.0-GA</version>
       <scope>test</scope>
     </dependency>
-  
+
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
@@ -147,7 +147,7 @@
             <goals>
               <goal>enforce</goal>
             </goals>
-            <configuration combine.self="override">
+            <configuration>
               <rules>
                 <bannedDependencies>
                   <includes>
