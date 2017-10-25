@@ -1113,6 +1113,155 @@ public class TestStringFunctions extends BaseTestQuery {
         .build()
         .run();
 
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like 'ab'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%ab'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like 'ab%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%ab%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like 'abc'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like 'abc%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%abc'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%abc%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like 'abcd'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like 'abcd%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%abcd'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%abcd%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like ''")
+        .unOrdered()
+        .baselineColumns("id")
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(" SELECT  id FROM (" +
+            "VALUES('abc')) tbl(id)" +
+            "where id like '%%'")
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues("abc")
+        .build()
+        .run();
   }
 
   @Test

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import io.netty.buffer.DrillBuf;
+
 public interface SqlPatternMatcher {
-  public int match();
+  int match(int start, int end, DrillBuf drillBuf);
 }
