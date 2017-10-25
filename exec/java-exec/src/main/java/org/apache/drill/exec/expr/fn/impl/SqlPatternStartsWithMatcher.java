@@ -17,32 +17,30 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-public class SqlPatternStartsWithMatcher implements SqlPatternMatcher {
-  final String patternString;
-  CharSequence charSequenceWrapper;
-  final int patternLength;
+import io.netty.buffer.DrillBuf;
 
-  public SqlPatternStartsWithMatcher(String patternString, CharSequence charSequenceWrapper) {
-    this.charSequenceWrapper = charSequenceWrapper;
-    this.patternString = patternString;
-    patternLength = patternString.length();
+public class SqlPatternStartsWithMatcher extends AbstractSqlPatternMatcher {
+
+  public SqlPatternStartsWithMatcher(String patternString) {
+    super(patternString);
   }
 
   @Override
-  public int match() {
-    int index = 0;
-    final int txtLength = charSequenceWrapper.length();
+  public int match(int start, int end, DrillBuf drillBuf) {
+
+    if (patternLength > (end - start)) {
+      return 0;
+    }
 
     // simplePattern string has meta characters i.e % and _ and escape characters removed.
     // so, we can just directly compare.
-    while (index < patternLength && index < txtLength) {
-      if (patternString.charAt(index) != charSequenceWrapper.charAt(index)) {
-        break;
+    for (int index = 0; index < patternLength; index++) {
+      if (patternByteBuffer.get(index) != drillBuf.getByte(start + index)) {
+        return 0;
       }
-      index++;
     }
 
-    return (index == patternLength ? 1 : 0);
+    return 1;
   }
 
 }

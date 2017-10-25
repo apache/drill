@@ -17,37 +17,46 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-public class SqlPatternContainsMatcher implements SqlPatternMatcher {
-  final String patternString;
-  CharSequence charSequenceWrapper;
-  final int patternLength;
+import io.netty.buffer.DrillBuf;
 
-  public SqlPatternContainsMatcher(String patternString, CharSequence charSequenceWrapper) {
-    this.patternString = patternString;
-    this.charSequenceWrapper = charSequenceWrapper;
-    patternLength = patternString.length();
+public class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
+
+  public SqlPatternContainsMatcher(String patternString) {
+    super(patternString);
   }
 
   @Override
-  public int match() {
-    final int txtLength = charSequenceWrapper.length();
-    int patternIndex = 0;
-    int txtIndex = 0;
+  public int match(int start, int end, DrillBuf drillBuf) {
 
-    // simplePattern string has meta characters i.e % and _ and escape characters removed.
-    // so, we can just directly compare.
-    while (patternIndex < patternLength && txtIndex < txtLength) {
-      if (patternString.charAt(patternIndex) != charSequenceWrapper.charAt(txtIndex)) {
-        // Go back if there is no match
-        txtIndex = txtIndex - patternIndex;
-        patternIndex = 0;
-      } else {
-        patternIndex++;
-      }
-      txtIndex++;
+    if (patternLength == 0) { // Everything should match for null pattern string
+      return 1;
     }
 
-    return patternIndex == patternLength ? 1 : 0;
+    final int txtLength = end - start;
+
+    // no match if input string length is less than pattern length
+    if (txtLength < patternLength) {
+      return 0;
+    }
+
+
+    final int outerEnd = txtLength - patternLength;
+
+    outer:
+    for (int txtIndex = 0; txtIndex <= outerEnd; txtIndex++) {
+
+      // simplePattern string has meta characters i.e % and _ and escape characters removed.
+      // so, we can just directly compare.
+      for (int patternIndex = 0; patternIndex < patternLength; patternIndex++) {
+        if (patternByteBuffer.get(patternIndex) != drillBuf.getByte(start + txtIndex + patternIndex)) {
+          continue outer;
+        }
+      }
+
+      return 1;
+    }
+
+    return  0;
   }
 
 }
