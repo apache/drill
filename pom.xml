@@ -360,6 +360,7 @@
                     <exclude>org.mortbay.jetty:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
                     <exclude>log4j:log4j</exclude>
+                    <exclude>jdk.tools:jdk.tools</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -697,6 +698,17 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-annotations</artifactId>
+        <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>jdk.tools</groupId>
+            <artifactId>jdk.tools</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-aws</artifactId>
         <version>${hadoop.version}</version>
         <scope>test</scope>
@@ -724,6 +736,17 @@
           <exclusion>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-annotations</artifactId>
+        <version>${hbase.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>jdk.tools</groupId>
+            <artifactId>jdk.tools</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1596,6 +1619,10 @@
                 <artifactId>asm</artifactId>
                 <groupId>asm</groupId>
               </exclusion>
+              <exclusion>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-annotations</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -2201,6 +2228,10 @@
                 <artifactId>asm</artifactId>
                 <groupId>asm</groupId>
               </exclusion>
+              <exclusion>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-annotations</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -2211,6 +2242,10 @@
               <exclusion>
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>jdk.tools</groupId>
+                <artifactId>jdk.tools</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
