@@ -64,5 +64,5 @@ public class STGeomFromTextSrid implements DrillSimpleFunc {
     out.start = 0;
     out.end = outputSize;
     buffer.setBytes(0, pointBytes);
-    }
+  }
 }

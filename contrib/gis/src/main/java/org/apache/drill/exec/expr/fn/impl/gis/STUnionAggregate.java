@@ -34,15 +34,15 @@ import com.esri.core.geometry.SpatialReference;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_union", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+@FunctionTemplate(name = "st_unionaggregate", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
 public class STUnionAggregate implements DrillAggFunc {
-  @Param  NullableVarBinaryHolder in;
-  @Workspace  ObjectHolder value;
-  @Workspace  UInt1Holder init;
-  @Workspace  BigIntHolder nonNullCount;
-  @Workspace  IntHolder srid;
-  @Inject  DrillBuf buf;
-  @Output  NullableVarBinaryHolder out;
+  @Param NullableVarBinaryHolder in;
+  @Workspace ObjectHolder value;
+  @Workspace UInt1Holder init;
+  @Workspace BigIntHolder nonNullCount;
+  @Workspace IntHolder srid;
+  @Inject DrillBuf buf;
+  @Output NullableVarBinaryHolder out;
 
   public void setup() {
     init = new UInt1Holder();
@@ -56,7 +56,7 @@ public class STUnionAggregate implements DrillAggFunc {
   @Override
   public void add() {
     sout: {
-      if (in.isSet == 0) {
+      if(in.isSet == 0){
         // processing nullable input and the value is null, so don't do anything...
         break sout;
       }
@@ -64,11 +64,12 @@ public class STUnionAggregate implements DrillAggFunc {
       java.util.ArrayList<com.esri.core.geometry.Geometry> tmp = (java.util.ArrayList<com.esri.core.geometry.Geometry>) value.obj;
 
       com.esri.core.geometry.ogc.OGCGeometry geom;
-      geom = com.esri.core.geometry.ogc.OGCGeometry.fromBinary(in.buffer.nioBuffer(in.start, in.end - in.start));
+      geom = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(in.buffer.nioBuffer(in.start, in.end - in.start));
 
       tmp.add(geom.getEsriGeometry());
 
-      if (init.value == 0) {
+      if(init.value == 0){
         init.value = 1;
         srid.value = geom.SRID();
       }
@@ -83,7 +84,7 @@ public class STUnionAggregate implements DrillAggFunc {
       java.util.ArrayList<com.esri.core.geometry.Geometry> tmp = (java.util.ArrayList<com.esri.core.geometry.Geometry>) value.obj;
 
       com.esri.core.geometry.SpatialReference spatialRef = null;
-      if (srid.value != 0) {
+      if(srid.value != 0){
         spatialRef = com.esri.core.geometry.SpatialReference.create(srid.value);
       }
       com.esri.core.geometry.Geometry[] geomArr = (com.esri.core.geometry.Geometry[]) tmp
