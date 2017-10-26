@@ -270,22 +270,4 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     resetRecordCount();
   }
 
-  /**
-   * Sorts vectors into canonical order (by field name).  Updates schema and
-   * internal vector container.
-   */
-  public void canonicalize() {
-    //logger.debug( "RecordBatchLoader : before schema " + schema);
-    container = VectorContainer.canonicalize(container);
-
-    // rebuild the schema.
-    SchemaBuilder b = BatchSchema.newBuilder();
-    for(final VectorWrapper<?> v : container){
-      b.addField(v.getField());
-    }
-    b.setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
-    this.schema = b.build();
-
-    //logger.debug( "RecordBatchLoader : after schema " + schema);
-  }
 }
