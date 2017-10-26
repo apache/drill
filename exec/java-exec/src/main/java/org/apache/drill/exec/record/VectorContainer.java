@@ -201,31 +201,6 @@ public class VectorContainer implements VectorAccessible {
     return vc;
   }
 
-  /**
-   * Sorts vectors into canonical order (by field name) in new VectorContainer.
-   */
-  public static VectorContainer canonicalize(VectorContainer original) {
-    VectorContainer vc = new VectorContainer();
-    List<VectorWrapper<?>> canonicalWrappers = new ArrayList<>(original.wrappers);
-    // Sort list of VectorWrapper alphabetically based on SchemaPath.
-    Collections.sort(canonicalWrappers, new Comparator<VectorWrapper<?>>() {
-      @Override
-      public int compare(VectorWrapper<?> v1, VectorWrapper<?> v2) {
-        return v1.getField().getName().compareTo(v2.getField().getName());
-      }
-    });
-
-    for (VectorWrapper<?> w : canonicalWrappers) {
-      if (w.isHyper()) {
-        vc.add(w.getValueVectors());
-      } else {
-        vc.add(w.getValueVector());
-      }
-    }
-    vc.allocator = original.allocator;
-    return vc;
-  }
-
   private void cloneAndTransfer(VectorWrapper<?> wrapper) {
     wrappers.add(wrapper.cloneAndTransfer(getAllocator()));
   }

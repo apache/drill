@@ -238,7 +238,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           }
           boolean success = false;
           try {
-            batch.canonicalize();
             if (priorityQueue == null) {
               assert !schemaChanged;
               priorityQueue = createNewPriorityQueue(context, config.getOrderings(), new ExpandableHyperContainer(batch.getContainer()), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
@@ -323,7 +322,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       selectionVector4.clear();
       c.clear();
       VectorContainer newQueue = new VectorContainer();
-      builder.canonicalize();
       builder.build(context, newQueue);
       priorityQueue.resetQueue(newQueue, builder.getSv4().createNewWrapperCurrent());
       builder.getSv4().clear();
@@ -414,16 +412,13 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       selectionVector4.clear();
       c.clear();
       final VectorContainer oldSchemaContainer = new VectorContainer(oContext);
-      builder.canonicalize();
       builder.build(context, oldSchemaContainer);
       oldSchemaContainer.setRecordCount(builder.getSv4().getCount());
       final VectorContainer newSchemaContainer =  SchemaUtil.coerceContainer(oldSchemaContainer, this.schema, oContext);
-      // Canonicalize new container since we canonicalize incoming batches before adding to queue.
-      final VectorContainer canonicalizedContainer = VectorContainer.canonicalize(newSchemaContainer);
-      canonicalizedContainer.buildSchema(SelectionVectorMode.FOUR_BYTE);
+      newSchemaContainer.buildSchema(SelectionVectorMode.FOUR_BYTE);
       priorityQueue.cleanup();
-      priorityQueue = createNewPriorityQueue(context, config.getOrderings(), canonicalizedContainer, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
-      priorityQueue.resetQueue(canonicalizedContainer, builder.getSv4().createNewWrapperCurrent());
+      priorityQueue = createNewPriorityQueue(context, config.getOrderings(), newSchemaContainer, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+      priorityQueue.resetQueue(newSchemaContainer, builder.getSv4().createNewWrapperCurrent());
     } finally {
       builder.clear();
       builder.close();

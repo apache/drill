@@ -531,4 +531,21 @@ public class TestStarQueries extends BaseTestQuery{
         .run();
   }
 
+  @Test // DRILL-5822
+  public void testSchemaForParallelizedStarOrderBy() throws Exception {
+    final String query = "select * from cp.`tpch/region.parquet` order by r_name";
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .add("r_regionkey", TypeProtos.MinorType.INT)
+        .add("r_name",TypeProtos.MinorType.VARCHAR)
+        .add("r_comment", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    testBuilder()
+        .sqlQuery(query)
+        .optionSettingQueriesForTestQuery("alter session set `planner.slice_target`=1")
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
 }

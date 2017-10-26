@@ -132,12 +132,6 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     recordCount += rbd.getRecordCount();
   }
 
-  public void canonicalize() {
-    for (RecordBatchData batch : batches.values()) {
-      batch.canonicalize();
-    }
-  }
-
   public boolean isEmpty() {
     return batches.isEmpty();
   }
