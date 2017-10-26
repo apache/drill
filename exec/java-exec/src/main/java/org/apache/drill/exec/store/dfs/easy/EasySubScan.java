@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,6 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -94,13 +93,7 @@ public class EasySubScan extends AbstractSubScan{
 
   @JsonProperty("format")
   public FormatPluginConfig getFormatConfig(){
-    if (formatPlugin.getName() != null) {
-      NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
-      namedConfig.name = formatPlugin.getName();
-      return namedConfig;
-    } else {
-      return formatPlugin.getConfig();
-    }
+    return formatPlugin.getConfig();
   }
 
   @JsonProperty("columns")
