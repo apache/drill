@@ -10,6 +10,16 @@
   language governing permissions and limitations under the License. -->
 
 <#include "*/generic.ftl">
+
+<#-- Format comma-delimited string-->
+<#macro format_string str>
+  <#if str?has_content>
+    ${(str?split(","))?join(", ")}
+  <#else>
+    ${"<empty>"}
+  </#if>
+</#macro>
+
 <#macro page_head>
 <style>
 .list-value {
@@ -106,11 +116,19 @@
                   <tbody>
                       <tr>
                         <td>Admin Users</td>
-                        <td class="list-value">${model.getAdminUsers()}</td>
+                        <td class="list-value"><@format_string str=model.getAdminUsers()/></td>
                       </tr>
                       <tr>
                         <td>Admin User Groups</td>
-                        <td class="list-value">${model.getAdminUserGroups()}</td>
+                        <td class="list-value"><@format_string str=model.getAdminUserGroups()/></td>
+                      </tr>
+                      <tr>
+                        <td>Process User</td>
+                        <td class="list-value">${model.getProcessUser()}</td>
+                      </tr>
+                      <tr>
+                        <td>Process User Groups</td>
+                        <td class="list-value">${model.getProcessUserGroups()}</td>
                       </tr>
                   </tbody>
                 </table>
