@@ -38,6 +38,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue;
 import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue.ZKQueueInfo;
@@ -85,22 +86,10 @@ public class DrillRoot {
     // For all other cases the user info need-not or should-not be displayed
     OptionManager optionManager = work.getContext().getOptionManager();
     final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
-    String adminUsers = isUserLoggedIn ?
-            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager) : null;
-    String adminUserGroups = isUserLoggedIn ?
-            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager) : null;
-
-    // separate groups by comma + space
-    if (adminUsers != null) {
-      String[] groups = adminUsers.split(",");
-      adminUsers = Joiner.on(", ").join(groups);
-    }
-
-    // separate groups by comma + space
-    if (adminUserGroups != null) {
-      String[] groups = adminUserGroups.split(",");
-      adminUserGroups = Joiner.on(", ").join(groups);
-    }
+    final String processUser = ImpersonationUtil.getProcessUserName();
+    final String processUserGroups = Joiner.on(", ").join(ImpersonationUtil.getProcessUserGroupNames());
+    String adminUsers = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+    String adminUserGroups = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
 
     final boolean shouldShowUserInfo = isUserLoggedIn &&
             ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
@@ -118,8 +107,8 @@ public class DrillRoot {
             " userLoggedIn "  + isUserLoggedIn + " shouldShowUserInfo: " + shouldShowUserInfo );
 
     return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
-      userEncryptionEnabled, bitEncryptionEnabled, adminUsers, adminUserGroups, shouldShowUserInfo,
-      QueueInfo.build(dbContext.getResourceManager()));
+      userEncryptionEnabled, bitEncryptionEnabled, processUser, processUserGroups, adminUsers,
+      adminUserGroups, shouldShowUserInfo, QueueInfo.build(dbContext.getResourceManager()));
   }
 
   /**
@@ -212,6 +201,8 @@ public class DrillRoot {
     private final boolean bitEncryptionEnabled;
     private final String adminUsers;
     private final String adminUserGroups;
+    private final String processUser;
+    private final String processUserGroups;
     private final boolean shouldShowUserInfo;
     private final QueueInfo queueInfo;
 
@@ -221,6 +212,8 @@ public class DrillRoot {
                        Collection<String> mismatchedVersions,
                        boolean userEncryption,
                        boolean bitEncryption,
+                       String processUser,
+                       String processUserGroups,
                        String adminUsers,
                        String adminUserGroups,
                        boolean shouldShowUserInfo,
@@ -230,6 +223,8 @@ public class DrillRoot {
       this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
       this.userEncryptionEnabled = userEncryption;
       this.bitEncryptionEnabled = bitEncryption;
+      this.processUser = processUser;
+      this.processUserGroups = processUserGroups;
       this.adminUsers = adminUsers;
       this.adminUserGroups = adminUserGroups;
       this.shouldShowUserInfo = shouldShowUserInfo;
@@ -251,6 +246,10 @@ public class DrillRoot {
     public boolean isUserEncryptionEnabled() { return userEncryptionEnabled; }
 
     public boolean isBitEncryptionEnabled() { return bitEncryptionEnabled; }
+
+    public String getProcessUser() { return processUser; }
+
+    public String getProcessUserGroups() { return processUserGroups; }
 
     public String getAdminUsers() { return adminUsers; }
 
