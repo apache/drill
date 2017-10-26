@@ -222,7 +222,14 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public TranslatableTable apply(List<Object> arguments) {
-      return new DrillTranslatableTable(schema.getDrillTable(new TableInstance(sig, arguments)));
+      DrillTable drillTable = schema.getDrillTable(new TableInstance(sig, arguments));
+      if (drillTable == null) {
+        throw UserException
+            .validationError()
+            .message("Unable to find table [%s] in schema [%s]", sig.name, schema.getFullSchemaName())
+            .build(logger);
+      }
+      return new DrillTranslatableTable(drillTable);
     }
 
   }

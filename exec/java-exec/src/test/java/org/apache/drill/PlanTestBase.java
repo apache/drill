@@ -281,6 +281,19 @@ public class PlanTestBase extends BaseTestQuery {
     }
   }
 
+
+  /**
+   * Creates physical plan for the given query and then executes this plan.
+   * This method is useful for testing serialization / deserialization issues.
+   *
+   * @param query query string
+   */
+  public static void testPhysicalPlanExecutionBasedOnQuery(String query) throws Exception {
+    query = "EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query);
+    String plan = getPlanInString(query, JSON_FORMAT);
+    testPhysical(plan);
+  }
+
   /*
    * This will get the plan (either logical or physical) in Optiq RelNode
    * format, based on SqlExplainLevel and Depth.

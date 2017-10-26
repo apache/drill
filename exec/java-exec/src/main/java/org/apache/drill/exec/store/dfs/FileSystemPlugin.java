@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -133,15 +133,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
     FormatSelection formatSelection = selection.getWith(lpPersistance, FormatSelection.class);
-    FormatPlugin plugin;
-    if (formatSelection.getFormat() instanceof NamedFormatPluginConfig) {
-      plugin = formatCreator.getFormatPluginByName( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
-    } else {
-      plugin = formatPluginsByConfig.get(formatSelection.getFormat());
-    }
-    if (plugin == null) {
-      plugin = formatCreator.newFormatPlugin(formatSelection.getFormat());
-    }
+    FormatPlugin plugin = getFormatPlugin(formatSelection.getFormat());
     return plugin.getGroupScan(userName, formatSelection.getSelection(), columns);
   }
 
@@ -154,12 +146,23 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     return formatCreator.getFormatPluginByName(name);
   }
 
+  /**
+   * If format plugin configuration is for named format plugin, will return format plugin from pre-loaded list by name.
+   * For other cases will try to find format plugin by its configuration, if not present will attempt to create one.
+   *
+   * @param config format plugin configuration
+   * @return format plugin for given configuration if found, null otherwise
+   */
   public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
     if (config instanceof NamedFormatPluginConfig) {
       return formatCreator.getFormatPluginByName(((NamedFormatPluginConfig) config).name);
-    } else {
-      return formatPluginsByConfig.get(config);
     }
+
+    FormatPlugin plugin = formatPluginsByConfig.get(config);
+    if (plugin == null) {
+      plugin = formatCreator.newFormatPlugin(config);
+    }
+    return plugin;
   }
 
   @Override

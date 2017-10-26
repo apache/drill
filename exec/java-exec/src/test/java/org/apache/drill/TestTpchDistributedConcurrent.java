@@ -177,7 +177,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
     }
   }
 
-  @Test
+  //@Test
   public void testConcurrentQueries() throws Exception {
     QueryTestUtil.testRunAndPrint(client, UserBitShared.QueryType.SQL, alterSession);
 
