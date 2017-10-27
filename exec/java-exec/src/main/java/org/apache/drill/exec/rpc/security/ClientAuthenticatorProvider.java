@@ -57,17 +57,17 @@ public class ClientAuthenticatorProvider implements AuthenticatorProvider {
 
     // then, custom factories
     if (customFactories != null) {
-      try {
-        final String[] factories = customFactories.split(",");
-        for (final String factory : factories) {
+      final String[] factories = customFactories.split(",");
+      for (final String factory : factories) {
+        try {
           final Class<?> clazz = Class.forName(factory);
           if (AuthenticatorFactory.class.isAssignableFrom(clazz)) {
             final AuthenticatorFactory instance = (AuthenticatorFactory) clazz.newInstance();
             authFactories.put(instance.getSimpleName(), instance);
           }
+        } catch (final ReflectiveOperationException e) {
+          logger.error("Failed to create auth factory {}", factory, e);
         }
-      } catch (final ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-        throw new DrillRuntimeException("Failed to create auth factory.", e);
       }
     }
 
