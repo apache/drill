@@ -45,6 +45,9 @@ import io.netty.buffer.DrillBuf;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "to_char", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class G${type}ToChar implements DrillSimpleFunc {

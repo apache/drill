@@ -19,8 +19,6 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.NullableBitVector;
-import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -33,10 +31,10 @@ import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
  * because page/batch boundaries that do not land on byte boundaries require shifting of all of the values
  * in the next batch.
  */
-final class NullableBitReader extends ColumnReader {
+final class NullableBitReader extends ColumnReader<NullableBitVector> {
 
   NullableBitReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                    boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+                    boolean fixedLength, NullableBitVector v, SchemaElement schemaElement) throws ExecutionSetupException {
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
@@ -50,7 +48,7 @@ final class NullableBitReader extends ColumnReader {
       defLevel = pageReader.definitionLevels.readInteger();
       // if the value is defined
       if (defLevel == columnDescriptor.getMaxDefinitionLevel()){
-        ((NullableBitVector)valueVec).getMutator().setSafe(i + valuesReadInCurrentPass,
+        valueVec.getMutator().setSafe(i + valuesReadInCurrentPass,
             pageReader.valueReader.readBoolean() ? 1 : 0 );
       }
       // otherwise the value is skipped, because the bit vector indicating nullability is zero filled

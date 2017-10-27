@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,7 +39,7 @@ public abstract class ProjectorTemplate implements Projector {
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
 
-  public ProjectorTemplate() throws SchemaChangeException {
+  public ProjectorTemplate() {
   }
 
   @Override
@@ -51,7 +51,11 @@ public abstract class ProjectorTemplate implements Projector {
     case TWO_BYTE:
       final int count = recordCount;
       for (int i = 0; i < count; i++, firstOutputIndex++) {
-        doEval(vector2.getIndex(i), firstOutputIndex);
+        try {
+          doEval(vector2.getIndex(i), firstOutputIndex);
+        } catch (SchemaChangeException e) {
+          throw new UnsupportedOperationException(e);
+        }
       }
       return recordCount;
 
@@ -59,7 +63,11 @@ public abstract class ProjectorTemplate implements Projector {
       final int countN = recordCount;
       int i;
       for (i = startIndex; i < startIndex + countN; i++, firstOutputIndex++) {
-        doEval(i, firstOutputIndex);
+        try {
+          doEval(i, firstOutputIndex);
+        } catch (SchemaChangeException e) {
+          throw new UnsupportedOperationException(e);
+        }
       }
       if (i < startIndex + recordCount || startIndex > 0) {
         for (TransferPair t : transfers) {
@@ -93,7 +101,12 @@ public abstract class ProjectorTemplate implements Projector {
     doSetup(context, incoming, outgoing);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") RecordBatch incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract void doEval(@Named("inIndex") int inIndex,
+                              @Named("outIndex") int outIndex)
+                       throws SchemaChangeException;
 
 }

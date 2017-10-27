@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,17 +17,31 @@
  */
 package org.apache.drill;
 
+import com.google.common.collect.Lists;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.util.List;
+
+@Category({SqlTest.class, OperatorTest.class})
 public class TestUnionDistinct extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionDistinct.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionDistinct.class);
 
-  @Test  // Simple Unionover two scans
+  private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
+  private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
+
+  @Test  // Simple Union over two scans
   public void testUnionDistinct1() throws Exception {
     String query = "(select n_regionkey from cp.`tpch/nation.parquet`) union (select r_regionkey from cp.`tpch/region.parquet`)";
 
@@ -528,6 +542,117 @@ public class TestUnionDistinct extends BaseTestQuery {
   }
 
   @Test
+  public void testUnionDistinctLeftEmptyJson() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
+    final String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    final String queryLeftEmpty = String.format(
+        "select key from dfs_test.`%s` " +
+            "union " +
+            "select key from dfs_test.`%s`",
+        rootEmpty,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryLeftEmpty)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionDistinctBothEmptyJson() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
+    final String query = String.format(
+        "select key from dfs_test.`%s` " +
+            "union " +
+            "select key from dfs_test.`%s`",
+        rootEmpty,
+        rootEmpty);
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.INT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionDistinctRightEmptyDataBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    String queryRightEmptyBatch = String.format(
+        "select key from dfs_test.`%s` " +
+            "union " +
+            "select key from dfs_test.`%s` where 1 = 0",
+        rootSimple,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryRightEmptyBatch)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build().run();
+  }
+
+  @Test
+  public void testUnionDistinctLeftEmptyDataBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    final String queryLeftBatch = String.format(
+        "select key from dfs_test.`%s` where 1 = 0 " +
+            "union " +
+            "select key from dfs_test.`%s`",
+        rootSimple,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryLeftBatch)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionDistinctBothEmptyDataBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+    final String query = String.format(
+        "select key from dfs_test.`%s` where 1 = 0 " +
+            "union " +
+            "select key from dfs_test.`%s` where 1 = 0",
+        rootSimple,
+        rootSimple);
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIT) // field "key" has boolean type.
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
   public void testFilterPushDownOverUnionDistinct() throws Exception {
     String query = "select n_regionkey from \n"
         + "(select n_regionkey from cp.`tpch/nation.parquet` union select r_regionkey from cp.`tpch/region.parquet`) \n"
@@ -705,4 +830,34 @@ public class TestUnionDistinct extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // DRILL-4147 // union-distinct base case
+  public void testDrill4147_1() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM dfs_test.`%s` \n" +
+        "Union distinct SELECT o_custkey FROM dfs_test.`%s`", l, r);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*HashAgg.*HashToRandomExchange.*UnionAll.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
 }

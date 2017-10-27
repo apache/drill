@@ -21,8 +21,10 @@ import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.test.DrillTest;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import java.io.IOException;
@@ -35,6 +37,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Unit testing for {@link TimedRunnable}.
  */
+@Category(SlowTest.class)
 public class TestTimedRunnable extends DrillTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTimedRunnable.class);
 

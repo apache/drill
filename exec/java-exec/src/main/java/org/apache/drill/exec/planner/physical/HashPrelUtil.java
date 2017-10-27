@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class HashPrelUtil {
 
   public static final String HASH_EXPR_NAME = "E_X_P_R_H_A_S_H_F_I_E_L_D";
 
+  public static final int DIST_SEED = 1301011; // distribution seed
   /**
    * Interface for creating different forms of hash expression types.
    * @param <T>
@@ -72,8 +74,9 @@ public class HashPrelUtil {
    */
   public static <T> T createHashBasedPartitionExpression(
       List<T> distFields,
+      T seed,
       HashExpressionCreatorHelper<T> helper) {
-    return createHashExpression(distFields, helper, true /*for distribution always hash as double*/);
+    return createHashExpression(distFields, seed, helper, true /*for distribution always hash as double*/);
   }
 
   /**
@@ -89,6 +92,7 @@ public class HashPrelUtil {
    */
   public static <T> T createHashExpression(
       List<T> inputExprs,
+      T seed,
       HashExpressionCreatorHelper<T> helper,
       boolean hashAsDouble) {
 
@@ -96,7 +100,7 @@ public class HashPrelUtil {
 
     final String functionName = hashAsDouble ? HASH32_DOUBLE_FUNCTION_NAME : HASH32_FUNCTION_NAME;
 
-    T func = helper.createCall(functionName,  ImmutableList.of(inputExprs.get(0)));
+    T func = helper.createCall(functionName,  ImmutableList.of(inputExprs.get(0), seed ));
     for (int i = 1; i<inputExprs.size(); i++) {
       func = helper.createCall(functionName, ImmutableList.of(inputExprs.get(i), func));
     }
@@ -108,7 +112,8 @@ public class HashPrelUtil {
    * Return a hash expression :  hash32(field1, hash32(field2, hash32(field3, 0)));
    */
   public static LogicalExpression getHashExpression(List<LogicalExpression> fields, boolean hashAsDouble){
-    return createHashExpression(fields, HASH_HELPER_LOGICALEXPRESSION, hashAsDouble);
+    final LogicalExpression seed = ValueExpressions.getInt(0); // Hash Table seed
+    return createHashExpression(fields, seed, HASH_HELPER_LOGICALEXPRESSION, hashAsDouble);
   }
 
 
@@ -134,6 +139,7 @@ public class HashPrelUtil {
       expressions.add(new FieldReference(childFields.get(fields.get(i).getFieldId()), ExpressionPosition.UNKNOWN));
     }
 
-    return createHashBasedPartitionExpression(expressions, HASH_HELPER_LOGICALEXPRESSION);
+    final LogicalExpression distSeed = ValueExpressions.getInt(DIST_SEED);
+    return createHashBasedPartitionExpression(expressions, distSeed, HASH_HELPER_LOGICALEXPRESSION);
   }
 }

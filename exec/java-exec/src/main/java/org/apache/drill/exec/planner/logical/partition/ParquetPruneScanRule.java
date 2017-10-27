@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.logical.partition;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -41,13 +43,13 @@ public class ParquetPruneScanRule {
         optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new ParquetPartitionDescriptor(settings, scanRel);
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
+        return new ParquetPartitionDescriptor(settings, (DrillScanRel) scanRel);
       }
 
       @Override
       public boolean matches(RelOptRuleCall call) {
-        final DrillScanRel scan = (DrillScanRel) call.rel(2);
+        final DrillScanRel scan = call.rel(2);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for parquet based partition pruning
         if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
@@ -59,9 +61,9 @@ public class ParquetPruneScanRule {
 
       @Override
       public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
+        final DrillFilterRel filterRel =  call.rel(0);
+        final DrillProjectRel projectRel = call.rel(1);
+        final DrillScanRel scanRel =  call.rel(2);
         doOnMatch(call, filterRel, projectRel, scanRel);
       }
     };
@@ -73,13 +75,13 @@ public class ParquetPruneScanRule {
         "PruneScanRule:Filter_On_Scan_Parquet", optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new ParquetPartitionDescriptor(settings, scanRel);
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
+        return new ParquetPartitionDescriptor(settings, (DrillScanRel) scanRel);
       }
 
       @Override
       public boolean matches(RelOptRuleCall call) {
-        final DrillScanRel scan = (DrillScanRel) call.rel(1);
+        final DrillScanRel scan = call.rel(1);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for parquet based partition pruning
         if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
@@ -91,8 +93,8 @@ public class ParquetPruneScanRule {
 
       @Override
       public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
+        final DrillFilterRel filterRel = call.rel(0);
+        final DrillScanRel scanRel = call.rel(1);
         doOnMatch(call, filterRel, null, scanRel);
       }
     };

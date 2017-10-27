@@ -24,14 +24,15 @@ import org.apache.drill.exec.memory.BoundsChecking;
 
 import com.google.common.primitives.UnsignedLongs;
 
-public final class XXHash {
+public final class XXHash extends DrillHash{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XXHash.class);
 
-  static final long PRIME64_1 = UnsignedLongs.decode("11400714785074694791");
-  static final long PRIME64_2 = UnsignedLongs.decode("14029467366897019727");
-  static final long PRIME64_3 = UnsignedLongs.decode("1609587929392839161");
-  static final long PRIME64_4 = UnsignedLongs.decode("9650029242287828579");
-  static final long PRIME64_5 = UnsignedLongs.decode("2870177450012600261");
+  //UnsignedLongs.decode won't give right output(keep the value in 8 bytes unchanged).
+  static final long PRIME64_1 = 0x9e3779b185ebca87L;//UnsignedLongs.decode("11400714785074694791");
+  static final long PRIME64_2 = 0xc2b2ae3d27d4eb4fL;//UnsignedLongs.decode("14029467366897019727");
+  static final long PRIME64_3 = 0x165667b19e3779f9L;//UnsignedLongs.decode("1609587929392839161");
+  static final long PRIME64_4 = 0x85ebca77c2b2ae63L;//UnsignedLongs.decode("9650029242287828579");
+  static final long PRIME64_5 = 0x27d4eb2f165667c5L;//UnsignedLongs.decode("2870177450012600261");
 
   private static long hash64bytes(long start, long bEnd, long seed) {
     long len = bEnd - start;
@@ -114,12 +115,14 @@ public final class XXHash {
     }
 
     if (p + 4 <= bEnd) {
-      h64 ^= PlatformDependent.getInt(p) * PRIME64_1;
+      //IMPORTANT: we are expecting a long from these 4 bytes. Which means it is always positive
+      long finalInt = getIntLittleEndian(p);
+      h64 ^= finalInt * PRIME64_1;
       h64 = Long.rotateLeft(h64, 23) * PRIME64_2 + PRIME64_3;
       p += 4;
     }
     while (p < bEnd) {
-      h64 ^= PlatformDependent.getByte(p) * PRIME64_5;
+      h64 ^= ((long)(PlatformDependent.getByte(p) & 0x00ff)) * PRIME64_5;
       h64 = Long.rotateLeft(h64, 11) * PRIME64_1;
       p++;
     }
@@ -128,25 +131,17 @@ public final class XXHash {
   }
 
   private static long applyFinalHashComputation(long h64) {
-    h64 ^= h64 >> 33;
+    //IMPORTANT: using logical right shift instead of arithmetic right shift
+    h64 ^= h64 >>> 33;
     h64 *= PRIME64_2;
-    h64 ^= h64 >> 29;
+    h64 ^= h64 >>> 29;
     h64 *= PRIME64_3;
-    h64 ^= h64 >> 32;
+    h64 ^= h64 >>> 32;
     return h64;
   }
 
 
-  /* 64 bit variations */
-  public static long hash64(int val, long seed){
-    long h64 = seed + PRIME64_5;
-    h64 += 4; // add length (4 bytes) to hash value
-    h64 ^= val * PRIME64_1;
-    h64 = Long.rotateLeft(h64, 23) * PRIME64_2 + PRIME64_3;
-    return applyFinalHashComputation(h64);
-  }
-
-  public static long hash64(long val, long seed){
+  public static long hash64Internal(long val, long seed){
     long h64 = seed + PRIME64_5;
     h64 += 8; // add length (8 bytes) to hash value
     long k1 = val* PRIME64_2;
@@ -157,17 +152,22 @@ public final class XXHash {
     return applyFinalHashComputation(h64);
   }
 
-  public static long hash64(float val, long seed){
-    return hash64(Float.floatToIntBits(val), seed);
+  /**
+   * @param val the input 64 bit hash value
+   * @return converted 32 bit hash value
+   */
+  private static int convert64To32(long val) {
+    return (int) (val & 0x00FFFFFFFF);
   }
+
 
   public static long hash64(double val, long seed){
-    return hash64(Double.doubleToLongBits(val), seed);
+    return hash64Internal(Double.doubleToLongBits(val), seed);
   }
 
-  public static long hash64(int start, int end, DrillBuf buffer, long seed){
+  public static long hash64(long start, long end, DrillBuf buffer, long seed){
     if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      buffer.checkBytes(start, end);
+      buffer.checkBytes((int)start, (int)end);
     }
 
     long s = buffer.memoryAddress() + start;
@@ -176,38 +176,12 @@ public final class XXHash {
     return hash64bytes(s, e, seed);
   }
 
-  /* 32 bit variations */
-  public static int hash32(int val, long seed){
-    return convert64To32(hash64(val, seed));
-  }
-
-  public static int hash32(long val, long seed){
-    return convert64To32(hash64(val, seed));
-  }
-
-  public static int hash32(float val, long seed){
-    return convert64To32(hash64(val, seed));
-  }
-
   public static int hash32(double val, long seed){
     return convert64To32(hash64(val, seed));
   }
 
-  public static int hash32(int start, int end, DrillBuf buffer, long seed){
+  public static int hash32(int start, int end, DrillBuf buffer, int seed){
     return convert64To32(hash64(start, end, buffer, seed));
-  }
-
-  /**
-   * Convert a 64 bit hash value to a 32 bit by taking the XOR of the
-   * most significant 4 bytes with the least significant 4 bytes.
-   * @param val the input 64 bit hash value
-   * @return converted 32 bit hash value
-   */
-  private static int convert64To32(long val) {
-
-    int msb = (int) ((val >>> 32) & 0xFFFFFFFF);
-    int lsb = (int) (val);
-    return (msb ^ lsb);
   }
 
 }

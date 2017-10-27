@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,26 +17,6 @@
  */
 package org.apache.drill.jdbc;
 
-import net.hydromatic.avatica.ColumnMetaData;
-
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import static org.apache.drill.common.types.TypeProtos.MajorType;
-import static org.apache.drill.common.types.TypeProtos.MinorType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -45,6 +25,27 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
+import org.apache.drill.categories.JdbcTest;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+@Category(JdbcTest.class)
 public class DrillColumnMetaDataListTest {
 
   private DrillColumnMetaDataList emptyList;
@@ -70,13 +71,13 @@ public class DrillColumnMetaDataListTest {
     // Create mock columns
     final MaterializedField exampleIntField = mock(MaterializedField.class);
     MajorType exampleIntType = MajorType.newBuilder().setMinorType(MinorType.INT).build();
-    when(exampleIntField.getPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testInt"));
+    when(exampleIntField.getName()).thenReturn("/path/to/testInt");
     when(exampleIntField.getType()).thenReturn(exampleIntType);
     when(exampleIntField.getDataMode()).thenReturn(DataMode.OPTIONAL);
 
     final MaterializedField exampleStringField = mock(MaterializedField.class);
     MajorType exampleStringType = MajorType.newBuilder().setMinorType(MinorType.VARCHAR).build();
-    when(exampleStringField.getPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testString"));
+    when(exampleStringField.getName()).thenReturn("/path/to/testString");
     when(exampleStringField.getType()).thenReturn(exampleStringType);
     when(exampleStringField.getDataMode()).thenReturn(DataMode.REQUIRED);
 

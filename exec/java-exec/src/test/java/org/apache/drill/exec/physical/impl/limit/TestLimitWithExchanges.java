@@ -18,15 +18,20 @@
 package org.apache.drill.exec.physical.impl.limit;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.OperatorFixture;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
+@Category(OperatorTest.class)
 public class TestLimitWithExchanges extends BaseTestQuery {
+  final String WORKING_PATH = TestTools.getWorkingPath();
+  final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   @Test
   public void testLimitWithExchanges() throws Exception{
@@ -36,23 +41,20 @@ public class TestLimitWithExchanges extends BaseTestQuery {
   @Test
   public void testPushLimitPastUnionExchange() throws Exception {
     // Push limit past through UnionExchange.
-    final String WORKING_PATH = TestTools.getWorkingPath();
-    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
-
     try {
       test("alter session set `planner.slice_target` = 1");
       final String[] excludedPlan = {};
 
       // case 1. single table query.
-      final String sql = String.format("select * from dfs_test.`%s/tpchmulti/region` limit 1 offset 2", TEST_RES_PATH);
+      final String sql = String.format("select * from dfs_test.`%s/multilevel/json` limit 1 offset 2", TEST_RES_PATH);
       final String[] expectedPlan ={"(?s)Limit\\(offset=\\[2\\], fetch=\\[1\\].*UnionExchange.*Limit\\(fetch=\\[3\\]\\).*Scan"};
       testLimitHelper(sql, expectedPlan, excludedPlan, 1);
 
-      final String sql2 = String.format("select * from dfs_test.`%s/tpchmulti/region` limit 1 offset 0", TEST_RES_PATH);
+      final String sql2 = String.format("select * from dfs_test.`%s/multilevel/json` limit 1 offset 0", TEST_RES_PATH);
       final String[] expectedPlan2 = {"(?s)Limit\\(offset=\\[0\\], fetch=\\[1\\].*UnionExchange.*Limit\\(fetch=\\[1\\]\\).*Scan"};
       testLimitHelper(sql2, expectedPlan2, excludedPlan, 1);
 
-      final String sql3 = String.format("select * from dfs_test.`%s/tpchmulti/region` limit 1", TEST_RES_PATH);
+      final String sql3 = String.format("select * from dfs_test.`%s/multilevel/json` limit 1", TEST_RES_PATH);
       final String[] expectedPlan3 = {"(?s)Limit\\(fetch=\\[1\\].*UnionExchange.*Limit\\(fetch=\\[1\\]\\).*Scan"};
       testLimitHelper(sql3, expectedPlan3, excludedPlan, 1);
 
@@ -72,16 +74,14 @@ public class TestLimitWithExchanges extends BaseTestQuery {
       final String[] expectedPlan5 = {"(?s)Limit\\(fetch=\\[1\\].*UnionExchange.*Limit\\(fetch=\\[1\\]\\).*Join"};
       testLimitHelper(sql5, expectedPlan5, excludedPlan, 1);
     } finally {
-      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_OPTION.getDefault().getValue());
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `%s` = %s", ExecConstants.SLICE_TARGET, testOptionSet.getDefault(ExecConstants.SLICE_TARGET).getValue());
     }
   }
 
   @Test
   public void testNegPushLimitPastUnionExchange() throws Exception {
     // Negative case: should not push limit past through UnionExchange.
-    final String WORKING_PATH = TestTools.getWorkingPath();
-    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
-
     try {
       test("alter session set `planner.slice_target` = 1");
       final String[] expectedPlan ={};
@@ -96,8 +96,48 @@ public class TestLimitWithExchanges extends BaseTestQuery {
 
       testLimitHelper(sql2, expectedPlan, excludedPlan2, 5);
     } finally {
-      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_OPTION.getDefault().getValue());
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `planner.slice_target` = " + testOptionSet.getDefault(ExecConstants.SLICE_TARGET).getValue());
     }
+  }
+
+  @Test
+  public void testLimitImpactExchange() throws Exception {
+    try {
+      test("alter session set `planner.slice_target` = 5" );
+
+      // nation has 3 files, total 25 rows.
+      // Given slice_target = 5, if # of rows to fetch is < 5 : do NOT insert Exchange, and the query should run in single fragment.
+      //                         if # of row to fetch is >= 5:  do insert exchange, and query should run in multiple fragments.
+      final String sql = String.format("select * from dfs_test.`%s/tpchmulti/nation` limit 2", TEST_RES_PATH);  // Test Limit_On_Scan rule.
+      final String sql2 = String.format("select n_nationkey + 1000 from dfs_test.`%s/tpchmulti/nation` limit 2", TEST_RES_PATH); // Test Limit_On_Project rule.
+      final String [] expectedPlan = {};
+      final String [] excludedPlan = {"UnionExchange"};
+
+      testLimitHelper(sql, expectedPlan, excludedPlan, 2);
+      testLimitHelper(sql2, expectedPlan, excludedPlan, 2);
+
+      final String sql3 = String.format("select * from dfs_test.`%s/tpchmulti/nation` limit 10", TEST_RES_PATH); // Test Limit_On_Scan rule.
+      final String sql4 = String.format("select n_nationkey + 1000 from dfs_test.`%s/tpchmulti/nation` limit 10", TEST_RES_PATH); // Test Limit_On_Project rule.
+
+      final String [] expectedPlan2 = {"UnionExchange"};
+      final String [] excludedPlan2 = {};
+
+      testLimitHelper(sql3, expectedPlan2, excludedPlan2, 10);
+      testLimitHelper(sql4, expectedPlan2, excludedPlan2, 10);
+    } finally {
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
+      test("alter session set `planner.slice_target` = " + testOptionSet.getDefault(ExecConstants.SLICE_TARGET).getValue());
+    }
+  }
+
+  @Test
+  public void TestLimitAllOnParquet() throws Exception {
+    final String query = String.format("select t.n_nationkey from cp.`tpch/nation.parquet` t limit all offset 5", TEST_RES_PATH);
+    final String [] expectedPlan = {};
+    final String [] excludedPlan = {"UnionExchange"};
+
+    testLimitHelper(query, expectedPlan, excludedPlan, 20);
   }
 
   private void testLimitHelper(final String sql, final String[] expectedPlan, final String[] excludedPattern, int expectedRecordCount) throws Exception {
@@ -108,5 +148,4 @@ public class TestLimitWithExchanges extends BaseTestQuery {
     final int actualRecordCount = testSql(sql);
     assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s", expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
-
 }

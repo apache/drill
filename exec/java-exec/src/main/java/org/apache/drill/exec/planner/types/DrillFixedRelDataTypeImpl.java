@@ -91,7 +91,7 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
 
   @Override
   public RelDataTypePrecedenceList getPrecedenceList() {
-    return new SqlTypeExplicitPrecedenceList((List) Collections.emptyList());
+    return new SqlTypeExplicitPrecedenceList(Collections.<SqlTypeName>emptyList());
   }
 
   @Override

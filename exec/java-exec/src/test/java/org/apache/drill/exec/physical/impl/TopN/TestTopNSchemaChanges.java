@@ -18,14 +18,16 @@
 package org.apache.drill.exec.physical.impl.TopN;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.TestBuilder;
-import org.apache.drill.exec.physical.impl.aggregate.InternalBatch;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
+@Category(OperatorTest.class)
 public class TestTopNSchemaChanges extends BaseTestQuery {
 
   @Test
@@ -155,7 +157,7 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
   public void testMissingColumn() throws Exception {
     final File data_dir = new File(BaseTestQuery.getTempDir("topn-schemachanges"));
     data_dir.mkdirs();
-    System.out.println(data_dir);
+
     BufferedWriter writer = new BufferedWriter(new FileWriter(new File(data_dir, "d1.json")));
     for (int i = 0; i < 100; i++) {
       writer.write(String.format("{ \"kl1\" : %d , \"vl1\": %d }\n", i, i));
@@ -166,6 +168,7 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
       writer.write(String.format("{ \"kl\" : %f , \"vl\": %f }\n", (float)i, (float)i));
     }
     writer.close();
+
     writer = new BufferedWriter(new FileWriter(new File(data_dir, "d3.json")));
     for (int i = 200; i < 300; i++) {
       writer.write(String.format("{ \"kl2\" : \"%s\" , \"vl2\": \"%s\" }\n", i, i));
@@ -194,16 +197,17 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
       .baselineValues(null, null, 2l, 2l, null, null);
     builder.go();
 
-    query = String.format("select kl, vl, kl1, vl1, kl2, vl2 from dfs_test.`%s` order by kl2 desc limit 3", data_dir.toPath().toString());
+    query = String.format("select kl, vl, kl1, vl1, kl2, vl2 from dfs_test.`%s` order by kl2 limit 3", data_dir.toPath().toString());
     builder = testBuilder()
       .sqlQuery(query)
       .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
       .ordered()
       .baselineColumns("kl", "vl", "kl1", "vl1", "kl2", "vl2")
-      .baselineValues(null, null, null, null, "299", "299")
-      .baselineValues(null, null, null, null, "298", "298")
-      .baselineValues(null, null, null, null, "297", "297");
+      .baselineValues(null, null, null, null, "200", "200")
+      .baselineValues(null, null, null, null, "201", "201")
+      .baselineValues(null, null, null, null, "202", "202");
     builder.go();
+
     // Since client can't handle new columns which are not in first batch, we won't test output of query.
     // Query should run w/o any errors.
     test(String.format("select * from dfs_test.`%s` order by kl limit 3", data_dir.toPath().toString()));

@@ -17,31 +17,30 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.physical.visitor;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.tools.RelConversionException;
-
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.planner.StarColumnHelper;
-import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.planner.physical.ProjectPrel;
-import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
-import org.apache.drill.exec.planner.types.RelDataTypeHolder;
-import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.planner.physical.ProjectPrel;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
+import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, RelConversionException> {
 
@@ -76,8 +75,8 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
 
     List<RexNode> exprList = new ArrayList<>();
 
-    List<RelDataTypeField> relDataTypes = new ArrayList();
-    List<RelDataTypeField> origRelDataTypes = new ArrayList();
+    List<RelDataTypeField> relDataTypes = new ArrayList<>();
+    List<RelDataTypeField> origRelDataTypes = new ArrayList<>();
     int i = 0;
     final int lastColumnReferenced = PrelUtil.getLastUsedColumnReference(project.getProjects());
 
@@ -101,7 +100,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
 
     ProjectPrel childProject;
 
-    List<RexNode> allExprs = new ArrayList();
+    List<RexNode> allExprs = new ArrayList<>();
     int exprIndex = 0;
     List<String> fieldNames = originalInput.getRowType().getFieldNames();
     for (int index = 0; index < lastRexInput; index++) {

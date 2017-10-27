@@ -30,6 +30,8 @@ public interface JsonProcessor {
 
   public static enum ReadState {
     END_OF_STREAM,
+    JSON_RECORD_PARSE_ERROR,
+    JSON_RECORD_PARSE_EOF_ERROR,
     WRITE_SUCCEED
   }
 
@@ -50,4 +52,7 @@ public interface JsonProcessor {
                                                        String msg,
                                                        Object... args);
 
+  public boolean ignoreJSONParseError() ;
+
+  public void setIgnoreJSONParseErrors(boolean ignoreJSONParseErrors);
 }

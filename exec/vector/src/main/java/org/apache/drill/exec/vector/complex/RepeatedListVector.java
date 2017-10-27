@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,15 +23,15 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedListHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -64,7 +64,7 @@ public class RepeatedListVector extends AbstractContainerVector
 
       @Override
       public Object getObject(int index) {
-        final List<Object> list = new JsonStringArrayList();
+        final List<Object> list = new JsonStringArrayList<>();
         final int start = offsets.getAccessor().get(index);
         final int until = offsets.getAccessor().get(index+1);
         for (int i = start; i < until; i++) {
@@ -120,7 +120,6 @@ public class RepeatedListVector extends AbstractContainerVector
       }
     }
 
-
     public class DelegateTransferPair implements TransferPair {
       private final DelegateRepeatedVector target;
       private final TransferPair[] children;
@@ -172,7 +171,7 @@ public class RepeatedListVector extends AbstractContainerVector
       }
     }
 
-    public DelegateRepeatedVector(SchemaPath path, BufferAllocator allocator) {
+    public DelegateRepeatedVector(String path, BufferAllocator allocator) {
       this(MaterializedField.create(path, TYPE), allocator);
     }
 
@@ -189,7 +188,7 @@ public class RepeatedListVector extends AbstractContainerVector
     }
 
     @Override
-    public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
       return makeTransferPair(new DelegateRepeatedVector(ref, allocator));
     }
 
@@ -220,6 +219,10 @@ public class RepeatedListVector extends AbstractContainerVector
       ephPair.copyValueSafe(fromIndex, thisIndex);
     }
 
+    @Override
+    public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+      copyFromSafe(fromIndex, toIndex, (DelegateRepeatedVector) from);
+    }
   }
 
   protected class RepeatedListTransferPair implements TransferPair {
@@ -229,6 +232,7 @@ public class RepeatedListVector extends AbstractContainerVector
       this.delegate = delegate;
     }
 
+    @Override
     public void transfer() {
       delegate.transfer();
     }
@@ -250,7 +254,7 @@ public class RepeatedListVector extends AbstractContainerVector
     }
   }
 
-  public RepeatedListVector(SchemaPath path, BufferAllocator allocator, CallBack callBack) {
+  public RepeatedListVector(String path, BufferAllocator allocator, CallBack callBack) {
     this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
@@ -315,6 +319,7 @@ public class RepeatedListVector extends AbstractContainerVector
     if (result.isCreated() && callBack != null) {
       callBack.doWork();
     }
+    this.field = delegate.getField();
     return result;
   }
 
@@ -349,7 +354,7 @@ public class RepeatedListVector extends AbstractContainerVector
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new RepeatedListTransferPair(delegate.getTransferPair(ref, allocator));
   }
 
@@ -412,6 +417,7 @@ public class RepeatedListVector extends AbstractContainerVector
   public void allocateNew(int valueCount, int innerValueCount) {
     clear();
     getOffsetVector().allocateNew(valueCount + 1);
+    getOffsetVector().getMutator().setSafe(0, 0);
     getMutator().reset();
   }
 
@@ -425,5 +431,30 @@ public class RepeatedListVector extends AbstractContainerVector
 
   public void copyFromSafe(int fromIndex, int thisIndex, RepeatedListVector from) {
     delegate.copyFromSafe(fromIndex, thisIndex, from.delegate);
+  }
+
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (RepeatedListVector) from);
+  }
+
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    delegate.collectLedgers(ledgers);
+  }
+
+  @Override
+  public int getPayloadByteCount(int valueCount) {
+    return delegate.getPayloadByteCount(valueCount);
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    // TODO: Figure out how to test this scenario, then what to do...
+    throw new UnsupportedOperationException("Exchange() not yet supported for repeated lists");
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
   }
 }

@@ -62,7 +62,7 @@ public class FunctionCallFactory {
     opToFuncTable.put("u-", "negative");
   }
 
-  private static String replaceOpWithFuncName(String op) {
+  public static String replaceOpWithFuncName(String op) {
     return (opToFuncTable.containsKey(op)) ? (opToFuncTable.get(op)) : op;
   }
 

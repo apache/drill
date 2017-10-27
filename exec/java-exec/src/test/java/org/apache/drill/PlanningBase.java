@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,7 +48,7 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
@@ -76,12 +76,13 @@ public class PlanningBase extends ExecTest{
 
   protected void testSqlPlan(String sqlCommands) throws Exception {
     final String[] sqlStrings = sqlCommands.split(";");
-    final LocalPStoreProvider provider = new LocalPStoreProvider(config);
+    final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(config);
     provider.start();
     final ScanResult scanResult = ClassPathScanner.fromPrescan(config);
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
-    final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider);
+    final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider, config);
     systemOptions.init();
+    @SuppressWarnings("resource")
     final UserSession userSession = UserSession.Builder.newBuilder().withOptionManager(systemOptions).build();
     final SessionOptionManager sessionOptions = (SessionOptionManager) userSession.getOptions();
     final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);
@@ -97,7 +98,7 @@ public class PlanningBase extends ExecTest{
         result = config;
         dbContext.getOptionManager();
         result = systemOptions;
-        dbContext.getPersistentStoreProvider();
+        dbContext.getStoreProvider();
         result = provider;
         dbContext.getClasspathScan();
         result = scanResult;
@@ -109,7 +110,7 @@ public class PlanningBase extends ExecTest{
     final StoragePluginRegistry registry = new StoragePluginRegistryImpl(dbContext);
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
-    final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
+    final DrillOperatorTable table = new DrillOperatorTable(functionRegistry, systemOptions);
     final SchemaPlus root = SimpleCalciteSchema.createRootSchema(false);
     registry.getSchemaFactory().registerSchemas(SchemaConfig.newBuilder("foo", context).build(), root);
 
@@ -150,8 +151,8 @@ public class PlanningBase extends ExecTest{
       if (sql.trim().isEmpty()) {
         continue;
       }
-      final DrillSqlWorker worker = new DrillSqlWorker(context);
-      final PhysicalPlan p = worker.getPlan(sql);
+      @SuppressWarnings("unused")
+      final PhysicalPlan p = DrillSqlWorker.getPlan(context, sql);
     }
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,10 +39,10 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
@@ -105,9 +105,12 @@ public class DrillParquetReader extends AbstractRecordReader {
   private List<SchemaPath> columnsNotFound=null;
   boolean noColumnsFound = false; // true if none of the columns in the projection list is found in the schema
 
+  // See DRILL-4203
+  private final ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates;
 
   public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry,
-      List<SchemaPath> columns, DrillFileSystem fileSystem) {
+      List<SchemaPath> columns, DrillFileSystem fileSystem, ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
+    this.containsCorruptedDates = containsCorruptedDates;
     this.footer = footer;
     this.fileSystem = fileSystem;
     this.entry = entry;
@@ -189,7 +192,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   }
 
   @Override
-  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+  public void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException {
     try {
       for (final ValueVector v : vectorMap.values()) {
         AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
@@ -205,27 +208,28 @@ public class DrillParquetReader extends AbstractRecordReader {
     try {
       this.operatorContext = context;
       schema = footer.getFileMetaData().getSchema();
-      MessageType projection = null;
+      MessageType projection;
 
       if (isStarQuery()) {
         projection = schema;
       } else {
-        columnsNotFound=new ArrayList<SchemaPath>();
+        columnsNotFound = new ArrayList<>();
         projection = getProjection(schema, getColumns(), columnsNotFound);
-        if(projection == null){
+        if (projection == null) {
             projection = schema;
         }
-        if(columnsNotFound!=null && columnsNotFound.size()>0) {
+        if (columnsNotFound != null && columnsNotFound.size() > 0) {
           nullFilledVectors = new ArrayList<>();
-          for(SchemaPath col: columnsNotFound){
+          for (SchemaPath col: columnsNotFound) {
+            // col.toExpr() is used here as field name since we don't want to see these fields in the existing maps
             nullFilledVectors.add(
-              (NullableIntVector)output.addField(MaterializedField.create(col,
+              (NullableIntVector) output.addField(MaterializedField.create(col.toExpr(),
                   org.apache.drill.common.types.Types.optional(TypeProtos.MinorType.INT)),
                 (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT,
                   TypeProtos.DataMode.OPTIONAL)));
           }
-          if(columnsNotFound.size()==getColumns().size()){
-            noColumnsFound=true;
+          if (columnsNotFound.size() == getColumns().size()) {
+            noColumnsFound = true;
           }
         }
       }
@@ -264,7 +268,7 @@ public class DrillParquetReader extends AbstractRecordReader {
         // Discard the columns not found in the schema when create DrillParquetRecordMaterializer, since they have been added to output already.
         final Collection<SchemaPath> columns = columnsNotFound == null || columnsNotFound.size() == 0 ? getColumns(): CollectionUtils.subtract(getColumns(), columnsNotFound);
         recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, columns,
-            fragmentContext.getOptions());
+            fragmentContext.getOptions(), containsCorruptedDates);
         primitiveVectors = writer.getMapVector().getPrimitiveVectors();
         recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
       }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -81,8 +81,9 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     options.put("extension", "json");
     options.put("extended", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_EXTENDED_TYPES)));
     options.put("uglify", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_UGLIFY)));
+    options.put("skipnulls", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_SKIPNULLFIELDS)));
 
-    RecordWriter recordWriter = new JsonRecordWriter();
+    RecordWriter recordWriter = new JsonRecordWriter(writer.getStorageStrategy());
     recordWriter.init(options);
 
     return recordWriter;
@@ -105,20 +106,32 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
     @Override
     public int hashCode() {
-      return 31;
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
+      return result;
     }
 
     @Override
     public boolean equals(Object obj) {
       if (this == obj) {
         return true;
-      } else if (obj == null) {
-        return false;
-      } else if (getClass() == obj.getClass()) {
-        return true;
       }
-
-      return false;
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      JSONFormatConfig other = (JSONFormatConfig) obj;
+      if (extensions == null) {
+        if (other.extensions != null) {
+          return false;
+        }
+      } else if (!extensions.equals(other.extensions)) {
+        return false;
+      }
+      return true;
     }
   }
 
@@ -136,5 +149,4 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   public boolean supportsPushDown() {
     return true;
   }
-
 }

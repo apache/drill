@@ -25,7 +25,8 @@ public enum HandshakeStatus implements com.dyuproject.protostuff.EnumLite<Handsh
     SUCCESS(1),
     RPC_VERSION_MISMATCH(2),
     AUTH_FAILED(3),
-    UNKNOWN_FAILURE(4);
+    UNKNOWN_FAILURE(4),
+    AUTH_REQUIRED(5);
     
     public final int number;
     
@@ -47,6 +48,7 @@ public enum HandshakeStatus implements com.dyuproject.protostuff.EnumLite<Handsh
             case 2: return RPC_VERSION_MISMATCH;
             case 3: return AUTH_FAILED;
             case 4: return UNKNOWN_FAILURE;
+            case 5: return AUTH_REQUIRED;
             default: return null;
         }
     }

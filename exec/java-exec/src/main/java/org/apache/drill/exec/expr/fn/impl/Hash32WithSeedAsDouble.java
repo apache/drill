@@ -59,7 +59,7 @@ public class Hash32WithSeedAsDouble {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((double) in.value, seed.value);
       }
     }
   }
@@ -76,7 +76,7 @@ public class Hash32WithSeedAsDouble {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((double) in.value, seed.value);
     }
   }
 
@@ -95,7 +95,7 @@ public class Hash32WithSeedAsDouble {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -112,7 +112,7 @@ public class Hash32WithSeedAsDouble {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -132,7 +132,7 @@ public class Hash32WithSeedAsDouble {
         out.value = seed.value;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((double) in.value, seed.value);
       }
     }
   }
@@ -152,7 +152,7 @@ public class Hash32WithSeedAsDouble {
         out.value = seed.value;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((double) in.value, seed.value);
       }
     }
   }
@@ -169,7 +169,7 @@ public class Hash32WithSeedAsDouble {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((double) in.value, seed.value);
     }
   }
 
@@ -185,7 +185,7 @@ public class Hash32WithSeedAsDouble {
 
     public void eval() {
       // TODO: implement hash function for other types
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((double) in.value, seed.value);
     }
   }
 
@@ -201,7 +201,7 @@ public class Hash32WithSeedAsDouble {
 
     public void eval() {
       java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
     }
   }
 
@@ -220,7 +220,7 @@ public class Hash32WithSeedAsDouble {
         out.value = seed.value;
       } else {
         java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
       }
     }
   }
@@ -237,7 +237,7 @@ public class Hash32WithSeedAsDouble {
 
     public void eval() {
       java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
     }
   }
 
@@ -256,7 +256,7 @@ public class Hash32WithSeedAsDouble {
         out.value = seed.value;
       } else {
         java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
       }
     }
   }
@@ -274,7 +274,7 @@ public class Hash32WithSeedAsDouble {
     public void eval() {
       java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
           in.start, in.nDecimalDigits, in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
     }
   }
 
@@ -294,7 +294,7 @@ public class Hash32WithSeedAsDouble {
       } else {
         java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
       }
     }
   }
@@ -312,7 +312,7 @@ public class Hash32WithSeedAsDouble {
     public void eval() {
       java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
           in.start, in.nDecimalDigits, in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
     }
   }
 
@@ -332,7 +332,7 @@ public class Hash32WithSeedAsDouble {
       } else {
         java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), seed.value);
       }
     }
   }

@@ -132,7 +132,7 @@ public final class ScanResult {
    */
   public <T> Set<Class<? extends T>> getImplementations(Class<T> c) {
     ParentClassDescriptor p = getImplementations(c.getName());
-    Stopwatch watch = new Stopwatch().start();
+    Stopwatch watch = Stopwatch.createStarted();
     Set<Class<? extends T>> result = new HashSet<>();
     try {
       if (p != null) {

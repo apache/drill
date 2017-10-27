@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,43 +23,39 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
-
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, OperatorTest.class})
 public class TestMergeJoin extends PopUnitTestBase {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
   private final DrillConfig c = DrillConfig.create();
@@ -67,15 +63,9 @@ public class TestMergeJoin extends PopUnitTestBase {
   @Test
   @Ignore // this doesn't have a sort.  it also causes an infinite loop.  these may or may not be related.
   public void simpleEqualityJoin(@Injectable final DrillbitContext bitContext,
-                                 @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                                 @Injectable UserClientConnection connection) throws Throwable {
 
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/join/merge_join.json"), Charsets.UTF_8));
@@ -87,11 +77,11 @@ public class TestMergeJoin extends PopUnitTestBase {
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
       for (final ValueVector v : exec) {
-        System.out.print("[" + v.getField().toExpr() + "]        ");
+        System.out.print("[" + v.getField().getName() + "]        ");
       }
       System.out.println("\n");
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
-        final List<Object> row = new ArrayList();
+        final List<Object> row = new ArrayList<>();
         for (final ValueVector v : exec) {
            row.add(v.getAccessor().getObject(valueIdx));
         }
@@ -121,14 +111,8 @@ public class TestMergeJoin extends PopUnitTestBase {
   @Test
   @Ignore
   public void orderedEqualityLeftJoin(@Injectable final DrillbitContext bitContext,
-                                      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getConfig(); result = c;
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+                                      @Injectable UserClientConnection connection) throws Throwable {
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
         new StoragePluginRegistryImpl(bitContext));
@@ -150,7 +134,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {
@@ -178,14 +162,8 @@ public class TestMergeJoin extends PopUnitTestBase {
   @Test
   @Ignore
   public void orderedEqualityInnerJoin(@Injectable final DrillbitContext bitContext,
-                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getConfig(); result = c;
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+                                       @Injectable UserClientConnection connection) throws Throwable {
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
         new StoragePluginRegistryImpl(bitContext));
@@ -207,7 +185,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {
@@ -235,14 +213,8 @@ public class TestMergeJoin extends PopUnitTestBase {
   @Test
   @Ignore
   public void orderedEqualityMultiBatchJoin(@Injectable final DrillbitContext bitContext,
-                                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getConfig(); result = c;
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+                                            @Injectable UserClientConnection connection) throws Throwable {
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
         new StoragePluginRegistryImpl(bitContext));
@@ -263,7 +235,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {
@@ -290,13 +262,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
   @Test
   public void testJoinBatchSize(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getConfig(); result = c;
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/join/join_batchsize.json"), Charsets.UTF_8));

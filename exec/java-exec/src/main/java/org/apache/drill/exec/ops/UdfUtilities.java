@@ -17,9 +17,14 @@
  ******************************************************************************/
 package org.apache.drill.exec.ops;
 
-import com.google.common.collect.ImmutableMap;
-import io.netty.buffer.DrillBuf;
+import com.google.common.base.Function;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.store.PartitionExplorer;
+
+import com.google.common.collect.ImmutableMap;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * Defines the query state and shared resources available to UDFs through
@@ -31,8 +36,8 @@ public interface UdfUtilities {
 
   // Map between injectable classes and their respective getter methods
   // used for code generation
-  public static final ImmutableMap<Class, String> INJECTABLE_GETTER_METHODS =
-      new ImmutableMap.Builder<Class, String>()
+  public static final ImmutableMap<Class<?>, String> INJECTABLE_GETTER_METHODS =
+      new ImmutableMap.Builder<Class<?>, String>()
           .put(DrillBuf.class, "getManagedBuffer")
           .put(PartitionExplorer.class, "getPartitionExplorer")
           .put(ContextInformation.class, "getContextInformation")
@@ -82,4 +87,12 @@ public interface UdfUtilities {
    * @return - an object for exploring partitions of all available schemas
    */
   PartitionExplorer getPartitionExplorer();
+
+  /**
+   * Works with value holders cache which holds constant value and its wrapper by type.
+   * If value is absent uses holderInitializer to create holder and adds it to cache.
+   *
+   * @return - a wrapper object for an constant value.
+   */
+  ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer);
 }

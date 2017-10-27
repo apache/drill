@@ -45,16 +45,11 @@ public class ConvertFromImpalaTimestamp {
       in.buffer.readerIndex(in.start);
       long nanosOfDay = in.buffer.readLong();
       int julianDay = in.buffer.readInt();
-      /* We use the same implementation as org.joda.time.DateTimeUtils.fromJulianDay but avoid rounding errors
-         Note we need to subtract half of a day because julian days are recorded as starting at noon.
-         From Joda :
-              public static final long fromJulianDay(double julianDay) {
-                484            double epochDay = julianDay - 2440587.5d;
-                485            return (long) (epochDay * 86400000d);
-                486        }
-      */
-      long dateTime = (julianDay - 2440588)*86400000L + (nanosOfDay / 1000000);
-      out.value = new org.joda.time.DateTime((long) dateTime, org.joda.time.chrono.JulianChronology.getInstance()).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+      long dateTime = (julianDay - org.apache.drill.exec.store.parquet.ParquetReaderUtility.JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) *
+          org.joda.time.DateTimeConstants.MILLIS_PER_DAY + (nanosOfDay / org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.NANOS_PER_MILLISECOND);
+      /* Note: This function uses local timezone for drill backward compatibility
+               and to avoid issues while reading hive parquet files */
+      out.value = org.joda.time.DateTimeZone.getDefault().convertUTCToLocal(dateTime);
     }
   }
 }

@@ -21,13 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.planner.fragment.ParallelizationInfo;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 public abstract class AbstractExchange extends AbstractSingle implements Exchange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractExchange.class);
@@ -93,7 +94,7 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
       }
     }
 
-    return new ArrayList(affinityMap.values());
+    return new ArrayList<>(affinityMap.values());
   }
 
   protected void setupSenders(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,33 +18,40 @@
 package org.apache.drill.hbase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Map.Entry;
 
+import com.google.common.collect.Lists;
+import org.apache.drill.categories.HbaseStorageTest;
 import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
-import org.apache.drill.exec.store.hbase.config.HBasePStoreProvider;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.drill.exec.store.hbase.config.HBasePersistentStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.categories.SlowTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HbaseStorageTest.class})
 public class TestHBaseTableProvider extends BaseHBaseTest {
 
-  private static HBasePStoreProvider provider;
+  private static HBasePersistentStoreProvider provider;
 
   @BeforeClass // mask HBase cluster start function
   public static void setUpBeforeTestHBaseTableProvider() throws Exception {
-    provider = new HBasePStoreProvider(storagePluginConfig.getHBaseConf(), "drill_store");
+    provider = new HBasePersistentStoreProvider(storagePluginConfig.getHBaseConf(), "drill_store");
     provider.start();
   }
 
   @Test
-  public void testTableProvider() throws IOException {
+  public void testTableProvider() throws StoreException {
     LogicalPlanPersistence lp = PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(config);
-    PStore<String> hbaseStore = provider.getStore(PStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase").build());
+    PersistentStore<String> hbaseStore = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase").build());
     hbaseStore.put("", "v0");
     hbaseStore.put("k1", "v1");
     hbaseStore.put("k2", "v2");
@@ -56,14 +63,17 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     assertEquals("v0", hbaseStore.get(""));
     assertEquals("testValue", hbaseStore.get(".test"));
 
+    assertTrue(hbaseStore.contains(""));
+    assertFalse(hbaseStore.contains("unknown_key"));
+
     int rowCount = 0;
-    for (Entry<String, String> entry : hbaseStore) {
+    for (Entry<String, String> entry : Lists.newArrayList(hbaseStore.getAll())) {
       rowCount++;
       System.out.println(entry.getKey() + "=" + entry.getValue());
     }
     assertEquals(7, rowCount);
 
-    PStore<String> hbaseTestStore = provider.getStore(PStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase.test").build());
+    PersistentStore<String> hbaseTestStore = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase.test").build());
     hbaseTestStore.put("", "v0");
     hbaseTestStore.put("k1", "v1");
     hbaseTestStore.put("k2", "v2");
@@ -75,7 +85,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     assertEquals("testValue", hbaseStore.get(".test"));
 
     rowCount = 0;
-    for (Entry<String, String> entry : hbaseTestStore) {
+    for (Entry<String, String> entry : Lists.newArrayList(hbaseTestStore.getAll())) {
       rowCount++;
       System.out.println(entry.getKey() + "=" + entry.getValue());
     }

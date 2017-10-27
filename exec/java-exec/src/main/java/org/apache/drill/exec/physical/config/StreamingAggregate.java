@@ -27,29 +27,31 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.List;
+
 @JsonTypeName("streaming-aggregate")
 public class StreamingAggregate extends AbstractSingle {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggregate.class);
 
-  private final NamedExpression[] keys;
-  private final NamedExpression[] exprs;
+  private final List<NamedExpression> keys;
+  private final List<NamedExpression> exprs;
 
   private final float cardinality;
 
   @JsonCreator
-  public StreamingAggregate(@JsonProperty("child") PhysicalOperator child, @JsonProperty("keys") NamedExpression[] keys, @JsonProperty("exprs") NamedExpression[] exprs, @JsonProperty("cardinality") float cardinality) {
+  public StreamingAggregate(@JsonProperty("child") PhysicalOperator child, @JsonProperty("keys") List<NamedExpression> keys, @JsonProperty("exprs") List<NamedExpression> exprs, @JsonProperty("cardinality") float cardinality) {
     super(child);
     this.keys = keys;
     this.exprs = exprs;
     this.cardinality = cardinality;
   }
 
-  public NamedExpression[] getKeys() {
+  public List<NamedExpression> getKeys() {
     return keys;
   }
 
-  public NamedExpression[] getExprs() {
+  public List<NamedExpression> getExprs() {
     return exprs;
   }
 

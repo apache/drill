@@ -48,7 +48,7 @@ public interface LogicalOperator extends GraphValue<LogicalOperator> {
 
   public void registerAsSubscriber(LogicalOperator operator);
 
-  NodeBuilder nodeBuilder();
+  NodeBuilder<?> nodeBuilder();
 
   public interface NodeBuilder<T extends LogicalOperator> {
     ObjectNode convert(ObjectMapper mapper, T operator, Integer inputId);

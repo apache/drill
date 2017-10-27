@@ -17,7 +17,23 @@
  */
 package org.apache.drill.exec.expr.holders;
 
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.vector.complex.ListVector;
+
 public final class RepeatedListHolder implements ValueHolder{
-  public int start;
-  public int end;
+
+    public static final TypeProtos.MajorType TYPE = Types.repeated(TypeProtos.MinorType.LIST);
+
+    public TypeProtos.MajorType getType() {return TYPE;}
+
+    /** The first index (inclusive) into the Vector. **/
+    public int start;
+
+    /** The last index (exclusive) into the Vector. **/
+    public int end;
+
+    /** The Vector holding the actual values. **/
+    public ListVector vector;
+
 }

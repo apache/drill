@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,11 +24,14 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Types;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Function;
+import org.junit.experimental.categories.Category;
 
+@Category(JdbcTest.class)
 public class TestJdbcQuery extends JdbcTestQueryBase {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
@@ -126,7 +129,7 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
   public void testSimilarNotSimilar() throws Exception{
     JdbcAssert.withNoDefaultSchema()
       .sql("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.`TABLES` "+
-        "WHERE TABLE_NAME SIMILAR TO '%(H|I)E%' AND TABLE_NAME NOT SIMILAR TO 'C%'")
+        "WHERE TABLE_NAME SIMILAR TO '%(H|I)E%' AND TABLE_NAME NOT SIMILAR TO 'C%' ORDER BY TABLE_NAME")
       .returns(
         "TABLE_NAME=SCHEMATA\n" +
         "TABLE_NAME=VIEWS\n"
@@ -367,4 +370,34 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
             "TIME_INT_ADD=6\n"
         );
   }
+
+  @Test // DRILL-1051
+  public void testOldDateTimeJulianCalendar() throws Exception {
+    // Should work with any timezone
+    JdbcAssert.withNoDefaultSchema()
+        .sql("select cast(to_timestamp('1581-12-01 23:32:01', 'yyyy-MM-dd HH:mm:ss') as date) as `DATE`, " +
+            "to_timestamp('1581-12-01 23:32:01', 'yyyy-MM-dd HH:mm:ss') as `TIMESTAMP`, " +
+            "cast(to_timestamp('1581-12-01 23:32:01', 'yyyy-MM-dd HH:mm:ss') as time) as `TIME` " +
+            "from (VALUES(1))")
+        .returns("DATE=1581-12-01; TIMESTAMP=1581-12-01 23:32:01.0; TIME=23:32:01");
+  }
+
+  @Test // DRILL-1051
+  public void testOldDateTimeLocalMeanTime() throws Exception {
+    // Should work with any timezone
+    JdbcAssert.withNoDefaultSchema()
+        .sql("select cast(to_timestamp('1883-11-16 01:32:01', 'yyyy-MM-dd HH:mm:ss') as date) as `DATE`, " +
+            "to_timestamp('1883-11-16 01:32:01', 'yyyy-MM-dd HH:mm:ss') as `TIMESTAMP`, " +
+            "cast(to_timestamp('1883-11-16 01:32:01', 'yyyy-MM-dd HH:mm:ss') as time) as `TIME` " +
+            "from (VALUES(1))")
+        .returns("DATE=1883-11-16; TIMESTAMP=1883-11-16 01:32:01.0; TIME=01:32:01");
+  }
+
+  @Test // DRILL-5792
+  public void testConvertFromInEmptyInputSql() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT CONVERT_FROM(columns[1], 'JSON') as col1 from cp.`empty.csv`")
+        .returns("");
+  }
+
 }

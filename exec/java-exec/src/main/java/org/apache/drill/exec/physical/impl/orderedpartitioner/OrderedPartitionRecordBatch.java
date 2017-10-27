@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -70,7 +70,6 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -88,8 +87,8 @@ import com.sun.codemodel.JExpr;
 public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPartitionSender> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionRecordBatch.class);
 
-  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
-  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+//  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+//  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
   public static final CacheConfig<String, CachedVectorContainer> SINGLE_CACHE_CONFIG = CacheConfig //
       .newBuilder(CachedVectorContainer.class) //
@@ -142,6 +141,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     this.completionFactor = pop.getCompletionFactor();
 
     DistributedCache cache = null;
+    // Clearly, this code is not used!
     this.mmap = cache.getMultiMap(MULTI_CACHE_CONFIG);
     this.tableMap = cache.getMap(SINGLE_CACHE_CONFIG);
     Preconditions.checkNotNull(tableMap);
@@ -150,11 +150,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     this.minorFragmentSampleCount = cache.getCounter(mapKey);
 
     SchemaPath outputPath = popConfig.getRef();
-    MaterializedField outputField = MaterializedField.create(outputPath, Types.required(TypeProtos.MinorType.INT));
+    MaterializedField outputField = MaterializedField.create(outputPath.getAsNamePart().getName(), Types.required(TypeProtos.MinorType.INT));
     this.partitionKeyVector = (IntVector) TypeHelper.getNewVector(outputField, oContext.getAllocator());
-
   }
-
 
   @Override
   public void close() {
@@ -164,6 +162,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   }
 
 
+  @SuppressWarnings("resource")
   private boolean saveSamples() throws SchemaChangeException, ClassTransformationException, IOException {
     recordsSampled = 0;
     IterOutcome upstream;
@@ -250,8 +249,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       }
     }
     return true;
-
-
   }
 
   /**
@@ -343,6 +340,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Get all samples from distributed map
 
+    @SuppressWarnings("resource")
     SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator());
     final VectorContainer allSamplesContainer = new VectorContainer();
     final VectorContainer candidatePartitionTable = new VectorContainer();
@@ -361,6 +359,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       }
 
       // sort the data incoming samples.
+      @SuppressWarnings("resource")
       SelectionVector4 newSv4 = containerBuilder.getSv4();
       Sorter sorter = SortBatch.createNewSorter(context, orderDefs, allSamplesContainer);
       sorter.setup(context, newSv4, allSamplesContainer);
@@ -389,6 +388,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         }
       }
       candidatePartitionTable.setRecordCount(copier.getOutputRecords());
+      @SuppressWarnings("resource")
       WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
       wrap = new CachedVectorContainer(batch, context.getDrillbitContext().getAllocator());
       tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
@@ -421,21 +421,26 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       List<Ordering> orderings, List<ValueVector> localAllocationVectors) throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<SampleCopier> cg = CodeGenerator.getRoot(SampleCopier.TEMPLATE_DEFINITION,
-        context.getFunctionRegistry());
+        context.getFunctionRegistry(), context.getOptions());
+    // Note: disabled for now. This may require some debugging:
+    // no tests are available for this operator.
+//    cg.getCodeGenerator().plainOldJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     int i = 0;
     for (Ordering od : orderings) {
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), incoming, collector, context.getFunctionRegistry());
-      SchemaPath schemaPath = SchemaPath.getSimplePath("f" + i++);
       TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().mergeFrom(expr.getMajorType())
           .clearMode().setMode(TypeProtos.DataMode.REQUIRED);
       TypeProtos.MajorType newType = builder.build();
-      MaterializedField outputField = MaterializedField.create(schemaPath, newType);
+      MaterializedField outputField = MaterializedField.create("f" + i++, newType);
       if (collector.hasErrors()) {
         throw new SchemaChangeException(String.format(
             "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
 
+      @SuppressWarnings("resource")
       ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       localAllocationVectors.add(vector);
       TypedFieldId fid = outgoing.add(vector);
@@ -527,7 +532,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // if this now that all the batches on the queue are processed, we begin processing the incoming batches. For the
     // first one
     // we need to generate a new schema, even if the outcome is IterOutcome.OK After that we can reuse the schema.
-    if (this.startedUnsampledBatches == false) {
+    if (!this.startedUnsampledBatches) {
       this.startedUnsampledBatches = true;
       if (upstream == IterOutcome.OK) {
         upstream = IterOutcome.OK_NEW_SCHEMA;
@@ -587,7 +592,12 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     final List<TransferPair> transfers = Lists.newArrayList();
 
     final ClassGenerator<OrderedPartitionProjector> cg = CodeGenerator.getRoot(
-        OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+        OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    // Note: disabled for now. This may require some debugging:
+    // no tests are available for this operator.
+//    cg.getCodeGenerator().plainOldJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     for (VectorWrapper<?> vw : batch) {
       TransferPair tp = vw.getValueVector().getTransferPair(oContext.getAllocator());
@@ -604,17 +614,17 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }
       cg.setMappingSet(incomingMapping);
-      ClassGenerator.HoldingContainer left = cg.addExpr(expr, false);
+      ClassGenerator.HoldingContainer left = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(partitionMapping);
       ClassGenerator.HoldingContainer right = cg.addExpr(
-          new ValueVectorReadExpression(new TypedFieldId(expr.getMajorType(), count++)), false);
+          new ValueVectorReadExpression(new TypedFieldId(expr.getMajorType(), count++)), ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(mainMapping);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
                                                          context.getFunctionRegistry());
-      ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
+      ClassGenerator.HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
       if (od.getDirection() == Direction.ASCENDING) {

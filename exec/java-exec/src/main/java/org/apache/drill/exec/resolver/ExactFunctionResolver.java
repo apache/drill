@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.resolver;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.List;
@@ -37,8 +40,11 @@ public class ExactFunctionResolver implements FunctionResolver {
     int currcost;
 
     for (DrillFuncHolder h : methods) {
-
-      currcost = TypeCastRules.getCost(call, h);
+      final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
+      for (LogicalExpression expression : call.args) {
+        argumentTypes.add(expression.getMajorType());
+      }
+      currcost = TypeCastRules.getCost(argumentTypes, h);
 
       // Return if we found a function that has an exact match with the input arguments
       if (currcost  == 0){

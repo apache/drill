@@ -19,7 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.physical.base.GroupScan;
 
-public interface DrillScanPrel extends Prel{
+public interface DrillScanPrel extends Prel, HasDistributionAffinity{
 
   public GroupScan getGroupScan();
 

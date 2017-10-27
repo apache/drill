@@ -327,6 +327,7 @@ public class SimpleRepeatedFunctions {
     @Param VarCharHolder targetValue;
     @Workspace VarCharHolder currVal;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Output BitHolder out;
 
@@ -334,15 +335,19 @@ public class SimpleRepeatedFunctions {
       currVal = new VarCharHolder();
       matcher = java.util.regex.Pattern.compile(
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(targetValue.start,  targetValue.end,  targetValue.buffer)).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     public void eval() {
       for (int i = listToSearch.start; i < listToSearch.end; i++) {
         out.value = 0;
         listToSearch.vector.getAccessor().get(i, currVal);
-        String in = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(currVal.start, currVal.end, currVal.buffer);
-        matcher.reset(in);
-          if(matcher.find()) {
+        charSequenceWrapper.setBuffer(currVal.start, currVal.end, currVal.buffer);
+        // Reusing same charSequenceWrapper, no need to pass it in.
+        // This saves one method call since reset(CharSequence) calls reset()
+        matcher.reset();
+        if(matcher.find()) {
              out.value = 1;
              break;
           }

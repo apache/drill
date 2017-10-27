@@ -24,7 +24,7 @@ option optimize_for = SPEED;
 enum MinorType {
     LATE = 0;   //  late binding type
     MAP = 1;   //  an empty map column.  Useful for conceptual setup.  Children listed within here
-    
+
     TINYINT = 3;   //  single byte signed integer
     SMALLINT = 4;   //  two byte signed integer
     INT = 5;   //  four byte signed integer
@@ -40,7 +40,7 @@ enum MinorType {
     TIMESTAMPTZ = 15;   //  unix epoch time in millis
     TIMESTAMP = 16;   //  TBD
     INTERVAL = 17;   //  TBD
-    FLOAT4 = 18;   //  4 byte ieee 754 
+    FLOAT4 = 18;   //  4 byte ieee 754
     FLOAT8 = 19;   //  8 byte ieee 754
     BIT = 20;   //  single bit value (boolean)
     FIXEDCHAR = 21;   //  utf8 fixed length string, padded with spaces
@@ -70,18 +70,15 @@ enum MinorType {
 message MajorType {
   optional MinorType minor_type = 1;
   optional DataMode mode = 2;
-  optional int32 width = 3; // optional width for fixed size values.
-  optional int32 precision = 4; // used for decimal types
+  optional int32 width = 3;
+  optional int32 precision = 4; // used for decimal types or as optional length for fixed size value
   optional int32 scale = 5; // used for decimal types
   optional int32 timeZone = 6; // used by TimeStamp type
   repeated MinorType sub_type = 7; // used by Union type
 }
-
-
 
 enum DataMode {
   OPTIONAL = 0; // nullable
   REQUIRED = 1; // non-nullable
   REPEATED = 2; // single, repeated-field
 }
-

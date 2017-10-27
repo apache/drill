@@ -17,10 +17,13 @@
  */
 package org.apache.drill.common.util;
 
+import com.google.common.base.Joiner;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
 
 public class DrillStringUtils {
 
@@ -134,7 +137,7 @@ public class DrillStringUtils {
    */
   public static String toBinaryString(byte[] buf, int strStart, int strEnd) {
     StringBuilder result = new StringBuilder();
-    for (int i = strStart; i < strEnd ; ++i) {
+    for (int i = strStart; i < strEnd; ++i) {
       appendByte(result, buf[i]);
     }
     return result.toString();
@@ -153,20 +156,19 @@ public class DrillStringUtils {
   }
 
   /**
-   * In-place parsing of a hex encoded binary string.
+   * parsing a hex encoded binary string and write to an output buffer.
    *
    * This function does not modify  the {@code readerIndex} and {@code writerIndex}
    * of the byte buffer.
    *
    * @return Index in the byte buffer just after the last written byte.
    */
-  public static int parseBinaryString(ByteBuf str, int strStart, int strEnd) {
-    int length = (strEnd - strStart);
-    int dstEnd = strStart;
-    for (int i = strStart; i < length ; i++) {
+  public static int parseBinaryString(ByteBuf str, int strStart, int strEnd, ByteBuf out) {
+    int dstEnd = 0;
+    for (int i = strStart; i < strEnd; i++) {
       byte b = str.getByte(i);
       if (b == '\\'
-          && length > i+3
+          && strEnd > i+3
           && (str.getByte(i+1) == 'x' || str.getByte(i+1) == 'X')) {
         // ok, take next 2 hex digits.
         byte hd1 = str.getByte(i+2);
@@ -177,7 +179,7 @@ public class DrillStringUtils {
           i += 3; // skip 3
         }
       }
-      str.setByte(dstEnd++, b);
+      out.setByte(dstEnd++, b);
     }
     return dstEnd;
   }
@@ -199,6 +201,29 @@ public class DrillStringUtils {
 
   private static boolean isHexDigit(byte c) {
     return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
+  }
+
+  /**
+   * Removes extra spaces and empty values in a CSV String
+   * @param csv The CSV string to be sanitized
+   * @return The sanitized CSV string
+   */
+  public static String sanitizeCSV(String csv) {
+    // tokenize
+    String[] tokens = csv.split(",");
+    ArrayList<String> sanitizedTokens = new ArrayList<String>(tokens.length);
+    // check for empties
+    for (String s : tokens) {
+      String trimmedToken = s.trim();
+      if (trimmedToken.length() != 0) {
+        sanitizedTokens.add(trimmedToken);
+      }
+    }
+    String result = "";
+    if (sanitizedTokens.size() != 0) {
+      result = Joiner.on(",").join(sanitizedTokens);
+    }
+    return result;
   }
 
 }

@@ -18,14 +18,17 @@
 
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 // Test the optimizer plan in terms of project pushdown.
 // When a query refers to a subset of columns in a table, optimizer should push the list
 // of refereed columns to the SCAN operator, so that SCAN operator would only retrieve
 // the column values in the subset of columns.
 
+@Category(PlannerTest.class)
 public class TestProjectPushDown extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(TestProjectPushDown.class);
@@ -206,6 +209,61 @@ public class TestProjectPushDown extends PlanTestBase {
         new String[]{firstExpected, secondExpected, thirdExpected}, projection, table, table, table, filter));
     }
 
+  }
+
+  @Test
+  public void testEmptyColProjectInTextScan() throws Exception {
+    final String sql = "SELECT count(*) cnt from cp.`store/text/data/d1/regions.csv`";
+    final String expected = "\"columns\" : [ ]";
+    // Verify plan
+    testPushDown(new PushDownTestInstance(sql, new String[] {expected}));
+
+    // Verify execution result.
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues((long) 5)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testEmptyColProjectInJsonScan() throws Exception {
+    final String sql = "SELECT count(*) cnt from cp.`employee.json`";
+    final String expected = "\"columns\" : [ ]";
+
+    testPushDown(new PushDownTestInstance(sql, new String[] {expected}));
+
+    // Verify execution result.
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues((long) 1155)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testEmptyColProjectInParquetScan() throws Exception {
+    final String sql = "SELECT 1 + 1 as val from cp.`tpch/region.parquet`";
+    final String expected = "\"columns\" : [ ]";
+
+    testPushDown(new PushDownTestInstance(sql, new String[] {expected}));
+
+    // Verify execution result.
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("val")
+        .baselineValues(2)
+        .baselineValues(2)
+        .baselineValues(2)
+        .baselineValues(2)
+        .baselineValues(2)
+        .build()
+        .run();
   }
 
   @Test

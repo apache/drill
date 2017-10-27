@@ -21,14 +21,12 @@ import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.RpcChannel;
 import org.apache.drill.exec.rpc.ReconnectingConnection;
-import org.apache.drill.exec.server.BootStrapContext;
 
 public class DataConnectionManager extends ReconnectingConnection<DataClientConnection, BitClientHandshake>{
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataConnectionManager.class);
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataConnectionManager.class);
-
-  private final DrillbitEndpoint endpoint;
-  private final BootStrapContext context;
+  private final DrillbitEndpoint remoteEndpoint;
+  private final DataConnectionConfig config;
 
   private final static BitClientHandshake HANDSHAKE = BitClientHandshake //
       .newBuilder() //
@@ -36,15 +34,15 @@ public class DataConnectionManager extends ReconnectingConnection<DataClientConn
       .setChannel(RpcChannel.BIT_DATA) //
       .build();
 
-  public DataConnectionManager(DrillbitEndpoint endpoint, BootStrapContext context) {
-    super(HANDSHAKE, endpoint.getAddress(), endpoint.getDataPort());
-    this.endpoint = endpoint;
-    this.context = context;
+  public DataConnectionManager(DrillbitEndpoint remoteEndpoint, DataConnectionConfig config) {
+    super(HANDSHAKE, remoteEndpoint.getAddress(), remoteEndpoint.getDataPort());
+    this.remoteEndpoint = remoteEndpoint;
+    this.config = config;
   }
 
   @Override
   protected DataClient getNewClient() {
-    return new DataClient(endpoint, context, new CloseHandlerCreator());
+    return new DataClient(remoteEndpoint, config, new CloseHandlerCreator());
   }
 
 }

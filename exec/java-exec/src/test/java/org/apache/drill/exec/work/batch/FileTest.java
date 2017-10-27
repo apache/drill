@@ -58,8 +58,7 @@ public class FileTest {
     out = fs.create(new Path("/tmp/file"));
     for (int i = 0; i < 100; i++) {
       bytes = new byte[256*1024];
-      Stopwatch watch = new Stopwatch();
-      watch.start();
+      Stopwatch watch = Stopwatch.createStarted();
       out.write(bytes);
       out.sync();
       long t = watch.elapsed(TimeUnit.MILLISECONDS);

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -73,6 +74,14 @@ public class MongoTestSuit implements MongoTestConstants {
   private static boolean authEnabled = System.getProperty(
       "drill.mongo.tests.authEnabled", "false").equalsIgnoreCase("true");
 
+  private static volatile AtomicInteger initCount = new AtomicInteger(0);
+
+  private static volatile boolean runningSuite = false;
+
+  public static boolean isRunningSuite() {
+    return runningSuite;
+  }
+
   private static class DistributedMode {
     private static MongosSystemForTestFactory mongosTestFactory;
 
@@ -115,11 +124,13 @@ public class MongoTestSuit implements MongoTestConstants {
         throw new Exception(" Error while starting shrded cluster. ", e);
       }
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
+      createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
+      createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
     }
 
     private static IMongodConfig crateConfigServerConfig(int configServerPort,
         boolean flag) throws UnknownHostException, IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().useNoJournal(false).verbose(false)
           .build();
 
       IMongodConfig mongodConfig = new MongodConfigBuilder()
@@ -132,7 +143,7 @@ public class MongoTestSuit implements MongoTestConstants {
     private static IMongodConfig crateIMongodConfig(int mongodPort,
         boolean flag, String replicaName) throws UnknownHostException,
         IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().useNoJournal(false).verbose(false)
           .build();
 
       Storage replication = new Storage(null, replicaName, 0);
@@ -146,7 +157,7 @@ public class MongoTestSuit implements MongoTestConstants {
 
     private static IMongosConfig createIMongosConfig()
         throws UnknownHostException, IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().useNoJournal(false).verbose(false)
           .build();
 
       IMongosConfig mongosConfig = new MongosConfigBuilder()
@@ -187,6 +198,8 @@ public class MongoTestSuit implements MongoTestConstants {
       mongoClient = new MongoClient(new ServerAddress(LOCALHOST, MONGOS_PORT));
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
       createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
+      createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
+      createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
     }
 
     private static void cleanup() {
@@ -202,16 +215,21 @@ public class MongoTestSuit implements MongoTestConstants {
   @BeforeClass
   public static void initMongo() throws Exception {
     synchronized (MongoTestSuit.class) {
-      if (distMode) {
-        logger.info("Executing tests in distributed mode");
-        DistributedMode.setup();
-      } else {
-        logger.info("Executing tests in single mode");
-        SingleMode.setup();
+      if (initCount.get() == 0) {
+        if (distMode) {
+          logger.info("Executing tests in distributed mode");
+          DistributedMode.setup();
+        } else {
+          logger.info("Executing tests in single mode");
+          SingleMode.setup();
+        }
+        TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
+        TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
+        TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
+        TestTableGenerator.importData(DATATYPE_DB, DATATYPE_COLLECTION, DATATYPE_DATA);
       }
-      TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
-      TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
-      TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
+      initCount.incrementAndGet();
+      runningSuite = true;
     }
   }
 
@@ -232,15 +250,26 @@ public class MongoTestSuit implements MongoTestConstants {
 
   @AfterClass
   public static void tearDownCluster() throws Exception {
-    if (mongoClient != null) {
-      mongoClient.dropDatabase(EMPLOYEE_DB);
-      mongoClient.close();
-    }
     synchronized (MongoTestSuit.class) {
-      if (distMode) {
-        DistributedMode.cleanup();
-      } else {
-        SingleMode.cleanup();
+      if (initCount.decrementAndGet() == 0) {
+        try {
+          if (mongoClient != null) {
+            mongoClient.dropDatabase(EMPLOYEE_DB);
+            mongoClient.dropDatabase(DATATYPE_DB);
+            mongoClient.dropDatabase(DONUTS_DB);
+          }
+        }
+        finally {
+          runningSuite = false;
+          if (mongoClient != null) {
+            mongoClient.close();
+          }
+          if (distMode) {
+            DistributedMode.cleanup();
+          } else {
+            SingleMode.cleanup();
+          }
+        }
       }
     }
   }

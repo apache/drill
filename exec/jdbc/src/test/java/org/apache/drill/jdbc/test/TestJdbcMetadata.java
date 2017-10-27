@@ -22,11 +22,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-
+@Category(JdbcTest.class)
 public class TestJdbcMetadata extends JdbcTestActionBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcMetadata.class);
 
@@ -37,6 +39,7 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
   @Test
   public void catalogs() throws Exception{
     this.testAction(new JdbcAction(){
+      @Override
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getCatalogs();
       }
@@ -46,6 +49,7 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
   @Test
   public void allSchemas() throws Exception{
     this.testAction(new JdbcAction(){
+      @Override
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getSchemas();
       }
@@ -55,6 +59,7 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
   @Test
   public void schemasWithConditions() throws Exception{
     this.testAction(new JdbcAction(){
+      @Override
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getSchemas("DRILL", "%fs%");
       }
@@ -64,6 +69,7 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
   @Test
   public void allTables() throws Exception{
     this.testAction(new JdbcAction(){
+      @Override
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getTables(null, null, null, null);
       }
@@ -73,15 +79,17 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
   @Test
   public void tablesWithConditions() throws Exception{
     this.testAction(new JdbcAction(){
+      @Override
       public ResultSet getResult(Connection c) throws SQLException {
-        return c.getMetaData().getTables("DRILL", "sys", "opt%", new String[]{"TABLE", "VIEW"});
+        return c.getMetaData().getTables("DRILL", "sys", "opt%", new String[]{"SYSTEM_TABLE", "SYSTEM_VIEW"});
       }
-    }, 1);
+    }, 2);
   }
 
   @Test
   public void allColumns() throws Exception{
     this.testAction(new JdbcAction(){
+      @Override
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getColumns(null, null, null, null);
       }
@@ -91,9 +99,10 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
   @Test
   public void columnsWithConditions() throws Exception{
     this.testAction(new JdbcAction(){
+      @Override
       public ResultSet getResult(Connection c) throws SQLException {
         return c.getMetaData().getColumns("DRILL", "sys", "opt%", "%ame");
       }
-    }, 1);
+    }, 2);
   }
 }

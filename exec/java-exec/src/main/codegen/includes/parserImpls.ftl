@@ -196,24 +196,26 @@ SqlNode SqlCreateOrReplaceView() :
 }
 
 /**
- * Parses a drop view statement.
- * DROP VIEW view_name;
+ * Parses a drop view or drop view if exists statement.
+ * DROP VIEW [IF EXISTS] view_name;
  */
 SqlNode SqlDropView() :
 {
     SqlParserPos pos;
+    boolean viewExistenceCheck = false;
 }
 {
     <DROP> { pos = getPos(); }
     <VIEW>
+    [ <IF> <EXISTS> { viewExistenceCheck = true; } ]
     {
-        return new SqlDropView(pos, CompoundIdentifier());
+        return new SqlDropView(pos, CompoundIdentifier(), viewExistenceCheck);
     }
 }
 
 /**
- * Parses a CTAS statement.
- * CREATE TABLE tblname [ (field1, field2, ...) ] AS select_statement.
+ * Parses a CTAS or CTTAS statement.
+ * CREATE [TEMPORARY] TABLE tblname [ (field1, field2, ...) ] AS select_statement.
  */
 SqlNode SqlCreateTable() :
 {
@@ -222,12 +224,14 @@ SqlNode SqlCreateTable() :
     SqlNodeList fieldList;
     SqlNodeList partitionFieldList;
     SqlNode query;
+    boolean isTemporary = false;
 }
 {
     {
         partitionFieldList = SqlNodeList.EMPTY;
     }
     <CREATE> { pos = getPos(); }
+    ( <TEMPORARY> { isTemporary = true; } )?
     <TABLE>
     tblName = CompoundIdentifier()
     fieldList = ParseOptionalFieldList("Table")
@@ -237,23 +241,26 @@ SqlNode SqlCreateTable() :
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
-        return new SqlCreateTable(pos, tblName, fieldList, partitionFieldList, query);
+        return new SqlCreateTable(pos,tblName, fieldList, partitionFieldList, query,
+                                    SqlLiteral.createBoolean(isTemporary, getPos()));
     }
 }
 
 /**
- * Parses a drop table statement.
- * DROP TABLE table_name;
+ * Parses a drop table or drop table if exists statement.
+ * DROP TABLE [IF EXISTS] table_name;
  */
 SqlNode SqlDropTable() :
 {
     SqlParserPos pos;
+    boolean tableExistenceCheck = false;
 }
 {
     <DROP> { pos = getPos(); }
     <TABLE>
+    [ <IF> <EXISTS> { tableExistenceCheck = true; } ]
     {
-        return new SqlDropTable(pos, CompoundIdentifier());
+        return new SqlDropTable(pos, CompoundIdentifier(), tableExistenceCheck);
     }
 }
 
@@ -278,3 +285,59 @@ SqlNode SqlRefreshMetadata() :
     }
 }
 
+/**
+* Parses statement
+*   DESCRIBE { SCHEMA | DATABASE } name
+*/
+SqlNode SqlDescribeSchema() :
+{
+   SqlParserPos pos;
+   SqlIdentifier schema;
+}
+{
+   <DESCRIBE> { pos = getPos(); }
+   (<SCHEMA> | <DATABASE>) { schema = CompoundIdentifier(); }
+   {
+        return new SqlDescribeSchema(pos, schema);
+   }
+}
+
+/**
+* Parse create UDF statement
+* CREATE FUNCTION USING JAR 'jar_name'
+*/
+SqlNode SqlCreateFunction() :
+{
+   SqlParserPos pos;
+   SqlNode jar;
+}
+{
+   <CREATE> { pos = getPos(); }
+   <FUNCTION>
+   <USING>
+   <JAR>
+   jar = StringLiteral()
+   {
+       return new SqlCreateFunction(pos, jar);
+   }
+}
+
+/**
+* Parse drop UDF statement
+* DROP FUNCTION USING JAR 'jar_name'
+*/
+SqlNode SqlDropFunction() :
+{
+   SqlParserPos pos;
+   SqlNode jar;
+}
+{
+   <DROP> { pos = getPos(); }
+   <FUNCTION>
+   <USING>
+   <JAR>
+   jar = StringLiteral()
+   {
+       return new SqlDropFunction(pos, jar);
+   }
+}

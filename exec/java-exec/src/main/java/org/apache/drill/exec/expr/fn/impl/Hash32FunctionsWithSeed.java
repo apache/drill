@@ -72,7 +72,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -89,7 +89,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -108,7 +108,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -125,7 +125,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -144,7 +144,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, seed.value);
       }
     }
   }
@@ -164,7 +164,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, seed.value);
       }
     }
   }
@@ -184,7 +184,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, seed.value);
       }
     }
   }
@@ -205,7 +205,7 @@ public class Hash32FunctionsWithSeed {
         out.value = seed.value;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -225,7 +225,7 @@ public class Hash32FunctionsWithSeed {
         out.value = seed.value;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -242,7 +242,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, seed.value);
     }
   }
 
@@ -258,7 +258,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, seed.value);
     }
   }
 
@@ -274,7 +274,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, seed.value);
     }
   }
 
@@ -290,7 +290,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -306,7 +306,7 @@ public class Hash32FunctionsWithSeed {
 
     public void eval() {
       // TODO: implement hash function for other types
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
   @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
@@ -320,7 +320,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -338,7 +338,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -354,7 +354,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -372,7 +372,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -388,7 +388,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -406,7 +406,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -422,7 +422,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -440,7 +440,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -456,7 +456,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
   }
 
@@ -474,7 +474,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -490,7 +490,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + Decimal28SparseHolder.WIDTH, in.buffer, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.start + Decimal28SparseHolder.WIDTH, in.buffer, seed.value);
     }
   }
 
@@ -508,7 +508,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + NullableDecimal28SparseHolder.WIDTH, in.buffer, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.start + NullableDecimal28SparseHolder.WIDTH, in.buffer, seed.value);
       }
     }
   }
@@ -524,7 +524,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + Decimal38SparseHolder.WIDTH, in.buffer, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.start + Decimal38SparseHolder.WIDTH, in.buffer, seed.value);
     }
   }
 
@@ -542,7 +542,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + NullableDecimal38SparseHolder.WIDTH, in.buffer, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.start + NullableDecimal38SparseHolder.WIDTH, in.buffer, seed.value);
       }
     }
   }
@@ -562,7 +562,7 @@ public class Hash32FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
       }
     }
   }
@@ -579,6 +579,7 @@ public class Hash32FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
     }
-  }}
+  }
+}

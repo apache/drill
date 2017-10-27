@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,6 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 
 /**
  * A record batch contains a set of field values for a particular range of
@@ -34,7 +32,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  * <p>
  *   A key thing to know is that the Iterator provided by a record batch must
  *   align with the rank positions of the field IDs provided using
- *   {@link getValueVectorId}.
+ *   {@link #getValueVectorId}.
  * </p>
  */
 public interface RecordBatch extends VectorAccessible {
@@ -233,11 +231,6 @@ public interface RecordBatch extends VectorAccessible {
    * should use the QueryContext to determine what has happened.
    */
   public void kill(boolean sendUpstream);
-
-  public abstract SelectionVector2 getSelectionVector2();
-
-  public abstract SelectionVector4 getSelectionVector4();
-
 
   public VectorContainer getOutgoingContainer();
 

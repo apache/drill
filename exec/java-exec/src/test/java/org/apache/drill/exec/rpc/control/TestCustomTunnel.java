@@ -30,7 +30,6 @@ import java.util.Random;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.UserRpcException;
 import org.apache.drill.exec.rpc.control.ControlTunnel.CustomFuture;
 import org.apache.drill.exec.rpc.control.ControlTunnel.CustomTunnel;
@@ -38,8 +37,6 @@ import org.apache.drill.exec.rpc.control.Controller.CustomMessageHandler;
 import org.apache.drill.exec.rpc.control.Controller.CustomResponse;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Test;
-
-import com.google.protobuf.InvalidProtocolBufferException;
 
 public class TestCustomTunnel extends BaseTestQuery {
 
@@ -61,7 +58,7 @@ public class TestCustomTunnel extends BaseTestQuery {
   }
 
   @Test
-  public void ensureRoundTrip() throws RpcException, InvalidProtocolBufferException {
+  public void ensureRoundTrip() throws Exception {
 
     final DrillbitContext context = getDrillbitContext();
     final TestCustomMessageHandler handler = new TestCustomMessageHandler(context.getEndpoint(), false);
@@ -74,7 +71,7 @@ public class TestCustomTunnel extends BaseTestQuery {
   }
 
   @Test
-  public void ensureRoundTripBytes() throws RpcException, InvalidProtocolBufferException {
+  public void ensureRoundTripBytes() throws Exception {
     final DrillbitContext context = getDrillbitContext();
     final TestCustomMessageHandler handler = new TestCustomMessageHandler(context.getEndpoint(), true);
     context.getController().registerCustomHandler(1002, handler, DrillbitEndpoint.PARSER);
@@ -89,6 +86,8 @@ public class TestCustomTunnel extends BaseTestQuery {
     future.getBuffer().release();
     assertTrue(Arrays.equals(expected, actual));
   }
+
+
 
   private class TestCustomMessageHandler implements CustomMessageHandler<DrillbitEndpoint, QueryId> {
     private DrillbitEndpoint expectedValue;
@@ -130,6 +129,164 @@ public class TestCustomTunnel extends BaseTestQuery {
           } else {
             return null;
           }
+        }
+
+      };
+    }
+  }
+
+  @Test
+  public void ensureRoundTripJackson() throws Exception {
+    final DrillbitContext context = getDrillbitContext();
+    final MesgA mesgA = new MesgA();
+    mesgA.fieldA = "123";
+    mesgA.fieldB = "okra";
+
+    final TestCustomMessageHandlerJackson handler = new TestCustomMessageHandlerJackson(mesgA);
+    context.getController().registerCustomHandler(1003, handler,
+        new ControlTunnel.JacksonSerDe<MesgA>(MesgA.class),
+        new ControlTunnel.JacksonSerDe<MesgB>(MesgB.class));
+    final ControlTunnel loopbackTunnel = context.getController().getTunnel(context.getEndpoint());
+    final CustomTunnel<MesgA, MesgB> tunnel = loopbackTunnel.getCustomTunnel(
+        1003,
+        new ControlTunnel.JacksonSerDe<MesgA>(MesgA.class),
+        new ControlTunnel.JacksonSerDe<MesgB>(MesgB.class));
+    CustomFuture<MesgB> future = tunnel.send(mesgA);
+    assertEquals(expectedB, future.get());
+  }
+
+  private MesgB expectedB = new MesgB().set("hello", "bye", "friend");
+
+  public static class MesgA {
+    public String fieldA;
+    public String fieldB;
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((fieldA == null) ? 0 : fieldA.hashCode());
+      result = prime * result + ((fieldB == null) ? 0 : fieldB.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      MesgA other = (MesgA) obj;
+      if (fieldA == null) {
+        if (other.fieldA != null) {
+          return false;
+        }
+      } else if (!fieldA.equals(other.fieldA)) {
+        return false;
+      }
+      if (fieldB == null) {
+        if (other.fieldB != null) {
+          return false;
+        }
+      } else if (!fieldB.equals(other.fieldB)) {
+        return false;
+      }
+      return true;
+    }
+
+  }
+
+  public static class MesgB {
+    public String fieldA;
+    public String fieldB;
+    public String fieldC;
+
+    public MesgB set(String a, String b, String c) {
+      fieldA = a;
+      fieldB = b;
+      fieldC = c;
+      return this;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((fieldA == null) ? 0 : fieldA.hashCode());
+      result = prime * result + ((fieldB == null) ? 0 : fieldB.hashCode());
+      result = prime * result + ((fieldC == null) ? 0 : fieldC.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      MesgB other = (MesgB) obj;
+      if (fieldA == null) {
+        if (other.fieldA != null) {
+          return false;
+        }
+      } else if (!fieldA.equals(other.fieldA)) {
+        return false;
+      }
+      if (fieldB == null) {
+        if (other.fieldB != null) {
+          return false;
+        }
+      } else if (!fieldB.equals(other.fieldB)) {
+        return false;
+      }
+      if (fieldC == null) {
+        if (other.fieldC != null) {
+          return false;
+        }
+      } else if (!fieldC.equals(other.fieldC)) {
+        return false;
+      }
+      return true;
+    }
+
+  }
+
+  private class TestCustomMessageHandlerJackson implements CustomMessageHandler<MesgA, MesgB> {
+    private MesgA expectedValue;
+
+    public TestCustomMessageHandlerJackson(MesgA expectedValue) {
+      super();
+      this.expectedValue = expectedValue;
+    }
+
+    @Override
+    public CustomResponse<MesgB> onMessage(MesgA pBody, DrillBuf dBody) throws UserRpcException {
+
+      if (!expectedValue.equals(pBody)) {
+        throw new UserRpcException(DrillbitEndpoint.getDefaultInstance(),
+            "Invalid expected downstream value.", new IllegalStateException());
+      }
+
+      return new CustomResponse<MesgB>() {
+
+        @Override
+        public MesgB getMessage() {
+          return expectedB;
+        }
+
+        @Override
+        public ByteBuf[] getBodies() {
+          return null;
         }
 
       };

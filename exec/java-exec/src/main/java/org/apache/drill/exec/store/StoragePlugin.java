@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,16 +43,11 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   public boolean supportsWrite();
 
   /** An implementation of this method will return one or more specialized rules that Drill query
-   *  optimizer can leverage in <i>logical</i> space. Otherwise, it should return an empty set.
-   * @return an empty set or a set of plugin specific logical optimizer rules.
-   */
-  public Set<? extends RelOptRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext);
-
-  /** An implementation of this method will return one or more specialized rules that Drill query
    *  optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
    * @return an empty set or a set of plugin specific physical optimizer rules.
    */
-  public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerContext);
+  @Deprecated
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
@@ -76,7 +71,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException;
 
-  /** Method returns a jackson serializable object that extends a StoragePluginConfig
+  /** Method returns a Jackson serializable object that extends a StoragePluginConfig
   * @return an extension of StoragePluginConfig
   */
   public StoragePluginConfig getConfig();
@@ -85,5 +80,4 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Initialize the storage plugin. The storage plugin will not be used until this method is called.
    */
   public void start() throws IOException;
-
 }

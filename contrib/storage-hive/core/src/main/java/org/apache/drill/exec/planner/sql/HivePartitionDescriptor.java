@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql;
 
 import io.netty.buffer.DrillBuf;
 
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -27,12 +28,13 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.AbstractPartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionLocation;
+import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.hive.HiveTableWrapper;
 import org.apache.drill.exec.store.hive.HiveUtilities;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
-import org.apache.drill.exec.store.hive.HiveTable;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.hive.metastore.api.Partition;
 
@@ -62,7 +64,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     this.scanRel = scanRel;
     this.managedBuffer = managedBuffer.reallocIfNeeded(256);
     this.defaultPartitionValue = defaultPartitionValue;
-    for (HiveTable.FieldSchemaWrapper wrapper : ((HiveScan) scanRel.getGroupScan()).hiveReadEntry.table.partitionKeys) {
+    for (HiveTableWrapper.FieldSchemaWrapper wrapper : ((HiveScan) scanRel.getGroupScan()).hiveReadEntry.table.partitionKeys) {
       partitionMap.put(wrapper.name, i);
       i++;
     }
@@ -84,30 +86,10 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     return numPartitionLevels;
   }
 
+  @Override
   public String getBaseTableLocation() {
     HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
     return origEntry.table.getTable().getSd().getLocation();
-  }
-
-  @Override
-  public GroupScan createNewGroupScan(List<String> newFiles) throws ExecutionSetupException {
-    HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
-    HiveReadEntry origReadEntry = hiveScan.hiveReadEntry;
-    List<HiveTable.HivePartition> oldPartitions = origReadEntry.partitions;
-    List<HiveTable.HivePartition> newPartitions = new LinkedList<>();
-
-    for (HiveTable.HivePartition part: oldPartitions) {
-      String partitionLocation = part.getPartition().getSd().getLocation();
-      for (String newPartitionLocation: newFiles) {
-        if (partitionLocation.equals(newPartitionLocation)) {
-          newPartitions.add(part);
-        }
-      }
-    }
-
-    HiveReadEntry newReadEntry = new HiveReadEntry(origReadEntry.table, newPartitions, origReadEntry.hiveConfigOverride);
-
-    return hiveScan.clone(newReadEntry);
   }
 
   @Override
@@ -133,7 +115,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     }
 
     for(ValueVector v : vectors) {
-      if(v == null){
+      if (v == null) {
         continue;
       }
       v.getMutator().setValueCount(partitions.size());
@@ -168,5 +150,38 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
     sublistsCreated = true;
   }
+
+  @Override
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, boolean wasAllPartitionsPruned /* ignored */) throws Exception {
+    GroupScan newGroupScan = createNewGroupScan(newPartitions);
+    return new DrillScanRel(scanRel.getCluster(),
+        scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+        scanRel.getTable(),
+        newGroupScan,
+        scanRel.getRowType(),
+        scanRel.getColumns(),
+        true /*filter pushdown*/);
+  }
+
+  private GroupScan createNewGroupScan(List<PartitionLocation> newPartitionLocations) throws ExecutionSetupException {
+    HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
+    HiveReadEntry origReadEntry = hiveScan.hiveReadEntry;
+    List<HiveTableWrapper.HivePartitionWrapper> oldPartitions = origReadEntry.partitions;
+    List<HiveTableWrapper.HivePartitionWrapper> newPartitions = Lists.newLinkedList();
+
+    for (HiveTableWrapper.HivePartitionWrapper part: oldPartitions) {
+      String partitionLocation = part.getPartition().getSd().getLocation();
+      for (PartitionLocation newPartitionLocation: newPartitionLocations) {
+        if (partitionLocation.equals(newPartitionLocation.getEntirePartitionLocation())) {
+          newPartitions.add(part);
+        }
+      }
+    }
+
+    HiveReadEntry newReadEntry = new HiveReadEntry(origReadEntry.table, newPartitions);
+
+    return hiveScan.clone(newReadEntry);
+  }
+
 
 }

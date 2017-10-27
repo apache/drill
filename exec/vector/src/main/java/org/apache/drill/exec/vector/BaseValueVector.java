@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,22 +19,27 @@ package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class BaseValueVector implements ValueVector {
-  private static final Logger logger = LoggerFactory.getLogger(BaseValueVector.class);
+//  private static final Logger logger = LoggerFactory.getLogger(BaseValueVector.class);
 
+  /**
+   * Physical maximum allocation. This is the value prior to Drill 1.11.
+   * This size causes memory fragmentation. Please use
+   * {@link ValueVector#MAX_BUFFER_SIZE} in new code.
+   */
+
+  @Deprecated
   public static final int MAX_ALLOCATION_SIZE = Integer.MAX_VALUE;
   public static final int INITIAL_VALUE_ALLOCATION = 4096;
 
@@ -66,13 +71,13 @@ public abstract class BaseValueVector implements ValueVector {
     return field;
   }
 
-  public MaterializedField getField(FieldReference ref){
+  public MaterializedField getField(String ref) {
     return getField().withPath(ref);
   }
 
   @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
-    return getTransferPair(new FieldReference(getField().getPath()), allocator);
+    return getTransferPair(getField().getName(), allocator);
   }
 
   @Override
@@ -102,12 +107,17 @@ public abstract class BaseValueVector implements ValueVector {
     public void generateTestData(int values) {}
 
     //TODO: consider making mutator stateless(if possible) on another issue.
+    @Override
     public void reset() {}
+
+    // TODO: If mutator becomes stateless, remove this method.
+    @Override
+    public void exchange(ValueVector.Mutator other) { }
   }
 
   @Override
   public Iterator<ValueVector> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   public static boolean checkBufRefs(final ValueVector vv) {
@@ -123,6 +133,23 @@ public abstract class BaseValueVector implements ValueVector {
   @Override
   public BufferAllocator getAllocator() {
     return allocator;
+  }
+
+  public static void fillBitsVector(UInt1Vector bits, int valueCount) {
+
+    // Create a new bits vector, all values non-null
+
+    bits.allocateNew(valueCount);
+    UInt1Vector.Mutator bitsMutator = bits.getMutator();
+    for (int i = 0; i < valueCount; i++) {
+      bitsMutator.set(i, 1);
+    }
+    bitsMutator.setValueCount(valueCount);
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
   }
 }
 

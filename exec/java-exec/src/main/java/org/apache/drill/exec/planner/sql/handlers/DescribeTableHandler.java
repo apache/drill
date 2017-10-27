@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,18 +18,17 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_DATA_TYPE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_IS_NULLABLE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_COLUMNS;
+
 import java.util.List;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.tools.RelConversionException;
-
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
-
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
-import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
-import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
-import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -37,11 +36,15 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.util.Util;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
+import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.collect.ImmutableList;
-
-import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
 
 public class DescribeTableHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DescribeTableHandler.class);
@@ -63,9 +66,10 @@ public class DescribeTableHandler extends DefaultSqlHandler {
           ImmutableList.of(IS_SCHEMA_NAME, TAB_COLUMNS), null, SqlParserPos.ZERO, null);
 
       final SqlIdentifier table = node.getTable();
-      final SchemaPlus defaultSchema = context.getNewDefaultSchema();
+      final SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
       final List<String> schemaPathGivenInCmd = Util.skipLast(table.names);
       final SchemaPlus schema = SchemaUtilites.findSchema(defaultSchema, schemaPathGivenInCmd);
+      final String charset = Util.getDefaultCharset().name();
 
       if (schema == null) {
         SchemaUtilites.throwSchemaNotFoundException(defaultSchema,
@@ -94,14 +98,14 @@ public class DescribeTableHandler extends DefaultSqlHandler {
         schemaCondition = DrillParserUtil.createCondition(
             new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
             SqlStdOperatorTable.EQUALS,
-            SqlLiteral.createCharString(schemaPath, CHARSET, SqlParserPos.ZERO)
+            SqlLiteral.createCharString(schemaPath, charset, SqlParserPos.ZERO)
         );
       }
 
       SqlNode where = DrillParserUtil.createCondition(
           new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO),
           SqlStdOperatorTable.EQUALS,
-          SqlLiteral.createCharString(tableName, CHARSET, SqlParserPos.ZERO));
+          SqlLiteral.createCharString(tableName, charset, SqlParserPos.ZERO));
 
       where = DrillParserUtil.createCondition(schemaCondition, SqlStdOperatorTable.AND, where);
 
@@ -111,7 +115,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
             DrillParserUtil.createCondition(
                 new SqlIdentifier(COLS_COL_COLUMN_NAME, SqlParserPos.ZERO),
                 SqlStdOperatorTable.EQUALS,
-                SqlLiteral.createCharString(node.getColumn().toString(), CHARSET, SqlParserPos.ZERO));
+                SqlLiteral.createCharString(node.getColumn().toString(), charset, SqlParserPos.ZERO));
       } else if (node.getColumnQualifier() != null) {
         columnFilter =
             DrillParserUtil.createCondition(

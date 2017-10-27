@@ -1,12 +1,12 @@
-<#-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-  license agreements. See the NOTICE file distributed with this work for additional 
-  information regarding copyright ownership. The ASF licenses this file to 
-  You under the Apache License, Version 2.0 (the "License"); you may not use 
-  this file except in compliance with the License. You may obtain a copy of 
-  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
-  by applicable law or agreed to in writing, software distributed under the 
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
-  OF ANY KIND, either express or implied. See the License for the specific 
+<#-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+  license agreements. See the NOTICE file distributed with this work for additional
+  information regarding copyright ownership. The ASF licenses this file to
+  You under the Apache License, Version 2.0 (the "License"); you may not use
+  this file except in compliance with the License. You may obtain a copy of
+  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+  by applicable law or agreed to in writing, software distributed under the
+  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+  OF ANY KIND, either express or implied. See the License for the specific
   language governing permissions and limitations under the License. -->
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -33,7 +33,6 @@ import org.apache.drill.exec.vector.*;
 import org.apache.drill.common.exceptions.*;
 import org.apache.drill.exec.exception.*;
 import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.*;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillStringUtils;
@@ -44,12 +43,14 @@ import org.apache.drill.exec.vector.complex.writer.*;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 
 import java.util.Arrays;
 import java.util.Random;
 import java.util.List;
+import java.util.Set;
 
 import java.io.Closeable;
 import java.io.InputStream;
@@ -65,10 +66,4 @@ import java.math.BigInteger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import org.apache.hadoop.io.Text;
-
-
-
-
-
-
+import org.apache.drill.exec.util.Text;

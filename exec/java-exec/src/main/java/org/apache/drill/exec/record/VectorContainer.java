@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,8 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -38,21 +40,45 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccessible {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
+public class VectorContainer implements VectorAccessible {
 
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
   private int recordCount = -1;
-  private OperatorContext oContext;
+  private BufferAllocator allocator;
   private boolean schemaChanged = true; // Schema has changed since last built. Must rebuild schema
 
   public VectorContainer() {
-    this.oContext = null;
   }
 
-  public VectorContainer( OperatorContext oContext) {
-    this.oContext = oContext;
+  public VectorContainer(OperatorContext oContext) {
+    this(oContext.getAllocator());
+  }
+
+  public VectorContainer(BufferAllocator allocator) {
+    this.allocator = allocator;
+  }
+
+  /**
+   * Create a new vector container given a pre-defined schema. Creates the
+   * corresponding vectors, but does not allocate memory for them. Call
+   * {@link #allocateNew()} or {@link #allocateNewSafe()} to allocate
+   * memory.
+   * <p>
+   * Note that this method does the equivalent of {@link #buildSchema(SelectionVectorMode)}
+   * using the schema provided.
+   *
+   * @param allocator allocator to be used to allocate memory later
+   * @param schema the schema that defines the vectors to create
+   */
+
+  public VectorContainer(BufferAllocator allocator, BatchSchema schema) {
+    this.allocator = allocator;
+    for (MaterializedField field : schema) {
+      addOrGet(field, null);
+    }
+    this.schema = schema;
+    schemaChanged = false;
   }
 
   @Override
@@ -65,14 +91,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
         + ", ...]";
   }
 
-  /**
-   * Get the OperatorContext.
-   *
-   * @return the OperatorContext; may be null
-   */
-  public OperatorContext getOperatorContext() {
-    return oContext;
-  }
+  public BufferAllocator getAllocator() { return allocator; }
 
   public boolean isSchemaChanged() {
     return schemaChanged;
@@ -94,7 +113,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   /**
    * Transfer vectors from containerIn to this.
    */
-  void transferIn(VectorContainer containerIn) {
+  public void transferIn(VectorContainer containerIn) {
     Preconditions.checkArgument(this.wrappers.size() == containerIn.wrappers.size());
     for (int i = 0; i < this.wrappers.size(); ++i) {
       containerIn.wrappers.get(i).transfer(this.wrappers.get(i));
@@ -104,7 +123,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   /**
    * Transfer vectors from this to containerOut
    */
-  void transferOut(VectorContainer containerOut) {
+  public void transferOut(VectorContainer containerOut) {
     Preconditions.checkArgument(this.wrappers.size() == containerOut.wrappers.size());
     for (int i = 0; i < this.wrappers.size(); ++i) {
       this.wrappers.get(i).transfer(containerOut.wrappers.get(i));
@@ -115,20 +134,20 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return addOrGet(field, null);
   }
 
+  @SuppressWarnings("unchecked")
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
-    final TypedFieldId id = getValueVectorId(field.getPath());
+    final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getName()));
     final ValueVector vector;
     final Class<?> clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
     if (id != null) {
       vector = getValueAccessorById(id.getFieldIds()).getValueVector();
       if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(vector.getClass())) {
-        final ValueVector newVector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
+        final ValueVector newVector = TypeHelper.getNewVector(field, this.getAllocator(), callBack);
         replace(vector, newVector);
         return (T) newVector;
       }
     } else {
-
-      vector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
+      vector = TypeHelper.getNewVector(field, this.getAllocator(), callBack);
       add(vector);
     }
     return (T) vector;
@@ -157,10 +176,18 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return vc;
   }
 
-  public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper[] ignoreWrappers, OperatorContext oContext) {
+  public static VectorContainer getTransferClone(VectorAccessible incoming, BufferAllocator allocator) {
+    VectorContainer vc = new VectorContainer(allocator);
+    for (VectorWrapper<?> w : incoming) {
+      vc.cloneAndTransfer(w);
+    }
+    return vc;
+  }
+
+  public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper<?>[] ignoreWrappers, OperatorContext oContext) {
     Iterable<VectorWrapper<?>> wrappers = incoming;
     if (ignoreWrappers != null) {
-      final List<VectorWrapper> ignored = Lists.newArrayList(ignoreWrappers);
+      final List<VectorWrapper<?>> ignored = Lists.newArrayList(ignoreWrappers);
       final Set<VectorWrapper<?>> resultant = Sets.newLinkedHashSet(incoming);
       resultant.removeAll(ignored);
       wrappers = resultant;
@@ -179,11 +206,12 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
    */
   public static VectorContainer canonicalize(VectorContainer original) {
     VectorContainer vc = new VectorContainer();
-    List<VectorWrapper<?>> canonicalWrappers = new ArrayList<VectorWrapper<?>>(original.wrappers);
+    List<VectorWrapper<?>> canonicalWrappers = new ArrayList<>(original.wrappers);
     // Sort list of VectorWrapper alphabetically based on SchemaPath.
     Collections.sort(canonicalWrappers, new Comparator<VectorWrapper<?>>() {
+      @Override
       public int compare(VectorWrapper<?> v1, VectorWrapper<?> v2) {
-        return v1.getField().getPath().toExpr().compareTo(v2.getField().getPath().toExpr());
+        return v1.getField().getName().compareTo(v2.getField().getName());
       }
     });
 
@@ -194,12 +222,12 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
         vc.add(w.getValueVector());
       }
     }
-    vc.oContext = original.oContext;
+    vc.allocator = original.allocator;
     return vc;
   }
 
   private void cloneAndTransfer(VectorWrapper<?> wrapper) {
-    wrappers.add(wrapper.cloneAndTransfer(oContext.getAllocator()));
+    wrappers.add(wrapper.cloneAndTransfer(getAllocator()));
   }
 
   public void addCollection(Iterable<ValueVector> vectors) {
@@ -227,9 +255,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     schema = null;
     Class<?> clazz = hyperVector[0].getClass();
     ValueVector[] c = (ValueVector[]) Array.newInstance(clazz, hyperVector.length);
-    for (int i = 0; i < hyperVector.length; i++) {
-      c[i] = hyperVector[i];
-    }
+    System.arraycopy(hyperVector, 0, c, 0, hyperVector.length);
     // todo: work with a merged schema.
     wrappers.add(HyperVectorWrapper.create(hyperVector[0].getField(), c, releasable));
   }
@@ -255,7 +281,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     for (VectorWrapper<?> w : wrappers){
       if (!w.isHyper() && old == w.getValueVector()) {
         w.clear();
-        wrappers.set(i, new SimpleVectorWrapper<ValueVector>(newVector));
+        wrappers.set(i, new SimpleVectorWrapper<>(newVector));
         return;
       }
       i++;
@@ -263,6 +289,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     throw new IllegalStateException("You attempted to remove a vector that didn't exist.");
   }
 
+  @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
     for (int i = 0; i < wrappers.size(); i++) {
       VectorWrapper<?> va = wrappers.get(i);
@@ -273,6 +300,10 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     }
 
     return null;
+  }
+
+  public VectorWrapper<?> getValueVector(int index) {
+    return wrappers.get(index);
   }
 
   @Override
@@ -291,7 +322,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     }
 
     return va.getChildWrapper(fieldIds);
-
   }
 
   private VectorWrapper<?> getValueAccessorById(int... fieldIds) {
@@ -308,6 +338,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return schema != null;
   }
 
+  @Override
   public BatchSchema getSchema() {
     Preconditions
         .checkNotNull(schema,
@@ -341,17 +372,27 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   @Override
   public int getRecordCount() {
-    Preconditions.checkState(recordCount != -1, "Record count not set for this vector container");
+    Preconditions.checkState(hasRecordCount(), "Record count not set for this vector container");
     return recordCount;
+  }
+
+  public boolean hasRecordCount() { return recordCount != -1; }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    throw new UnsupportedOperationException();
   }
 
   /**
    * Clears the contained vectors.  (See {@link ValueVector#clear}).
    */
   public void zeroVectors() {
-    for (VectorWrapper<?> w : wrappers) {
-      w.clear();
-    }
+    VectorAccessibleUtilities.clear(this);
   }
 
   public int getNumberOfColumns() {
@@ -371,5 +412,32 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       }
     }
     return true;
+  }
+
+  /**
+   * Merge two batches to create a single, combined, batch. Vectors
+   * appear in the order defined by {@link BatchSchema#merge(BatchSchema)}.
+   * The two batches must have identical row counts. The pattern is that
+   * this container is the main part of the record batch, the other
+   * represents new columns to merge.
+   * <p>
+   * Reference counts on the underlying buffers are <b>unchanged</b>.
+   * The client code is assumed to abandon the two input containers in
+   * favor of the merged container.
+   *
+   * @param otherContainer the container to merge with this one
+   * @return a new, merged, container
+   */
+  public VectorContainer merge(VectorContainer otherContainer) {
+    if (recordCount != otherContainer.recordCount) {
+      throw new IllegalArgumentException();
+    }
+    VectorContainer merged = new VectorContainer(allocator);
+    merged.schema = schema.merge(otherContainer.schema);
+    merged.recordCount = recordCount;
+    merged.wrappers.addAll(wrappers);
+    merged.wrappers.addAll(otherContainer.wrappers);
+    merged.schemaChanged = false;
+    return merged;
   }
 }

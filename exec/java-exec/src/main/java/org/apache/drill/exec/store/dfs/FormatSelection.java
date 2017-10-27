@@ -61,4 +61,8 @@ public class FormatSelection {
     return selection;
   }
 
+  @JsonIgnore
+  public boolean supportDirPruning() {
+    return selection.supportDirPrunig();
+  }
 }

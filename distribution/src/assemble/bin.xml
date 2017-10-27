@@ -96,6 +96,7 @@
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
         <include>org.apache.drill.contrib:drill-mongo-storage</include>
         <include>org.apache.drill.contrib:drill-storage-hbase</include>
+        <include>org.apache.drill.contrib:drill-format-mapr</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage</include>
         <include>org.apache.drill.contrib:drill-kudu-storage</include>
         <include>org.apache.drill.contrib:drill-gis</include>
@@ -118,7 +119,9 @@
         <exclude>org.apache.drill</exclude>
         <exclude>org.apache.drill.exec</exclude>
         <exclude>org.apache.drill.contrib</exclude>
+        <exclude>org.apache.drill.contrib.data</exclude>
         <exclude>org.apache.drill.contrib.storage-hive</exclude>
+        <exclude>org.apache.drill.memory</exclude>
         <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
         <exclude>org.apache.hive:hive-common</exclude>
         <exclude>org.apache.hive:hive-serde</exclude>
@@ -165,6 +168,8 @@
         <exclude>org.eclipse.jdt</exclude>
         <exclude>com.github.stephenc.high-scale-lib</exclude>
 
+        <exclude>io.netty:netty-tcnative</exclude>
+
         <exclude>org.jamon</exclude>
 
       </excludes>
@@ -187,6 +192,42 @@
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
         <include>com.google.protobuf:protobuf-java:jar:2.5</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/linux</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64:2.0.1.Final</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/fedora</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:2.0.1.Final</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/windows</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:windows-x86_64:2.0.1.Final</include>
+      </includes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>jars/3rdparty/osx</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>io.netty:netty-tcnative:jar:osx-x86_64:2.0.1.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -286,11 +327,6 @@
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/dumpcat</source>
-      <fileMode>0755</fileMode>
-      <outputDirectory>bin</outputDirectory>
-    </file>
-    <file>
       <source>src/resources/drill-override.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>
@@ -304,11 +340,16 @@
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
+      <source>src/resources/distrib-env.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drill-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
-      <source>src/resources/core-site.xml</source>
+      <source>src/resources/core-site-example.xml</source>
       <outputDirectory>conf</outputDirectory>
     </file>
   </files>

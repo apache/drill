@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -43,7 +44,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
-import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -98,10 +99,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final RecordIterator rightIterator;
   private final JoinStatus status;
   private final List<JoinCondition> conditions;
+  private final List<Comparator> comparators;
   private final JoinRelType joinType;
   private JoinWorker worker;
-  private boolean areNullsEqual = false; // whether nulls compare equal
-
 
   private static final String LEFT_INPUT = "LEFT INPUT";
   private static final String RIGHT_INPUT = "RIGHT INPUT";
@@ -113,19 +113,17 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
     }
     this.left = left;
-    this.leftIterator = new RecordIterator(left, this, oContext, 0);
+    this.leftIterator = new RecordIterator(left, this, oContext, 0, false);
     this.right = right;
     this.rightIterator = new RecordIterator(right, this, oContext, 1);
     this.joinType = popConfig.getJoinType();
     this.status = new JoinStatus(leftIterator, rightIterator, this);
     this.conditions = popConfig.getConditions();
 
-    JoinComparator comparator = JoinComparator.NONE;
+    this.comparators = Lists.newArrayListWithExpectedSize(conditions.size());
     for (JoinCondition condition : conditions) {
-      comparator = JoinUtils.checkAndSetComparison(condition, comparator);
+      this.comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(condition));
     }
-    assert comparator != JoinComparator.NONE;
-    areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM);
   }
 
   public JoinRelType getJoinType() {
@@ -153,6 +151,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       state = BatchState.OUT_OF_MEMORY;
       return;
     }
+
+    if (leftOutcome == IterOutcome.NONE && rightOutcome == IterOutcome.NONE) {
+      state = BatchState.DONE;
+      return;
+    }
+
     allocateBatch(true);
   }
 
@@ -267,7 +271,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
   private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException{
 
-    final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
     final ErrorCollector collector = new ErrorCollectorImpl();
 
     // Generate members and initialization code
@@ -344,6 +351,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           .arg(copyLeftMapping.getValueReadIndex())
           .arg(copyLeftMapping.getValueWriteIndex())
           .arg(vvIn));
+        cg.rotateBlock();
         ++vectorId;
       }
     }
@@ -372,6 +380,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           .arg(copyRightMappping.getValueReadIndex())
           .arg(copyRightMappping.getValueWriteIndex())
           .arg(vvIn));
+        cg.rotateBlock();
         ++vectorId;
       }
     }
@@ -397,7 +406,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           } else {
             outputType = inputType;
           }
-          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          MaterializedField newField = MaterializedField.create(w.getField().getName(), outputType);
           ValueVector v = container.addOrGet(newField);
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
@@ -414,7 +423,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           } else {
             outputType = inputType;
           }
-          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          MaterializedField newField = MaterializedField.create(w.getField().getName(), outputType);
           ValueVector v = container.addOrGet(newField);
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
@@ -446,22 +455,22 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         ////////////////////////
         cg.setMappingSet(compareMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
-        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(leftExpression[i], false);
+        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(leftExpression[i], ClassGenerator.BlkCreateMode.FALSE);
 
         cg.setMappingSet(compareRightMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
-        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(rightExpression[i], false);
+        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(rightExpression[i], ClassGenerator.BlkCreateMode.FALSE);
 
         LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparatorNullsHigh(compareLeftExprHolder,
             compareRightExprHolder,
             context.getFunctionRegistry());
-        HoldingContainer out = cg.addExpr(fh, false);
+        HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
 
         // If not 0, it means not equal.
         // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
         if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()
-          && ! areNullsEqual) {
+          && comparators.get(i) == Comparator.EQUALS) {
           JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
             cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));
           jc._then()._return(JExpr.lit(1));

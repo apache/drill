@@ -21,10 +21,11 @@ import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 
-import com.carrotsearch.hppc.LongObjectOpenHashMap;
+import com.carrotsearch.hppc.LongObjectHashMap;
+import com.carrotsearch.hppc.predicates.LongObjectPredicate;
 
 public class BufferManagerImpl implements BufferManager {
-  private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
+  private LongObjectHashMap<DrillBuf> managedBuffers = new LongObjectHashMap<>();
   private final BufferAllocator allocator;
 
   public BufferManagerImpl(BufferAllocator allocator) {
@@ -33,12 +34,13 @@ public class BufferManagerImpl implements BufferManager {
 
   @Override
   public void close() {
-    final Object[] mbuffers = ((LongObjectOpenHashMap<Object>) (Object) managedBuffers).values;
-    for (int i = 0; i < mbuffers.length; i++) {
-      if (managedBuffers.allocated[i]) {
-        ((DrillBuf) mbuffers[i]).release(1);
+    managedBuffers.forEach(new LongObjectPredicate<DrillBuf>() {
+      @Override
+      public boolean apply(long key, DrillBuf value) {
+        value.release();
+        return true;
       }
-    }
+    });
     managedBuffers.clear();
   }
 

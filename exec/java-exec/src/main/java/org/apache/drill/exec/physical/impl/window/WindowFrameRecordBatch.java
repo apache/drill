@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Order;
+import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -39,14 +40,17 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.WindowPOP;
+import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
+import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * support for OVER(PARTITION BY expression1,expression2,... [ORDER BY expressionA, expressionB,...])
@@ -58,14 +62,14 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   private final RecordBatch incoming;
   private List<WindowDataBatch> batches;
 
-  private WindowFramer framer;
+  private WindowFramer[] framers;
   private boolean hasOrderBy; // true if window definition contains an order-by clause
   private final List<WindowFunction> functions = Lists.newArrayList();
 
-  private boolean noMoreBatches;
+  private boolean noMoreBatches; // true when downstream returns NONE
   private BatchSchema schema;
 
-  private boolean shouldStop;
+  private boolean shouldStop; // true if we received an early termination request
 
   public WindowFrameRecordBatch(WindowPOP popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -74,41 +78,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   /**
-   * Let's assume we have the following 3 batches of data:
-   * <p><pre>
-   * +---------+--------+--------------+--------+
-   * |   b0    |   b1   |      b2      |   b3   |
-   * +----+----+--------+----+----+----+--------+
-   * | p0 | p1 |   p1   | p2 | p3 | p4 |   p5   |
-   * +----+----+--------+----+----+----+--------+
-   * </pre></p>
-   *
-   * batch b0 contains partitions p0 and p1
-   * batch b1 contains partition p1
-   * batch b2 contains partitions p2 p3 and p4
-   * batch b3 contains partition p5
-   *
-   * <p><pre>
-   * when innerNext() is called:
-   *   call next(incoming), we receive and save b0 in a list of WindowDataBatch
-   *     we can't process b0 yet because we don't know if p1 has more rows upstream
-   *   call next(incoming), we receive and save b1
-   *     we can't process b0 yet for the same reason previously stated
-   *   call next(incoming), we receive and save b2
-   *   we process b0 (using the framer) and pass the container downstream
-   * when innerNext() is called:
-   *   we process b1 and pass the container downstream, b0 and b1 are released from memory
-   * when innerNext() is called:
-   *   call next(incoming), we receive and save b3
-   *   we process b2 and pass the container downstream, b2 is released from memory
-   * when innerNext() is called:
-   *   call next(incoming) and receive NONE
-   *   we process b3 and pass the container downstream, b3 is released from memory
-   * when innerNext() is called:
-   *  we return NONE
-   * </pre></p>
-   * Because we only support the default frame, we don't need to reset the aggregations until we reach the end of
-   * a partition. We can safely free a batch as soon as it has been processed.
+   * Hold incoming batches in memory until all window functions are ready to process the batch on top of the queue
    */
   @Override
   public IterOutcome innerNext() {
@@ -174,7 +144,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
     // process first saved batch, then release it
     try {
-      framer.doWork();
+      doWork();
     } catch (DrillException e) {
       context.fail(e);
       cleanup();
@@ -186,6 +156,41 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     return IterOutcome.OK;
+  }
+
+  private void doWork() throws DrillException {
+
+    final WindowDataBatch current = batches.get(0);
+    final int recordCount = current.getRecordCount();
+
+    logger.trace("WindowFramer.doWork() START, num batches {}, current batch has {} rows", batches.size(), recordCount);
+
+    // allocate outgoing vectors
+    for (VectorWrapper<?> w : container) {
+      w.getValueVector().allocateNew();
+    }
+
+    for (WindowFramer framer : framers) {
+      framer.doWork();
+    }
+
+    // transfer "non aggregated" vectors
+    for (VectorWrapper<?> vw : current) {
+      ValueVector v = container.addOrGet(vw.getField());
+      TransferPair tp = vw.getValueVector().makeTransferPair(v);
+      tp.transfer();
+    }
+
+    container.setRecordCount(recordCount);
+    for (VectorWrapper<?> v : container) {
+      v.getValueVector().getMutator().setValueCount(recordCount);
+    }
+
+    // we can safely free the current batch
+    current.clear();
+    batches.remove(0);
+
+    logger.trace("doWork() END");
   }
 
   /**
@@ -204,13 +209,19 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     final VectorAccessible last = batches.get(batches.size() - 1);
     final int lastSize = last.getRecordCount();
 
-    final boolean partitionEndReached = !framer.isSamePartition(currentSize - 1, current, lastSize - 1, last);
-    final boolean frameEndReached = partitionEndReached || !framer.isPeer(currentSize - 1, current, lastSize - 1, last);
+    boolean partitionEndReached;
+    boolean frameEndReached;
+    try {
+      partitionEndReached = !framers[0].isSamePartition(currentSize - 1, current, lastSize - 1, last);
+      frameEndReached = partitionEndReached || !framers[0].isPeer(currentSize - 1, current, lastSize - 1, last);
 
-    for (final WindowFunction function : functions) {
-      if (!function.canDoWork(batches.size(), hasOrderBy, frameEndReached, partitionEndReached)) {
-        return false;
+      for (final WindowFunction function : functions) {
+        if (!function.canDoWork(batches.size(), popConfig, frameEndReached, partitionEndReached)) {
+          return false;
+        }
       }
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
     }
 
     return true;
@@ -234,7 +245,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     try {
-      framer = createFramer(incoming);
+      createFramers(incoming);
     } catch (IOException | ClassTransformationException e) {
       throw new SchemaChangeException("Exception when creating the schema", e);
     }
@@ -244,20 +255,19 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
   }
 
-  private WindowFramer createFramer(VectorAccessible batch) throws SchemaChangeException, IOException, ClassTransformationException {
-    assert framer == null : "createFramer should only be called once";
+  private void createFramers(VectorAccessible batch) throws SchemaChangeException, IOException, ClassTransformationException {
+    assert framers == null : "createFramer should only be called once";
 
-    logger.trace("creating framer");
+    logger.trace("creating framer(s)");
 
     final List<LogicalExpression> keyExprs = Lists.newArrayList();
     final List<LogicalExpression> orderExprs = Lists.newArrayList();
     boolean requireFullPartition = false;
 
-    container.clear();
+    boolean useDefaultFrame = false; // at least one window function uses the DefaultFrameTemplate
+    boolean useCustomFrame = false; // at least one window function uses the CustomFrameTemplate
 
-    functions.clear();
-
-    hasOrderBy = popConfig.getOrderings().length > 0;
+    hasOrderBy = popConfig.getOrderings().size() > 0;
 
     // all existing vectors will be transferred to the outgoing container in framer.doWork()
     for (final VectorWrapper<?> wrapper : batch) {
@@ -276,13 +286,18 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       final WindowFunction winfun = WindowFunction.fromExpression(call);
       if (winfun.materialize(ne, container, context.getFunctionRegistry())) {
         functions.add(winfun);
-        requireFullPartition |= winfun.requiresFullPartition(hasOrderBy);
+        requireFullPartition |= winfun.requiresFullPartition(popConfig);
+
+        if (winfun.supportsCustomFrames()) {
+          useCustomFrame = true;
+        } else {
+          useDefaultFrame = true;
+        }
       }
     }
 
-    if (container.isSchemaChanged()) {
-      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    }
+    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    container.setRecordCount(0);
 
     // materialize partition by expressions
     for (final NamedExpression ne : popConfig.getWithins()) {
@@ -294,15 +309,31 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       orderExprs.add(ExpressionTreeMaterializer.materializeAndCheckErrors(oe.getExpr(), batch, context.getFunctionRegistry()));
     }
 
-    final WindowFramer framer = generateFramer(keyExprs, orderExprs, functions);
-    framer.setup(batches, container, oContext, requireFullPartition);
+    // count how many framers we need
+    int numFramers = useDefaultFrame ? 1 : 0;
+    numFramers += useCustomFrame ? 1 : 0;
+    assert numFramers > 0 : "No framer was needed!";
 
-    return framer;
+    framers = new WindowFramer[numFramers];
+    int index = 0;
+    if (useDefaultFrame) {
+      framers[index] = generateFramer(keyExprs, orderExprs, functions, false);
+      framers[index].setup(batches, container, oContext, requireFullPartition, popConfig);
+      index++;
+    }
+
+    if (useCustomFrame) {
+      framers[index] = generateFramer(keyExprs, orderExprs, functions, true);
+      framers[index].setup(batches, container, oContext, requireFullPartition, popConfig);
+    }
   }
 
   private WindowFramer generateFramer(final List<LogicalExpression> keyExprs, final List<LogicalExpression> orderExprs,
-      final List<WindowFunction> functions) throws IOException, ClassTransformationException {
-    final ClassGenerator<WindowFramer> cg = CodeGenerator.getRoot(WindowFramer.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+      final List<WindowFunction> functions, boolean useCustomFrame) throws IOException, ClassTransformationException {
+
+    TemplateClassDefinition<WindowFramer> definition = useCustomFrame ?
+      WindowFramer.FRAME_TEMPLATE_DEFINITION : WindowFramer.NOFRAME_TEMPLATE_DEFINITION;
+    final ClassGenerator<WindowFramer> cg = CodeGenerator.getRoot(definition, context.getFunctionRegistry(), context.getOptions());
 
     {
       // generating framer.isSamePartition()
@@ -322,12 +353,19 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     for (final WindowFunction function : functions) {
-      function.generateCode(cg);
+      // only generate code for the proper window functions
+      if (function.supportsCustomFrames() == useCustomFrame) {
+        function.generateCode(cg);
+      }
     }
 
     cg.getBlock("resetValues")._return(JExpr.TRUE);
+    CodeGenerator<WindowFramer> codeGen = cg.getCodeGenerator();
+    codeGen.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    codeGen.saveCodeForDebugging(true);
 
-    return context.getImplementationClass(cg);
+    return context.getImplementationClass(codeGen);
   }
 
   /**
@@ -342,23 +380,27 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       }
 
       cg.setMappingSet(leftMapping);
-      ClassGenerator.HoldingContainer first = cg.addExpr(expr, false);
+      ClassGenerator.HoldingContainer first = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(rightMapping);
-      ClassGenerator.HoldingContainer second = cg.addExpr(expr, false);
+      ClassGenerator.HoldingContainer second = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
 
       final LogicalExpression fh =
         FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
-      final ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
+      final ClassGenerator.HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
   }
 
   private void cleanup() {
-    if (framer != null) {
-      framer.cleanup();
-      framer = null;
+
+    if (framers != null) {
+      for (WindowFramer framer : framers) {
+        framer.cleanup();
+      }
+
+      framers = null;
     }
 
     if (batches != null) {
@@ -383,6 +425,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
   @Override
   public int getRecordCount() {
-    return framer.getOutputCount();
+    return framers[0].getOutputCount();
   }
 }

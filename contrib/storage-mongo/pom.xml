@@ -15,13 +15,12 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-mongo-storage</artifactId>
@@ -70,7 +69,7 @@
     <dependency>
       <groupId>de.flapdoodle.embed</groupId>
       <artifactId>de.flapdoodle.embed.mongo</artifactId>
-      <version>1.50.0</version>
+      <version>1.50.5</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -81,9 +80,15 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-	  <includes>
-	    <include>${mongo.TestSuite}</include>
-	  </includes>
+          <includes>
+            <include>${mongo.TestSuite}</include>
+          </includes>
+          <excludes>
+            <exclude>**/TestMongoFilterPushDown.java</exclude>
+            <exclude>**/TestMongoProjectPushDown.java</exclude>
+            <exclude>**/TestMongoQueries.java</exclude>
+            <exclude>**/TestMongoChunkAssignment.java</exclude>
+          </excludes>
           <systemProperties>
             <property>
               <name>logback.log.dir</name>

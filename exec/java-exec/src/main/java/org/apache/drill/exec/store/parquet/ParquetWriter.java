@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,11 +21,11 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
@@ -40,6 +40,18 @@ import com.google.common.base.Preconditions;
 public class ParquetWriter extends AbstractWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetWriter.class);
 
+/** Version of Drill's Parquet writer. Increment this version (by 1) any time we make any format change to the file.
+ * Format changes include:
+ * <ul>
+ * <li>Supporting new data types,
+ * <li>Changes to the format of data fields,
+ * <li>Adding new metadata to the file footer, etc.
+ * </ul>
+ * Newer readers must be able to read old files. The Writer version tells the Parquet reader how to interpret fields
+ * or metadata when that data changes format from one writer version to another.
+ */
+  public static final int WRITER_VERSION = 2;
+
   private final String location;
   private final List<String> partitionColumns;
   private final ParquetFormatPlugin formatPlugin;
@@ -49,6 +61,7 @@ public class ParquetWriter extends AbstractWriter {
           @JsonProperty("child") PhysicalOperator child,
           @JsonProperty("location") String location,
           @JsonProperty("partitionColumns") List<String> partitionColumns,
+          @JsonProperty("storageStrategy") StorageStrategy storageStrategy,
           @JsonProperty("storage") StoragePluginConfig storageConfig,
           @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
 
@@ -57,6 +70,7 @@ public class ParquetWriter extends AbstractWriter {
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
     this.partitionColumns = partitionColumns;
+    setStorageStrategy(storageStrategy);
   }
 
   public ParquetWriter(PhysicalOperator child,
@@ -97,7 +111,9 @@ public class ParquetWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new ParquetWriter(child, location, partitionColumns, formatPlugin);
+    ParquetWriter writer = new ParquetWriter(child, location, partitionColumns, formatPlugin);
+    writer.setStorageStrategy(getStorageStrategy());
+    return writer;
   }
 
   @Override

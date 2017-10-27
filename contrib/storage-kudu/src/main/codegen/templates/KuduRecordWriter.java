@@ -88,7 +88,7 @@ import java.lang.UnsupportedOperationException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.kududb.client.*;
+import org.apache.kudu.client.*;
 import org.apache.drill.exec.store.*;
 
 public abstract class KuduRecordWriter extends AbstractRecordWriter implements RecordWriter {
@@ -157,7 +157,7 @@ public abstract class KuduRecordWriter extends AbstractRecordWriter implements R
             <#elseif minor.class == "VarChar" >
               byte[] bytes = new byte[holder.end - holder.start];
               holder.buffer.getBytes(holder.start, bytes);
-              row.addStringUtf8(fieldId, bytes);
+              row.addString(fieldId, new String(bytes));
             <#elseif minor.class == "VarBinary">
               byte[] bytes = new byte[holder.end - holder.start];
               holder.buffer.getBytes(holder.start, bytes);

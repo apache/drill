@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,20 +17,28 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
+@Category({SqlTest.class, PlannerTest.class})
 public class TestStarQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
   static final String WORKING_PATH = TestTools.getWorkingPath();
   static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   @Test // see DRILL-2021
+  @Category(UnlikelyTest.class)
   public void testSelStarCommaSameColumnRepeated() throws Exception {
     testBuilder()
       .sqlQuery("select n_name, *, n_name, n_name from cp.`tpch/nation.parquet`")
@@ -70,6 +78,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // see DRILL-1979
+  @Category(UnlikelyTest.class)
   public void testSelStarMultipleStarsRegularColumnAsAlias() throws Exception {
     testBuilder()
       .sqlQuery("select *, n_name as extra, *, n_name as extra from cp.`tpch/nation.parquet`")
@@ -91,6 +100,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // see DRILL-1828
+  @Category(UnlikelyTest.class)
   public void testSelStarMultipleStars() throws Exception {
     testBuilder()
     .sqlQuery("select *, *, n_name from cp.`tpch/nation.parquet`")
@@ -110,6 +120,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // see DRILL-1825
+  @Category(UnlikelyTest.class)
   public void testSelStarWithAdditionalColumnLimit() throws Exception {
     testBuilder()
     .sqlQuery("select *, n_nationkey, *, n_name from cp.`tpch/nation.parquet` limit 2")
@@ -235,6 +246,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-1293
+  @Category(UnlikelyTest.class)
   public void testStarView1() throws Exception {
     test("use dfs_test.tmp");
     test("create view vt1 as select * from cp.`tpch/region.parquet` r, cp.`tpch/nation.parquet` n where r.r_regionkey = n.n_regionkey");
@@ -244,7 +256,7 @@ public class TestStarQueries extends BaseTestQuery{
 
   @Test  // select star for a SchemaTable.
   public void testSelStarSubQSchemaTable() throws Exception {
-    test("select name, kind, type from (select * from sys.options);");
+    test("select name, kind, accessibleScopes from (select * from sys.options);");
   }
 
   @Test  // Join a select star of SchemaTable, with a select star of Schema-less table.
@@ -261,6 +273,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // see DRILL-1811
+  @Category(UnlikelyTest.class)
   public void testSelStarDifferentColumnOrder() throws Exception {
     test("select first_name, * from cp.`employee.json`;");
     test("select *, first_name, *, last_name from cp.`employee.json`;");
@@ -361,6 +374,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-595 : Join two CTE, each having select * : regular columns appear in the select , where and on clause, group by, order by.
+  @Category(UnlikelyTest.class)
   public void testDRILL_595WithClauseJoin() throws Exception {
     test("with n as (select * from cp.`tpch/nation.parquet`), \n " +
         "     r as (select * from cp.`tpch/region.parquet`) \n" +
@@ -378,6 +392,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test  // DRILL-1889
+  @Category(UnlikelyTest.class)
   public void testStarWithOtherExpression() throws Exception {
     testBuilder()
         .ordered()
@@ -399,6 +414,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-1500
+  @Category(UnlikelyTest.class)
   public void testStarPartitionFilterOrderBy() throws Exception {
     String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where dir0=1994 and dir1='Q1' order by dir0 limit 1", TEST_RES_PATH);
     org.joda.time.DateTime mydate = new org.joda.time.DateTime("1994-01-20T00:00:00.000");
@@ -412,6 +428,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-2069
+  @Category(UnlikelyTest.class)
   public void testStarInSubquery() throws Exception {
     testBuilder()
         .unOrdered()
@@ -462,6 +479,7 @@ public class TestStarQueries extends BaseTestQuery{
 
 
   @Test //DRILL-2802
+  @Category(UnlikelyTest.class)
   public void testSelectPartitionColumnOnly() throws Exception {
     final String table = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     final String query1 = String.format("select dir0 from dfs_test.`%s` limit 1 ", table);
@@ -479,6 +497,7 @@ public class TestStarQueries extends BaseTestQuery{
   }
 
   @Test   // DRILL-2053 : column name is case-insensitive when join a CTE with a regluar table.
+  @Category(UnlikelyTest.class)
   public void testCaseSenJoinCTEWithRegTab() throws Exception {
     final String query1 = "with a as ( select * from cp.`tpch/nation.parquet` ) select * from a, cp.`tpch/region.parquet` b where a.N_REGIONKEY = b.R_REGIONKEY";
 
@@ -493,6 +512,23 @@ public class TestStarQueries extends BaseTestQuery{
     expectedRecordCount = 25;
     assertEquals(String.format("Received unexpected number of rows in output for query:\n%s\n expected=%d, received=%s",
         query2, expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+  }
+
+  @Test // DRILL-5845
+  public void testSchemaForStarOrderByLimit() throws Exception {
+    final String query = "select * from cp.`tpch/nation.parquet` order by n_name limit 1";
+    final BatchSchema expectedSchema = new SchemaBuilder()
+        .add("n_nationkey", TypeProtos.MinorType.INT)
+        .add("n_name",TypeProtos.MinorType.VARCHAR)
+        .add("n_regionkey", TypeProtos.MinorType.INT)
+        .add("n_comment", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
   }
 
 }

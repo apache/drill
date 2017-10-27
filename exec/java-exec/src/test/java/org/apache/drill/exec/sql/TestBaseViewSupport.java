@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -102,6 +102,50 @@ public class TestBaseViewSupport extends BaseTestQuery {
         .baselineColumns("ok", "summary")
         .baselineValues(true, String.format("View [%s] deleted successfully from schema [%s].", viewName, finalSchema))
         .go();
+  }
+
+  /**
+   * Drop view if exists with given parameters.
+   *
+   * Current schema "dfs_test"
+   * DROP VIEW IF EXISTS tmp.viewName
+   *
+   * For the above DROP VIEW IF EXISTS query, function parameters values are:
+   *  viewSchema = "tmp"
+   *  "viewName" = "viewName"
+   *  "finalSchema" = "dfs_test.tmp"
+   *  "ifViewExists" = null
+   *
+   * @param viewSchema
+   * @param viewName
+   * @param finalSchema
+   * @param ifViewExists Helps to check query result depending from the existing of the view.
+   * @throws Exception
+   */
+  protected static void dropViewIfExistsHelper(final String viewSchema, final String viewName, final String finalSchema, Boolean ifViewExists) throws
+      Exception{
+    String viewFullName = "`" + viewName + "`";
+    if (!Strings.isNullOrEmpty(viewSchema)) {
+      viewFullName = viewSchema + "." + viewFullName;
+    }
+    if (ifViewExists == null) {
+      // ifViewExists == null: we do not know whether the table exists. Just drop it if exists or skip dropping if doesn't exist
+      test(String.format("DROP VIEW IF EXISTS %s", viewFullName));
+    } else if (ifViewExists) {
+      testBuilder()
+          .sqlQuery(String.format("DROP VIEW IF EXISTS %s", viewFullName))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("View [%s] deleted successfully from schema [%s].", viewName, finalSchema))
+          .go();
+    } else {
+      testBuilder()
+          .sqlQuery(String.format("DROP VIEW IF EXISTS %s", viewFullName))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(false, String.format("View [%s] not found in schema [%s].", viewName, finalSchema))
+          .go();
+    }
   }
 
   /**

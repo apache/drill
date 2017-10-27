@@ -33,17 +33,21 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import javax.inject.Inject;
 
-/**
- * This file is generated with Freemarker using the template exec/java-exec/src/main/codegen/templates/DirectoryExplorers.java
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
  */
 public class DirectoryExplorers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectoryExplorers.class);
-  private static final String FILE_SEPARATOR = "/";
 
   <#list [ { "name" : "\"maxdir\"", "functionClassName" : "MaxDir", "comparison" : "compareTo(curr) < 0", "goal" : "maximum", "comparisonType" : "case-sensitive"},
            { "name" : "\"imaxdir\"", "functionClassName" : "IMaxDir", "comparison" : "compareToIgnoreCase(curr) < 0", "goal" : "maximum", "comparisonType" : "case-insensitive"},
            { "name" : "\"mindir\"", "functionClassName" : "MinDir", "comparison" : "compareTo(curr) > 0", "goal" : "minimum", "comparisonType" : "case-sensitive"},
            { "name" : "\"imindir\"", "functionClassName" : "IMinDir", "comparison" : "compareToIgnoreCase(curr) > 0", "goal" : "minimum", "comparisonType" : "case-insensitive"}
+
+           { "name" : "\"maxdir\"", "functionClassName" : "MaxDirTwoArg", "comparison" : "compareTo(curr) < 0", "goal" : "maximum", "comparisonType" : "case-sensitive"},
+           { "name" : "\"imaxdir\"", "functionClassName" : "IMaxDirTwoArg", "comparison" : "compareToIgnoreCase(curr) < 0", "goal" : "maximum", "comparisonType" : "case-insensitive"},
+           { "name" : "\"mindir\"", "functionClassName" : "MinDirTwoArg", "comparison" : "compareTo(curr) > 0", "goal" : "minimum", "comparisonType" : "case-sensitive"},
+           { "name" : "\"imindir\"", "functionClassName" : "IMinDirTwoArg", "comparison" : "compareToIgnoreCase(curr) > 0", "goal" : "minimum", "comparisonType" : "case-insensitive"}
   ] as dirAggrProps>
 
 
@@ -51,7 +55,9 @@ public class DirectoryExplorers {
   public static class ${dirAggrProps.functionClassName} implements DrillSimpleFunc {
 
     @Param VarCharHolder schema;
+  <#if dirAggrProps.functionClassName?ends_with("TwoArg")>
     @Param  VarCharHolder table;
+  </#if>
     @Output VarCharHolder out;
     @Inject DrillBuf buffer;
     @Inject org.apache.drill.exec.store.PartitionExplorer partitionExplorer;
@@ -64,23 +70,39 @@ public class DirectoryExplorers {
       try {
         subPartitions = partitionExplorer.getSubPartitions(
             org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(schema),
+          <#if dirAggrProps.functionClassName?ends_with("TwoArg")>
             org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(table),
+          <#else>
+            ".",
+          </#if>
             new java.util.ArrayList<String>(),
             new java.util.ArrayList<String>());
       } catch (org.apache.drill.exec.store.PartitionNotFoundException e) {
         throw new RuntimeException(
+          <#if dirAggrProps.functionClassName?ends_with("TwoArg")>
             String.format("Error in %s function: Table %s does not exist in schema %s ",
+          <#else>
+            String.format("Error in %s function: Schema/table %s does not exist ",
+          </#if>
                 ${dirAggrProps.name},
+          <#if dirAggrProps.functionClassName?ends_with("TwoArg")>
                 org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(table),
+          </#if>
                 org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(schema))
         );
       }
       java.util.Iterator partitionIterator = subPartitions.iterator();
       if (!partitionIterator.hasNext()) {
         throw new RuntimeException(
+          <#if dirAggrProps.functionClassName?ends_with("TwoArg")>
             String.format("Error in %s function: Table %s in schema %s does not contain sub-partitions.",
+          <#else>
+            String.format("Error in %s function: Schema/table %s does not contain sub-partitions.",
+          </#if>
                 ${dirAggrProps.name},
+          <#if dirAggrProps.functionClassName?ends_with("TwoArg")>
                 org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(table),
+          </#if>
                 org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(schema)
             )
         );
@@ -94,7 +116,7 @@ public class DirectoryExplorers {
           subPartitionStr = curr;
         }
       }
-      String[] subPartitionParts = subPartitionStr.split(FILE_SEPARATOR);
+      String[] subPartitionParts = subPartitionStr.split("/");
       subPartitionStr = subPartitionParts[subPartitionParts.length - 1];
       byte[] result = subPartitionStr.getBytes();
       out.buffer = buffer = buffer.reallocIfNeeded(result.length);

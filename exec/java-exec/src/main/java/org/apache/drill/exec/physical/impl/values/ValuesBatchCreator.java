@@ -39,6 +39,6 @@ public class ValuesBatchCreator implements BatchCreator<Values> {
     assert children.isEmpty();
 
     JSONRecordReader reader = new JSONRecordReader(context, config.getContent().asNode(), null, Collections.singletonList(SchemaPath.getSimplePath("*")));
-    return new ScanBatch(config, context, Iterators.singletonIterator((RecordReader) reader));
+    return new ScanBatch(config, context, Collections.singletonList((RecordReader) reader));
   }
 }

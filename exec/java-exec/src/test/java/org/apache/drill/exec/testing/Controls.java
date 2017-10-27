@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.testing;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class Controls {
 
@@ -131,7 +132,7 @@ public class Controls {
      * @param nSkip     number of times to skip before firing
      * @return this builder
      */
-    public Builder addPause(final Class siteClass, final String desc, final int nSkip) {
+    public Builder addPause(final Class<?> siteClass, final String desc, final int nSkip) {
       injections.add(ControlsInjectionUtil.createPause(siteClass, desc, nSkip));
       return this;
     }
@@ -144,7 +145,7 @@ public class Controls {
      * @param desc      descriptor for the pause site in the site class
      * @return this builder
      */
-    public Builder addPause(final Class siteClass, final String desc) {
+    public Builder addPause(final Class<?> siteClass, final String desc) {
       return addPause(siteClass, desc, 0);
     }
 
@@ -156,7 +157,7 @@ public class Controls {
      * @param nSkip     number of times to skip before firing
      * @return this builder
      */
-    public Builder addPauseOnBit(final Class siteClass, final String desc,
+    public Builder addPauseOnBit(final Class<?> siteClass, final String desc,
                                  final DrillbitEndpoint endpoint, final int nSkip) {
       injections.add(ControlsInjectionUtil.createPauseOnBit(siteClass, desc, nSkip, endpoint));
       return this;
@@ -170,7 +171,7 @@ public class Controls {
      * @param desc      descriptor for the pause site in the site class
      * @return this builder
      */
-    public Builder addPauseOnBit(final Class siteClass, final String desc,
+    public Builder addPauseOnBit(final Class<?> siteClass, final String desc,
                                  final DrillbitEndpoint endpoint) {
       return addPauseOnBit(siteClass, desc, endpoint, 0);
     }
@@ -182,7 +183,7 @@ public class Controls {
      * @param desc      descriptor for the latch in the site class
      * @return this builder
      */
-    public Builder addLatch(final Class siteClass, final String desc) {
+    public Builder addLatch(final Class<?> siteClass, final String desc) {
       injections.add(ControlsInjectionUtil.createLatch(siteClass, desc));
       return this;
     }

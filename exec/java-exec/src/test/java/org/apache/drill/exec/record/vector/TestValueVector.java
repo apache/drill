@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,13 +20,12 @@ package org.apache.drill.exec.record.vector;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import io.netty.buffer.DrillBuf;
 
 import java.nio.charset.Charset;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
@@ -57,6 +56,7 @@ import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
@@ -67,10 +67,14 @@ import org.junit.Test;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import io.netty.buffer.DrillBuf;
+import org.junit.experimental.categories.Category;
+
+@Category(VectorTest.class)
 public class TestValueVector extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
 
-  private final static SchemaPath EMPTY_SCHEMA_PATH = SchemaPath.getSimplePath("");
+  private final static String EMPTY_SCHEMA_PATH = "";
 
   private DrillConfig drillConfig;
   private BufferAllocator allocator;
@@ -94,6 +98,7 @@ public class TestValueVector extends ExecTest {
   @Test(expected = OversizedAllocationException.class)
   public void testFixedVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
+    @SuppressWarnings("resource")
     final UInt4Vector vector = new UInt4Vector(field, allocator);
     // edge case 1: buffer size = max value capacity
     final int expectedValueCapacity = BaseValueVector.MAX_ALLOCATION_SIZE / 4;
@@ -146,10 +151,10 @@ public class TestValueVector extends ExecTest {
     }
   }
 
-
   @Test(expected = OversizedAllocationException.class)
   public void testVariableVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
+    @SuppressWarnings("resource")
     final VarCharVector vector = new VarCharVector(field, allocator);
     // edge case 1: value count = MAX_VALUE_ALLOCATION
     final int expectedAllocationInBytes = BaseValueVector.MAX_ALLOCATION_SIZE;
@@ -744,7 +749,7 @@ the interface to load has changed
     final VectorVerifier noChild = new ChildVerifier();
     final VectorVerifier offsetChild = new ChildVerifier(UInt4Holder.TYPE);
 
-    final ImmutableMap.Builder<Class, VectorVerifier> builder = ImmutableMap.builder();
+    final ImmutableMap.Builder<Class<? extends ValueVector>, VectorVerifier> builder = ImmutableMap.builder();
     builder.put(UInt4Vector.class, noChild);
     builder.put(BitVector.class, noChild);
     builder.put(VarCharVector.class, offsetChild);
@@ -752,14 +757,14 @@ the interface to load has changed
     builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
     builder.put(MapVector.class, noChild);
     builder.put(RepeatedMapVector.class, offsetChild);
-    final ImmutableMap<Class, VectorVerifier> children = builder.build();
+    final ImmutableMap<Class<? extends ValueVector>, VectorVerifier> children = builder.build();
 
     testVectors(new VectorVerifier() {
 
       @Override
       public void verify(ValueVector vector) throws Exception {
 
-        final Class klazz = vector.getClass();
+        final Class<?> klazz = vector.getClass();
         final VectorVerifier verifier = children.get(klazz);
         verifier.verify(vector);
       }
@@ -788,4 +793,23 @@ the interface to load has changed
       }
     });
   }
+
+  @Test
+  public void testListVectorShouldNotThrowOversizedAllocationException() throws Exception {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH,
+            Types.optional(TypeProtos.MinorType.LIST));
+    ListVector vector = new ListVector(field, allocator, null);
+    ListVector vectorFrom = new ListVector(field, allocator, null);
+    vectorFrom.allocateNew();
+
+    for (int i = 0; i < 10000; i++) {
+      vector.allocateNew();
+      vector.copyFromSafe(0, 0, vectorFrom);
+      vector.clear();
+    }
+
+    vectorFrom.clear();
+    vector.clear();
+  }
+
 }

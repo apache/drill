@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,28 +17,29 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.fail;
+import static java.sql.ResultSetMetaData.columnNoNulls;
+import static java.sql.ResultSetMetaData.columnNullable;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.hamcrest.CoreMatchers.*;
-
-import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTestBase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.Statement;
-
-import static java.sql.ResultSetMetaData.columnNoNulls;
-import static java.sql.ResultSetMetaData.columnNullable;
-
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
+
+import org.apache.drill.jdbc.Driver;
+import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 // NOTE: TestInformationSchemaColumns and DatabaseMetaDataGetColumnsTest
 // have identical sections.  (Cross-maintain them for now; factor out later.)
@@ -52,6 +53,7 @@ import java.sql.Types;
 /**
  * Test class for Drill's INFORMATION_SCHEMA.COLUMNS implementation.
  */
+@Category(JdbcTest.class)
 public class TestInformationSchemaColumns extends JdbcTestBase {
 
   private static final String VIEW_SCHEMA = "dfs_test.tmp";
@@ -1155,7 +1157,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_mdrOptVARCHAR() throws SQLException {
-    assertThat( getIntOrNull( mdrOptVARCHAR, "CHARACTER_MAXIMUM_LENGTH" ), equalTo( 1 ) );
+    assertThat(getIntOrNull(mdrOptVARCHAR, "CHARACTER_MAXIMUM_LENGTH"), equalTo(org.apache.drill.common.types.Types.MAX_VARCHAR_LENGTH));
   }
 
   @Test
@@ -1319,7 +1321,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   @Test
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_mdrOptVARCHAR() throws SQLException {
     assertThat( getIntOrNull( mdrOptVARCHAR, "CHARACTER_OCTET_LENGTH" ),
-                equalTo( 1    /* chars. (default of 1) */
+        equalTo(org.apache.drill.common.types.Types.MAX_VARCHAR_LENGTH /* chars. (default of 65535) */
                          * 4  /* max. UTF-8 bytes per char. */ ) );
   }
 

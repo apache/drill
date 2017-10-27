@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.util.List;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.util.FileUtils;
@@ -47,7 +48,7 @@ import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
@@ -55,7 +56,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.junit.Ignore;
@@ -65,8 +66,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import org.junit.experimental.categories.Category;
 
 @Ignore
+@Category(PlannerTest.class)
 public class TestOptiqPlans extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptiqPlans.class);
   private final DrillConfig config = DrillConfig.create();
@@ -112,7 +115,7 @@ public class TestOptiqPlans extends ExecTest {
         controller,
         com,
         workBus,
-        new LocalPStoreProvider(config));
+        new LocalPersistentStoreProvider(config));
     final QueryContext qc = new QueryContext(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(),
         bitContext, QueryId.getDefaultInstance());
     final PhysicalPlanReader reader = bitContext.getPlanReader();
@@ -142,7 +145,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().toExpr());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -171,7 +174,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().toExpr());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -200,7 +203,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().toExpr());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -239,7 +242,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper vw : loader) {
-          System.out.println(vw.getValueVector().getField().toExpr());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -278,7 +281,7 @@ public class TestOptiqPlans extends ExecTest {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (final VectorWrapper vw : loader) {
-          System.out.println(vw.getValueVector().getField().toExpr());
+          System.out.println(vw.getValueVector().getField().getName());
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
@@ -304,16 +307,7 @@ public class TestOptiqPlans extends ExecTest {
 
   private SimpleRootExec doPhysicalTest(final DrillbitContext bitContext, UserClientConnection connection, String file)
       throws Exception {
-    new NonStrictExpectations() {
-      {
-        bitContext.getMetrics();
-        result = new MetricRegistry();
-        bitContext.getAllocator();
-        result = RootAllocatorFactory.newRoot(config);
-        bitContext.getConfig();
-        result = config;
-      }
-    };
+    mockDrillbitContext(bitContext);
 
     final StoragePluginRegistry reg = new StoragePluginRegistryImpl(bitContext);
 

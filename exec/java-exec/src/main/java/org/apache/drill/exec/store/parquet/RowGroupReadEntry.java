@@ -26,20 +26,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RowGroupReadEntry extends ReadEntryFromHDFS {
 
   private int rowGroupIndex;
+  private long numRecordsToRead;
 
   @JsonCreator
   public RowGroupReadEntry(@JsonProperty("path") String path, @JsonProperty("start") long start,
-                           @JsonProperty("length") long length, @JsonProperty("rowGroupIndex") int rowGroupIndex) {
+                           @JsonProperty("length") long length, @JsonProperty("rowGroupIndex") int rowGroupIndex,
+                           @JsonProperty("numRecordsToRead") long numRecordsToRead) {
     super(path, start, length);
     this.rowGroupIndex = rowGroupIndex;
+    this.numRecordsToRead = numRecordsToRead;
   }
 
   @JsonIgnore
   public RowGroupReadEntry getRowGroupReadEntry() {
-    return new RowGroupReadEntry(this.getPath(), this.getStart(), this.getLength(), this.rowGroupIndex);
+    return new RowGroupReadEntry(this.getPath(), this.getStart(),
+                                 this.getLength(), this.rowGroupIndex, this.numRecordsToRead);
   }
 
   public int getRowGroupIndex(){
     return rowGroupIndex;
   }
+
+  public long getNumRecordsToRead() { return numRecordsToRead; }
 }

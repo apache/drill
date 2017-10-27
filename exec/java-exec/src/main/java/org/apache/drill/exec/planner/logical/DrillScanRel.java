@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -41,8 +42,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import org.apache.drill.exec.util.Utilities;
 
 /**
  * GroupScan of a Drill table.
@@ -82,13 +82,8 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.rowType = rowType;
-    if (columns == null) { // planner asks to scan all of the columns
-      this.columns =  ColumnList.all();
-    } else if (columns.size() == 0) { // planner asks to skip all of the columns
-      this.columns = ColumnList.none();
-    } else { // planner asks to scan some columns
-      this.columns  = ColumnList.some(columns);
-    }
+    Preconditions.checkNotNull(columns);
+    this.columns = columns;
     this.partitionFilterPushdown = partitionFilterPushdown;
     try {
       this.groupScan = drillTable.getGroupScan().clone(this.columns);
@@ -152,7 +147,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     return this.groupScan.getScanStats(settings).getRecordCount();
   }
 
@@ -160,16 +155,11 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   /// this and few other methods in a common base class which would be extended
   /// by both logical and physical rels.
   @Override
-  public RelOptCost computeSelfCost(final RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
     final ScanStats stats = groupScan.getScanStats(settings);
     int columnCount = getRowType().getFieldCount();
     double ioCost = 0;
-    boolean isStarQuery = Iterables.tryFind(getRowType().getFieldNames(), new Predicate<String>() {
-      @Override
-      public boolean apply(String input) {
-        return Preconditions.checkNotNull(input).equals("*");
-      }
-    }).isPresent();
+    boolean isStarQuery = Utilities.isStarQuery(columns);
 
     if (isStarQuery) {
       columnCount = STAR_COLUMN_COST;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -157,9 +157,9 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       //   1. Fragment unique id.
       //   2. Summary: currently contains number of records written.
       final MaterializedField fragmentIdField =
-          MaterializedField.create(SchemaPath.getSimplePath("Fragment"), Types.required(MinorType.VARCHAR));
+          MaterializedField.create("Fragment", Types.required(MinorType.VARCHAR));
       final MaterializedField summaryField =
-          MaterializedField.create(SchemaPath.getSimplePath("Number of records written"),
+          MaterializedField.create("Number of records written",
               Types.required(MinorType.BIGINT));
 
       container.addOrGet(fragmentIdField);
@@ -174,13 +174,25 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     schema = container.getSchema();
   }
 
+  /** Clean up needs to be performed before closing writer. Partially written data will be removed. */
   private void closeWriter() {
-    if (recordWriter != null) {
+    if (recordWriter == null) {
+      return;
+    }
+
+    try {
+      recordWriter.cleanup();
+    } catch(IOException ex) {
+      context.fail(ex);
+    } finally {
       try {
-        recordWriter.cleanup();
+        if (!processed) {
+          recordWriter.abort();
+        }
+      } catch (IOException e) {
+        logger.error("Abort failed. There could be leftover output files.", e);
+      } finally {
         recordWriter = null;
-      } catch(IOException ex) {
-        context.fail(ex);
       }
     }
   }

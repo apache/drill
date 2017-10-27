@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,10 +26,10 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.StatsSetupConst;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -58,15 +58,17 @@ public class HiveMetadataProvider {
   private final UserGroupInformation ugi;
   private final boolean isPartitionedTable;
   private final Map<Partition, List<InputSplitWrapper>> partitionInputSplitMap;
+  private final HiveConf hiveConf;
   private List<InputSplitWrapper> tableInputSplits;
 
-  private final Stopwatch watch = new Stopwatch();
+  private final Stopwatch watch = Stopwatch.createUnstarted();
 
-  public HiveMetadataProvider(final String userName, final HiveReadEntry hiveReadEntry) {
+  public HiveMetadataProvider(final String userName, final HiveReadEntry hiveReadEntry, final HiveConf hiveConf) {
     this.hiveReadEntry = hiveReadEntry;
     this.ugi = ImpersonationUtil.createProxyUgi(userName);
     isPartitionedTable = hiveReadEntry.getTable().getPartitionKeysSize() > 0;
     partitionInputSplitMap = Maps.newHashMap();
+    this.hiveConf = hiveConf;
   }
 
   /**
@@ -78,9 +80,9 @@ public class HiveMetadataProvider {
    * @throws IOException
    */
   public HiveStats getStats(final HiveReadEntry hiveReadEntry) throws IOException {
-    final Stopwatch timeGetStats = new Stopwatch().start();
+    final Stopwatch timeGetStats = Stopwatch.createStarted();
 
-    final Table table = hiveReadEntry.getTable();
+    final HiveTableWithColumnCache table = hiveReadEntry.getTable();
     try {
       if (!isPartitionedTable) {
         final Properties properties = MetaStoreUtils.getTableMetadata(table);
@@ -93,7 +95,7 @@ public class HiveMetadataProvider {
         return getStatsEstimateFromInputSplits(getTableInputSplits());
       } else {
         final HiveStats aggStats = new HiveStats(0, 0);
-        for(Partition partition : hiveReadEntry.getPartitions()) {
+        for(HivePartition partition : hiveReadEntry.getPartitions()) {
           final Properties properties = HiveUtilities.getPartitionMetadata(partition, table);
           HiveStats stats = getStatsFromProps(properties);
 
@@ -121,7 +123,7 @@ public class HiveMetadataProvider {
       return tableInputSplits;
     }
 
-    final Properties properties = MetaStoreUtils.getTableMetadata(hiveReadEntry.getTable());
+    final Properties properties = HiveUtilities.getTableMetadata(hiveReadEntry.getTable());
     tableInputSplits = splitInputWithUGI(properties, hiveReadEntry.getTable().getSd(), null);
 
     return tableInputSplits;
@@ -130,7 +132,7 @@ public class HiveMetadataProvider {
   /** Helper method which returns the InputSplits for given partition. InputSplits are cached to speed up subsequent
    * metadata cache requests for the same partition(s).
    */
-  private List<InputSplitWrapper> getPartitionInputSplits(final Partition partition) throws Exception {
+  private List<InputSplitWrapper> getPartitionInputSplits(final HivePartition partition) throws Exception {
     if (partitionInputSplitMap.containsKey(partition)) {
       return partitionInputSplitMap.get(partition);
     }
@@ -151,14 +153,14 @@ public class HiveMetadataProvider {
    * @return
    */
   public List<InputSplitWrapper> getInputSplits(final HiveReadEntry hiveReadEntry) {
-    final Stopwatch timeGetSplits = new Stopwatch().start();
+    final Stopwatch timeGetSplits = Stopwatch.createStarted();
     try {
       if (!isPartitionedTable) {
         return getTableInputSplits();
       }
 
       final List<InputSplitWrapper> splits = Lists.newArrayList();
-      for (Partition p : hiveReadEntry.getPartitions()) {
+      for (HivePartition p : hiveReadEntry.getPartitions()) {
         splits.addAll(getPartitionInputSplits(p));
       }
       return splits;
@@ -192,8 +194,9 @@ public class HiveMetadataProvider {
    * Get the stats from table properties. If not found -1 is returned for each stats field.
    * CAUTION: stats may not be up-to-date with the underlying data. It is always good to run the ANALYZE command on
    * Hive table to have up-to-date stats.
-   * @param properties
-   * @return
+   *
+   * @param properties the source of table stats
+   * @return {@link HiveStats} instance with rows number and size in bytes from specified properties
    */
   private HiveStats getStatsFromProps(final Properties properties) {
     long numRows = -1;
@@ -206,7 +209,7 @@ public class HiveMetadataProvider {
 
       final String sizeInBytesProp = properties.getProperty(StatsSetupConst.TOTAL_SIZE);
       if (sizeInBytesProp != null) {
-        sizeInBytes = Long.valueOf(numRowsProp);
+        sizeInBytes = Long.valueOf(sizeInBytesProp);
       }
     } catch (final NumberFormatException e) {
       logger.error("Failed to parse Hive stats in metastore.", e);
@@ -238,15 +241,15 @@ public class HiveMetadataProvider {
       return ugi.doAs(new PrivilegedExceptionAction<List<InputSplitWrapper>>() {
         public List<InputSplitWrapper> run() throws Exception {
           final List<InputSplitWrapper> splits = Lists.newArrayList();
-          final JobConf job = new JobConf();
-          HiveUtilities.addConfToJob(job, properties, hiveReadEntry.hiveConfigOverride);
+          final JobConf job = new JobConf(hiveConf);
+          HiveUtilities.addConfToJob(job, properties);
           job.setInputFormat(HiveUtilities.getInputFormatClass(job, sd, hiveReadEntry.getTable()));
           final Path path = new Path(sd.getLocation());
           final FileSystem fs = path.getFileSystem(job);
 
           if (fs.exists(path)) {
             FileInputFormat.addInputPath(job, path);
-            final InputFormat format = job.getInputFormat();
+            final InputFormat<?, ?> format = job.getInputFormat();
             for (final InputSplit split : format.getSplits(job, 1)) {
               splits.add(new InputSplitWrapper(split, partition));
             }

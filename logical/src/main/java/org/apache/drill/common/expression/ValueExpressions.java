@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,12 +51,16 @@ public class ValueExpressions {
     return new BooleanExpression(Boolean.toString(b), ExpressionPosition.UNKNOWN);
   }
 
-  public static LogicalExpression getChar(String s){
-    return new QuotedString(s, ExpressionPosition.UNKNOWN);
+  public static LogicalExpression getChar(String s, int precision){
+    return new QuotedString(s, precision, ExpressionPosition.UNKNOWN);
   }
 
   public static LogicalExpression getDate(GregorianCalendar date) {
     return new org.apache.drill.common.expression.ValueExpressions.DateExpression(date.getTimeInMillis());
+  }
+
+  public static LogicalExpression getDate(long milliSecond){
+    return new org.apache.drill.common.expression.ValueExpressions.DateExpression(milliSecond);
   }
 
   public static LogicalExpression getTime(GregorianCalendar time) {
@@ -68,9 +72,18 @@ public class ValueExpressions {
       return new TimeExpression(millis);
   }
 
+  public static LogicalExpression getTime(int milliSeconds) {
+    return new TimeExpression(milliSeconds);
+  }
+
   public static LogicalExpression getTimeStamp(GregorianCalendar date) {
     return new org.apache.drill.common.expression.ValueExpressions.TimeStampExpression(date.getTimeInMillis());
   }
+
+  public static LogicalExpression getTimeStamp(long milliSeconds) {
+    return new org.apache.drill.common.expression.ValueExpressions.TimeStampExpression(milliSeconds);
+  }
+
   public static LogicalExpression getIntervalYear(int months) {
     return new IntervalYearExpression(months);
   }
@@ -140,6 +153,8 @@ public class ValueExpressions {
 
   public static class BooleanExpression extends ValueExpression<Boolean> {
 
+    public static final BooleanExpression TRUE = new BooleanExpression("true", ExpressionPosition.UNKNOWN);
+    public static final BooleanExpression FALSE = new BooleanExpression("false", ExpressionPosition.UNKNOWN);
 
     public BooleanExpression(String value, ExpressionPosition pos) {
       super(value, pos);
@@ -635,10 +650,13 @@ public class ValueExpressions {
 
   public static class QuotedString extends ValueExpression<String> {
 
-    private static final MajorType QUOTED_STRING_CONSTANT = Types.required(MinorType.VARCHAR);
+    public static final QuotedString EMPTY_STRING = new QuotedString("", 0, ExpressionPosition.UNKNOWN);
 
-    public QuotedString(String value, ExpressionPosition pos) {
+    private final int precision;
+
+    public QuotedString(String value, int precision, ExpressionPosition pos) {
       super(value, pos);
+      this.precision = precision;
     }
 
     public String getString() {
@@ -652,7 +670,7 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return QUOTED_STRING_CONSTANT;
+      return Types.withPrecision(MinorType.VARCHAR, DataMode.REQUIRED, precision);
     }
 
     @Override

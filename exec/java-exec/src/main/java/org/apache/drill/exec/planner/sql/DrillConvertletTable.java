@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql;
 
 import java.util.HashMap;
 
+import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlAvgAggFunction;
@@ -26,10 +27,13 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
+import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
 
 public class DrillConvertletTable implements SqlRexConvertletTable{
 
   public static HashMap<SqlOperator, SqlRexConvertlet> map = new HashMap<>();
+
+  public static SqlRexConvertletTable INSTANCE = new DrillConvertletTable();
 
   static {
     // Use custom convertlet for extract function
@@ -47,13 +51,27 @@ public class DrillConvertletTable implements SqlRexConvertletTable{
    */
   @Override
   public SqlRexConvertlet get(SqlCall call) {
-
     SqlRexConvertlet convertlet;
+    if(call.getOperator() instanceof DrillCalciteSqlWrapper) {
+      final SqlOperator wrapper = call.getOperator();
+      final SqlOperator wrapped = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(call.getOperator());
+      if ((convertlet = map.get(wrapped)) != null) {
+        return convertlet;
+      }
+
+      ((SqlBasicCall) call).setOperator(wrapped);
+      SqlRexConvertlet sqlRexConvertlet = StandardConvertletTable.INSTANCE.get(call);
+      ((SqlBasicCall) call).setOperator(wrapper);
+      return sqlRexConvertlet;
+    }
 
     if ((convertlet = map.get(call.getOperator())) != null) {
       return convertlet;
     }
 
     return StandardConvertletTable.INSTANCE.get(call);
+  }
+
+  private DrillConvertletTable() {
   }
 }

@@ -120,14 +120,6 @@ public class ExpressionTest extends ExecTest {
 
   // HELPER METHODS //
 
-  private LogicalExpression parseExpr(String expr) throws RecognitionException {
-    final ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    final CommonTokenStream tokens = new CommonTokenStream(lexer);
-    final ExprParser parser = new ExprParser(tokens);
-    parse_return ret = parser.parse();
-    return ret.e;
-  }
-
   private String getExpressionCode(String expression, RecordBatch batch) throws Exception {
     final LogicalExpression expr = parseExpr(expression);
     final ErrorCollector error = new ErrorCollectorImpl();
@@ -137,7 +129,8 @@ public class ExpressionTest extends ExecTest {
       assertEquals(0, error.getErrorCount());
     }
 
-    final ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, new FunctionImplementationRegistry(DrillConfig.create())).getRoot();
+    FunctionImplementationRegistry funcReg = new FunctionImplementationRegistry(DrillConfig.create());
+    final ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, funcReg, null).getRoot();
     cg.addExpr(new ValueVectorWriteExpression(new TypedFieldId(materializedExpr.getMajorType(), -1), materializedExpr));
     return cg.getCodeGenerator().generateAndGet();
   }

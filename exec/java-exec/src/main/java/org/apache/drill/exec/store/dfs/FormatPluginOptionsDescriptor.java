@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableInstance;
@@ -149,6 +150,10 @@ final class FormatPluginOptionsDescriptor {
       if (param == null) {
         // when null is passed, we leave the default defined in the config class
         continue;
+      }
+      if (param instanceof String) {
+        // normalize Java literals, ex: \t, \n, \r
+        param = StringEscapeUtils.unescapeJava((String) param);
       }
       TableParamDef paramDef = t.sig.params.get(i);
       TableParamDef expectedParamDef = this.functionParamsByName.get(paramDef.name);

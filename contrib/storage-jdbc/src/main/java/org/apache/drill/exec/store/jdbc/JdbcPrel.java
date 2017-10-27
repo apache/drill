@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
@@ -80,7 +81,8 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    return new JdbcGroupScan(sql, convention.getPlugin(), rows);
+    JdbcGroupScan output = new JdbcGroupScan(sql, convention.getPlugin(), rows);
+    return creator.addMetadata(this, output);
   }
 
   @Override
@@ -89,7 +91,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     return rows;
   }
 

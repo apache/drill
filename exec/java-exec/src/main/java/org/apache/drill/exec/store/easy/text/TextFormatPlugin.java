@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -125,7 +125,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
     options.put("extension", ((TextFormatConfig)getConfig()).getExtensions().get(0));
 
-    RecordWriter recordWriter = new DrillTextRecordWriter(context.getAllocator());
+    RecordWriter recordWriter = new DrillTextRecordWriter(context.getAllocator(), writer.getStorageStrategy());
     recordWriter.init(options);
 
     return recordWriter;
@@ -198,6 +198,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       result = prime * result + ((lineDelimiter == null) ? 0 : lineDelimiter.hashCode());
       result = prime * result + quote;
       result = prime * result + (skipFirstLine ? 1231 : 1237);
+      result = prime * result + (extractHeader ? 1231 : 1237);
       return result;
     }
 
@@ -240,6 +241,9 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
         return false;
       }
       if (skipFirstLine != other.skipFirstLine) {
+        return false;
+      }
+      if (extractHeader != other.extractHeader) {
         return false;
       }
       return true;

@@ -17,16 +17,25 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.UUID;
 import java.util.Vector;
+import java.util.concurrent.Semaphore;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,6 +44,7 @@ public class ITTestShadedJar {
 
   private static DrillbitClassLoader drillbitLoader;
   private static URLClassLoader rootClassLoader;
+  private static int userPort;
 
   private static URL getJdbcUrl() throws MalformedURLException {
     return new URL(
@@ -42,6 +52,49 @@ public class ITTestShadedJar {
             ClassLoader.getSystemClassLoader().getResource("").toString(),
             System.getProperty("project.version")
             ));
+
+  }
+
+  static {
+    String dirConfDir = "DRILL_CONF_DIR";
+    if (System.getProperty(dirConfDir) == null) {
+      final File condDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
+      condDir.mkdirs();
+      condDir.deleteOnExit();
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          FileUtils.deleteQuietly(condDir);
+        }
+      });
+      System.setProperty(dirConfDir, condDir.getAbsolutePath());
+    }
+  }
+
+  @Test
+  public void testDatabaseVersion() throws Exception {
+
+    // print class path for debugging
+    System.out.println("java.class.path:");
+    System.out.println(System.getProperty("java.class.path"));
+
+    final URLClassLoader loader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+    Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+    method.setAccessible(true);
+    method.invoke(loader, getJdbcUrl());
+
+    Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
+    try {
+      Driver driver = (Driver) clazz.newInstance();
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:" + userPort, null)) {
+        DatabaseMetaData metadata = c.getMetaData();
+        assertEquals("Apache Drill JDBC Driver", metadata.getDriverName());
+        assertEquals("Apache Drill Server", metadata.getDatabaseProductName());
+        //assertEquals()
+      }
+    } catch (Exception ex) {
+      throw ex;
+    }
 
   }
 
@@ -60,12 +113,9 @@ public class ITTestShadedJar {
     Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
     try {
       Driver driver = (Driver) clazz.newInstance();
-      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null);
-          Statement s = c.createStatement();
-          ResultSet result = s.executeQuery("select * from (VALUES 1)");) {
-        while (result.next()) {
-          System.out.println(result.getObject(1));
-        }
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:" + userPort, null)) {
+        String path = Paths.get("").toAbsolutePath().toString() + "/src/test/resources/types.json";
+        printQuery(c, "select * from dfs.`" + path + "`");
       }
     } catch (Exception ex) {
       throw ex;
@@ -73,7 +123,18 @@ public class ITTestShadedJar {
 
   }
 
-
+  private static void printQuery(Connection c, String query) throws SQLException {
+    try (Statement s = c.createStatement(); ResultSet result = s.executeQuery(query)) {
+      while (result.next()) {
+        final int columnCount = result.getMetaData().getColumnCount();
+        for(int i = 1; i < columnCount+1; i++){
+          System.out.print(result.getObject(i));
+          System.out.print('\t');
+        }
+        System.out.println(result.getObject(1));
+      }
+    }
+  }
 
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
@@ -85,18 +146,25 @@ public class ITTestShadedJar {
       printClassesLoaded("root", rootClassLoader);
       throw e;
     }
+
+    Class<?> clazz = drillbitLoader.loadClass("org.apache.drill.BaseTestQuery");
+    userPort = (Integer) clazz.getMethod("getUserPort").invoke(null);
+
+    DrillbitStartThread.SEM.acquire();
   }
 
   @AfterClass
   public static void closeClient() throws Exception {
     runWithLoader("DrillbitStopThread", drillbitLoader);
+
+    DrillbitStopThread.SEM.acquire();
   }
 
   private static int getClassesLoadedCount(ClassLoader classLoader) {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       return classes.size();
     } catch (Exception e) {
       System.out.println("Failure while loading class count.");
@@ -108,7 +176,7 @@ public class ITTestShadedJar {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       for (Class<?> c : classes) {
         System.out.println(prefix + ": " + c.getName());
       }
@@ -153,6 +221,7 @@ public class ITTestShadedJar {
   }
 
   public static class DrillbitStartThread extends AbstractLoaderThread {
+    public static final Semaphore SEM = new Semaphore(0);
 
     public DrillbitStartThread(ClassLoader loader) {
       super(loader);
@@ -169,11 +238,13 @@ public class ITTestShadedJar {
       clazz.getMethod("testNoResult", String.class, new Object[] {}.getClass())
           .invoke(null, "select * from (VALUES 1)", new Object[] {});
 
+      SEM.release();
     }
 
   }
 
   public static class DrillbitStopThread extends AbstractLoaderThread {
+    public static final Semaphore SEM = new Semaphore(0);
 
     public DrillbitStopThread(ClassLoader loader) {
       super(loader);
@@ -182,7 +253,8 @@ public class ITTestShadedJar {
     @Override
     protected void internalRun() throws Exception {
       Class<?> clazz = loader.loadClass("org.apache.drill.BaseTestQuery");
-      clazz.getMethod("setupDefaultTestCluster").invoke(null);
+      clazz.getMethod("closeClient").invoke(null);
+      SEM.release();
     }
   }
 

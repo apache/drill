@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,23 +17,33 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.flatten;
 
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.Lists;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
+import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
+@Category(OperatorTest.class)
 public class TestFlatten extends BaseTestQuery {
 
   /**
@@ -55,6 +65,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testFlatten_Drill2162_complex() throws Exception {
     String path = folder.getRoot().toPath().toString();
 
@@ -64,6 +75,7 @@ public class TestFlatten extends BaseTestQuery {
         .setRecord(jsonRecords)
         .createFiles(1, numCopies, "json");
 
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("uid", 1l,
             "lst_lst_0", listOf(1l, 2l, 3l, 4l, 5l),
@@ -98,6 +110,7 @@ public class TestFlatten extends BaseTestQuery {
 
   @Test
   public void testFlattenReferenceImpl() throws Exception {
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("a",1,
               "b",2,
@@ -107,7 +120,8 @@ public class TestFlatten extends BaseTestQuery {
                   listOf(1000,999)
             )));
     List<JsonStringHashMap<String, Object>> result = flatten(flatten(flatten(data, "list_col"), "nested_list_col"), "nested_list_col");
-     List<JsonStringHashMap<String, Object>> expectedResult = Lists.newArrayList(
+     @SuppressWarnings("unchecked")
+    List<JsonStringHashMap<String, Object>> expectedResult = Lists.newArrayList(
         mapOf("nested_list_col", 100,  "list_col", 10,"a", 1, "b",2),
         mapOf("nested_list_col", 99,   "list_col", 10,"a", 1, "b",2),
         mapOf("nested_list_col", 1000, "list_col", 10,"a", 1, "b",2),
@@ -118,7 +132,7 @@ public class TestFlatten extends BaseTestQuery {
         mapOf("nested_list_col", 999,  "list_col", 9, "a", 1, "b",2)
     );
     int i = 0;
-    for (JsonStringHashMap record : result) {
+    for (JsonStringHashMap<String, Object> record : result) {
       assertEquals(record, expectedResult.get(i));
       i++;
     }
@@ -136,9 +150,9 @@ public class TestFlatten extends BaseTestQuery {
       String flattenedDataColName) {
     List<JsonStringHashMap<String,Object>> output = Lists.newArrayList();
     for (JsonStringHashMap<String, Object> incomingRecord : incomingRecords) {
-      List dataToFlatten = (List) incomingRecord.get(colToFlatten);
+      List<?> dataToFlatten = (List<?>) incomingRecord.get(colToFlatten);
       for (int i = 0; i < dataToFlatten.size(); i++) {
-        final JsonStringHashMap newRecord = new JsonStringHashMap();
+        final JsonStringHashMap<String, Object> newRecord = new JsonStringHashMap<>();
         newRecord.put(flattenedDataColName, dataToFlatten.get(i));
         for (String s : incomingRecord.keySet()) {
           if (s.equals(colToFlatten)) {
@@ -170,6 +184,7 @@ public class TestFlatten extends BaseTestQuery {
         .setRecord(jsonRecord)
         .createFiles(1, numRecords, "json");
 
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("int_list", inputList)
     );
@@ -190,12 +205,14 @@ public class TestFlatten extends BaseTestQuery {
   };
 
   @Test
+  @Category(UnlikelyTest.class)
   public void drill1671() throws Exception{
     int rowCount = testSql("select * from (select count(*) as cnt from (select id, flatten(evnts1), flatten(evnts2), flatten(evnts3), flatten(evnts4), flatten(evnts5), flatten(evnts6), flatten(evnts7), flatten(evnts8), flatten(evnts9), flatten(evnts10), flatten(evnts11) from cp.`/flatten/many-arrays-50.json`)x )y where cnt = 2048");
     assertEquals(rowCount, 1);
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void drill3370() throws Exception {
     testBuilder()
         .sqlQuery("select a from (select flatten(arr) as a from cp.`/flatten/drill-3370.json`) where a > 100")
@@ -213,6 +230,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test // repeated list within a repeated map
+  @Category(UnlikelyTest.class)
   public void drill1673() throws Exception {
     String path = folder.getRoot().toPath().toString();
 
@@ -243,12 +261,14 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void drill1653() throws Exception{
     int rowCount = testSql("select * from (select sum(t.flat.`value`) as sm from (select id, flatten(kvgen(m)) as flat from cp.`/flatten/missing-map.json`)t) where sm = 10 ");
     assertEquals(1, rowCount);
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void drill1652() throws Exception {
     if(RUN_ADVANCED_TESTS){
       test("select uid, flatten(transactions) from dfs.`/tmp/bigfile.json`");
@@ -367,6 +387,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testDrill1665() throws Exception {
     if(RUN_ADVANCED_TESTS){
       test("select id, flatten(evnts) as rpt from dfs.`/tmp/drill1665.json`");
@@ -391,6 +412,7 @@ public class TestFlatten extends BaseTestQuery {
 
 
   @Test //DRILL-2254
+  @Category(UnlikelyTest.class)
   public void testSingleFlattenFromNestedRepeatedList() throws Exception {
     final String query = "select t.uid, flatten(t.odd) odd from cp.`project/complex/a.json` t";
 
@@ -403,6 +425,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test //DRILL-2254 supplementary
+  @Category(UnlikelyTest.class)
   public void testMultiFlattenFromNestedRepeatedList() throws Exception {
     final String query = "select t.uid, flatten(flatten(t.odd)) odd from cp.`project/complex/a.json` t";
 
@@ -415,6 +438,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test //DRILL-2254 supplementary
+  @Category(UnlikelyTest.class)
   public void testSingleMultiFlattenFromNestedRepeatedList() throws Exception {
     final String query = "select t.uid, flatten(t.odd) once, flatten(flatten(t.odd)) twice from cp.`project/complex/a.json` t";
 
@@ -428,6 +452,7 @@ public class TestFlatten extends BaseTestQuery {
 
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testDrill_2013() throws Exception {
     testBuilder()
             .sqlQuery("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json` where rownum > 5")
@@ -436,6 +461,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testDRILL_2106() throws Exception {
     testBuilder()
         .sqlQuery("select rl, flatten(rl) frl from (select `integer`, flatten(rl) as rl from cp.`jsoninput/input2.json`)")
@@ -452,6 +478,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test // see DRILL-2146
+  @Category(UnlikelyTest.class)
   public void testFalttenWithStar() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
     String q1 = String.format("select *, flatten(j.topping) tt, flatten(j.batters.batter) bb, j.id " +
@@ -466,6 +493,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test // see DRILL-2012
+  @Category(UnlikelyTest.class)
   public void testMultipleFalttenWithWhereClause() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
     String q1 = String.format("select flatten(j.topping) tt " +
@@ -480,6 +508,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test //DRILL-2099
+  @Category(UnlikelyTest.class)
   public void testFlattenAfterSort() throws Exception {
     String query = "select flatten(s1.rms.rptd) rptds from " +
         "(select d.uid uid, flatten(d.map.rm) rms from cp.`jsoninput/flatten_post_sort.json` d order by d.uid) s1";
@@ -492,6 +521,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test //DRILL-2268
+  @Category(UnlikelyTest.class)
   public void testFlattenAfterJoin1() throws Exception {
     String query = "select flatten(sub1.events) flat_events  from "+
       "(select t1.events events from cp.`complex/json/flatten_join.json` t1 "+
@@ -505,6 +535,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test //DRILL-2268
+  @Category(UnlikelyTest.class)
   public void testFlattenAfterJoin2() throws Exception {
     String query = "select flatten(t1.events) flat_events from cp.`complex/json/flatten_join.json` t1 " +
       "inner join cp.`complex/json/flatten_join.json` t2 on t1.id=t2.id";
@@ -517,6 +548,7 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test //DRILL-2268
+  @Category(UnlikelyTest.class)
   public void testFlattenAfterJoin3() throws Exception {
     String query = "select flatten(sub1.lst_lst) flat_lst_lst from "+
       "(select t1.lst_lst lst_lst from cp.`complex/json/flatten_join.json` t1 "+
@@ -545,6 +577,36 @@ public class TestFlatten extends BaseTestQuery {
         .baselineValues(3L)
         .go();
 
+  }
+
+  @Test
+  public void testFlattenOnEmptyArrayAndNestedMap() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      path.mkdirs();
+      String pathString = path.toPath().toString();
+
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_arrays.json")))) {
+        writer.write("{\"a\" : {\"a1\" : \"a1\"}, \"b\" : [1]}\n");
+        for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+          writer.write("{\"a\" : {\"a1\" : \"a1\"}, \"b\" : [], \"c\" : 1}\n");
+        }
+        writer.write("{\"a\" : {\"a1\" : \"a1\"}, \"b\" : [1], \"c\" : 1}");
+      }
+
+      String query = "select typeof(t1.a.a1) as col from " +
+        "(select t.*, flatten(t.b) as b from dfs_test.`%s/empty_arrays.json` t where t.c is not null) t1";
+
+      testBuilder()
+        .sqlQuery(query, pathString)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues("VARCHAR")
+        .go();
+
+    } finally {
+      deleteQuietly(path);
+    }
   }
 
 }

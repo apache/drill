@@ -18,26 +18,30 @@
 package org.apache.drill.store.kudu;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.categories.KuduStorageTest;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.kududb.ColumnSchema;
-import org.kududb.Schema;
-import org.kududb.Type;
-import org.kududb.client.CreateTableOptions;
-import org.kududb.client.Insert;
-import org.kududb.client.KuduClient;
-import org.kududb.client.KuduScanner;
-import org.kududb.client.KuduSession;
-import org.kududb.client.KuduTable;
-import org.kududb.client.ListTablesResponse;
-import org.kududb.client.PartialRow;
-import org.kududb.client.RowResult;
-import org.kududb.client.RowResultIterator;
-import org.kududb.client.SessionConfiguration;
+import org.apache.kudu.ColumnSchema;
+import org.apache.kudu.Schema;
+import org.apache.kudu.Type;
+import org.apache.kudu.client.CreateTableOptions;
+import org.apache.kudu.client.Insert;
+import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduScanner;
+import org.apache.kudu.client.KuduSession;
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.ListTablesResponse;
+import org.apache.kudu.client.PartialRow;
+import org.apache.kudu.client.RowResult;
+import org.apache.kudu.client.RowResultIterator;
+import org.apache.kudu.client.SessionConfiguration;
+import org.junit.experimental.categories.Category;
 
 @Ignore("requires remote kudu server")
+@Category(KuduStorageTest.class)
 public class TestKuduConnect {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestKuduConnect.class);
 
@@ -63,6 +67,7 @@ public class TestKuduConnect {
 
       CreateTableOptions builder = new CreateTableOptions();
       builder.setNumReplicas(replicas);
+      builder.setRangePartitionColumns(Arrays.asList("key"));
       for (int i = 1; i < tablets; i++) {
         PartialRow splitRow = schema.newPartialRow();
         splitRow.addInt("key", i*1000);

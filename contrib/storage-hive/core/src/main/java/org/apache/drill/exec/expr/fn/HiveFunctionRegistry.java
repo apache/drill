@@ -18,18 +18,27 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
+import org.apache.drill.exec.planner.sql.HiveUDFOperatorWithoutInference;
+import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.UDFType;
@@ -65,12 +74,32 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     for (Class<? extends UDF> clazz : udfClasses) {
       register(clazz, methodsUDF);
     }
+
+    if (logger.isTraceEnabled()) {
+      StringBuilder allHiveFunctions = new StringBuilder();
+      for (Map.Entry<String, Class<? extends GenericUDF>> method : methodsGenericUDF.entries()) {
+        allHiveFunctions.append(method.toString()).append("\n");
+      }
+      logger.trace("Registered Hive GenericUDFs: [\n{}]", allHiveFunctions);
+
+      StringBuilder allUDFs = new StringBuilder();
+      for (Map.Entry<String, Class<? extends UDF>> method : methodsUDF.entries()) {
+        allUDFs.append(method.toString()).append("\n");
+      }
+      logger.trace("Registered Hive UDFs: [\n{}]", allUDFs);
+      StringBuilder allNonDeterministic = new StringBuilder();
+      for (Class<?> clz : nonDeterministicUDFs) {
+        allNonDeterministic.append(clz.toString()).append("\n");
+      }
+      logger.trace("Registered Hive nonDeterministicUDFs: [\n{}]", allNonDeterministic);
+    }
   }
 
   @Override
   public void register(DrillOperatorTable operatorTable) {
     for (String name : Sets.union(methodsGenericUDF.asMap().keySet(), methodsUDF.asMap().keySet())) {
-      operatorTable.add(name, new HiveUDFOperator(name.toUpperCase()));
+      operatorTable.addOperatorWithoutInference(name, new HiveUDFOperatorWithoutInference(name.toUpperCase()));
+      operatorTable.addOperatorWithInference(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference()));
     }
   }
 
@@ -87,7 +116,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     }
 
     UDFType type = clazz.getAnnotation(UDFType.class);
-    if (type != null && type.deterministic()) {
+    if (type != null && !type.deterministic()) {
       nonDeterministicUDFs.add(clazz);
     }
 
@@ -117,23 +146,21 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
 
   /**
    * Helper method which resolves the given function call to a Hive UDF. It takes an argument
-   * <i>convertVarCharToVar16Char</i> which tells to implicitly cast input arguments of type VARCHAR to VAR16CHAR
-   * and search Hive UDF registry using implicitly casted argument types.
+   * <i>varCharToStringReplacement</i> which tells to use hive STRING(true) or VARCHAR(false) type for drill VARCHAR type
+   * and search Hive UDF registry using this replacement.
    *
    * TODO: This is a rudimentary function resolver. Need to include more implicit casting such as DECIMAL28 to
    * DECIMAL38 as Hive UDFs can accept only DECIMAL38 type.
    */
-  private HiveFuncHolder resolveFunction(FunctionCall call, boolean convertVarCharToVar16Char) {
+  private HiveFuncHolder resolveFunction(FunctionCall call, boolean varCharToStringReplacement) {
     HiveFuncHolder holder;
     MajorType[] argTypes = new MajorType[call.args.size()];
     ObjectInspector[] argOIs = new ObjectInspector[call.args.size()];
     for (int i=0; i<call.args.size(); i++) {
       try {
         argTypes[i] = call.args.get(i).getMajorType();
-        if (convertVarCharToVar16Char && argTypes[i].getMinorType() == MinorType.VARCHAR) {
-          argTypes[i] = Types.withMode(MinorType.VAR16CHAR, argTypes[i].getMode());
-        }
-        argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType());
+        argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType(),
+            varCharToStringReplacement);
       } catch(Exception e) {
         // Hive throws errors if there are unsupported types. Consider there is no hive UDF supporting the
         // given argument types
@@ -204,4 +231,46 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     return null;
   }
 
+  public class HiveSqlReturnTypeInference implements SqlReturnTypeInference {
+    private HiveSqlReturnTypeInference() {
+
+    }
+
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      for (RelDataType type : opBinding.collectOperandTypes()) {
+        final TypeProtos.MinorType minorType = TypeInferenceUtils.getDrillTypeFromCalciteType(type);
+        if(minorType == TypeProtos.MinorType.LATE) {
+          return opBinding.getTypeFactory()
+              .createTypeWithNullability(
+                  opBinding.getTypeFactory().createSqlType(SqlTypeName.ANY),
+                  true);
+        }
+      }
+
+      final FunctionCall functionCall = TypeInferenceUtils.convertSqlOperatorBindingToFunctionCall(opBinding);
+      final HiveFuncHolder hiveFuncHolder = getFunction(functionCall);
+      if(hiveFuncHolder == null) {
+        final StringBuilder operandTypes = new StringBuilder();
+        for(int j = 0; j < opBinding.getOperandCount(); ++j) {
+          operandTypes.append(opBinding.getOperandType(j).getSqlTypeName());
+          if(j < opBinding.getOperandCount() - 1) {
+            operandTypes.append(",");
+          }
+        }
+
+        throw UserException
+            .functionError()
+            .message(String.format("%s does not support operand types (%s)",
+                opBinding.getOperator().getName(),
+                operandTypes))
+            .build(logger);
+      }
+
+      return TypeInferenceUtils.createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          TypeInferenceUtils.getCalciteTypeFromDrillType(hiveFuncHolder.getReturnType().getMinorType()),
+          hiveFuncHolder.getReturnType().getMode() != TypeProtos.DataMode.REQUIRED);
+    }
+  }
 }

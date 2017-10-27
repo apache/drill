@@ -17,9 +17,6 @@
  */
 package org.apache.drill.common;
 
-import io.netty.util.Recycler;
-import io.netty.util.Recycler.Handle;
-
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
 
@@ -30,13 +27,6 @@ import java.util.concurrent.Executor;
  * execute against it to be serialized.
  */
 public abstract class SerializedExecutor implements Executor {
-
-  private final Recycler<RunnableProcessor> processors = new Recycler<RunnableProcessor>() {
-    @Override
-    protected RunnableProcessor newObject(Handle handle) {
-      return new RunnableProcessor(handle);
-    }
-  };
 
   private boolean isProcessing = false;
   private final LinkedList<Runnable> queuedRunnables = new LinkedList<>();
@@ -80,17 +70,11 @@ public abstract class SerializedExecutor implements Executor {
   protected abstract void runException(Runnable command, Throwable t);
 
   private class RunnableProcessor implements Runnable {
-    private final Handle handle;
 
     private Runnable command;
 
-    public RunnableProcessor(Handle handle) {
-      this.handle = handle;
-    }
-
-    public Runnable set(Runnable command) {
+    public RunnableProcessor(Runnable command) {
       this.command = command;
-      return this;
     }
 
     @Override
@@ -110,7 +94,6 @@ public abstract class SerializedExecutor implements Executor {
               throw new IllegalStateException("Exception handler threw an exception", ee);
             }
           }
-
           synchronized (queuedRunnables) {
             if (queuedRunnables.isEmpty()) {
               isProcessing = false;
@@ -122,8 +105,6 @@ public abstract class SerializedExecutor implements Executor {
         }
       } finally {
         currentThread.setName(originalThreadName);
-        command = null;
-        processors.recycle(this, handle);
       }
     }
   }
@@ -139,6 +120,6 @@ public abstract class SerializedExecutor implements Executor {
       isProcessing = true;
     }
 
-    underlyingExecutor.execute(processors.get().set(command));
+    underlyingExecutor.execute(new RunnableProcessor(command));
   }
 }

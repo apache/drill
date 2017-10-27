@@ -20,11 +20,16 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SqlTest.class, PlannerTest.class})
 public class TestPartitionFilter extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPartitionFilter.class);
 
@@ -202,7 +207,8 @@ public class TestPartitionFilter extends PlanTestBase {
   @Test // Parquet: one side of OR has partition filter only, other side has both partition filter and non-partition filter
   public void testPartitionFilter6_Parquet_from_CTAS() throws Exception {
     String query = String.format("select * from dfs_test.tmp.parquet where (yr=1995 and o_totalprice < 40000) or yr=1996", TEST_RES_PATH);
-    testIncludeFilter(query, 8, "Filter", 46);
+    // Parquet RG filter pushdown further reduces to 6 files.
+    testIncludeFilter(query, 6, "Filter", 46);
   }
 
   @Test // Parquet: trivial case with 1 partition filter
@@ -232,13 +238,15 @@ public class TestPartitionFilter extends PlanTestBase {
   @Test // Parquet: partition filter on subdirectory only plus non-partition filter
   public void testPartitionFilter9_Parquet() throws Exception {
     String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where dir1 in ('Q1','Q4') and o_totalprice < 40000", TEST_RES_PATH);
-    testIncludeFilter(query, 6, "Filter", 9);
+    // Parquet RG filter pushdown further reduces to 4 files.
+    testIncludeFilter(query, 4, "Filter", 9);
   }
 
   @Test
   public void testPartitionFilter9_Parquet_from_CTAS() throws Exception {
     String query = String.format("select * from dfs_test.tmp.parquet where qrtr in ('Q1','Q4') and o_totalprice < 40000", TEST_RES_PATH);
-    testIncludeFilter(query, 6, "Filter", 9);
+    // Parquet RG filter pushdown further reduces to 4 files.
+    testIncludeFilter(query, 4, "Filter", 9);
   }
 
   @Test
@@ -254,13 +262,16 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test // see DRILL-2712
+  @Category(UnlikelyTest.class)
   public void testMainQueryFalseCondition() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query = String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994') t where 1 = 0", root);
-    testExcludeFilter(query, 4, "Filter", 0);
+    // the 1 = 0 becomes limit 0, which will require to read only one parquet file, in stead of 4 for year '1994'.
+    testExcludeFilter(query, 1, "Filter", 0);
   }
 
   @Test // see DRILL-2712
+  @Category(UnlikelyTest.class)
   public void testMainQueryTrueCondition() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query =  String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994' ) t where 0 = 0", root);
@@ -271,10 +282,12 @@ public class TestPartitionFilter extends PlanTestBase {
   public void testMainQueryFilterRegularColumn() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query =  String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994' and o_custkey = 10) t limit 0", root);
-    testIncludeFilter(query, 4, "Filter", 0);
+    // with Parquet RG filter pushdown, reduce to 1 file ( o_custkey all > 10).
+    testIncludeFilter(query, 1, "Filter", 0);
   }
 
   @Test // see DRILL-2852 and DRILL-3591
+  @Category(UnlikelyTest.class)
   public void testPartitionFilterWithCast() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query = String.format("select myyear, myquarter, o_totalprice from (select cast(dir0 as varchar(10)) as myyear, "
@@ -302,6 +315,7 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test // DRILL-3702
+  @Category(UnlikelyTest.class)
   public void testPartitionFilterWithNonNullabeFilterExpr() throws Exception {
     String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/parquet` where concat(dir0, '') = '1994' and concat(dir1, '') = 'Q1'", TEST_RES_PATH);
     testExcludeFilter(query, 1, "Filter", 10);
@@ -328,6 +342,7 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test  //DRILL-4021: Json with complex type and nested flatten functions: dir0 and dir1 filters plus filter involves filter refering to output from nested flatten functions.
+  @Category(UnlikelyTest.class)
   public void testPartitionFilter_Json_WithFlatten() throws Exception {
     // this query expects to have the partition filter pushded.
     // With partition pruning, we will end with one file, and one row returned from the query.
@@ -343,6 +358,91 @@ public class TestPartitionFilter extends PlanTestBase {
         TEST_RES_PATH);
 
     testIncludeFilter(query, 1, "Filter", 1);
+  }
+
+  @Test
+  public void testLogicalDirPruning() throws Exception {
+    // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
+    // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
+    String query = String.format("select dir0, o_custkey from dfs_test.`%s/multilevel/parquetWithBadFormat` where dir0=1995", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 10);
+  }
+
+  @Test
+  public void testLogicalDirPruning2() throws Exception {
+    // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
+    // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
+    String query = String.format("select dir0, o_custkey from dfs_test.`%s/multilevel/parquetWithBadFormat` where dir0=1995 and o_custkey > 0", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 10);
+  }
+
+  @Test  //DRILL-4665: Partition pruning should occur when LIKE predicate on non-partitioning column
+  public void testPartitionFilterWithLike() throws Exception {
+    // Also should be insensitive to the order of the predicates
+    String query1 = "select yr, qrtr from dfs_test.tmp.parquet where yr=1994 and o_custkey LIKE '%5%'";
+    String query2 = "select yr, qrtr from dfs_test.tmp.parquet where o_custkey LIKE '%5%' and yr=1994";
+    testIncludeFilter(query1, 4, "Filter", 9);
+    testIncludeFilter(query2, 4, "Filter", 9);
+    // Test when LIKE predicate on partitioning column
+    String query3 = "select yr, qrtr from dfs_test.tmp.parquet where yr LIKE '%1995%' and o_custkey LIKE '%3%'";
+    String query4 = "select yr, qrtr from dfs_test.tmp.parquet where o_custkey LIKE '%3%' and yr LIKE '%1995%'";
+    testIncludeFilter(query3, 4, "Filter", 16);
+    testIncludeFilter(query4, 4, "Filter", 16);
+  }
+
+  @Test //DRILL-3710 Partition pruning should occur with varying IN-LIST size
+  public void testPartitionFilterWithInSubquery() throws Exception {
+    String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where cast (dir0 as int) IN (1994, 1994, 1994, 1994, 1994, 1994)", TEST_RES_PATH);
+    /* In list size exceeds threshold - no partition pruning since predicate converted to join */
+    test("alter session set `planner.in_subquery_threshold` = 2");
+    testExcludeFilter(query, 12, "Filter", 40);
+    /* In list size does not exceed threshold - partition pruning */
+    test("alter session set `planner.in_subquery_threshold` = 10");
+    testExcludeFilter(query, 4, "Filter", 40);
+  }
+
+
+  @Test // DRILL-4825: querying same table with different filter in UNION ALL.
+  public void testPruneSameTableInUnionAll() throws Exception {
+    final String query = String.format("select count(*) as cnt from "
+        + "( select dir0 from dfs_test.`%s/multilevel/parquet` where dir0 in ('1994') union all "
+        + "  select dir0 from dfs_test.`%s/multilevel/parquet` where dir0 in ('1995', '1996') )",
+        TEST_RES_PATH, TEST_RES_PATH);
+
+    String [] excluded = {"Filter"};
+
+    // verify plan that filter is applied in partition pruning.
+    testPlanMatchingPatterns(query, null, excluded);
+
+    // verify we get correct count(*).
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues((long)120)
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-4825: querying same table with different filter in Join.
+  public void testPruneSameTableInJoin() throws Exception {
+    final String query = String.format("select *  from "
+            + "( select sum(o_custkey) as x from dfs_test.`%s/multilevel/parquet` where dir0 in ('1994') ) join "
+            + " ( select sum(o_custkey) as y from dfs_test.`%s/multilevel/parquet` where dir0 in ('1995', '1996')) "
+            + " on x = y ",
+        TEST_RES_PATH, TEST_RES_PATH);
+
+    String [] excluded = {"Filter"};
+    // verify plan that filter is applied in partition pruning.
+    testPlanMatchingPatterns(query, null, excluded);
+
+    // verify we get empty result.
+    testBuilder()
+        .sqlQuery(query)
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
   }
 
 }

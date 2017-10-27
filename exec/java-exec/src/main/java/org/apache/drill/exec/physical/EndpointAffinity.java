@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.physical;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.TextFormat;
 
 /**
@@ -30,6 +30,14 @@ public class EndpointAffinity {
 
   private final DrillbitEndpoint endpoint;
   private double affinity = 0.0d;
+
+  // Requires including this endpoint at least once? Default is not required.
+  private boolean mandatory;
+
+  /**
+   * Maximum allowed assignments for this endpoint. Default is {@link Integer#MAX_VALUE}
+   */
+  private int maxWidth = Integer.MAX_VALUE;
 
   /**
    * Create EndpointAffinity instance for given Drillbit endpoint. Affinity is initialized to 0. Affinity can be added
@@ -51,6 +59,22 @@ public class EndpointAffinity {
   public EndpointAffinity(DrillbitEndpoint endpoint, double affinity) {
     this.endpoint = endpoint;
     this.affinity = affinity;
+  }
+
+  /**
+   * Creates EndpointAffinity instance for given DrillbitEndpoint, affinity and mandatory assignment requirement flag.
+   * @param endpoint Drillbit endpoint
+   * @param affinity Initial affinity value
+   * @param mandatory Is this endpoint requires at least one mandatory assignment?
+   * @param maxWidth Maximum allowed assignments for this endpoint.
+   */
+  public EndpointAffinity(final DrillbitEndpoint endpoint, final double affinity, final boolean mandatory,
+      final int maxWidth) {
+    Preconditions.checkArgument(maxWidth >= 1, "MaxWidth for given endpoint should be at least one.");
+    this.endpoint = endpoint;
+    this.affinity = affinity;
+    this.mandatory = mandatory;
+    this.maxWidth = maxWidth;
   }
 
   /**
@@ -87,16 +111,76 @@ public class EndpointAffinity {
   }
 
   /**
+   * Set the endpoint requires at least one assignment.
+   */
+  public void setAssignmentRequired() {
+    mandatory = true;
+  }
+
+  /**
    * Is this endpoint required to be in fragment endpoint assignment list?
    *
    * @return Returns true for mandatory assignment, false otherwise.
    */
   public boolean isAssignmentRequired() {
-    return Double.POSITIVE_INFINITY == affinity;
+    return mandatory || Double.POSITIVE_INFINITY == affinity;
+  }
+
+  /**
+   * @return Maximum allowed assignments for this endpoint.
+   */
+  public int getMaxWidth() {
+    return maxWidth;
+  }
+
+  /**
+   * Set the new max width as the minimum of the the given value and current max width.
+   * @param maxWidth
+   */
+  public void setMaxWidth(final int maxWidth) {
+    Preconditions.checkArgument(maxWidth >= 1, "MaxWidth for given endpoint should be at least one.");
+    this.maxWidth = Math.min(this.maxWidth, maxWidth);
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    long temp;
+    temp = Double.doubleToLongBits(affinity);
+    result = prime * result + (int) (temp ^ (temp >>> 32));
+    result = prime * result + ((endpoint == null) ? 0 : endpoint.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof EndpointAffinity)) {
+      return false;
+    }
+    EndpointAffinity other = (EndpointAffinity) obj;
+    if (Double.doubleToLongBits(affinity) != Double.doubleToLongBits(other.affinity)) {
+      return false;
+    }
+    if (endpoint == null) {
+      if (other.endpoint != null) {
+        return false;
+      }
+    } else if (!endpoint.equals(other.endpoint)) {
+      return false;
+    }
+    return mandatory == other.mandatory;
   }
 
   @Override
   public String toString() {
-    return "EndpointAffinity [endpoint=" + TextFormat.shortDebugString(endpoint) + ", affinity=" + affinity + "]";
+    return "EndpointAffinity [endpoint=" + TextFormat.shortDebugString(endpoint) + ", affinity=" + affinity +
+        ", mandatory=" + mandatory + ", maxWidth=" + maxWidth + "]";
   }
 }

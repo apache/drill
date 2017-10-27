@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 
 package org.apache.drill.exec.planner.physical;
 
@@ -45,16 +45,16 @@ public class BroadcastExchangePrel extends ExchangePrel{
    * purposes we assume it is also sending to itself).
    */
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
 
     RelNode child = this.getInput();
 
     final int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
     final double broadcastFactor = PrelUtil.getSettings(getCluster()).getBroadcastFactor();
-    final double inputRows = RelMetadataQuery.getRowCount(child);
+    final double inputRows = mq.getRowCount(child);
 
     final int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
     final double cpuCost = broadcastFactor * DrillCostBase.SVR_CPU_COST * inputRows ;

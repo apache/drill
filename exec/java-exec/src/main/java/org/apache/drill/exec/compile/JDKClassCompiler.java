@@ -20,6 +20,7 @@ package org.apache.drill.exec.compile;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
@@ -44,8 +45,7 @@ class JDKClassCompiler extends AbstractClassCompiler {
   public static JDKClassCompiler newInstance(ClassLoader classLoader, boolean debug) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     if (compiler == null) {
-      logger.warn("JDK Java compiler not available - probably you're running Drill with a JRE and not a JDK");
-      return null;
+      throw new RuntimeException("JDK Java compiler not available - probably you're running Drill with a JRE and not a JDK");
     }
     return new JDKClassCompiler(compiler, classLoader, debug);
   }
@@ -61,6 +61,17 @@ class JDKClassCompiler extends AbstractClassCompiler {
   @Override
   protected byte[][] getByteCode(final ClassNames className, final String sourceCode)
       throws CompileException, IOException, ClassNotFoundException {
+    return doCompile(className, sourceCode).getByteCode();
+   }
+
+  @Override
+  public Map<String,byte[]> compile(final ClassNames className, final String sourceCode)
+      throws CompileException, IOException, ClassNotFoundException {
+    return doCompile(className, sourceCode).getClassByteCodes();
+ }
+
+  private DrillJavaFileObject doCompile(final ClassNames className, final String sourceCode)
+        throws CompileException, IOException, ClassNotFoundException {
     try {
       // Create one Java source file in memory, which will be compiled later.
       DrillJavaFileObject compilationUnit = new DrillJavaFileObject(className.dot, sourceCode);
@@ -74,7 +85,7 @@ class JDKClassCompiler extends AbstractClassCompiler {
         throw new ClassNotFoundException(className + ": Class file not created by compilation.");
       }
       // all good
-      return compilationUnit.getByteCode();
+      return compilationUnit;
     } catch (RuntimeException rte) {
       // Unwrap the compilation exception and throw it.
       Throwable cause = rte.getCause();
@@ -93,5 +104,4 @@ class JDKClassCompiler extends AbstractClassCompiler {
 
   @Override
   protected org.slf4j.Logger getLogger() { return logger; }
-
 }

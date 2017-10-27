@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,8 @@ package org.apache.drill.exec.memory;
 
 import org.apache.drill.common.config.DrillConfig;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class RootAllocatorFactory {
 
   public static final String TOP_LEVEL_MAX_ALLOC = "drill.memory.top.max";
@@ -35,6 +37,11 @@ public class RootAllocatorFactory {
    * @return a new root allocator
    */
   public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-    return new RootAllocator(Math.min(DrillConfig.getMaxDirectMemory(), drillConfig.getLong(TOP_LEVEL_MAX_ALLOC)));
+    return newRoot(drillConfig.getLong(TOP_LEVEL_MAX_ALLOC));
+  }
+
+  @VisibleForTesting
+  public static BufferAllocator newRoot(long maxAlloc) {
+    return new RootAllocator(Math.min(DrillConfig.getMaxDirectMemory(), maxAlloc));
   }
 }

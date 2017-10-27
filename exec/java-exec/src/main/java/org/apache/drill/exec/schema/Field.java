@@ -38,16 +38,6 @@ public abstract class Field {
     this.parentSchema = parentSchema;
   }
 
-  public MaterializedField getAsMaterializedField(FieldReference ref) {
-    assert (ref!=null);
-
-    return MaterializedField.create(ref.getChild(getFieldName()), fieldType);
-  }
-
-  public MaterializedField getAsMaterializedField() {
-      return MaterializedField.create(SchemaPath.getCompoundPath(getFieldName().split("\\.")), fieldType);
-  }
-
   public abstract String getFieldName();
 
   public String getFullFieldName() {

@@ -34,6 +34,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -92,8 +93,7 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
     int recordCount = newContainer.getRecordCount();
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(recordCount, newContainer, false);
     VectorAccessibleSerializable outputBatch = new VectorAccessibleSerializable(batch, allocator);
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     outputBatch.writeToStream(outputStream);
     newContainer.zeroVectors();
     logger.debug("Took {} us to spill {} records", watch.elapsed(TimeUnit.MICROSECONDS), recordCount);
@@ -107,18 +107,17 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
       inputStream = fs.open(path);
     }
     VectorAccessibleSerializable vas = new VectorAccessibleSerializable(allocator);
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     vas.readFromStream(inputStream);
     VectorContainer c =  vas.get();
     if (schema != null) {
       c = SchemaUtil.coerceContainer(c, schema, context);
     }
-//    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
+    logger.trace("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
     spilledBatches--;
     currentContainer.zeroVectors();
     Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();
-    for (VectorWrapper w : currentContainer) {
+    for (VectorWrapper<?> w : currentContainer) {
       TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
       pair.transfer();
     }
@@ -210,6 +209,16 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return currentContainer.iterator();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    throw new UnsupportedOperationException();
   }
 
 }

@@ -30,16 +30,11 @@ import com.google.common.collect.Lists;
 
 @JsonTypeName("union")
 public class Union extends LogicalOperatorBase {
-  private final LogicalOperator[] inputs;
+  private final List<LogicalOperator> inputs;
   private final boolean distinct;
 
-//  @JsonCreator
-//  public Union(@JsonProperty("inputs") LogicalOperator[] inputs){
-//    this(inputs, false);
-//  }
-
   @JsonCreator
-  public Union(@JsonProperty("inputs") LogicalOperator[] inputs, @JsonProperty("distinct") Boolean distinct){
+  public Union(@JsonProperty("inputs") List<LogicalOperator> inputs, @JsonProperty("distinct") Boolean distinct){
     this.inputs = inputs;
       for (LogicalOperator o : inputs) {
           o.registerAsSubscriber(this);
@@ -47,7 +42,7 @@ public class Union extends LogicalOperatorBase {
     this.distinct = distinct == null ? false : distinct;
   }
 
-  public LogicalOperator[] getInputs() {
+  public List<LogicalOperator> getInputs() {
     return inputs;
   }
 
@@ -62,7 +57,7 @@ public class Union extends LogicalOperatorBase {
 
     @Override
     public Iterator<LogicalOperator> iterator() {
-        return Iterators.forArray(inputs);
+        return inputs.iterator();
     }
 
 
@@ -86,7 +81,7 @@ public class Union extends LogicalOperatorBase {
 
       @Override
       public Union build() {
-        return new Union(inputs.toArray(new LogicalOperator[inputs.size()]), distinct);
+        return new Union(inputs, distinct);
       }
 
     }

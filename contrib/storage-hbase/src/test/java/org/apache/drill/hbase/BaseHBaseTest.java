@@ -38,7 +38,7 @@ import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
 
-  private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
+  public static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 
   protected static Configuration conf = HBaseConfiguration.create();
 
@@ -47,13 +47,15 @@ public class BaseHBaseTest extends BaseTestQuery {
   protected static HBaseStoragePluginConfig storagePluginConfig;
 
   @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
+  public static void setupDefaultTestCluster() throws Exception {
     /*
      * Change the following to HBaseTestsSuite.configure(false, true)
      * if you want to test against an externally running HBase cluster.
      */
-    HBaseTestsSuite.configure(true, true);
+    HBaseTestsSuite.configure(true /*manageHBaseCluster*/, true /*createTables*/);
     HBaseTestsSuite.initCluster();
+
+    BaseTestQuery.setupDefaultTestCluster();
 
     final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(HBASE_STORAGE_PLUGIN_NAME);
@@ -99,7 +101,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected String canonizeHBaseSQL(String sql) {
-    return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1);
+    return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1.getNameAsString());
   }
 
 }

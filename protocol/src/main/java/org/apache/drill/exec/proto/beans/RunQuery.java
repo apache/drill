@@ -24,6 +24,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -50,6 +52,8 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
     private QueryResultsMode resultsMode;
     private QueryType type;
     private String plan;
+    private List<PlanFragment> fragments;
+    private PreparedStatementHandle preparedStatementHandle;
 
     public RunQuery()
     {
@@ -94,6 +98,32 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
     public RunQuery setPlan(String plan)
     {
         this.plan = plan;
+        return this;
+    }
+
+    // fragments
+
+    public List<PlanFragment> getFragmentsList()
+    {
+        return fragments;
+    }
+
+    public RunQuery setFragmentsList(List<PlanFragment> fragments)
+    {
+        this.fragments = fragments;
+        return this;
+    }
+
+    // preparedStatementHandle
+
+    public PreparedStatementHandle getPreparedStatementHandle()
+    {
+        return preparedStatementHandle;
+    }
+
+    public RunQuery setPreparedStatementHandle(PreparedStatementHandle preparedStatementHandle)
+    {
+        this.preparedStatementHandle = preparedStatementHandle;
         return this;
     }
 
@@ -160,6 +190,16 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
                 case 3:
                     message.plan = input.readString();
                     break;
+                case 4:
+                    if(message.fragments == null)
+                        message.fragments = new ArrayList<PlanFragment>();
+                    message.fragments.add(input.mergeObject(null, PlanFragment.getSchema()));
+                    break;
+
+                case 5:
+                    message.preparedStatementHandle = input.mergeObject(message.preparedStatementHandle, PreparedStatementHandle.getSchema());
+                    break;
+
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -177,6 +217,20 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
 
         if(message.plan != null)
             output.writeString(3, message.plan, false);
+
+        if(message.fragments != null)
+        {
+            for(PlanFragment fragments : message.fragments)
+            {
+                if(fragments != null)
+                    output.writeObject(4, fragments, PlanFragment.getSchema(), true);
+            }
+        }
+
+
+        if(message.preparedStatementHandle != null)
+             output.writeObject(5, message.preparedStatementHandle, PreparedStatementHandle.getSchema(), false);
+
     }
 
     public String getFieldName(int number)
@@ -186,6 +240,8 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
             case 1: return "resultsMode";
             case 2: return "type";
             case 3: return "plan";
+            case 4: return "fragments";
+            case 5: return "preparedStatementHandle";
             default: return null;
         }
     }
@@ -202,6 +258,8 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
         __fieldMap.put("resultsMode", 1);
         __fieldMap.put("type", 2);
         __fieldMap.put("plan", 3);
+        __fieldMap.put("fragments", 4);
+        __fieldMap.put("preparedStatementHandle", 5);
     }
     
 }

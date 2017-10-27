@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
-import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalProject;
@@ -54,8 +53,14 @@ public class DrillPushProjIntoScan extends RelOptRule {
     try {
       ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
 
+      // get DrillTable, either wrapped in RelOptTable, or DrillTranslatableTable.
+      DrillTable table = scan.getTable().unwrap(DrillTable.class);
+      if (table == null) {
+        table = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+      }
+
       if (columnInfo == null || columnInfo.isStarQuery() //
-          || !scan.getTable().unwrap(DrillTable.class) //
+          || !table //
           .getGroupScan().canPushdownProjects(columnInfo.columns)) {
         return;
       }

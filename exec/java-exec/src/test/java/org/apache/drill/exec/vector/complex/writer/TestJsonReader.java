@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,15 +24,16 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
@@ -41,6 +42,7 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.RepeatedBigIntVector;
 import org.junit.Ignore;
@@ -49,6 +51,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+
 import org.junit.rules.TemporaryFolder;
 
 public class TestJsonReader extends BaseTestQuery {
@@ -596,5 +599,174 @@ public class TestJsonReader extends BaseTestQuery {
     os.flush();
     os.close();
     testNoResult("select t.col2.col3 from dfs_test.tmp.drill_4032 t");
+  }
+
+  @Test
+  public void drill_4479() throws Exception {
+    try {
+      String dfs_temp = getDfsTestTmpSchemaLocation();
+      File table_dir = new File(dfs_temp, "drill_4479");
+      table_dir.mkdir();
+      BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "mostlynulls.json")));
+      // Create an entire batch of null values for 3 columns
+      for (int i = 0 ; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+        os.write("{\"a\": null, \"b\": null, \"c\": null}".getBytes());
+      }
+      // Add a row with {bigint,  float, string} values
+      os.write("{\"a\": 123456789123, \"b\": 99.999, \"c\": \"Hello World\"}".getBytes());
+      os.flush();
+      os.close();
+
+      String query1 = "select c, count(*) as cnt from dfs_test.tmp.drill_4479 t group by c";
+      String query2 = "select a, b, c, count(*) as cnt from dfs_test.tmp.drill_4479 t group by a, b, c";
+      String query3 = "select max(a) as x, max(b) as y, max(c) as z from dfs_test.tmp.drill_4479 t";
+
+      testBuilder()
+        .sqlQuery(query1)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("c", "cnt")
+        .baselineValues(null, 4096L)
+        .baselineValues("Hello World", 1L)
+        .go();
+
+      testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("a", "b", "c", "cnt")
+        .baselineValues(null, null, null, 4096L)
+        .baselineValues("123456789123", "99.999", "Hello World", 1L)
+        .go();
+
+      testBuilder()
+        .sqlQuery(query3)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("x", "y", "z")
+        .baselineValues("123456789123", "99.999", "Hello World")
+        .go();
+
+    } finally {
+      testNoResult("alter session set `store.json.all_text_mode` = false");
+    }
+  }
+
+  @Test
+  public void testFlattenEmptyArrayWithAllTextMode() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    path.deleteOnExit();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_array_all_text_mode.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = String.format("select flatten(t.a.b.c) as c from dfs_test.`%s/empty_array_all_text_mode.json` t",
+        pathString);
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = false")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+    }
+  }
+
+  @Test
+  public void testFlattenEmptyArrayWithUnionType() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    path.deleteOnExit();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_array.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = String.format("select flatten(t.a.b.c) as c from dfs_test.`%s/empty_array.json` t",
+        pathString);
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+      testNoResult("alter session reset `exec.enable_union_type`");
+    }
+  }
+
+  @Test // DRILL-5521
+  public void testKvgenWithUnionAll() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "map.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk\": \"a\", \"m\": {\"a\":\"1\"}}");
+      }
+
+      String query = String.format("select kvgen(m) as res from (select m from dfs_test.`%s/%s` union all " +
+          "select convert_from('{\"a\" : null}' ,'json') as m from (values(1)))", directory.toPath().toString(), fileName);
+      assertEquals("Row count should match", 2, testSql(query));
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
+  }
+
+  @Test // DRILL-4264
+  public void testFieldWithDots() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "table.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+      }
+
+      String query = String.format("select t.m.`a.b` as a,\n" +
+                                          "t.m.a.b as b,\n" +
+                                          "t.m['a.b'] as c,\n" +
+                                          "t.rk.q as d,\n" +
+                                          "t.`rk.q` as e\n" +
+                                    "from dfs_test.`%s/%s` t",
+                                  directory.toPath().toString(), fileName);
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a", "b", "c", "d", "e")
+        .baselineValues("1", "2", "1", null, "a")
+        .go();
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
   }
 }

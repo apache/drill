@@ -18,13 +18,16 @@
 
 package org.apache.drill.exec.store.ischema;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.slf4j.Logger;
-import static org.slf4j.LoggerFactory.getLogger;
+
+import com.google.common.base.MoreObjects;
 
 public class Records {
 
@@ -59,6 +62,7 @@ public class Records {
     public final String COLUMN_DEFAULT;
     public final String IS_NULLABLE;
     public final String DATA_TYPE;
+    public final Integer COLUMN_SIZE;
     public final Integer CHARACTER_MAXIMUM_LENGTH;
     public final Integer CHARACTER_OCTET_LENGTH;
     public final Integer NUMERIC_PRECISION;
@@ -154,6 +158,8 @@ public class Records {
           else {
             this.CHARACTER_OCTET_LENGTH = Integer.MAX_VALUE;
           }
+          // Column size is the number of characters
+          this.COLUMN_SIZE = this.CHARACTER_MAXIMUM_LENGTH;
           this.NUMERIC_PRECISION = null;
           this.NUMERIC_PRECISION_RADIX = null;
           this.NUMERIC_SCALE = null;
@@ -161,10 +167,13 @@ public class Records {
           this.INTERVAL_TYPE = null;
           this.INTERVAL_PRECISION = null;
           break;
+
         case BINARY:
         case VARBINARY:
           this.CHARACTER_MAXIMUM_LENGTH = relDataType.getPrecision();
           this.CHARACTER_OCTET_LENGTH = this.CHARACTER_MAXIMUM_LENGTH;
+          // Column size is the number of bytes
+          this.COLUMN_SIZE = this.CHARACTER_MAXIMUM_LENGTH;
           this.NUMERIC_PRECISION = null;
           this.NUMERIC_PRECISION_RADIX = null;
           this.NUMERIC_SCALE = null;
@@ -172,6 +181,19 @@ public class Records {
           this.INTERVAL_TYPE = null;
           this.INTERVAL_PRECISION = null;
           break;
+
+        case BOOLEAN:
+          this.COLUMN_SIZE = 1;
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          this.NUMERIC_PRECISION = null;
+          this.NUMERIC_PRECISION_RADIX = null;
+          this.NUMERIC_SCALE = null;
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+
         case TINYINT:
         case SMALLINT:
         case INTEGER:
@@ -191,11 +213,14 @@ public class Records {
               //break;
           }
           this.NUMERIC_PRECISION_RADIX = 2;
+          // Column size is the number of digits, based on the precision radix
+          this.COLUMN_SIZE = NUMERIC_PRECISION;
           this.NUMERIC_SCALE = 0;
           this.DATETIME_PRECISION = null;
           this.INTERVAL_TYPE = null;
           this.INTERVAL_PRECISION = null;
           break;
+
         case DECIMAL:
           this.CHARACTER_MAXIMUM_LENGTH = null;
           this.CHARACTER_OCTET_LENGTH = null;
@@ -203,11 +228,14 @@ public class Records {
           // NUMERIC_PRECISION_RADIX is 10.
           this.NUMERIC_PRECISION = relDataType.getPrecision();
           this.NUMERIC_PRECISION_RADIX = 10;
+          // Column size is the number of digits, based on the precision radix
+          this.COLUMN_SIZE = NUMERIC_PRECISION;
           this.NUMERIC_SCALE = relDataType.getScale();
           this.DATETIME_PRECISION = null;
           this.INTERVAL_TYPE = null;
           this.INTERVAL_PRECISION = null;
           break;
+
         case REAL:
         case FLOAT:
         case DOUBLE:
@@ -224,11 +252,14 @@ public class Records {
               //break;
           }
           this.NUMERIC_PRECISION_RADIX = 2;
+          // Column size is the number of digits, based on the precision radix
+          this.COLUMN_SIZE = NUMERIC_PRECISION;
           this.NUMERIC_SCALE = null;
           this.DATETIME_PRECISION = null;
           this.INTERVAL_TYPE = null;
           this.INTERVAL_PRECISION = null;
           break;
+
         case DATE:
         case TIME:
         case TIMESTAMP:
@@ -243,6 +274,23 @@ public class Records {
           this.DATETIME_PRECISION = relDataType.getPrecision();
           this.INTERVAL_TYPE = null;
           this.INTERVAL_PRECISION = null;
+          switch(sqlTypeName) {
+          case DATE: this.COLUMN_SIZE = 10; break;// yyyy-MM-dd
+          case TIME: this.COLUMN_SIZE = this.DATETIME_PRECISION == 0
+              ? 8 // HH::mm::ss
+              : 8 + 1 + this.DATETIME_PRECISION;
+            break;
+
+          case TIMESTAMP: this.COLUMN_SIZE = this.DATETIME_PRECISION == 0
+              ? 10 + 1 + 8 // date + "T" + time
+              : 10 + 1 + 8 + 1 + this.DATETIME_PRECISION;
+            break;
+
+          default:
+            throw new AssertionError(
+                "Unexpected type " + sqlTypeName + " in approximate-types branch" );
+
+          }
           break;
         case INTERVAL_YEAR_MONTH:
         case INTERVAL_DAY_TIME:
@@ -270,21 +318,87 @@ public class Records {
                   "Unexpected type " + sqlTypeName + " in interval-types branch" );
               //break;
           }
+          this.INTERVAL_PRECISION =
+              relDataType
+              .getIntervalQualifier()
+              .getStartPrecision(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
           {
             final TimeUnit start = relDataType.getIntervalQualifier().getStartUnit();
-            final TimeUnit end = relDataType.getIntervalQualifier().getEndUnit();
             // NOTE: getEndUnit() returns null instead of YEAR for "INTERVAL YEAR".
-            if ( start == end || null == end ) {
+            final TimeUnit end = MoreObjects.firstNonNull(relDataType.getIntervalQualifier().getEndUnit(), start);
+            if ( start == end ) {
               this.INTERVAL_TYPE = start.name();
             }
             else {
               this.INTERVAL_TYPE = start + " TO " + end;
             }
+
+            // extra size for fractional types
+            final int extraSecondIntervalSize = this.DATETIME_PRECISION > 0
+              ? DATETIME_PRECISION + 1 // add 1 for decimal point
+              : 0;
+
+            switch(start) {
+            case YEAR:
+              switch(end) {
+              case YEAR: this.COLUMN_SIZE = INTERVAL_PRECISION + 2; break;// P..Y
+              case MONTH: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 5; break; // P..Y12M
+              default:
+                throw new AssertionError("Unexpected interval type " + this.INTERVAL_TYPE + " in interval-types branch" );
+              }
+              break;
+
+            case MONTH:
+              switch(end) {
+              case MONTH: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 2; break; // P..M
+              default:
+                throw new AssertionError("Unexpected interval type " + this.INTERVAL_TYPE + " in interval-types branch" );
+              }
+              break;
+
+            case DAY:
+              switch(end) {
+              case DAY: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 2; break; // P..D
+              case HOUR: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 6; break; // P..DT12H
+              case MINUTE: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 9; break; // P..DT12H60M
+              case SECOND: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 12 + extraSecondIntervalSize; break; // P..DT12H60M60....S
+              default:
+                throw new AssertionError("Unexpected interval type " + this.INTERVAL_TYPE + " in interval-types branch" );
+              }
+              break;
+
+            case HOUR:
+              switch(end) {
+              case HOUR: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 3; break; // PT..H
+              case MINUTE: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 6; break; // PT..H60M
+              case SECOND: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 9 + extraSecondIntervalSize; break; // PT..H12M60....S
+              default:
+                throw new AssertionError("Unexpected interval type " + this.INTERVAL_TYPE + " in interval-types branch" );
+              }
+              break;
+
+            case MINUTE:
+              switch(end) {
+              case MINUTE: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 3; break; // PT...M
+              case SECOND: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 6 + extraSecondIntervalSize; break; // PT..M60....S
+              default:
+                throw new AssertionError("Unexpected interval type " + this.INTERVAL_TYPE + " in interval-types branch" );
+              }
+              break;
+
+
+            case SECOND:
+              switch(end) {
+              case SECOND: this.COLUMN_SIZE = this.INTERVAL_PRECISION + 3 + extraSecondIntervalSize; break; // PT....S
+              default:
+                throw new AssertionError("Unexpected interval type " + this.INTERVAL_TYPE + " in interval-types branch" );
+              }
+              break;
+
+            default:
+              throw new AssertionError("Unexpected interval type " + this.INTERVAL_TYPE + " in interval-types branch" );
+            }
           }
-          this.INTERVAL_PRECISION =
-              relDataType
-              .getIntervalQualifier()
-              .getStartPrecision(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
           break;
 
         default:
@@ -296,6 +410,7 @@ public class Records {
           this.DATETIME_PRECISION = null;
           this.INTERVAL_TYPE = null;
           this.INTERVAL_PRECISION = null;
+          this.COLUMN_SIZE = null;
         break;
       }
 

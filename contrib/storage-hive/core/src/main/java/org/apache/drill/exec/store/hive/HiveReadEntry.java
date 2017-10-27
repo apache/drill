@@ -17,17 +17,11 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.calcite.schema.Schema.TableType;
 
-import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,46 +31,47 @@ import com.google.common.collect.Lists;
 public class HiveReadEntry {
 
   @JsonProperty("table")
-  public HiveTable table;
+  public HiveTableWrapper table;
   @JsonProperty("partitions")
-  public List<HiveTable.HivePartition> partitions;
-  @JsonProperty("hiveConfigOverride")
-  public Map<String, String> hiveConfigOverride;
+  public List<HivePartitionWrapper> partitions;
 
   @JsonIgnore
-  private List<Partition> partitionsUnwrapped = Lists.newArrayList();
+  private List<HivePartition> partitionsUnwrapped = Lists.newArrayList();
 
   @JsonCreator
-  public HiveReadEntry(@JsonProperty("table") HiveTable table,
-                       @JsonProperty("partitions") List<HiveTable.HivePartition> partitions,
-                       @JsonProperty("hiveConfigOverride") Map<String, String> hiveConfigOverride) {
+  public HiveReadEntry(@JsonProperty("table") HiveTableWrapper table,
+                       @JsonProperty("partitions") List<HivePartitionWrapper> partitions) {
     this.table = table;
     this.partitions = partitions;
     if (partitions != null) {
-      for(HiveTable.HivePartition part : partitions) {
+      for(HivePartitionWrapper part : partitions) {
         partitionsUnwrapped.add(part.getPartition());
       }
     }
-    this.hiveConfigOverride = hiveConfigOverride;
   }
 
   @JsonIgnore
-  public Table getTable() {
+  public HiveTableWithColumnCache getTable() {
     return table.getTable();
   }
 
   @JsonIgnore
-  public List<Partition> getPartitions() {
-    return partitionsUnwrapped;
-  }
-
-  @JsonIgnore
-  public HiveTable getHiveTableWrapper() {
+  public HiveTableWrapper getTableWrapper() {
     return table;
   }
 
   @JsonIgnore
-  public List<HivePartition> getHivePartitionWrappers() {
+  public List<HivePartition> getPartitions() {
+    return partitionsUnwrapped;
+  }
+
+  @JsonIgnore
+  public HiveTableWrapper getHiveTableWrapper() {
+    return table;
+  }
+
+  @JsonIgnore
+  public List<HivePartitionWrapper> getHivePartitionWrappers() {
     return partitions;
   }
 
@@ -89,7 +84,7 @@ public class HiveReadEntry {
     return TableType.TABLE;
   }
 
-  public String getPartitionLocation(HiveTable.HivePartition partition) {
+  public String getPartitionLocation(HivePartitionWrapper partition) {
     String partitionPath = table.getTable().getSd().getLocation();
 
     for (String value: partition.values) {

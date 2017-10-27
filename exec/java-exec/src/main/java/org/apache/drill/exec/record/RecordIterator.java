@@ -25,12 +25,10 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
 import com.google.common.collect.TreeRangeMap;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 
 /**
  * RecordIterator iterates over incoming record batches one record at a time.
@@ -54,6 +52,7 @@ public class RecordIterator implements VectorAccessible {
   private boolean lastBatchRead;    // True if all batches are consumed.
   private boolean initialized;
   private OperatorContext oContext;
+  private final boolean enableMarkAndReset;
 
   private final VectorContainer container; // Holds VectorContainer of current record batch
   private final TreeRangeMap<Long, RecordBatchData> batches = TreeRangeMap.create();
@@ -62,6 +61,14 @@ public class RecordIterator implements VectorAccessible {
                         AbstractRecordBatch<?> outgoing,
                         OperatorContext oContext,
                         int inputIndex) {
+    this(incoming, outgoing, oContext, inputIndex, true);
+  }
+
+  public RecordIterator(RecordBatch incoming,
+                        AbstractRecordBatch<?> outgoing,
+                        OperatorContext oContext,
+                        int inputIndex,
+                        boolean enableMarkAndReset) {
     this.incoming = incoming;
     this.outgoing = outgoing;
     this.inputIndex = inputIndex;
@@ -70,6 +77,7 @@ public class RecordIterator implements VectorAccessible {
     this.oContext = oContext;
     resetIndices();
     this.initialized = false;
+    this.enableMarkAndReset = enableMarkAndReset;
   }
 
   private void resetIndices() {
@@ -88,14 +96,17 @@ public class RecordIterator implements VectorAccessible {
     if (lastBatchRead) {
       return;
     }
-    lastOutcome = outgoing.next(inputIndex, incoming);
+    lastOutcome = outgoing != null ? outgoing.next(inputIndex, incoming) : incoming.next();
   }
 
   public void mark() {
+    if (!enableMarkAndReset) {
+      throw new UnsupportedOperationException("mark and reset disabled for this RecordIterator");
+    }
     // Release all batches before current batch. [0 to startBatchPosition).
     final Map<Range<Long>,RecordBatchData> oldBatches = batches.subRangeMap(Range.closedOpen(0l, startBatchPosition)).asMapOfRanges();
-    for (Range<Long> range : oldBatches.keySet()) {
-      oldBatches.get(range).clear();
+    for (RecordBatchData rbd : oldBatches.values()) {
+      rbd.clear();
     }
     batches.remove(Range.closedOpen(0l, startBatchPosition));
     markedInnerPosition = innerPosition;
@@ -103,12 +114,15 @@ public class RecordIterator implements VectorAccessible {
   }
 
   public void reset() {
+    if (!enableMarkAndReset) {
+      throw new UnsupportedOperationException("mark and reset disabled for this RecordIterator");
+    }
     if (markedOuterPosition >= 0) {
       // Move to rbd for markedOuterPosition.
       final RecordBatchData rbdNew = batches.get(markedOuterPosition);
       final RecordBatchData rbdOld = batches.get(startBatchPosition);
-      Preconditions.checkArgument(rbdOld != null);
-      Preconditions.checkArgument(rbdNew != null);
+      assert rbdOld != null;
+      assert rbdNew != null;
       if (rbdNew != rbdOld) {
         container.transferOut(rbdOld.getContainer());
         container.transferIn(rbdNew.getContainer());
@@ -125,13 +139,16 @@ public class RecordIterator implements VectorAccessible {
 
   // Move forward by delta (may cross one or more record batches)
   public void forward(long delta) {
-    Preconditions.checkArgument(delta >= 0);
-    Preconditions.checkArgument(delta + outerPosition < totalRecordCount);
+    if (!enableMarkAndReset) {
+      throw new UnsupportedOperationException("mark and reset disabled for this RecordIterator");
+    }
+    assert delta >= 0;
+    assert (delta + outerPosition) < totalRecordCount;
     final long nextOuterPosition = delta + outerPosition;
     final RecordBatchData rbdNew = batches.get(nextOuterPosition);
     final RecordBatchData rbdOld = batches.get(outerPosition);
-    Preconditions.checkArgument(rbdNew != null);
-    Preconditions.checkArgument(rbdOld != null);
+    assert rbdNew != null;
+    assert rbdOld != null;
     container.transferOut(rbdOld.getContainer());
     // Get vectors from new position.
     container.transferIn(rbdNew.getContainer());
@@ -172,6 +189,9 @@ public class RecordIterator implements VectorAccessible {
           // No more data, disallow reads unless reset is called.
           outerPosition = nextOuterPosition;
           lastBatchRead = true;
+          if (!enableMarkAndReset) {
+            container.clear();
+          }
           break;
         case OK_NEW_SCHEMA:
         case OK:
@@ -193,14 +213,19 @@ public class RecordIterator implements VectorAccessible {
             initialized = true;
           }
           if (innerRecordCount > 0) {
-            // Transfer vectors back to old batch.
-            if (startBatchPosition != -1 && batches.get(startBatchPosition) != null) {
-              container.transferOut(batches.get(outerPosition).getContainer());
+            if (enableMarkAndReset) {
+              // Transfer vectors back to old batch.
+              if (startBatchPosition != -1 && batches.get(startBatchPosition) != null) {
+                container.transferOut(batches.get(outerPosition).getContainer());
+              }
+              container.transferIn(rbd.getContainer());
+              batches.put(Range.closedOpen(nextOuterPosition, nextOuterPosition + innerRecordCount), rbd);
+            } else {
+              container.zeroVectors();
+              container.transferIn(rbd.getContainer());
             }
-            container.transferIn(rbd.getContainer());
-            startBatchPosition = nextOuterPosition;
-            batches.put(Range.closedOpen(nextOuterPosition, nextOuterPosition + innerRecordCount), rbd);
             innerPosition = 0;
+            startBatchPosition = nextOuterPosition;
             outerPosition = nextOuterPosition;
             totalRecordCount += innerRecordCount;
           } else {
@@ -216,12 +241,13 @@ public class RecordIterator implements VectorAccessible {
       }
     } else {
       if (nextInnerPosition >= innerRecordCount) {
+        assert enableMarkAndReset;
         // move to next batch
         final RecordBatchData rbdNew = batches.get(nextOuterPosition);
         final RecordBatchData rbdOld = batches.get(outerPosition);
-        Preconditions.checkArgument(rbdNew != null);
-        Preconditions.checkArgument(rbdOld != null);
-        Preconditions.checkArgument(rbdOld != rbdNew);
+        assert rbdNew != null;
+        assert rbdOld != null;
+        assert rbdOld != rbdNew;
         container.transferOut(rbdOld.getContainer());
         container.transferIn(rbdNew.getContainer());
         innerPosition = 0;
@@ -257,41 +283,55 @@ public class RecordIterator implements VectorAccessible {
   }
 
   public int getCurrentPosition() {
-    Preconditions.checkArgument(initialized);
-    Preconditions.checkArgument(innerPosition >= 0 && innerPosition < innerRecordCount,
-      String.format("innerPosition:%d, outerPosition:%d, innerRecordCount:%d, totalRecordCount:%d",
-        innerPosition, outerPosition, innerRecordCount, totalRecordCount));
+    assert initialized;
+    assert innerPosition >= 0;
+    assert innerPosition < innerRecordCount;
     return innerPosition;
+  }
+
+  // Test purposes only.
+  public Map<Range<Long>, RecordBatchData> cachedBatches() {
+    return batches.asMapOfRanges();
   }
 
   @Override
   public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
-    Preconditions.checkArgument(initialized);
+    assert initialized;
     return container.getValueAccessorById(clazz, ids);
   }
 
   @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
-    Preconditions.checkArgument(initialized);
+    assert initialized;
     return container.getValueVectorId(path);
   }
 
   @Override
   public BatchSchema getSchema() {
-    Preconditions.checkArgument(initialized);
+    assert initialized;
     return container.getSchema();
   }
 
   @Override
   public int getRecordCount() {
-    Preconditions.checkArgument(initialized);
+    assert initialized;
     return innerRecordCount;
   }
 
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
-    Preconditions.checkArgument(initialized);
+    assert initialized;
     return container.iterator();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    throw new UnsupportedOperationException();
   }
 
   // Release all vectors held by record batches, clear out range map.

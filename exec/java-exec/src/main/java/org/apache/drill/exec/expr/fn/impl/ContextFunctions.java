@@ -27,19 +27,19 @@ import org.apache.drill.exec.ops.ContextInformation;
 
 import javax.inject.Inject;
 
-@SuppressWarnings("unused")
 public class ContextFunctions {
 
   /**
    * Implement "user", "session_user" or "system_user" function. Returns the username of the user connected to Drillbit.
    */
-  @FunctionTemplate(names = {"user", "session_user", "system_user"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"user", "session_user", "system_user"}, scope = FunctionTemplate.FunctionScope.SIMPLE, isNiladic = true)
   public static class User implements DrillSimpleFunc {
     @Output VarCharHolder out;
     @Inject ContextInformation contextInfo;
     @Inject DrillBuf buffer;
     @Workspace int queryUserBytesLength;
 
+    @Override
     public void setup() {
       final byte[] queryUserNameBytes = contextInfo.getQueryUser().getBytes();
       buffer = buffer.reallocIfNeeded(queryUserNameBytes.length);
@@ -47,6 +47,7 @@ public class ContextFunctions {
       buffer.setBytes(0, queryUserNameBytes);
     }
 
+    @Override
     public void eval() {
       out.start = 0;
       out.end = queryUserBytesLength;
@@ -57,13 +58,14 @@ public class ContextFunctions {
   /**
    * Implement "current_schema" function. Returns the default schema in current session.
    */
-  @FunctionTemplate(name = "current_schema", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(name = "current_schema", scope = FunctionTemplate.FunctionScope.SIMPLE, isNiladic = true)
   public static class CurrentSchema implements DrillSimpleFunc {
     @Output VarCharHolder out;
     @Inject ContextInformation contextInfo;
     @Inject DrillBuf buffer;
     @Workspace int currentSchemaBytesLength;
 
+    @Override
     public void setup() {
       final byte[] currentSchemaBytes = contextInfo.getCurrentDefaultSchema().getBytes();
       buffer = buffer.reallocIfNeeded(currentSchemaBytes.length);
@@ -71,10 +73,37 @@ public class ContextFunctions {
       buffer.setBytes(0, currentSchemaBytes);
     }
 
+    @Override
     public void eval() {
       out.start = 0;
       out.end = currentSchemaBytesLength;
       out.buffer = buffer;
+    }
+  }
+
+  /**
+   * Implement "session_id" function. Returns the unique id of the current session.
+   */
+  @FunctionTemplate(name = "session_id", scope = FunctionTemplate.FunctionScope.SIMPLE, isNiladic = true)
+  public static class SessionId implements DrillSimpleFunc {
+    @Output VarCharHolder out;
+    @Inject ContextInformation contextInfo;
+    @Inject DrillBuf buffer;
+    @Workspace int sessionIdBytesLength;
+
+    @Override
+    public void setup() {
+        final byte[] sessionIdBytes = contextInfo.getSessionId().getBytes();
+        buffer = buffer.reallocIfNeeded(sessionIdBytes.length);
+        sessionIdBytesLength = sessionIdBytes.length;
+        buffer.setBytes(0, sessionIdBytes);
+    }
+
+    @Override
+    public void eval() {
+        out.start = 0;
+        out.end = sessionIdBytesLength;
+        out.buffer = buffer;
     }
   }
 }

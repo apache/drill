@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,61 +17,58 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 
 /**
  * Attributes of a function
  * Those are used in code generation and optimization.
  */
 public class FunctionAttributes {
-  private final FunctionScope scope;
-  private final NullHandling nullHandling;
-  private final boolean isBinaryCommutative;
-  private final boolean isDeterministic;
+
+  private final FunctionTemplate template;
   private final String[] registeredNames;
   private final ValueReference[] parameters;
   private final ValueReference returnValue;
   private final WorkspaceReference[] workspaceVars;
-  private final FunctionCostCategory costCategory;
 
-  public FunctionAttributes(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative,
-      boolean isDeteministic, String[] registeredNames, ValueReference[] parameters, ValueReference returnValue,
-      WorkspaceReference[] workspaceVars, FunctionCostCategory costCategory) {
-    super();
-    this.scope = scope;
-    this.nullHandling = nullHandling;
-    this.isBinaryCommutative = isBinaryCommutative;
-    this.isDeterministic = isDeteministic;
-    this.registeredNames = registeredNames;
+
+  public FunctionAttributes (FunctionTemplate template,
+                             ValueReference[] parameters,
+                             ValueReference returnValue,
+                             WorkspaceReference[] workspaceVars) {
+    this.template = template;
+    this.registeredNames = ((template.name().isEmpty()) ? template.names() : new String[] {template.name()});
     this.parameters = parameters;
     this.returnValue = returnValue;
     this.workspaceVars = workspaceVars;
-    this.costCategory = costCategory;
   }
 
   public FunctionScope getScope() {
-    return scope;
+    return template.scope();
+  }
+
+  public FunctionTemplate.ReturnType getReturnType() {
+    return template.returnType();
   }
 
   public NullHandling getNullHandling() {
-    return nullHandling;
+    return template.nulls();
   }
 
   public boolean isBinaryCommutative() {
-    return isBinaryCommutative;
+    return template.isBinaryCommutative();
   }
 
   @Deprecated
   public boolean isRandom() {
-    return !isDeterministic;
+    return template.isRandom();
   }
 
   public boolean isDeterministic() {
-    return isDeterministic;
+    return !template.isRandom();
   }
 
   public String[] getRegisteredNames() {
@@ -91,8 +88,12 @@ public class FunctionAttributes {
   }
 
   public FunctionCostCategory getCostCategory() {
-    return costCategory;
+    return template.costCategory();
   }
 
+  public boolean isNiladic() {
+    return template.isNiladic();
+  }
 
+  public boolean checkPrecisionRange() { return template.checkPrecisionRange(); }
 }

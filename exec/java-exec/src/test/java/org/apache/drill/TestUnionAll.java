@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,15 +17,34 @@
  */
 package org.apache.drill;
 
+import com.google.common.collect.Lists;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestUnionAll extends BaseTestQuery{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.List;
+
+@Category({SqlTest.class, OperatorTest.class})
+public class TestUnionAll extends BaseTestQuery {
+
+  private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
+  private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
+  private static final String enableDistribute = "alter session set `planner.enable_unionall_distribute` = true";
+  private static final String defaultDistribute = "alter session reset `planner.enable_unionall_distribute`";
 
   @Test  // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
@@ -150,6 +169,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // DRILL-1905: Union-all of * column from JSON files in different directories
+  @Category(UnlikelyTest.class)
   public void testUnionAll9() throws Exception {
     String file0 = FileUtils.getResourceAsFile("/multilevel/json/1994/Q1/orders_94_q1.json").toURI().toString();
     String file1 = FileUtils.getResourceAsFile("/multilevel/json/1995/Q1/orders_95_q1.json").toURI().toString();
@@ -263,6 +283,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2203
+  @Category(UnlikelyTest.class)
   public void testDistinctOverUnionAllwithFullyQualifiedColumnNames() throws Exception {
     String query = "select distinct sq.x1, sq.x2 " +
         "from " +
@@ -280,6 +301,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-1923
+  @Category(UnlikelyTest.class)
   public void testUnionAllContainsColumnANumericConstant() throws Exception {
     String query = "(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 5) " +
         "union all " +
@@ -295,6 +317,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2207
+  @Category(UnlikelyTest.class)
   public void testUnionAllEmptySides() throws Exception {
     String query1 = "(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 0) " +
         "union all " +
@@ -323,6 +346,7 @@ public class TestUnionAll extends BaseTestQuery{
     }
 
   @Test // see DRILL-1977, DRILL-2376, DRILL-2377, DRILL-2378, DRILL-2379
+  @Category(UnlikelyTest.class)
   public void testAggregationOnUnionAllOperator() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
     String query1 = String.format(
@@ -370,6 +394,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2591
+  @Category(UnlikelyTest.class)
   public void testDateAndTimestampJson() throws Exception {
     String rootDate = FileUtils.getResourceAsFile("/store/json/dateData.json").toURI().toString();
     String rootTimpStmp = FileUtils.getResourceAsFile("/store/json/timeStmpData.json").toURI().toString();
@@ -415,6 +440,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2637
+  @Category(UnlikelyTest.class)
   public void testUnionAllOneInputContainsAggFunction() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
     String query1 = String.format("select * from ((select count(c1) as ct from (select columns[0] c1 from dfs.`%s`)) \n" +
@@ -457,6 +483,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2717
+  @Category(UnlikelyTest.class)
   public void testUnionInputsGroupByOnCSV() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
     String query = String.format("select * from \n" +
@@ -487,6 +514,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2639
+  @Category(UnlikelyTest.class)
   public void testUnionAllDiffTypesAtPlanning() throws Exception {
     String query = "select count(c1) as ct from (select cast(r_regionkey as int) c1 from cp.`tpch/region.parquet`) " +
         "union all " +
@@ -506,6 +534,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2612
+  @Category(UnlikelyTest.class)
   public void testUnionAllRightEmptyJson() throws Exception {
     String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
     String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
@@ -524,6 +553,117 @@ public class TestUnionAll extends BaseTestQuery{
       .baselineValues(true)
       .baselineValues(false)
       .build().run();
+  }
+
+  @Test
+  public void testUnionAllLeftEmptyJson() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
+    final String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    final String queryLeftEmpty = String.format(
+        "select key from dfs_test.`%s` " +
+        "union all " +
+        "select key from dfs_test.`%s`",
+        rootEmpty,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryLeftEmpty)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionAllBothEmptyJson() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
+    final String query = String.format(
+        "select key from dfs_test.`%s` " +
+            "union all " +
+            "select key from dfs_test.`%s`",
+        rootEmpty,
+        rootEmpty);
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.INT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionAllRightEmptyDataBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    String queryRightEmptyBatch = String.format(
+        "select key from dfs_test.`%s` " +
+            "union all " +
+            "select key from dfs_test.`%s` where 1 = 0",
+        rootSimple,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryRightEmptyBatch)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build().run();
+  }
+
+  @Test
+  public void testUnionAllLeftEmptyDataBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    final String queryLeftBatch = String.format(
+        "select key from dfs_test.`%s` where 1 = 0 " +
+            "union all " +
+            "select key from dfs_test.`%s`",
+        rootSimple,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryLeftBatch)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionAllBothEmptyDataBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+    final String query = String.format(
+        "select key from dfs_test.`%s` where 1 = 0 " +
+            "union all " +
+            "select key from dfs_test.`%s` where 1 = 0",
+        rootSimple,
+        rootSimple);
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIT) // field "key" is boolean type
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
   }
 
   @Test // see DRILL-2746
@@ -557,7 +697,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2746
-  public void testInListPushDownOverUnionAll() throws Exception {
+  public void testInListOnUnionAll() throws Exception {
     String query = "select n_nationkey \n" +
         "from (select n1.n_nationkey from cp.`tpch/nation.parquet` n1 inner join cp.`tpch/region.parquet` r1 on n1.n_regionkey = r1.r_regionkey \n" +
         "union all \n" +
@@ -569,13 +709,11 @@ public class TestUnionAll extends BaseTestQuery{
         ".*UnionAll.*\n" +
             ".*Project.*\n" +
                 ".*HashJoin.*\n" +
-                    ".*Project.*\n" +
-                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\].*\n" +
             ".*Project.*\n" +
                 ".*HashJoin.*\n" +
-                    ".*Project.*\n" +
-                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\].*"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
@@ -610,6 +748,7 @@ public class TestUnionAll extends BaseTestQuery{
                     ".*Scan.*columns=\\[`columns`\\[0\\]\\].*\n" +
             ".*Project.*\n" +
                 ".*Scan.*columns=\\[`columns`\\[0\\]\\].*"};
+
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -787,6 +926,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // DRILL-3257 (Simplified Query from TPC-DS query 74)
+  @Category(UnlikelyTest.class)
   public void testUnionAllInWith() throws Exception {
     final String query1 = "WITH year_total \n" +
         "     AS (SELECT c.r_regionkey    customer_id,\n" +
@@ -898,5 +1038,216 @@ public class TestUnionAll extends BaseTestQuery{
         .baselineValues((long) 900)
         .build()
         .run();
+  }
+
+  @Test // DRILL-4147 // base case
+  @Category(UnlikelyTest.class)
+  public void testDrill4147_1() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM dfs_test.`%s` \n" +
+        "Union All SELECT o_custkey FROM dfs_test.`%s`", l, r);
+
+    // Validate the plan
+    final String[] expectedPlan = {"UnionExchange.*\n",
+        ".*UnionAll"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
+  @Test // DRILL-4147  // group-by on top of union-all
+  public void testDrill4147_2() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("Select o_custkey, count(*) as cnt from \n" +
+        " (SELECT o_custkey FROM dfs_test.`%s` \n" +
+        "Union All SELECT o_custkey FROM dfs_test.`%s`) \n" +
+        "group by o_custkey", l, r);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*HashAgg.*HashToRandomExchange.*UnionAll.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
+  @Test // DRILL-4147 // union-all above a hash join
+  public void testDrill4147_3() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " (select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey) \n" +
+        " Union All SELECT o_custkey FROM dfs_test.`%s` where o_custkey > 10", l, r, l);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
+  @Test // DRILL-4833  // limit 1 is on RHS of union-all
+  @Category(UnlikelyTest.class)
+  public void testDrill4833_1() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " ((select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey) \n" +
+        " Union All (SELECT o_custkey FROM dfs_test.`%s` limit 1))", l, r, l);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      test(enableDistribute);
+
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+      test(defaultDistribute);
+    }
+  }
+
+  @Test // DRILL-4833  // limit 1 is on LHS of union-all
+  @Category(UnlikelyTest.class)
+  public void testDrill4833_2() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " ((SELECT o_custkey FROM dfs_test.`%s` limit 1) \n" +
+        " union all \n" +
+        " (select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey))", l, r, l);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      test(enableDistribute);
+
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+      test(defaultDistribute);
+    }
+  }
+
+  @Test // DRILL-5130
+  public void testUnionAllWithValues() throws Exception {
+    testBuilder()
+        .sqlQuery("values('A') union all values('B')")
+        .unOrdered()
+        .baselineColumns("EXPR$0")
+        .baselineValues("A")
+        .baselineValues("B")
+        .go();
+  }
+
+  @Test // DRILL-4264
+  @Category(UnlikelyTest.class)
+  public void testFieldWithDots() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "table.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+      }
+
+      String query = String.format("select * from (" +
+                                              "(select t.m.`a.b` as a,\n" +
+                                                      "t.m.a.b as b,\n" +
+                                                      "t.m['a.b'] as c,\n" +
+                                                      "t.rk.q as d,\n" +
+                                                      "t.`rk.q` as e\n" +
+                                              "from dfs_test.`%1$s/%2$s` t)\n" +
+                                            "union all\n" +
+                                              "(select t.m.`a.b` as a,\n" +
+                                                      "t.m.a.b as b,\n" +
+                                                      "t.m['a.b'] as c,\n" +
+                                                      "t.rk.q as d,\n" +
+                                                      "t.`rk.q` as e\n" +
+                                              "from dfs_test.`%1$s/%2$s` t))",
+                                  directory.toPath().toString(), fileName);
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a", "b", "c", "d", "e")
+        .baselineValues("1", "2", "1", null, "a")
+        .baselineValues("1", "2", "1", null, "a")
+        .go();
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
   }
 }

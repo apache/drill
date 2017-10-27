@@ -18,14 +18,17 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.OperatorFixture;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import java.io.BufferedWriter;
@@ -34,6 +37,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
+@Category(OperatorTest.class)
 public class TestMergeJoinAdvanced extends BaseTestQuery {
   @Rule
   public final TestRule TIMEOUT = TestTools.getTimeoutRule(120000); // Longer timeout than usual.
@@ -89,6 +93,7 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
   }
 
   @Test
+  @Ignore // TODO file JIRA to fix this
   public void testFix2967() throws Exception {
     setSessionOption(PlannerSettings.BROADCAST.getOptionName(), "false");
     setSessionOption(PlannerSettings.HASHJOIN.getOptionName(), "false");
@@ -101,10 +106,7 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
       test("select * from dfs_test.`%s/join/j1` j1 left outer join dfs_test.`%s/join/j2` j2 on (j1.c_varchar = j2.c_varchar)",
         TEST_RES_PATH, TEST_RES_PATH);
     } finally {
-      setSessionOption(PlannerSettings.BROADCAST.getOptionName(), String.valueOf(PlannerSettings.BROADCAST.getDefault().bool_val));
-      setSessionOption(PlannerSettings.HASHJOIN.getOptionName(), String.valueOf(PlannerSettings.HASHJOIN.getDefault().bool_val));
-      setSessionOption(ExecConstants.SLICE_TARGET, String.valueOf(ExecConstants.SLICE_TARGET_DEFAULT));
-      setSessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, String.valueOf(ExecConstants.MAX_WIDTH_PER_NODE.getDefault().num_val));
+      test("ALTER SESSION RESET ALL");
     }
   }
 
@@ -211,6 +213,40 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
       .unOrdered()
       .baselineColumns("cnt")
       .baselineValues(202452l)
+      .go();
+  }
+
+  @Test
+  public void testDrill4196() throws Exception {
+    final String leftSide = BaseTestQuery.getTempDir("merge-join-left.json");
+    final String rightSide = BaseTestQuery.getTempDir("merge-join-right.json");
+    final BufferedWriter leftWriter = new BufferedWriter(new FileWriter(new File(leftSide)));
+    final BufferedWriter rightWriter = new BufferedWriter(new FileWriter(new File(rightSide)));
+
+    // output batch is 32k, create 60k left batch
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 9999, 9999));
+    for (int i=0; i < 6000; ++i) {
+      leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10000, 10000));
+    }
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10001, 10001));
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10002, 10002));
+
+    // Keep all values same. Jon will consume entire right side.
+    for (int i=0; i < 800; ++i) {
+      rightWriter.write(String.format("{ \"k1\" : %d , \"v1\": %d }", 10000, 10000));
+    }
+
+    leftWriter.close();
+    rightWriter.close();
+
+    final String query1 = String.format("select count(*) c1 from dfs_test.`%s` L %s join dfs_test.`%s` R on L.k=R.k1",
+      leftSide, "inner", rightSide);
+    testBuilder()
+      .sqlQuery(query1)
+      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+      .unOrdered()
+      .baselineColumns("c1")
+      .baselineValues(6000*800L)
       .go();
   }
 }

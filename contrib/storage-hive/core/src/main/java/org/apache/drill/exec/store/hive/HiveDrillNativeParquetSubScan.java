@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,17 +36,20 @@ public class HiveDrillNativeParquetSubScan extends HiveSubScan {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveDrillNativeParquetSubScan.class);
 
   @JsonCreator
-  public HiveDrillNativeParquetSubScan(@JsonProperty("userName") String userName,
+  public HiveDrillNativeParquetSubScan(@JacksonInject StoragePluginRegistry registry,
+                                       @JsonProperty("userName") String userName,
                                        @JsonProperty("splits") List<String> splits,
                                        @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
                                        @JsonProperty("splitClasses") List<String> splitClasses,
-                                       @JsonProperty("columns") List<SchemaPath> columns)
-      throws IOException, ReflectiveOperationException {
-    super(userName, splits, hiveReadEntry, splitClasses, columns);
+                                       @JsonProperty("columns") List<SchemaPath> columns,
+                                       @JsonProperty("storagePluginName") String pluginName)
+      throws IOException, ExecutionSetupException, ReflectiveOperationException {
+    super(registry, userName, splits, hiveReadEntry, splitClasses, columns, pluginName);
   }
 
-  public HiveDrillNativeParquetSubScan(final HiveSubScan subScan) throws IOException, ReflectiveOperationException {
-    this(subScan.getUserName(), subScan.getSplits(), subScan.getHiveReadEntry(), subScan.getSplitClasses(),
-        subScan.getColumns());
+  public HiveDrillNativeParquetSubScan(final HiveSubScan subScan)
+      throws IOException, ExecutionSetupException, ReflectiveOperationException {
+    super(subScan.getUserName(), subScan.getSplits(), subScan.getHiveReadEntry(), subScan.getSplitClasses(),
+        subScan.getColumns(), subScan.getStoragePlugin());
   }
 }

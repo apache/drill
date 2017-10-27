@@ -77,6 +77,8 @@ public class ResolverTypePrecedence {
     precedenceMap.put(MinorType.INTERVALDAY, i+= 2);
     precedenceMap.put(MinorType.INTERVALYEAR, i+= 2);
     precedenceMap.put(MinorType.INTERVAL, i+= 2);
+    precedenceMap.put(MinorType.MAP, i += 2);
+    precedenceMap.put(MinorType.LIST, i += 2);
     precedenceMap.put(MinorType.UNION, i += 2);
 
     MAX_IMPLICIT_CAST_COST = i;

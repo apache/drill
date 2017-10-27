@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,9 +18,14 @@
 package org.apache.drill.exec.hive;
 
 import com.google.common.base.Strings;
+import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.categories.SlowTest;
+import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
   private static final String[] baselineCols = new String[] {"COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE"};
   private static final Object[] expVal1 = new Object[] {"key", "INTEGER", "YES"};
@@ -41,6 +46,9 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("hive.default", "kv")
         .baselineValues("hive.default", "kv_parquet")
         .baselineValues("hive.default", "kv_sh")
+        .baselineValues("hive.default", "countstar_parquet")
+        .baselineValues("hive.default", "simple_json")
+        .baselineValues("hive.default", "partition_with_few_schemas")
         .go();
 
     testBuilder()
@@ -49,6 +57,19 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
         .baselineValues("hive.db1", "kv_db1")
         .baselineValues("hive.db1", "avro")
+        .go();
+
+    testBuilder()
+        .sqlQuery("SHOW TABLES IN hive.skipper")
+        .unOrdered()
+        .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
+        .baselineValues("hive.skipper", "kv_text_small")
+        .baselineValues("hive.skipper", "kv_text_large")
+        .baselineValues("hive.skipper", "kv_incorrect_skip_header")
+        .baselineValues("hive.skipper", "kv_incorrect_skip_footer")
+        .baselineValues("hive.skipper", "kv_rcfile_large")
+        .baselineValues("hive.skipper", "kv_parquet_large")
+        .baselineValues("hive.skipper", "kv_sequencefile_large")
         .go();
   }
 
@@ -60,6 +81,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineColumns("SCHEMA_NAME")
         .baselineValues("hive.default")
         .baselineValues("hive.db1")
+        .baselineValues("hive.skipper")
         .baselineValues("dfs.default")
         .baselineValues("dfs.root")
         .baselineValues("dfs.tmp")
@@ -163,7 +185,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         "       NUMERIC_PRECISION_RADIX, NUMERIC_PRECISION, NUMERIC_SCALE " +
         "FROM INFORMATION_SCHEMA.`COLUMNS` " +
         "WHERE TABLE_SCHEMA = 'hive.default' AND TABLE_NAME = 'infoschematest' AND " +
-        "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
+        "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR COLUMN_NAME = 'chartype' OR " +
         "COLUMN_NAME = 'inttype' OR COLUMN_NAME = 'decimaltype')";
 
     testBuilder()
@@ -178,8 +200,9 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
                          "NUMERIC_SCALE")
         .baselineValues("inttype",     "INTEGER",            null,    2,   32,    0)
         .baselineValues("decimaltype", "DECIMAL",            null,   10,   38,    2)
-        .baselineValues("stringtype",  "CHARACTER VARYING", 65535, null, null, null)
+        .baselineValues("stringtype",  "CHARACTER VARYING", HiveVarchar.MAX_VARCHAR_LENGTH, null, null, null)
         .baselineValues("varchartype", "CHARACTER VARYING",    20, null, null, null)
+        .baselineValues("chartype", "CHARACTER", 10, null, null, null)
         .go();
   }
 
@@ -206,4 +229,39 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("2", " key_2")
         .go();
   }
+
+  @Test // DRILL-4577
+  public void showInfoSchema() throws Exception {
+    final String query = "select * \n" +
+        "from INFORMATION_SCHEMA.`TABLES` \n" +
+        "where TABLE_SCHEMA like 'hive%'";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "TABLE_TYPE")
+        .baselineValues("DRILL", "hive.db1", "kv_db1", "TABLE")
+        .baselineValues("DRILL", "hive.db1", "avro", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv", "TABLE")
+        .baselineValues("DRILL", "hive.default", "empty_table", "TABLE")
+        .baselineValues("DRILL", "hive.default", "readtest", "TABLE")
+        .baselineValues("DRILL", "hive.default", "infoschematest", "TABLE")
+        .baselineValues("DRILL", "hive.default", "readtest_parquet", "TABLE")
+        .baselineValues("DRILL", "hive.default", "hiveview", "VIEW")
+        .baselineValues("DRILL", "hive.default", "partition_pruning_test", "TABLE")
+        .baselineValues("DRILL", "hive.default", "partition_with_few_schemas", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv_parquet", "TABLE")
+        .baselineValues("DRILL", "hive.default", "countstar_parquet", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv_sh", "TABLE")
+        .baselineValues("DRILL", "hive.default", "simple_json", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_small", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_large", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_header", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_footer", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_rcfile_large", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_parquet_large", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_sequencefile_large", "TABLE")
+        .go();
+  }
+
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.validate;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.IteratorValidator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
@@ -35,6 +36,13 @@ public class IteratorValidatorCreator implements BatchCreator<IteratorValidator>
       List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
-    return new IteratorValidatorBatchIterator(children.iterator().next());
+    RecordBatch child = children.iterator().next();
+    IteratorValidatorBatchIterator iter = new IteratorValidatorBatchIterator(child);
+    boolean validateBatches = context.getOptionSet().getOption(ExecConstants.ENABLE_VECTOR_VALIDATOR) ||
+                              context.getConfig().getBoolean(ExecConstants.ENABLE_VECTOR_VALIDATION);
+    iter.enableBatchValidation(validateBatches);
+    logger.trace("Iterator validation enabled for " + child.getClass().getSimpleName() +
+                 (validateBatches ? " with vector validation" : ""));
+    return iter;
   }
 }

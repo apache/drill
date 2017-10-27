@@ -17,16 +17,14 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import java.security.PrivilegedExceptionAction;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -47,15 +45,17 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 
-import org.apache.hadoop.security.UserGroupInformation;
+import io.netty.buffer.DrillBuf;
 
 /**
  * A RecordReader implementation for Avro data files.
@@ -69,11 +69,11 @@ public class AvroRecordReader extends AbstractRecordReader {
   private final Path hadoop;
   private final long start;
   private final long end;
+  private final FieldSelection fieldSelection;
   private DrillBuf buffer;
   private VectorContainerWriter writer;
 
   private DataFileReader<GenericContainer> reader = null;
-  private OperatorContext operatorContext;
   private FileSystem fs;
 
   private final String opUserName;
@@ -97,14 +97,15 @@ public class AvroRecordReader extends AbstractRecordReader {
     this.opUserName = userName;
     this.queryUserName = fragmentContext.getQueryUserName();
     setColumns(projectedColumns);
+    this.fieldSelection = FieldSelection.getFieldSelection(projectedColumns);
   }
 
-  private DataFileReader getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
+  private DataFileReader<GenericContainer> getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
     try {
       final UserGroupInformation ugi = ImpersonationUtil.createProxyUgi(this.opUserName, this.queryUserName);
-      return ugi.doAs(new PrivilegedExceptionAction<DataFileReader>() {
+      return ugi.doAs(new PrivilegedExceptionAction<DataFileReader<GenericContainer>>() {
         @Override
-        public DataFileReader run() throws Exception {
+        public DataFileReader<GenericContainer> run() throws Exception {
           return new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>());
         }
       });
@@ -116,7 +117,6 @@ public class AvroRecordReader extends AbstractRecordReader {
 
   @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
-    operatorContext = context;
     writer = new VectorContainerWriter(output);
 
     try {
@@ -130,7 +130,7 @@ public class AvroRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    final Stopwatch watch = new Stopwatch().start();
+    final Stopwatch watch = Stopwatch.createStarted();
 
     if (reader == null) {
       throw new IllegalStateException("Avro reader is not open.");
@@ -168,14 +168,14 @@ public class AvroRecordReader extends AbstractRecordReader {
 
     switch (type) {
       case RECORD:
-        process(container, schema, null, new MapOrListWriterImpl(writer.rootAsMap()));
+        process(container, schema, null, new MapOrListWriterImpl(writer.rootAsMap()), fieldSelection);
         break;
       default:
         throw new DrillRuntimeException("Root object must be record type. Found: " + type);
     }
   }
 
-  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriterImpl writer) {
+  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriterImpl writer, FieldSelection fieldSelection) {
     if (value == null) {
       return;
     }
@@ -194,12 +194,13 @@ public class AvroRecordReader extends AbstractRecordReader {
               _writer = (MapOrListWriterImpl) writer.map(field.name());
           }
 
-          process(((GenericRecord) value).get(field.name()), field.schema(), field.name(), _writer);
+          process(((GenericRecord) value).get(field.name()), field.schema(), field.name(), _writer, fieldSelection.getChild(field.name()));
+
         }
         break;
       case ARRAY:
         assert fieldName != null;
-        final GenericArray array = (GenericArray) value;
+        final GenericArray<?> array = (GenericArray<?>) value;
         Schema elementSchema = array.getSchema().getElementType();
         Type elementType = elementSchema.getType();
         if (elementType == Schema.Type.RECORD || elementType == Schema.Type.MAP){
@@ -207,18 +208,18 @@ public class AvroRecordReader extends AbstractRecordReader {
         } else {
           writer = (MapOrListWriterImpl) writer.list(fieldName);
         }
-        writer.start();
         for (final Object o : array) {
-          process(o, elementSchema, fieldName, writer);
+          writer.start();
+          process(o, elementSchema, fieldName, writer, fieldSelection.getChild(fieldName));
+          writer.end();
         }
-        writer.end();
         break;
       case UNION:
         // currently supporting only nullable union (optional fields) like ["null", "some-type"].
         if (schema.getTypes().get(0).getType() != Schema.Type.NULL) {
           throw new UnsupportedOperationException("Avro union type must be of the format : [\"null\", \"some-type\"]");
         }
-        process(value, schema.getTypes().get(1), fieldName, writer);
+        process(value, schema.getTypes().get(1), fieldName, writer, fieldSelection);
         break;
       case MAP:
         @SuppressWarnings("unchecked")
@@ -227,7 +228,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         writer = (MapOrListWriterImpl) writer.map(fieldName);
         writer.start();
         for (Entry<Object, Object> entry : map.entrySet()) {
-          process(entry.getValue(), valueSchema, entry.getKey().toString(), writer);
+          process(entry.getValue(), valueSchema, entry.getKey().toString(), writer, fieldSelection.getChild(entry.getKey().toString()));
         }
         writer.end();
         break;
@@ -239,14 +240,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         assert fieldName != null;
 
         if (writer.isMapWriter()) {
-          SchemaPath path;
-          if (writer.map.getField().getPath().getRootSegment().getPath().equals("")) {
-            path = new SchemaPath(new PathSegment.NameSegment(fieldName));
-          } else {
-            path = writer.map.getField().getPath().getChild(fieldName);
-          }
-
-          if (!selected(path)) {
+          if (fieldSelection.isNeverValid()) {
             break;
           }
         }

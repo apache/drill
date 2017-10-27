@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,12 +21,14 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.AddOrGetResult;
@@ -182,6 +184,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     return vector == DEFAULT_DATA_VECTOR ? 0:1;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T extends ValueVector> AddOrGetResult<T> addOrGetVector(VectorDescriptor descriptor) {
     boolean created = false;
@@ -207,6 +210,25 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   protected void replaceDataVector(ValueVector v) {
     vector.clear();
     vector = v;
+  }
+
+  @Override
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    offsets.collectLedgers(ledgers);
+    vector.collectLedgers(ledgers);
+  }
+
+  @Override
+  public int getPayloadByteCount(int valueCount) {
+    int entryCount = offsets.getAccessor().get(valueCount);
+    return offsets.getPayloadByteCount(valueCount) + vector.getPayloadByteCount(entryCount);
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    BaseRepeatedValueVector target = (BaseRepeatedValueVector) other;
+    vector.exchange(target.vector);
+    offsets.exchange(target.offsets);
   }
 
   public abstract class BaseRepeatedAccessor extends BaseValueVector.BaseAccessor implements RepeatedAccessor {
@@ -248,6 +270,14 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       setValueCount(index+1);
     }
 
+    public boolean startNewValueBounded(int index) {
+      if (index >= MAX_ROW_COUNT) {
+        return false;
+      }
+      startNewValue(index);
+      return true;
+    }
+
     @Override
     public void setValueCount(int valueCount) {
       // TODO: populate offset end points
@@ -255,6 +285,9 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       final int childValueCount = valueCount == 0 ? 0 : offsets.getAccessor().get(valueCount);
       vector.getMutator().setValueCount(childValueCount);
     }
-  }
 
+    public int getInnerValueCountAt(int index) {
+      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
+    }
+  }
 }

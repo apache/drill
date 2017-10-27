@@ -73,11 +73,12 @@ enum MinorType {
   INTERVALYEAR = 38,
   INTERVALDAY = 39,
   LIST = 40,
-  GENERIC_OBJECT = 41
+  GENERIC_OBJECT = 41,
+  UNION = 42
 };
 bool MinorType_IsValid(int value);
 const MinorType MinorType_MIN = LATE;
-const MinorType MinorType_MAX = GENERIC_OBJECT;
+const MinorType MinorType_MAX = UNION;
 const int MinorType_ARRAYSIZE = MinorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* MinorType_descriptor();
@@ -208,6 +209,16 @@ class MajorType : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 timezone() const;
   inline void set_timezone(::google::protobuf::int32 value);
 
+  // repeated .common.MinorType sub_type = 7;
+  inline int sub_type_size() const;
+  inline void clear_sub_type();
+  static const int kSubTypeFieldNumber = 7;
+  inline ::common::MinorType sub_type(int index) const;
+  inline void set_sub_type(int index, ::common::MinorType value);
+  inline void add_sub_type(::common::MinorType value);
+  inline const ::google::protobuf::RepeatedField<int>& sub_type() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_sub_type();
+
   // @@protoc_insertion_point(class_scope:common.MajorType)
  private:
   inline void set_has_minor_type();
@@ -231,9 +242,10 @@ class MajorType : public ::google::protobuf::Message {
   ::google::protobuf::int32 precision_;
   ::google::protobuf::int32 scale_;
   ::google::protobuf::int32 timezone_;
+  ::google::protobuf::RepeatedField<int> sub_type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_Types_2eproto();
   friend void protobuf_AssignDesc_Types_2eproto();
@@ -381,6 +393,33 @@ inline ::google::protobuf::int32 MajorType::timezone() const {
 inline void MajorType::set_timezone(::google::protobuf::int32 value) {
   set_has_timezone();
   timezone_ = value;
+}
+
+// repeated .common.MinorType sub_type = 7;
+inline int MajorType::sub_type_size() const {
+  return sub_type_.size();
+}
+inline void MajorType::clear_sub_type() {
+  sub_type_.Clear();
+}
+inline ::common::MinorType MajorType::sub_type(int index) const {
+  return static_cast< ::common::MinorType >(sub_type_.Get(index));
+}
+inline void MajorType::set_sub_type(int index, ::common::MinorType value) {
+  assert(::common::MinorType_IsValid(value));
+  sub_type_.Set(index, value);
+}
+inline void MajorType::add_sub_type(::common::MinorType value) {
+  assert(::common::MinorType_IsValid(value));
+  sub_type_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+MajorType::sub_type() const {
+  return sub_type_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+MajorType::mutable_sub_type() {
+  return &sub_type_;
 }
 
 

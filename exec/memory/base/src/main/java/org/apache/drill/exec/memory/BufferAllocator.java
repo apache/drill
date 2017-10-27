@@ -20,6 +20,10 @@ package org.apache.drill.exec.memory;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.BufferManager;
 
@@ -98,6 +102,19 @@ public interface BufferAllocator extends AutoCloseable {
   public void setLimit(long newLimit);
 
   /**
+   * Request lenient enforcement of the allocation limits. Use for
+   * memory-managed operators to prevent minor math errors from killing
+   * queries. This is temporary until Drill manages memory better.
+   * Leniency is allowed only in production code (no assertions),
+   * not in debug mode (assertions enabled).
+   *
+   * @return true if leniency was granted, false if the allocator will
+   * enforce strict limits despite the request
+   */
+
+  public boolean setLenient();
+
+  /**
    * Return the current maximum limit this allocator imposes.
    *
    * @return Limit in number of bytes.
@@ -146,4 +163,64 @@ public interface BufferAllocator extends AutoCloseable {
    */
   public String toVerboseString();
 
+  /**
+   * Asserts (using java assertions) that the provided allocator is currently open. If assertions are disabled, this is
+   * a no-op.
+   */
+  public void assertOpen();
+
+  /**
+   * Write the contents of a DrillBuf to a stream. Use this method, rather
+   * than calling the DrillBuf.getBytes() method, because this method
+   * avoids repeated heap allocation for the intermediate heap buffer.
+   * Uses the reader and writer indexes to determine
+   * the number of bytes to write. Useful only for bufs created using
+   * those indexes.
+   *
+   * @param buf the Drillbuf to write
+   * @param output the output stream
+   * @throws IOException if a write error occurs
+   */
+
+  public void write(DrillBuf buf, OutputStream out) throws IOException;
+
+  /**
+   * Write the contents of a DrillBuf to a stream. Use this method, rather
+   * than calling the DrillBuf.getBytes() method, because this method
+   * avoids repeated heap allocation for the intermediate heap buffer.
+   * Writes the specified number of bytes starting from the head of the
+   * given Drillbuf.
+   *
+   * @param buf the Drillbuf to write
+   * @param length the number of bytes to read. Must be less than or
+   * equal to number of bytes allocated in the buffer.
+   * @param out the output stream
+   * @throws IOException if a write error occurs
+   */
+
+  public void write(DrillBuf buf, int length, OutputStream out) throws IOException;
+
+  /**
+   * Read the contents of a DrillBuf from a stream. Use this method, rather
+   * than calling the DrillBuf.writeBytes() method, because this method
+   * avoids repeated heap allocation for the intermediate heap buffer.
+   * The buffer must have already been allocated.
+   *
+   * @param buf the buffer to read with space already allocated
+   * @param length number of bytes to read
+   * @param in input stream from which to read data
+   * @throws IOException if a read error occurs
+   */
+
+  public void read(DrillBuf buf, int length, InputStream in) throws IOException;
+
+  /**
+   * Reads the specified number of bytes into a new Drillbuf.
+   * @param length number of bytes to read
+   * @param in input stream from which to read data
+   * @return the buffer holding the data read from the stream
+   * @throws IOException if a read error occurs
+   */
+
+  public DrillBuf read(int length, InputStream in) throws IOException;
 }

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 /**
  * {@link OptionManager} that holds options within {@link org.apache.drill.exec.ops.QueryContext}.
@@ -38,7 +37,31 @@ public class QueryOptionManager extends InMemoryOptionManager {
   }
 
   @Override
-  boolean supportsOptionType(OptionType type) {
-    return type == OptionType.QUERY;
+  public OptionValue getDefault(String optionName) {
+    return fallback.getDefault(optionName);
+  }
+
+  public SessionOptionManager getSessionOptionManager() {
+    return (SessionOptionManager) fallback;
+  }
+
+  public OptionManager getOptionManager(OptionValue.OptionScope scope) {
+    switch (scope) {
+      case SYSTEM:
+        return getSessionOptionManager().getSystemOptionManager();
+      case SESSION:
+        return getSessionOptionManager();
+      case QUERY:
+        return this;
+      case BOOT:
+        throw new UnsupportedOperationException("There is no option manager for " + OptionValue.OptionScope.BOOT);
+      default:
+        throw new UnsupportedOperationException("Invalid type: " + scope);
+    }
+  }
+
+  @Override
+  protected OptionValue.OptionScope getScope() {
+    return OptionValue.OptionScope.QUERY;
   }
 }

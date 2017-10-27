@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,11 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.drill.common.exceptions.RetryAfterSpillException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -43,8 +46,9 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
-import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
+import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -62,21 +66,17 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JVar;
 
-public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
+public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   public static final long ALLOCATOR_INITIAL_RESERVATION = 1 * 1024 * 1024;
   public static final long ALLOCATOR_MAX_RESERVATION = 20L * 1000 * 1000 * 1000;
-
-  // Probe side record batch
-  private final RecordBatch left;
-
-  // Build side record batch
-  private final RecordBatch right;
 
   // Join type, INNER, LEFT, RIGHT or OUTER
   private final JoinRelType joinType;
 
   // Join conditions
   private final List<JoinCondition> conditions;
+
+  private final List<Comparator> comparators;
 
   // Runtime generated class implementing HashJoinProbe interface
   private HashJoinProbe hashJoinProbe = null;
@@ -141,9 +141,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   // indicates if we have previously returned an output batch
   boolean firstOutputBatch = true;
 
-  IterOutcome leftUpstream = IterOutcome.NONE;
-  IterOutcome rightUpstream = IterOutcome.NONE;
-
   private final HashTableStats htStats = new HashTableStats();
 
   public enum Metric implements MetricDef {
@@ -151,7 +148,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     NUM_BUCKETS,
     NUM_ENTRIES,
     NUM_RESIZING,
-    RESIZING_TIME;
+    RESIZING_TIME_MS;
 
     // duplicate for hash ag
 
@@ -168,16 +165,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
   @Override
   protected void buildSchema() throws SchemaChangeException {
-    leftUpstream = next(left);
-    rightUpstream = next(right);
-
-    if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
-      state = BatchState.STOP;
-      return;
-    }
-
-    if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
-      state = BatchState.OUT_OF_MEMORY;
+    if (! prefetchFirstBatchFromBothSides()) {
       return;
     }
 
@@ -281,40 +269,37 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   public void setupHashTable() throws IOException, SchemaChangeException, ClassTransformationException {
     // Setup the hash table configuration object
     int conditionsSize = conditions.size();
-    final NamedExpression rightExpr[] = new NamedExpression[conditionsSize];
-    NamedExpression leftExpr[] = new NamedExpression[conditionsSize];
+    final List<NamedExpression> rightExpr = new ArrayList<>(conditionsSize);
+    List<NamedExpression> leftExpr = new ArrayList<>(conditionsSize);
 
-    JoinComparator comparator = JoinComparator.NONE;
     // Create named expressions from the conditions
     for (int i = 0; i < conditionsSize; i++) {
-      rightExpr[i] = new NamedExpression(conditions.get(i).getRight(), new FieldReference("build_side_" + i));
-      leftExpr[i] = new NamedExpression(conditions.get(i).getLeft(), new FieldReference("probe_side_" + i));
-
-      // Hash join only supports certain types of comparisons
-      comparator = JoinUtils.checkAndSetComparison(conditions.get(i), comparator);
+      rightExpr.add(new NamedExpression(conditions.get(i).getRight(), new FieldReference("build_side_" + i)));
+      leftExpr.add(new NamedExpression(conditions.get(i).getLeft(), new FieldReference("probe_side_" + i)));
     }
-
-    assert comparator != JoinComparator.NONE;
-    final boolean areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM) ? true : false;
 
     // Set the left named expression to be null if the probe batch is empty.
     if (leftUpstream != IterOutcome.OK_NEW_SCHEMA && leftUpstream != IterOutcome.OK) {
       leftExpr = null;
     } else {
       if (left.getSchema().getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
-        throw new SchemaChangeException("Hash join does not support probe batch with selection vectors");
+        final String errorMsg = new StringBuilder()
+            .append("Hash join does not support probe batch with selection vectors. ")
+            .append("Probe batch has selection mode = ")
+            .append(left.getSchema().getSelectionVectorMode())
+            .toString();
+        throw new SchemaChangeException(errorMsg);
       }
     }
 
     final HashTableConfig htConfig =
-        new HashTableConfig(context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE_KEY).num_val.intValue(),
-            HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr);
+        new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
+            HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators);
 
     // Create the chained hash table
     final ChainedHashTable ht =
-        new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null,
-            areNullsEqual);
-    hashTable = ht.createAndSetupHashTable(null);
+        new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null);
+    hashTable = ht.createAndSetupHashTable(null, 1);
   }
 
   public void executeBuildPhase() throws SchemaChangeException, ClassTransformationException, IOException {
@@ -344,12 +329,18 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           rightSchema = right.getSchema();
 
           if (rightSchema.getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
-            throw new SchemaChangeException("Hash join does not support build batch with selection vectors");
+            final String errorMsg = new StringBuilder()
+                .append("Hash join does not support build batch with selection vectors. ")
+                .append("Build batch has selection mode = ")
+                .append(left.getSchema().getSelectionVectorMode())
+                .toString();
+
+            throw new SchemaChangeException(errorMsg);
           }
           setupHashTable();
         } else {
           if (!rightSchema.equals(right.getSchema())) {
-            throw new SchemaChangeException("Hash join does not support schema changes");
+            throw SchemaChangeException.schemaChanged("Hash join does not support schema changes in build side.", rightSchema, right.getSchema());
           }
           hashTable.updateBatches();
         }
@@ -367,8 +358,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
         // For every record in the build batch , hash the key columns
         for (int i = 0; i < currentRecordCount; i++) {
-          hashTable.put(i, htIndex, 1 /* retry count */);
-
+          int hashCode = hashTable.getHashCode(i);
+          try {
+            hashTable.put(i, htIndex, hashCode);
+          } catch (RetryAfterSpillException RE) { throw new OutOfMemoryException("HT put");} // Hash Join can not retry yet
                         /* Use the global index returned by the hash table, to store
                          * the current record index and batch index. This will be used
                          * later when we probe and find a match.
@@ -405,7 +398,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   }
 
   public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
-    final CodeGenerator<HashJoinProbe> cg = CodeGenerator.get(HashJoinProbe.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final CodeGenerator<HashJoinProbe> cg = CodeGenerator.get(HashJoinProbe.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    cg.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.saveCodeForDebugging(true);
     final ClassGenerator<HashJoinProbe> g = cg.getRoot();
 
     // Generate the code to project build side records
@@ -440,7 +436,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             .arg(buildIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
             .arg(outIndex)
             .arg(inVV.component(buildIndex.shrz(JExpr.lit(16)))));
-
+        g.rotateBlock();
         fieldId++;
       }
     }
@@ -466,7 +462,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           outputType = inputType;
         }
 
-        final ValueVector v = container.addOrGet(MaterializedField.create(vv.getField().getPath(), outputType));
+        final ValueVector v = container.addOrGet(MaterializedField.create(vv.getField().getName(), outputType));
         if (v instanceof AbstractContainerVector) {
           vv.getValueVector().makeTransferPair(v);
           v.clear();
@@ -476,7 +472,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         final JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, outputFieldId));
 
         g.getEvalBlock().add(outVV.invoke("copyFromSafe").arg(probeIndex).arg(outIndex).arg(inVV));
-
+        g.rotateBlock();
         fieldId++;
         outputFieldId++;
       }
@@ -492,13 +488,19 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
   }
 
-  public HashJoinBatch(HashJoinPOP popConfig, FragmentContext context, RecordBatch left,
-      RecordBatch right) throws OutOfMemoryException {
-    super(popConfig, context, true);
-    this.left = left;
-    this.right = right;
+  public HashJoinBatch(HashJoinPOP popConfig, FragmentContext context,
+      RecordBatch left, /*Probe side record batch*/
+      RecordBatch right /*Build side record batch*/
+  ) throws OutOfMemoryException {
+    super(popConfig, context, true, left, right);
     joinType = popConfig.getJoinType();
     conditions = popConfig.getConditions();
+
+    comparators = Lists.newArrayListWithExpectedSize(conditions.size());
+    for (int i=0; i<conditions.size(); i++) {
+      JoinCondition cond = conditions.get(i);
+      comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(cond));
+    }
   }
 
   private void updateStats(HashTable htable) {
@@ -509,7 +511,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     stats.setLongStat(Metric.NUM_BUCKETS, htStats.numBuckets);
     stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
     stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
-    stats.setLongStat(Metric.RESIZING_TIME, htStats.resizingTime);
+    stats.setLongStat(Metric.RESIZING_TIME_MS, htStats.resizingTime);
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,8 +23,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -68,12 +70,18 @@ public class ImplCreator {
     Preconditions.checkNotNull(root);
     Preconditions.checkNotNull(context);
 
-    if (AssertionUtil.isAssertionsEnabled()) {
+    // Enable iterator (operator) validation if assertions are enabled (debug mode)
+    // or if in production mode and the ENABLE_ITERATOR_VALIDATION option is set
+    // to true.
+
+    if (AssertionUtil.isAssertionsEnabled() ||
+        context.getOptionSet().getOption(ExecConstants.ENABLE_ITERATOR_VALIDATOR) ||
+        context.getConfig().getBoolean(ExecConstants.ENABLE_ITERATOR_VALIDATION)) {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
+
     final ImplCreator creator = new ImplCreator();
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
 
     try {
       final RootExec rootExec = creator.getRootExec(root, context);
@@ -121,7 +129,8 @@ public class ImplCreator {
 
 
   /** Create a RecordBatch and its children for given PhysicalOperator */
-  private RecordBatch getRecordBatch(final PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
+  @VisibleForTesting
+  public RecordBatch getRecordBatch(final PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
     Preconditions.checkNotNull(op);
 
     final List<RecordBatch> childRecordBatches = getChildren(op, context);
@@ -153,7 +162,7 @@ public class ImplCreator {
 
   /** Helper method to get OperatorCreator (RootCreator or BatchCreator) for given PhysicalOperator (root or non-root) */
   private Object getOpCreator(PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
-    final Class opClass = op.getClass();
+    final Class<? extends PhysicalOperator> opClass = op.getClass();
     Object opCreator = context.getDrillbitContext().getOperatorCreatorRegistry().getOperatorCreator(opClass);
     if (opCreator == null) {
       throw new UnsupportedOperationException(

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+import org.apache.drill.exec.vector.UntypedNullHolder;
+import org.apache.drill.exec.vector.UntypedNullVector;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/BasicTypeHelper.java" />
 
@@ -25,23 +28,20 @@ package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />
 import org.apache.drill.exec.vector.complex.UnionVector;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
-
+import org.apache.drill.common.types.Types;
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public class BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicTypeHelper.class);
 
   private static final int WIDTH_ESTIMATE = 50;
-
-  // Default length when casting to varchar : 65536 = 2^16
-  // This only defines an absolute maximum for values, setting
-  // a high value like this will not inflate the size for small values
-  public static final int VARCHAR_DEFAULT_CAST_LEN = 65536;
 
   protected static String buildErrorMessage(final String operation, final MinorType type, final DataMode mode) {
     return String.format("Unable to %s for minor type [%s] and mode [%s]", operation, type, mode);
@@ -61,21 +61,20 @@ public class BasicTypeHelper {
                                minor.class?substring(0, 3) == "MSG"> + WIDTH_ESTIMATE</#if>;
   </#list>
 </#list>
-      case FIXEDCHAR: return major.getWidth();
-      case FIXED16CHAR: return major.getWidth();
-      case FIXEDBINARY: return major.getWidth();
+      case FIXEDCHAR: return major.getPrecision();
+      case FIXED16CHAR: return major.getPrecision();
+      case FIXEDBINARY: return major.getPrecision();
     }
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
 
-  public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type, CallBack callback){
-    SchemaPath child = parentPath.getChild(name);
-    MaterializedField field = MaterializedField.create(child, type);
+  public static ValueVector getNewVector(String name, BufferAllocator allocator, MajorType type, CallBack callback){
+    MaterializedField field = MaterializedField.create(name, type);
     return getNewVector(field, allocator, callback);
   }
   
   
-  public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
+  public static Class<? extends ValueVector> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
     case UNION:
       return UnionVector.class;
@@ -112,6 +111,8 @@ public class BasicTypeHelper {
 </#list>
     case GENERIC_OBJECT      :
       return ObjectVector.class  ;
+    case NULL:
+      return UntypedNullVector.class;
     default:
       break;
     }
@@ -275,6 +276,8 @@ public class BasicTypeHelper {
 </#list>
     case GENERIC_OBJECT:
       return new ObjectVector(field, allocator)        ;
+    case NULL:
+      return new UntypedNullVector(field, allocator);
     default:
       break;
     }
@@ -352,6 +355,8 @@ public class BasicTypeHelper {
     case GENERIC_OBJECT:
       ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
       return;
+    case NULL:
+      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
     default:
       throw new UnsupportedOperationException(buildErrorMessage("set value", type));
     }
@@ -380,7 +385,9 @@ public class BasicTypeHelper {
       </#list>
       case GENERIC_OBJECT:
         ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
-      default:
+    case NULL:
+      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
+    default:
         throw new UnsupportedOperationException(buildErrorMessage("set value safe", type));
     }
   }
@@ -432,6 +439,8 @@ public class BasicTypeHelper {
       </#list>
       case GENERIC_OBJECT:
         return new ObjectHolder();
+    case NULL:
+        return new UntypedNullHolder();
       default:
         throw new UnsupportedOperationException(buildErrorMessage("create value holder", type));
     }
@@ -455,6 +464,8 @@ public class BasicTypeHelper {
       }
       </#list>
       </#list>
+    case NULL:
+      return true;
       default:
         throw new UnsupportedOperationException(buildErrorMessage("check is null", type));
     }
@@ -536,7 +547,9 @@ public class BasicTypeHelper {
       }
     </#list>
     </#list>
-
+    else if (holder instanceof UntypedNullHolder) {
+      return UntypedNullHolder.TYPE;
+    }
     throw new UnsupportedOperationException("ValueHolder is not supported for 'getValueHolderType' method.");
 
   }

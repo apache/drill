@@ -25,9 +25,11 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.exec.planner.logical.DrillUnionRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -53,15 +55,50 @@ public class UnionAllPrule extends Prule {
     final DrillUnionRel union = (DrillUnionRel) call.rel(0);
     final List<RelNode> inputs = union.getInputs();
     List<RelNode> convertedInputList = Lists.newArrayList();
-    RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
+    PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    boolean allHashDistributed = true;
 
-    try {
-      for (int i = 0; i < inputs.size(); i++) {
-        RelNode convertedInput = convert(inputs.get(i), PrelUtil.fixTraits(call, traits));
-        convertedInputList.add(convertedInput);
+    for (int i = 0; i < inputs.size(); i++) {
+      RelNode child = inputs.get(i);
+      List<DistributionField> childDistFields = Lists.newArrayList();
+      RelNode convertedChild;
+
+      for (RelDataTypeField f : child.getRowType().getFieldList()) {
+        childDistFields.add(new DistributionField(f.getIndex()));
       }
 
-      traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
+      if (settings.isUnionAllDistributeEnabled()) {
+        /*
+         * Strictly speaking, union-all does not need re-distribution of data; but in Drill's execution
+         * model, the data distribution and parallelism operators are the same. Here, we insert a
+         * hash distribution operator to allow parallelism to be determined independently for the parent
+         * and children. (See DRILL-4833).
+         * Note that a round robin distribution would have sufficed but we don't have one.
+         */
+        DrillDistributionTrait hashChild = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(childDistFields));
+        RelTraitSet traitsChild = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(hashChild);
+        convertedChild = convert(child, PrelUtil.fixTraits(call, traitsChild));
+      } else {
+        RelTraitSet traitsChild = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
+        convertedChild = convert(child, PrelUtil.fixTraits(call, traitsChild));
+        allHashDistributed = false;
+      }
+      convertedInputList.add(convertedChild);
+    }
+
+    try {
+
+      RelTraitSet traits;
+      if (allHashDistributed) {
+        // since all children of union-all are hash distributed, propagate the traits of the left child
+        traits = convertedInputList.get(0).getTraitSet();
+      } else {
+        // output distribution trait is set to ANY since union-all inputs may be distributed in different ways
+        // and unlike a join there are no join keys that allow determining how the output would be distributed.
+        // Note that a downstream operator may impose a required distribution which would be satisfied by
+        // inserting an Exchange after the Union-All.
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.ANY);
+      }
 
       Preconditions.checkArgument(convertedInputList.size() >= 2, "Union list must be at least two items.");
       RelNode left = convertedInputList.get(0);

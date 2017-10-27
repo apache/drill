@@ -17,64 +17,23 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
-import org.apache.calcite.rex.RexVisitor;
-import org.apache.calcite.rex.RexVisitorImpl;
-import org.apache.calcite.util.Util;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+
+import java.util.List;
 
 public class DrillPushFilterPastProjectRule extends RelOptRule {
 
   public final static RelOptRule INSTANCE = new DrillPushFilterPastProjectRule();
-
-  private RexCall findItemOrFlatten(
-      final RexNode node,
-      final List<RexNode> projExprs) {
-    try {
-      RexVisitor<Void> visitor =
-          new RexVisitorImpl<Void>(true) {
-        public Void visitCall(RexCall call) {
-          if ("item".equals(call.getOperator().getName().toLowerCase()) ||
-            "flatten".equals(call.getOperator().getName().toLowerCase())) {
-            throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
-                                              other utility methods in RexUtil.java */
-          }
-          return super.visitCall(call);
-        }
-
-        public Void visitInputRef(RexInputRef inputRef) {
-          final int index = inputRef.getIndex();
-          RexNode n = projExprs.get(index);
-          if (n instanceof RexCall) {
-            RexCall r = (RexCall) n;
-            if ("item".equals(r.getOperator().getName().toLowerCase()) ||
-                "flatten".equals(r.getOperator().getName().toLowerCase())) {
-              throw new Util.FoundOne(r);
-            }
-          }
-
-          return super.visitInputRef(inputRef);
-        }
-      };
-      node.accept(visitor);
-      return null;
-    } catch (Util.FoundOne e) {
-      Util.swallow(e, null);
-      return (RexCall) e.getNode();
-    }
-  }
 
   protected DrillPushFilterPastProjectRule() {
     super(
@@ -99,7 +58,7 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
 
 
     for (final RexNode pred : predList) {
-      if (findItemOrFlatten(pred, projRel.getProjects()) == null) {
+      if (DrillRelOptUtil.findItemOrFlatten(pred, projRel.getProjects()) == null) {
         qualifiedPredList.add(pred);
       } else {
         unqualifiedPredList.add(pred);

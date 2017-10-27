@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,6 +42,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.RepeatTestRule.Repeat;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -81,11 +82,14 @@ import org.apache.drill.exec.work.foreman.ForemanException;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.categories.SlowTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
@@ -94,6 +98,7 @@ import com.google.common.base.Preconditions;
  * Test how resilient drillbits are to throwing exceptions during various phases of query
  * execution by injecting exceptions at various points, and to cancellations in various phases.
  */
+@Category(SlowTest.class)
 public class TestDrillbitResilience extends DrillTest {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
 
@@ -119,6 +124,7 @@ public class TestDrillbitResilience extends DrillTest {
     }
 
     try {
+      @SuppressWarnings("resource")
       final Drillbit drillbit = Drillbit.start(zkHelper.getConfig(), remoteServiceSet);
       drillbits.put(name, drillbit);
     } catch (final DrillbitStartupException e) {
@@ -132,6 +138,7 @@ public class TestDrillbitResilience extends DrillTest {
    * @param name name of the drillbit
    */
   private static void stopDrillbit(final String name) {
+    @SuppressWarnings("resource")
     final Drillbit drillbit = drillbits.get(name);
     if (drillbit == null) {
       throw new IllegalStateException("No Drillbit named \"" + name + "\" found");
@@ -168,8 +175,8 @@ public class TestDrillbitResilience extends DrillTest {
    * @param name name of the drillbit
    * @return endpoint of the drillbit
    */
+  @SuppressWarnings("resource")
   private static DrillbitEndpoint getEndpoint(final String name) {
-    @SuppressWarnings("resource")
     final Drillbit drillbit = drillbits.get(name);
     if (drillbit == null) {
       throw new IllegalStateException("No Drillbit named \"" + name + "\" found.");
@@ -182,8 +189,10 @@ public class TestDrillbitResilience extends DrillTest {
     // turn off the HTTP server to avoid port conflicts between the drill bits
     System.setProperty(ExecConstants.HTTP_ENABLE, "false");
 
+    ZookeeperTestUtil.setJaasTestConfigFile();
+
     // turn on error for failure in cancelled fragments
-    zkHelper = new ZookeeperHelper(true);
+    zkHelper = new ZookeeperHelper(true, true);
     zkHelper.startZookeeper(1);
 
     // use a non-null service set so that the drillbits can use port hunting
@@ -508,9 +517,11 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   /**
-   * Given the result of {@link WaitUntilCompleteListener#waitForCompletion}, this method fails if the completed state
-   * is not as expected, or if an exception is thrown. The completed state could be COMPLETED or CANCELED. This state
-   * is set when {@link WaitUntilCompleteListener#queryCompleted} is called.
+   * Given the result of {@link WaitUntilCompleteListener#waitForCompletion},
+   * this method fails if the completed state is not as expected, or if an
+   * exception is thrown. The completed state could be COMPLETED or CANCELED.
+   * This state is set when {@link WaitUntilCompleteListener#queryCompleted} is
+   * called.
    */
   private static void assertStateCompleted(final Pair<QueryState, Exception> result, final QueryState expectedState) {
     final QueryState actualState = result.getFirst();
@@ -758,8 +769,8 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   /**
-   * Test cancelling query interrupts currently blocked FragmentExecutor threads waiting for some event to happen.
-   * Specifically tests cancelling fragment which has {@link MergingRecordBatch} blocked waiting for data.
+   * Test canceling query interrupts currently blocked FragmentExecutor threads waiting for some event to happen.
+   * Specifically tests canceling fragment which has {@link MergingRecordBatch} blocked waiting for data.
    */
   @Test
   @Repeat(count = NUM_RUNS)
@@ -776,8 +787,8 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   /**
-   * Test cancelling query interrupts currently blocked FragmentExecutor threads waiting for some event to happen.
-   * Specifically tests cancelling fragment which has {@link UnorderedReceiverBatch} blocked waiting for data.
+   * Test canceling query interrupts currently blocked FragmentExecutor threads waiting for some event to happen.
+   * Specifically tests canceling fragment which has {@link UnorderedReceiverBatch} blocked waiting for data.
    */
   @Test
   @Repeat(count = NUM_RUNS)
@@ -801,8 +812,9 @@ public class TestDrillbitResilience extends DrillTest {
       final String query = "SELECT sales_city, COUNT(*) cnt FROM cp.`region.json` GROUP BY sales_city";
       assertCancelledWithoutException(control, new ListenerThatCancelsQueryAfterFirstBatchOfData(), query);
     } finally {
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
       setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
-      setSessionOption(HASHAGG.getOptionName(), HASHAGG.getDefault().bool_val.toString());
+      setSessionOption(HASHAGG.getOptionName(), testOptionSet.getDefault(HASHAGG.getOptionName()).bool_val.toString());
     }
   }
 
@@ -832,10 +844,11 @@ public class TestDrillbitResilience extends DrillTest {
       final long after = countAllocatedMemory();
       assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
     } finally {
+      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
       setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
-      setSessionOption(HASHAGG.getOptionName(), HASHAGG.getDefault().bool_val.toString());
+      setSessionOption(HASHAGG.getOptionName(), testOptionSet.getDefault(HASHAGG.getOptionName()).bool_val.toString());
       setSessionOption(PARTITION_SENDER_SET_THREADS.getOptionName(),
-          Long.toString(PARTITION_SENDER_SET_THREADS.getDefault().num_val));
+          Long.toString(testOptionSet.getDefault(PARTITION_SENDER_SET_THREADS.getOptionName()).num_val));
     }
   }
 
@@ -931,7 +944,13 @@ public class TestDrillbitResilience extends DrillTest {
 
   @Test // DRILL-3065
   public void failsAfterMSorterSorting() {
-    final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
+
+    // Note: must use an input table that returns more than one
+    // batch. The sort uses an optimization for single-batch inputs
+    // which bypasses the code where this partiucular fault is
+    // injected.
+
+    final String query = "select n_name from cp.`tpch/lineitem.parquet` order by n_name";
     final Class<? extends Exception> typeOfException = RuntimeException.class;
 
     final long before = countAllocatedMemory();
@@ -946,7 +965,13 @@ public class TestDrillbitResilience extends DrillTest {
 
   @Test // DRILL-3085
   public void failsAfterMSorterSetup() {
-    final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
+
+    // Note: must use an input table that returns more than one
+    // batch. The sort uses an optimization for single-batch inputs
+    // which bypasses the code where this partiucular fault is
+    // injected.
+
+    final String query = "select n_name from cp.`tpch/lineitem.parquet` order by n_name";
     final Class<? extends Exception> typeOfException = RuntimeException.class;
 
     final long before = countAllocatedMemory();

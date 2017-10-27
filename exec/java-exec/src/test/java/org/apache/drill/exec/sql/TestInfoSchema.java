@@ -17,12 +17,30 @@
  */
 package org.apache.drill.exec.sql;
 
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_CONNECT;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_DESCRIPTION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contains tests for
@@ -31,7 +49,11 @@ import java.util.List;
  * -- USE schema
  * -- SHOW FILES
  */
+@Category(SqlTest.class)
 public class TestInfoSchema extends BaseTestQuery {
+
+  private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
+
   @Test
   public void selectFromAllTables() throws Exception{
     test("select * from INFORMATION_SCHEMA.SCHEMATA");
@@ -39,6 +61,16 @@ public class TestInfoSchema extends BaseTestQuery {
     test("select * from INFORMATION_SCHEMA.VIEWS");
     test("select * from INFORMATION_SCHEMA.`TABLES`");
     test("select * from INFORMATION_SCHEMA.COLUMNS");
+  }
+
+  @Test
+  public void catalogs() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM INFORMATION_SCHEMA.CATALOGS")
+        .unOrdered()
+        .baselineColumns(CATS_COL_CATALOG_NAME, CATS_COL_CATALOG_DESCRIPTION, CATS_COL_CATALOG_CONNECT)
+        .baselineValues("DRILL", "The internal metadata used by Drill", "")
+        .go();
   }
 
   @Test
@@ -337,4 +369,56 @@ public class TestInfoSchema extends BaseTestQuery {
     test("USE dfs_test.`default`");
     test("SHOW FILES FROM `/tmp`");
   }
+
+  @Test
+  public void describeSchemaSyntax() throws Exception {
+    test("describe schema dfs_test");
+    test("describe schema dfs_test.`default`");
+    test("describe database dfs_test.`default`");
+  }
+
+  @Test
+  public void describeSchemaOutput() throws Exception {
+    final List<QueryDataBatch> result = testSqlWithResults("describe schema dfs_test.tmp");
+    assertTrue(result.size() == 1);
+    final QueryDataBatch batch = result.get(0);
+    final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
+    loader.load(batch.getHeader().getDef(), batch.getData());
+
+    // check schema column value
+    final VectorWrapper schemaValueVector = loader.getValueAccessorById(
+        NullableVarCharVector.class,
+        loader.getValueVectorId(SchemaPath.getCompoundPath("schema")).getFieldIds());
+    String schema = schemaValueVector.getValueVector().getAccessor().getObject(0).toString();
+    assertEquals("dfs_test.tmp", schema);
+
+    // check properties column value
+    final VectorWrapper propertiesValueVector = loader.getValueAccessorById(
+        NullableVarCharVector.class,
+        loader.getValueVectorId(SchemaPath.getCompoundPath("properties")).getFieldIds());
+    String properties = propertiesValueVector.getValueVector().getAccessor().getObject(0).toString();
+    final Map configMap = mapper.readValue(properties, Map.class);
+
+    // check some stable properties existence
+    assertTrue(configMap.containsKey("connection"));
+    assertTrue(configMap.containsKey("config"));
+    assertTrue(configMap.containsKey("formats"));
+    assertFalse(configMap.containsKey("workspaces"));
+
+    // check some stable properties values
+    assertEquals("file", configMap.get("type"));
+
+    final FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs_test").getConfig();
+    final String tmpSchemaLocation = testConfig.workspaces.get("tmp").getLocation();
+    assertEquals(tmpSchemaLocation, configMap.get("location"));
+
+    batch.release();
+    loader.clear();
+  }
+
+  @Test
+  public void describeSchemaInvalid() throws Exception {
+    errorMsgTestHelper("describe schema invalid.schema", "Invalid schema name [invalid.schema]");
+  }
+
 }

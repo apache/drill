@@ -107,6 +107,11 @@ public class DrillTextRecordReader extends AbstractRecordReader {
   }
 
   @Override
+  protected List<SchemaPath> getDefaultColumnsToRead() {
+    return DEFAULT_TEXT_COLS_TO_READ;
+  }
+
+  @Override
   public boolean isStarQuery() {
     return super.isStarQuery() || Iterables.tryFind(getColumns(), new Predicate<SchemaPath>() {
       private final SchemaPath COLUMNS = SchemaPath.getSimplePath("columns");
@@ -119,7 +124,7 @@ public class DrillTextRecordReader extends AbstractRecordReader {
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-    MaterializedField field = MaterializedField.create(ref, Types.repeated(TypeProtos.MinorType.VARCHAR));
+    MaterializedField field = MaterializedField.create(ref.getAsNamePart().getName(), Types.repeated(TypeProtos.MinorType.VARCHAR));
     try {
       vector = output.addField(field, RepeatedVarCharVector.class);
     } catch (Exception e) {

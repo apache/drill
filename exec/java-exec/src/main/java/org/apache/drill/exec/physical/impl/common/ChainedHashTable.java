@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed
  * with this work for additional information regarding copyright
@@ -19,15 +19,12 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -45,13 +42,11 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.physical.HashPrelUtil;
-import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JConditional;
@@ -119,14 +114,12 @@ public class ChainedHashTable {
   private HashTableConfig htConfig;
   private final FragmentContext context;
   private final BufferAllocator allocator;
-  private final RecordBatch incomingBuild;
+  private RecordBatch incomingBuild;
   private final RecordBatch incomingProbe;
   private final RecordBatch outgoing;
-  private final boolean areNullsEqual;
 
   public ChainedHashTable(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
-                          RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing,
-                          boolean areNullsEqual) {
+                          RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing) {
 
     this.htConfig = htConfig;
     this.context = context;
@@ -134,26 +127,35 @@ public class ChainedHashTable {
     this.incomingBuild = incomingBuild;
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
-    this.areNullsEqual = areNullsEqual;
   }
 
-  public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds) throws ClassTransformationException,
+  public void updateIncoming(RecordBatch incomingBuild) {
+    this.incomingBuild = incomingBuild;
+  }
+
+  public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds, int numPartitions) throws ClassTransformationException,
       IOException, SchemaChangeException {
-    CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    top.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+    // This code is called from generated code, so to step into this code,
+    // persist the code generated in HashAggBatch also.
+    // top.saveCodeForDebugging(true);
+    top.preferPlainJava(true); // use a subclass
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 
-    LogicalExpression[] keyExprsBuild = new LogicalExpression[htConfig.getKeyExprsBuild().length];
+    LogicalExpression[] keyExprsBuild = new LogicalExpression[htConfig.getKeyExprsBuild().size()];
     LogicalExpression[] keyExprsProbe = null;
     boolean isProbe = (htConfig.getKeyExprsProbe() != null);
     if (isProbe) {
-      keyExprsProbe = new LogicalExpression[htConfig.getKeyExprsProbe().length];
+      keyExprsProbe = new LogicalExpression[htConfig.getKeyExprsProbe().size()];
     }
 
     ErrorCollector collector = new ErrorCollectorImpl();
     VectorContainer htContainerOrig = new VectorContainer(); // original ht container from which others may be cloned
-    LogicalExpression[] htKeyExprs = new LogicalExpression[htConfig.getKeyExprsBuild().length];
-    TypedFieldId[] htKeyFieldIds = new TypedFieldId[htConfig.getKeyExprsBuild().length];
+    LogicalExpression[] htKeyExprs = new LogicalExpression[htConfig.getKeyExprsBuild().size()];
+    TypedFieldId[] htKeyFieldIds = new TypedFieldId[htConfig.getKeyExprsBuild().size()];
 
     int i = 0;
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
@@ -195,7 +197,9 @@ public class ChainedHashTable {
      */
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       LogicalExpression expr = keyExprsBuild[i];
-      final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
+      @SuppressWarnings("resource")
       ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
       htKeyFieldIds[i] = htContainerOrig.add(vv);
       i++;
@@ -203,14 +207,15 @@ public class ChainedHashTable {
 
 
     // generate code for isKeyMatch(), setValue(), getHash() and outputRecordKeys()
-    setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild, htKeyFieldIds);
+    setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild,
+        htConfig.getComparators(), htKeyFieldIds);
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingProbeMapping, KeyMatchHtableProbeMapping, keyExprsProbe,
-        htKeyFieldIds);
+        htConfig.getComparators(), htKeyFieldIds);
 
     setupSetValue(cgInner, keyExprsBuild, htKeyFieldIds);
     if (outgoing != null) {
 
-      if (outKeyFieldIds.length > htConfig.getKeyExprsBuild().length) {
+      if (outKeyFieldIds.length > htConfig.getKeyExprsBuild().size()) {
         throw new IllegalArgumentException("Mismatched number of output key fields.");
       }
     }
@@ -227,7 +232,7 @@ public class ChainedHashTable {
 
 
   private void setupIsKeyMatchInternal(ClassGenerator<HashTable> cg, MappingSet incomingMapping, MappingSet htableMapping,
-                                       LogicalExpression[] keyExprs, TypedFieldId[] htKeyFieldIds)
+      LogicalExpression[] keyExprs, List<Comparator> comparators, TypedFieldId[] htKeyFieldIds)
       throws SchemaChangeException {
     cg.setMappingSet(incomingMapping);
 
@@ -236,19 +241,20 @@ public class ChainedHashTable {
       return;
     }
 
-    int i = 0;
-    for (LogicalExpression expr : keyExprs) {
+    for (int i=0; i<keyExprs.length; i++) {
+      final LogicalExpression expr = keyExprs[i];
       cg.setMappingSet(incomingMapping);
-      HoldingContainer left = cg.addExpr(expr, false);
+      HoldingContainer left = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
 
       cg.setMappingSet(htableMapping);
-      ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i++]);
-      HoldingContainer right = cg.addExpr(vvrExpr, false);
+      ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
+      HoldingContainer right = cg.addExpr(vvrExpr, ClassGenerator.BlkCreateMode.FALSE);
 
       JConditional jc;
 
       // codegen for nullable columns if nulls are not equal
-      if (!areNullsEqual && left.isOptional() && right.isOptional()) {
+      if (comparators.get(i) == Comparator.EQUALS
+          && left.isOptional() && right.isOptional()) {
         jc = cg.getEvalBlock()._if(left.getIsSet().eq(JExpr.lit(0)).
             cand(right.getIsSet().eq(JExpr.lit(0))));
         jc._then()._return(JExpr.FALSE);
@@ -258,7 +264,7 @@ public class ChainedHashTable {
           FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(left, right, context.getFunctionRegistry());
 
-      HoldingContainer out = cg.addExpr(f, false);
+      HoldingContainer out = cg.addExpr(f, ClassGenerator.BlkCreateMode.FALSE);
 
       // check if two values are not equal (comparator result != 0)
       jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
@@ -280,7 +286,7 @@ public class ChainedHashTable {
       boolean useSetSafe = !Types.isFixedWidthType(expr.getMajorType()) || Types.isRepeated(expr.getMajorType());
       ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(htKeyFieldIds[i++], expr, useSetSafe);
 
-      cg.addExpr(vvwExpr, false); // this will write to the htContainer at htRowIdx
+      cg.addExpr(vvwExpr, ClassGenerator.BlkCreateMode.FALSE); // this will write to the htContainer at htRowIdx
     }
   }
 
@@ -293,7 +299,7 @@ public class ChainedHashTable {
         ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
         boolean useSetSafe = !Types.isFixedWidthType(vvrExpr.getMajorType()) || Types.isRepeated(vvrExpr.getMajorType());
         ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(outKeyFieldIds[i], vvrExpr, useSetSafe);
-        cg.addExpr(vvwExpr, true);
+        cg.addExpr(vvwExpr, ClassGenerator.BlkCreateMode.TRUE);
       }
 
     }
@@ -314,8 +320,7 @@ public class ChainedHashTable {
      * aggregate. For join we need to hash everything as double (both for distribution and for comparison) but
      * for aggregation we can avoid the penalty of casting to double
      */
-    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs),
-        incomingProbe != null ? true : false);
+    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs), incomingProbe != null);
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
     HoldingContainer hash = cg.addExpr(materializedExpr);
     cg.getEvalBlock()._return(hash.getValue());

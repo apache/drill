@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.planner.cost;
 
 import com.google.common.collect.ImmutableList;
@@ -29,5 +29,5 @@ public class DrillDefaultRelMetadataProvider {
   public static final RelMetadataProvider INSTANCE = ChainedRelMetadataProvider.of(ImmutableList
       .of(DrillRelMdRowCount.SOURCE,
           DrillRelMdDistinctRowCount.SOURCE,
-          new DefaultRelMetadataProvider()));
+          DefaultRelMetadataProvider.INSTANCE));
 }

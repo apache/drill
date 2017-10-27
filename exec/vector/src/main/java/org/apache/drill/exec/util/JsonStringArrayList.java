@@ -20,11 +20,8 @@ package org.apache.drill.exec.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.io.Text;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class JsonStringArrayList<E> extends ArrayList<E> {
 
@@ -32,9 +29,6 @@ public class JsonStringArrayList<E> extends ArrayList<E> {
 
   static {
     mapper = new ObjectMapper();
-    SimpleModule serializer = new SimpleModule("TextSerializer")
-        .addSerializer(Text.class, new TextSerializer());
-    mapper.registerModule(serializer);
   }
 
   @Override
@@ -48,7 +42,7 @@ public class JsonStringArrayList<E> extends ArrayList<E> {
     if (!(obj instanceof List)) {
       return false;
     }
-    List other = (List) obj;
+    List<?> other = (List<?>) obj;
     return this.size() == other.size() && this.containsAll(other);
   }
 

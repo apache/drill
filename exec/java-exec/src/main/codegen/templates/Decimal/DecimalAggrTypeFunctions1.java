@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,6 +49,10 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
 
 public class Decimal${aggrtype.className}Functions {
@@ -56,7 +60,10 @@ public class Decimal${aggrtype.className}Functions {
 
 <#list aggrtype.types as type>
 
-@FunctionTemplate(name = "${aggrtype.funcName}", <#if aggrtype.funcName == "sum"> scope = FunctionTemplate.FunctionScope.DECIMAL_SUM_AGGREGATE <#else>scope = FunctionTemplate.FunctionScope.DECIMAL_AGGREGATE</#if>)
+@FunctionTemplate(name = "${aggrtype.funcName}",
+    scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
+    <#if aggrtype.funcName == "sum"> returnType = FunctionTemplate.ReturnType.DECIMAL_SUM_AGGREGATE
+    <#else>returnType = FunctionTemplate.ReturnType.DECIMAL_AGGREGATE</#if>)
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
@@ -85,7 +92,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value = new ObjectHolder();
     //${type.runningType}Holder tmp = new ${type.runningType}Holder();
     byte[] byteArray = new byte[${type.runningType}Holder.WIDTH];
-    org.apache.hadoop.io.Text tmp = new org.apache.hadoop.io.Text(byteArray);
+    org.apache.drill.exec.util.Text tmp = new org.apache.drill.exec.util.Text(byteArray);
     value.obj = tmp;
     <#if aggrtype.funcName == "max">
     for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
@@ -127,7 +134,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif aggrtype.funcName == "max">
     <#if type.outputType.endsWith("Sparse")>
       //${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-      org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+      org.apache.drill.exec.util.Text tmp = (org.apache.drill.exec.util.Text) value.obj;
       int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseSamePrecScale(in.buffer, in.start, tmp.getBytes(), tmp.getLength());
     if (cmp == 1) {
       //in.buffer.getBytes(in.start, tmp.getBytes(), 0, ${type.runningType}Holder.WIDTH);
@@ -144,7 +151,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
     //${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-    org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+    org.apache.drill.exec.util.Text tmp = (org.apache.drill.exec.util.Text) value.obj;
     int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseSamePrecScale(in.buffer, in.start, tmp.getBytes(), tmp.getLength());
     if (cmp == -1) {
       //in.buffer.getBytes(in.start, tmp.getBytes(), 0, ${type.runningType}Holder.WIDTH);
@@ -187,7 +194,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
    <#else>
     <#if type.outputType.endsWith("Sparse")>
-    org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+    org.apache.drill.exec.util.Text tmp = (org.apache.drill.exec.util.Text) value.obj;
     buffer = buffer.reallocIfNeeded(tmp.getLength());
     //buffer.setBytes(0, tmp.getBytes(), 0, tmp.getLength());
     for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
@@ -213,7 +220,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  value.value = 0;
 	<#elseif aggrtype.funcName == "max" || aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
-    org.apache.hadoop.io.Text tmp = (org.apache.hadoop.io.Text) value.obj;
+    org.apache.drill.exec.util.Text tmp = (org.apache.drill.exec.util.Text) value.obj;
     for (int i = 0; i < ${type.runningType}Holder.nDecimalDigits; i++) {
       org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.setInteger(tmp.getBytes(), i, 0xFFFFFFFF);
     }

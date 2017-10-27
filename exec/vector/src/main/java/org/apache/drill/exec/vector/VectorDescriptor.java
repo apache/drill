@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector;
 import java.util.Collection;
 
 import com.google.common.base.Preconditions;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -50,7 +49,7 @@ public class VectorDescriptor {
   }
 
   public String getName() {
-    return field.getLastName();
+    return field.getName();
   }
 
   public Collection<MaterializedField> getChildren() {
@@ -58,11 +57,11 @@ public class VectorDescriptor {
   }
 
   public boolean hasName() {
-    return getName() != DEFAULT_NAME;
+    return !DEFAULT_NAME.equals(getName());
   }
 
   public VectorDescriptor withName(final String name) {
-    return new VectorDescriptor(field.withPath(new FieldReference(name)));
+    return new VectorDescriptor(field.withPath(name));
   }
 
   public VectorDescriptor withType(final TypeProtos.MajorType type) {

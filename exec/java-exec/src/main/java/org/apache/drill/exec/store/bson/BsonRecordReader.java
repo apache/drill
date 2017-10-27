@@ -258,14 +258,17 @@ public class BsonRecordReader {
   }
 
   private void writeString(String readString, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    final int length = readString.length();
-    final VarCharHolder vh = new VarCharHolder();
-    ensure(length);
+    int length;
+    byte[] strBytes;
     try {
-      workBuf.setBytes(0, readString.getBytes("UTF-8"));
+      strBytes = readString.getBytes("UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new DrillRuntimeException("Unable to read string value for field: " + fieldName, e);
     }
+    length = strBytes.length;
+    ensure(length);
+    workBuf.setBytes(0, strBytes);
+    final VarCharHolder vh = new VarCharHolder();
     vh.buffer = workBuf;
     vh.start = 0;
     vh.end = length;

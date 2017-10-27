@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,11 +30,13 @@ import com.google.common.base.Strings;
 
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.jdbc.test.JdbcAssert;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -42,6 +44,7 @@ import org.junit.runner.Description;
 // TODO:  Document this, especially what writers of unit tests need to know
 //   (e.g., the reusing of connections, the automatic interception of test
 //   failures and resetting of connections, etc.).
+@Category(JdbcTest.class)
 public class JdbcTestBase extends ExecTest {
   @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestBase.class);
@@ -60,8 +63,7 @@ public class JdbcTestBase extends ExecTest {
   public static void setUpTestCase() {
     factory = new SingleConnectionCachingFactory(new ConnectionFactory() {
       @Override
-      public Connection getConnection(ConnectionInfo info) throws Exception {
-        Class.forName("org.apache.drill.jdbc.Driver");
+      public Connection getConnection(ConnectionInfo info) throws SQLException {
         return DriverManager.getConnection(info.getUrl(), info.getParamsAsProperties());
       }
     });
@@ -73,7 +75,7 @@ public class JdbcTestBase extends ExecTest {
    * @param url connection URL
    * @throws Exception if connection fails
    */
-  protected static Connection connect(String url) throws Exception {
+  protected static Connection connect(String url) throws SQLException {
     return connect(url, JdbcAssert.getDefaultProperties());
   }
 
@@ -84,7 +86,7 @@ public class JdbcTestBase extends ExecTest {
    * @param info connection info
    * @throws Exception if connection fails
    */
-  protected static Connection connect(String url, Properties info) throws Exception {
+  protected static Connection connect(String url, Properties info) throws SQLException {
     final Connection conn = factory.getConnection(new ConnectionInfo(url, info));
     changeSchemaIfSupplied(conn, info);
     return conn;
@@ -114,7 +116,8 @@ public class JdbcTestBase extends ExecTest {
 
   protected static void changeSchema(Connection conn, String schema) {
     final String query = String.format("use %s", schema);
-    try ( Statement s = conn.createStatement() ) {
+    try (Statement s = conn.createStatement()) {
+      @SuppressWarnings("unused")
       ResultSet r = s.executeQuery(query);
       // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
       // race conditions are fixed (not just DRILL-2245 fixes).
@@ -147,10 +150,10 @@ public class JdbcTestBase extends ExecTest {
    * (Note:  Not a guaranteed test--depends on order in which test methods are
    * run.)
    */
-  @Ignore( "Usually disabled; enable temporarily to check tests" )
+  @Ignore("Usually disabled; enable temporarily to check tests")
   @Test
   public void testJdbcTestConnectionResettingCompatibility() {
-    fail( "Intentional failure--did other test methods still run?" );
+    fail("Intentional failure--did other test methods still run?");
   }
 
 }

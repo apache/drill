@@ -121,8 +121,13 @@ public class ParallelizationInfo {
 
     // Helper method to add the given EndpointAffinity to the global affinity map
     private void addEndpointAffinity(EndpointAffinity epAff) {
-      if (affinityMap.containsKey(epAff.getEndpoint())) {
-        affinityMap.get(epAff.getEndpoint()).addAffinity(epAff.getAffinity());
+      final EndpointAffinity epAffAgg = affinityMap.get(epAff.getEndpoint());
+      if (epAffAgg != null) {
+        epAffAgg.addAffinity(epAff.getAffinity());
+        if (epAff.isAssignmentRequired()) {
+          epAffAgg.setAssignmentRequired();
+        }
+        epAffAgg.setMaxWidth(epAff.getMaxWidth());
       } else {
         affinityMap.put(epAff.getEndpoint(), epAff);
       }

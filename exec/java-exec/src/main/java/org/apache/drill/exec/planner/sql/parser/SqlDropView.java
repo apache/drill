@@ -17,16 +17,11 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.calcite.tools.Planner;
-
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.ViewHandler.DropView;
-import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
@@ -43,15 +38,21 @@ public class SqlDropView extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_VIEW", SqlKind.OTHER) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
-      return new SqlDropView(pos, (SqlIdentifier) operands[0]);
+      return new SqlDropView(pos, (SqlIdentifier) operands[0], (SqlLiteral) operands[1]);
     }
   };
 
   private SqlIdentifier viewName;
+  private boolean viewExistenceCheck;
 
-  public SqlDropView(SqlParserPos pos, SqlIdentifier viewName) {
+  public SqlDropView(SqlParserPos pos, SqlIdentifier viewName, SqlLiteral viewExistenceCheck) {
+    this(pos, viewName, viewExistenceCheck.booleanValue());
+  }
+
+  public SqlDropView(SqlParserPos pos, SqlIdentifier viewName, boolean viewExistenceCheck) {
     super(pos);
     this.viewName = viewName;
+    this.viewExistenceCheck = viewExistenceCheck;
   }
 
   @Override
@@ -61,13 +62,22 @@ public class SqlDropView extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return Collections.singletonList((SqlNode)viewName);
+    final List<SqlNode> ops =
+        ImmutableList.of(
+            viewName,
+            SqlLiteral.createBoolean(viewExistenceCheck, SqlParserPos.ZERO)
+        );
+    return ops;
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("DROP");
     writer.keyword("VIEW");
+    if (viewExistenceCheck) {
+      writer.keyword("IF");
+      writer.keyword("EXISTS");
+    }
     viewName.unparse(writer, leftPrec, rightPrec);
   }
 
@@ -90,6 +100,10 @@ public class SqlDropView extends DrillSqlCall {
     }
 
     return viewName.names.get(viewName.names.size() - 1);
+  }
+
+  public boolean checkViewExistence() {
+    return viewExistenceCheck;
   }
 
 }

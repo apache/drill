@@ -647,7 +647,7 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
                     sstr<<"NULL";
                     strncpy(buf, sstr.str().c_str(), nChars);
                 }else{
-                    return m_pVector->getValueAt(index, buf, nChars);
+                    m_pVector->getValueAt(index, buf, nChars);
                 }
             }
 
@@ -785,39 +785,6 @@ typedef NullableValueVectorTyped<DateTimeTZHolder, ValueVectorTimestampTZ>  Null
 typedef NullableValueVectorTyped<IntervalHolder, ValueVectorInterval>  NullableValueVectorInterval;
 typedef NullableValueVectorTyped<IntervalDayHolder, ValueVectorIntervalDay>  NullableValueVectorIntervalDay;
 typedef NullableValueVectorTyped<IntervalYearHolder, ValueVectorIntervalYear>  NullableValueVectorIntervalYear;
-
-class DECLSPEC_DRILL_CLIENT FieldMetadata{
-    public:
-
-        FieldMetadata(){};
-        void set(const exec::shared::SerializedField& f);
-        const std::string& getName() const{ return m_name;}
-        common::MinorType getMinorType() const{ return m_minorType;}
-        common::DataMode getDataMode() const{return m_dataMode;}
-        uint32_t getValueCount() const{return m_valueCount;}
-        uint32_t getScale() const{return m_scale;}
-        uint32_t getPrecision() const{return m_precision;}
-        uint32_t getBufferLength() const{return m_bufferLength;}
-        void copy(Drill::FieldMetadata& f){
-            m_name=f.m_name;
-            m_minorType=f.m_minorType;
-            m_dataMode=f.m_dataMode;
-            m_valueCount=f.m_valueCount;
-            m_scale=f.m_scale;
-            m_precision=f.m_precision;
-            m_bufferLength=f.m_bufferLength;
-        }
-
-    private:
-        //exec::shared::FieldMetadata* m_pFieldMetadata;
-        std::string m_name;
-        common::MinorType m_minorType;
-        common::DataMode m_dataMode;
-        uint32_t m_valueCount;
-        uint32_t m_scale;
-        uint32_t m_precision;
-        uint32_t m_bufferLength;
-};
 
 class FieldBatch{
     public:

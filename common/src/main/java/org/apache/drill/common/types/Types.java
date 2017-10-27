@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,27 +19,34 @@ package org.apache.drill.common.types;
 
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
+import java.sql.ResultSetMetaData;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
 import com.google.protobuf.TextFormat;
+import org.apache.drill.common.util.CoreDecimalUtility;
 
 public class Types {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
+
+  public static final int MAX_VARCHAR_LENGTH = 65535;
+  public static final int UNDEFINED = 0;
 
   public static final MajorType NULL = required(MinorType.NULL);
   public static final MajorType LATE_BIND_TYPE = optional(MinorType.LATE);
   public static final MajorType REQUIRED_BIT = required(MinorType.BIT);
   public static final MajorType OPTIONAL_BIT = optional(MinorType.BIT);
+  public static final MajorType OPTIONAL_INT = optional(MinorType.INT);
 
   public static boolean isUnion(MajorType toType) {
     return toType.getMinorType() == MinorType.UNION;
   }
 
-  public static enum Comparability {
-    UNKNOWN, NONE, EQUAL, ORDERED;
+  public enum Comparability {
+    UNKNOWN, NONE, EQUAL, ORDERED
   }
 
   public static boolean isComplex(final MajorType type) {
@@ -132,8 +139,8 @@ public class Types {
       case TIMESTAMP:       return "TIMESTAMP";
       case TIMESTAMPTZ:     return "TIMESTAMP WITH TIME ZONE";
 
-      case INTERVALYEAR:
-      case INTERVALDAY:     return "INTERVAL";
+      case INTERVALYEAR:    return "INTERVAL YEAR TO MONTH";
+      case INTERVALDAY:     return "INTERVAL DAY TO SECOND";
 
       // Non-standard SQL atomic data types:
 
@@ -148,6 +155,7 @@ public class Types {
       case LATE:            return "ANY";
       case NULL:            return "NULL";
       case UNION:           return "UNION";
+      case GENERIC_OBJECT:  return "JAVA_OBJECT";
 
       // Internal types not actually used at level of SQL types(?):
 
@@ -163,84 +171,45 @@ public class Types {
   }
 
   /***
-   * Gets JDBC type code for given Drill RPC-/protobuf-level type.
+   * Gets JDBC type code for given SQL data type name.
    */
-  public static int getJdbcTypeCode(final MajorType type) {
-    if (type.getMode() == DataMode.REPEATED || type.getMinorType() == MinorType.LIST) {
-      return java.sql.Types.ARRAY;
-    }
+  public static int getJdbcTypeCode(final String sqlTypeName) {
 
-    switch (type.getMinorType()) {
-    case BIGINT:
-      return java.sql.Types.BIGINT;
-    case BIT:
-      return java.sql.Types.BOOLEAN;
-    case DATE:
-      return java.sql.Types.DATE;
-    case DECIMAL9:
-    case DECIMAL18:
-    case DECIMAL28DENSE:
-    case DECIMAL28SPARSE:
-    case DECIMAL38DENSE:
-    case DECIMAL38SPARSE:
-      return java.sql.Types.DECIMAL;
-    case FIXED16CHAR:
-      return java.sql.Types.NCHAR;
-    case FIXEDBINARY:
-      return java.sql.Types.BINARY;
-    case FIXEDCHAR:
-      return java.sql.Types.NCHAR;
-    case FLOAT4:
-      return java.sql.Types.FLOAT;
-    case FLOAT8:
-      return java.sql.Types.DOUBLE;
-    case INT:
-      return java.sql.Types.INTEGER;
-    case MAP:
-      return java.sql.Types.STRUCT;
-    case MONEY:
-      return java.sql.Types.DECIMAL;
-    case NULL:
-      return java.sql.Types.NULL;
-    case INTERVAL:
-    case INTERVALYEAR:
-    case INTERVALDAY:
-      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
-    case LATE:
-      return java.sql.Types.OTHER;
-    case SMALLINT:
-      return java.sql.Types.SMALLINT;
-    case TIME:
-      return java.sql.Types.TIME;
-    case TIMESTAMPTZ:
-    case TIMESTAMP:
-      return java.sql.Types.TIMESTAMP;
-    case TIMETZ:
-      return java.sql.Types.TIME;
-    case TINYINT:
-      return java.sql.Types.TINYINT;
-    case UINT1:
-      return java.sql.Types.TINYINT;
-    case UINT2:
-      return java.sql.Types.SMALLINT;
-    case UINT4:
-      return java.sql.Types.INTEGER;
-    case UINT8:
-      return java.sql.Types.BIGINT;
-    case VAR16CHAR:
-      return java.sql.Types.NVARCHAR;
-    case VARBINARY:
-      return java.sql.Types.VARBINARY;
-    case VARCHAR:
-      return java.sql.Types.VARCHAR;
-    case UNION:
-      return java.sql.Types.OTHER;
-    default:
-      // TODO:  This isn't really an unsupported-operation/-type case; this
-      //   is an unexpected, code-out-of-sync-with-itself case, so use an
-      //   exception intended for that.
-      throw new UnsupportedOperationException(
-          "Unexpected/unhandled MinorType value " + type.getMinorType() );
+    switch (sqlTypeName) {
+      case "ANY":                           return java.sql.Types.OTHER;
+      case "ARRAY":                         return java.sql.Types.OTHER; // Drill doesn't support java.sql.Array
+      case "BIGINT":                        return java.sql.Types.BIGINT;
+      case "BINARY VARYING":                return java.sql.Types.VARBINARY;
+      case "BINARY":                        return java.sql.Types.BINARY;
+      case "BOOLEAN":                       return java.sql.Types.BOOLEAN;
+      case "CHARACTER VARYING":             return java.sql.Types.VARCHAR;
+      case "CHARACTER":                     return java.sql.Types.NCHAR;
+      case "DATE":                          return java.sql.Types.DATE;
+      case "DECIMAL":                       return java.sql.Types.DECIMAL;
+      case "DOUBLE":                        return java.sql.Types.DOUBLE;
+      case "FLOAT":                         return java.sql.Types.FLOAT;
+      case "INTEGER":                       return java.sql.Types.INTEGER;
+      case "INTERVAL":                      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
+      case "INTERVAL YEAR TO MONTH":        return java.sql.Types.OTHER;
+      case "INTERVAL DAY TO SECOND":        return java.sql.Types.OTHER;
+      case "MAP":                           return java.sql.Types.OTHER; // Drill doesn't support java.sql.Struct
+      case "NATIONAL CHARACTER VARYING":    return java.sql.Types.NVARCHAR;
+      case "NATIONAL CHARACTER":            return java.sql.Types.NCHAR;
+      case "NULL":                          return java.sql.Types.NULL;
+      case "SMALLINT":                      return java.sql.Types.SMALLINT;
+      case "TIME WITH TIME ZONE":           // fall through
+      case "TIME":                          return java.sql.Types.TIME;
+      case "TIMESTAMP WITH TIME ZONE":      // fall through
+      case "TIMESTAMP":                     return java.sql.Types.TIMESTAMP;
+      case "TINYINT":                       return java.sql.Types.TINYINT;
+      case "UNION":                         return java.sql.Types.OTHER;
+      case "JAVA_OBJECT":                   return java.sql.Types.JAVA_OBJECT;
+      default:
+        // TODO:  This isn't really an unsupported-operation/-type case; this
+        //   is an unexpected, code-out-of-sync-with-itself case, so use an
+        //   exception intended for that.
+        throw new UnsupportedOperationException(
+            "Unexpected/unhandled SqlType value " + sqlTypeName );
     }
   }
 
@@ -315,6 +284,83 @@ public class Types {
     return isSigned;
   }
 
+  public static int getJdbcDisplaySize(MajorType type) {
+    if (type.getMode() == DataMode.REPEATED || type.getMinorType() == MinorType.LIST) {
+      return UNDEFINED;
+    }
+
+    final int precision = getPrecision(type);
+    switch(type.getMinorType()) {
+      case BIT:             return 1; // 1 digit
+
+      case TINYINT:         return 4; // sign + 3 digit
+      case SMALLINT:        return 6; // sign + 5 digits
+      case INT:             return 11; // sign + 10 digits
+      case BIGINT:          return 20; // sign + 19 digits
+
+      case UINT1:          return 3; // 3 digits
+      case UINT2:          return 5; // 5 digits
+      case UINT4:          return 10; // 10 digits
+      case UINT8:          return 19; // 19 digits
+
+      case FLOAT4:          return 14; // sign + 7 digits + decimal point + E + 2 digits
+      case FLOAT8:          return 24; // sign + 15 digits + decimal point + E + 3 digits
+
+      case DECIMAL9:
+      case DECIMAL18:
+      case DECIMAL28DENSE:
+      case DECIMAL28SPARSE:
+      case DECIMAL38DENSE:
+      case DECIMAL38SPARSE:
+      case MONEY:           return 2 + precision; // precision of the column plus a sign and a decimal point
+
+      case VARCHAR:
+      case FIXEDCHAR:
+      case VAR16CHAR:
+      case FIXED16CHAR:     return precision; // number of characters
+
+      case VARBINARY:
+      case FIXEDBINARY:     return 2 * precision; // each binary byte is represented as a 2digit hex number
+
+      case DATE:            return 10; // yyyy-mm-dd
+      case TIME:
+        return precision > 0
+            ? 9 + precision // hh-mm-ss.SSS
+            : 8; // hh-mm-ss
+      case TIMETZ:
+        return precision > 0
+            ? 15 + precision // hh-mm-ss.SSS-zz:zz
+            : 14; // hh-mm-ss-zz:zz
+      case TIMESTAMP:
+        return precision > 0
+            ? 20 + precision // yyyy-mm-ddThh:mm:ss.SSS
+            : 19; // yyyy-mm-ddThh:mm:ss
+      case TIMESTAMPTZ:
+        return precision > 0
+            ? 26 + precision // yyyy-mm-ddThh:mm:ss.SSS:ZZ-ZZ
+            : 25; // yyyy-mm-ddThh:mm:ss-ZZ:ZZ
+
+      case INTERVALYEAR:
+        return precision > 0
+            ? 5 + precision // P..Y12M
+            : 9; // we assume max is P9999Y12M
+
+      case INTERVALDAY:
+        return precision > 0
+            ? 12 + precision // P..DT12H60M60S assuming fractional seconds precision is not supported
+            : 22; // the first 4 bytes give the number of days, so we assume max is P2147483648DT12H60M60S
+
+      case INTERVAL:
+      case MAP:
+      case LATE:
+      case NULL:
+      case UNION:
+        return UNDEFINED;
+
+      default:
+        throw new UnsupportedOperationException("Unexpected/unhandled MinorType value " + type.getMinorType());
+    }
+  }
   public static boolean usesHolderForGet(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return true;
@@ -356,7 +402,13 @@ public class Types {
   }
 
 
-  public static boolean isStringScalarType(final MajorType type) {
+  /**
+   * Checks if given major type is string scalar type.
+   *
+   * @param type major type
+   * @return true if given major type is scalar string, false otherwise
+   */
+  public static boolean isScalarStringType(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return false;
     }
@@ -428,8 +480,24 @@ public class Types {
     return type.getMinorType() == MinorType.LATE;
   }
 
+  public static boolean isUntypedNull(final MajorType type) {
+    return type.getMinorType() == MinorType.NULL;
+  }
+
   public static MajorType withMode(final MinorType type, final DataMode mode) {
     return MajorType.newBuilder().setMode(mode).setMinorType(type).build();
+  }
+
+  /**
+   * Builds major type using given minor type, data mode and precision.
+   *
+   * @param type minor type
+   * @param mode data mode
+   * @param precision precision value
+   * @return major type
+   */
+  public static MajorType withPrecision(final MinorType type, final DataMode mode, final int precision) {
+    return MajorType.newBuilder().setMinorType(type).setMode(mode).setPrecision(precision).build();
   }
 
   public static MajorType withScaleAndPrecision(final MinorType type, final DataMode mode, final int scale, final int precision) {
@@ -589,6 +657,75 @@ public class Types {
 
   public static String toString(final MajorType type) {
     return type != null ? "MajorType[" + TextFormat.shortDebugString(type) + "]" : "null";
+  }
+
+  /**
+   * Get the <code>precision</code> of given type.
+   *
+   * @param majorType major type
+   * @return precision value
+   */
+  public static int getPrecision(MajorType majorType) {
+    if (majorType.hasPrecision()) {
+      return majorType.getPrecision();
+    }
+
+    return isScalarStringType(majorType) ? MAX_VARCHAR_LENGTH : UNDEFINED;
+  }
+
+  /**
+   * Get the <code>scale</code> of given type.
+   *
+   * @param majorType major type
+   * @return scale value
+   */
+  public static int getScale(MajorType majorType) {
+    if (majorType.hasScale()) {
+      return majorType.getScale();
+    }
+
+    return UNDEFINED;
+  }
+
+  /**
+   * Checks if the given type column can be used in ORDER BY clause.
+   *
+   * @param type minor type
+   * @return true if type can be used in ORDER BY clause
+   */
+  public static boolean isSortable(MinorType type) {
+    // Currently only map and list columns are not sortable.
+    return type != MinorType.MAP && type != MinorType.LIST;
+  }
+
+  /**
+   * Sets max precision from both types if these types are string scalar types.
+   * Sets max precision and scale from both types if these types are decimal types.
+   * Both types should be of the same minor type.
+   *
+   * @param leftType type from left side
+   * @param rightType type from right side
+   * @param typeBuilder type builder
+   * @return type builder
+   */
+  public static MajorType.Builder calculateTypePrecisionAndScale(MajorType leftType, MajorType rightType, MajorType.Builder typeBuilder) {
+    if (leftType.getMinorType().equals(rightType.getMinorType())) {
+      boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
+      boolean isDecimal = CoreDecimalUtility.isDecimalType(leftType);
+
+      if ((isScalarString || isDecimal) && leftType.hasPrecision() && rightType.hasPrecision()) {
+        typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
+      }
+
+      if (isDecimal && leftType.hasScale() && rightType.hasScale()) {
+        typeBuilder.setScale(Math.max(leftType.getScale(), rightType.getScale()));
+      }
+    }
+    return typeBuilder;
+  }
+
+  public static boolean isLaterType(MajorType type) {
+    return type.getMinorType() == MinorType.LATE;
   }
 
 }

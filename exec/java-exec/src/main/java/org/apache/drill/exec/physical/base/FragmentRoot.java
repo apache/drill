@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.physical.base;
 
-
 /**
- * Describes the root operation within a particular Fragment. This includes things Sender nodes.
+ * Describes the root operation within a particular Fragment. This includes
+ * things like Sender nodes.
  */
-public interface FragmentRoot extends FragmentLeaf{
+
+public interface FragmentRoot extends FragmentLeaf {
 }

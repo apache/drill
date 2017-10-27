@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,10 +29,11 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 
 public class BatchSchema implements Iterable<MaterializedField> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
-  final SelectionVectorMode selectionVectorMode;
+
+  private final SelectionVectorMode selectionVectorMode;
   private final List<MaterializedField> fields;
 
-  BatchSchema(SelectionVectorMode selectionVector, List<MaterializedField> fields) {
+  public BatchSchema(SelectionVectorMode selectionVector, List<MaterializedField> fields) {
     this.fields = fields;
     this.selectionVectorMode = selectionVector;
   }
@@ -134,6 +136,21 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return true;
   }
 
+  public boolean isEquivalent(BatchSchema other) {
+    if (fields == null || other.fields == null) {
+      return fields == other.fields;
+    }
+    if (fields.size() != other.fields.size()) {
+      return false;
+    }
+    for (int i = 0; i < fields.size(); i++) {
+      if (! fields.get(i).isEquivalent(other.fields.get(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /**
    * We treat fields with same set of Subtypes as equal, even if they are in a different order
    * @param t1
@@ -156,4 +173,31 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return true;
   }
 
+  /**
+   * Merge two schema to produce a new, merged schema. The caller is responsible
+   * for ensuring that column names are unique. The order of the fields in the
+   * new schema is the same as that of this schema, with the other schema's fields
+   * appended in the order defined in the other schema.
+   * <p>
+   * Merging data with selection vectors is unlikely to be useful, or work well.
+   * With a selection vector, the two record batches would have to be correlated
+   * both in their selection vectors AND in the underlying vectors. Such a use case
+   * is hard to imagine. So, for now, this method forbids merging schemas if either
+   * of them carry a selection vector. If we discover a meaningful use case, we can
+   * revisit the issue.
+   * @param otherSchema the schema to merge with this one
+   * @return the new, merged, schema
+   */
+
+  public BatchSchema merge(BatchSchema otherSchema) {
+    if (selectionVectorMode != SelectionVectorMode.NONE ||
+        otherSchema.selectionVectorMode != SelectionVectorMode.NONE) {
+      throw new IllegalArgumentException("Cannot merge schemas with selection vectors");
+    }
+    List<MaterializedField> mergedFields =
+        new ArrayList<>(fields.size() + otherSchema.fields.size());
+    mergedFields.addAll(this.fields);
+    mergedFields.addAll(otherSchema.fields);
+    return new BatchSchema(selectionVectorMode, mergedFields);
+  }
 }

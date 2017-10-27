@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,7 @@ public abstract class CopierTemplate2 implements Copier{
   }
 
   @Override
-  public int copyRecords(int index, int recordCount){
+  public int copyRecords(int index, int recordCount) throws SchemaChangeException {
     for(VectorWrapper<?> out : outgoing){
       MajorType type = out.getField().getType();
       if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
@@ -61,9 +61,11 @@ public abstract class CopierTemplate2 implements Copier{
     return outgoingPosition;
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-
-
-
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") RecordBatch incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract void doEval(@Named("inIndex") int inIndex,
+                              @Named("outIndex") int outIndex)
+                       throws SchemaChangeException;
 }

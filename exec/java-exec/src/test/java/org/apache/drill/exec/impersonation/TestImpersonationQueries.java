@@ -18,16 +18,19 @@
 package org.apache.drill.exec.impersonation;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.store.avro.AvroTestUtil;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
@@ -40,6 +43,7 @@ import static org.junit.Assert.assertNull;
  * Test queries involving direct impersonation and multilevel impersonation including join queries where each side is
  * a nested view.
  */
+@Category({SlowTest.class, SecurityTest.class})
 public class TestImpersonationQueries extends BaseTestImpersonation {
   @BeforeClass
   public static void setup() throws Exception {

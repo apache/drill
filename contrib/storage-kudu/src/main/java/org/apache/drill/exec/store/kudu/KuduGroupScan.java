@@ -51,8 +51,8 @@ import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
-import org.kududb.client.LocatedTablet;
-import org.kududb.client.LocatedTablet.Replica;
+import org.apache.kudu.client.LocatedTablet;
+import org.apache.kudu.client.LocatedTablet.Replica;
 
 @JsonTypeName("kudu-scan")
 public class KuduGroupScan extends AbstractGroupScan {
@@ -190,7 +190,7 @@ public class KuduGroupScan extends AbstractGroupScan {
    */
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    assignments = AssignmentCreator.getMappings(incomingEndpoints, kuduWorkList, storagePlugin.getContext());
+    assignments = AssignmentCreator.getMappings(incomingEndpoints, kuduWorkList);
   }
 
 

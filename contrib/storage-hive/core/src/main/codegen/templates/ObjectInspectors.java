@@ -18,7 +18,8 @@
 <@pp.dropOutputFile />
 
 <#list drillOI.map as entry>
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}ObjectInspector.java" />
+<#if entry.needOIForDrillType == true>
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}${entry.hiveOI}.java" />
 
 <#include "/@includes/license.ftl" />
 
@@ -46,7 +47,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-public class Drill${entry.drillType}ObjectInspector {
+public class Drill${entry.drillType}${entry.hiveOI} {
 <#assign seq = ["Required", "Optional"]>
 <#list seq as mode>
 
@@ -55,7 +56,7 @@ public class Drill${entry.drillType}ObjectInspector {
       super(TypeInfoFactory.${entry.hiveType?lower_case}TypeInfo);
     }
 
-<#if entry.drillType == "VarChar">
+<#if entry.drillType == "VarChar" && entry.hiveType == "VARCHAR">
     @Override
     public HiveVarcharWritable getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
@@ -84,18 +85,18 @@ public class Drill${entry.drillType}ObjectInspector {
       final String s = StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
       return new HiveVarchar(s, HiveVarchar.MAX_VARCHAR_LENGTH);
     }
-<#elseif entry.drillType == "Var16Char">
+<#elseif entry.drillType == "VarChar" && entry.hiveType == "STRING">
     @Override
     public Text getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
       }
-      final NullableVar16CharHolder h = (NullableVar16CharHolder)o;
+      final NullableVarCharHolder h = (NullableVarCharHolder)o;
     <#else>
-      final Var16CharHolder h = (Var16CharHolder)o;
+      final VarCharHolder h = (VarCharHolder)o;
     </#if>
-      return new Text(StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer));
+      return new Text(StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer));
     }
 
     @Override
@@ -104,11 +105,11 @@ public class Drill${entry.drillType}ObjectInspector {
       if (o == null) {
         return null;
       }
-      final NullableVar16CharHolder h = (NullableVar16CharHolder)o;
+      final NullableVarCharHolder h = (NullableVarCharHolder)o;
     <#else>
-      final Var16CharHolder h = (Var16CharHolder)o;
+      final VarCharHolder h = (VarCharHolder)o;
     </#if>
-      return StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer);
+      return StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
     }
 <#elseif entry.drillType == "VarBinary">
     @Override
@@ -212,7 +213,10 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
-      return new java.sql.Timestamp(h.value);
+      org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
+      // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
+      // See more in Javadoc for "LocalDateTime#toDate()"
+      return new java.sql.Timestamp(dateTime.toDate().getTime());
     }
 
     @Override
@@ -225,7 +229,10 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
-      return new TimestampWritable(new java.sql.Timestamp(h.value));
+      org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
+      // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
+      // See more in Javadoc for "LocalDateTime#toDate()"
+      return new TimestampWritable(new java.sql.Timestamp(dateTime.toDate().getTime()));
     }
 
 <#elseif entry.drillType == "Date">
@@ -239,7 +246,10 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
-      return new java.sql.Date(h.value);
+      org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
+      // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
+      // See more in Javadoc for "LocalDate#toDate()"
+      return new java.sql.Date(localDate.toDate().getTime());
     }
 
     @Override
@@ -252,7 +262,10 @@ public class Drill${entry.drillType}ObjectInspector {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
-      return new DateWritable(new java.sql.Date(h.value));
+      org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
+      // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
+      // See more in Javadoc for "LocalDate#toDate()"
+      return new DateWritable(new java.sql.Date(localDate.toDate().getTime()));
     }
 
 <#else>
@@ -305,6 +318,6 @@ public class Drill${entry.drillType}ObjectInspector {
   }
 </#list>
 }
-
+</#if>
 </#list>
 

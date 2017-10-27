@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl.aggregate;
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -37,6 +36,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private int previousIndex = -1;
   private int underlyingIndex = 0;
   private int currentIndex;
+  /**
+   * Number of records added to the current aggregation group.
+   */
   private long addedRecordCount = 0;
   private IterOutcome outcome;
   private int outputCount = 0;
@@ -53,7 +55,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     this.outgoing = outgoing;
     setupInterior(incoming, outgoing);
   }
-
 
   private void allocateOutgoing() {
     for (VectorWrapper<?> w : outgoing) {
@@ -165,6 +166,19 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
           previousIndex = currentIndex;
         }
 
+        /**
+         * Hold onto the previous incoming batch. When the incoming uses an
+         * SV4, the InternalBatch DOES NOT clone or transfer the data. Instead,
+         * it clones only the SV4, and assumes that the same hyper-list of
+         * batches will be offered again after the next call to the incoming
+         * next(). This is, in fact, how the SV4 works, so all is fine. The
+         * trick to be aware of, however, is that this MUST BE TRUE even if
+         * the incoming next() returns NONE: the incoming is obligated to continue
+         * to offer the set of batches. That is, the incoming cannot try to be
+         * tidy and release the batches one end-of-data or the following code
+         * will fail, likely with an IndexOutOfBounds exception.
+         */
+
         InternalBatch previous = new InternalBatch(incoming, context);
 
         try {
@@ -180,14 +194,14 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               lastOutcome = out;
               if (first && addedRecordCount == 0) {
                 return setOkAndReturn();
-              } else if(addedRecordCount > 0) {
+              } else if (addedRecordCount > 0) {
                 outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
-                // (output container full or not) as we are not going to insert anymore records.
+                // (output container full or not) as we are not going to insert any more records.
                 if (EXTRA_DEBUG) {
                   logger.debug("Received no more batches, returning.");
                 }
                 return setOkAndReturn();
-              }else{
+              } else {
                 if (first && out == IterOutcome.OK) {
                   out = IterOutcome.OK_NEW_SCHEMA;
                 }
@@ -332,7 +346,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
   private void addRecordInc(int index) {
     addRecord(index);
-    this.addedRecordCount++;
+    addedRecordCount++;
   }
 
   @Override
@@ -348,5 +362,4 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   public abstract void outputRecordValues(@Named("outIndex") int outIndex);
   public abstract int getVectorIndex(@Named("recordIndex") int recordIndex);
   public abstract boolean resetValues();
-
 }

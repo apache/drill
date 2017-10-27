@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,12 +24,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.schema.Function;
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
@@ -39,6 +37,7 @@ import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -97,7 +96,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
                                             ) throws PartitionNotFoundException {
       List<FileStatus> fileStatuses;
       try {
-        fileStatuses = defaultSchema.getFS().list(false, new Path(defaultSchema.getDefaultLocation(), table));
+        fileStatuses = DrillFileSystemUtil.listDirectories(defaultSchema.getFS(), new Path(defaultSchema.getDefaultLocation(), table), false);
       } catch (IOException e) {
         throw new PartitionNotFoundException("Error finding partitions for table " + table, e);
       }
@@ -150,8 +149,8 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     }
 
     @Override
-    public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
-      return defaultSchema.createNewTable(tableName, partitionColumns);
+    public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
+      return defaultSchema.createNewTable(tableName, partitionColumns, storageStrategy);
     }
 
     @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,41 +18,40 @@
 package org.apache.drill.exec.server.rest.auth;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.eclipse.jetty.security.MappedLoginService.RolePrincipal;
 
 import java.security.Principal;
 import java.util.List;
 
+
 /**
- * Captures Drill user credentials and resources in a session.
+ * Captures Drill user credentials and privilege's of the session user.
  */
-public class DrillUserPrincipal implements Principal, AutoCloseable {
+public class DrillUserPrincipal implements Principal {
   public static final String ANONYMOUS_USER = "anonymous";
 
   public static final String AUTHENTICATED_ROLE = "authenticated";
+
   public static final String ADMIN_ROLE = "admin";
 
-  public static final String[] ADMIN_USER_ROLES = new String[] { AUTHENTICATED_ROLE, ADMIN_ROLE };
-  public static final String[] NON_ADMIN_USER_ROLES = new String[] { AUTHENTICATED_ROLE };
+  public static final String[] ADMIN_USER_ROLES = new String[]{AUTHENTICATED_ROLE, ADMIN_ROLE};
 
-  public static final List<RolePrincipal> ADMIN_PRINCIPALS = ImmutableList.of(
-      new RolePrincipal(AUTHENTICATED_ROLE),
-      new RolePrincipal(ADMIN_ROLE));
+  public static final String[] NON_ADMIN_USER_ROLES = new String[]{AUTHENTICATED_ROLE};
 
-  public static final List<RolePrincipal> NON_ADMIN_PRINCIPALS =
-      ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE));
+  public static final List<RolePrincipal> ADMIN_PRINCIPALS = ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE), new RolePrincipal(ADMIN_ROLE));
+
+  public static final List<RolePrincipal> NON_ADMIN_PRINCIPALS = ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE));
 
   private final String userName;
-  private final boolean isAdmin;
-  private final DrillClient drillClient;
 
-  public DrillUserPrincipal(final String userName, final boolean isAdmin, final DrillClient drillClient) {
+  private final boolean isAdmin;
+
+  public DrillUserPrincipal(final String userName, final boolean isAdmin) {
     this.userName = userName;
     this.isAdmin = isAdmin;
-    this.drillClient = drillClient;
   }
+
+  public boolean isAdminUser() { return isAdmin; }
 
   @Override
   public String getName() {
@@ -60,16 +59,10 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
   }
 
   /**
-   * @return Return {@link DrillClient} instanced with credentials of this user principal.
-   */
-  public DrillClient getDrillClient() {
-    return drillClient;
-  }
-
-  /**
    * Is the user identified by this user principal can manage (read) the profile owned by the given user?
+   *
    * @param profileOwner Owner of the profile.
-   * @return
+   * @return true/false
    */
   public boolean canManageProfileOf(final String profileOwner) {
     return isAdmin || userName.equals(profileOwner);
@@ -77,17 +70,21 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
 
   /**
    * Is the user identified by this user principal can manage (cancel) the query issued by the given user?
+   *
    * @param queryUser User who launched the query.
-   * @return
+   * @return true/false
    */
   public boolean canManageQueryOf(final String queryUser) {
     return isAdmin || userName.equals(queryUser);
   }
 
-  @Override
-  public void close() throws Exception {
-    if (drillClient != null) {
-      drillClient.close();
+  /**
+   * {@link DrillUserPrincipal} for anonymous (auth disabled) mode.
+   */
+  public static class AnonDrillUserPrincipal extends DrillUserPrincipal {
+
+    public AnonDrillUserPrincipal() {
+      super(ANONYMOUS_USER, true /* in anonymous (auth disabled) mode all users are admins */);
     }
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,7 +30,6 @@ import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.NullComparator;
-import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
@@ -100,7 +99,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
         nullComparatorSupported = groupScan.getHBaseConf().getBoolean("drill.hbase.supports.null.comparator", false);
       }
 
-      CompareFunctionsProcessor processor = CompareFunctionsProcessor.process(call, nullComparatorSupported);
+      CompareFunctionsProcessor processor = CompareFunctionsProcessor.createFunctionsProcessorInstance(call, nullComparatorSupported);
       if (processor.isSuccess()) {
         nodeScanSpec = createHBaseScanSpec(call, processor);
       }
@@ -156,7 +155,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     SchemaPath field = processor.getPath();
     byte[] fieldValue = processor.getValue();
     boolean sortOrderAscending = processor.isSortOrderAscending();
-    boolean isRowKey = field.getAsUnescapedPath().equals(ROW_KEY);
+    boolean isRowKey = field.getRootSegmentPath().equals(ROW_KEY);
     if (!(isRowKey
         || (!field.getRootSegment().isLastPath()
             && field.getRootSegment().getChild().isLastPath()
@@ -332,20 +331,19 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     return null;
   }
 
-private HBaseScanSpec createRowKeyPrefixScanSpec(FunctionCall call,
-    CompareFunctionsProcessor processor) {
+  private HBaseScanSpec createRowKeyPrefixScanSpec(FunctionCall call, CompareFunctionsProcessor processor) {
     byte[] startRow = processor.getRowKeyPrefixStartRow();
     byte[] stopRow  = processor.getRowKeyPrefixStopRow();
     Filter filter   = processor.getRowKeyPrefixFilter();
 
     if (startRow != HConstants.EMPTY_START_ROW ||
-      stopRow != HConstants.EMPTY_END_ROW ||
-      filter != null) {
+        stopRow != HConstants.EMPTY_END_ROW ||
+        filter != null) {
       return new HBaseScanSpec(groupScan.getTableName(), startRow, stopRow, filter);
     }
 
     // else
     return null;
-}
+  }
 
 }

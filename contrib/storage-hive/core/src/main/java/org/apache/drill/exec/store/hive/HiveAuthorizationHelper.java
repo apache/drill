@@ -102,7 +102,7 @@ public class HiveAuthorizationHelper {
       return;
     }
 
-    authorize(HiveOperationType.SHOWDATABASES, Collections.EMPTY_LIST, Collections.EMPTY_LIST, "SHOW DATABASES");
+    authorize(HiveOperationType.SHOWDATABASES, Collections.<HivePrivilegeObject> emptyList(), Collections.<HivePrivilegeObject> emptyList(), "SHOW DATABASES");
   }
 
   /**
@@ -117,7 +117,7 @@ public class HiveAuthorizationHelper {
 
     final HivePrivilegeObject toRead = new HivePrivilegeObject(HivePrivilegeObjectType.DATABASE, dbName, null);
 
-    authorize(HiveOperationType.SHOWTABLES, ImmutableList.of(toRead), Collections.EMPTY_LIST, "SHOW TABLES");
+    authorize(HiveOperationType.SHOWTABLES, ImmutableList.of(toRead), Collections.<HivePrivilegeObject> emptyList(), "SHOW TABLES");
   }
 
   /**
@@ -132,7 +132,7 @@ public class HiveAuthorizationHelper {
     }
 
     HivePrivilegeObject toRead = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, dbName, tableName);
-    authorize(HiveOperationType.QUERY, ImmutableList.of(toRead), Collections.EMPTY_LIST, "READ TABLE");
+    authorize(HiveOperationType.QUERY, ImmutableList.of(toRead), Collections.<HivePrivilegeObject> emptyList(), "READ TABLE");
   }
 
   /* Helper method to check privileges */

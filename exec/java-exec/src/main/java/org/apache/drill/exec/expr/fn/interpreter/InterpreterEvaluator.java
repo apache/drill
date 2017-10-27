@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.expr.fn.interpreter;
 
-import com.google.common.base.Preconditions;
-import io.netty.buffer.DrillBuf;
-
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+
+import com.google.common.base.Function;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -35,6 +37,7 @@ import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -52,8 +55,9 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
-import javax.inject.Inject;
-import java.lang.reflect.Method;
+import com.google.common.base.Preconditions;
+
+import io.netty.buffer.DrillBuf;
 
 public class InterpreterEvaluator {
 
@@ -84,6 +88,49 @@ public class InterpreterEvaluator {
 
   }
 
+  public static ValueHolder evaluateFunction(DrillSimpleFunc interpreter, ValueHolder[] args, String funcName) throws Exception {
+    Preconditions.checkArgument(interpreter != null, "interpreter could not be null when use interpreted model to evaluate function " + funcName);
+
+    // the current input index to assign into the next available parameter, found using the @Param notation
+    // the order parameters are declared in the java class for the DrillFunc is meaningful
+    int currParameterIndex = 0;
+    Field outField = null;
+    try {
+      Field[] fields = interpreter.getClass().getDeclaredFields();
+      for (Field f : fields) {
+        // if this is annotated as a parameter to the function
+        if ( f.getAnnotation(Param.class) != null ) {
+          f.setAccessible(true);
+          if (currParameterIndex < args.length) {
+            f.set(interpreter, args[currParameterIndex]);
+          }
+          currParameterIndex++;
+        } else if ( f.getAnnotation(Output.class) != null ) {
+          f.setAccessible(true);
+          outField = f;
+          // create an instance of the holder for the output to be stored in
+          f.set(interpreter, f.getType().newInstance());
+        }
+      }
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+    if (args.length != currParameterIndex ) {
+      throw new DrillRuntimeException(
+          String.format("Wrong number of parameters provided to interpreted expression evaluation " +
+                  "for function %s, expected %d parameters, but received %d.",
+              funcName, currParameterIndex, args.length));
+    }
+    if (outField == null) {
+      throw new DrillRuntimeException("Malformed DrillFunction without a return type: " + funcName);
+    }
+    interpreter.setup();
+    interpreter.eval();
+    ValueHolder out = (ValueHolder) outField.get(interpreter);
+
+    return out;
+  }
+
   private static class InitVisitor extends AbstractExprVisitor<LogicalExpression, VectorAccessible, RuntimeException> {
 
     private UdfUtilities udfUtilities;
@@ -111,7 +158,7 @@ public class InterpreterEvaluator {
         for (Field f : fields) {
           if ( f.getAnnotation(Inject.class) != null ) {
             f.setAccessible(true);
-            Class fieldType = f.getType();
+            Class<?> fieldType = f.getType();
             if (UdfUtilities.INJECTABLE_GETTER_METHODS.get(fieldType) != null) {
               Method method = udfUtilities.getClass().getMethod(UdfUtilities.INJECTABLE_GETTER_METHODS.get(fieldType));
               f.set(interpreter, method.invoke(udfUtilities));
@@ -153,10 +200,6 @@ public class InterpreterEvaluator {
       this.udfUtilities = udfUtilities;
     }
 
-    public DrillBuf getManagedBufferIfAvailable() {
-      return udfUtilities.getManagedBuffer();
-    }
-
     @Override
     public ValueHolder visitFunctionCall(FunctionCall call, Integer value) throws RuntimeException {
       return visitUnknown(call, value);
@@ -178,13 +221,25 @@ public class InterpreterEvaluator {
     }
 
     @Override
-    public ValueHolder visitDecimal28Constant(ValueExpressions.Decimal28Expression decExpr,Integer value) throws RuntimeException {
-      return ValueHolderHelper.getDecimal28Holder(getManagedBufferIfAvailable(), decExpr.getBigDecimal().toString());
+    public ValueHolder visitDecimal28Constant(final ValueExpressions.Decimal28Expression decExpr,Integer value) throws RuntimeException {
+      return getConstantValueHolder(decExpr.getBigDecimal().toString(), decExpr.getMajorType().getMinorType(), new Function<DrillBuf, ValueHolder>() {
+        @Nullable
+        @Override
+        public ValueHolder apply(DrillBuf buffer) {
+          return ValueHolderHelper.getDecimal28Holder(buffer, decExpr.getBigDecimal().toString());
+        }
+      });
     }
 
     @Override
-    public ValueHolder visitDecimal38Constant(ValueExpressions.Decimal38Expression decExpr,Integer value) throws RuntimeException {
-      return ValueHolderHelper.getDecimal38Holder(getManagedBufferIfAvailable(), decExpr.getBigDecimal().toString());
+    public ValueHolder visitDecimal38Constant(final ValueExpressions.Decimal38Expression decExpr,Integer value) throws RuntimeException {
+      return getConstantValueHolder(decExpr.getBigDecimal().toString(), decExpr.getMajorType().getMinorType(), new Function<DrillBuf, ValueHolder>() {
+        @Nullable
+        @Override
+        public ValueHolder apply(DrillBuf buffer) {
+          return ValueHolderHelper.getDecimal38Holder(buffer, decExpr.getBigDecimal().toString());
+        }
+      });
     }
 
     @Override
@@ -269,44 +324,7 @@ public class InterpreterEvaluator {
       try {
         DrillSimpleFunc interpreter =  ((DrillFuncHolderExpr) holderExpr).getInterpreter();
 
-        Preconditions.checkArgument(interpreter != null, "interpreter could not be null when use interpreted model to evaluate function " + holder.getRegisteredNames()[0]);
-
-        // the current input index to assign into the next available parameter, found using the @Param notation
-        // the order parameters are declared in the java class for the DrillFunc is meaningful
-        int currParameterIndex = 0;
-        Field outField = null;
-        try {
-          Field[] fields = interpreter.getClass().getDeclaredFields();
-          for (Field f : fields) {
-            // if this is annotated as a parameter to the function
-            if ( f.getAnnotation(Param.class) != null ) {
-              f.setAccessible(true);
-              if (currParameterIndex < args.length) {
-                f.set(interpreter, args[currParameterIndex]);
-              }
-              currParameterIndex++;
-            } else if ( f.getAnnotation(Output.class) != null ) {
-              f.setAccessible(true);
-              outField = f;
-              // create an instance of the holder for the output to be stored in
-              f.set(interpreter, f.getType().newInstance());
-            }
-          }
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-        if (args.length != currParameterIndex ) {
-          throw new DrillRuntimeException(
-              String.format("Wrong number of parameters provided to interpreted expression evaluation " +
-                  "for function %s, expected %d parameters, but received %d.",
-                  holderExpr.getName(), currParameterIndex, args.length));
-        }
-        if (outField == null) {
-          throw new DrillRuntimeException("Malformed DrillFunction without a return type: " + holderExpr.getName());
-        }
-        interpreter.setup();
-        interpreter.eval();
-        ValueHolder out = (ValueHolder) outField.get(interpreter);
+        ValueHolder out = evaluateFunction(interpreter, args, holderExpr.getName());
 
         if (TypeHelper.getValueHolderType(out).getMode() == TypeProtos.DataMode.OPTIONAL &&
             holderExpr.getMajorType().getMode() == TypeProtos.DataMode.REQUIRED) {
@@ -323,6 +341,7 @@ public class InterpreterEvaluator {
       }
 
     }
+
 
     @Override
     public ValueHolder visitBooleanOperator(BooleanOperator op, Integer inIndex) {
@@ -377,8 +396,14 @@ public class InterpreterEvaluator {
     }
 
     @Override
-    public ValueHolder visitQuotedStringConstant(ValueExpressions.QuotedString e, Integer value) throws RuntimeException {
-      return ValueHolderHelper.getVarCharHolder(getManagedBufferIfAvailable(), e.value);
+    public ValueHolder visitQuotedStringConstant(final ValueExpressions.QuotedString e, Integer value) throws RuntimeException {
+      return getConstantValueHolder(e.value, e.getMajorType().getMinorType(), new Function<DrillBuf, ValueHolder>() {
+        @Nullable
+        @Override
+        public ValueHolder apply(DrillBuf buffer) {
+          return ValueHolderHelper.getVarCharHolder(buffer, e.value);
+        }
+      });
     }
 
 
@@ -427,7 +452,6 @@ public class InterpreterEvaluator {
     private ValueHolder visitBooleanAnd(BooleanOperator op, Integer inIndex) {
       ValueHolder [] args = new ValueHolder [op.args.size()];
       boolean hasNull = false;
-      ValueHolder out = null;
       for (int i = 0; i < op.args.size(); i++) {
         args[i] = op.args.get(i).accept(this, inIndex);
 
@@ -500,6 +524,11 @@ public class InterpreterEvaluator {
         return Trivalent.FALSE;
       }
     }
+
+    private ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
+      return udfUtilities.getConstantValueHolder(value, type, holderInitializer);
+    }
+
   }
 
 }

@@ -35,6 +35,9 @@ import org.apache.drill.exec.vector.accessor.*;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public class TypeHelper extends BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
 
@@ -58,6 +61,7 @@ public class TypeHelper extends BasicTypeHelper {
     </#list>
     case MAP:
     case LIST:
+    case NULL:
       return new GenericAccessor(vector);
     }
     throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", type));
@@ -86,6 +90,8 @@ public class TypeHelper extends BasicTypeHelper {
 </#list>
       case GENERIC_OBJECT:
         return model._ref(ObjectHolder.class);
+    case NULL:
+      return model._ref(UntypedNullHolder.class);
       default:
         break;
       }

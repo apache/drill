@@ -19,10 +19,14 @@ package org.apache.drill.jdbc.test;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.ServiceLoader;
 
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -37,7 +41,7 @@ import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
-import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -48,11 +52,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
+import org.junit.experimental.categories.Category;
 
 /** Unit tests for Drill's JDBC driver. */
 
-
 @Ignore // ignore for now.
+@Category(JdbcTest.class)
 public class JdbcDataTest extends JdbcTestBase {
   private static String MODEL;
   private static String EXPECTED;
@@ -80,6 +85,22 @@ public class JdbcDataTest extends JdbcTestBase {
     Class.forName("org.apache.drill.jdbc.Driver");
   }
 
+  /**
+   * Load the driver using ServiceLoader
+   */
+  @Test
+  public void testLoadDriverServiceLoader() {
+    ServiceLoader<Driver> sl = ServiceLoader.load(Driver.class);
+    for(Iterator<Driver> it = sl.iterator(); it.hasNext(); ) {
+      Driver driver = it.next();
+      if (driver instanceof org.apache.drill.jdbc.Driver) {
+        return;
+      }
+    }
+
+    Assert.fail("org.apache.drill.jdbc.Driver not found using ServiceLoader");
+  }
+
   /** Load driver and make a connection. */
   @Test
   public void testConnect() throws Exception {
@@ -92,6 +113,7 @@ public class JdbcDataTest extends JdbcTestBase {
   @Test
   public void testPrepare() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS").withConnection(new Function<Connection, Void>() {
+      @Override
       public Void apply(Connection connection) {
         try {
           final Statement statement = connection.prepareStatement("select * from donuts");
@@ -186,7 +208,7 @@ public class JdbcDataTest extends JdbcTestBase {
     Scan scan = findOnlyOperator(plan, Scan.class);
     Assert.assertEquals("donuts-json", scan.getStorageEngine());
     Project project = findOnlyOperator(plan, Project.class);
-    Assert.assertEquals(1, project.getSelections().length);
+    Assert.assertEquals(1, project.getSelections().size());
     Assert.assertEquals(Scan.class, project.getInput().getClass());
     Store store = findOnlyOperator(plan, Store.class);
     Assert.assertEquals("queue", store.getStorageEngine());
@@ -244,9 +266,9 @@ public class JdbcDataTest extends JdbcTestBase {
     Assert.assertTrue(filter.getInput() instanceof Scan);
     Project[] projects = Iterables.toArray(findOperator(plan, Project.class), Project.class);
     Assert.assertEquals(2, projects.length);
-    Assert.assertEquals(1, projects[0].getSelections().length);
+    Assert.assertEquals(1, projects[0].getSelections().size());
     Assert.assertEquals(Filter.class, projects[0].getInput().getClass());
-    Assert.assertEquals(2, projects[1].getSelections().length);
+    Assert.assertEquals(2, projects[1].getSelections().size());
     Assert.assertEquals(Project.class, projects[1].getInput().getClass());
     Store store = findOnlyOperator(plan, Store.class);
     Assert.assertEquals("queue", store.getStorageEngine());

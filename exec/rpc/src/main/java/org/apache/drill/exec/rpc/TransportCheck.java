@@ -26,7 +26,7 @@ import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.internal.SystemPropertyUtil;
+import org.apache.drill.exec.util.SystemPropertyUtil;
 
 import java.util.Locale;
 
@@ -45,6 +45,8 @@ public class TransportCheck {
 
     String name = SystemPropertyUtil.get("os.name").toLowerCase(Locale.US).trim();
 
+    // Epoll is disabled by default (see distribution/src/resources/drill-env.sh) due to
+    // https://github.com/netty/netty/issues/3539
     if (name.startsWith("linux") && SystemPropertyUtil.getBoolean(USE_LINUX_EPOLL, false)) {
       SUPPORTS_EPOLL = true;
     } else {

@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-import org.joda.time.DateTimeUtils;
 import org.apache.parquet.io.api.Binary;
 
 import java.lang.Override;
@@ -49,7 +48,7 @@ import org.apache.drill.exec.record.MaterializedField;
 
 import org.apache.drill.common.types.TypeProtos;
 
-import org.joda.time.DateTimeUtils;
+import org.joda.time.DateTimeConstants;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
@@ -71,7 +70,6 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
 
   private RecordConsumer consumer;
   private MessageType schema;
-  public static final long JULIAN_DAY_EPOC = DateTimeUtils.toJulianDayNumber(0);
 
   public void setUp(MessageType schema, RecordConsumer consumer) {
     this.schema = schema;
@@ -156,12 +154,12 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
   <#elseif minor.class == "Date">
     <#if mode.prefix == "Repeated" >
       reader.read(i, holder);
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
+      consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
     <#else>
       consumer.startField(fieldName, fieldId);
       reader.read(holder);
       // convert from internal Drill date format to Julian Day centered around Unix Epoc
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
+      consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
       consumer.endField(fieldName, fieldId);
     </#if>
   <#elseif

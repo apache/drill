@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -62,12 +63,14 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
@@ -78,6 +81,7 @@ import com.google.common.collect.Lists;
  * ability to copy and flush data
  *
  */
+@Category(OperatorTest.class)
 public class TestPartitionSender extends PlanTestBase {
 
   private static final SimpleParallelizer PARALLELIZER = new SimpleParallelizer(
@@ -149,7 +153,7 @@ public class TestPartitionSender extends PlanTestBase {
       Mockito.when(sv.get(i)).thenReturn(i);
     }
 
-    final TopNBatch.SimpleRecordBatch incoming = new TopNBatch.SimpleRecordBatch(container, sv, null);
+    final TopNBatch.SimpleSV4RecordBatch incoming = new TopNBatch.SimpleSV4RecordBatch(container, sv, null);
 
     updateTestCluster(DRILLBITS_COUNT, null);
 
@@ -180,20 +184,20 @@ public class TestPartitionSender extends PlanTestBase {
 
     final OptionList options = new OptionList();
     // try multiple scenarios with different set of options
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1));
+    options.add(OptionValue.create(OptionValue.AccessibleScopes.SESSION, "planner.slice_target", 1, OptionScope.SESSION));
     testThreadsHelper(hashToRandomExchange, drillbitContext, options,
         incoming, registry, planReader, planningSet, rootFragment, 1);
 
     options.clear();
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1));
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.partitioner_sender_max_threads", 10));
+    options.add(OptionValue.create(AccessibleScopes.SESSION, "planner.slice_target", 1, OptionScope.SESSION));
+    options.add(OptionValue.create(OptionValue.AccessibleScopes.SESSION, "planner.partitioner_sender_max_threads", 10, OptionScope.SESSION));
     hashToRandomExchange.setCost(1000);
     testThreadsHelper(hashToRandomExchange, drillbitContext, options,
         incoming, registry, planReader, planningSet, rootFragment, 10);
 
     options.clear();
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.slice_target", 1000));
-    options.add(OptionValue.createLong(OptionType.SESSION, "planner.partitioner_sender_threads_factor",2));
+    options.add(OptionValue.create(AccessibleScopes.SESSION, "planner.slice_target", 1000, OptionScope.SESSION));
+    options.add(OptionValue.create(AccessibleScopes.SESSION, "planner.partitioner_sender_threads_factor",2, OptionScope.SESSION));
     hashToRandomExchange.setCost(14000);
     testThreadsHelper(hashToRandomExchange, drillbitContext, options,
         incoming, registry, planReader, planningSet, rootFragment, 2);
@@ -216,10 +220,11 @@ public class TestPartitionSender extends PlanTestBase {
       RecordBatch incoming, FunctionImplementationRegistry registry, PhysicalPlanReader planReader, PlanningSet planningSet, Fragment rootFragment,
       int expectedThreadsCount) throws Exception {
 
-    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName");
+    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName", "938ea2d9-7cb9-4baf-9414-a5a0b7777e8e");
     final QueryWorkUnit qwu = PARALLELIZER.getFragments(options, drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
-        drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryContextInfo);
+        drillbitContext.getBits(), rootFragment, USER_SESSION, queryContextInfo);
+    qwu.applyPlan(planReader);
 
     final List<MinorFragmentEndpoint> mfEndPoints = PhysicalOperatorUtil.getIndexOrderedEndpoints(Lists.newArrayList(drillbitContext.getBits()));
 
@@ -363,8 +368,12 @@ public class TestPartitionSender extends PlanTestBase {
       super(context, incoming, operator);
     }
 
-    public void close() throws Exception {
-      ((AutoCloseable) oContext).close();
+    @Override
+    public void close() {
+      // Don't close the context here; it is closed
+      // separately. Close only resources this sender
+      // controls.
+//      ((AutoCloseable) oContext).close();
     }
 
     public int getNumberPartitions() {

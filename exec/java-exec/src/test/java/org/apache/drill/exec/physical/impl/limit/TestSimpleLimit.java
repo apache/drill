@@ -20,61 +20,45 @@ package org.apache.drill.exec.physical.impl.limit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
-import mockit.NonStrictExpectations;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestSimpleLimit extends ExecTest {
   private final DrillConfig c = DrillConfig.create();
 
   @Test
-  public void testLimit(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+  public void testLimit(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
 
+    mockDrillbitContext(bitContext);
     verifyLimitCount(bitContext, connection, "test1.json", 5);
   }
 
   @Test
-  public void testLimitNoEnd(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
-
+  public void testLimitNoEnd(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
+    mockDrillbitContext(bitContext);
     verifyLimitCount(bitContext, connection, "test3.json", 95);
   }
 
@@ -84,15 +68,9 @@ public class TestSimpleLimit extends ExecTest {
   // However, when evaluate the increasingBitInt(0), if the outgoing batch could not hold the new value, doEval() return false, and start the
   // next batch. But the value has already been increased by 1 in the prior failed try. Therefore, the sum of the generated number could be different,
   // depending on the size of each outgoing batch, and when the batch could not hold any more values.
-  public void testLimitAcrossBatches(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+  public void testLimitAcrossBatches(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
 
+    mockDrillbitContext(bitContext);
     verifyLimitCount(bitContext, connection, "test2.json", 69999);
     final long start = 30000;
     final long end = 100000;
@@ -103,7 +81,7 @@ public class TestSimpleLimit extends ExecTest {
 
   }
 
-  private void verifyLimitCount(DrillbitContext bitContext, UserServer.UserClientConnection connection, String testPlan, int expectedCount) throws Throwable {
+  private void verifyLimitCount(DrillbitContext bitContext, UserClientConnection connection, String testPlan, int expectedCount) throws Throwable {
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/limit/" + testPlan), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -123,7 +101,7 @@ public class TestSimpleLimit extends ExecTest {
     assertTrue(!context.isFailed());
   }
 
-  private void verifySum(DrillbitContext bitContext, UserServer.UserClientConnection connection, String testPlan, int expectedCount, long expectedSum) throws Throwable {
+  private void verifySum(DrillbitContext bitContext, UserClientConnection connection, String testPlan, int expectedCount, long expectedSum) throws Throwable {
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/limit/" + testPlan), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);

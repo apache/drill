@@ -24,7 +24,9 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Map;
 
+import com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -35,6 +37,7 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.google.common.collect.Maps;
+import org.apache.hadoop.hive.serde.serdeConstants;
 
 import static org.apache.drill.BaseTestQuery.getTempDir;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
@@ -67,7 +70,7 @@ public class HiveTestDataGenerator {
     config.put("hive.metastore.uris", "");
     config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
     config.put("hive.metastore.warehouse.dir", whDir);
-    config.put(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+    config.put(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
   }
 
   /**
@@ -112,7 +115,7 @@ public class HiveTestDataGenerator {
     HiveConf conf = new HiveConf(SessionState.class);
 
     conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
     conf.set("hive.metastore.warehouse.dir", whDir);
     conf.set("mapred.job.tracker", "local");
     conf.set(ConfVars.SCRATCHDIR.varname,  getTempDir("scratch_dir"));
@@ -183,7 +186,8 @@ public class HiveTestDataGenerator {
         "  string_field STRING," +
         "  varchar_field VARCHAR(50)," +
         "  timestamp_field TIMESTAMP," +
-        "  date_field DATE" +
+        "  date_field DATE," +
+        "  char_field CHAR(10)" +
         ") PARTITIONED BY (" +
         // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
         // "  binary_part BINARY," +
@@ -202,7 +206,8 @@ public class HiveTestDataGenerator {
         "  string_part STRING," +
         "  varchar_part VARCHAR(50)," +
         "  timestamp_part TIMESTAMP," +
-        "  date_part DATE" +
+        "  date_part DATE," +
+        "  char_part CHAR(10)" +
         ") ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' " +
         "TBLPROPERTIES ('serialization.null.format'='') "
     );
@@ -227,7 +232,8 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05')"
+        "  date_part='2013-07-05', " +
+        "  char_part='char')"
     );
 
     // Add a second partition to table 'readtest' which contains the same values as the first partition except
@@ -251,7 +257,8 @@ public class HiveTestDataGenerator {
             "  string_part='string', " +
             "  varchar_part='varchar', " +
             "  timestamp_part='2013-07-05 17:01:00', " +
-            "  date_part='2013-07-05')"
+            "  date_part='2013-07-05', " +
+            "  char_part='char')"
     );
 
     // Load data into table 'readtest'
@@ -274,7 +281,9 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05')", testDataFile));
+        "  date_part='2013-07-05'," +
+        "  char_part='char'" +
+            ")", testDataFile));
 
     // create a table that has all Hive types. This is to test how hive tables metadata is populated in
     // Drill's INFORMATION_SCHEMA.
@@ -296,7 +305,8 @@ public class HiveTestDataGenerator {
         "listType ARRAY<STRING>, " +
         "mapType MAP<STRING,INT>, " +
         "structType STRUCT<sint:INT,sboolean:BOOLEAN,sstring:STRING>, " +
-        "uniontypeType UNIONTYPE<int, double, array<string>>)"
+        "uniontypeType UNIONTYPE<int, double, array<string>>, " +
+        "charType CHAR(10))"
     );
 
     /**
@@ -319,7 +329,8 @@ public class HiveTestDataGenerator {
             "  smallint_field SMALLINT," +
             "  string_field STRING," +
             "  varchar_field VARCHAR(50)," +
-            "  timestamp_field TIMESTAMP" +
+            "  timestamp_field TIMESTAMP," +
+            "  char_field CHAR(10)" +
             ") PARTITIONED BY (" +
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
             // "  binary_part BINARY," +
@@ -338,7 +349,8 @@ public class HiveTestDataGenerator {
             "  string_part STRING," +
             "  varchar_part VARCHAR(50)," +
             "  timestamp_part TIMESTAMP," +
-            "  date_part DATE" +
+            "  date_part DATE," +
+            "  char_part CHAR(10)" +
             ") STORED AS parquet "
     );
 
@@ -361,7 +373,8 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05'" +
+        "  date_part='2013-07-05', " +
+        "  char_part='char'" +
         ") " +
         " SELECT " +
         "  binary_field," +
@@ -379,7 +392,8 @@ public class HiveTestDataGenerator {
         "  smallint_field," +
         "  string_field," +
         "  varchar_field," +
-        "  timestamp_field" +
+        "  timestamp_field," +
+        "  char_field" +
         " FROM readtest WHERE tinyint_part = 64");
 
     // Add a second partition to table 'readtest_parquet' which contains the same values as the first partition except
@@ -403,7 +417,8 @@ public class HiveTestDataGenerator {
             "  string_part='string', " +
             "  varchar_part='varchar', " +
             "  timestamp_part='2013-07-05 17:01:00', " +
-            "  date_part='2013-07-05')"
+            "  date_part='2013-07-05', " +
+            "  char_part='char')"
     );
 
     // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
@@ -423,6 +438,15 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "INSERT OVERWRITE TABLE partition_pruning_test PARTITION(c, d, e) " +
         "SELECT a, b, c, d, e FROM partition_pruning_test_loadtable");
 
+    executeQuery(hiveDriver,
+      "CREATE TABLE IF NOT EXISTS partition_with_few_schemas(a DATE, b TIMESTAMP) "+
+        "partitioned by (c INT, d INT, e INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
+    executeQuery(hiveDriver, "INSERT OVERWRITE TABLE partition_with_few_schemas PARTITION(c, d, e) " +
+      "SELECT a, b, c, d, e FROM partition_pruning_test_loadtable");
+    executeQuery(hiveDriver,"alter table partition_with_few_schemas partition(c=1, d=1, e=1) change a a1 INT");
+    executeQuery(hiveDriver,"alter table partition_with_few_schemas partition(c=1, d=1, e=2) change a a1 INT");
+    executeQuery(hiveDriver,"alter table partition_with_few_schemas partition(c=2, d=2, e=2) change a a1 INT");
+
     // Add a partition with custom location
     executeQuery(hiveDriver,
         String.format("ALTER TABLE partition_pruning_test ADD PARTITION (c=99, d=98, e=97) LOCATION '%s'",
@@ -440,6 +464,22 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "INSERT INTO TABLE kv_parquet PARTITION(part1) SELECT key, value, key FROM default.kv");
     executeQuery(hiveDriver, "ALTER TABLE kv_parquet ADD COLUMNS (newcol string)");
 
+    executeQuery(hiveDriver,
+        "CREATE TABLE countStar_Parquet (int_field INT) STORED AS parquet");
+
+    final int numOfRows = 200;
+    final StringBuffer sb = new StringBuffer();
+    sb.append("VALUES ");
+    for(int i = 0; i < numOfRows; ++i) {
+      if(i != 0) {
+        sb.append(",");
+      }
+      sb.append("(").append(i).append(")");
+    }
+
+    executeQuery(hiveDriver, "INSERT INTO TABLE countStar_Parquet \n" +
+        sb.toString());
+
     // Create a StorageHandler based table (DRILL-3739)
     executeQuery(hiveDriver, "CREATE TABLE kv_sh(key INT, value STRING) STORED BY " +
         "'org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler'");
@@ -448,6 +488,37 @@ public class HiveTestDataGenerator {
     FileUtils.deleteQuietly(new File(whDir, "kv_sh"));
     //executeQuery(hiveDriver, "INSERT OVERWRITE TABLE kv_sh SELECT * FROM kv");
 
+    // Create text tables with skip header and footer table property
+    executeQuery(hiveDriver, "create database if not exists skipper");
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_small", "textfile", "1", "1"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_small", 5, 1, 1));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_large", "textfile", "2", "2"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_large", 5000, 2, 2));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_header", "textfile", "A", "1"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_header", 5, 1, 1));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_footer", "textfile", "1", "A"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_footer", 5, 1, 1));
+
+    // Create rcfile table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_rcfile_large", "rcfile", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_rcfile_large select * from skipper.kv_text_large");
+
+    // Create parquet table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_parquet_large", "parquet", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_parquet_large select * from skipper.kv_text_large");
+
+    // Create sequencefile table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_sequencefile_large", "sequencefile", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_sequencefile_large select * from skipper.kv_text_large");
+
+      // Create a table based on json file
+      executeQuery(hiveDriver, "create table default.simple_json(json string)");
+      final String loadData = String.format("load data local inpath '" +
+          Resources.getResource("simple.json") + "' into table default.simple_json");
+      executeQuery(hiveDriver, loadData);
     ss.close();
   }
 
@@ -498,10 +569,31 @@ public class HiveTestDataGenerator {
     PrintWriter printWriter = new PrintWriter(file);
     printWriter.println("YmluYXJ5ZmllbGQ=,false,34,65.99,2347.923,2758725827.9999,29375892739852.7689," +
         "89853749534593985.7834783,8.345,4.67,123456,234235,3455,stringfield,varcharfield," +
-        "2013-07-05 17:01:00,2013-07-05");
+        "2013-07-05 17:01:00,2013-07-05,charfield");
     printWriter.println(",,,,,,,,,,,,,,,,");
     printWriter.close();
 
     return file.getPath();
+  }
+
+  private String createTableWithHeaderFooterProperties(String tableName, String format, String headerValue, String footerValue) {
+    return String.format("create table %s (key int, value string) stored as %s tblproperties('%s'='%s', '%s'='%s')",
+        tableName, format, serdeConstants.HEADER_COUNT, headerValue, serdeConstants.FOOTER_COUNT, footerValue);
+  }
+
+  private String generateTestDataWithHeadersAndFooters(String tableName, int rowCount, int headerLines, int footerLines) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("insert into table ").append(tableName).append(" (key, value) values ");
+    int length = sb.length();
+    sb.append(StringUtils.repeat("('key_header', 'value_header')", ",", headerLines));
+    for (int i  = 1; i <= rowCount; i++) {
+        sb.append(",(").append(i).append(",").append("'key_").append(i).append("')");
+    }
+    if (headerLines <= 0) {
+      sb.deleteCharAt(length);
+    }
+    sb.append(StringUtils.repeat(",('key_footer', 'value_footer')", footerLines));
+
+    return sb.toString();
   }
 }

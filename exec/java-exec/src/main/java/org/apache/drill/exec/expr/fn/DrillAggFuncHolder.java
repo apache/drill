@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,20 +18,15 @@
 package org.apache.drill.exec.expr.fn;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.record.TypedFieldId;
 
@@ -44,7 +39,6 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JForLoop;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMod;
-import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 class DrillAggFuncHolder extends DrillFuncHolder {
@@ -98,15 +92,15 @@ class DrillAggFuncHolder extends DrillFuncHolder {
         //Loop through all workspace vectors, to get the minimum of size of all workspace vectors.
         JVar sizeVar = setupBlock.decl(g.getModel().INT, "vectorSize", JExpr.lit(Integer.MAX_VALUE));
         JClass mathClass = g.getModel().ref(Math.class);
-        for (int id = 0; id<workspaceVars.length; id ++) {
-          if (!workspaceVars[id].isInject()) {
-            setupBlock.assign(sizeVar,mathClass.staticInvoke("min").arg(sizeVar).arg(g.getWorkspaceVectors().get(workspaceVars[id]).invoke("getValueCapacity")));
+        for (int id = 0; id < getWorkspaceVars().length; id ++) {
+          if (!getWorkspaceVars()[id].isInject()) {
+            setupBlock.assign(sizeVar,mathClass.staticInvoke("min").arg(sizeVar).arg(g.getWorkspaceVectors().get(getWorkspaceVars()[id]).invoke("getValueCapacity")));
           }
         }
 
-        for(int i =0 ; i < workspaceVars.length; i++) {
-          if (!workspaceVars[i].isInject()) {
-            setupBlock.assign(workspaceJVars[i], JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
+        for(int i =0 ; i < getWorkspaceVars().length; i++) {
+          if (!getWorkspaceVars()[i].isInject()) {
+            setupBlock.assign(workspaceJVars[i], JExpr._new(g.getHolderType(getWorkspaceVars()[i].getMajorType())));
           }
         }
 
@@ -132,43 +126,46 @@ class DrillAggFuncHolder extends DrillFuncHolder {
 
 
   @Override
-  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
-    HoldingContainer out = g.declare(returnValue.type, false);
+  public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
+                                    JVar[] workspaceJVars, FieldReference fieldReference) {
+    HoldingContainer out = classGenerator.declare(getReturnType(), false);
     JBlock sub = new JBlock();
-    g.getEvalBlock().add(sub);
-    JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValue.type), returnValue.name, JExpr._new(g.getHolderType(returnValue.type)));
-    addProtectedBlock(g, sub, output(), null, workspaceJVars, false);
+    classGenerator.getEvalBlock().add(sub);
+    JVar internalOutput = sub.decl(JMod.FINAL, classGenerator.getHolderType(getReturnType()), getReturnValue().getName(), JExpr._new(classGenerator.getHolderType(getReturnType())));
+    addProtectedBlock(classGenerator, sub, output(), null, workspaceJVars, false);
     sub.assign(out.getHolder(), internalOutput);
-        //hash aggregate uses workspace vectors. Initialization is done in "setup" and does not require "reset" block.
-        if (!g.getMappingSet().isHashAggMapping()) {
-          generateBody(g, BlockType.RESET, reset(), null, workspaceJVars, false);
-        }
-       generateBody(g, BlockType.CLEANUP, cleanup(), null, workspaceJVars, false);
+    //hash aggregate uses workspace vectors. Initialization is done in "setup" and does not require "reset" block.
+    if (!classGenerator.getMappingSet().isHashAggMapping()) {
+      generateBody(classGenerator, BlockType.RESET, reset(), null, workspaceJVars, false);
+    }
+    generateBody(classGenerator, BlockType.CLEANUP, cleanup(), null, workspaceJVars, false);
 
     return out;
   }
 
 
   private JVar[] declareWorkspaceVectors(ClassGenerator<?> g) {
-    JVar[] workspaceJVars = new JVar[workspaceVars.length];
+    JVar[] workspaceJVars = new JVar[getWorkspaceVars().length];
 
-    for(int i =0 ; i < workspaceVars.length; i++){
-      if (workspaceVars[i].isInject() == true) {
-        workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
+    for(int i =0 ; i < getWorkspaceVars().length; i++){
+      if (getWorkspaceVars()[i].isInject()) {
+        workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(getWorkspaceVars()[i].getType()));
         g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], g.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer"));
       } else {
-        Preconditions.checkState(Types.isFixedWidthType(workspaceVars[i].majorType), String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have variable length type.", workspaceVars[i].name, registeredNames[0]));
-        Preconditions.checkState(workspaceVars[i].majorType.getMode()==DataMode.REQUIRED, String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have null or repeated type.", workspaceVars[i].name, registeredNames[0]));
+        Preconditions.checkState(Types.isFixedWidthType(getWorkspaceVars()[i].getMajorType()), String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to " +
+            "have variable length type.", getWorkspaceVars()[i].getName(), getRegisteredNames()[0]));
+        Preconditions.checkState(getWorkspaceVars()[i].getMajorType().getMode()==DataMode.REQUIRED, String.format("Workspace variable '%s' in aggregation function '%s' is not allowed" +
+            " to have null or repeated type.", getWorkspaceVars()[i].getName(), getRegisteredNames()[0]));
 
         //workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType), JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
-        workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType));
+        workspaceJVars[i] = g.declareClassField("work", g.getHolderType(getWorkspaceVars()[i].getMajorType()));
 
         //Declare a workspace vector for the workspace var.
-        TypedFieldId typedFieldId = new TypedFieldId(workspaceVars[i].majorType, g.getWorkspaceTypes().size());
+        TypedFieldId typedFieldId = new TypedFieldId(getWorkspaceVars()[i].getMajorType(), g.getWorkspaceTypes().size());
         JVar vv  = g.declareVectorValueSetupAndMember(g.getMappingSet().getWorkspace(), typedFieldId);
 
         g.getWorkspaceTypes().add(typedFieldId);
-        g.getWorkspaceVectors().put(workspaceVars[i], vv);
+        g.getWorkspaceVectors().put(getWorkspaceVars()[i], vv);
       }
     }
     return workspaceJVars;
@@ -179,9 +176,9 @@ class DrillAggFuncHolder extends DrillFuncHolder {
     if(!Strings.isNullOrEmpty(body) && !body.trim().isEmpty()){
       JBlock sub = new JBlock(true, true);
       addProtectedBlockHA(g, sub, body, null, workspaceJVars, wsIndexVariable);
-      initBlock.directStatement(String.format("/** start %s for function %s **/ ", bt.name(), registeredNames[0]));
+      initBlock.directStatement(String.format("/** start %s for function %s **/ ", bt.name(), getRegisteredNames()[0]));
       initBlock.add(sub);
-      initBlock.directStatement(String.format("/** end %s for function %s **/ ", bt.name(), registeredNames[0]));
+      initBlock.directStatement(String.format("/** end %s for function %s **/ ", bt.name(), getRegisteredNames()[0]));
     }
     return initBlock;
   }
@@ -202,28 +199,28 @@ class DrillAggFuncHolder extends DrillFuncHolder {
   private void addProtectedBlockHA(ClassGenerator<?> g, JBlock sub, String body, HoldingContainer[] inputVariables, JVar[] workspaceJVars, JExpression wsIndexVariable){
     if (inputVariables != null){
       for(int i =0; i < inputVariables.length; i++){
-        ValueReference parameter = parameters[i];
+        ValueReference parameter = getParameters()[i];
         HoldingContainer inputVariable = inputVariables[i];
-        sub.decl(inputVariable.getHolder().type(), parameter.name, inputVariable.getHolder());
+        sub.decl(inputVariable.getHolder().type(), parameter.getName(), inputVariable.getHolder());
       }
     }
 
     JVar[] internalVars = new JVar[workspaceJVars.length];
     for(int i =0; i < workspaceJVars.length; i++){
 
-      if (workspaceVars[i].isInject()) {
-        internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
+      if (getWorkspaceVars()[i].isInject()) {
+        internalVars[i] = sub.decl(g.getModel()._ref(getWorkspaceVars()[i].getType()), getWorkspaceVars()[i].getName(), workspaceJVars[i]);
         continue;
       }
       //sub.assign(workspaceJVars[i], JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
       //Access workspaceVar through workspace vector.
-      JInvocation getValueAccessor = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getAccessor").invoke("get");
-      if (Types.usesHolderForGet(workspaceVars[i].majorType)) {
+      JInvocation getValueAccessor = g.getWorkspaceVectors().get(getWorkspaceVars()[i]).invoke("getAccessor").invoke("get");
+      if (Types.usesHolderForGet(getWorkspaceVars()[i].getMajorType())) {
         sub.add(getValueAccessor.arg(wsIndexVariable).arg(workspaceJVars[i]));
       } else {
         sub.assign(workspaceJVars[i].ref("value"), getValueAccessor.arg(wsIndexVariable));
       }
-      internalVars[i] = sub.decl(g.getHolderType(workspaceVars[i].majorType),  workspaceVars[i].name, workspaceJVars[i]);
+      internalVars[i] = sub.decl(g.getHolderType(getWorkspaceVars()[i].getMajorType()),  getWorkspaceVars()[i].getName(), workspaceJVars[i]);
     }
 
     Preconditions.checkNotNull(body);
@@ -234,19 +231,19 @@ class DrillAggFuncHolder extends DrillFuncHolder {
       sub.assign(workspaceJVars[i], internalVars[i]);
 
       // Injected buffers are not stored as vectors skip storing them in vectors
-      if (workspaceVars[i].isInject()) {
+      if (getWorkspaceVars()[i].isInject()) {
         continue;
       }
       //Change workspaceVar through workspace vector.
       JInvocation setMeth;
-      MajorType type = workspaceVars[i].majorType;
+      MajorType type = getWorkspaceVars()[i].getMajorType();
       if (Types.usesHolderForGet(type)) {
-          setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i]);
+          setMeth = g.getWorkspaceVectors().get(getWorkspaceVars()[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i]);
       }else{
         if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
-          setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
+          setMeth = g.getWorkspaceVectors().get(getWorkspaceVars()[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
         } else {
-          setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("set").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
+          setMeth = g.getWorkspaceVectors().get(getWorkspaceVars()[i]).invoke("getMutator").invoke("set").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
         }
       }
 

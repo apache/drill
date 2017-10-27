@@ -22,10 +22,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestNewTextReader extends BaseTestQuery {
 
@@ -39,6 +42,7 @@ public class TestNewTextReader extends BaseTestQuery {
         .go();
   }
 
+  @Ignore ("Not needed any more. (DRILL-3178)")
   @Test
   public void ensureFailureOnNewLineDelimiterWithinQuotes() {
     try {
@@ -63,6 +67,7 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
   public void testTabSeparatedWithQuote() throws Exception {
     final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.tsv").toURI().toString();
     final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
@@ -80,6 +85,7 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
   public void testSpaceSeparatedWithQuote() throws Exception {
     final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.ssv").toURI().toString();
     final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
@@ -97,6 +103,7 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
   public void testPipSeparatedWithQuote() throws Exception {
     final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.tbl").toURI().toString();
     final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
@@ -109,6 +116,24 @@ public class TestNewTextReader extends BaseTestQuery {
         .baselineValues("a", "a", "a")
         .baselineValues("a", "a", "a")
         .baselineValues("a", "a", "a")
+        .build()
+        .run();
+  }
+
+  @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
+  public void testCrLfSeparatedWithQuote() throws Exception {
+    final String root = FileUtils.getResourceAsFile("/store/text/WithQuotedCrLf.tbl").toURI().toString();
+    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+        "from dfs_test.`%s` ", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c0", "c1", "c2")
+        .baselineValues("a\n1", "a", "a")
+        .baselineValues("a", "a\n2", "a")
+        .baselineValues("a", "a", "a\n3")
         .build()
         .run();
   }

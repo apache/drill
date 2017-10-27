@@ -23,7 +23,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
 public interface RecordReader extends AutoCloseable {
@@ -41,7 +41,7 @@ public interface RecordReader extends AutoCloseable {
    */
   void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException;
 
-  void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException;
+  void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException;
 
   /**
    * Increments this record reader forward, writing via the provided output

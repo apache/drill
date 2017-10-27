@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,19 +19,17 @@ package org.apache.drill.exec.store.hive.schema;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import org.apache.calcite.schema.SchemaPlus;
-
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -60,33 +58,22 @@ public class HiveSchemaFactory implements SchemaFactory {
   private final LoadingCache<String, DrillHiveMetaStoreClient> metaStoreClientLoadingCache;
 
   private final HiveStoragePlugin plugin;
-  private final Map<String, String> hiveConfigOverride;
   private final String schemaName;
   private final HiveConf hiveConf;
   private final boolean isDrillImpersonationEnabled;
   private final boolean isHS2DoAsSet;
 
-  public HiveSchemaFactory(final HiveStoragePlugin plugin, final String name, final Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
+  public HiveSchemaFactory(final HiveStoragePlugin plugin, final String name, final HiveConf hiveConf) throws ExecutionSetupException {
     this.schemaName = name;
     this.plugin = plugin;
 
-    this.hiveConfigOverride = hiveConfigOverride;
-    hiveConf = new HiveConf();
-    if (hiveConfigOverride != null) {
-      for (Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
-        final String property = entry.getKey();
-        final String value = entry.getValue();
-        hiveConf.set(property, value);
-        logger.trace("HiveConfig Override {}={}", property, value);
-      }
-    }
-
+    this.hiveConf = hiveConf;
     isHS2DoAsSet = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS);
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
     try {
       processUserMetastoreClient =
-          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf, hiveConfigOverride);
+          DrillHiveMetaStoreClient.createCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {
       throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }
@@ -105,8 +92,7 @@ public class HiveSchemaFactory implements SchemaFactory {
         .build(new CacheLoader<String, DrillHiveMetaStoreClient>() {
           @Override
           public DrillHiveMetaStoreClient load(String userName) throws Exception {
-            return DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf,
-                HiveSchemaFactory.this.hiveConfigOverride, userName);
+            return DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf, userName);
           }
         });
   }
@@ -117,6 +103,20 @@ public class HiveSchemaFactory implements SchemaFactory {
    */
   private boolean needToImpersonateReadingData() {
     return isDrillImpersonationEnabled && isHS2DoAsSet;
+  }
+
+  /**
+   * Close this schema factory in preparation for retrying. Attempt to close
+   * connections, but just ignore any errors.
+   */
+
+  public void close() {
+    try {
+      processUserMetastoreClient.close();
+    } catch (Exception e) { }
+    try {
+      metaStoreClientLoadingCache.invalidateAll();
+    } catch (Exception e) { }
   }
 
   @Override
@@ -160,9 +160,8 @@ public class HiveSchemaFactory implements SchemaFactory {
           this.defaultSchema = schema;
         }
         return schema;
-      } catch (final TException e) {
-        logger.warn("Failure while attempting to access HiveDatabase '{}'.", name, e.getCause());
-        return null;
+      } catch (TException e) {
+        throw new DrillRuntimeException(e);
       }
     }
 

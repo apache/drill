@@ -43,7 +43,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.apache.drill.exec.expr.holders.*;
-import org.apache.hadoop.io.Text;
 import org.joda.time.Period;
 
 // Source code generated using FreeMarker template ${.template_name}

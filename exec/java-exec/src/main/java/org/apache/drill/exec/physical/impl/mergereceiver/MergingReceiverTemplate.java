@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,14 +26,16 @@ import org.apache.drill.exec.record.VectorAccessible;
 public abstract class MergingReceiverTemplate implements MergingReceiverGeneratorBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingReceiverTemplate.class);
 
-  public MergingReceiverTemplate() throws SchemaChangeException { }
-
+  @Override
   public abstract void doSetup(@Named("context") FragmentContext context,
                                @Named("incoming") VectorAccessible incoming,
                                @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
 
+  @Override
   public abstract int doEval(@Named("leftIndex") int leftIndex,
-                                @Named("rightIndex") int rightIndex);
+                             @Named("rightIndex") int rightIndex) throws SchemaChangeException;
 
-  public abstract void doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  @Override
+  public abstract void doCopy(@Named("inIndex") int inIndex,
+                              @Named("outIndex") int outIndex) throws SchemaChangeException;
 }

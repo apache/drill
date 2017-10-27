@@ -17,16 +17,21 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 
+import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
+import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
+
+@Category(SqlFunctionTest.class)
 public class TestFunctionsQuery extends BaseTestQuery {
 
   // enable decimal data type
@@ -543,7 +548,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "timestamp '2008-2-23 12:23:23' as TS " +
         "FROM cp.`tpch/region.parquet` limit 1";
 
-    DateTime date = DateUtility.formatTimeStamp.parseDateTime("2008-02-23 12:23:23.0");
+    DateTime date = formatTimeStamp.parseDateTime("2008-02-23 12:23:23.0");
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
@@ -578,22 +583,6 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("DEC_28", "DEC_18")
         .baselineValues(new BigDecimal("-2147483648.00"), new BigDecimal("-2147483648.00"))
-        .go();
-  }
-
-  @Test
-  public void testHashFunctions() throws Exception {
-    String query = "select " +
-        "hash(cast(hire_date as date)) hash_date, " +
-        "hash(cast(employee_id as decimal(9, 2))) as hash_dec9, " +
-        "hash(cast(employee_id as decimal(38, 11))) as hash_dec38 " +
-        "from cp.`employee.json` where employee_id = 1 limit 1";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("hash_date", "hash_dec9", "hash_dec38")
-        .baselineValues(312993367, 292570647, 337328302)
         .go();
   }
 
@@ -701,7 +690,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "To_DaTe('2003/07/09', 'yyyy/MM/dd') as col3 " +
         "from cp.`employee.json` LIMIT 1";
 
-    DateTime date = DateUtility.formatDate.parseDateTime("2003-07-09");
+    DateTime date = formatDate.parseDateTime("2003-07-09");
 
     testBuilder()
         .sqlQuery(query)
@@ -739,7 +728,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
 
   @Test
   public void testNegative() throws Exception {
-    String query = "select  negative(2) as NEG " +
+    String query = "select  negative(cast(2 as bigint)) as NEG " +
         "from cp.`employee.json` where employee_id = 1";
 
     testBuilder()
@@ -780,32 +769,6 @@ public class TestFunctionsQuery extends BaseTestQuery {
   }
 
   @Test
-  public void testDateTrunc() throws Exception {
-    String query = "select "
-        + "date_trunc('MINUTE', time '2:30:21.5') as TIME1, "
-        + "date_trunc('SECOND', time '2:30:21.5') as TIME2, "
-        + "date_trunc('HOUR', timestamp '1991-05-05 10:11:12.100') as TS1, "
-        + "date_trunc('SECOND', timestamp '1991-05-05 10:11:12.100') as TS2, "
-        + "date_trunc('MONTH', date '2011-2-2') as DATE1, "
-        + "date_trunc('YEAR', date '2011-2-2') as DATE2 "
-        + "from cp.`employee.json` where employee_id < 2";
-
-    DateTime time1 = DateUtility.formatTime.parseDateTime("2:30:00.0");
-    DateTime time2 = DateUtility.formatTime.parseDateTime("2:30:21.0");
-    DateTime ts1 = DateUtility.formatTimeStamp.parseDateTime("1991-05-05 10:00:00.0");
-    DateTime ts2 = DateUtility.formatTimeStamp.parseDateTime("1991-05-05 10:11:12.0");
-    DateTime date1 = DateUtility.formatDate.parseDateTime("2011-02-01");
-    DateTime date2 = DateUtility.formatDate.parseDateTime("2011-01-01");
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("TIME1", "TIME2", "TS1", "TS2", "DATE1", "DATE2")
-        .baselineValues(time1, time2, ts1, ts2, date1, date2)
-        .go();
-  }
-
-  @Test
   public void testCaseWithDecimalExpressions() throws Exception {
     String query = "select " +
         "case when true then cast(employee_id as decimal(15, 5)) else cast('0.0' as decimal(2, 1)) end as col1 " +
@@ -818,6 +781,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineValues(new BigDecimal("1.00000"))
         .go();
   }
+
 
   /*
    * We may apply implicit casts in Hash Join while dealing with different numeric data types
@@ -834,7 +798,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "hash64AsDouble(cast(employee_id as decimal(9, 0))) = hash64AsDouble(cast(employee_id as decimal(18, 0))) col5, " +
         "hash64AsDouble(cast(employee_id as decimal(18, 0))) = hash64AsDouble(cast(employee_id as decimal(28, 0))) col6, " +
         "hash64AsDouble(cast(employee_id as decimal(28, 0))) = hash64AsDouble(cast(employee_id as decimal(38, 0))) col7 " +
-        "from cp.`employee.json` where employee_id = 1";
+        "from cp.`employee.json`  where employee_id = 1";
 
     testBuilder()
         .sqlQuery(query)
@@ -842,11 +806,32 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
         .baselineValues(true, true, true, true, true, true, true)
         .go();
+
+    java.util.Random seedGen = new java.util.Random();
+    seedGen.setSeed(System.currentTimeMillis());
+    int seed = seedGen.nextInt();
+
+    String querytemplate = "select " +
+            "hash64AsDouble(cast(employee_id as int), #RAND_SEED#) = hash64AsDouble(cast(employee_id as bigint), #RAND_SEED#) col1, " +
+            "hash64AsDouble(cast(employee_id as bigint), #RAND_SEED#) = hash64AsDouble(cast(employee_id as float), #RAND_SEED#) col2, " +
+            "hash64AsDouble(cast(employee_id as float), #RAND_SEED#) = hash64AsDouble(cast(employee_id as double), #RAND_SEED#) col3, " +
+            "hash64AsDouble(cast(employee_id as double), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) col4, " +
+            "hash64AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) col5, " +
+            "hash64AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) col6, " +
+            "hash64AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(38, 0)), #RAND_SEED#) col7 " +
+            "from cp.`employee.json` where employee_id = 1";
+
+    String queryWithSeed = querytemplate.replaceAll("#RAND_SEED#", String.format("%d",seed));
+    testBuilder()
+            .sqlQuery(queryWithSeed)
+            .unOrdered()
+            .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
+            .baselineValues(true, true, true, true, true, true, true)
+            .go();
+
   }
 
-  /*
-   * hash32 version of the above test
-   */
+
   @Test
   public void testHash32() throws Exception {
     String query = "select " +
@@ -865,6 +850,29 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
         .baselineValues(true, true, true, true, true, true, true)
         .go();
+
+    java.util.Random seedGen = new java.util.Random();
+    seedGen.setSeed(System.currentTimeMillis());
+    int seed = seedGen.nextInt();
+
+    String querytemplate = "select " +
+            "hash32AsDouble(cast(employee_id as int), #RAND_SEED#) = hash32AsDouble(cast(employee_id as bigint), #RAND_SEED#) col1, " +
+            "hash32AsDouble(cast(employee_id as bigint), #RAND_SEED#) = hash32AsDouble(cast(employee_id as float), #RAND_SEED#) col2, " +
+            "hash32AsDouble(cast(employee_id as float),  #RAND_SEED#) = hash32AsDouble(cast(employee_id as double), #RAND_SEED#) col3, " +
+            "hash32AsDouble(cast(employee_id as double), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) col4, " +
+            "hash32AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) col5, " +
+            "hash32AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) col6, " +
+            "hash32AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(38, 0)), #RAND_SEED#) col7 " +
+            "from cp.`employee.json` where employee_id = 1";
+
+    String queryWithSeed = querytemplate.replaceAll("#RAND_SEED#", String.format("%d",seed));
+    testBuilder()
+            .sqlQuery(queryWithSeed)
+            .unOrdered()
+            .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
+            .baselineValues(true, true, true, true, true, true, true)
+            .go();
+
   }
 
   @Test
@@ -906,5 +914,40 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineColumns("col1")
         .baselineValues("foo")
         .go();
+  }
+
+  @Test
+  public void testRandom() throws Exception {
+    String query = "select 2*random()=2*random() as col1 from (values (1))";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("col1")
+            .baselineValues(false)
+            .go();
+  }
+
+  /**
+  * Test for DRILL-5645, where negation of expressions that do not contain
+  * a RelNode input results in a NullPointerException
+  */
+  @Test
+  public void testNegate() throws Exception {
+    String query = "select -(2 * 2) as col1 from ( values ( 1 ) ) T ( C1 )";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("col1")
+            .baselineValues(-4)
+            .go();
+
+    // Test float
+    query = "select -(1.1 * 1) as col1 from ( values ( 1 ) ) T ( C1 )";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("col1")
+            .baselineValues(-1.1)
+            .go();
   }
 }

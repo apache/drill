@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,10 @@ package org.apache.drill.exec.store.hive;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Functions;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -33,17 +33,15 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.io.parquet.ProjectionPusher;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
@@ -62,33 +60,30 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
   @Override
   public ScanBatch getBatch(FragmentContext context, HiveDrillNativeParquetSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    final Table table = config.getTable();
+    final HiveTableWithColumnCache table = config.getTable();
     final List<InputSplit> splits = config.getInputSplits();
-    final List<Partition> partitions = config.getPartitions();
+    final List<HivePartition> partitions = config.getPartitions();
     final List<SchemaPath> columns = config.getColumns();
-    final Map<String, String> hiveConfigOverride = config.getHiveReadEntry().hiveConfigOverride;
     final String partitionDesignator = context.getOptions()
         .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    List<Map<String, String>> implicitColumns = Lists.newLinkedList();
+    boolean selectAllQuery = Utilities.isStarQuery(columns);
 
     final boolean hasPartitions = (partitions != null && partitions.size() > 0);
 
     final List<String[]> partitionColumns = Lists.newArrayList();
     final List<Integer> selectedPartitionColumns = Lists.newArrayList();
     List<SchemaPath> newColumns = columns;
-    if (AbstractRecordReader.isStarQuery(columns)) {
-      for (int i = 0; i < table.getPartitionKeys().size(); i++) {
-        selectedPartitionColumns.add(i);
-      }
-    } else {
+    if (!selectAllQuery) {
       // Separate out the partition and non-partition columns. Non-partition columns are passed directly to the
       // ParquetRecordReader. Partition columns are passed to ScanBatch.
       newColumns = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
-        Matcher m = pattern.matcher(column.getAsUnescapedPath());
+        Matcher m = pattern.matcher(column.getRootSegmentPath());
         if (m.matches()) {
           selectedPartitionColumns.add(
-              Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
+              Integer.parseInt(column.getRootSegmentPath().substring(partitionDesignator.length())));
         } else {
           newColumns.add(column);
         }
@@ -100,11 +95,12 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     int currentPartitionIndex = 0;
     final List<RecordReader> readers = Lists.newArrayList();
 
-    final Configuration conf = getConf(hiveConfigOverride);
+    final HiveConf conf = config.getHiveConf();
 
     // TODO: In future we can get this cache from Metadata cached on filesystem.
     final Map<String, ParquetMetadata> footerCache = Maps.newHashMap();
 
+    Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
     try {
       for (InputSplit split : splits) {
         final FileSplit fileSplit = (FileSplit) split;
@@ -121,6 +117,17 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
         final List<Integer> rowGroupNums = getRowGroupNumbersFromFileSplit(fileSplit, parquetMetadata);
 
         for(int rowGroupNum : rowGroupNums) {
+          //DRILL-5009 : Skip the row group if the row count is zero
+          if (parquetMetadata.getBlocks().get(rowGroupNum).getRowCount() == 0) {
+            continue;
+          }
+          // Drill has only ever written a single row group per file, only detect corruption
+          // in the first row group
+          ParquetReaderUtility.DateCorruptionStatus containsCorruptDates =
+              ParquetReaderUtility.detectCorruptDates(parquetMetadata, config.getColumns(), true);
+          if (logger.isDebugEnabled()) {
+            logger.debug(containsCorruptDates.toString());
+          }
           readers.add(new ParquetRecordReader(
                   context,
                   Path.getPathWithoutSchemeAndAuthority(finalPath).toString(),
@@ -128,12 +135,22 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
                   CodecFactory.createDirectCodecFactory(fs.getConf(),
                       new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
                   parquetMetadata,
-                  newColumns)
+                  newColumns,
+                  containsCorruptDates)
           );
+          Map<String, String> implicitValues = Maps.newLinkedHashMap();
 
           if (hasPartitions) {
-            Partition p = partitions.get(currentPartitionIndex);
-            partitionColumns.add(p.getValues().toArray(new String[0]));
+            List<String> values = partitions.get(currentPartitionIndex).getValues();
+            for (int i = 0; i < values.size(); i++) {
+              if (selectAllQuery || selectedPartitionColumns.contains(i)) {
+                implicitValues.put(partitionDesignator + i, values.get(i));
+              }
+            }
+          }
+          implicitColumns.add(implicitValues);
+          if (implicitValues.size() > mapWithMaxColumns.size()) {
+            mapWithMaxColumns = implicitValues;
           }
         }
         currentPartitionIndex++;
@@ -143,23 +160,20 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
       throw new ExecutionSetupException("Failed to create RecordReaders. " + e.getMessage(), e);
     }
 
+    // all readers should have the same number of implicit columns, add missing ones with value null
+    mapWithMaxColumns = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    for (Map<String, String> map : implicitColumns) {
+      map.putAll(Maps.difference(map, mapWithMaxColumns).entriesOnlyOnRight());
+    }
+
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),
     // create an empty RecordReader to output the schema
     if (readers.size() == 0) {
-      readers.add(new HiveRecordReader(table, null, null, columns, context, hiveConfigOverride,
+      readers.add(new HiveDefaultReader(table, null, null, columns, context, conf,
         ImpersonationUtil.createProxyUgi(config.getUserName(), context.getQueryUserName())));
     }
 
-    return new ScanBatch(config, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);
-  }
-
-  private Configuration getConf(final Map<String, String> hiveConfigOverride) {
-    final HiveConf hiveConf = new HiveConf();
-    for(Entry<String, String> prop : hiveConfigOverride.entrySet()) {
-      hiveConf.set(prop.getKey(), prop.getValue());
-    }
-
-    return hiveConf;
+    return new ScanBatch(config, context, oContext, readers, implicitColumns);
   }
 
   /**

@@ -15,13 +15,12 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-storage-hbase</artifactId>
@@ -33,6 +32,14 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <!-- used to update stopwatch -->
+      <groupId>org.javassist</groupId>
+      <artifactId>javassist</artifactId>
+      <version>3.20.0-GA</version>
+      <scope>test</scope>
+    </dependency>
+  
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
@@ -69,6 +76,14 @@
       <artifactId>metrics-core</artifactId>
       <version>2.1.1</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <!-- Needed by HBase test cluster, set to provided
+           scope to avoid dependency propagation -->
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -123,6 +138,28 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>avoid_bad_dependencies</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration combine.self="override">
+              <rules>
+                <bannedDependencies>
+                  <includes>
+                    <!-- Needed by HBase test cluster -->
+                    <include>commons-logging:commons-logging:*:jar:provided</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
     </plugins>
   </build>
@@ -139,6 +176,28 @@
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-client</artifactId>
+          <exclusions>
+              <exclusion>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-core</artifactId>
+              </exclusion>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
 
         <!-- test dependencies -->
@@ -146,12 +205,32 @@
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-testing-util</artifactId>
           <classifier>tests</classifier>
+          <exclusions>
+            <exclusion>
+              <artifactId>log4j</artifactId>
+              <groupId>log4j</groupId>
+            </exclusion>
+              <exclusion>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+              </exclusion>
+          </exclusions>
           <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-hdfs</artifactId>
           <scope>test</scope>
+          <exclusions>
+            <exclusion>
+              <artifactId>log4j</artifactId>
+              <groupId>log4j</groupId>
+            </exclusion>
+              <exclusion>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+              </exclusion>
+          </exclusions>
         </dependency>
       </dependencies>
     </profile>
@@ -166,11 +245,35 @@
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-client</artifactId>
+          <exclusions>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+            </exclusion>
+        </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-testing-util</artifactId>
           <classifier>tests</classifier>
+          <exclusions>
+            <exclusion>
+              <artifactId>log4j</artifactId>
+              <groupId>log4j</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
       </dependencies>
     </profile>

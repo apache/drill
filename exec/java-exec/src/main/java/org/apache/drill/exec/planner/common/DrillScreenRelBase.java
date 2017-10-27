@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,12 +39,12 @@ public abstract class DrillScreenRelBase extends SingleRel implements DrillRelNo
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     // by default, assume cost is proportional to number of rows
-    double rowCount = RelMetadataQuery.getRowCount(this);
+    double rowCount = mq.getRowCount(this);
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(rowCount, rowCount, 0, 0).multiplyBy(0.1);
   }

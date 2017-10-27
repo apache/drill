@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.exec.store.TimedRunnable;
-import org.apache.drill.exec.store.dfs.DrillPathFilter;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -68,10 +68,10 @@ public class FooterGatherer {
   public static List<Footer> getFooters(final Configuration conf, List<FileStatus> statuses, int parallelism) throws IOException {
     final List<TimedRunnable<Footer>> readers = Lists.newArrayList();
     List<Footer> foundFooters = Lists.newArrayList();
-    for(FileStatus status : statuses){
+    for (FileStatus status : statuses) {
 
 
-      if(status.isDirectory()){
+      if (status.isDirectory()){
         // first we check for summary file.
         FileSystem fs = status.getPath().getFileSystem(conf);
 
@@ -83,10 +83,10 @@ public class FooterGatherer {
         }
 
         // else we handle as normal file.
-        for(FileStatus inStatus : fs.listStatus(status.getPath(), new DrillPathFilter())){
+        for (FileStatus inStatus : DrillFileSystemUtil.listFiles(fs, status.getPath(), false)){
           readers.add(new FooterReader(conf, inStatus));
         }
-      }else{
+      } else {
         readers.add(new FooterReader(conf, status));
       }
 

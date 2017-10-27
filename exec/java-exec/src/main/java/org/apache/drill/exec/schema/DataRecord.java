@@ -41,7 +41,7 @@ public class DataRecord {
             }
         } else {
             if(isList) {
-                ((List)dataMap.get(fieldId)).add(data);
+                ((List<Object>)dataMap.get(fieldId)).add(data);
             } else {
                 throw new IllegalStateException("Overriding field id existing data!");
             }

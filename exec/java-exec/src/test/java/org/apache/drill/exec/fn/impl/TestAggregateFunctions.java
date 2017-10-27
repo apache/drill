@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,31 @@
  */
 package org.apache.drill.exec.fn.impl;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.List;
+import java.util.Map;
+
+@Category({SqlFunctionTest.class, OperatorTest.class, PlannerTest.class})
 public class TestAggregateFunctions extends BaseTestQuery {
 
   private static final String TEST_RES_PATH =   TestTools.getWorkingPath() + "/src/test/resources";
@@ -101,6 +119,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-2170: Subquery has group-by, order-by on aggregate function and limit
+  @Category(UnlikelyTest.class)
   public void testDrill2170() throws Exception {
     String query =
         "select count(*) as cnt from "
@@ -120,6 +139,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-2168
+  @Category(UnlikelyTest.class)
   public void testGBExprWithDrillFunc() throws Exception {
     testBuilder()
         .ordered()
@@ -136,6 +156,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test //DRILL-2242
+  @Category(UnlikelyTest.class)
   public void testDRILLNestedGBWithSubsetKeys() throws Exception {
     String sql = " select count(*) as cnt from (select l_partkey from\n" +
         "   (select l_partkey, l_suppkey from cp.`tpch/lineitem.parquet`\n" +
@@ -211,8 +232,9 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .go();
   }
 
-  @Test // test aggregates when input is empty and data type is optional
-  public void testAggregateWithEmptyInput() throws Exception {
+  @Test
+  // test aggregates when input is empty and data type is optional
+  public void countEmptyNullableInput() throws Exception {
     String query = "select " +
         "count(employee_id) col1, avg(employee_id) col2, sum(employee_id) col3 " +
         "from cp.`employee.json` where 1 = 0";
@@ -225,39 +247,13 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .go();
   }
 
-  @Test // test aggregates when input is empty and data type is required
-  public void testAggregateWithEmptyRequiredInput() throws Exception {
-    // test min function on required type
-    String query = "select " +
-        "min(bool_col) col1, min(int_col) col2, min(bigint_col) col3, min(float4_col) col4, min(float8_col) col5, " +
-        "min(date_col) col6, min(time_col) col7, min(timestamp_col) col8, min(interval_year_col) col9, " +
-        "min(varhcar_col) col10 " +
-        "from cp.`parquet/alltypes_required.parquet` where 1 = 0";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9", "col10")
-        .baselineValues(null, null, null, null, null, null, null, null, null, null)
-        .go();
-
-    // test max function
-    query = "select " +
-        "max(int_col) col1, max(bigint_col) col2, max(float4_col) col3, max(float8_col) col4, " +
-        "max(date_col) col5, max(time_col) col6, max(timestamp_col) col7, max(interval_year_col) col8, " +
-        "max(varhcar_col) col9 " +
-        "from cp.`parquet/alltypes_required.parquet` where 1 = 0";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9")
-        .baselineValues(null, null, null, null, null, null, null, null, null)
-        .go();
-
-    // test sum function
-    query = "select " +
-        "sum(int_col) col1, sum(bigint_col) col2, sum(float4_col) col3, sum(float8_col) col4, sum(interval_year_col) col5 " +
+  @Test
+  @Ignore("DRILL-4473")
+  public void sumEmptyNonexistentNullableInput() throws Exception {
+    final String query = "select "
+        +
+        "sum(int_col) col1, sum(bigint_col) col2, sum(float4_col) col3, sum(float8_col) col4, sum(interval_year_col) col5 "
+        +
         "from cp.`employee.json` where 1 = 0";
 
     testBuilder()
@@ -266,10 +262,16 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5")
         .baselineValues(null, null, null, null, null)
         .go();
+  }
 
+  @Test
+  @Ignore("DRILL-4473")
+  public void avgEmptyNonexistentNullableInput() throws Exception {
     // test avg function
-    query = "select " +
-        "avg(int_col) col1, avg(bigint_col) col2, avg(float4_col) col3, avg(float8_col) col4, avg(interval_year_col) col5 " +
+    final String query = "select "
+        +
+        "avg(int_col) col1, avg(bigint_col) col2, avg(float4_col) col3, avg(float8_col) col4, avg(interval_year_col) col5 "
+        +
         "from cp.`employee.json` where 1 = 0";
 
     testBuilder()
@@ -278,9 +280,12 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5")
         .baselineValues(null, null, null, null, null)
         .go();
+  }
 
+  @Test
+  public void stddevEmptyNonexistentNullableInput() throws Exception {
     // test stddev function
-    query = "select " +
+    final String query = "select " +
         "stddev_pop(int_col) col1, stddev_pop(bigint_col) col2, stddev_pop(float4_col) col3, " +
         "stddev_pop(float8_col) col4, stddev_pop(interval_year_col) col5 " +
         "from cp.`employee.json` where 1 = 0";
@@ -292,6 +297,51 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues(null, null, null, null, null)
         .go();
 
+  }
+  @Test
+  public void minMaxEmptyNonNullableInput() throws Exception {
+    // test min and max functions on required type
+
+    final QueryDataBatch result = testSqlWithResults("select * from cp.`parquet/alltypes_required.parquet` limit 0")
+        .get(0);
+
+    final Map<String, StringBuilder> functions = Maps.newHashMap();
+    functions.put("min", new StringBuilder());
+    functions.put("max", new StringBuilder());
+
+    final Map<String, Object> resultingValues = Maps.newHashMap();
+    for (UserBitShared.SerializedField field : result.getHeader().getDef().getFieldList()) {
+      final String fieldName = field.getNamePart().getName();
+      // Only COUNT aggregate function supported for Boolean type
+      if (fieldName.equals("col_bln")) {
+        continue;
+      }
+      resultingValues.put(String.format("`%s`", fieldName), null);
+      for (Map.Entry<String, StringBuilder> function : functions.entrySet()) {
+        function.getValue()
+            .append(function.getKey())
+            .append("(")
+            .append(fieldName)
+            .append(") ")
+            .append(fieldName)
+            .append(",");
+      }
+    }
+    result.release();
+
+    final String query = "select %s from cp.`parquet/alltypes_required.parquet` where 1 = 0";
+    final List<Map<String, Object>> baselineRecords = Lists.newArrayList();
+    baselineRecords.add(resultingValues);
+
+    for (StringBuilder selectBody : functions.values()) {
+      selectBody.setLength(selectBody.length() - 1);
+
+      testBuilder()
+          .sqlQuery(query, selectBody.toString())
+          .unOrdered()
+          .baselineRecords(baselineRecords)
+          .go();
+    }
   }
 
   /*
@@ -326,6 +376,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test //DRILL-2748
+  @Category(UnlikelyTest.class)
   public void testPushFilterPastAgg() throws Exception {
     final String query =
         " select cnt " +
@@ -401,6 +452,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test // DRILL-3781
+  @Category(UnlikelyTest.class)
   // GROUP BY System functions in schema table.
   public void testGroupBySystemFuncSchemaTable() throws Exception {
     final String query = "select count(*) as cnt from sys.version group by CURRENT_DATE";
@@ -411,6 +463,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test //DRILL-3781
+  @Category(UnlikelyTest.class)
   // GROUP BY System functions in csv, parquet, json table.
   public void testGroupBySystemFuncFileSystemTable() throws Exception {
     final String query = String.format("select count(*) as cnt from dfs_test.`%s/nation/nation.tbl` group by CURRENT_DATE", TEST_RES_PATH);
@@ -438,4 +491,129 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .build().run();
   }
 
+  @Test
+  public void test4443() throws Exception {
+    test("SELECT MIN(columns[1]) FROM dfs_test.`%s/agg/4443.csv` GROUP BY columns[0]", TEST_RES_PATH);
+  }
+
+  @Test
+  public void testCountStarRequired() throws Exception {
+    final String query = "select count(*) as col from cp.`tpch/region.parquet`";
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(5l)
+        .build()
+        .run();
+  }
+
+
+  @Test // DRILL-4531
+  @Category(UnlikelyTest.class)
+  public void testPushFilterDown() throws Exception {
+    final String sql =
+        "SELECT  cust.custAddress, \n"
+            + "       lineitem.provider \n"
+            + "FROM ( \n"
+            + "      SELECT cast(c_custkey AS bigint) AS custkey, \n"
+            + "             c_address                 AS custAddress \n"
+            + "      FROM   cp.`tpch/customer.parquet` ) cust \n"
+            + "LEFT JOIN \n"
+            + "  ( \n"
+            + "    SELECT DISTINCT l_linenumber, \n"
+            + "           CASE \n"
+            + "             WHEN l_partkey IN (1, 2) THEN 'Store1'\n"
+            + "             WHEN l_partkey IN (5, 6) THEN 'Store2'\n"
+            + "           END AS provider \n"
+            + "    FROM  cp.`tpch/lineitem.parquet` \n"
+            + "    WHERE ( l_orderkey >=20160101 AND l_partkey <=20160301) \n"
+            + "      AND   l_partkey IN (1,2, 5, 6) ) lineitem\n"
+            + "ON        cust.custkey = lineitem.l_linenumber \n"
+            + "WHERE     provider IS NOT NULL \n"
+            + "GROUP BY  cust.custAddress, \n"
+            + "          lineitem.provider \n"
+            + "ORDER BY  cust.custAddress, \n"
+            + "          lineitem.provider";
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)(Join).*inner"}; // With filter pushdown, left join will be converted into inner join
+    final String[] excludedPatterns = {"(?s)(Join).*(left)"};
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPatterns);
+  }
+
+  @Test // DRILL-2385: count on complex objects failed with missing function implementation
+  @Category(UnlikelyTest.class)
+  public void testCountComplexObjects() throws Exception {
+    final String query = "select count(t.%s) %s from cp.`complex/json/complex.json` t";
+    Map<String, String> objectsMap = Maps.newHashMap();
+    objectsMap.put("COUNT_BIG_INT_REPEATED", "sia");
+    objectsMap.put("COUNT_FLOAT_REPEATED", "sfa");
+    objectsMap.put("COUNT_MAP_REPEATED", "soa");
+    objectsMap.put("COUNT_MAP_REQUIRED", "oooi");
+    objectsMap.put("COUNT_LIST_REPEATED", "odd");
+    objectsMap.put("COUNT_LIST_OPTIONAL", "sia");
+
+    for (String object: objectsMap.keySet()) {
+      String optionSetting = "";
+      if (object.equals("COUNT_LIST_OPTIONAL")) {
+        // if `exec.enable_union_type` parameter is true then BIGINT<REPEATED> object is converted to LIST<OPTIONAL> one
+        optionSetting = "alter session set `exec.enable_union_type`=true";
+      }
+      try {
+        testBuilder()
+            .sqlQuery(query, objectsMap.get(object), object)
+            .optionSettingQueriesForTestQuery(optionSetting)
+            .unOrdered()
+            .baselineColumns(object)
+            .baselineValues(3L)
+            .go();
+      } finally {
+        test("ALTER SESSION RESET `exec.enable_union_type`");
+      }
+    }
+  }
+
+  @Test // DRILL-4264
+  @Category(UnlikelyTest.class)
+  public void testCountOnFieldWithDots() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "table.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+      }
+
+      String query = String.format("select count(t.m.`a.b`) as a,\n" +
+                                          "count(t.m.a.b) as b,\n" +
+                                          "count(t.m['a.b']) as c,\n" +
+                                          "count(t.rk.q) as d,\n" +
+                                          "count(t.`rk.q`) as e\n" +
+                                    "from dfs_test.`%s/%s` t",
+                                  directory.toPath().toString(), fileName);
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a", "b", "c", "d", "e")
+        .baselineValues(1L, 1L, 1L, 0L, 1L)
+        .go();
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
+  }
 }

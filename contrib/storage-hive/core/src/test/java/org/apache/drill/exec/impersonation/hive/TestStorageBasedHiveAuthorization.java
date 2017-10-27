@@ -19,7 +19,11 @@ package org.apache.drill.exec.impersonation.hive;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+
+import org.apache.calcite.schema.Schema.TableType;
+import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.ql.Driver;
@@ -30,6 +34,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 import java.util.Map;
@@ -45,6 +50,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SE
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.DYNAMICPARTITIONINGMODE;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation {
 
   // DB whose warehouse directory has permissions 755, available everyone to read
@@ -265,7 +271,48 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             u0_voter_all_755
         ));
 
-    showTablesHelper(db_u1g1_only, Collections.EMPTY_LIST);
+    showTablesHelper(db_u1g1_only, Collections.<String>emptyList());
+  }
+
+  @Test
+  public void fromInfoSchemaUser0() throws Exception {
+    updateClient(org1Users[0]);
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_general,
+        ImmutableList.of(
+            g_student_u0_700,
+            g_student_u0g0_750,
+            g_student_all_755,
+            g_voter_all_755,
+            g_partitioned_student_u0_700
+        ),
+        ImmutableList.of(
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE
+        ));
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_u0_only,
+        ImmutableList.of(
+            u0_student_all_755,
+            u0_voter_all_755
+        ),
+        ImmutableList.of(
+            TableType.TABLE,
+            TableType.TABLE
+        ));
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_u1g1_only,
+        Collections.<String>emptyList(),
+        Collections.<TableType>emptyList());
   }
 
   @Test
@@ -289,7 +336,52 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             u1g1_voter_u1_700
         ));
 
-    showTablesHelper(db_u0_only, Collections.EMPTY_LIST);
+    showTablesHelper(db_u0_only, Collections.<String>emptyList());
+  }
+
+  @Test
+  public void fromInfoSchemaUser1() throws Exception {
+    updateClient(org1Users[1]);
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_general,
+        ImmutableList.of(
+            g_student_u0g0_750,
+            g_student_all_755,
+            g_voter_u1_700,
+            g_voter_u2g1_750,
+            g_voter_all_755
+        ),
+        ImmutableList.of(
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE
+        ));
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_u1g1_only,
+        ImmutableList.of(
+            u1g1_student_all_755,
+            u1g1_student_u1_700,
+            u1g1_voter_all_755,
+            u1g1_voter_u1_700
+        ),
+        ImmutableList.of(
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE
+        ));
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_u0_only,
+        Collections.<String>emptyList(),
+        Collections.<TableType>emptyList());
   }
 
   @Test
@@ -309,7 +401,44 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             u1g1_voter_all_755
         ));
 
-    showTablesHelper(db_u0_only, Collections.EMPTY_LIST);
+    showTablesHelper(db_u0_only, Collections.<String>emptyList());
+  }
+
+  @Test
+  public void fromInfoSchemaUser2() throws Exception {
+    updateClient(org1Users[2]);
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_general,
+        ImmutableList.of(
+            g_student_all_755,
+            g_voter_u2g1_750,
+            g_voter_all_755
+        ),
+        ImmutableList.of(
+            TableType.TABLE,
+            TableType.TABLE,
+            TableType.TABLE
+        ));
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_u1g1_only,
+        ImmutableList.of(
+            u1g1_student_all_755,
+            u1g1_voter_all_755
+        ),
+        ImmutableList.of(
+            TableType.TABLE,
+            TableType.TABLE
+        ));
+
+    fromInfoSchemaHelper(
+        hivePluginName,
+        db_u0_only,
+        Collections.<String>emptyList(),
+        Collections.<TableType>emptyList());
   }
 
   // Try to read the tables "user0" has access to read in db_general.

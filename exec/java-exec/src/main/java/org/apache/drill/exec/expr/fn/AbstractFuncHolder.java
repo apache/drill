@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr.fn;
 import java.util.List;
 
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.fn.FuncHolder;
@@ -37,7 +38,17 @@ public abstract class AbstractFuncHolder implements FuncHolder {
     // default implementation is add no code
   }
 
-  public abstract HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[] workspaceJVars);
+  /**
+   * Generate methods body and complete the code generation.
+   *
+   * @param classGenerator the class responsible for code generation
+   * @param inputVariables the source of the vector holders
+   * @param workspaceJVars class fields
+   * @param fieldReference reference of the output field
+   * @return HoldingContainer for return value
+   */
+  public abstract HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
+                                             JVar[] workspaceJVars, FieldReference fieldReference);
 
   public boolean isNested() {
     return false;
@@ -48,4 +59,14 @@ public abstract class AbstractFuncHolder implements FuncHolder {
   public abstract MajorType getParmMajorType(int i);
 
   public abstract int getParamCount();
+
+  /**
+   * Checks that the current function holder stores output value
+   * using field writer instead of vector holder.
+   *
+   * @return true if current function holder uses field writer to store the output value
+   */
+  public boolean isComplexWriterFuncHolder() {
+    return false;
+  }
 }

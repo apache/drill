@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,19 +25,15 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.MessageToMessageDecoder;
-import io.netty.util.Recycler;
-import io.netty.util.Recycler.Handle;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.Closeable;
 import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.drill.common.SerializedExecutor;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
@@ -53,25 +49,18 @@ import com.google.protobuf.Parser;
  * The Rpc Bus deals with incoming and outgoing communication and is used on both the server and the client side of a
  * system.
  *
- * @param <T>
+ * @param <T> RPC type
+ * @param <C> Remote connection type
  */
 public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> implements Closeable {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
   private static final OutboundRpcMessage PONG = new OutboundRpcMessage(RpcMode.PONG, 0, 0, Acks.OK);
-  private static final boolean ENABLE_SEPARATE_THREADS = "true".equals(System.getProperty("drill.enable_rpc_offload"));
-
-  protected final CoordinationQueue queue = new CoordinationQueue(16, 16);
 
   protected abstract MessageLite getResponseDefaultInstance(int rpcType) throws RpcException;
 
-  protected void handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody, ResponseSender sender) throws RpcException{
-    sender.send(handle(connection, rpcType, pBody, dBody));
-  }
-
-  protected abstract Response handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException;
-
-  public abstract boolean isClient();
+  protected abstract void handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody, ResponseSender sender)
+      throws RpcException;
 
   protected final RpcConfig rpcConfig;
 
@@ -88,20 +77,23 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     this.local = local;
   }
 
-  <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  DrillRpcFuture<RECEIVE> send(C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+                               ByteBuf... dataBodies) {
     DrillRpcFutureImpl<RECEIVE> rpcFuture = new DrillRpcFutureImpl<RECEIVE>();
     this.send(rpcFuture, connection, rpcType, protobufBody, clazz, dataBodies);
     return rpcFuture;
   }
 
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+            ByteBuf... dataBodies) {
     send(listener, connection, rpcType, protobufBody, clazz, false, dataBodies);
   }
 
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, boolean allowInEventLoop, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+            boolean allowInEventLoop, ByteBuf... dataBodies) {
 
     Preconditions
         .checkArgument(
@@ -122,7 +114,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       assert rpcConfig.checkSend(rpcType, protobufBody.getClass(), clazz);
 
       Preconditions.checkNotNull(protobufBody);
-      ChannelListenerWithCoordinationId futureListener = queue.get(listener, clazz, connection);
+      ChannelListenerWithCoordinationId futureListener = connection.createNewRpcListener(listener, clazz);
       OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, futureListener.getCoordinationId(), protobufBody, dataBodies);
       ChannelFuture channelFuture = connection.getChannel().writeAndFlush(m);
       channelFuture.addListener(futureListener);
@@ -131,6 +123,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     } catch (Exception | AssertionError e) {
       listener.failed(new RpcException("Failure sending message.", e));
     } finally {
+
       if (!completed) {
         if (pBuffer != null) {
           pBuffer.release();
@@ -146,7 +139,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     }
   }
 
-  public abstract C initRemoteConnection(SocketChannel channel);
+  protected abstract C initRemoteConnection(SocketChannel channel);
 
   public class ChannelClosedHandler implements GenericFutureListener<ChannelFuture> {
 
@@ -160,22 +153,18 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-      String msg;
+      final String msg;
+
       if(local!=null) {
         msg = String.format("Channel closed %s <--> %s.", local, remote);
       }else{
         msg = String.format("Channel closed %s <--> %s.", future.channel().localAddress(), future.channel().remoteAddress());
       }
 
-      if (RpcBus.this.isClient()) {
-        if(local != null) {
-          logger.info(String.format(msg));
-        }
-      } else {
-        queue.channelClosed(new ChannelClosedException(msg));
-      }
-
-      clientConnection.close();
+      final ChannelClosedException ex = future.cause() != null ?
+          new ChannelClosedException(msg, future.cause()) :
+          new ChannelClosedException(msg);
+      clientConnection.channelClosed(ex);
     }
 
   }
@@ -184,41 +173,28 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     return new ChannelClosedHandler(clientConnection, channel);
   }
 
-  private interface Recyclable {
-    public void recycle();
-  }
 
   private class ResponseSenderImpl implements ResponseSender {
 
-    private RemoteConnection connection;
-    private int coordinationId;
+    private final RemoteConnection connection;
+    private final int coordinationId;
     private final AtomicBoolean sent = new AtomicBoolean(false);
-    private final Recyclable recyclable;
 
-    public ResponseSenderImpl(Recyclable recyclable) {
-      this.recyclable = recyclable;
-    }
-
-    void set(RemoteConnection connection, int coordinationId){
+    public ResponseSenderImpl(RemoteConnection connection, int coordinationId) {
       this.connection = connection;
       this.coordinationId = coordinationId;
-      sent.set(false);
     }
 
     public void send(Response r) {
-      try {
-        assert rpcConfig.checkResponseSend(r.rpcType, r.pBody.getClass());
-        sendOnce();
-        OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, coordinationId,
-            r.pBody, r.dBodies);
-        if (RpcConstants.EXTRA_DEBUGGING) {
-          logger.debug("Adding message to outbound buffer. {}", outMessage);
-        }
+      assert rpcConfig.checkResponseSend(r.rpcType, r.pBody.getClass());
+      sendOnce();
+      OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, coordinationId,
+          r.pBody, r.dBodies);
+      if (RpcConstants.EXTRA_DEBUGGING) {
+        logger.debug("Adding message to outbound buffer. {}", outMessage);
         logger.debug("Sending response with Sender {}", System.identityHashCode(this));
-        connection.getChannel().writeAndFlush(outMessage);
-      } finally {
-        recyclable.recycle();
       }
+      connection.getChannel().writeAndFlush(outMessage);
     }
 
     /**
@@ -231,55 +207,53 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     }
 
     void sendFailure(UserRpcException e){
-      try {
-        sendOnce();
-        UserException uex = UserException.systemError(e)
-            .addIdentity(e.getEndpoint())
-            .build(logger);
+      sendOnce();
+      UserException uex = UserException.systemError(e)
+          .addIdentity(e.getEndpoint())
+          .build(logger);
 
-        logger.error("Unexpected Error while handling request message", e);
+      logger.error("Unexpected Error while handling request message", e);
 
-        OutboundRpcMessage outMessage = new OutboundRpcMessage(
-            RpcMode.RESPONSE_FAILURE,
-            0,
-            coordinationId,
-            uex.getOrCreatePBError(false)
-            );
+      OutboundRpcMessage outMessage = new OutboundRpcMessage(
+          RpcMode.RESPONSE_FAILURE,
+          0,
+          coordinationId,
+          uex.getOrCreatePBError(false)
+          );
 
-        if (RpcConstants.EXTRA_DEBUGGING) {
-          logger.debug("Adding message to outbound buffer. {}", outMessage);
-        }
-        connection.getChannel().writeAndFlush(outMessage);
-      } finally {
-        recyclable.recycle();
+      if (RpcConstants.EXTRA_DEBUGGING) {
+        logger.debug("Adding message to outbound buffer. {}", outMessage);
       }
+      connection.getChannel().writeAndFlush(outMessage);
     }
 
   }
 
-  private class SameExecutor implements Executor {
-
-    @Override
-    public void execute(Runnable command) {
-      command.run();
+  private static void retainByteBuf(ByteBuf buf) {
+    if (buf != null) {
+      buf.retain();
     }
+  }
 
+  private static void releaseByteBuf(ByteBuf buf) {
+    if (buf != null) {
+      buf.release();
+    }
   }
 
   protected class InboundHandler extends MessageToMessageDecoder<InboundRpcMessage> {
 
-    private final Executor exec;
     private final C connection;
 
     public InboundHandler(C connection) {
       super();
+      Preconditions.checkNotNull(connection);
       this.connection = connection;
-      final Executor underlyingExecutor = ENABLE_SEPARATE_THREADS ? rpcConfig.getExecutor() : new SameExecutor();
-      this.exec = new RpcEventHandler(underlyingExecutor);
     }
 
     @Override
-    protected void decode(final ChannelHandlerContext ctx, final InboundRpcMessage msg, final List<Object> output) throws Exception {
+    protected void decode(final ChannelHandlerContext ctx, final InboundRpcMessage msg, final List<Object> output)
+        throws Exception {
       if (!ctx.channel().isOpen()) {
         return;
       }
@@ -287,30 +261,58 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         logger.debug("Received message {}", msg);
       }
       final Channel channel = connection.getChannel();
-      final Stopwatch watch = new Stopwatch().start();
+      final Stopwatch watch = Stopwatch.createStarted();
 
-      try{
+      try {
 
         switch (msg.mode) {
-        case REQUEST:
-          RequestEvent reqEvent = requestRecycler.get();
-          reqEvent.set(msg.coordinationId, connection, msg.rpcType, msg.pBody, msg.dBody);
-          exec.execute(reqEvent);
+        case REQUEST: {
+          final ResponseSenderImpl sender = new ResponseSenderImpl(connection, msg.coordinationId);
+          retainByteBuf(msg.pBody);
+          retainByteBuf(msg.dBody);
+          try {
+            handle(connection, msg.rpcType, msg.pBody, msg.dBody, sender);
+          } catch (UserRpcException e) {
+            sender.sendFailure(e);
+          } finally {
+            releaseByteBuf(msg.pBody);
+            releaseByteBuf(msg.dBody);
+          }
           break;
+        }
 
-        case RESPONSE:
-          ResponseEvent respEvent = responseRecycler.get();
-          respEvent.set(msg.rpcType, msg.coordinationId, msg.pBody, msg.dBody);
-          exec.execute(respEvent);
+        case RESPONSE: {
+          retainByteBuf(msg.pBody);
+          retainByteBuf(msg.dBody);
+          try {
+            final MessageLite defaultResponse = getResponseDefaultInstance(msg.rpcType);
+            assert rpcConfig.checkReceive(msg.rpcType, defaultResponse.getClass());
+            final RpcOutcome<?> rpcFuture = connection.getAndRemoveRpcOutcome(msg.rpcType, msg.coordinationId,
+                defaultResponse.getClass());
+            final Parser<?> parser = defaultResponse.getParserForType();
+            final Object value = parser.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
+            rpcFuture.set(value, msg.dBody);
+            if (RpcConstants.EXTRA_DEBUGGING) {
+              logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
+            }
+          } catch (Exception ex) {
+            logger.error("Failure while handling response.", ex);
+            throw ex;
+          } finally {
+            releaseByteBuf(msg.pBody);
+            releaseByteBuf(msg.dBody);
+          }
           break;
+        }
 
-        case RESPONSE_FAILURE:
+        case RESPONSE_FAILURE: {
           DrillPBError failure = DrillPBError.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
-          queue.updateFailedFuture(msg.coordinationId, failure);
+          connection.recordRemoteFailure(msg.coordinationId, failure);
           if (RpcConstants.EXTRA_DEBUGGING) {
             logger.debug("Updated rpc future with coordinationId {} with failure ", msg.coordinationId, failure);
           }
           break;
+        }
 
         case PING:
           channel.writeAndFlush(PONG);
@@ -341,148 +343,9 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       ByteBufInputStream is = new ByteBufInputStream(pBody);
       return parser.parseFrom(is);
     } catch (InvalidProtocolBufferException e) {
-      throw new RpcException(String.format("Failure while decoding message with parser of type. %s", parser.getClass().getCanonicalName()), e);
+      throw new RpcException(
+          String.format("Failure while decoding message with parser of type. %s",
+              parser.getClass().getCanonicalName()), e);
     }
-  }
-
-  class RpcEventHandler extends SerializedExecutor {
-
-    public RpcEventHandler(Executor underlyingExecutor) {
-      super(rpcConfig.getName() + "-rpc-event-queue", underlyingExecutor);
-    }
-
-    @Override
-    protected void runException(Runnable command, Throwable t) {
-      logger.error("Failure while running rpc command.", t);
-    }
-
-  }
-
-  private final Recycler<RequestEvent> requestRecycler = new Recycler<RequestEvent>() {
-    @Override
-    protected RequestEvent newObject(Handle handle) {
-      return new RequestEvent(handle);
-    }
-  };
-
-  private class RequestEvent implements Runnable, Recyclable {
-    private final ResponseSenderImpl sender;
-    private final Handle handle;
-    private C connection;
-    private int rpcType;
-    private ByteBuf pBody;
-    private ByteBuf dBody;
-
-    RequestEvent(Handle handle){
-      this.handle = handle;
-      sender = new ResponseSenderImpl(this);
-    }
-
-    public void set(int coordinationId, C connection, int rpcType, ByteBuf pBody, ByteBuf dBody) {
-      this.connection = connection;
-      this.rpcType = rpcType;
-      this.pBody = pBody;
-      this.dBody = dBody;
-      sender.set(connection, coordinationId);
-
-      if(pBody != null){
-        pBody.retain();
-      }
-
-      if(dBody != null){
-        dBody.retain();
-      }
-    }
-
-    @Override
-    public void run() {
-      try {
-        handle(connection, rpcType, pBody, dBody, sender);
-      } catch (UserRpcException e) {
-        sender.sendFailure(e);
-      } catch (Exception e) {
-        logger.error("Failure while handling message.", e);
-      }finally{
-        if(pBody != null){
-          pBody.release();
-        }
-
-        if(dBody != null){
-          dBody.release();
-        }
-      }
-
-    }
-
-    @Override
-    public void recycle() {
-      // We must defer recycling until the sender has been used.
-      requestRecycler.recycle(this, handle);
-    }
-
-
-  }
-
-  private final Recycler<ResponseEvent> responseRecycler = new Recycler<ResponseEvent>() {
-    @Override
-    protected ResponseEvent newObject(Handle handle) {
-      return new ResponseEvent(handle);
-    }
-  };
-
-  private class ResponseEvent implements Runnable {
-    private final Handle handle;
-
-    private int rpcType;
-    private int coordinationId;
-    private ByteBuf pBody;
-    private ByteBuf dBody;
-
-    public ResponseEvent(Handle handle){
-      this.handle = handle;
-    }
-
-    public void set(int rpcType, int coordinationId, ByteBuf pBody, ByteBuf dBody) {
-      this.rpcType = rpcType;
-      this.coordinationId = coordinationId;
-      this.pBody = pBody;
-      this.dBody = dBody;
-
-      if(pBody != null){
-        pBody.retain();
-      }
-
-      if(dBody != null){
-        dBody.retain();
-      }
-    }
-
-    public void run(){
-      try {
-        MessageLite m = getResponseDefaultInstance(rpcType);
-        assert rpcConfig.checkReceive(rpcType, m.getClass());
-        RpcOutcome<?> rpcFuture = queue.getFuture(rpcType, coordinationId, m.getClass());
-        Parser<?> parser = m.getParserForType();
-        Object value = parser.parseFrom(new ByteBufInputStream(pBody, pBody.readableBytes()));
-        rpcFuture.set(value, dBody);
-        if (RpcConstants.EXTRA_DEBUGGING) {
-          logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
-        }
-      } catch (Exception ex) {
-        logger.error("Failure while handling response.", ex);
-      }finally{
-        if(pBody != null){
-          pBody.release();
-        }
-
-        if(dBody != null){
-          dBody.release();
-        }
-
-        responseRecycler.recycle(this, handle);
-      }
-
-    }
-
   }
 }

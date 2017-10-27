@@ -28,6 +28,10 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.vector.*;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 /** Wrapper around VectorAccessible to iterate over the records and fetch fields within a record. */
 public class RecordValueAccessor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordValueAccessor.class);

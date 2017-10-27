@@ -19,6 +19,7 @@ package org.apache.drill.common.logical.data;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.drill.common.logical.data.Sequence.De;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
@@ -42,11 +43,15 @@ import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.collect.Iterators;
 
+// TODO - is this even ever used anymore? I don't believe the planner will ever
+// generate this, we might have some tests with old logical plans that use this
+// but it should probably be removed
 /**
  * Describes a list of operators where each operator only has one input and that
  * input is the operator that came before.
  *
  */
+@Deprecated
 @JsonDeserialize(using = De.class)
 @JsonTypeName("sequence")
 public class Sequence extends LogicalOperatorBase {
@@ -57,7 +62,7 @@ public class Sequence extends LogicalOperatorBase {
   public boolean openTop;
   public LogicalOperator input;
   @JsonProperty("do")
-  public LogicalOperator[] stream;
+  public List<LogicalOperator> stream;
 
     @Override
     public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
@@ -66,7 +71,7 @@ public class Sequence extends LogicalOperatorBase {
 
     @Override
     public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(stream[stream.length - 1]);
+        return Iterators.singletonIterator(stream.get(stream.size() - 1));
     }
 
     public static class De extends StdDeserializer<LogicalOperator> {

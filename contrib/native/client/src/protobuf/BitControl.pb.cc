@@ -34,6 +34,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* InitializeFragments_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   InitializeFragments_reflection_ = NULL;
+const ::google::protobuf::Descriptor* CustomMessage_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  CustomMessage_reflection_ = NULL;
 const ::google::protobuf::Descriptor* PlanFragment_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   PlanFragment_reflection_ = NULL;
@@ -61,10 +64,11 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       "BitControl.proto");
   GOOGLE_CHECK(file != NULL);
   BitControlHandshake_descriptor_ = file->message_type(0);
-  static const int BitControlHandshake_offsets_[3] = {
+  static const int BitControlHandshake_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitControlHandshake, rpc_version_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitControlHandshake, channel_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitControlHandshake, endpoint_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitControlHandshake, authenticationmechanisms_),
   };
   BitControlHandshake_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -123,7 +127,23 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(InitializeFragments));
-  PlanFragment_descriptor_ = file->message_type(4);
+  CustomMessage_descriptor_ = file->message_type(4);
+  static const int CustomMessage_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CustomMessage, type_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CustomMessage, message_),
+  };
+  CustomMessage_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      CustomMessage_descriptor_,
+      CustomMessage::default_instance_,
+      CustomMessage_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CustomMessage, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CustomMessage, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(CustomMessage));
+  PlanFragment_descriptor_ = file->message_type(5);
   static const int PlanFragment_offsets_[15] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, handle_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, network_cost_),
@@ -152,7 +172,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(PlanFragment));
-  Collector_descriptor_ = file->message_type(5);
+  Collector_descriptor_ = file->message_type(6);
   static const int Collector_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, opposite_major_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, incoming_minor_fragment_),
@@ -170,11 +190,12 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Collector));
-  QueryContextInformation_descriptor_ = file->message_type(6);
-  static const int QueryContextInformation_offsets_[3] = {
+  QueryContextInformation_descriptor_ = file->message_type(7);
+  static const int QueryContextInformation_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryContextInformation, query_start_time_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryContextInformation, time_zone_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryContextInformation, default_schema_name_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryContextInformation, session_id_),
   };
   QueryContextInformation_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -187,7 +208,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryContextInformation));
-  WorkQueueStatus_descriptor_ = file->message_type(7);
+  WorkQueueStatus_descriptor_ = file->message_type(8);
   static const int WorkQueueStatus_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(WorkQueueStatus, endpoint_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(WorkQueueStatus, queue_length_),
@@ -204,7 +225,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(WorkQueueStatus));
-  FinishedReceiver_descriptor_ = file->message_type(8);
+  FinishedReceiver_descriptor_ = file->message_type(9);
   static const int FinishedReceiver_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FinishedReceiver, receiver_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FinishedReceiver, sender_),
@@ -242,6 +263,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     InitializeFragments_descriptor_, &InitializeFragments::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    CustomMessage_descriptor_, &CustomMessage::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     PlanFragment_descriptor_, &PlanFragment::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Collector_descriptor_, &Collector::default_instance());
@@ -264,6 +287,8 @@ void protobuf_ShutdownFile_BitControl_2eproto() {
   delete FragmentStatus_reflection_;
   delete InitializeFragments::default_instance_;
   delete InitializeFragments_reflection_;
+  delete CustomMessage::default_instance_;
+  delete CustomMessage_reflection_;
   delete PlanFragment::default_instance_;
   delete PlanFragment_reflection_;
   delete Collector::default_instance_;
@@ -288,57 +313,61 @@ void protobuf_AddDesc_BitControl_2eproto() {
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\020BitControl.proto\022\020exec.bit.control\032\025Ex"
     "ecutionProtos.proto\032\022Coordination.proto\032"
-    "\023UserBitShared.proto\"\213\001\n\023BitControlHands"
+    "\023UserBitShared.proto\"\255\001\n\023BitControlHands"
     "hake\022\023\n\013rpc_version\030\001 \001(\005\0225\n\007channel\030\002 \001"
     "(\0162\027.exec.shared.RpcChannel:\013BIT_CONTROL"
     "\022(\n\010endpoint\030\003 \001(\0132\026.exec.DrillbitEndpoi"
-    "nt\"F\n\tBitStatus\0229\n\017fragment_status\030\001 \003(\013"
-    "2 .exec.bit.control.FragmentStatus\"n\n\016Fr"
-    "agmentStatus\0222\n\007profile\030\001 \001(\0132!.exec.sha"
-    "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013"
-    "2\030.exec.bit.FragmentHandle\"G\n\023Initialize"
-    "Fragments\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.c"
-    "ontrol.PlanFragment\"\374\003\n\014PlanFragment\022(\n\006"
-    "handle\030\001 \001(\0132\030.exec.bit.FragmentHandle\022\024"
-    "\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002\022\021"
-    "\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002\022\025"
-    "\n\rfragment_json\030\010 \001(\t\022\025\n\rleaf_fragment\030\t"
-    " \001(\010\022*\n\nassignment\030\n \001(\0132\026.exec.Drillbit"
-    "Endpoint\022\'\n\007foreman\030\013 \001(\0132\026.exec.Drillbi"
-    "tEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\01020000000"
-    "\022\033\n\007mem_max\030\r \001(\003:\n2000000000\0221\n\013credent"
-    "ials\030\016 \001(\0132\034.exec.shared.UserCredentials"
-    "\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001(\0132"
-    ").exec.bit.control.QueryContextInformati"
-    "on\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.control"
-    ".Collector\"\210\001\n\tCollector\022\"\n\032opposite_maj"
-    "or_fragment_id\030\001 \001(\005\022#\n\027incoming_minor_f"
-    "ragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_ord"
-    "er\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"c\n\027QueryCo"
-    "ntextInformation\022\030\n\020query_start_time\030\001 \001"
-    "(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schema_"
-    "name\030\003 \001(\t\"f\n\017WorkQueueStatus\022(\n\010endpoin"
-    "t\030\001 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014queue"
-    "_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001(\003\"h\n\020Fi"
-    "nishedReceiver\022*\n\010receiver\030\001 \001(\0132\030.exec."
-    "bit.FragmentHandle\022(\n\006sender\030\002 \001(\0132\030.exe"
-    "c.bit.FragmentHandle*\323\002\n\007RpcType\022\r\n\tHAND"
-    "SHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034\n\030REQ_INI"
-    "TIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANCEL_FRAGME"
-    "NT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007\022\027\n\023REQ_F"
-    "RAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STATUS\020\t\022\024\n\020"
-    "REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY_CANCEL\020\017"
-    "\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\030\n\024RESP_FRAGM"
-    "ENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023"
-    "\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS"
-    "\020\016B+\n\033org.apache.drill.exec.protoB\nBitCo"
-    "ntrolH\001", 1847);
+    "nt\022 \n\030authenticationMechanisms\030\004 \003(\t\"F\n\t"
+    "BitStatus\0229\n\017fragment_status\030\001 \003(\0132 .exe"
+    "c.bit.control.FragmentStatus\"n\n\016Fragment"
+    "Status\0222\n\007profile\030\001 \001(\0132!.exec.shared.Mi"
+    "norFragmentProfile\022(\n\006handle\030\002 \001(\0132\030.exe"
+    "c.bit.FragmentHandle\"G\n\023InitializeFragme"
+    "nts\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.control"
+    ".PlanFragment\".\n\rCustomMessage\022\014\n\004type\030\001"
+    " \001(\005\022\017\n\007message\030\002 \001(\014\"\374\003\n\014PlanFragment\022("
+    "\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentHandle"
+    "\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002"
+    "\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002"
+    "\022\025\n\rfragment_json\030\010 \001(\t\022\025\n\rleaf_fragment"
+    "\030\t \001(\010\022*\n\nassignment\030\n \001(\0132\026.exec.Drillb"
+    "itEndpoint\022\'\n\007foreman\030\013 \001(\0132\026.exec.Drill"
+    "bitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\010200000"
+    "00\022\033\n\007mem_max\030\r \001(\003:\n2000000000\0221\n\013crede"
+    "ntials\030\016 \001(\0132\034.exec.shared.UserCredentia"
+    "ls\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001("
+    "\0132).exec.bit.control.QueryContextInforma"
+    "tion\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.contr"
+    "ol.Collector\"\210\001\n\tCollector\022\"\n\032opposite_m"
+    "ajor_fragment_id\030\001 \001(\005\022#\n\027incoming_minor"
+    "_fragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_o"
+    "rder\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"w\n\027Query"
+    "ContextInformation\022\030\n\020query_start_time\030\001"
+    " \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schem"
+    "a_name\030\003 \001(\t\022\022\n\nsession_id\030\004 \001(\t\"f\n\017Work"
+    "QueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.Dri"
+    "llbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013r"
+    "eport_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010"
+    "receiver\030\001 \001(\0132\030.exec.bit.FragmentHandle"
+    "\022(\n\006sender\030\002 \001(\0132\030.exec.bit.FragmentHand"
+    "le*\206\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013"
+    "\n\007GOODBYE\020\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020"
+    "\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIV"
+    "ER_FINISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022"
+    "\n\016REQ_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n"
+    "\022\024\n\020REQ_QUERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FR"
+    "AGMENT\020\020\022\016\n\nREQ_CUSTOM\020\021\022\030\n\024RESP_FRAGMEN"
+    "T_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017"
+    "RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016"
+    "\022\017\n\013RESP_CUSTOM\020\022\022\020\n\014SASL_MESSAGE\020\023B+\n\033o"
+    "rg.apache.drill.exec.protoB\nBitControlH\001", 2000);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   BitControlHandshake::default_instance_ = new BitControlHandshake();
   BitStatus::default_instance_ = new BitStatus();
   FragmentStatus::default_instance_ = new FragmentStatus();
   InitializeFragments::default_instance_ = new InitializeFragments();
+  CustomMessage::default_instance_ = new CustomMessage();
   PlanFragment::default_instance_ = new PlanFragment();
   Collector::default_instance_ = new Collector();
   QueryContextInformation::default_instance_ = new QueryContextInformation();
@@ -348,6 +377,7 @@ void protobuf_AddDesc_BitControl_2eproto() {
   BitStatus::default_instance_->InitAsDefaultInstance();
   FragmentStatus::default_instance_->InitAsDefaultInstance();
   InitializeFragments::default_instance_->InitAsDefaultInstance();
+  CustomMessage::default_instance_->InitAsDefaultInstance();
   PlanFragment::default_instance_->InitAsDefaultInstance();
   Collector::default_instance_->InitAsDefaultInstance();
   QueryContextInformation::default_instance_->InitAsDefaultInstance();
@@ -383,6 +413,9 @@ bool RpcType_IsValid(int value) {
     case 14:
     case 15:
     case 16:
+    case 17:
+    case 18:
+    case 19:
       return true;
     default:
       return false;
@@ -396,6 +429,7 @@ bool RpcType_IsValid(int value) {
 const int BitControlHandshake::kRpcVersionFieldNumber;
 const int BitControlHandshake::kChannelFieldNumber;
 const int BitControlHandshake::kEndpointFieldNumber;
+const int BitControlHandshake::kAuthenticationMechanismsFieldNumber;
 #endif  // !_MSC_VER
 
 BitControlHandshake::BitControlHandshake()
@@ -460,6 +494,7 @@ void BitControlHandshake::Clear() {
       if (endpoint_ != NULL) endpoint_->::exec::DrillbitEndpoint::Clear();
     }
   }
+  authenticationmechanisms_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -516,6 +551,25 @@ bool BitControlHandshake::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(34)) goto parse_authenticationMechanisms;
+        break;
+      }
+
+      // repeated string authenticationMechanisms = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_authenticationMechanisms:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_authenticationmechanisms()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->authenticationmechanisms(this->authenticationmechanisms_size() - 1).data(),
+            this->authenticationmechanisms(this->authenticationmechanisms_size() - 1).length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(34)) goto parse_authenticationMechanisms;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -555,6 +609,15 @@ void BitControlHandshake::SerializeWithCachedSizes(
       3, this->endpoint(), output);
   }
 
+  // repeated string authenticationMechanisms = 4;
+  for (int i = 0; i < this->authenticationmechanisms_size(); i++) {
+  ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+    this->authenticationmechanisms(i).data(), this->authenticationmechanisms(i).length(),
+    ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      4, this->authenticationmechanisms(i), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -579,6 +642,15 @@ void BitControlHandshake::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         3, this->endpoint(), target);
+  }
+
+  // repeated string authenticationMechanisms = 4;
+  for (int i = 0; i < this->authenticationmechanisms_size(); i++) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->authenticationmechanisms(i).data(), this->authenticationmechanisms(i).length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteStringToArray(4, this->authenticationmechanisms(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -613,6 +685,13 @@ int BitControlHandshake::ByteSize() const {
     }
 
   }
+  // repeated string authenticationMechanisms = 4;
+  total_size += 1 * this->authenticationmechanisms_size();
+  for (int i = 0; i < this->authenticationmechanisms_size(); i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->authenticationmechanisms(i));
+  }
+
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -638,6 +717,7 @@ void BitControlHandshake::MergeFrom(const ::google::protobuf::Message& from) {
 
 void BitControlHandshake::MergeFrom(const BitControlHandshake& from) {
   GOOGLE_CHECK_NE(&from, this);
+  authenticationmechanisms_.MergeFrom(from.authenticationmechanisms_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_rpc_version()) {
       set_rpc_version(from.rpc_version());
@@ -674,6 +754,7 @@ void BitControlHandshake::Swap(BitControlHandshake* other) {
     std::swap(rpc_version_, other->rpc_version_);
     std::swap(channel_, other->channel_);
     std::swap(endpoint_, other->endpoint_);
+    authenticationmechanisms_.Swap(&other->authenticationmechanisms_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -1349,6 +1430,262 @@ void InitializeFragments::Swap(InitializeFragments* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = InitializeFragments_descriptor_;
   metadata.reflection = InitializeFragments_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int CustomMessage::kTypeFieldNumber;
+const int CustomMessage::kMessageFieldNumber;
+#endif  // !_MSC_VER
+
+CustomMessage::CustomMessage()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void CustomMessage::InitAsDefaultInstance() {
+}
+
+CustomMessage::CustomMessage(const CustomMessage& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void CustomMessage::SharedCtor() {
+  _cached_size_ = 0;
+  type_ = 0;
+  message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+CustomMessage::~CustomMessage() {
+  SharedDtor();
+}
+
+void CustomMessage::SharedDtor() {
+  if (message_ != &::google::protobuf::internal::kEmptyString) {
+    delete message_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void CustomMessage::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* CustomMessage::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return CustomMessage_descriptor_;
+}
+
+const CustomMessage& CustomMessage::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_BitControl_2eproto();
+  return *default_instance_;
+}
+
+CustomMessage* CustomMessage::default_instance_ = NULL;
+
+CustomMessage* CustomMessage::New() const {
+  return new CustomMessage;
+}
+
+void CustomMessage::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    type_ = 0;
+    if (has_message()) {
+      if (message_ != &::google::protobuf::internal::kEmptyString) {
+        message_->clear();
+      }
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool CustomMessage::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 type = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &type_)));
+          set_has_type();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_message;
+        break;
+      }
+
+      // optional bytes message = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_message:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_message()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void CustomMessage::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional int32 type = 1;
+  if (has_type()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->type(), output);
+  }
+
+  // optional bytes message = 2;
+  if (has_message()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      2, this->message(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* CustomMessage::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // optional int32 type = 1;
+  if (has_type()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->type(), target);
+  }
+
+  // optional bytes message = 2;
+  if (has_message()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        2, this->message(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int CustomMessage::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional int32 type = 1;
+    if (has_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->type());
+    }
+
+    // optional bytes message = 2;
+    if (has_message()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->message());
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void CustomMessage::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const CustomMessage* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const CustomMessage*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void CustomMessage::MergeFrom(const CustomMessage& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_type()) {
+      set_type(from.type());
+    }
+    if (from.has_message()) {
+      set_message(from.message());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void CustomMessage::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void CustomMessage::CopyFrom(const CustomMessage& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool CustomMessage::IsInitialized() const {
+
+  return true;
+}
+
+void CustomMessage::Swap(CustomMessage* other) {
+  if (other != this) {
+    std::swap(type_, other->type_);
+    std::swap(message_, other->message_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata CustomMessage::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = CustomMessage_descriptor_;
+  metadata.reflection = CustomMessage_reflection_;
   return metadata;
 }
 
@@ -2532,6 +2869,7 @@ void Collector::Swap(Collector* other) {
 const int QueryContextInformation::kQueryStartTimeFieldNumber;
 const int QueryContextInformation::kTimeZoneFieldNumber;
 const int QueryContextInformation::kDefaultSchemaNameFieldNumber;
+const int QueryContextInformation::kSessionIdFieldNumber;
 #endif  // !_MSC_VER
 
 QueryContextInformation::QueryContextInformation()
@@ -2553,6 +2891,7 @@ void QueryContextInformation::SharedCtor() {
   query_start_time_ = GOOGLE_LONGLONG(0);
   time_zone_ = 0;
   default_schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  session_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -2563,6 +2902,9 @@ QueryContextInformation::~QueryContextInformation() {
 void QueryContextInformation::SharedDtor() {
   if (default_schema_name_ != &::google::protobuf::internal::kEmptyString) {
     delete default_schema_name_;
+  }
+  if (session_id_ != &::google::protobuf::internal::kEmptyString) {
+    delete session_id_;
   }
   if (this != default_instance_) {
   }
@@ -2596,6 +2938,11 @@ void QueryContextInformation::Clear() {
     if (has_default_schema_name()) {
       if (default_schema_name_ != &::google::protobuf::internal::kEmptyString) {
         default_schema_name_->clear();
+      }
+    }
+    if (has_session_id()) {
+      if (session_id_ != &::google::protobuf::internal::kEmptyString) {
+        session_id_->clear();
       }
     }
   }
@@ -2653,6 +3000,23 @@ bool QueryContextInformation::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(34)) goto parse_session_id;
+        break;
+      }
+
+      // optional string session_id = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_session_id:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_session_id()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->session_id().data(), this->session_id().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -2694,6 +3058,15 @@ void QueryContextInformation::SerializeWithCachedSizes(
       3, this->default_schema_name(), output);
   }
 
+  // optional string session_id = 4;
+  if (has_session_id()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->session_id().data(), this->session_id().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      4, this->session_id(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -2720,6 +3093,16 @@ void QueryContextInformation::SerializeWithCachedSizes(
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
         3, this->default_schema_name(), target);
+  }
+
+  // optional string session_id = 4;
+  if (has_session_id()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->session_id().data(), this->session_id().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        4, this->session_id(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -2752,6 +3135,13 @@ int QueryContextInformation::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->default_schema_name());
+    }
+
+    // optional string session_id = 4;
+    if (has_session_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->session_id());
     }
 
   }
@@ -2790,6 +3180,9 @@ void QueryContextInformation::MergeFrom(const QueryContextInformation& from) {
     if (from.has_default_schema_name()) {
       set_default_schema_name(from.default_schema_name());
     }
+    if (from.has_session_id()) {
+      set_session_id(from.session_id());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -2816,6 +3209,7 @@ void QueryContextInformation::Swap(QueryContextInformation* other) {
     std::swap(query_start_time_, other->query_start_time_);
     std::swap(time_zone_, other->time_zone_);
     std::swap(default_schema_name_, other->default_schema_name_);
+    std::swap(session_id_, other->session_id_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

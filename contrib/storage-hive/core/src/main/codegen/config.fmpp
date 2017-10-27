@@ -16,6 +16,7 @@
 
 data: {
     drillOI:tdd(../data/HiveTypes.tdd)
+    hiveFormat:tdd(../data/HiveFormats.tdd)
 }
 freemarkerLinks: {
     includes: includes/

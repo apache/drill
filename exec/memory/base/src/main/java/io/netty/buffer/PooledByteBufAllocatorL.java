@@ -40,7 +40,7 @@ public class PooledByteBufAllocatorL {
   private static final int MEMORY_LOGGER_FREQUENCY_SECONDS = 60;
 
 
-  private static final String METRIC_PREFIX = "drill.allocator.";
+  public static final String METRIC_PREFIX = "drill.allocator.";
 
   private final MetricRegistry registry;
   private final AtomicLong hugeBufferSize = new AtomicLong(0);
@@ -48,7 +48,7 @@ public class PooledByteBufAllocatorL {
   private final AtomicLong normalBufferSize = new AtomicLong(0);
   private final AtomicLong normalBufferCount = new AtomicLong(0);
 
-  public final InnerAllocator allocator;
+  private final InnerAllocator allocator;
   public final UnsafeDirectLittleEndian empty;
 
   public PooledByteBufAllocatorL(MetricRegistry registry) {
@@ -59,7 +59,7 @@ public class PooledByteBufAllocatorL {
 
   public UnsafeDirectLittleEndian allocate(int size) {
     try {
-      return allocator.directBuffer(size, size);
+      return allocator.directBuffer(size, Integer.MAX_VALUE);
     } catch (OutOfMemoryError e) {
       throw new OutOfMemoryException("Failure allocating buffer.", e);
     }
@@ -145,7 +145,7 @@ public class PooledByteBufAllocatorL {
     }
 
     private UnsafeDirectLittleEndian newDirectBufferL(int initialCapacity, int maxCapacity) {
-      PoolThreadCache cache = threadCache.get();
+      PoolThreadCache cache = threadCache();
       PoolArena<ByteBuffer> directArena = cache.directArena;
 
       if (directArena != null) {

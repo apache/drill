@@ -47,7 +47,6 @@ class RepeatedVarCharOutput extends TextOutput {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RepeatedVarCharOutput.class);
 
   static final String COL_NAME = "columns";
-  static final FieldReference REF = new FieldReference(COL_NAME);
   static final SchemaPath COLUMNS = SchemaPath.getSimplePath("columns");
   public static final int MAXIMUM_NUMBER_COLUMNS = 64 * 1024;
 
@@ -122,7 +121,7 @@ class RepeatedVarCharOutput extends TextOutput {
   public RepeatedVarCharOutput(OutputMutator outputMutator, Collection<SchemaPath> columns, boolean isStarQuery) throws SchemaChangeException {
     super();
 
-    MaterializedField field = MaterializedField.create(REF, Types.repeated(TypeProtos.MinorType.VARCHAR));
+    MaterializedField field = MaterializedField.create(COL_NAME, Types.repeated(TypeProtos.MinorType.VARCHAR));
     this.vector = outputMutator.addField(field, RepeatedVarCharVector.class);
 
     this.mutator = vector.getMutator();
@@ -173,6 +172,7 @@ class RepeatedVarCharOutput extends TextOutput {
    * Start a new record batch. Resets all the offsets and pointers that
    * store buffer addresses
    */
+  @Override
   public void startBatch() {
     this.recordStart = characterDataOriginal;
     this.fieldOpen = false;
@@ -186,6 +186,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadRepeatedOffsetAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getOffsetVector().getBuffer();
     checkBuf(buf);
     this.repeatedOffset = buf.memoryAddress() + 4;
@@ -194,6 +195,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharDataAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getDataVector().getBuffer();
     checkBuf(buf);
     this.characterData = buf.memoryAddress();
@@ -202,6 +204,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharOffsetAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getDataVector().getOffsetVector().getBuffer();
     checkBuf(buf);
     this.charLengthOffset = buf.memoryAddress() + 4;
@@ -342,9 +345,6 @@ class RepeatedVarCharOutput extends TextOutput {
     return out;
   }
 
-  // Sets the record count in this batch within the value vector
   @Override
-  public void finishBatch() {
-    mutator.setValueCount(batchIndex);
-  }
+  public void finishBatch() { }
 }

@@ -66,7 +66,7 @@ public class TestDrillFileSystem {
     DrillFileSystem dfs = null;
     InputStream is = null;
     Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
     OpProfileDef profileDef = new OpProfileDef(0 /*operatorId*/, 0 /*operatorType*/, 0 /*inputCount*/);
     OperatorStats stats = new OperatorStats(profileDef, null /*allocator*/);
 

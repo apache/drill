@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -59,7 +59,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.popConfig = popConfig;
     this.oContext = oContext;
     stats = oContext.getStats();
-    container = new VectorContainer(this.oContext);
+    container = new VectorContainer(this.oContext.getAllocator());
     if (buildSchema) {
       state = BatchState.BUILD_SCHEMA;
     } else {
@@ -117,16 +117,18 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
         return IterOutcome.STOP;
       }
       next = b.next();
-    }finally{
+    } finally {
       stats.startProcessing();
     }
 
-    switch(next){
+    switch(next) {
     case OK_NEW_SCHEMA:
       stats.batchReceived(inputIndex, b.getRecordCount(), true);
       break;
     case OK:
       stats.batchReceived(inputIndex, b.getRecordCount(), false);
+      break;
+    default:
       break;
     }
 

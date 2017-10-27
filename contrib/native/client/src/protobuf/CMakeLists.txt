@@ -82,9 +82,9 @@ set(ProtoIncludesDir ${PROTO_INC_DIR} PARENT_SCOPE)
 
 #Preprocess to fix protobuf .proto definitions
 SET (SRCDIR ${PROJECT_SOURCE_DIR}/../../../protocol/src/main/protobuf )
-SET (TARGDIR ${PROJECT_SOURCE_DIR}/build/protobuf)
+SET (TARGDIR ${CMAKE_BINARY_DIR}/protobuf)
 SET (FNAME Types.proto)
-SET (CPPSRCDIR ${PROJECT_SOURCE_DIR}/build/src/protobuf)
+SET (CPPSRCDIR ${CMAKE_BINARY_DIR}/src/protobuf)
 SET (CPPDESTDIR ${PROJECT_SOURCE_DIR}/src/protobuf)
 SET (CPPINCDIR ${PROJECT_SOURCE_DIR}/src/include/drill/protobuf)
 
@@ -92,7 +92,7 @@ add_custom_target(fixProtobufs
     COMMAND ${PROJECT_SOURCE_DIR}/scripts/fixProtodefs.sh ${SRCDIR} ${TARGDIR} ${FNAME}
     )
 
-add_custom_target(genProtobufs DEPENDS ${GenProtoSources})
+add_custom_target(genProtobufs DEPENDS ${GenProtoSources} fixProtobufs)
 
 # copy protobuf CPP files to destinations in the source tree
 add_custom_target(cpProtobufs

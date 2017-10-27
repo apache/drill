@@ -36,14 +36,33 @@ public class Project extends AbstractSingle{
 
   private final List<NamedExpression> exprs;
 
+  /**
+   * {@link org.apache.drill.exec.planner.physical.ProjectPrel for the meaning of flag 'outputProj'}
+   */
+  private boolean outputProj = false;
+
   @JsonCreator
-  public Project(@JsonProperty("exprs") List<NamedExpression> exprs, @JsonProperty("child") PhysicalOperator child) {
+  public Project(@JsonProperty("exprs") List<NamedExpression> exprs, @JsonProperty("child") PhysicalOperator child, @JsonProperty("outputProj") boolean outputProj) {
+    super(child);
+    this.exprs = exprs;
+    this.outputProj = outputProj;
+  }
+
+  public Project(List<NamedExpression> exprs, PhysicalOperator child) {
     super(child);
     this.exprs = exprs;
   }
 
   public List<NamedExpression> getExprs() {
     return exprs;
+  }
+
+  /**
+   * @Return true if Project is for the query's final output. Such Project is added by TopProjectVisitor,
+   * to handle fast NONE when all the inputs to the query are empty and are skipped.
+   */
+  public boolean isOutputProj() {
+    return outputProj;
   }
 
   @Override
@@ -53,7 +72,7 @@ public class Project extends AbstractSingle{
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new Project(exprs, child);
+    return new Project(exprs, child, outputProj);
   }
 
   @Override

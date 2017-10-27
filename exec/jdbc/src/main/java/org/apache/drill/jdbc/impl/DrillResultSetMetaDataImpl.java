@@ -19,14 +19,12 @@
 package org.apache.drill.jdbc.impl;
 
 import java.sql.SQLException;
-import java.util.List;
 
+import org.apache.calcite.avatica.AvaticaResultSetMetaData;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.InvalidParameterSqlException;
-
-import net.hydromatic.avatica.AvaticaResultSetMetaData;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.ColumnMetaData;
 
 
 public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
@@ -36,8 +34,8 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
 
   public DrillResultSetMetaDataImpl(AvaticaStatement statement,
                                     Object query,
-                                    List<ColumnMetaData> columnMetaDataList) {
-    super(statement, query, columnMetaDataList);
+                                    Meta.Signature signature) {
+    super(statement, query, signature);
     this.statement = statement;
   }
 
@@ -51,7 +49,8 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
                                       SQLException {
     // Statement.isClosed() call is to avoid exception from getResultSet().
     if (statement.isClosed()
-        || statement.getResultSet().isClosed()) {
+        || (statement.getResultSet() != null // result set doesn't exist for prepared statement cases
+            && statement.getResultSet().isClosed())) {
         throw new AlreadyClosedSqlException(
             "ResultSetMetaData's ResultSet is already closed." );
     }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hbase;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -29,15 +30,18 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.ClusterStatus;
-import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.RegionLoad;
 import org.apache.hadoop.hbase.ServerLoad;
 import org.apache.hadoop.hbase.ServerName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
@@ -64,14 +68,16 @@ public class TableStatsCalculator {
   /**
    * Computes size of each region for table.
    *
-   * @param table
+   * @param conn
    * @param hbaseScanSpec
    * @param config
    * @throws IOException
    */
-  public TableStatsCalculator(HTable table, HBaseScanSpec hbaseScanSpec, DrillConfig config, HBaseStoragePluginConfig storageConfig) throws IOException {
-    HBaseAdmin admin = new HBaseAdmin(table.getConfiguration());
-    try {
+  public TableStatsCalculator(Connection conn, HBaseScanSpec hbaseScanSpec, DrillConfig config, HBaseStoragePluginConfig storageConfig) throws IOException {
+    TableName tableName = TableName.valueOf(hbaseScanSpec.getTableName());
+    try (Admin admin = conn.getAdmin();
+         Table table = conn.getTable(tableName);
+         RegionLocator locator = conn.getRegionLocator(tableName)) {
       int rowsToSample = rowsToSample(config);
       if (rowsToSample > 0) {
         Scan scan = new Scan(hbaseScanSpec.getStartRow(), hbaseScanSpec.getStopRow());
@@ -89,7 +95,7 @@ public class TableStatsCalculator {
           Cell[] cells = row.rawCells();
           if (cells != null) {
             for (Cell cell : cells) {
-              rowSizeSum += CellUtil.estimatedSizeOf(cell);
+              rowSizeSum += CellUtil.estimatedSerializedSizeOf(cell);
             }
           }
         }
@@ -105,13 +111,13 @@ public class TableStatsCalculator {
         return;
       }
 
-      logger.info("Calculating region sizes for table \"" + new String(table.getTableName()) + "\".");
+      logger.info("Calculating region sizes for table '{}'.", tableName.getNameAsString());
 
       //get regions for table
-      Set<HRegionInfo> tableRegionInfos = table.getRegionLocations().keySet();
+      List<HRegionLocation> tableRegionInfos = locator.getAllRegionLocations();
       Set<byte[]> tableRegions = new TreeSet<byte[]>(Bytes.BYTES_COMPARATOR);
-      for (HRegionInfo regionInfo : tableRegionInfos) {
-        tableRegions.add(regionInfo.getRegionName());
+      for (HRegionLocation regionInfo : tableRegionInfos) {
+        tableRegions.add(regionInfo.getRegionInfo().getRegionName());
       }
 
       ClusterStatus clusterStatus = null;
@@ -145,8 +151,6 @@ public class TableStatsCalculator {
         }
       }
       logger.debug("Region sizes calculated");
-    } finally {
-      admin.close();
     }
 
   }

@@ -9,7 +9,7 @@
           writable: false
         },
         "tmp" : {
-          location: "/tmp/drilltest",
+          location: "/tmp",
           writable: true
         }
       },
@@ -39,6 +39,10 @@
         },
         "json" : {
           type: "json"
+        },
+        "httpd" : {
+          type: "httpd",
+          logFormat: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
         },
         "txt" : {
           type : "text",

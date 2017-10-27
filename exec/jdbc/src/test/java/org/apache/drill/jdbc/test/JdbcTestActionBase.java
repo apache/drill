@@ -71,7 +71,7 @@ public class JdbcTestActionBase extends JdbcTestBase {
 
   protected void testAction(JdbcAction action, long rowcount) throws Exception {
     int rows = 0;
-    Stopwatch watch = new Stopwatch().start();
+    Stopwatch watch = Stopwatch.createStarted();
     ResultSet r = action.getResult(connection);
     boolean first = true;
     while (r.next()) {

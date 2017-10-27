@@ -33,11 +33,14 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category(SlowTest.class)
 public class TestDecimal extends PopUnitTestBase{
     DrillConfig c = DrillConfig.create();
 

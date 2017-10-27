@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,6 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
 
@@ -48,7 +47,7 @@ public class MergeJoinPrel  extends JoinPrel {
   public MergeJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
-    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
+    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
 
@@ -62,19 +61,19 @@ public class MergeJoinPrel  extends JoinPrel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     if (joincategory == JoinCategory.CARTESIAN || joincategory == JoinCategory.INEQUALITY) {
-      return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+      return planner.getCostFactory().makeInfiniteCost();
     }
-    double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
-    double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
+    double leftRowCount = mq.getRowCount(this.getLeft());
+    double rightRowCount = mq.getRowCount(this.getRight());
     // cost of evaluating each leftkey=rightkey join condition
     double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
     double cpuCost = joinConditionCost * (leftRowCount + rightRowCount);
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
     return costFactory.makeCost(leftRowCount + rightRowCount, cpuCost, 0, 0);
   }
 

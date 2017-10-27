@@ -42,7 +42,7 @@ public class OrderTest {
   public void test_Ordering_roundTripAscAndNullsFirst() {
     Ordering src = new Ordering( Direction.ASCENDING, null, NullDirection.FIRST);
     Ordering reconstituted =
-        new Ordering( (LogicalExpression) null, src.getOrder(), src.getNullDirection().toString() );
+        new Ordering( src.getDirection(), (LogicalExpression) null, src.getNullDirection() );
     assertThat( reconstituted.getDirection(), equalTo( RelFieldCollation.Direction.ASCENDING  ) );
     assertThat( reconstituted.getNullDirection(), equalTo( NullDirection.FIRST  ) );
   }
@@ -51,7 +51,7 @@ public class OrderTest {
   public void test_Ordering_roundTripDescAndNullsLast() {
     Ordering src = new Ordering( Direction.DESCENDING, null, NullDirection.LAST);
     Ordering reconstituted =
-        new Ordering( (LogicalExpression) null, src.getOrder(), src.getNullDirection().toString() );
+        new Ordering( src.getDirection(), (LogicalExpression) null, src.getNullDirection() );
     assertThat( reconstituted.getDirection(), equalTo( RelFieldCollation.Direction.DESCENDING  ) );
     assertThat( reconstituted.getNullDirection(), equalTo( NullDirection.LAST  ) );
   }
@@ -60,22 +60,20 @@ public class OrderTest {
   public void test_Ordering_roundTripDescAndNullsUnspecified() {
     Ordering src = new Ordering( Direction.DESCENDING, null, NullDirection.UNSPECIFIED);
     Ordering reconstituted =
-        new Ordering( (LogicalExpression) null, src.getOrder(), src.getNullDirection().toString() );
+        new Ordering( src.getDirection(), (LogicalExpression) null, src.getNullDirection() );
     assertThat( reconstituted.getDirection(), equalTo( RelFieldCollation.Direction.DESCENDING  ) );
     assertThat( reconstituted.getNullDirection(), equalTo( NullDirection.UNSPECIFIED  ) );
   }
 
-
   // Basic input validation:
-
   @Test( expected = DrillRuntimeException.class )  // (Currently.)
   public void test_Ordering_garbageOrderRejected() {
-    new Ordering( (LogicalExpression) null, "AS CE ND IN G", (String) null );
+    new Ordering( "AS CE ND IN G", null, null );
   }
 
   @Test( expected = DrillRuntimeException.class )  // (Currently.)
   public void test_Ordering_garbageNullOrderingRejected() {
-    new Ordering( (LogicalExpression) null, (String) null, "HIGH" );
+    new Ordering( null, null, "HIGH" );
   }
 
 
@@ -83,7 +81,7 @@ public class OrderTest {
 
   @Test
   public void testOrdering_nullStrings() {
-    Ordering ordering = new Ordering( (LogicalExpression) null, null, null );
+    Ordering ordering = new Ordering( (String) null, (LogicalExpression) null, null );
     assertThat( ordering.getDirection(), equalTo( RelFieldCollation.Direction.ASCENDING ) );
     assertThat( ordering.getNullDirection(), equalTo( RelFieldCollation.NullDirection.UNSPECIFIED ) );
     assertThat( ordering.getOrder(), equalTo( "ASC" ) );

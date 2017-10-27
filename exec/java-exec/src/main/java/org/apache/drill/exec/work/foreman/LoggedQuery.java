@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import java.net.SocketAddress;
 import java.util.Date;
 
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -33,9 +34,11 @@ public class LoggedQuery {
   private final Date finish;
   private final QueryState outcome;
   private final String username;
+  private final SocketAddress remoteAddress;
+
 
   public LoggedQuery(String queryId, String schema, String queryText, Date start, Date finish, QueryState outcome,
-      String username) {
+      String username, SocketAddress remoteAddress) {
     super();
     this.queryId = queryId;
     this.schema = schema;
@@ -44,6 +47,7 @@ public class LoggedQuery {
     this.finish = finish;
     this.outcome = outcome;
     this.username = username;
+    this.remoteAddress = remoteAddress;
   }
 
   @JsonProperty("id")
@@ -75,6 +79,10 @@ public class LoggedQuery {
   @JsonProperty("user")
   public String getUsername() {
     return username;
+  }
+
+  public String getRemoteAddress() {
+    return remoteAddress.toString().replace("/","");
   }
 
 }

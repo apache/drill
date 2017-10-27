@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,11 +21,11 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -48,6 +48,7 @@ public class EasyWriter extends AbstractWriter {
       @JsonProperty("child") PhysicalOperator child,
       @JsonProperty("location") String location,
       @JsonProperty("partitionColumns") List<String> partitionColumns,
+      @JsonProperty("storageStrategy") StorageStrategy storageStrategy,
       @JsonProperty("storage") StoragePluginConfig storageConfig,
       @JsonProperty("format") FormatPluginConfig formatConfig,
       @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
@@ -57,6 +58,7 @@ public class EasyWriter extends AbstractWriter {
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
     this.partitionColumns = partitionColumns;
+    setStorageStrategy(storageStrategy);
   }
 
   public EasyWriter(PhysicalOperator child,
@@ -92,7 +94,9 @@ public class EasyWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new EasyWriter(child, location, partitionColumns, formatPlugin);
+    EasyWriter writer = new EasyWriter(child, location, partitionColumns, formatPlugin);
+    writer.setStorageStrategy(getStorageStrategy());
+    return writer;
   }
 
   @Override

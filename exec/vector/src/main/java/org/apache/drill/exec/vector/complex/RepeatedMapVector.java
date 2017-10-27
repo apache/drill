@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,11 +22,9 @@ import io.netty.buffer.DrillBuf;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -36,10 +34,10 @@ import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.AddOrGetResult;
@@ -47,11 +45,11 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractMapVector
@@ -90,7 +88,7 @@ public class RepeatedMapVector extends AbstractMapVector
   @Override
   public void setInitialCapacity(int numRecords) {
     offsets.setInitialCapacity(numRecords + 1);
-    for(final ValueVector v : (Iterable<ValueVector>) this) {
+    for (final ValueVector v : this) {
       v.setInitialCapacity(numRecords * RepeatedValueVector.DEFAULT_REPEAT_PER_RECORD);
     }
   }
@@ -104,7 +102,7 @@ public class RepeatedMapVector extends AbstractMapVector
   public void allocateNew(int groupCount, int innerValueCount) {
     clear();
     try {
-      offsets.allocateNew(groupCount + 1);
+      allocateOffsetsNew(groupCount);
       for (ValueVector v : getChildren()) {
         AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, innerValueCount);
       }
@@ -112,8 +110,12 @@ public class RepeatedMapVector extends AbstractMapVector
       clear();
       throw e;
     }
-    offsets.zeroVector();
     mutator.reset();
+  }
+
+  public void allocateOffsetsNew(int groupCount) {
+    offsets.allocateNew(groupCount + 1);
+    offsets.zeroVector();
   }
 
   public Iterator<String> fieldNameIterator() {
@@ -132,11 +134,7 @@ public class RepeatedMapVector extends AbstractMapVector
     if (getAccessor().getValueCount() == 0) {
       return 0;
     }
-    long bufferSize = offsets.getBufferSize();
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
-      bufferSize += v.getBufferSize();
-    }
-    return (int) bufferSize;
+    return offsets.getBufferSize() + super.getBufferSize();
   }
 
   @Override
@@ -145,7 +143,7 @@ public class RepeatedMapVector extends AbstractMapVector
       return 0;
     }
 
-    long bufferSize = 0;
+    long bufferSize = offsets.getBufferSizeFor(valueCount);
     for (final ValueVector v : (Iterable<ValueVector>) this) {
       bufferSize += v.getBufferSizeFor(valueCount);
     }
@@ -161,7 +159,7 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
-    return new RepeatedMapTransferPair(this, getField().getPath(), allocator);
+    return new RepeatedMapTransferPair(this, getField().getName(), allocator);
   }
 
   @Override
@@ -204,32 +202,12 @@ public class RepeatedMapVector extends AbstractMapVector
     }
   }
 
-  @Override
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg != null && seg.isArray() && !seg.isLastPath()) {
-      if (addToBreadCrumb) {
-        addToBreadCrumb = false;
-        builder.remainder(seg);
-      }
-      // skip the first array segment as there is no corresponding child vector.
-      seg = seg.getChild();
-
-      // multi-level numbered access to a repeated map is not possible so return if the next part is also an array
-      // segment.
-      if (seg.isArray()) {
-        return null;
-      }
-    }
-
-    return super.getFieldIdIfMatches(builder, addToBreadCrumb, seg);
-  }
-
-  public TransferPair getTransferPairToSingleMap(FieldReference reference, BufferAllocator allocator) {
+  public TransferPair getTransferPairToSingleMap(String reference, BufferAllocator allocator) {
     return new SingleMapTransferPair(this, reference, allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new RepeatedMapTransferPair(this, ref, allocator);
   }
 
@@ -261,8 +239,8 @@ public class RepeatedMapVector extends AbstractMapVector
     private final MapVector to;
     private static final MajorType MAP_TYPE = Types.required(MinorType.MAP);
 
-    public SingleMapTransferPair(RepeatedMapVector from, SchemaPath path, BufferAllocator allocator) {
-      this(from, new MapVector(MaterializedField.create(path, MAP_TYPE), allocator, from.callBack), false);
+    public SingleMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
+      this(from, new MapVector(MaterializedField.create(path, MAP_TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
     public SingleMapTransferPair(RepeatedMapVector from, MapVector to) {
@@ -326,8 +304,8 @@ public class RepeatedMapVector extends AbstractMapVector
     private final RepeatedMapVector to;
     private final RepeatedMapVector from;
 
-    public RepeatedMapTransferPair(RepeatedMapVector from, SchemaPath path, BufferAllocator allocator) {
-      this(from, new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
+    public RepeatedMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
+      this(from, new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
     public RepeatedMapTransferPair(RepeatedMapVector from, RepeatedMapVector to) {
@@ -414,7 +392,6 @@ public class RepeatedMapVector extends AbstractMapVector
     }
   }
 
-
   transient private RepeatedMapTransferPair ephPair;
 
   public void copyFromSafe(int fromIndex, int thisIndex, RepeatedMapVector from) {
@@ -422,6 +399,11 @@ public class RepeatedMapVector extends AbstractMapVector
       ephPair = (RepeatedMapTransferPair) from.makeTransferPair(this);
     }
     ephPair.copyValueSafe(fromIndex, thisIndex);
+  }
+
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (RepeatedMapVector) from);
   }
 
   @Override
@@ -435,14 +417,19 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
-  public DrillBuf[] getBuffers(boolean clear) {
-    final int expectedBufferSize = getBufferSize();
-    final int actualBufferSize = super.getBufferSize();
-
-    Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
-    return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
+  public void exchange(ValueVector other) {
+    // Exchange is used for look-ahead writers, but writers manage
+    // map member vectors directly.
+    throw new UnsupportedOperationException("Exchange() not supported for maps");
   }
 
+  @Override
+  public DrillBuf[] getBuffers(boolean clear) {
+    //final int expectedBufferSize = getBufferSize();
+    //final int actualBufferSize = super.getBufferSize();
+    //Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
+    return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
+  }
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
@@ -455,18 +442,18 @@ public class RepeatedMapVector extends AbstractMapVector
     for (int i = 1; i < children.size(); i++) {
       final SerializedField child = children.get(i);
       final MaterializedField fieldDef = MaterializedField.create(child);
-      ValueVector vector = getChild(fieldDef.getLastName());
+      ValueVector vector = getChild(fieldDef.getName());
       if (vector == null) {
         // if we arrive here, we didn't have a matching vector.
         vector = BasicTypeHelper.getNewVector(fieldDef, allocator);
-        putChild(fieldDef.getLastName(), vector);
+        putChild(fieldDef.getName(), vector);
       }
       final int vectorLength = child.getBufferLength();
       vector.load(child, buffer.slice(bufOffset, vectorLength));
       bufOffset += vectorLength;
     }
 
-    assert bufOffset == buffer.capacity();
+    assert bufOffset == buffer.writerIndex();
   }
 
 
@@ -499,7 +486,7 @@ public class RepeatedMapVector extends AbstractMapVector
         final Map<String, Object> vv = Maps.newLinkedHashMap();
         for (final MaterializedField field : getField().getChildren()) {
           if (!field.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
-            fieldName = field.getLastName();
+            fieldName = field.getName();
             final Object value = getChild(fieldName).getAccessor().getObject(i);
             if (value != null) {
               vv.put(fieldName, value);
@@ -597,6 +584,9 @@ public class RepeatedMapVector extends AbstractMapVector
       offsets.getMutator().setSafe(index + 1, prevEnd + 1);
       return prevEnd;
     }
+
+    @Override
+    public void exchange(ValueVector.Mutator other) { }
   }
 
   @Override
@@ -607,5 +597,16 @@ public class RepeatedMapVector extends AbstractMapVector
     for(final ValueVector vector : getChildren()) {
       vector.clear();
     }
+  }
+
+  @Override
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    super.collectLedgers(ledgers);
+    offsets.collectLedgers(ledgers);
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
   }
 }

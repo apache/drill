@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,8 +26,6 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -40,6 +38,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
@@ -60,7 +59,7 @@ public class MapVector extends AbstractMapVector {
   private int valueCount;
 
   public MapVector(String path, BufferAllocator allocator, CallBack callBack){
-    this(MaterializedField.create(SchemaPath.getSimplePath(path), TYPE), allocator, callBack);
+    this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
   public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
@@ -91,6 +90,11 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (MapVector) from);
+  }
+
+  @Override
   protected boolean supportsDirectRead() {
     return true;
   }
@@ -101,7 +105,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
+    for (final ValueVector v : this) {
       v.setInitialCapacity(numRecords);
     }
   }
@@ -112,7 +116,7 @@ public class MapVector extends AbstractMapVector {
       return 0;
     }
     long buffer = 0;
-    for (final ValueVector v : (Iterable<ValueVector>)this) {
+    for (final ValueVector v : this) {
       buffer += v.getBufferSize();
     }
 
@@ -126,7 +130,7 @@ public class MapVector extends AbstractMapVector {
     }
 
     long bufferSize = 0;
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
+    for (final ValueVector v : this) {
       bufferSize += v.getBufferSizeFor(valueCount);
     }
 
@@ -135,16 +139,15 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    int expectedSize = getBufferSize();
-    int actualSize   = super.getBufferSize();
-
-    Preconditions.checkArgument(expectedSize == actualSize);
+    //int expectedSize = getBufferSize();
+    //int actualSize   = super.getBufferSize();
+    //Preconditions.checkArgument(expectedSize == actualSize);
     return super.getBuffers(clear);
   }
 
   @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
-    return new MapTransferPair(this, getField().getPath(), allocator);
+    return new MapTransferPair(this, getField().getName(), allocator);
   }
 
   @Override
@@ -153,7 +156,7 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new MapTransferPair(this, ref, allocator);
   }
 
@@ -162,8 +165,8 @@ public class MapVector extends AbstractMapVector {
     private final MapVector from;
     private final MapVector to;
 
-    public MapTransferPair(MapVector from, SchemaPath path, BufferAllocator allocator) {
-      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
+    public MapTransferPair(MapVector from, String path, BufferAllocator allocator) {
+      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
     public MapTransferPair(MapVector from, MapVector to) {
@@ -265,11 +268,11 @@ public class MapVector extends AbstractMapVector {
     for (final SerializedField child : fields) {
       final MaterializedField fieldDef = MaterializedField.create(child);
 
-      ValueVector vector = getChild(fieldDef.getLastName());
+      ValueVector vector = getChild(fieldDef.getName());
       if (vector == null) {
         // if we arrive here, we didn't have a matching vector.
         vector = BasicTypeHelper.getNewVector(fieldDef, allocator);
-        putChild(fieldDef.getLastName(), vector);
+        putChild(fieldDef.getName(), vector);
       }
       if (child.getValueCount() == 0) {
         vector.clear();
@@ -279,7 +282,10 @@ public class MapVector extends AbstractMapVector {
       bufOffset += child.getBufferLength();
     }
 
-    assert bufOffset == buf.capacity();
+    // We should have consumed all bytes written into the buffer
+    // during deserialization.
+
+    assert bufOffset == buf.writerIndex();
   }
 
   @Override
@@ -299,6 +305,13 @@ public class MapVector extends AbstractMapVector {
   @Override
   public Mutator getMutator() {
     return mutator;
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    // Exchange is used for look-ahead writers, but writers manage
+    // map member vectors directly.
+    throw new UnsupportedOperationException("Exchange() not supported for maps");
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {
@@ -375,5 +388,10 @@ public class MapVector extends AbstractMapVector {
     valueCount = 0;
 
     super.close();
- }
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
 }

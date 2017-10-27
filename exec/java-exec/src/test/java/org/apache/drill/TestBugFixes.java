@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,20 @@
  */
 package org.apache.drill;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+@Category(UnlikelyTest.class)
 public class TestBugFixes extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
   private static final String WORKING_PATH = TestTools.getWorkingPath();
@@ -166,5 +174,129 @@ public class TestBugFixes extends BaseTestQuery {
         .baselineColumns("dir0", "dir1")
         .baselineValues("single_top_partition", "nested_partition_1")
         .go();
+  }
+
+  @Test
+  public void testDRILL4771() throws Exception {
+    final String query = "select count(*) cnt, avg(distinct emp.department_id) avd\n"
+        + " from cp.`employee.json` emp";
+    final String[] expectedPlans = {
+        ".*Agg\\(group=\\[\\{\\}\\], cnt=\\[\\$SUM0\\(\\$1\\)\\], agg#1=\\[\\$SUM0\\(\\$0\\)\\], agg#2=\\[COUNT\\(\\$0\\)\\]\\)",
+        ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
+    final String[] excludedPlans = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlans, excludedPlans);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt", "avd")
+        .baselineValues(1155L, 10.416666666666666)
+        .build().run();
+
+    final String query1 = "select emp.gender, count(*) cnt, avg(distinct emp.department_id) avd\n"
+            + " from cp.`employee.json` emp\n"
+            + " group by gender";
+    final String[] expectedPlans1 = {
+            ".*Agg\\(group=\\[\\{0\\}\\], agg#0=\\[\\$SUM0\\(\\$2\\)\\], agg#1=\\[\\$SUM0\\(\\$1\\)\\], agg#2=\\[COUNT\\(\\$1\\)\\]\\)",
+            ".*Agg\\(group=\\[\\{0, 1\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
+    final String[] excludedPlans1 = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
+    PlanTestBase.testPlanMatchingPatterns(query1, expectedPlans1, excludedPlans1);
+    testBuilder()
+            .sqlQuery(query1)
+            .unOrdered()
+            .baselineColumns("gender", "cnt", "avd")
+            .baselineValues("F", 601L, 10.416666666666666)
+            .baselineValues("M", 554L, 11.9)
+            .build().run();
+  }
+
+  @Test
+  public void testDRILL4884() throws Exception {
+    int limit = 65536;
+    ImmutableList.Builder<Map<String, Object>> baselineBuilder = ImmutableList.builder();
+    for (int i = 0; i < limit; i++) {
+      baselineBuilder.add(Collections.<String, Object>singletonMap("`id`", /*String.valueOf */ (i + 1)));
+    }
+    List<Map<String, Object>> baseline = baselineBuilder.build();
+
+    testBuilder()
+            .sqlQuery(String.format("select cast(id as int) as id from dfs_test.`%s/bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id order by 1 limit %s",
+                TEST_RES_PATH, limit))
+            .unOrdered()
+            .baselineRecords(baseline)
+            .go();
+  }
+
+  @Test
+  public void testDRILL5051() throws Exception {
+    testBuilder()
+        .sqlQuery("select count(1) as cnt from (select l_orderkey from (select l_orderkey from cp.`tpch/lineitem.parquet` limit 2) limit 1 offset 1)")
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(1L)
+        .go();
+  }
+
+  @Test // DRILL-4678
+  public void testManyDateCasts() throws Exception {
+    StringBuilder query = new StringBuilder("SELECT DISTINCT dt FROM (VALUES");
+    for (int i = 0; i < 50; i++) {
+      query.append("(CAST('1964-03-07' AS DATE)),");
+    }
+    query.append("(CAST('1951-05-16' AS DATE))) tbl(dt)");
+    test(query.toString());
+  }
+
+  @Test // DRILL-4971
+  public void testVisitBooleanOrWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT\n" +
+        "CASE WHEN employee_id IN (1) THEN 1 ELSE 0 END `first`\n" +
+        ", CASE WHEN employee_id IN (2) THEN 1 ELSE 0 END `second`\n" +
+        ", CASE WHEN employee_id IN (1, 2) THEN 1 ELSE 0 END `any`\n" +
+        "FROM cp.`employee.json` ORDER BY employee_id limit 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("first", "second", "any")
+        .baselineValues(1, 0, 1)
+        .baselineValues(0, 1, 1)
+        .go();
+  }
+
+  @Test // DRILL-4971
+  public void testVisitBooleanAndWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT employee_id FROM cp.`employee.json` WHERE\n" +
+        "((employee_id > 1 AND employee_id < 3) OR (employee_id > 9 AND employee_id < 11))\n" +
+        "AND (employee_id > 1 AND employee_id < 3)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("employee_id")
+        .baselineValues((long) 2)
+        .go();
+  }
+
+  @Test
+  public void testDRILL5269() throws Exception {
+    try {
+      test("ALTER SESSION SET `planner.enable_nljoin_for_scalar_only` = false");
+      test("ALTER SESSION SET `planner.slice_target` = 500");
+      test("\nSELECT `one` FROM (\n" +
+          "  SELECT 1 `one` FROM cp.`tpch/nation.parquet`\n" +
+          "  INNER JOIN (\n" +
+          "    SELECT 2 `two` FROM cp.`tpch/nation.parquet`\n" +
+          "  ) `t0` ON (\n" +
+          "    `tpch/nation.parquet`.n_regionkey IS NOT DISTINCT FROM `t0`.`two`\n" +
+          "  )\n" +
+          "  GROUP BY `one`\n" +
+          ") `t1`\n" +
+          "  INNER JOIN (\n" +
+          "    SELECT count(1) `a_count` FROM cp.`tpch/nation.parquet`\n" +
+          ") `t5` ON TRUE\n");
+    } finally {
+      test("ALTER SESSION RESET `planner.enable_nljoin_for_scalar_only`");
+      test("ALTER SESSION RESET `planner.slice_target`");
+    }
   }
 }

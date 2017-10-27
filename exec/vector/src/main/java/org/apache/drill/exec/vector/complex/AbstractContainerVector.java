@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,14 +21,12 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -45,7 +43,7 @@ import com.google.common.collect.Sets;
 public abstract class AbstractContainerVector implements ValueVector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
 
-  protected final MaterializedField field;
+  protected MaterializedField field;
   protected final BufferAllocator allocator;
   protected final CallBack callBack;
 
@@ -62,6 +60,7 @@ public abstract class AbstractContainerVector implements ValueVector {
     }
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     return allocator;
   }
@@ -89,7 +88,7 @@ public abstract class AbstractContainerVector implements ValueVector {
       @Nullable
       @Override
       public String apply(MaterializedField field) {
-        return Preconditions.checkNotNull(field).getLastName();
+        return Preconditions.checkNotNull(field).getName();
       }
     }));
   }
@@ -97,13 +96,14 @@ public abstract class AbstractContainerVector implements ValueVector {
   /**
    * Clears out all underlying child vectors.
    */
- @Override
+  @Override
   public void close() {
-    for (ValueVector vector:(Iterable<ValueVector>)this) {
+    for (ValueVector vector : this) {
       vector.close();
     }
   }
 
+  @SuppressWarnings("unchecked")
   protected <T extends ValueVector> T typeify(ValueVector v, Class<T> clazz) {
     if (clazz.isAssignableFrom(v.getClass())) {
       return (T) v;
@@ -111,19 +111,15 @@ public abstract class AbstractContainerVector implements ValueVector {
     throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), v.getClass().getSimpleName()));
   }
 
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    return FieldIdUtil.getFieldIdIfMatches(this, builder, addToBreadCrumb, seg);
-  }
-
   MajorType getLastPathType() {
-    if((this.getField().getType().getMinorType() == MinorType.LIST  &&
+    if ((this.getField().getType().getMinorType() == MinorType.LIST &&
         this.getField().getType().getMode() == DataMode.REPEATED)) {  // Use Repeated scalar type instead of Required List.
       VectorWithOrdinal vord = getChildVectorWithOrdinal(null);
       ValueVector v = vord.vector;
-      if (! (v instanceof  AbstractContainerVector)) {
+      if (!(v instanceof AbstractContainerVector)) {
         return v.getField().getType();
       }
-    } else if (this.getField().getType().getMinorType() == MinorType.MAP  &&
+    } else if (this.getField().getType().getMinorType() == MinorType.MAP &&
         this.getField().getType().getMode() == DataMode.REPEATED) {  // Use Required Map
       return this.getField().getType().toBuilder().setMode(DataMode.REQUIRED).build();
     }

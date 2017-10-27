@@ -30,15 +30,18 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
+@Category(JdbcTest.class)
 public class TestJdbcDistQuery extends JdbcTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcDistQuery.class);
 
@@ -199,7 +202,7 @@ public class TestJdbcDistQuery extends JdbcTestBase {
       // (e.g., for debugging) then define a constant field or local variable
       // for the number of iterations.)
       for (int x = 0; x < 1; x++) {
-        Stopwatch watch = new Stopwatch().start();
+        Stopwatch watch = Stopwatch.createStarted();
         Statement s = c.createStatement();
         ResultSet r = s.executeQuery(sql);
         boolean first = true;
@@ -222,7 +225,7 @@ public class TestJdbcDistQuery extends JdbcTestBase {
           System.out.println();
         }
 
-        System.out.println(String.format("Query completed in %d millis.", watch.elapsedMillis()));
+        System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
       }
 
       System.out.println("\n\n\n");

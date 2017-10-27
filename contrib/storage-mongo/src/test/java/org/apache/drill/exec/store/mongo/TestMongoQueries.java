@@ -17,8 +17,12 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import org.apache.drill.categories.MongoStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, MongoStorageTest.class})
 public class TestMongoQueries extends MongoTestBase {
 
   @Test
@@ -57,6 +61,12 @@ public class TestMongoQueries extends MongoTestBase {
     String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB,
         DONUTS_DB, DONUTS_COLLECTION);
     runMongoSQLVerifyCount(queryString, 5);
+  }
+
+  @Test
+  public void testEmptyCollection() throws Exception {
+    String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB, EMPLOYEE_DB, EMPTY_COLLECTION);
+    runMongoSQLVerifyCount(queryString, 0);
   }
 
   @Test

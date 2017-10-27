@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sudo: false
 before_install: git fetch --unshallow
 language: java
-install: mvn install --batch-mode -DskipTests=true -Dmaven.javadoc.skip=true -Dsource.skip=true > mvn_install.log || (cat mvn_install.log && false)
-script: mvn package -DskipTests=true
+jdk:
+  - openjdk7
+install: MAVEN_OPTS="-Xms1G -Xmx1G" mvn install --batch-mode -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true
+script: echo "Done"

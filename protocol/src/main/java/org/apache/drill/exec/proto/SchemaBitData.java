@@ -155,6 +155,8 @@ public final class SchemaBitData
             {
                 if(message.hasRpcVersion())
                     output.writeInt32(1, message.getRpcVersion(), false);
+                for(String authenticationMechanisms : message.getAuthenticationMechanismsList())
+                    output.writeString(2, authenticationMechanisms, true);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitData.BitServerHandshake message)
             {
@@ -197,6 +199,9 @@ public final class SchemaBitData
                         case 1:
                             builder.setRpcVersion(input.readInt32());
                             break;
+                        case 2:
+                            builder.addAuthenticationMechanisms(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -238,6 +243,7 @@ public final class SchemaBitData
             switch(number)
             {
                 case 1: return "rpcVersion";
+                case 2: return "authenticationMechanisms";
                 default: return null;
             }
         }
@@ -250,6 +256,7 @@ public final class SchemaBitData
         static
         {
             fieldMap.put("rpcVersion", 1);
+            fieldMap.put("authenticationMechanisms", 2);
         }
     }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,17 @@
  */
 package org.apache.drill.exec.record;
 
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class TestMaterializedField {
 
   private static final String PARENT_NAME = "parent";
@@ -66,12 +69,12 @@ public class TestMaterializedField {
 
     for (final MaterializedField field:new MaterializedField[]{parent, child}) {
       for (Object[] args:matrix) {
-        final SchemaPath path = SchemaPath.getSimplePath(args[0].toString());
+        final String path = args[0].toString();
         final TypeProtos.MajorType type = TypeProtos.MajorType.class.cast(args[1]);
 
         final MaterializedField clone = field.withPathAndType(path, type);
 
-        final boolean isPathEqual = path.equals(clone.getPath());
+        final boolean isPathEqual = path.equals(clone.getName());
         assertTrue("Cloned path does not match the original", isPathEqual);
 
         final boolean isTypeEqual = type.equals(clone.getType());
@@ -83,5 +86,4 @@ public class TestMaterializedField {
     }
 
   }
-
 }

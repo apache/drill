@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,6 +42,7 @@ public final class JoinStatus {
   private boolean allowMarking;
 
   public boolean ok = true;
+  public boolean hasMoreData = false;
 
   public JoinStatus(RecordIterator left, RecordIterator right, MergeJoinBatch output) {
     this.left = left;
@@ -120,6 +121,14 @@ public final class JoinStatus {
     return allowMarking;
   }
 
+  public boolean isHasMoreData() {
+    return hasMoreData;
+  }
+
+  public void setHasMoreData(boolean hasMoreData) {
+    this.hasMoreData = hasMoreData;
+  }
+
   /**
    * Return state of join based on status of left and right iterator.
    * @return
@@ -129,8 +138,12 @@ public final class JoinStatus {
    *  4. JoinOutcome.SCHEMA_CHANGED : one of the side has change in schema.
    */
   public JoinOutcome getOutcome() {
-    if (!ok) {
+    // on STOP, OUT_OF_MEMORY return FAILURE.
+    if (!ok || eitherMatches(IterOutcome.STOP)) {
       return JoinOutcome.FAILURE;
+    }
+    if (hasMoreData) {
+      return JoinOutcome.BATCH_RETURNED;
     }
     if (bothMatches(IterOutcome.NONE) ||
       (joinType == JoinRelType.INNER && eitherMatches(IterOutcome.NONE)) ||
@@ -150,7 +163,7 @@ public final class JoinStatus {
       return JoinOutcome.WAITING;
     }
     ok = false;
-    // on STOP, OUT_OF_MEMORY return FAILURE.
+
     return JoinOutcome.FAILURE;
   }
 

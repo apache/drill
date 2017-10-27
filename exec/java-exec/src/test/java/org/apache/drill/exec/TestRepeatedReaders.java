@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,11 +19,12 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestRepeatedReaders extends BaseTestQuery {
 
@@ -31,10 +32,7 @@ public class TestRepeatedReaders extends BaseTestQuery {
 
   @BeforeClass
   public static void initFs() throws Exception {
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
-
-    fs = FileSystem.get(conf);
+    fs = getLocalFileSystem();
   }
 
   private static void deleteTableIfExists(String tableName) {

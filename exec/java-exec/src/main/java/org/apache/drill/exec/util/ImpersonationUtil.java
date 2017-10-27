@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -130,9 +130,6 @@ public class ImpersonationUtil {
   /**
    * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} for give user name.
    *
-   * TODO: we may want to cache the {@link org.apache.hadoop.security.UserGroupInformation} instances as we try to
-   * create different instances for the same user which is an unnecessary overhead.
-   *
    * @param proxyUserName Proxy user name (must be valid)
    * @return
    */
@@ -173,7 +170,16 @@ public class ImpersonationUtil {
    * @return Drillbit process user.
    */
   public static String getProcessUserName() {
-    return getProcessUserUGI().getUserName();
+    return getProcessUserUGI().getShortUserName();
+  }
+
+  /**
+   * Return the list of groups to which the process user belongs.
+   *
+   * @return Drillbit process user group names
+   */
+  public static String[] getProcessUserGroupNames() {
+    return getProcessUserUGI().getGroupNames();
   }
 
   /**
@@ -255,5 +261,9 @@ public class ImpersonationUtil {
     }
 
     return false;
+  }
+
+  // avoid instantiation
+  private ImpersonationUtil() {
   }
 }

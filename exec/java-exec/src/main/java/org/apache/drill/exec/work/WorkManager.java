@@ -17,15 +17,14 @@
  */
 package org.apache.drill.exec.work;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executor;
-
+import com.codahale.metrics.Gauge;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.drill.common.SelfCleaningRunnable;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -39,7 +38,7 @@ import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.QueryManager;
@@ -47,11 +46,11 @@ import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executor;
 
 /**
  * Manages the running fragments in a Drillbit. Periodically requests run-time stats updates from fragments
@@ -101,23 +100,18 @@ public class WorkManager implements AutoCloseable {
       final Controller controller,
       final DataConnectionCreator data,
       final ClusterCoordinator coord,
-      final PStoreProvider provider) {
-    dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
+      final PersistentStoreProvider provider,
+      final PersistentStoreProvider profilesProvider) {
+    dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider, profilesProvider);
     statusThread.start();
 
-    // TODO remove try block once metrics moved from singleton, For now catch to avoid unit test failures
-    try {
-      dContext.getMetrics().register(
-          MetricRegistry.name("drill.exec.work.running_fragments." + dContext.getEndpoint().getUserPort()),
-              new Gauge<Integer>() {
-                @Override
-                public Integer getValue() {
-                  return runningFragments.size();
-                }
-          });
-    } catch (final IllegalArgumentException e) {
-      logger.warn("Exception while registering metrics", e);
-    }
+    DrillMetrics.register("drill.fragments.running",
+        new Gauge<Integer>() {
+          @Override
+          public Integer getValue() {
+            return runningFragments.size();
+          }
+        });
   }
 
   public Executor getExecutor() {
@@ -144,14 +138,19 @@ public class WorkManager implements AutoCloseable {
   public void close() throws Exception {
     statusThread.interrupt();
 
-    if (!runningFragments.isEmpty()) {
-      logger.warn("Closing WorkManager but there are {} running fragments.", runningFragments.size());
+    final long numRunningFragments = runningFragments.size();
+    if (numRunningFragments != 0) {
+      logger.warn("Closing WorkManager but there are {} running fragments.", numRunningFragments);
       if (logger.isDebugEnabled()) {
         for (final FragmentHandle handle : runningFragments.keySet()) {
           logger.debug("Fragment still running: {} status: {}", QueryIdHelper.getQueryIdentifier(handle),
             runningFragments.get(handle).getStatus());
         }
       }
+    }
+
+    if (getContext() != null) {
+      getContext().close();
     }
   }
 
@@ -205,6 +204,14 @@ public class WorkManager implements AutoCloseable {
     }
 
     /**
+     * Add a self contained runnable work to executor service.
+     * @param runnable
+     */
+    public void addNewWork(final Runnable runnable) {
+      executor.execute(runnable);
+    }
+
+    /**
      * Remove the given Foreman from the running query list.
      *
      * <p>The running query list is a bit of a misnomer, because it doesn't
@@ -254,7 +261,8 @@ public class WorkManager implements AutoCloseable {
 
     /**
      * Currently used to start a root fragment that is blocked on data, and intermediate fragments. This method is
-     * called, when the first batch arrives, by {@link org.apache.drill.exec.rpc.data.DataResponseHandlerImpl#handle}
+     * called, when the first batch arrives.
+     *
      * @param fragmentManager the manager for the fragment
      */
     public void startFragmentPendingRemote(final FragmentManager fragmentManager) {
@@ -286,39 +294,54 @@ public class WorkManager implements AutoCloseable {
    * about RUNNING queries, such as current memory consumption, number of rows processed, and so on.
    * The FragmentStatusListener only tracks changes to state, so the statistics kept there will be
    * stale; this thread probes for current values.
+   *
+   * For each running fragment if the Foreman is the local Drillbit then status is updated locally bypassing the Control
+   * Tunnel, whereas for remote Foreman it is sent over the Control Tunnel.
    */
   private class StatusThread extends Thread {
     public StatusThread() {
-      setDaemon(true);
+      // assume this thread is created by a non-daemon thread
       setName("WorkManager.StatusThread");
     }
 
     @Override
     public void run() {
-      while(true) {
-        final Controller controller = dContext.getController();
+
+      // Get the controller and localBitEndPoint outside the loop since these will not change once a Drillbit and
+      // StatusThread is started
+      final Controller controller = dContext.getController();
+      final DrillbitEndpoint localBitEndPoint = dContext.getEndpoint();
+
+      while (true) {
         final List<DrillRpcFuture<Ack>> futures = Lists.newArrayList();
-        for(final FragmentExecutor fragmentExecutor : runningFragments.values()) {
+        for (final FragmentExecutor fragmentExecutor : runningFragments.values()) {
           final FragmentStatus status = fragmentExecutor.getStatus();
           if (status == null) {
             continue;
           }
 
-          final DrillbitEndpoint ep = fragmentExecutor.getContext().getForemanEndpoint();
-          futures.add(controller.getTunnel(ep).sendFragmentStatus(status));
+          final DrillbitEndpoint foremanEndpoint = fragmentExecutor.getContext().getForemanEndpoint();
+
+          // If local endpoint is the Foreman for this running fragment, then submit the status locally bypassing the
+          // Control Tunnel
+          if (localBitEndPoint.equals(foremanEndpoint)) {
+            workBus.statusUpdate(status);
+          } else { // else send the status to remote Foreman over Control Tunnel
+            futures.add(controller.getTunnel(foremanEndpoint).sendFragmentStatus(status));
+          }
         }
 
-        for(final DrillRpcFuture<Ack> future : futures) {
+        for (final DrillRpcFuture<Ack> future : futures) {
           try {
             future.checkedGet();
-          } catch(final RpcException ex) {
+          } catch (final RpcException ex) {
             logger.info("Failure while sending intermediate fragment status to Foreman", ex);
           }
         }
 
         try {
           Thread.sleep(STATUS_PERIOD_SECONDS * 1000);
-        } catch(final InterruptedException e) {
+        } catch (final InterruptedException e) {
           // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
           // interruption and respond to it if it wants to.
           Thread.currentThread().interrupt();

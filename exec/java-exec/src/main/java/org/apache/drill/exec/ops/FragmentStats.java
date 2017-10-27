@@ -23,7 +23,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 
 /**
@@ -37,7 +36,7 @@ public class FragmentStats {
   private final DrillbitEndpoint endpoint;
   private final BufferAllocator allocator;
 
-  public FragmentStats(BufferAllocator allocator, MetricRegistry metrics, DrillbitEndpoint endpoint) {
+  public FragmentStats(BufferAllocator allocator, DrillbitEndpoint endpoint) {
     this.startTime = System.currentTimeMillis();
     this.endpoint = endpoint;
     this.allocator = allocator;

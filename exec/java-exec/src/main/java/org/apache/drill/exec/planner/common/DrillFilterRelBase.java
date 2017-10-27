@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,8 @@ import java.util.List;
 public abstract class DrillFilterRelBase extends Filter implements DrillRelNode {
   private final int numConjuncts;
   private final List<RexNode> conjunctions;
+  private final double filterMinSelectivityEstimateFactor;
+  private final double filterMaxSelectivityEstimateFactor;
 
   protected DrillFilterRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
     super(cluster, traits, child, condition);
@@ -55,16 +57,20 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
     numConjuncts = conjunctions.size();
     // assert numConjuncts >= 1;
 
+    filterMinSelectivityEstimateFactor = PrelUtil.
+            getPlannerSettings(cluster.getPlanner()).getFilterMinSelectivityEstimateFactor();
+    filterMaxSelectivityEstimateFactor = PrelUtil.
+            getPlannerSettings(cluster.getPlanner()).getFilterMaxSelectivityEstimateFactor();
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     RelNode child = this.getInput();
-    double inputRows = RelMetadataQuery.getRowCount(child);
-    double cpuCost = estimateCpuCost();
+    double inputRows = mq.getRowCount(child);
+    double cpuCost = estimateCpuCost(mq);
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, 0, 0);
   }
@@ -78,9 +84,9 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
   *  #_of_comparison = n + n * Selectivity(C1) + n * Selectivity(C1 and C2) + ... + n * Selecitivity(C1 and C2 ... and C_n)
   *  cpu_cost = #_of_comparison * DrillCostBase_COMPARE_CPU_COST;
   */
-  private double estimateCpuCost() {
+  private double estimateCpuCost(RelMetadataQuery mq) {
     RelNode child = this.getInput();
-    double compNum = RelMetadataQuery.getRowCount(child);
+    double compNum = mq.getRowCount(child);
 
     for (int i = 0; i< numConjuncts; i++) {
       RexNode conjFilter = RexUtil.composeConjunction(this.getCluster().getRexBuilder(), conjunctions.subList(0, i + 1), false);
@@ -90,4 +96,23 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
     return compNum * DrillCostBase.COMPARE_CPU_COST;
   }
 
+  @Override
+  public double estimateRowCount(RelMetadataQuery mq) {
+    // override Calcite's default selectivity estimate - cap lower/upper bounds on the
+    // selectivity estimate in order to get desired parallelism
+    double selectivity = mq.getSelectivity(getInput(), condition);
+    if (!condition.isAlwaysFalse()) {
+      // Cap selectivity at filterMinSelectivityEstimateFactor unless it is always FALSE
+      if (selectivity < filterMinSelectivityEstimateFactor) {
+        selectivity = filterMinSelectivityEstimateFactor;
+      }
+    }
+    if (!condition.isAlwaysTrue()) {
+      // Cap selectivity at filterMaxSelectivityEstimateFactor unless it is always TRUE
+      if (selectivity > filterMaxSelectivityEstimateFactor) {
+        selectivity = filterMaxSelectivityEstimateFactor;
+      }
+    }
+    return selectivity * mq.getRowCount(getInput());
+  }
 }

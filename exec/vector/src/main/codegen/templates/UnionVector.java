@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.vector.ValueVector;
 
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/UnionVector.java" />
@@ -28,10 +29,12 @@ package org.apache.drill.exec.vector.complex;
 
 <#include "/@includes/vv_imports.ftl" />
 import java.util.Iterator;
+import java.util.Set;
+
 import org.apache.drill.exec.vector.complex.impl.ComplexCopier;
 import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.exec.expr.BasicTypeHelper;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
@@ -80,6 +83,7 @@ public class UnionVector implements ValueVector {
     this.callBack = callBack;
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     return allocator;
   }
@@ -93,7 +97,7 @@ public class UnionVector implements ValueVector {
       return;
     }
     majorType =  MajorType.newBuilder(this.majorType).addSubType(type).build();
-    field = MaterializedField.create(field.getPath(), majorType);
+    field = MaterializedField.create(field.getName(), majorType);
     if (callBack != null) {
       callBack.doWork();
     }
@@ -202,12 +206,27 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    // Most vectors are held inside the internal map.
+
+    internalMap.collectLedgers(ledgers);
+    if (bit != null) {
+      bit.collectLedgers(ledgers);
+    }
+  }
+
+  @Override
+  public int getPayloadByteCount(int valueCount) {
+    return internalMap.getPayloadByteCount(valueCount);
+  }
+
+  @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
     return new TransferImpl(field, allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new TransferImpl(field.withPath(ref), allocator);
   }
 
@@ -232,14 +251,25 @@ public class UnionVector implements ValueVector {
     copyFrom(inIndex, outIndex, from);
   }
 
-  public void addVector(ValueVector v) {
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (UnionVector) from);
+  }
+
+  public ValueVector addVector(ValueVector v) {
     String name = v.getField().getType().getMinorType().name().toLowerCase();
     MajorType type = v.getField().getType();
     Preconditions.checkState(internalMap.getChild(name) == null, String.format("%s vector already exists", name));
-    ValueVector newVector = internalMap.addOrGet(name, type, (Class<ValueVector>) BasicTypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+    final ValueVector newVector = internalMap.addOrGet(name, type, BasicTypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
     v.makeTransferPair(newVector).transfer();
     internalMap.putChild(name, newVector);
     addSubType(v.getField().getType().getMinorType());
+    return newVector;
+  }
+
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
   }
 
   private class TransferImpl implements TransferPair {
@@ -347,24 +377,6 @@ public class UnionVector implements ValueVector {
     List<ValueVector> vectors = Lists.newArrayList(internalMap.iterator());
     vectors.add(typeVector);
     return vectors.iterator();
-  }
-
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg.isNamed()) {
-      ValueVector v = getMap();
-      if (v != null) {
-        return ((AbstractContainerVector) v).getFieldIdIfMatches(builder, addToBreadCrumb, seg);
-      } else {
-        return null;
-      }
-    } else if (seg.isArray()) {
-      ValueVector v = getList();
-      if (v != null) {
-        return ((ListVector) v).getFieldIdIfMatches(builder, addToBreadCrumb, seg);
-      }
-      else return null;
-    }
-    return null;
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {
@@ -485,5 +497,10 @@ public class UnionVector implements ValueVector {
 
     @Override
     public void generateTestData(int values) { }
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    throw new UnsupportedOperationException("Union vector does not yet support exchange()");
   }
 }

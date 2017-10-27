@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,133 +18,42 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
-
-import java.util.concurrent.ExecutionException;
-
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
-public abstract class RemoteConnection implements ConnectionThrottle, AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);
-  private final Channel channel;
-  private final WriteManager writeManager;
-  private String name;
-  private final String clientName;
+import java.net.SocketAddress;
 
-  public boolean inEventLoop(){
-    return channel.eventLoop().inEventLoop();
-  }
+public interface RemoteConnection extends ConnectionThrottle, AutoCloseable {
 
-  public RemoteConnection(SocketChannel channel, String name) {
-    super();
-    this.channel = channel;
-    this.clientName = name;
-    this.writeManager = new WriteManager();
-    channel.pipeline().addLast(new BackPressureHandler());
-    channel.closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
-      public void operationComplete(Future<? super Void> future) throws Exception {
-        // this could possibly overrelease but it doesn't matter since we're only going to do this to ensure that we
-        // fail out any pending messages
-        writeManager.disable();
-        writeManager.setWritable(true);
-      }
-    });
+  boolean inEventLoop();
 
-  }
+  String getName();
 
-  public String getName() {
-    if(name == null){
-      name = String.format("%s <--> %s (%s)", channel.localAddress(), channel.remoteAddress(), clientName);
-    }
-    return name;
-  }
+  BufferAllocator getAllocator();
 
-  public abstract BufferAllocator getAllocator();
+  Channel getChannel();
 
-  public final Channel getChannel() {
-    return channel;
-  }
+  boolean blockOnNotWritable(RpcOutcomeListener<?> listener);
 
-  public boolean blockOnNotWritable(RpcOutcomeListener<?> listener){
-    try{
-      writeManager.waitForWritable();
-      return true;
-    }catch(final InterruptedException e){
-      listener.interrupted(e);
+  boolean isActive();
 
-      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
-      // interruption and respond to it if it wants to.
-      Thread.currentThread().interrupt();
+  // should be invoked only within package
+  <V> RpcOutcome<V> getAndRemoveRpcOutcome(int rpcType, int coordinationId, Class<V> clazz);
 
-      return false;
-    }
-  }
+  // should be invoked only within package
+  <V> ChannelListenerWithCoordinationId createNewRpcListener(RpcOutcomeListener<V> handler, Class<V> clazz);
 
-  public void setAutoRead(boolean enableAutoRead){
-    channel.config().setAutoRead(enableAutoRead);
-  }
+  // should be invoked only within package
+  void recordRemoteFailure(int coordinationId, DrillPBError failure);
 
-  public boolean isActive(){
-    return channel.isActive();
-  }
+  // should be invoked only within package
+  void channelClosed(RpcException ex);
 
-  /**
-   * The write manager is responsible for controlling whether or not a write can be sent.  It controls whether or not to block a sender if we have tcp backpressure on the receive side.
-   */
-  private static class WriteManager{
-    private final ResettableBarrier barrier = new ResettableBarrier();
-    private volatile boolean disabled = false;
+  SocketAddress getRemoteAddress();
 
-    public WriteManager(){
-      barrier.openBarrier();
-    }
-
-    public void waitForWritable() throws InterruptedException{
-      barrier.await();
-    }
-
-    public void setWritable(boolean isWritable){
-      if(isWritable){
-        barrier.openBarrier();
-      } else if (!disabled) {
-        barrier.closeBarrier();
-      }
-
-    }
-
-    public void disable() {
-      disabled = true;
-    }
-  }
-
-  private class BackPressureHandler extends ChannelInboundHandlerAdapter{
-
-    @Override
-    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-//      logger.debug("Channel writability changed.", ctx.channel().isWritable());
-      writeManager.setWritable(ctx.channel().isWritable());
-      ctx.fireChannelWritabilityChanged();
-    }
-
-  }
+  void addSecurityHandlers();
 
   @Override
-  public void close() {
-    try {
-      if (channel.isActive()) {
-        channel.close().get();
-      }
-    } catch (final InterruptedException | ExecutionException e) {
-      logger.warn("Caught exception while closing channel.", e);
-
-      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
-      // interruption and respond to it if it wants to.
-      Thread.currentThread().interrupt();
-    }
-  }
+  void close();
 
 }

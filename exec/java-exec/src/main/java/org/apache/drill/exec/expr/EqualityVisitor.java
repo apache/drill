@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,7 +44,6 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.exec.compile.sig.GeneratorMapping;
 
 import java.util.List;
 
@@ -73,6 +72,9 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
       return false;
     }
     if (!holder.getName().equals(((FunctionHolderExpression) value).getName())) {
+      return false;
+    }
+    if (holder.isRandom()) {
       return false;
     }
     return checkChildren(holder, value);
@@ -166,7 +168,8 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!(value instanceof IntervalDayExpression)) {
       return false;
     }
-    return intExpr.getIntervalDay() == ((IntervalDayExpression) value).getIntervalDay();
+    return intExpr.getIntervalDay() == ((IntervalDayExpression) value).getIntervalDay()
+            && intExpr.getIntervalMillis() == ((IntervalDayExpression) value).getIntervalMillis();
   }
 
   @Override
@@ -287,7 +290,7 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!(value instanceof TypedNullConstant)) {
       return false;
     }
-    return e.getMajorType().equals(e.getMajorType());
+    return value.getMajorType().equals(e.getMajorType());
   }
 
   @Override

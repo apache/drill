@@ -19,6 +19,8 @@ package org.apache.drill.exec.impersonation.hive;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import org.apache.drill.categories.HiveStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Driver;
@@ -30,6 +32,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
@@ -42,6 +45,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_ENABLE_
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
 
   private static final String db_general = "db_general";

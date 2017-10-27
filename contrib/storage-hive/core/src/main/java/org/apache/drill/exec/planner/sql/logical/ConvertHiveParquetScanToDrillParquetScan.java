@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.logical;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -38,9 +39,10 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveDrillNativeParquetScan;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
-import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
+import org.apache.drill.exec.store.hive.HiveTableWithColumnCache;
+import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 import org.apache.drill.exec.store.hive.HiveUtilities;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -66,7 +68,9 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   public static final ConvertHiveParquetScanToDrillParquetScan INSTANCE = new ConvertHiveParquetScanToDrillParquetScan();
 
   private static final DrillSqlOperator INT96_TO_TIMESTAMP =
-      new DrillSqlOperator("convert_fromTIMESTAMP_IMPALA", 1, true);
+      new DrillSqlOperator("convert_fromTIMESTAMP_IMPALA", 1, true, false);
+
+  private static final DrillSqlOperator RTRIM = new DrillSqlOperator("RTRIM", 1, true, false);
 
   private ConvertHiveParquetScanToDrillParquetScan() {
     super(RelOptHelper.any(DrillScanRel.class), "ConvertHiveScanToHiveDrillNativeScan:Parquet");
@@ -86,32 +90,34 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   @Override
   public boolean matches(RelOptRuleCall call) {
     final DrillScanRel scanRel = (DrillScanRel) call.rel(0);
-    final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
 
     if (!(scanRel.getGroupScan() instanceof HiveScan) || ((HiveScan) scanRel.getGroupScan()).isNativeReader()) {
       return false;
     }
 
     final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
-    final Table hiveTable = hiveScan.hiveReadEntry.getTable();
+    final HiveConf hiveConf = hiveScan.getHiveConf();
+    final HiveTableWithColumnCache hiveTable = hiveScan.hiveReadEntry.getTable();
 
-    final Class<? extends InputFormat> tableInputFormat =
-        getInputFormatFromSD(MetaStoreUtils.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd());
+    final Class<? extends InputFormat<?,?>> tableInputFormat =
+        getInputFormatFromSD(HiveUtilities.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd(),
+            hiveConf);
     if (tableInputFormat == null || !tableInputFormat.equals(MapredParquetInputFormat.class)) {
       return false;
     }
 
-    final List<HivePartition> partitions = hiveScan.hiveReadEntry.getHivePartitionWrappers();
+    final List<HivePartitionWrapper> partitions = hiveScan.hiveReadEntry.getHivePartitionWrappers();
     if (partitions == null) {
       return true;
     }
 
     final List<FieldSchema> tableSchema = hiveTable.getSd().getCols();
     // Make sure all partitions have the same input format as the table input format
-    for (HivePartition partition : partitions) {
+    for (HivePartitionWrapper partition : partitions) {
       final StorageDescriptor partitionSD = partition.getPartition().getSd();
-      Class<? extends InputFormat> inputFormat = getInputFormatFromSD(
-          HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.hiveReadEntry, partitionSD);
+      Class<? extends InputFormat<?, ?>> inputFormat = getInputFormatFromSD(
+          HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.hiveReadEntry, partitionSD,
+          hiveConf);
       if (inputFormat == null || !inputFormat.equals(tableInputFormat)) {
         return false;
       }
@@ -138,12 +144,17 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
    * @param sd
    * @return {@link InputFormat} class or null if a failure has occurred. Failure is logged as warning.
    */
-  private Class<? extends InputFormat> getInputFormatFromSD(final Properties properties,
-      final HiveReadEntry hiveReadEntry, final StorageDescriptor sd) {
+  private Class<? extends InputFormat<?, ?>> getInputFormatFromSD(final Properties properties,
+      final HiveReadEntry hiveReadEntry, final StorageDescriptor sd, final HiveConf hiveConf) {
     final Table hiveTable = hiveReadEntry.getTable();
     try {
-      final JobConf job = new JobConf();
-      HiveUtilities.addConfToJob(job, properties, hiveReadEntry.hiveConfigOverride);
+      final String inputFormatName = sd.getInputFormat();
+      if (!Strings.isNullOrEmpty(inputFormatName)) {
+        return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName);
+      }
+
+      final JobConf job = new JobConf(hiveConf);
+      HiveUtilities.addConfToJob(job, properties);
       return HiveUtilities.getInputFormatClass(job, sd, hiveTable);
     } catch (final Exception e) {
       logger.warn("Failed to get InputFormat class from Hive table '{}.{}'. StorageDescriptor [{}]",
@@ -168,9 +179,12 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
           getPartitionColMapping(hiveTable, partitionColumnLabel);
 
       final DrillScanRel nativeScanRel = createNativeScanRel(partitionColMapping, hiveScanRel);
-      final DrillProjectRel projectRel = createProjectRel(hiveScanRel, partitionColMapping, nativeScanRel);
-
-      call.transformTo(projectRel);
+      if (hiveScanRel.getRowType().getFieldCount() == 0) {
+        call.transformTo(nativeScanRel);
+      } else {
+        final DrillProjectRel projectRel = createProjectRel(hiveScanRel, partitionColMapping, nativeScanRel);
+        call.transformTo(projectRel);
+      }
     } catch (final Exception e) {
       logger.warn("Failed to convert HiveScan to HiveDrillNativeParquetScan", e);
     }
@@ -219,7 +233,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     // unlike above where we expanded the '*'. HiveScan and related (subscan) can handle '*'.
     final List<SchemaPath> nativeScanCols = Lists.newArrayList();
     for(SchemaPath colName : hiveScanRel.getColumns()) {
-      final String partitionCol = partitionColMapping.get(colName.getAsUnescapedPath());
+      final String partitionCol = partitionColMapping.get(colName.getRootSegmentPath());
       if (partitionCol != null) {
         nativeScanCols.add(SchemaPath.getSimplePath(partitionCol));
       } else {
@@ -282,6 +296,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     if (outputType.getSqlTypeName() == SqlTypeName.TIMESTAMP) {
       // TIMESTAMP is stored as INT96 by Hive in ParquetFormat. Use convert_fromTIMESTAMP_IMPALA UDF to convert
       // INT96 format data to TIMESTAMP
+      // TODO: Remove this conversion once "store.parquet.reader.int96_as_timestamp" will be true by default
       return rb.makeCall(INT96_TO_TIMESTAMP, inputRef);
     }
 
@@ -299,6 +314,9 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     final RelDataTypeField inputField = nativeScanRel.getRowType().getField(dirColName, false, false);
     final RexInputRef inputRef =
         rb.makeInputRef(rb.getTypeFactory().createSqlType(SqlTypeName.VARCHAR), inputField.getIndex());
+    if (outputType.getSqlTypeName() == SqlTypeName.CHAR) {
+      return rb.makeCall(RTRIM, inputRef);
+    }
 
     return rb.makeCast(outputType, inputRef);
   }

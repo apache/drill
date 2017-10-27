@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 
@@ -28,10 +29,11 @@ import javax.inject.Named;
 import java.util.List;
 
 public interface WindowFramer {
-  TemplateClassDefinition<WindowFramer> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, DefaultFrameTemplate.class);
+  TemplateClassDefinition<WindowFramer> NOFRAME_TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, NoFrameSupportTemplate.class);
+  TemplateClassDefinition<WindowFramer> FRAME_TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, FrameSupportTemplate.class);
 
   void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext operatorContext,
-             final boolean requireFullPartition) throws SchemaChangeException;
+             final boolean requireFullPartition, final WindowPOP popConfig) throws SchemaChangeException;
 
   /**
    * process the inner batch and write the aggregated values in the container
@@ -55,8 +57,11 @@ public interface WindowFramer {
    * @param b2 batch for second row
    * @return true if the rows are in the same partition
    */
-  boolean isSamePartition(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
-                                          @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
+  boolean isSamePartition(@Named("b1Index") int b1Index,
+                          @Named("b1") VectorAccessible b1,
+                          @Named("b2Index") int b2Index,
+                          @Named("b2") VectorAccessible b2)
+          throws SchemaChangeException;
 
   /**
    * compares two rows from different batches (can be the same), if they have the same value for the order by
@@ -67,6 +72,9 @@ public interface WindowFramer {
    * @param b2 batch for second row
    * @return true if the rows are in the same partition
    */
-  boolean isPeer(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
-                                 @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
+  boolean isPeer(@Named("b1Index") int b1Index,
+                 @Named("b1") VectorAccessible b1,
+                 @Named("b2Index") int b2Index,
+                 @Named("b2") VectorAccessible b2)
+          throws SchemaChangeException;
 }

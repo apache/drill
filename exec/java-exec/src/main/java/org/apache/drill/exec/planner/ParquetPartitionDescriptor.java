@@ -17,15 +17,18 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -78,9 +81,11 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return partitionColumns.size();
   }
 
-  @Override
-  public GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
-    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation());
+  private GroupScan createNewGroupScan(List<String> newFiles, String cacheFileRoot,
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws IOException {
+    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation(),
+        cacheFileRoot, wasAllPartitionsPruned);
+    newSelection.setMetaContext(metaContext);
     final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
     return newScan;
   }
@@ -112,7 +117,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return ((ParquetGroupScan) scanRel.getGroupScan()).getTypeForColumn(column);
   }
 
-  private String getBaseTableLocation() {
+  @Override
+  public String getBaseTableLocation() {
     final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
     return origSelection.getSelection().selectionRoot;
   }
@@ -126,6 +132,31 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     }
     locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
     sublistsCreated = true;
+  }
+
+  @Override
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot,
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception {
+    List<String> newFiles = Lists.newArrayList();
+    for (final PartitionLocation location : newPartitionLocation) {
+      newFiles.add(location.getEntirePartitionLocation());
+    }
+
+    final GroupScan newGroupScan = createNewGroupScan(newFiles, cacheFileRoot, wasAllPartitionsPruned, metaContext);
+
+    return new DrillScanRel(scanRel.getCluster(),
+        scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+        scanRel.getTable(),
+        newGroupScan,
+        scanRel.getRowType(),
+        scanRel.getColumns(),
+        true /*filter pushdown*/);
+  }
+
+  @Override
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
+      boolean wasAllPartitionsPruned) throws Exception {
+    return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned, null);
   }
 
 }

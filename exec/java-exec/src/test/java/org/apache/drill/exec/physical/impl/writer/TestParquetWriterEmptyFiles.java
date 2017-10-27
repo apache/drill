@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,25 +18,25 @@
 package org.apache.drill.exec.physical.impl.writer;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.drill.test.OperatorFixture;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestParquetWriterEmptyFiles extends BaseTestQuery {
 
   private static FileSystem fs;
 
   @BeforeClass
   public static void initFs() throws Exception {
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
-
-    fs = FileSystem.get(conf);
-
+    fs = getLocalFileSystem();
     updateTestCluster(3, null);
   }
 
@@ -97,7 +97,8 @@ public class TestParquetWriterEmptyFiles extends BaseTestQuery {
         .go();
     } finally {
       // restore the session option
-      test("ALTER SESSION SET `store.parquet.block-size` = %d", ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR.getDefault().num_val);
+      final OperatorFixture.TestOptionSet optionSet = new OperatorFixture.TestOptionSet();
+      test("ALTER SESSION SET `store.parquet.block-size` = %d", optionSet.getDefault(ExecConstants.PARQUET_BLOCK_SIZE).num_val);
       deleteTableIfExists(outputFile);
     }
   }

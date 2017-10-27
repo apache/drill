@@ -21,6 +21,7 @@ import java.util.Properties;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.DrillTestWrapper;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
@@ -31,6 +32,7 @@ import static org.junit.Assert.fail;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestWindowFrame extends BaseTestQuery {
 
@@ -48,7 +50,7 @@ public class TestWindowFrame extends BaseTestQuery {
   private DrillTestWrapper buildWindowQuery(final String tableName, final boolean withPartitionBy, final int numBatches)
       throws Exception {
     return testBuilder()
-      .sqlQuery(String.format(getFile("window/q1.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id)":"()"))
+      .sqlQuery(getFile("window/q1.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id)":"()")
       .ordered()
       .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".tsv")
       .baselineColumns("count", "sum")
@@ -59,7 +61,7 @@ public class TestWindowFrame extends BaseTestQuery {
   private DrillTestWrapper buildWindowWithOrderByQuery(final String tableName, final boolean withPartitionBy,
                                                        final int numBatches) throws Exception {
     return testBuilder()
-      .sqlQuery(String.format(getFile("window/q2.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id order by sub)" : "(order by sub)"))
+      .sqlQuery(getFile("window/q2.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id order by sub)" : "(order by sub)")
       .ordered()
       .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".oby.tsv")
       .baselineColumns("count", "sum", "row_number", "rank", "dense_rank", "cume_dist", "percent_rank")
@@ -98,6 +100,68 @@ public class TestWindowFrame extends BaseTestQuery {
     runTest("b1.p2", 1);
   }
 
+  @Test
+  public void testMultipleFramers() throws Exception {
+    final String window = " OVER(PARTITION BY position_id ORDER by sub)";
+    test("SELECT COUNT(*)"+window+", SUM(salary)"+window+", ROW_NUMBER()"+window+", RANK()"+window+" " +
+      "FROM dfs_test.`"+TEST_RES_PATH+"/window/b1.p1`"
+    );
+  }
+
+  @Test
+  public void testUnboundedFollowing() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/q3.sql"), TEST_RES_PATH)
+      .ordered()
+      .sqlBaselineQuery(getFile("window/q4.sql"), TEST_RES_PATH)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testAggregateRowsUnboundedAndCurrentRow() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/aggregate_rows_unbounded_current.sql"), table)
+      .ordered()
+      .sqlBaselineQuery(getFile("window/aggregate_rows_unbounded_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testLastValueRowsUnboundedAndCurrentRow() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/last_value_rows_unbounded_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/last_value_rows_unbounded_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testAggregateRangeCurrentAndCurrent() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/aggregate_range_current_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/aggregate_range_current_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testFirstValueRangeCurrentAndCurrent() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/first_value_range_current_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/first_value_range_current_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
   /**
    * 2 batches with 2 partitions (position_id column), each batch contains a different partition
    */
@@ -132,32 +196,38 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test // DRILL-1862
+  @Category(UnlikelyTest.class)
   public void testEmptyPartitionBy() throws Exception {
     test("SELECT employee_id, position_id, salary, SUM(salary) OVER(ORDER BY position_id) FROM cp.`employee.json` LIMIT 10");
   }
 
   @Test // DRILL-3172
+  @Category(UnlikelyTest.class)
   public void testEmptyOverClause() throws Exception {
     test("SELECT employee_id, position_id, salary, SUM(salary) OVER() FROM cp.`employee.json` LIMIT 10");
   }
 
   @Test // DRILL-3218
+  @Category(UnlikelyTest.class)
   public void testMaxVarChar() throws Exception {
     test(getFile("window/q3218.sql"), TEST_RES_PATH);
   }
 
   @Test // DRILL-3220
+  @Category(UnlikelyTest.class)
   public void testCountConst() throws Exception {
     test(getFile("window/q3220.sql"), TEST_RES_PATH);
   }
 
   @Test // DRILL-3604
+  @Category(UnlikelyTest.class)
   public void testFix3604() throws Exception {
     // make sure the query doesn't fail
     test(getFile("window/3604.sql"), TEST_RES_PATH);
   }
 
   @Test // DRILL-3605
+  @Category(UnlikelyTest.class)
   public void testFix3605() throws Exception {
     testBuilder()
       .sqlQuery(getFile("window/3605.sql"), TEST_RES_PATH)
@@ -169,6 +239,7 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test // DRILL-3606
+  @Category(UnlikelyTest.class)
   public void testFix3606() throws Exception {
     testBuilder()
       .sqlQuery(getFile("window/3606.sql"), TEST_RES_PATH)
@@ -361,4 +432,38 @@ public class TestWindowFrame extends BaseTestQuery {
     partition.rowAggregated();
     assertEquals(5, partition.ntile(5));
   }
+
+  @Test
+  public void test4457() throws Exception {
+    runSQL(String.format("CREATE TABLE dfs_test.tmp.`4457` AS " +
+      "SELECT columns[0] AS c0, NULLIF(columns[1], 'null') AS c1 " +
+      "FROM dfs_test.`%s/window/4457.csv`", TEST_RES_PATH));
+
+    testBuilder()
+      .sqlQuery("SELECT COALESCE(FIRST_VALUE(c1) OVER(ORDER BY c0 RANGE BETWEEN CURRENT ROW AND CURRENT ROW), 'EMPTY') AS fv FROM dfs_test.tmp.`4457`")
+      .ordered()
+      .baselineColumns("fv")
+      .baselineValues("a")
+      .baselineValues("b")
+      .baselineValues("EMPTY")
+      .go();
+  }
+
+  // Note: This test is unstable. It works when forcing the merge/sort batch
+  // size to 20, but not for other sizes. The problem is either that the results
+  // are not ordered (and so subject to sort instability), or there is some bug
+  // somewhere in the window functions.
+
+  @Test
+  @Category(UnlikelyTest.class)
+  public void test4657() throws Exception {
+    testBuilder()
+      .sqlQuery("select row_number() over(order by position_id) rn, rank() over(order by position_id) rnk from dfs_test.`%s/window/b3.p2`", TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/4657.tsv")
+      .baselineColumns("rn", "rnk")
+      .expectsNumBatches(4) // we expect 3 data batches and the fast schema
+      .go();
+  }
+
 }

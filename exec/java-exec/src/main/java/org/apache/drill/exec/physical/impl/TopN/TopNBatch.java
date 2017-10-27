@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,6 +52,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaUtil;
+import org.apache.drill.exec.record.SimpleRecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
@@ -65,6 +66,8 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import com.google.common.base.Stopwatch;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
+
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.l;
 
 public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
@@ -128,15 +131,16 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     switch (outcome) {
       case OK:
       case OK_NEW_SCHEMA:
-        for (VectorWrapper w : incoming) {
+        for (VectorWrapper<?> w : incoming) {
+          @SuppressWarnings("resource")
           ValueVector v = c.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
             v.clear();
           }
         }
-        c = VectorContainer.canonicalize(c);
-        for (VectorWrapper w : c) {
+        for (VectorWrapper<?> w : c) {
+          @SuppressWarnings("resource")
           ValueVector v = container.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
@@ -180,8 +184,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
     try{
       outer: while (true) {
-        Stopwatch watch = new Stopwatch();
-        watch.start();
+        Stopwatch watch = Stopwatch.createStarted();
         IterOutcome upstream;
         if (first) {
           upstream = IterOutcome.OK_NEW_SCHEMA;
@@ -220,7 +223,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           // fall through.
         case OK:
           if (incoming.getRecordCount() == 0) {
-            for (VectorWrapper w : incoming) {
+            for (VectorWrapper<?> w : incoming) {
               w.clear();
             }
             break;
@@ -268,7 +271,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
       this.sv4 = priorityQueue.getFinalSv4();
       container.clear();
-      for (VectorWrapper w : priorityQueue.getHyperBatch()) {
+      for (VectorWrapper<?> w : priorityQueue.getHyperBatch()) {
         container.add(w.getValueVectors());
       }
       container.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
@@ -284,23 +287,25 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   private void purge() throws SchemaChangeException {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     VectorContainer c = priorityQueue.getHyperBatch();
     VectorContainer newContainer = new VectorContainer(oContext);
+    @SuppressWarnings("resource")
     SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
-    SimpleRecordBatch batch = new SimpleRecordBatch(c, selectionVector4, context);
-    SimpleRecordBatch newBatch = new SimpleRecordBatch(newContainer, null, context);
+    SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
+    SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     if (copier == null) {
       copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch, null);
     } else {
       for (VectorWrapper<?> i : batch) {
 
+        @SuppressWarnings("resource")
         ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
         newContainer.add(v);
       }
       copier.setupRemover(context, batch, newBatch);
     }
+    @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
       do {
@@ -332,7 +337,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   public PriorityQueue createNewPriorityQueue(FragmentContext context, List<Ordering> orderings,
                                                      VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
           throws ClassTransformationException, IOException, SchemaChangeException{
-    CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    cg.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.saveCodeForDebugging(true);
     ClassGenerator<PriorityQueue> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 
@@ -344,16 +352,16 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }
       g.setMappingSet(leftMapping);
-      HoldingContainer left = g.addExpr(expr, false);
+      HoldingContainer left = g.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       g.setMappingSet(rightMapping);
-      HoldingContainer right = g.addExpr(expr, false);
+      HoldingContainer right = g.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       g.setMappingSet(mainMapping);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh =
         FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
                                                        context.getFunctionRegistry());
-      HoldingContainer out = g.addExpr(fh, false);
+      HoldingContainer out = g.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
       if (od.getDirection() == Direction.ASCENDING) {
@@ -380,14 +388,15 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
    * @throws SchemaChangeException
    */
   public void purgeAndResetPriorityQueue() throws SchemaChangeException, ClassTransformationException, IOException {
-    final Stopwatch watch = new Stopwatch();
-    watch.start();
+    final Stopwatch watch = Stopwatch.createStarted();
     final VectorContainer c = priorityQueue.getHyperBatch();
     final VectorContainer newContainer = new VectorContainer(oContext);
+    @SuppressWarnings("resource")
     final SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
-    final SimpleRecordBatch batch = new SimpleRecordBatch(c, selectionVector4, context);
-    final SimpleRecordBatch newBatch = new SimpleRecordBatch(newContainer, null, context);
+    final SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
+    final SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch, null);
+    @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
       do {
@@ -433,26 +442,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
 
-  public static class SimpleRecordBatch implements RecordBatch {
-
-    private VectorContainer container;
+  public static class SimpleSV4RecordBatch extends SimpleRecordBatch {
     private SelectionVector4 sv4;
-    private FragmentContext context;
 
-    public SimpleRecordBatch(VectorContainer container, SelectionVector4 sv4, FragmentContext context) {
-      this.container = container;
+    public SimpleSV4RecordBatch(VectorContainer container, SelectionVector4 sv4, FragmentContext context) {
+      super(container, context);
       this.sv4 = sv4;
-      this.context = context;
-    }
-
-    @Override
-    public FragmentContext getContext() {
-      return context;
-    }
-
-    @Override
-    public BatchSchema getSchema() {
-      return container.getSchema();
     }
 
     @Override
@@ -460,54 +455,14 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       if (sv4 != null) {
         return sv4.getCount();
       } else {
-        return container.getRecordCount();
+        return super.getRecordCount();
       }
-    }
-
-    @Override
-    public void kill(boolean sendUpstream) {
-    }
-
-    @Override
-    public SelectionVector2 getSelectionVector2() {
-      throw new UnsupportedOperationException();
     }
 
     @Override
     public SelectionVector4 getSelectionVector4() {
       return sv4;
     }
-
-    @Override
-    public TypedFieldId getValueVectorId(SchemaPath path) {
-      return container.getValueVectorId(path);
-    }
-
-    @Override
-    public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
-      return container.getValueAccessorById(clazz, ids);
-    }
-
-    @Override
-    public IterOutcome next() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public WritableBatch getWritableBatch() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Iterator<VectorWrapper<?>> iterator() {
-      return container.iterator();
-    }
-
-    @Override
-    public VectorContainer getOutgoingContainer() {
-      throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
-    }
-
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -32,26 +31,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class ExternalSort extends Sort {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSort.class);
 
-  private long initialAllocation = 20000000;
+  public static final long DEFAULT_SORT_ALLOCATION = 20_000_000;
 
   @JsonCreator
   public ExternalSort(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse) {
     super(child, orderings, reverse);
-  }
-
-  @Override
-  public List<Ordering> getOrderings() {
-    return orderings;
-  }
-
-  @Override
-  public boolean getReverse() {
-    return reverse;
-  }
-
-  @Override
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E{
-    return physicalVisitor.visitSort(this, value);
+    initialAllocation = DEFAULT_SORT_ALLOCATION;
   }
 
   @Override
@@ -66,13 +51,19 @@ public class ExternalSort extends Sort {
     return CoreOperatorType.EXTERNAL_SORT_VALUE;
   }
 
-  public void setMaxAllocation(long maxAllocation) {
-    this.maxAllocation = Math.max(initialAllocation, maxAllocation);
-  }
-
+  /**
+   *
+   * @param maxAllocation The max memory allocation to be set
+   */
   @Override
-  public long getInitialAllocation() {
-    return initialAllocation;
+  public void setMaxAllocation(long maxAllocation) {
+    this.maxAllocation = maxAllocation;
   }
 
+  /**
+   * The External Sort operator supports spilling
+   * @return true
+   */
+  @Override
+  public boolean isBufferedOperator() { return true; }
 }

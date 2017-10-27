@@ -72,12 +72,14 @@ public class TestAffinityCalculator extends ExecTest {
     rowGroups.clear();
 
     for (int i = 0; i < numberOfRowGroups; i++) {
-      rowGroups.add(new ParquetGroupScan.RowGroupInfo(path, (long)i*rowGroupSize, (long)rowGroupSize, i));
+      // buildRowGroups method seems not be used at all.  Pass -1 as rowCount.
+      // Maybe remove this method completely ?
+      rowGroups.add(new ParquetGroupScan.RowGroupInfo(path, (long)i*rowGroupSize, (long)rowGroupSize, i, -1));
     }
   }
 
   public LinkedList<CoordinationProtos.DrillbitEndpoint> buildEndpoints(int numberOfEndpoints) {
-    LinkedList<CoordinationProtos.DrillbitEndpoint> endPoints = new LinkedList();
+    LinkedList<CoordinationProtos.DrillbitEndpoint> endPoints = new LinkedList<>();
 
     for (int i = 0; i < numberOfEndpoints; i++) {
       endPoints.add(CoordinationProtos.DrillbitEndpoint.newBuilder().setAddress("host" + i).build());
@@ -153,7 +155,7 @@ public class TestAffinityCalculator extends ExecTest {
     }
     ImmutableRangeMap<Long,BlockLocation> map = blockMapBuilder.build();
     long tB = System.nanoTime();
-    System.out.println(String.format("Took %f ms to build range map", (float)(tB - tA) / 1e6));
+    System.out.println(String.format("Took %f ms to build range map", (tB - tA) / 1e6));
   }
   /*
   @Test

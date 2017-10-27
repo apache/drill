@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,18 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import java.util.List;
+
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
-import com.google.common.io.Closeables;
+import com.google.common.collect.Lists;
+import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
@@ -31,52 +36,70 @@ import com.google.protobuf.Parser;
  * Manages communication tunnels between nodes.
  */
 public class ControllerImpl implements Controller {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControllerImpl.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControllerImpl.class);
 
   private volatile ControlServer server;
-  private final ControlMessageHandler handler;
-  private final BootStrapContext context;
   private final ConnectionManagerRegistry connectionRegistry;
-  private final boolean allowPortHunting;
   private final CustomHandlerRegistry handlerRegistry;
+  private final ControlConnectionConfig config;
 
-  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, boolean allowPortHunting) {
-    super();
-    this.handler = handler;
-    this.context = context;
-    this.connectionRegistry = new ConnectionManagerRegistry(handler, context);
-    this.allowPortHunting = allowPortHunting;
+  public ControllerImpl(BootStrapContext context, BufferAllocator allocator, ControlMessageHandler handler)
+      throws DrillbitStartupException {
+    config = new ControlConnectionConfig(allocator, context, handler);
+    this.connectionRegistry = new ConnectionManagerRegistry(config);
     this.handlerRegistry = handler.getHandlerRegistry();
+
+    // Initialize the singleton instance of ControlRpcMetrics.
+    ((ControlRpcMetrics)ControlRpcMetrics.getInstance()).initialize(config.isEncryptionEnabled(), allocator);
   }
 
   @Override
-  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException {
-    server = new ControlServer(handler, context, connectionRegistry);
-    int port = context.getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
+  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint, final boolean allowPortHunting) {
+    server = new ControlServer(config, connectionRegistry);
+    int port = config.getBootstrapContext().getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
     port = server.bind(port, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setControlPort(port).build();
-    connectionRegistry.setEndpoint(completeEndpoint);
+    connectionRegistry.setLocalEndpoint(completeEndpoint);
     handlerRegistry.setEndpoint(completeEndpoint);
     return completeEndpoint;
   }
 
   @Override
   public ControlTunnel getTunnel(DrillbitEndpoint endpoint) {
-    return new ControlTunnel(endpoint, connectionRegistry.getConnectionManager(endpoint));
+    return new ControlTunnel(connectionRegistry.getConnectionManager(endpoint));
+  }
+
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public <REQUEST extends MessageLite, RESPONSE extends MessageLite> void registerCustomHandler(int messageTypeId,
+      CustomMessageHandler<REQUEST, RESPONSE> handler, Parser<REQUEST> parser) {
+    handlerRegistry.registerCustomHandler(
+        messageTypeId,
+        handler,
+        new ControlTunnel.ProtoSerDe<REQUEST>(parser),
+        (CustomSerDe<RESPONSE>) new ControlTunnel.ProtoSerDe<Message>(null));
+  }
+
+  @Override
+  public <REQUEST, RESPONSE> void registerCustomHandler(int messageTypeId,
+      CustomMessageHandler<REQUEST, RESPONSE> handler,
+      CustomSerDe<REQUEST> requestSerde,
+      CustomSerDe<RESPONSE> responseSerde) {
+    handlerRegistry.registerCustomHandler(messageTypeId, handler, requestSerde, responseSerde);
   }
 
 
   @Override
-  public <REQUEST extends MessageLite, RESPONSE extends MessageLite> void registerCustomHandler(int messageTypeId,
-      CustomMessageHandler<REQUEST, RESPONSE> handler, Parser<REQUEST> parser) {
-    handlerRegistry.registerCustomHandler(messageTypeId, handler, parser);
-  }
+  public void close() throws Exception {
+    List<AutoCloseable> closeables = Lists.newArrayList();
+    closeables.add(server);
 
-  public void close() {
-    Closeables.closeQuietly(server);
     for (ControlConnectionManager bt : connectionRegistry) {
-      bt.close();
+      closeables.add(bt);
     }
+
+    AutoCloseables.close(closeables);
   }
 
 

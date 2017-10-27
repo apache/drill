@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.drill.exec.vector.complex.impl;
 
 import java.lang.reflect.Constructor;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.BasicTypeHelper;
@@ -85,16 +84,16 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     state = State.SINGLE;
     vector = v;
     type = v.getField().getType().getMinorType();
-    Class writerClass = BasicTypeHelper
+    Class<?> writerClass = BasicTypeHelper
         .getWriterImpl(v.getField().getType().getMinorType(), v.getField().getDataMode());
     if (writerClass.equals(SingleListWriter.class)) {
       writerClass = UnionListWriter.class;
     }
-    Class vectorClass = BasicTypeHelper.getValueVectorClass(v.getField().getType().getMinorType(), v.getField()
+    Class<? extends ValueVector> vectorClass = BasicTypeHelper.getValueVectorClass(v.getField().getType().getMinorType(), v.getField()
         .getDataMode());
     try {
-      Constructor constructor = null;
-      for (Constructor c : writerClass.getConstructors()) {
+      Constructor<?> constructor = null;
+      for (Constructor<?> c : writerClass.getConstructors()) {
         if (c.getParameterTypes().length == 3) {
           constructor = c;
         }
@@ -150,8 +149,8 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
   }
 
   private FieldWriter promoteToUnion() {
-    String name = vector.getField().getLastName();
-    TransferPair tp = vector.getTransferPair(new FieldReference(vector.getField().getType().getMinorType().name().toLowerCase()), vector.getAllocator());
+    String name = vector.getField().getName();
+    TransferPair tp = vector.getTransferPair(vector.getField().getType().getMinorType().name().toLowerCase(), vector.getAllocator());
     tp.transfer();
     if (parentContainer != null) {
       unionVector = parentContainer.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);

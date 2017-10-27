@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,10 +21,10 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.ProducerConsumer;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -38,7 +38,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
 
-public class ProducerConsumerBatch extends AbstractRecordBatch {
+public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProducerConsumerBatch.class);
 
   private final RecordBatch incoming;
@@ -99,9 +99,9 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
         final MaterializedField field = schema.getColumn(i);
         final MajorType type = field.getType();
         final ValueVector vOut = container.getValueAccessorById(TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()),
-                container.getValueVectorId(field.getPath()).getFieldIds()).getValueVector();
+                container.getValueVectorId(SchemaPath.getSimplePath(field.getName())).getFieldIds()).getValueVector();
         final ValueVector vIn = newContainer.getValueAccessorById(TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()),
-                newContainer.getValueVectorId(field.getPath()).getFieldIds()).getValueVector();
+                newContainer.getValueVectorId(SchemaPath.getSimplePath(field.getName())).getFieldIds()).getValueVector();
         final TransferPair tp = vIn.makeTransferPair(vOut);
         tp.transfer();
       }

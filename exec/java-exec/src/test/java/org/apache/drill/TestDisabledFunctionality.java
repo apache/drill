@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package org.apache.drill;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.ExecErrorConstants;
@@ -24,19 +25,11 @@ import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(UnlikelyTest.class)
 public class TestDisabledFunctionality extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
-
-  @Test(expected = UserException.class)  // see DRILL-2054
-  public void testBooleanORExpression() throws Exception {
-        test("select (1 = 1) || (1 > 0) from cp.`tpch/nation.parquet` ");
-    }
-
-  @Test(expected = UserException.class)  // see DRILL-2054
-  public void testBooleanORSelectClause() throws Exception {
-    test("select true || true from cp.`tpch/nation.parquet` ");
-  }
 
   @Test(expected = UserException.class)  // see DRILL-2054
   public void testBooleanORWhereClause() throws Exception {

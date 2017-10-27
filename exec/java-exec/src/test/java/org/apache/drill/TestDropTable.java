@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,22 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.Assert;
+import org.junit.experimental.categories.Category;
 
-
+@Category(SqlTest.class)
 public class TestDropTable extends PlanTestBase {
 
   private static final String CREATE_SIMPLE_TABLE = "create table %s as select 1 from cp.`employee.json`";
+  private static final String CREATE_SIMPLE_VIEW = "create view %s as select 1 from cp.`employee.json`";
   private static final String DROP_TABLE = "drop table %s";
+  private static final String DROP_TABLE_IF_EXISTS = "drop table if exists %s";
+  private static final String DROP_VIEW_IF_EXISTS = "drop view if exists %s";
   private static final String BACK_TICK = "`";
 
   @Test
@@ -165,10 +171,61 @@ public class TestDropTable extends PlanTestBase {
     try {
       test("drop table dfs.`/tmp`");
     } catch (UserException e) {
-      Assert.assertTrue(e.getMessage().contains("PARSE ERROR"));
+      Assert.assertTrue(e.getMessage().contains("VALIDATION ERROR"));
       dropFailed = true;
     }
 
     Assert.assertTrue("Dropping table on immutable schema failed", dropFailed);
+  }
+
+  @Test // DRILL-4673
+  @Category(UnlikelyTest.class)
+  public void testDropTableIfExistsWhileTableExists() throws Exception {
+    final String existentTableName = "test_table_exists";
+    test("use dfs_test.tmp");
+
+    // successful dropping of existent table
+    test(String.format(CREATE_SIMPLE_TABLE, existentTableName));
+    testBuilder()
+        .sqlQuery(String.format(DROP_TABLE_IF_EXISTS, existentTableName))
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Table [%s] dropped", existentTableName))
+        .go();
+  }
+
+  @Test // DRILL-4673
+  @Category(UnlikelyTest.class)
+  public void testDropTableIfExistsWhileTableDoesNotExist() throws Exception {
+    final String nonExistentTableName = "test_table_not_exists";
+    test("use dfs_test.tmp");
+
+    // dropping of non existent table without error
+    testBuilder()
+        .sqlQuery(String.format(DROP_TABLE_IF_EXISTS, nonExistentTableName))
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("Table [%s] not found", nonExistentTableName))
+        .go();
+  }
+
+  @Test // DRILL-4673
+  @Category(UnlikelyTest.class)
+  public void testDropTableIfExistsWhileItIsAView() throws Exception {
+    final String viewName = "test_view";
+    try{
+      test("use dfs_test.tmp");
+
+      // dropping of non existent table without error if the view with such name is existed
+      test(String.format(CREATE_SIMPLE_VIEW, viewName));
+      testBuilder()
+          .sqlQuery(String.format(DROP_TABLE_IF_EXISTS, viewName))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(false, String.format("Table [%s] not found", viewName))
+          .go();
+    } finally {
+      test(String.format(DROP_VIEW_IF_EXISTS, viewName));
+    }
   }
 }

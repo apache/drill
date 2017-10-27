@@ -46,6 +46,8 @@ public final class SchemaCoordinationProtos
                 if(message.hasRoles())
                     output.writeObject(5, message.getRoles(), org.apache.drill.exec.proto.SchemaCoordinationProtos.Roles.WRITE, false);
 
+                if(message.hasVersion())
+                    output.writeString(6, message.getVersion(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint message)
             {
@@ -101,6 +103,9 @@ public final class SchemaCoordinationProtos
                             builder.setRoles(input.mergeObject(org.apache.drill.exec.proto.CoordinationProtos.Roles.newBuilder(), org.apache.drill.exec.proto.SchemaCoordinationProtos.Roles.MERGE));
 
                             break;
+                        case 6:
+                            builder.setVersion(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -146,6 +151,7 @@ public final class SchemaCoordinationProtos
                 case 3: return "controlPort";
                 case 4: return "dataPort";
                 case 5: return "roles";
+                case 6: return "version";
                 default: return null;
             }
         }
@@ -162,6 +168,7 @@ public final class SchemaCoordinationProtos
             fieldMap.put("controlPort", 3);
             fieldMap.put("dataPort", 4);
             fieldMap.put("roles", 5);
+            fieldMap.put("version", 6);
         }
     }
 

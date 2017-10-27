@@ -32,30 +32,19 @@ import com.google.common.collect.Lists;
 @JsonTypeName("project")
 public class Project extends SingleInputOperator {
 
-  private final NamedExpression[] selections;
+  private final List<NamedExpression> selections;
 
   @JsonCreator
-  public Project(@JsonProperty("projections") NamedExpression[] selections) {
+  public Project(@JsonProperty("projections") List<NamedExpression> selections) {
     this.selections = selections;
-    if (selections == null || selections.length == 0) {
+    if (selections == null || selections.size() == 0) {
       throw new ExpressionParsingException(
           "Project did not provide any projection selections.  At least one projection must be provided.");
-//    for (int i = 0; i < selections.length; i++) {
-//      PathSegment segment = selections[i].getRef().getRootSegment();
-//      CharSequence path = segment.getNameSegment().getPath();
-//      if (!segment.isNamed() || !path.equals("output"))
-//        throw new ExpressionParsingException(
-//            String
-//                .format(
-//                    "Outputs for projections always have to start with named path of output. First segment was named '%s' or was named [%s]",
-//                    path, segment.isNamed()));
-//
-//    }
     }
   }
 
   @JsonProperty("projections")
-  public NamedExpression[] getSelections() {
+  public List<NamedExpression> getSelections() {
     return selections;
   }
 
@@ -84,7 +73,7 @@ public class Project extends SingleInputOperator {
 
     @Override
     public Project internalBuild() {
-      return new Project(aN(exprs));
+      return new Project(exprs);
     }
 
   }

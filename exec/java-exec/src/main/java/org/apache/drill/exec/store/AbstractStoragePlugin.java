@@ -26,17 +26,16 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 
 import com.google.common.collect.ImmutableSet;
 
 /** Abstract class for StorePlugin implementations.
  * See StoragePlugin for description of the interface intent and its methods.
  */
-public abstract class AbstractStoragePlugin implements StoragePlugin{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStoragePlugin.class);
+public abstract class AbstractStoragePlugin implements StoragePlugin {
 
-  protected AbstractStoragePlugin(){
-  }
+  protected AbstractStoragePlugin() { }
 
   @Override
   public boolean supportsRead() {
@@ -48,14 +47,52 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
     return false;
   }
 
+  /**
+   * @deprecated Marking for deprecation in next major version release. Use
+   *             {@link #getPhysicalOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
+   */
   @Override
+  @Deprecated
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext) {
+    return ImmutableSet.of();
+  }
+
+  /**
+   * @deprecated Marking for deprecation in next major version release. Use
+   *             {@link #getPhysicalOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
+   */
+  @Deprecated
   public Set<? extends RelOptRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext) {
     return ImmutableSet.of();
   }
 
-  @Override
+  /**
+   * @deprecated Marking for deprecation in next major version release. Use
+   *             {@link #getPhysicalOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
+   */
+  @Deprecated
   public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return ImmutableSet.of();
+    // To be backward compatible, by default call the getOptimizerRules() method.
+    return getOptimizerRules(optimizerRulesContext);
+  }
+
+  /**
+   *
+   * Note: Move this method to {@link StoragePlugin} interface in next major version release.
+   */
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
+    switch (phase) {
+    case LOGICAL_PRUNE_AND_JOIN:
+    case LOGICAL_PRUNE:
+    case LOGICAL:
+      return getLogicalOptimizerRules(optimizerContext);
+    case PHYSICAL:
+      return getPhysicalOptimizerRules(optimizerContext);
+    case PARTITION_PRUNING:
+    case JOIN_PLANNING:
+    default:
+      return ImmutableSet.of();
+    }
   }
 
   @Override
@@ -69,11 +106,8 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   }
 
   @Override
-  public void start() throws IOException {
-  }
+  public void start() throws IOException { }
 
   @Override
-  public void close() throws Exception {
-  }
-
+  public void close() throws Exception { }
 }

@@ -43,6 +43,9 @@ import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"cast${type.to?upper_case}", "${type.alias}"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
   costCategory = FunctionCostCategory.COMPLEX)

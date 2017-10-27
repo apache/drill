@@ -18,6 +18,7 @@
 package org.apache.drill.common.logical.data;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
@@ -29,15 +30,15 @@ import com.google.common.collect.Iterators;
 @JsonTypeName("transform")
 public class Transform extends SingleInputOperator {
 
-  private final NamedExpression[] transforms;
+  private final List<NamedExpression> transforms;
 
   @JsonCreator
-  public Transform(@JsonProperty("transforms") NamedExpression[] transforms) {
+  public Transform(@JsonProperty("transforms") List<NamedExpression> transforms) {
     super();
     this.transforms = transforms;
   }
 
-  public NamedExpression[] getTransforms() {
+  public List<NamedExpression> getTransforms() {
     return transforms;
   }
 

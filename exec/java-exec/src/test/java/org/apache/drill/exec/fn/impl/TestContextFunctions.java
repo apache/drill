@@ -18,8 +18,11 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlFunctionTest.class)
 public class TestContextFunctions extends BaseTestQuery {
 
   @Test
@@ -89,5 +92,16 @@ public class TestContextFunctions extends BaseTestQuery {
         .baselineColumns("current_schema")
         .baselineValues("dfs_test.tmp")
         .go();
+  }
+
+  @Test
+  public void sessionIdUDFWithinSameSession() throws Exception {
+    final String sessionIdQuery = "select session_id as sessionId from (values(1))";
+    testBuilder()
+        .sqlQuery(sessionIdQuery)
+        .ordered()
+        .sqlBaselineQuery(sessionIdQuery)
+        .build()
+        .run();
   }
 }

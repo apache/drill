@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
@@ -31,12 +33,17 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.joda.time.LocalDateTime;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateFunctions extends PopUnitTestBase {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDateFunctions.class);
 
@@ -133,9 +140,9 @@ public class TestDateFunctions extends PopUnitTestBase {
     @Test
     public void testToChar() throws Exception {
 
-        String expectedResults[] = {"2008-Feb-23",
-                                    "12 20 30",
-                                    "2008 Feb 23 12:00:00"};
+        String expectedResults[] = {(new LocalDate(2008, 2, 23)).toString("yyyy-MMM-dd"),
+                                    (new LocalTime(12, 20, 30)).toString("HH mm ss"),
+                                    (new LocalDateTime(2008, 2, 23, 12, 0, 0)).toString("yyyy MMM dd HH:mm:ss")};
         testCommon(expectedResults, "/functions/date/to_char.json", "/test_simple_date.json");
     }
 

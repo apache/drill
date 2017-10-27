@@ -18,6 +18,8 @@
 package org.apache.drill.exec.planner.logical;
 
 
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.rules.ProjectMergeRule;
@@ -47,6 +49,12 @@ public class DrillMergeProjectRule extends ProjectMergeRule {
   public boolean matches(RelOptRuleCall call) {
     Project topProject = call.rel(0);
     Project bottomProject = call.rel(1);
+
+    // Make sure both projects be LogicalProject.
+    if (topProject.getTraitSet().getTrait(ConventionTraitDef.INSTANCE) != Convention.NONE ||
+        bottomProject.getTraitSet().getTrait(ConventionTraitDef.INSTANCE) != Convention.NONE) {
+      return false;
+    }
 
     // We have a complex output type do not fire the merge project rule
     if (checkComplexOutput(topProject) || checkComplexOutput(bottomProject)) {

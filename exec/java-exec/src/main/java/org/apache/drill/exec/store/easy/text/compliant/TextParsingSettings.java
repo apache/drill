@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.easy.text.compliant;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.univocity.parsers.common.TextParsingException;
 
 public class TextParsingSettings {
@@ -51,8 +50,6 @@ public class TextParsingSettings {
     this.quote = bSafe(config.getQuote(), "quote");
     this.quoteEscape = bSafe(config.getEscape(), "escape");
     this.newLineDelimiter = config.getLineDelimiter().getBytes(Charsets.UTF_8);
-    Preconditions.checkArgument(newLineDelimiter.length == 1 || newLineDelimiter.length == 2,
-        String.format("Line delimiter must be 1 or 2 bytes in length.  The provided delimiter was %d bytes long.", newLineDelimiter.length));
     this.delimiter = bSafe(config.getFieldDelimiter(), "fieldDelimiter");
     this.comment = bSafe(config.getComment(), "comment");
     this.skipFirstLine = config.isSkipFirstLine();

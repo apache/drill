@@ -115,7 +115,7 @@ public abstract class TimedRunnable<V> implements Runnable {
    * @throws IOException All exceptions are coerced to IOException since this was build for storage system tasks initially.
    */
   public static <V> List<V> run(final String activity, final Logger logger, final List<TimedRunnable<V>> runnables, int parallelism) throws IOException {
-    Stopwatch watch = new Stopwatch().start();
+    Stopwatch watch = Stopwatch.createStarted();
     long timedRunnableStart=System.nanoTime();
     if(runnables.size() == 1){
       parallelism = 1;

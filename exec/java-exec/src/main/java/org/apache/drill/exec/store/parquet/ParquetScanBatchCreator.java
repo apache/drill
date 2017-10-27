@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,25 +18,21 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Stopwatch;
-import org.apache.commons.lang3.ArrayUtils;
+import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
@@ -65,52 +61,41 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   public ScanBatch getBatch(FragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    String partitionDesignator = context.getOptions()
-      .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    List<SchemaPath> columns = rowGroupScan.getColumns();
-    List<RecordReader> readers = Lists.newArrayList();
     OperatorContext oContext = context.newOperatorContext(rowGroupScan);
 
-    List<String[]> partitionColumns = Lists.newArrayList();
-    List<Integer> selectedPartitionColumns = Lists.newArrayList();
-    boolean selectAllColumns = AbstractRecordReader.isStarQuery(columns);
+    final ColumnExplorer columnExplorer = new ColumnExplorer(context, rowGroupScan.getColumns());
 
-    List<SchemaPath> newColumns = columns;
-    if (!selectAllColumns) {
-      newColumns = Lists.newArrayList();
-      Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
-      for (SchemaPath column : columns) {
-        Matcher m = pattern.matcher(column.getAsUnescapedPath());
-        if (m.matches()) {
-          selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
-        } else {
-          newColumns.add(column);
-        }
-      }
-      if (newColumns.isEmpty()) {
-        newColumns = GroupScan.ALL_COLUMNS;
-      }
-      final int id = rowGroupScan.getOperatorId();
-      // Create the new row group scan with the new columns
+    if (!columnExplorer.isStarQuery()) {
       rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getUserName(), rowGroupScan.getStorageEngine(),
-          rowGroupScan.getRowGroupReadEntries(), newColumns, rowGroupScan.getSelectionRoot());
-      rowGroupScan.setOperatorId(id);
+          rowGroupScan.getRowGroupReadEntries(), columnExplorer.getTableColumns(), rowGroupScan.getSelectionRoot(),
+          rowGroupScan.getFilter());
+      rowGroupScan.setOperatorId(rowGroupScan.getOperatorId());
     }
 
     DrillFileSystem fs;
     try {
-      fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf());
-    } catch(IOException e) {
-      throw new ExecutionSetupException(String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
+      boolean useAsyncPageReader =
+          context.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
+      if (useAsyncPageReader) {
+        fs = oContext.newNonTrackingFileSystem(rowGroupScan.getStorageEngine().getFsConf());
+      } else {
+        fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf());
+      }
+    } catch (IOException e) {
+      throw new ExecutionSetupException(
+          String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
     }
+
     Configuration conf = new Configuration(fs.getConf());
     conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
     conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);
     conf.setBoolean(ENABLE_TIME_READ_COUNTER, false);
 
     // keep footers in a map to avoid re-reading them
-    Map<String, ParquetMetadata> footers = new HashMap<String, ParquetMetadata>();
-    int numParts = 0;
+    Map<String, ParquetMetadata> footers = Maps.newHashMap();
+    List<RecordReader> readers = Lists.newArrayList();
+    List<Map<String, String>> implicitColumns = Lists.newArrayList();
+    Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
     for(RowGroupReadEntry e : rowGroupScan.getRowGroupReadEntries()){
       /*
       Here we could store a map from file names to footers, to prevent re-reading the footer for each row group in a file
@@ -120,58 +105,55 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       These fields will be added to the constructor below
       */
       try {
-        Stopwatch timer = new Stopwatch();
-        if ( ! footers.containsKey(e.getPath())){
+        Stopwatch timer = Stopwatch.createUnstarted();
+        if (!footers.containsKey(e.getPath())){
           timer.start();
           ParquetMetadata footer = ParquetFileReader.readFooter(conf, new Path(e.getPath()));
           long timeToRead = timer.elapsed(TimeUnit.MICROSECONDS);
           logger.trace("ParquetTrace,Read Footer,{},{},{},{},{},{},{}", "", e.getPath(), "", 0, 0, 0, timeToRead);
           footers.put(e.getPath(), footer );
         }
+        boolean autoCorrectCorruptDates = rowGroupScan.getFormatConfig().areCorruptDatesAutoCorrected();
+        ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(footers.get(e.getPath()), rowGroupScan.getColumns(),
+                autoCorrectCorruptDates);
+        if (logger.isDebugEnabled()) {
+          logger.debug(containsCorruptDates.toString());
+        }
         if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
           readers.add(
               new ParquetRecordReader(
-                  context, e.getPath(), e.getRowGroupIndex(), fs,
+                  context, e.getPath(), e.getRowGroupIndex(), e.getNumRecordsToRead(), fs,
                   CodecFactory.createDirectCodecFactory(
                   fs.getConf(),
                   new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
                   footers.get(e.getPath()),
-                  rowGroupScan.getColumns()
+                  rowGroupScan.getColumns(),
+                  containsCorruptDates
               )
           );
         } else {
           ParquetMetadata footer = footers.get(e.getPath());
-          readers.add(new DrillParquetReader(context, footer, e, newColumns, fs));
+          readers.add(new DrillParquetReader(context, footer, e, columnExplorer.getTableColumns(), fs, containsCorruptDates));
         }
-        if (rowGroupScan.getSelectionRoot() != null) {
-          String[] r = Path.getPathWithoutSchemeAndAuthority(new Path(rowGroupScan.getSelectionRoot())).toString().split("/");
-          String[] p = Path.getPathWithoutSchemeAndAuthority(new Path(e.getPath())).toString().split("/");
-          if (p.length > r.length) {
-            String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);
-            partitionColumns.add(q);
-            numParts = Math.max(numParts, q.length);
-          } else {
-            partitionColumns.add(new String[] {});
-          }
-        } else {
-          partitionColumns.add(new String[] {});
+
+        Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(e, rowGroupScan.getSelectionRoot());
+        implicitColumns.add(implicitValues);
+        if (implicitValues.size() > mapWithMaxColumns.size()) {
+          mapWithMaxColumns = implicitValues;
         }
+
       } catch (IOException e1) {
         throw new ExecutionSetupException(e1);
       }
     }
 
-    if (selectAllColumns) {
-      for (int i = 0; i < numParts; i++) {
-        selectedPartitionColumns.add(i);
-      }
+    // all readers should have the same number of implicit columns, add missing ones with value null
+    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    for (Map<String, String> map : implicitColumns) {
+      map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
     }
 
-    ScanBatch s =
-        new ScanBatch(rowGroupScan, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);
-
-
-    return s;
+    return new ScanBatch(rowGroupScan, context, oContext, readers, implicitColumns);
   }
 
   private static boolean isComplex(ParquetMetadata footer) {

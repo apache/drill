@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.compile;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Iterator;
@@ -39,11 +41,13 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 /**
  * Serves two purposes. Renames all inner classes references to the outer class to the new name. Also adds all the
  * methods and fields of the class to merge to the class that is being visited.
  */
+@SuppressWarnings("unused")
 class MergeAdapter extends ClassVisitor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeAdapter.class);
   private final ClassNode classToMerge;
@@ -137,7 +141,21 @@ class MergeAdapter extends ClassVisitor {
   public void visitEnd() {
     // add all the fields of the class we're going to merge.
     for (Iterator<?> it = classToMerge.fields.iterator(); it.hasNext();) {
-      ((FieldNode) it.next()).accept(this);
+
+      // Special handling for nested classes. Drill uses non-static nested
+      // "inner" classes in some templates. Prior versions of Drill would
+      // create the generated nested classes as static, then this line
+      // would copy the "this$0" field to convert the static nested class
+      // into a non-static inner class. However, that approach is not
+      // compatible with plain-old Java compilation. Now, Drill generates
+      // the nested classes as non-static inner classes. As a result, we
+      // do not want to copy the hidden fields; we'll end up with two if
+      // we do.
+
+      FieldNode field = (FieldNode) it.next();
+      if (! field.name.startsWith("this$")) {
+        field.accept(this);
+      }
     }
 
     // add all the methods that we to include.
@@ -253,7 +271,13 @@ class MergeAdapter extends ClassVisitor {
       }
 
       // enable when you want all the generated merged class files to also be written to disk.
-//      Files.write(outputClass, new File(String.format("/src/scratch/drill-generated-classes/%s-output.class", set.generated.dot)));
+//      try {
+//        File destDir = new File( "/tmp/scratch/drill-generated-classes" );
+//        destDir.mkdirs();
+//        Files.write(outputClass, new File(destDir, String.format("%s-output.class", set.generated.dot)));
+//      } catch (IOException e) {
+//        // Ignore;
+//      }
 
       return new MergedClassResult(outputClass, re.getInnerClasses());
     } catch (Error | RuntimeException e) {

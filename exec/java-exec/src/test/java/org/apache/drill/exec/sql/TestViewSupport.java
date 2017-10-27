@@ -19,12 +19,16 @@ package org.apache.drill.exec.sql;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.util.List;
 
+@Category(SqlTest.class)
 public class TestViewSupport extends TestBaseViewSupport {
   @Test
   public void referToSchemaInsideAndOutsideView() throws Exception {
@@ -239,6 +243,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-1015
+  @Category(UnlikelyTest.class)
   public void viewWithCompoundIdentifiersInDef() throws Exception{
     final String viewDef = "SELECT " +
         "cast(columns[0] AS int) n_nationkey, " +
@@ -298,6 +303,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2422
+  @Category(UnlikelyTest.class)
   public void createViewWhenATableWithSameNameAlreadyExists() throws Exception {
     final String tableName = generateViewName();
 
@@ -404,6 +410,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-1114
+  @Category(UnlikelyTest.class)
   public void viewResolvingTablesInWorkspaceSchema() throws Exception {
     final String viewName = generateViewName();
 
@@ -436,6 +443,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   // DRILL-2341, View schema verification where view's field is not specified is already tested in
   // TestViewSupport.infoSchemaWithView.
   @Test
+  @Category(UnlikelyTest.class)
   public void viewSchemaWhenSelectFieldsInDef_SelectFieldsInView() throws Exception {
     final String viewName = generateViewName();
 
@@ -463,6 +471,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithDuplicateColumnsInDef1() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s AS SELECT region_id, region_id FROM cp.`region.json`",
@@ -471,6 +480,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithDuplicateColumnsInDef2() throws Exception {
     createViewErrorTestHelper("CREATE VIEW %s.%s AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
         String.format("Duplicate column name [%s]", "sales_city")
@@ -478,6 +488,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithDuplicateColumnsInDef3() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, regionid) AS SELECT region_id, sales_city FROM cp.`region.json`",
@@ -486,6 +497,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithDuplicateColumnsInDef4() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, salescity, salescity) " +
@@ -495,6 +507,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithDuplicateColumnsInDef5() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, salescity, SalesCity) " +
@@ -504,6 +517,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithDuplicateColumnsInDef6() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s " +
@@ -514,6 +528,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithUniqueColsInFieldListDuplicateColsInQuery1() throws Exception {
     testViewHelper(
         TEMP_SCHEMA,
@@ -528,6 +543,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWithUniqueColsInFieldListDuplicateColsInQuery2() throws Exception {
     testViewHelper(
         TEMP_SCHEMA,
@@ -543,6 +559,7 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2589
+  @Category(UnlikelyTest.class)
   public void createViewWhenInEqualColumnCountInViewDefVsInViewQuery() throws Exception {
     createViewErrorTestHelper(
         "CREATE VIEW %s.%s(regionid, salescity) " +
@@ -566,18 +583,21 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-2423
+  @Category(UnlikelyTest.class)
   public void showProperMsgWhenDroppingNonExistentView() throws Exception{
     errorMsgTestHelper("DROP VIEW dfs_test.tmp.nonExistentView",
         "Unknown view [nonExistentView] in schema [dfs_test.tmp].");
   }
 
   @Test // DRILL-2423
+  @Category(UnlikelyTest.class)
   public void showProperMsgWhenTryingToDropAViewInImmutableSchema() throws Exception{
     errorMsgTestHelper("DROP VIEW cp.nonExistentView",
         "Unable to create or drop tables/views. Schema [cp] is immutable.");
   }
 
   @Test // DRILL-2423
+  @Category(UnlikelyTest.class)
   public void showProperMsgWhenTryingToDropANonViewTable() throws Exception{
     final String testTableName = "testTableShowErrorMsg";
     try {
@@ -589,6 +609,37 @@ public class TestViewSupport extends TestBaseViewSupport {
     } finally {
       File tblPath = new File(getDfsTestTmpSchemaLocation(), testTableName);
       FileUtils.deleteQuietly(tblPath);
+    }
+  }
+
+  @Test // DRILL-4673
+  public void dropViewIfExistsWhenViewExists() throws Exception {
+    final String existentViewName = generateViewName();
+
+    // successful dropping of existent view
+    createViewHelper(TEMP_SCHEMA, existentViewName, TEMP_SCHEMA, null,
+        "SELECT c_custkey, c_nationkey from cp.`tpch/customer.parquet`");
+    dropViewIfExistsHelper(TEMP_SCHEMA, existentViewName, TEMP_SCHEMA, true);
+  }
+
+  @Test // DRILL-4673
+  public void dropViewIfExistsWhenViewDoesNotExist() throws Exception {
+    final String nonExistentViewName = generateViewName();
+
+    // dropping of non existent view without error
+    dropViewIfExistsHelper(TEMP_SCHEMA, nonExistentViewName, TEMP_SCHEMA, false);
+  }
+
+  @Test // DRILL-4673
+  public void dropViewIfExistsWhenItIsATable() throws Exception {
+    final String tableName = "table_name";
+    try{
+      // dropping of non existent view without error if the table with such name is existed
+      test(String.format("CREATE TABLE %s.%s as SELECT region_id, sales_city FROM cp.`region.json`",
+          TEMP_SCHEMA, tableName));
+      dropViewIfExistsHelper(TEMP_SCHEMA, tableName, TEMP_SCHEMA, false);
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s ", TEMP_SCHEMA, tableName));
     }
   }
 }
