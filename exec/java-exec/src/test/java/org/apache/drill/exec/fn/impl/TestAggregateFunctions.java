@@ -223,6 +223,16 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testDRILL5913() throws Exception {
+    testBuilder()
+      .sqlQuery("select stddev_samp(cast(employee_id as int)) as col1, sum(cast(employee_id as int)) as col2 from cp.`employee.json`")
+      .unOrdered()
+      .baselineColumns("col1","col2")
+      .baselineValues(333.56708470261117d,668743.0)
+      .go();
+  }
+
+  @Test
   public void testStddevOnKnownType() throws Exception {
     testBuilder()
         .sqlQuery("select stddev_samp(cast(employee_id as int)) as col from cp.`employee.json`")
