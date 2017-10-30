@@ -45,20 +45,24 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Properties;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
+import org.apache.drill.categories.JdbcTest;
 import org.hamcrest.Matcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-
+import org.junit.experimental.categories.Category;
 
 /**
  * Test for Drill's implementation of PreparedStatement's methods.
  */
+@Category(JdbcTest.class)
 public class PreparedStatementTest extends JdbcTestBase {
 
   /** Fuzzy matcher for parameters-not-supported message assertions.  (Based on
@@ -74,7 +78,10 @@ public class PreparedStatementTest extends JdbcTestBase {
   @BeforeClass
   public static void setUpConnection() throws SQLException {
     Driver.load();
-    connection = DriverManager.getConnection( "jdbc:drill:zk=local" );
+    Properties properties = new Properties();
+    // Increased prepared statement creation timeout so test doesn't timeout on my laptop
+    properties.setProperty(ExecConstants.bootDefaultFor(ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS), "30000");
+    connection = DriverManager.getConnection( "jdbc:drill:zk=local", properties);
     try(Statement stmt = connection.createStatement()) {
       stmt.execute(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
     }

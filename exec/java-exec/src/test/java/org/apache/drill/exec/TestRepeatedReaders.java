@@ -19,10 +19,12 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestRepeatedReaders extends BaseTestQuery {
 

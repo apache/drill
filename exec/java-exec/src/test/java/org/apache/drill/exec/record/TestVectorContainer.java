@@ -19,9 +19,8 @@ package org.apache.drill.exec.record;
 
 import static org.junit.Assert.*;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
@@ -31,7 +30,9 @@ import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class TestVectorContainer extends DrillTest {
 
   // TODO: Replace the following with an extension of SubOperatorTest class

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,9 +46,9 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.QueryWorkUnit;
+import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -70,7 +70,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
 
   public SimpleParallelizer(QueryContext context) {
     OptionManager optionManager = context.getOptions();
-    long sliceTarget = optionManager.getOption(ExecConstants.SLICE_TARGET).num_val;
+    long sliceTarget = optionManager.getOption(ExecConstants.SLICE_TARGET_OPTION);
     this.parallelizationThreshold = sliceTarget > 0 ? sliceTarget : 1;
     double cpu_load_average = optionManager.getOption(ExecConstants.CPU_LOAD_AVERAGE);
     final long maxWidth = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE);
@@ -123,12 +123,12 @@ public class SimpleParallelizer implements ParallelizationParameters {
    * @throws ExecutionSetupException
    */
   public QueryWorkUnit getFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
-      Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootFragment,
+      Collection<DrillbitEndpoint> activeEndpoints, Fragment rootFragment,
       UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
 
     final PlanningSet planningSet = getFragmentsHelper(activeEndpoints, rootFragment);
     return generateWorkUnit(
-        options, foremanNode, queryId, reader, rootFragment, planningSet, session, queryContextInfo);
+        options, foremanNode, queryId, rootFragment, planningSet, session, queryContextInfo);
   }
 
   /**
@@ -150,6 +150,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
     // no op
     throw new UnsupportedOperationException("Use children classes");
   }
+
   /**
    * Helper method to reuse the code for QueryWorkUnit(s) generation
    * @param activeEndpoints
@@ -209,6 +210,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
     // Identify leaf fragments. Leaf fragments are fragments that have no other fragments depending on them for
     // parallelization info. First assume all fragments are leaf fragments. Go through the fragments one by one and
     // remove the fragment on which the current fragment depends on.
+
     final Set<Wrapper> roots = Sets.newHashSet();
     for(Wrapper w : planningSet) {
       roots.add(w);
@@ -257,11 +259,11 @@ public class SimpleParallelizer implements ParallelizationParameters {
   }
 
   protected QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
-      PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
+      Fragment rootNode, PlanningSet planningSet,
       UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
-    List<PlanFragment> fragments = Lists.newArrayList();
+    List<MinorFragmentDefn> fragmentDefns = new ArrayList<>( );
 
-    PlanFragment rootFragment = null;
+    MinorFragmentDefn rootFragmentDefn = null;
     FragmentRoot rootOperator = null;
 
     // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
@@ -287,16 +289,6 @@ public class SimpleParallelizer implements ParallelizationParameters {
         Preconditions.checkArgument(op instanceof FragmentRoot);
         FragmentRoot root = (FragmentRoot) op;
 
-        // get plan as JSON
-        String plan;
-        String optionsData;
-        try {
-          plan = reader.writeJson(root);
-          optionsData = reader.writeJson(options);
-        } catch (JsonProcessingException e) {
-          throw new ForemanSetupException("Failure while trying to convert fragment into json.", e);
-        }
-
         FragmentHandle handle = FragmentHandle //
             .newBuilder() //
             .setMajorFragmentId(wrapper.getMajorFragmentId()) //
@@ -306,40 +298,36 @@ public class SimpleParallelizer implements ParallelizationParameters {
 
         PlanFragment fragment = PlanFragment.newBuilder() //
             .setForeman(foremanNode) //
-            .setFragmentJson(plan) //
             .setHandle(handle) //
             .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId)) //
             .setLeafFragment(isLeafFragment) //
             .setContext(queryContextInfo)
             .setMemInitial(wrapper.getInitialAllocation())//
             .setMemMax(wrapper.getMaxAllocation())
-            .setOptionsJson(optionsData)
             .setCredentials(session.getCredentials())
             .addAllCollector(CountRequiredFragments.getCollectors(root))
             .build();
 
+        MinorFragmentDefn fragmentDefn = new MinorFragmentDefn(fragment, root, options);
+
         if (isRootNode) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
-          }
-          rootFragment = fragment;
+          logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          rootFragmentDefn = fragmentDefn;
           rootOperator = root;
         } else {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
-          }
-          fragments.add(fragment);
+          logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          fragmentDefns.add(fragmentDefn);
         }
       }
     }
 
-    return new QueryWorkUnit(rootOperator, rootFragment, fragments);
+    return new QueryWorkUnit(rootOperator, rootFragmentDefn, fragmentDefns);
   }
-
 
   /**
    * Designed to setup initial values for arriving fragment accounting.
    */
+
   protected static class CountRequiredFragments extends AbstractPhysicalVisitor<Void, List<Collector>, RuntimeException> {
     private static final CountRequiredFragments INSTANCE = new CountRequiredFragments();
 
@@ -357,7 +345,6 @@ public class SimpleParallelizer implements ParallelizationParameters {
         list.add(ep.getId());
       }
 
-
       collectors.add(Collector.newBuilder()
         .setIsSpooling(receiver.isSpooling())
         .setOppositeMajorFragmentId(receiver.getOppositeMajorFragmentId())
@@ -374,6 +361,5 @@ public class SimpleParallelizer implements ParallelizationParameters {
       }
       return null;
     }
-
   }
 }

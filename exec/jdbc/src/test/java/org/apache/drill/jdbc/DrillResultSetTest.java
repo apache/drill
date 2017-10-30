@@ -29,14 +29,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.jdbc.test.JdbcAssert;
 import org.apache.drill.test.DrillTest;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-
+@Category({SlowTest.class, JdbcTest.class})
 public class DrillResultSetTest extends DrillTest {
 
   // TODO: Move Jetty status server disabling to DrillTest.

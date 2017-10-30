@@ -17,24 +17,15 @@
  */
 package org.apache.drill.jdbc.test;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertThat;
-
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.hamcrest.CoreMatchers;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.*;
 
-import com.google.common.base.Function;
+import org.junit.experimental.categories.Category;
 
+@Category(JdbcTest.class)
 public class JdbcNullOrderingAndGroupingTest extends JdbcTestQueryBase {
   static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(JdbcNullOrderingAndGroupingTest.class);

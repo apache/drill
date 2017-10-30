@@ -19,6 +19,8 @@ package org.apache.drill.exec.impersonation;
 
 import com.google.common.collect.Maps;
 import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.categories.SecurityTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
@@ -34,12 +36,14 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
+@Category({SlowTest.class, SecurityTest.class})
 public class TestInboundImpersonation extends BaseTestImpersonation {
 
   public static final String OWNER = org1Users[0];

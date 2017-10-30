@@ -17,14 +17,21 @@
  */
 package org.apache.drill.exec.server;
 
+import com.google.common.base.Joiner;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_GROUP;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER;
@@ -35,6 +42,9 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
+
+
+
 
 import java.util.Properties;
 
@@ -113,6 +123,90 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
           .go();
     } finally {
       test(String.format("ALTER SYSTEM SET `%s` = %d;", ExecConstants.SLICE_TARGET, ExecConstants.SLICE_TARGET_DEFAULT));
+    }
+  }
+
+  @Test
+  public void testAdminUserOptions() throws Exception {
+
+    try (ClusterFixture cluster = ClusterFixture.standardCluster();
+         ClientFixture client = cluster.clientFixture()) {
+      OptionManager optionManager = cluster.drillbit().getContext().getOptionManager();
+
+      // Admin Users Tests
+      // config file should have the 'fake' default admin user and it should be returned
+      // by the option manager if the option has not been set by the user
+      String configAdminUser =  optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR);
+      assertEquals(configAdminUser, ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
+
+      // Option accessor should never return the 'fake' default from the config
+      String adminUser1 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+      assertNotEquals(adminUser1, ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
+
+      // Change testAdminUser if necessary
+      String testAdminUser = "ronswanson";
+      if (adminUser1.equals(testAdminUser)) {
+        testAdminUser += "thefirst";
+      }
+      // Check if the admin option accessor honors a user-supplied value
+      client.alterSystem(ExecConstants.ADMIN_USERS_KEY, testAdminUser);
+      String adminUser2 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+      assertEquals(adminUser2, testAdminUser);
+
+      // Ensure that the default admin users have admin privileges
+      client.resetSystem(ExecConstants.ADMIN_USERS_KEY);
+      client.resetSystem(ExecConstants.ADMIN_USER_GROUPS_KEY);
+      String systemAdminUsersList0 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+      String systemAdminUserGroupsList0 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+      for (String user : systemAdminUsersList0.split(",")) {
+        assertTrue(ImpersonationUtil.hasAdminPrivileges(user, systemAdminUsersList0, systemAdminUserGroupsList0));
+      }
+
+      // test if admin users, set by the user, have admin privileges
+      // test if we can handle a user-supplied list that is not well formatted
+      String crummyTestAdminUsersList = " alice, bob bob, charlie  ,, dave ";
+      client.alterSystem(ExecConstants.ADMIN_USERS_KEY, crummyTestAdminUsersList);
+      String[] sanitizedAdminUsers = {"alice", "bob bob", "charlie", "dave"};
+      // also test the CSV sanitizer
+      assertEquals(Joiner.on(",").join(sanitizedAdminUsers), DrillStringUtils.sanitizeCSV(crummyTestAdminUsersList));
+      String systemAdminUsersList1 = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+      String systemAdminUserGroupsList1 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+      for (String user : sanitizedAdminUsers) {
+        assertTrue(ImpersonationUtil.hasAdminPrivileges(user, systemAdminUsersList1, systemAdminUserGroupsList1));
+      }
+
+      // Admin User Groups Tests
+      // config file should have the 'fake' default admin user and it should be returned
+      // by the option manager if the option has not been set by the user
+      String configAdminUserGroups =  optionManager.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR);
+      assertEquals(configAdminUserGroups, ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.DEFAULT_ADMIN_USER_GROUPS);
+
+      // Option accessor should never return the 'fake' default from the config
+      String adminUserGroups1 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+      assertNotEquals(adminUserGroups1, ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.DEFAULT_ADMIN_USER_GROUPS);
+
+      // Change testAdminUserGroups if necessary
+      String testAdminUserGroups = "yakshavers";
+      if (adminUserGroups1.equals(testAdminUserGroups)) {
+        testAdminUserGroups += ",wormracers";
+      }
+      // Check if the admin option accessor honors a user-supplied values
+      client.alterSystem(ExecConstants.ADMIN_USER_GROUPS_KEY, testAdminUserGroups);
+      String adminUserGroups2 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+      assertEquals(adminUserGroups2, testAdminUserGroups);
+
+      // Test if we can handle a user-supplied admin user groups list that is not well formatted
+      String crummyTestAdminUserGroupsList = " g1, g 2, g4 ,, g5 ";
+      client.alterSystem(ExecConstants.ADMIN_USER_GROUPS_KEY, crummyTestAdminUserGroupsList);
+      String systemAdminUserGroupsList2 = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+      // test if all the group tokens are well-formed
+      // Note: A hasAdminPrivilege() test cannot be done here, like in the tests for handling a crummy admin user list.
+      // This is because ImpersonationUtil currently does not implement an API that takes a group as an input to check
+      // for admin privileges
+      for (String group : systemAdminUserGroupsList2.split(",")) {
+        assertTrue(group.length() != 0);
+        assertTrue(group.trim().equals(group));
+      }
     }
   }
 }

@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -36,6 +37,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,7 @@ import java.util.Map;
  * -- USE schema
  * -- SHOW FILES
  */
+@Category(SqlTest.class)
 public class TestInfoSchema extends BaseTestQuery {
 
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);

@@ -73,6 +73,9 @@ public class DrillConfigIterator implements Iterable<OptionValue> {
 
       case NULL:
         throw new IllegalStateException("Config value \"" + name + "\" has NULL type");
+
+      default:
+        throw new IllegalStateException("Unknown type: " + cv.valueType());
       }
 
       return optionValue;

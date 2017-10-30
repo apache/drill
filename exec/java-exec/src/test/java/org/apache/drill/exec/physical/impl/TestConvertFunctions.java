@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.QueryTestUtil;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
 import org.apache.drill.exec.compile.CodeCompiler;
@@ -55,7 +56,9 @@ import com.google.common.io.Resources;
 
 import io.netty.buffer.DrillBuf;
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
+@Category(UnlikelyTest.class)
 public class TestConvertFunctions extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestConvertFunctions.class);
 

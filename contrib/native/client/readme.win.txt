@@ -121,7 +121,6 @@ Windows platforms should be more or less similar.
 2.2 Protobuf (2.5.0)
     Get protobuf from here: https://protobuf.googlecode.com/files/protobuf-2.5.0.zip
 
-
     a) Protobuf builds static libraries
     b) In Visual Studio, open <PROTOBUF_HOME>/vsprojects/protobuf.sln. The IDE may
     update the solution file. This should go thru successfully.
@@ -152,6 +151,15 @@ Windows platforms should be more or less similar.
     c) InVisual Studio 2010 Express open <CPPUNIT_HOME>/src/CppUnitLibraries2010.sln
        i) Build cppunit project
 
+2.5 Install or build Cyrus SASL
+   To build your own see readme.sasl for instructions
+
+2.6 Install OpenSSL
+   Download from https://slproweb.com/products/Win32OpenSSL.html
+   At the time of writing the compatible version is Win32OpenSSL-1_0_2L
+   OpenSSL is installed into C:\OpenSSL-Win64, If you install DLL's into bin directory, make sure the directory is added to the PATH
+
+
 3 Building Drill Clientlib
 3.1 SET the following environment variables
     set BOOST_LIBRARYDIR=<BOOST_HOME>\BUILD_TYPE
@@ -163,10 +171,10 @@ Windows platforms should be more or less similar.
     C:> cd build
 
     a) For the 32 bit build :
-        C:> cmake -G "Visual Studio 10" -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CPPUNIT_HOME=<CPPUNIT_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
+        C:> cmake -G "Visual Studio 10" -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CPPUNIT_HOME=<CPPUNIT_HOME> -D SASL_LIBRARY="<SASL_HOME>\lib64_debug\libsasl.lib" -D SASL_HOME=<SASL_HOME> -D OPENSSL_ROOT=<OPENSSL_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
 
     b) For the 64 bit build :
-        C:> cmake -G "Visual Studio 10 Win64 " -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CPPUNIT_HOME=<CPPUNIT_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
+        C:> cmake -G "Visual Studio 10 Win64 " -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CPPUNIT_HOME=<CPPUNIT_HOME> -D SASL_LIBRARY="<SASL_HOME>\lib64_debug\libsasl.lib" -D SASL_HOME=<SASL_HOME> -D OPENSSL_ROOT=<OPENSSL_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
 
 3.3 Open the generated <DRILL_HOME>/contrib/native/client/build/drillclient.sln 
     file in Visual Studio.

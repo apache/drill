@@ -51,6 +51,8 @@ public class DrillUserPrincipal implements Principal {
     this.isAdmin = isAdmin;
   }
 
+  public boolean isAdminUser() { return isAdmin; }
+
   @Override
   public String getName() {
     return userName;

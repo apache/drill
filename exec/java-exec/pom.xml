@@ -20,6 +20,9 @@
   <name>exec/Java Execution Engine</name>
   <properties>
     <libpam4j.version>1.8-rev1</libpam4j.version>
+    <!-- Configure the os-maven-plugin extension to expand the classifier on -->
+    <!-- Fedora-"like" systems. Used for netty-tcnative inclusion -->
+    <os.detection.classifierWithLikes>fedora</os.detection.classifierWithLikes>
   </properties>
 
   <dependencies>
@@ -224,7 +227,6 @@
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
-      <version>${freemarker.version}</version>
     </dependency>
     <dependency>
       <groupId>net.hydromatic</groupId>
@@ -406,6 +408,14 @@
           <artifactId>log4j</artifactId>
           <groupId>log4j</groupId>
         </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -413,6 +423,12 @@
       <artifactId>curator-test</artifactId>
       <version>2.7.1</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.carrotsearch</groupId>
@@ -434,7 +450,22 @@
       <artifactId>joda-time</artifactId>
       <version>2.9</version>
     </dependency>
-
+    <dependency>
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+      <version>3.6</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-validator</groupId>
+      <artifactId>commons-validator</artifactId>
+      <version>1.4.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
@@ -442,6 +473,14 @@
         <exclusion>
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -454,6 +493,22 @@
         <exclusion>
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -476,6 +531,14 @@
     	  <groupId>org.xerial.snappy</groupId>
     	  <artifactId>snappy-java</artifactId>
     	</exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -487,6 +550,14 @@
           <groupId>org.mortbay.jetty</groupId>
           <artifactId>servlet-api</artifactId>
         </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -495,6 +566,10 @@
       <scope>test</scope>
       <classifier>tests</classifier>
       <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>io.netty</groupId>
           <artifactId>netty-all</artifactId>
@@ -527,6 +602,14 @@
       <artifactId>libpam4j</artifactId>
       <version>${libpam4j.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-tcnative</artifactId>
+      <version>2.0.1.Final</version>
+      <scope>provided</scope>
+      <classifier>${os.detected.classifier}</classifier>
+    </dependency>
+
   </dependencies>
 
   <profiles>
@@ -544,6 +627,28 @@
         <dependency>
           <artifactId>hadoop-common</artifactId>
           <groupId>org.apache.hadoop</groupId>
+          <exclusions>
+            <exclusion>
+              <groupId>commons-codec</groupId>
+              <artifactId>commons-codec</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-all</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
       </dependencies>
     </profile>
@@ -553,6 +658,24 @@
         <dependency>
           <artifactId>hadoop-common</artifactId>
           <groupId>org.apache.hadoop</groupId>
+          <exclusions>
+            <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-all</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
       </dependencies>
     </profile>
@@ -577,7 +700,7 @@
                   <includes>
                     <include>**/TestLargeFileCompilation.java</include>
                   </includes>
-                  <groups>org.apache.drill.test.SecondaryTest</groups>
+                  <groups>org.apache.drill.categories.SlowTest</groups>
                 </configuration>
               </execution>
             </executions>
@@ -588,6 +711,17 @@
   </profiles>
 
   <build>
+
+    <extensions>
+      <!--
+      Include the os-maven-plugin to get os.detected.classifier
+      -->
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>1.5.0.Final</version>
+      </extension>
+    </extensions>
 
     <plugins>
       <plugin>
@@ -782,9 +916,6 @@
               <excludes>
                 <exclude>**/TestLargeFileCompilation.java</exclude>
               </excludes>
-              <!-- Modern: include using the @Category annotation.
-                   See the Javadoc for SecondaryTest for details. -->
-              <excludedGroups>org.apache.drill.test.SecondaryTest</excludedGroups>
             </configuration>
           </execution>
         </executions>

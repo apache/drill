@@ -19,6 +19,8 @@ package org.apache.drill.exec.fn.impl;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
@@ -30,7 +32,9 @@ import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class, VectorTest.class})
 public class TestByteComparisonFunctions extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestByteComparisonFunctions.class);
 

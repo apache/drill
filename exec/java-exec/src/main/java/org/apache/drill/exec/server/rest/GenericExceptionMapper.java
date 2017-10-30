@@ -20,22 +20,21 @@ package org.apache.drill.exec.server.rest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
 
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
-    @Override
-    public Response toResponse(Throwable throwable) {
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode())
-                .entity(new GenericErrorMessage(throwable.getMessage()))
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .build();
-    }
+  @Override
+  public Response toResponse(Throwable throwable) {
+    return Response
+        .status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode())
+        .entity(new GenericErrorMessage(throwable.getMessage()))
+        .type(MediaType.APPLICATION_JSON_TYPE).build();
+  }
 
-    public static class GenericErrorMessage {
-        public final String errorMessage;
+  public static class GenericErrorMessage {
+    public final String errorMessage;
 
-        public GenericErrorMessage(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
+    public GenericErrorMessage(String errorMessage) {
+      this.errorMessage = errorMessage;
     }
+  }
 }

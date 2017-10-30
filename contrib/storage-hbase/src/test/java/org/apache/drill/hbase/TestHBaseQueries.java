@@ -20,6 +20,8 @@ package org.apache.drill.hbase;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.categories.HbaseStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -29,7 +31,9 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HbaseStorageTest.class})
 public class TestHBaseQueries extends BaseHBaseTest {
 
   @Test

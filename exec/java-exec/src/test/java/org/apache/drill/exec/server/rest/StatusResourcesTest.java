@@ -38,7 +38,7 @@ public class StatusResourcesTest {
 
     FixtureBuilder builder = ClusterFixture.builder().
       configProperty(ExecConstants.HTTP_ENABLE, true).
-      configProperty(OptionValidator.OPTION_DEFAULTS_ROOT + MOCK_PROPERTY, "a").
+      configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
       configProperty(ExecConstants.HTTP_PORT_HUNT, true).
       configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false).
       putDefinition(optionDefinition);

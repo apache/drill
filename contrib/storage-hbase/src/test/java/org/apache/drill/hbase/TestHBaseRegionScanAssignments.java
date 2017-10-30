@@ -25,9 +25,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NavigableMap;
 
+import org.apache.drill.categories.HbaseStorageTest;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.hbase.HBaseGroupScan;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
@@ -37,7 +39,9 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HbaseStorageTest.class})
 public class TestHBaseRegionScanAssignments extends BaseHBaseTest {
   static final String HOST_A = "A";
   static final String HOST_B = "B";

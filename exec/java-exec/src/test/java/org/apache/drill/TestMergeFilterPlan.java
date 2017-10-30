@@ -18,8 +18,11 @@
 
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(PlannerTest.class)
 public class TestMergeFilterPlan extends PlanTestBase {
 
   @Test

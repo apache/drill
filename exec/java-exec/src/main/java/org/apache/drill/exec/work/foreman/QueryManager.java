@@ -36,7 +36,6 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.SchemaUserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -98,6 +97,15 @@ public class QueryManager implements AutoCloseable {
 
   // Is the query saved in transient store
   private boolean inTransientStore;
+
+  /**
+   * Total query cost. This value is used to place the query into a queue
+   * and so has meaning to the user who wants to predict queue placement.
+   */
+
+  private double totalCost;
+
+  private String queueName;
 
   public QueryManager(final QueryId queryId, final RunQuery runQuery, final PersistentStoreProvider storeProvider,
       final ClusterCoordinator coordinator, final Foreman foreman) {
@@ -191,6 +199,7 @@ public class QueryManager implements AutoCloseable {
    * (3) Leaf fragment: running, send the cancel signal through a tunnel. The cancel is done directly.
    */
   void cancelExecutingFragments(final DrillbitContext drillbitContext) {
+    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       switch(data.getState()) {
@@ -219,6 +228,7 @@ public class QueryManager implements AutoCloseable {
    * sending any message. Resume all fragments through the control tunnel.
    */
   void unpauseExecutingFragments(final DrillbitContext drillbitContext) {
+    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       final DrillbitEndpoint endpoint = data.getEndpoint();
@@ -318,6 +328,8 @@ public class QueryManager implements AutoCloseable {
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
+        .setTotalCost(totalCost)
+        .setQueueName(queueName == null ? "-" : queueName)
         .setOptionsJson(getQueryOptionsAsJson());
 
     if (queryText != null) {
@@ -332,7 +344,6 @@ public class QueryManager implements AutoCloseable {
   }
 
   private QueryProfile getQueryProfile(UserException ex) {
-    final String queryText = foreman.getQueryText();
     final QueryProfile.Builder profileBuilder = QueryProfile.newBuilder()
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setType(runQuery.getType())
@@ -345,6 +356,8 @@ public class QueryManager implements AutoCloseable {
         .setQueueWaitEnd(queueWaitEndTime)
         .setTotalFragments(fragmentDataSet.size())
         .setFinishedFragments(finishedFragments.get())
+        .setTotalCost(totalCost)
+        .setQueueName(queueName == null ? "-" : queueName)
         .setOptionsJson(getQueryOptionsAsJson());
 
     if (ex != null) {
@@ -360,6 +373,7 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.setPlan(planText);
     }
 
+    final String queryText = foreman.getQueryText();
     if (queryText != null) {
       profileBuilder.setQuery(queryText);
     }
@@ -392,7 +406,6 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.addFragmentProfile(builder);
       return true;
     }
-
   }
 
   private class InnerIter implements IntObjectPredicate<FragmentData> {
@@ -407,7 +420,6 @@ public class QueryManager implements AutoCloseable {
       builder.addMinorFragmentProfile(data.getProfile());
       return true;
     }
-
   }
 
   void setPlanText(final String planText) {
@@ -428,6 +440,14 @@ public class QueryManager implements AutoCloseable {
 
   void markQueueWaitEndTime() {
     queueWaitEndTime = System.currentTimeMillis();
+  }
+
+  public void setTotalCost(double totalCost) {
+    this.totalCost = totalCost;
+  }
+
+  public void setQueueName(String queueName) {
+    this.queueName = queueName;
   }
 
   /**
@@ -536,7 +556,7 @@ public class QueryManager implements AutoCloseable {
     return drillbitStatusListener;
   }
 
-  private final DrillbitStatusListener drillbitStatusListener = new DrillbitStatusListener(){
+  private final DrillbitStatusListener drillbitStatusListener = new DrillbitStatusListener() {
 
     @Override
     public void drillbitRegistered(final Set<DrillbitEndpoint> registeredDrillbits) {

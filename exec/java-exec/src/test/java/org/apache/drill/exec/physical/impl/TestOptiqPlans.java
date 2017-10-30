@@ -22,6 +22,7 @@ import java.util.List;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.util.FileUtils;
@@ -65,8 +66,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import org.junit.experimental.categories.Category;
 
 @Ignore
+@Category(PlannerTest.class)
 public class TestOptiqPlans extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptiqPlans.class);
   private final DrillConfig config = DrillConfig.create();

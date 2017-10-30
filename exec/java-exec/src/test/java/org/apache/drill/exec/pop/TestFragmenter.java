@@ -23,13 +23,16 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(PlannerTest.class)
 public class TestFragmenter extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFragmenter.class);
 

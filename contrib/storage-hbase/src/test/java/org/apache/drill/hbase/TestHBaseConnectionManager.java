@@ -17,8 +17,12 @@
  */
 package org.apache.drill.hbase;
 
+import org.apache.drill.categories.HbaseStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HbaseStorageTest.class})
 public class TestHBaseConnectionManager extends BaseHBaseTest {
 
   @Test

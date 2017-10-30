@@ -21,6 +21,7 @@
 #include "utils.hpp"
 #include "logger.hpp"
 #include "drill/common.hpp"
+#include "drill/drillConfig.hpp"
 
 #if defined _WIN32  || defined _WIN64
 //Windows header files redefine 'max'

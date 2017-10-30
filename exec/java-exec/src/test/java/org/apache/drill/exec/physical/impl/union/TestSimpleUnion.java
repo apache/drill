@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.union;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
@@ -40,9 +41,10 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
 // See also TestUnionDistinct for a test that does not need JMockit
-
+@Category(OperatorTest.class)
 public class TestSimpleUnion extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleUnion.class);
   private final DrillConfig c = DrillConfig.create();

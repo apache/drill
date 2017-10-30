@@ -30,11 +30,13 @@ import com.google.common.base.Strings;
 
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.jdbc.test.JdbcAssert;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -42,6 +44,7 @@ import org.junit.runner.Description;
 // TODO:  Document this, especially what writers of unit tests need to know
 //   (e.g., the reusing of connections, the automatic interception of test
 //   failures and resetting of connections, etc.).
+@Category(JdbcTest.class)
 public class JdbcTestBase extends ExecTest {
   @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestBase.class);

@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -51,7 +53,9 @@ import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, SqlTest.class})
 public class ExpressionInterpreterTest  extends PopUnitTestBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionInterpreterTest.class);
 

@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/assign.hpp>
+#include "drill/userProperties.hpp"
 #include "saslAuthenticatorImpl.hpp"
 
 #include "drillClientImpl.hpp"
@@ -123,10 +124,11 @@ int SaslAuthenticatorImpl::init(const std::vector<std::string>& mechanisms, exec
     std::string authMechanismToUse;
     std::string serviceName;
     std::string serviceHost;
-    for (size_t i = 0; i < m_pUserProperties->size(); i++) {
-        const std::string key = m_pUserProperties->keyAt(i);
-        const std::string value = m_pUserProperties->valueAt(i);
-
+    for (std::map<std::string, std::string>::const_iterator it=m_pUserProperties->begin(); 
+            it!=m_pUserProperties->end(); 
+            ++it){
+        const std::string key = it->first;
+        const std::string value = it->second;
         if (USERPROP_SERVICE_HOST == key) {
             serviceHost = value;
         } else if (USERPROP_SERVICE_NAME == key) {

@@ -19,9 +19,12 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestAggNullable extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAggNullable.class);
 

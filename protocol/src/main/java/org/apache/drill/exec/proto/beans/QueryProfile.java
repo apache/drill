@@ -50,6 +50,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     static final QueryProfile DEFAULT_INSTANCE = new QueryProfile();
 
     static final String DEFAULT_USER = ByteString.stringDefaultValue("-");
+    static final String DEFAULT_QUEUE_NAME = ByteString.stringDefaultValue("-");
     
     private QueryId id;
     private QueryType type;
@@ -70,6 +71,8 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     private String optionsJson;
     private long planEnd;
     private long queueWaitEnd;
+    private double totalCost;
+    private String queueName = DEFAULT_QUEUE_NAME;
 
     public QueryProfile()
     {
@@ -325,6 +328,32 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         return this;
     }
 
+    // totalCost
+
+    public double getTotalCost()
+    {
+        return totalCost;
+    }
+
+    public QueryProfile setTotalCost(double totalCost)
+    {
+        this.totalCost = totalCost;
+        return this;
+    }
+
+    // queueName
+
+    public String getQueueName()
+    {
+        return queueName;
+    }
+
+    public QueryProfile setQueueName(String queueName)
+    {
+        this.queueName = queueName;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -441,6 +470,12 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
                 case 19:
                     message.queueWaitEnd = input.readInt64();
                     break;
+                case 20:
+                    message.totalCost = input.readDouble();
+                    break;
+                case 21:
+                    message.queueName = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -515,6 +550,12 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
 
         if(message.queueWaitEnd != 0)
             output.writeInt64(19, message.queueWaitEnd, false);
+
+        if(message.totalCost != 0)
+            output.writeDouble(20, message.totalCost, false);
+
+        if(message.queueName != null && message.queueName != DEFAULT_QUEUE_NAME)
+            output.writeString(21, message.queueName, false);
     }
 
     public String getFieldName(int number)
@@ -540,6 +581,8 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             case 17: return "optionsJson";
             case 18: return "planEnd";
             case 19: return "queueWaitEnd";
+            case 20: return "totalCost";
+            case 21: return "queueName";
             default: return null;
         }
     }
@@ -572,6 +615,8 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         __fieldMap.put("optionsJson", 17);
         __fieldMap.put("planEnd", 18);
         __fieldMap.put("queueWaitEnd", 19);
+        __fieldMap.put("totalCost", 20);
+        __fieldMap.put("queueName", 21);
     }
     
 }

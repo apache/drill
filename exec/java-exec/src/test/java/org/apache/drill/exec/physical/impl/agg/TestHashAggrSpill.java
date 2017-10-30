@@ -19,6 +19,8 @@
 package org.apache.drill.exec.physical.impl.agg;
 
 import ch.qos.logback.classic.Level;
+import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggTemplate;
@@ -30,7 +32,9 @@ import org.apache.drill.test.FixtureBuilder;
 import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.ProfileParser;
 import org.apache.drill.test.QueryBuilder;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
@@ -41,6 +45,7 @@ import static org.junit.Assert.assertTrue;
 /**
  *  Test spilling for the Hash Aggr operator (using the mock reader)
  */
+@Category({SlowTest.class, OperatorTest.class})
 public class TestHashAggrSpill {
 
     private void runAndDump(ClientFixture client, String sql, long expectedRows, long spillCycle, long fromSpilledPartitions, long toSpilledPartitions) throws Exception {

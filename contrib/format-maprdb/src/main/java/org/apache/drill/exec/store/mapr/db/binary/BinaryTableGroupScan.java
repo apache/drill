@@ -35,6 +35,7 @@ import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
+import org.apache.drill.exec.store.hbase.HBaseUtils;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
 import org.apache.drill.exec.store.mapr.db.MapRDBGroupScan;
@@ -113,8 +114,8 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     BinaryTableGroupScan newScan = new BinaryTableGroupScan(this);
-    newScan.columns = columns;
-    newScan.verifyColumns();
+    newScan.columns = columns == null ? ALL_COLUMNS : columns;
+    HBaseUtils.verifyColumns(columns, hTableDesc);
     return newScan;
   }
 
@@ -145,21 +146,9 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
     } catch (Exception e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }
-    verifyColumns();
+    HBaseUtils.verifyColumns(columns, hTableDesc);
   }
 
-  private void verifyColumns() {
-    /*
-    if (columns != null) {
-      for (SchemaPath column : columns) {
-        if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-          DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
-              column.getRootSegment().getPath(), hTableDesc.getNameAsString());
-        }
-      }
-    }
-    */
-  }
 
   protected MapRDBSubScanSpec getSubScanSpec(TabletFragmentInfo tfi) {
     HBaseScanSpec spec = hbaseScanSpec;

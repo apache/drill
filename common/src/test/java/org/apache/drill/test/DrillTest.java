@@ -57,14 +57,15 @@ public class DrillTest {
   static MemWatcher memWatcher;
   static String className;
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(1000000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
+
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
   @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
 
   /**
    * Rule for tests that verify {@link org.apache.drill.common.exceptions.UserException} type and message. See
-   * {@link UserExceptionMatcher} and e.g. {@link org.apache.drill.exec.server.TestOptions#checkValidationException}.
+   * {@link UserExceptionMatcher} and e.g. apache.drill.exec.server.TestOptions#checkValidationException.
    * Tests that do not use this rule are not affected.
    */
   @Rule public final ExpectedException thrownException = ExpectedException.none();

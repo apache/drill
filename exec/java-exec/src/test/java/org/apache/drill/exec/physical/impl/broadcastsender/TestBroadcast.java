@@ -18,8 +18,11 @@
 package org.apache.drill.exec.physical.impl.broadcastsender;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestBroadcast extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBroadcast.class);
 

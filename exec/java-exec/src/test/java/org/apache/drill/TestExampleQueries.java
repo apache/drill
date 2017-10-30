@@ -22,18 +22,24 @@ import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.compile.ClassTransformer;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SqlFunctionTest.class, OperatorTest.class, PlannerTest.class})
 public class TestExampleQueries extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
   @Test // see DRILL-2328
+  @Category(UnlikelyTest.class)
   public void testConcatOnNull() throws Exception {
     try {
       test("use dfs_test.tmp");
@@ -218,11 +224,13 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testCaseReturnValueVarChar() throws Exception {
     test("select case when employee_id < 1000 then 'ABC' else 'DEF' end from cp.`employee.json` limit 5");
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testCaseReturnValueBigInt() throws Exception {
     test("select case when employee_id < 1000 then 1000 else 2000 end from cp.`employee.json` limit 5");
   }
@@ -347,6 +355,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   // cast non-exist column from json file. Should return null value.
   public void testDrill428() throws Exception {
     test("select cast(NON_EXIST_COL as varchar(10)) from cp.`employee.json` limit 2; ");
@@ -415,6 +424,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testCase() throws Exception {
     test("select case when n_nationkey > 0 and n_nationkey < 2 then concat(n_name, '_abc') when n_nationkey >=2 and n_nationkey < 4 then '_EFG' else concat(n_name,'_XYZ') end, n_comment from cp.`tpch/nation.parquet` ;");
   }
@@ -442,6 +452,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test // DRILL-1544
+  @Category(UnlikelyTest.class)
   public void testLikeEscape() throws Exception {
     int actualRecordCount = testSql("select id, name from cp.`jsoninput/specialchar.json` where name like '%#_%' ESCAPE '#'");
     int expectedRecordCount = 1;
@@ -451,6 +462,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testSimilarEscape() throws Exception {
     int actualRecordCount = testSql("select id, name from cp.`jsoninput/specialchar.json` where name similar to '(N|S)%#_%' ESCAPE '#'");
     int expectedRecordCount = 1;
@@ -459,6 +471,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testImplicitDownwardCast() throws Exception {
     int actualRecordCount = testSql("select o_totalprice from cp.`tpch/orders.parquet` where o_orderkey=60000 and o_totalprice=299402");
     int expectedRecordCount = 0;
@@ -467,6 +480,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test // DRILL-1470
+  @Category(UnlikelyTest.class)
   public void testCastToVarcharWithLength() throws Exception {
     // cast from varchar with unknown length to a fixed length.
     int actualRecordCount = testSql("select first_name from cp.`employee.json` where cast(first_name as varchar(2)) = 'Sh'");
@@ -495,6 +509,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test // DRILL-1488
+  @Category(UnlikelyTest.class)
   public void testIdentifierMaxLength() throws Exception {
     // use long column alias name (approx 160 chars)
     test("select employee_id as  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa from cp.`employee.json` limit 1");
@@ -520,6 +535,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test // DRILL-1788
+  @Category(UnlikelyTest.class)
   public void testCaseInsensitiveJoin() throws Exception {
     test("select n3.n_name from (select n2.n_name from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.N_name = n2.n_name) n3 " +
         " join cp.`tpch/nation.parquet` n4 on n3.n_name = n4.n_name");
@@ -682,6 +698,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testSimilar() throws Exception {
     String query = "select n_nationkey " +
         "from cp.`tpch/nation.parquet` " +
@@ -722,6 +739,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test // DRILL-1943, DRILL-1911
+  @Category(UnlikelyTest.class)
   public void testColumnNamesDifferInCaseOnly() throws Exception {
     testBuilder()
         .sqlQuery("select r_regionkey a, r_regionkey A FROM cp.`tpch/region.parquet`")
@@ -1095,6 +1113,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test // see DRILL-3557
+  @Category(UnlikelyTest.class)
   public void testEmptyCSVinDirectory() throws Exception {
     final String root = FileUtils.getResourceAsFile("/store/text/directoryWithEmpyCSV").toURI().toString();
     final String toFile = FileUtils.getResourceAsFile("/store/text/directoryWithEmpyCSV/empty.csv").toURI().toString();
@@ -1107,6 +1126,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testNegativeExtractOperator() throws Exception {
     String query = "select -EXTRACT(DAY FROM birth_date) as col \n" +
         "from cp.`employee.json` \n" +
@@ -1175,6 +1195,7 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test // DRILL-2190
+  @Category(UnlikelyTest.class)
   public void testDateImplicitCasting() throws Exception {
     String query = "SELECT birth_date \n" +
         "FROM cp.`employee.json` \n" +

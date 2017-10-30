@@ -21,6 +21,7 @@ import java.util.Properties;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.DrillTestWrapper;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
@@ -31,6 +32,7 @@ import static org.junit.Assert.fail;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestWindowFrame extends BaseTestQuery {
 
@@ -194,32 +196,38 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test // DRILL-1862
+  @Category(UnlikelyTest.class)
   public void testEmptyPartitionBy() throws Exception {
     test("SELECT employee_id, position_id, salary, SUM(salary) OVER(ORDER BY position_id) FROM cp.`employee.json` LIMIT 10");
   }
 
   @Test // DRILL-3172
+  @Category(UnlikelyTest.class)
   public void testEmptyOverClause() throws Exception {
     test("SELECT employee_id, position_id, salary, SUM(salary) OVER() FROM cp.`employee.json` LIMIT 10");
   }
 
   @Test // DRILL-3218
+  @Category(UnlikelyTest.class)
   public void testMaxVarChar() throws Exception {
     test(getFile("window/q3218.sql"), TEST_RES_PATH);
   }
 
   @Test // DRILL-3220
+  @Category(UnlikelyTest.class)
   public void testCountConst() throws Exception {
     test(getFile("window/q3220.sql"), TEST_RES_PATH);
   }
 
   @Test // DRILL-3604
+  @Category(UnlikelyTest.class)
   public void testFix3604() throws Exception {
     // make sure the query doesn't fail
     test(getFile("window/3604.sql"), TEST_RES_PATH);
   }
 
   @Test // DRILL-3605
+  @Category(UnlikelyTest.class)
   public void testFix3605() throws Exception {
     testBuilder()
       .sqlQuery(getFile("window/3605.sql"), TEST_RES_PATH)
@@ -231,6 +239,7 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test // DRILL-3606
+  @Category(UnlikelyTest.class)
   public void testFix3606() throws Exception {
     testBuilder()
       .sqlQuery(getFile("window/3606.sql"), TEST_RES_PATH)
@@ -446,6 +455,7 @@ public class TestWindowFrame extends BaseTestQuery {
   // somewhere in the window functions.
 
   @Test
+  @Category(UnlikelyTest.class)
   public void test4657() throws Exception {
     testBuilder()
       .sqlQuery("select row_number() over(order by position_id) rn, rank() over(order by position_id) rnk from dfs_test.`%s/window/b3.p2`", TEST_RES_PATH)
