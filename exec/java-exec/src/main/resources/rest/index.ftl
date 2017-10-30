@@ -116,6 +116,7 @@
                   <tbody>
                       <tr>
                         <td>Admin Users</td>
+<<<<<<< HEAD
                         <td class="list-value"><@format_string str=model.getAdminUsers()/></td>
                       </tr>
                       <tr>
@@ -129,6 +130,13 @@
                       <tr>
                         <td>Process User Groups</td>
                         <td class="list-value">${model.getProcessUserGroups()}</td>
+=======
+                        <td class="list-value">${model.getAdminUsers()}</td>
+                      </tr>
+                      <tr>
+                        <td>Admin User Groups</td>
+                        <td class="list-value">${model.getAdminUserGroups()}</td>
+>>>>>>> Squash Commits
                       </tr>
                   </tbody>
                 </table>

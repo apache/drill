@@ -367,6 +367,7 @@ public final class ExecConstants {
   public static final LongValidator MAX_QUERY_MEMORY_PER_NODE = new RangeLongValidator(MAX_QUERY_MEMORY_PER_NODE_KEY, 1024 * 1024, Long.MAX_VALUE);
 
   /**
+<<<<<<< HEAD
    * Alternative way to compute per-query-per-node memory as a percent
    * of the total available system memory.
    * <p>
@@ -395,6 +396,8 @@ public final class ExecConstants {
       PERCENT_MEMORY_PER_QUERY_KEY, 0, 1.0);
 
   /**
+=======
+>>>>>>> Squash Commits
    * Minimum memory allocated to each buffered operator instance.
    * <p/>
    * DEFAULT: 40 MB
@@ -423,6 +426,7 @@ public final class ExecConstants {
   public static final OptionValidator AVERAGE_FIELD_WIDTH = new PositiveLongValidator(AVERAGE_FIELD_WIDTH_KEY, Long.MAX_VALUE);
 
   // Resource management boot-time options.
+<<<<<<< HEAD
 
   public static final String MAX_MEMORY_PER_NODE = "drill.exec.rm.memory_per_node";
   public static final String MAX_CPUS_PER_NODE = "drill.exec.rm.cpus_per_node";
@@ -463,6 +467,48 @@ public final class ExecConstants {
   public static final String DRILLBIT_CONTROL_INJECTIONS = "drill.exec.testing.controls";
   public static final OptionValidator DRILLBIT_CONTROLS_VALIDATOR = new ExecutionControls.ControlsOptionValidator(DRILLBIT_CONTROL_INJECTIONS, 1);
 
+=======
+
+  public static final String MAX_MEMORY_PER_NODE = "drill.exec.rm.memory_per_node";
+  public static final String MAX_CPUS_PER_NODE = "drill.exec.rm.cpus_per_node";
+
+  // Resource management system run-time options.
+
+  // Enables queues. When running embedded, enables an in-process queue. When
+  // running distributed, enables the Zookeeper-based distributed queue.
+
+  public static final BooleanValidator ENABLE_QUEUE = new BooleanValidator("exec.queue.enable");
+  public static final LongValidator LARGE_QUEUE_SIZE = new PositiveLongValidator("exec.queue.large", 10_000);
+  public static final LongValidator SMALL_QUEUE_SIZE = new PositiveLongValidator("exec.queue.small", 100_000);
+  public static final LongValidator QUEUE_THRESHOLD_SIZE = new PositiveLongValidator("exec.queue.threshold", Long.MAX_VALUE);
+  public static final LongValidator QUEUE_TIMEOUT = new PositiveLongValidator("exec.queue.timeout_millis", Long.MAX_VALUE);
+
+  // Ratio of memory for small queries vs. large queries.
+  // Each small query gets 1 unit, each large query gets QUEUE_MEMORY_RATIO units.
+  // A lower limit of 1 enforces the intuition that a large query should never get
+  // *less* memory than a small one.
+
+  public static final DoubleValidator QUEUE_MEMORY_RATIO = new RangeDoubleValidator("exec.queue.memory_ratio", 1.0, 1000);
+
+  public static final DoubleValidator QUEUE_MEMORY_RESERVE = new RangeDoubleValidator("exec.queue.memory_reserve_ratio", 0, 1.0);
+
+  public static final String ENABLE_VERBOSE_ERRORS_KEY = "exec.errors.verbose";
+  public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY);
+
+  public static final String ENABLE_NEW_TEXT_READER_KEY = "exec.storage.enable_new_text_reader";
+  public static final OptionValidator ENABLE_NEW_TEXT_READER = new BooleanValidator(ENABLE_NEW_TEXT_READER_KEY);
+
+  public static final String BOOTSTRAP_STORAGE_PLUGINS_FILE = "bootstrap-storage-plugins.json";
+
+  public static final String DRILL_SYS_FILE_SUFFIX = ".sys.drill";
+
+  public static final String ENABLE_WINDOW_FUNCTIONS = "window.enable";
+  public static final OptionValidator ENABLE_WINDOW_FUNCTIONS_VALIDATOR = new BooleanValidator(ENABLE_WINDOW_FUNCTIONS);
+
+  public static final String DRILLBIT_CONTROL_INJECTIONS = "drill.exec.testing.controls";
+  public static final OptionValidator DRILLBIT_CONTROLS_VALIDATOR = new ExecutionControls.ControlsOptionValidator(DRILLBIT_CONTROL_INJECTIONS, 1);
+
+>>>>>>> Squash Commits
   public static final String NEW_VIEW_DEFAULT_PERMS_KEY = "new_view_default_permissions";
   public static final OptionValidator NEW_VIEW_DEFAULT_PERMS_VALIDATOR = new StringValidator(NEW_VIEW_DEFAULT_PERMS_KEY);
 

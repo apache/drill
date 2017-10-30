@@ -34,7 +34,7 @@
     <dep.junit.version>4.11</dep.junit.version>
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
     <dep.guava.version>18.0</dep.guava.version>
-    <forkCount>2</forkCount>
+    <forkCount>1C</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
     <calcite.version>1.4.0-drill-r23</calcite.version>
     <janino.version>2.7.6</janino.version>
@@ -232,8 +232,11 @@
             <exclude>**/client/tags</exclude>
             <exclude>**/cmake_install.cmake</exclude>
             <exclude>**/ssl/*.csr</exclude>
+<<<<<<< HEAD
             <exclude>**/ssl/*.pem</exclude>
             <exclude>**/ssl/*.p12</exclude>
+=======
+>>>>>>> Squash Commits
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
             <exclude>**/*.autotools</exclude>
@@ -697,6 +700,7 @@
         <version>${freemarker.version}</version>
       </dependency>
       <dependency>
+<<<<<<< HEAD
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-annotations</artifactId>
         <version>${hadoop.version}</version>
@@ -708,6 +712,8 @@
         </exclusions>
       </dependency>
       <dependency>
+=======
+>>>>>>> Squash Commits
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-aws</artifactId>
         <version>${hadoop.version}</version>
