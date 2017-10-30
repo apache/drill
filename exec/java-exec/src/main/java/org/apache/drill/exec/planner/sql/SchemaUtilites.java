@@ -79,12 +79,19 @@ public class SchemaUtilites {
 
   /**
    * Utility function to get the commonPrefix schema between two supplied schemas.
+   *
+   * Eg: if the defaultSchema: dfs and the schemaPath is dfs.tmp.`cicks.json`
+   *     then this function returns dfs if (caseSensitive is not true
+   *     otherwise it returns empty string.
+   *
    * @param defaultSchema default schema
    * @param schemaPath current schema path
    * @param isCaseSensitive true if caseSensitive comparision is required.
    * @return common prefix schemaPath
    */
-  public static String getPrefixSchemaPath(final String defaultSchema, final String schemaPath, final boolean isCaseSensitive) {
+  public static String getPrefixSchemaPath(final String defaultSchema,
+                                           final String schemaPath,
+                                           final boolean isCaseSensitive) {
     if (!isCaseSensitive) {
       return Strings.commonPrefix(defaultSchema.toLowerCase(), schemaPath.toLowerCase());
     }

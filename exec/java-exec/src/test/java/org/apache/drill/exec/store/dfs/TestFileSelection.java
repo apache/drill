@@ -26,9 +26,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.TestTools;
 import org.apache.hadoop.fs.FileStatus;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class TestFileSelection extends BaseTestQuery {
   private static final List<FileStatus> EMPTY_STATUSES = ImmutableList.of();
@@ -59,20 +57,6 @@ public class TestFileSelection extends BaseTestQuery {
       final String pattern = String.format("%s' not found", table).toLowerCase();
       final boolean isTableNotFound = ex.getMessage().toLowerCase().contains(pattern);
       assertTrue(isTableNotFound);
-      throw ex;
-    }
-  }
-
-  @Test(expected = Exception.class)
-  public void testWrongSchemaThrowsSchemaNotFound() throws Exception {
-    final String table = String.format("%s/empty", TestTools.getTestResourcesPath());
-    final String query = String.format("select * from dfs1.`%s`", table);
-    try {
-      testNoResult(query);
-    } catch (Exception ex) {
-      final String pattern = String.format("[[dfs1]] is not valid with respect to either root schema or current default schema").toLowerCase();
-      final boolean isSchemaNotFound = ex.getMessage().toLowerCase().contains(pattern);
-      assertTrue(isSchemaNotFound);
       throw ex;
     }
   }

@@ -488,23 +488,38 @@ public class SqlConverter {
             .build(logger);
       }
 
+      RelOptTableImpl table = super.getTable(names);
+
       // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
+      if (table == null) {
+        isValidSchema(names);
+      }
+
+      return table;
+    }
+
+    /**
+     * check if the schema provided is a valid schema:
+     * <li>schema is not indicated (only one element in the names list)<li/>
+     *
+     * @param names             list of schema and table names, table name is always the last element
+     * @return throws a userexception if the schema is not valid.
+     */
+    private void isValidSchema(final List<String> names) throws UserException {
       SchemaPlus defaultSchema = session.getDefaultSchema(this.rootSchema);
       String defaultSchemaCombinedPath = SchemaUtilites.getSchemaPath(defaultSchema);
       List<String> schemaPath = Util.skipLast(names);
       String schemaPathCombined = SchemaUtilites.getSchemaPath(schemaPath);
       String commonPrefix = SchemaUtilites.getPrefixSchemaPath(defaultSchemaCombinedPath,
-                                                               schemaPathCombined,
-                                                               parserConfig.caseSensitive());
+              schemaPathCombined,
+              parserConfig.caseSensitive());
       boolean isPrefixDefaultPath = commonPrefix.length() == defaultSchemaCombinedPath.length();
       List<String> fullSchemaPath = Strings.isNullOrEmpty(defaultSchemaCombinedPath) ? schemaPath :
               isPrefixDefaultPath ? schemaPath : ListUtils.union(SchemaUtilites.getSchemaPathAsList(defaultSchema), schemaPath);
       if (names.size() > 1 && (SchemaUtilites.findSchema(this.rootSchema, fullSchemaPath) == null &&
-                               SchemaUtilites.findSchema(this.rootSchema, schemaPath) == null)) {
+              SchemaUtilites.findSchema(this.rootSchema, schemaPath) == null)) {
         SchemaUtilites.throwSchemaNotFoundException(defaultSchema, schemaPath);
       }
-
-      return super.getTable(names);
     }
 
     /**
