@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -87,14 +87,14 @@ public class MongoTestSuit implements MongoTestConstants {
 
     private static void setup() throws Exception {
       // creating configServers
-      List<IMongodConfig> configServers = new ArrayList<IMongodConfig>(1);
+      List<IMongodConfig> configServers = new ArrayList<>(1);
       IMongodConfig configIMongodConfig = crateConfigServerConfig(
           CONFIG_SERVER_PORT, true);
       configServers.add(configIMongodConfig);
 
       // creating replicaSets
-      Map<String, List<IMongodConfig>> replicaSets = new HashMap<String, List<IMongodConfig>>();
-      List<IMongodConfig> replicaSet1 = new ArrayList<IMongodConfig>();
+      Map<String, List<IMongodConfig>> replicaSets = new HashMap<>();
+      List<IMongodConfig> replicaSet1 = new ArrayList<>();
       replicaSet1.add(crateIMongodConfig(MONGOD_1_PORT, false,
           REPLICA_SET_1_NAME));
       replicaSet1.add(crateIMongodConfig(MONGOD_2_PORT, false,
@@ -102,7 +102,7 @@ public class MongoTestSuit implements MongoTestConstants {
       replicaSet1.add(crateIMongodConfig(MONGOD_3_PORT, false,
           REPLICA_SET_1_NAME));
       replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
-      List<IMongodConfig> replicaSet2 = new ArrayList<IMongodConfig>();
+      List<IMongodConfig> replicaSet2 = new ArrayList<>();
       replicaSet2.add(crateIMongodConfig(MONGOD_4_PORT, false,
           REPLICA_SET_2_NAME));
       replicaSet2.add(crateIMongodConfig(MONGOD_5_PORT, false,
@@ -170,7 +170,12 @@ public class MongoTestSuit implements MongoTestConstants {
 
     private static void cleanup() {
       if (mongosTestFactory != null) {
-        mongosTestFactory.stop();
+        // ignoring exception because sometimes provided time isn't enough to stop mongod processes
+        try {
+            mongosTestFactory.stop();
+          } catch (IllegalStateException e) {
+            logger.warn("Failed to close all mongod processes during provided timeout", e);
+          }
       }
     }
 
