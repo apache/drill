@@ -26,6 +26,10 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.hadoop.conf.Configuration;
+<<<<<<< HEAD
+=======
+import org.apache.hadoop.security.ssl.SSLFactory;
+>>>>>>> Squash Commits
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -53,7 +57,11 @@ public class SSLConfigServer extends SSLConfig {
 
   public SSLConfigServer(DrillConfig config, Configuration hadoopConfig) throws DrillException {
     this.config = config;
+<<<<<<< HEAD
     Mode mode = Mode.SERVER;
+=======
+    SSLFactory.Mode mode = SSLFactory.Mode.SERVER;
+>>>>>>> Squash Commits
     httpsEnabled =
         config.hasPath(ExecConstants.HTTP_ENABLE_SSL) && config.getBoolean(ExecConstants.HTTP_ENABLE_SSL);
     // For testing we will mock up a hadoop configuration, however for regular use, we find the actual hadoop config.
@@ -91,6 +99,7 @@ public class SSLConfigServer extends SSLConfig {
         resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_KEYPASSWORD_TPL_KEY, mode));
     keyPassword = keyPass.isEmpty() ? keyStorePassword : keyPass;
     protocol = getConfigParamWithDefault(ExecConstants.SSL_PROTOCOL, DEFAULT_SSL_PROTOCOL);
+<<<<<<< HEAD
     // If provider is OPENSSL then to debug or run this code in an IDE, you will need to enable
     // the dependency on netty-tcnative with the correct classifier for the platform you use.
     // This can be done by enabling the openssl profile.
@@ -99,6 +108,8 @@ public class SSLConfigServer extends SSLConfig {
     // or from your local maven repository:
     // ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
     // Note that installing this plugin may require you to start with a new workspace
+=======
+>>>>>>> Squash Commits
     provider = getConfigParamWithDefault(ExecConstants.SSL_PROVIDER, DEFAULT_SSL_PROVIDER);
   }
 
@@ -234,7 +245,11 @@ public class SSLConfigServer extends SSLConfig {
     return value;
   }
 
+<<<<<<< HEAD
   private String resolveHadoopPropertyName(String nameTemplate, Mode mode) {
+=======
+  private String resolveHadoopPropertyName(String nameTemplate, SSLFactory.Mode mode) {
+>>>>>>> Squash Commits
     return MessageFormat.format(nameTemplate, mode.toString().toLowerCase());
   }
 
@@ -311,8 +326,13 @@ public class SSLConfigServer extends SSLConfig {
   }
 
   @Override
+<<<<<<< HEAD
   public Mode getMode() {
     return Mode.SERVER;
+=======
+  public SSLFactory.Mode getMode() {
+    return SSLFactory.Mode.SERVER;
+>>>>>>> Squash Commits
   }
 
   @Override

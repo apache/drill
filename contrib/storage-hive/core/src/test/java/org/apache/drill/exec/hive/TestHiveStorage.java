@@ -20,6 +20,11 @@ package org.apache.drill.exec.hive;
 import mockit.integration.junit4.JMockit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+<<<<<<< HEAD
+=======
+import org.apache.calcite.util.Util;
+import org.apache.calcite.util.ConversionUtil;
+>>>>>>> Squash Commits
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;

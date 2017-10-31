@@ -22,8 +22,11 @@ import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+<<<<<<< HEAD
 import static org.apache.drill.TestBuilder.mapOf;
 
+=======
+>>>>>>> Squash Commits
 @Category({SlowTest.class, HbaseStorageTest.class})
 public class HBaseRecordReaderTest extends BaseHBaseTest {
 

@@ -83,6 +83,7 @@ import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.rpc.security.SaslProperties;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.slf4j.Logger;
 
 import com.google.common.base.Strings;
@@ -127,7 +128,11 @@ public class UserClient
     this.allocator = allocator;
     this.supportComplexTypes = supportComplexTypes;
     try {
+<<<<<<< HEAD
       this.sslConfig = new SSLConfigBuilder().properties(properties).mode(SSLConfig.Mode.CLIENT)
+=======
+      this.sslConfig = new SSLConfigBuilder().properties(properties).mode(SSLFactory.Mode.CLIENT)
+>>>>>>> Squash Commits
           .initializeSSLContext(true).validateKeyStore(false).build();
     } catch (DrillException e) {
       throw new InvalidConnectionInfoException(e.getMessage());
@@ -201,13 +206,30 @@ public class UserClient
             .checkedGet(sslConfig.getHandshakeTimeout(), TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
         String msg = new StringBuilder().append(
+<<<<<<< HEAD
             "Connecting to the server timed out. This is sometimes due to a mismatch in the SSL configuration between" +
                 " client and server. [ Exception: ")
+=======
+            "Connecting to the server timed out. This is sometimes due to a mismatch in the SSL configuration between client and server. [ Exception: ")
+>>>>>>> Squash Commits
             .append(e.getMessage()).append("]").toString();
         throw new NonTransientRpcException(msg);
       }
     } else {
       connect(hsBuilder.build(), endpoint).checkedGet();
+<<<<<<< HEAD
+=======
+    }
+
+    // Check if client needs encryption and server is not configured for encryption.
+    final boolean clientNeedsEncryption = properties.containsKey(DrillProperties.SASL_ENCRYPT) && Boolean
+        .parseBoolean(properties.getProperty(DrillProperties.SASL_ENCRYPT));
+
+    if (clientNeedsEncryption && !connection.isEncryptionEnabled()) {
+      throw new NonTransientRpcException(
+          "Client needs encrypted connection but server is not configured for "
+              + "encryption. Please check connection parameter or contact your administrator");
+>>>>>>> Squash Commits
     }
 
     // Validate if both client and server are compatible in their security requirements for the connection

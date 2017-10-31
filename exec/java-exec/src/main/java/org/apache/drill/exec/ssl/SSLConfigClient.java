@@ -20,9 +20,18 @@ package org.apache.drill.exec.ssl;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
+<<<<<<< HEAD
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.memory.BufferAllocator;
+=======
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.ssl.SSLFactory;
+>>>>>>> Squash Commits
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -63,6 +72,7 @@ public class SSLConfigClient extends SSLConfig {
       hsTimeout = DEFAULT_SSL_HANDSHAKE_TIMEOUT_MS;
     }
     handshakeTimeout = hsTimeout;
+<<<<<<< HEAD
     // If provider is OPENSSL then to debug or run this code in an IDE, you will need to enable
     // the dependency on netty-tcnative with the correct classifier for the platform you use.
     // This can be done by enabling the openssl profile.
@@ -71,6 +81,8 @@ public class SSLConfigClient extends SSLConfig {
     // or from your local maven repository:
     // ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
     // Note that installing this plugin may require you to start with a new workspace
+=======
+>>>>>>> Squash Commits
     provider = getStringProperty(DrillProperties.TLS_PROVIDER, DEFAULT_SSL_PROVIDER);
   }
 
@@ -252,8 +264,13 @@ public class SSLConfigClient extends SSLConfig {
   }
 
   @Override
+<<<<<<< HEAD
   public Mode getMode() {
     return Mode.CLIENT;
+=======
+  public SSLFactory.Mode getMode() {
+    return SSLFactory.Mode.CLIENT;
+>>>>>>> Squash Commits
   }
 
   @Override

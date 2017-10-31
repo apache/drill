@@ -62,6 +62,7 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.user.UserWorker;
 import org.apache.hadoop.security.HadoopKerberosName;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.slf4j.Logger;
 
 import com.google.protobuf.MessageLite;
@@ -92,7 +93,11 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     try {
       this.sslConfig = new SSLConfigBuilder()
           .config(context.getConfig())
+<<<<<<< HEAD
           .mode(SSLConfig.Mode.SERVER)
+=======
+          .mode(SSLFactory.Mode.SERVER)
+>>>>>>> Squash Commits
           .initializeSSLContext(true)
           .validateKeyStore(true)
           .build();

@@ -169,9 +169,12 @@ public class DrillRestServer extends ResourceConfig {
     @Inject
     WorkManager workManager;
 
+<<<<<<< HEAD
     @Inject
     EventExecutor executor;
 
+=======
+>>>>>>> Squash Commits
     @SuppressWarnings("resource")
     @Override
     public WebUserConnection provide() {
@@ -246,9 +249,12 @@ public class DrillRestServer extends ResourceConfig {
     @Inject
     WorkManager workManager;
 
+<<<<<<< HEAD
     @Inject
     EventExecutor executor;
 
+=======
+>>>>>>> Squash Commits
     @SuppressWarnings("resource")
     @Override
     public WebUserConnection provide() {
