@@ -126,6 +126,9 @@ public class Foreman implements Runnable {
   private static final Counter enqueuedQueries = DrillMetrics.getRegistry().counter("drill.queries.enqueued");
   private static final Counter runningQueries = DrillMetrics.getRegistry().counter("drill.queries.running");
   private static final Counter completedQueries = DrillMetrics.getRegistry().counter("drill.queries.completed");
+  private static final Counter succeededQueries = DrillMetrics.getRegistry().counter("drill.queries.succeeded");
+  private static final Counter failedQueries = DrillMetrics.getRegistry().counter("drill.queries.failed");
+  private static final Counter canceledQueries = DrillMetrics.getRegistry().counter("drill.queries.canceled");
 
   private final QueryId queryId;
   private final String queryIdString;
@@ -835,6 +838,19 @@ public class Foreman implements Runnable {
         queryManager.close();
       } catch (final Exception e) {
         logger.warn("unable to close query manager", e);
+      }
+
+      // Incrementing QueryState counters
+      switch (state) {
+        case FAILED:
+          failedQueries.inc();
+          break;
+        case CANCELED:
+          canceledQueries.inc();
+          break;
+        case COMPLETED:
+          succeededQueries.inc();
+          break;
       }
 
       runningQueries.dec();
