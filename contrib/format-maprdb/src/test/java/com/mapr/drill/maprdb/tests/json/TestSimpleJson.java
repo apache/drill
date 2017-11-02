@@ -58,6 +58,16 @@ public class TestSimpleJson extends BaseJsonTest {
   }
 
   @Test
+  public void testSelectNonExistentColumns() throws Exception {
+    setColumnWidths(new int[] {23});
+    final String sql = "SELECT\n"
+            + "  something\n"
+            + "FROM\n"
+            + "  hbase.business business limit 5";
+    runSQLAndVerifyCount(sql, 5);
+  }
+
+  @Test
   public void testKVGen() throws Exception {
     setColumnWidths(new int[] {21, 10, 6});
     final String sql = "select _id, t.parking[0].`key` K, t.parking[0].`value` V from"
