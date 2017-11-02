@@ -102,4 +102,11 @@ public class TestHBaseQueries extends BaseHBaseTest {
     }
   }
 
+  @Test
+  public void testSelectFromSchema() throws Exception {
+    setColumnWidths(new int[] {8, 15});
+    test("USE hbase");
+    runHBaseSQLVerifyCount("SELECT row_key\n"
+        + " FROM hbase.TestTableNullStr t WHERE row_key='a1'", 1);
+  }
 }

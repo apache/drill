@@ -741,4 +741,14 @@ public class TestViewSupport extends TestBaseViewSupport {
       test("DROP TABLE IF EXISTS %s.%s ", DFS_TMP_SCHEMA, tableName);
     }
   }
+
+  @Test
+  public void selectFromViewCreatedOnCalcite1_4() throws Exception {
+    testBuilder()
+        .sqlQuery("select store_type from cp.`view/view_from_calcite_1_4.view.drill`")
+        .unOrdered()
+        .baselineColumns("store_type")
+        .baselineValues("HeadQuarters")
+        .go();
+  }
 }

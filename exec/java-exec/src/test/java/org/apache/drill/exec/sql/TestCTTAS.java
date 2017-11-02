@@ -282,6 +282,21 @@ public class TestCTTAS extends BaseTestQuery {
   }
 
   @Test
+  public void testSelectWithJoinOnTemporaryTables() throws Exception {
+    String temporaryLeftTableName = "temporary_left_table_for_Select_with_join";
+    String temporaryRightTableName = "temporary_right_table_for_Select_with_join";
+    test("create TEMPORARY table %s as select 'A' as c1, 'B' as c2 from (values(1))", temporaryLeftTableName);
+    test("create TEMPORARY table %s as select 'A' as c1, 'C' as c2 from (values(1))", temporaryRightTableName);
+
+    testBuilder()
+        .sqlQuery("select t1.c2 col1, t2.c2 col2 from %s t1 join %s t2 on t1.c1 = t2.c1", temporaryLeftTableName, temporaryRightTableName)
+        .unOrdered()
+        .baselineColumns("col1", "col2")
+        .baselineValues("B", "C")
+        .go();
+  }
+
+  @Test
   public void testTemporaryAndPersistentTablesPriority() throws Exception {
     String name = "temporary_and_persistent_table";
     test("use %s", temp2_schema);

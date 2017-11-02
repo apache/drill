@@ -71,8 +71,11 @@ public class View {
         @JsonProperty("endUnit")                    TimeUnit endUnit,
         @JsonProperty("fractionalSecondPrecision")  Integer fractionalSecondPrecision,
         @JsonProperty("isNullable")                 Boolean isNullable) {
-      this.name = name;
-      this.type = type;
+      // Fix for views which were created on Calcite 1.4.
+      // After Calcite upgrade star "*" was changed on dynamic star "**"
+      // and type of star was changed to SqlTypeName.DYNAMIC_STAR
+      this.name = "*".equals(name) ? "**" : name;
+      this.type = "*".equals(name) && type == SqlTypeName.ANY ? SqlTypeName.DYNAMIC_STAR : type;
       this.precision = precision;
       this.scale = scale;
       this.intervalQualifier =
