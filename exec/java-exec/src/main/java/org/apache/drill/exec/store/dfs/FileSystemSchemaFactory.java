@@ -27,6 +27,7 @@ import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -38,7 +39,9 @@ import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 
@@ -49,11 +52,23 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
   public static final String DEFAULT_WS_NAME = "default";
 
+  public static final String LOCAL_FS_SCHEME = "file";
+
   private List<WorkspaceSchemaFactory> factories;
   private String schemaName;
+  protected FileSystemPlugin plugin;
 
   public FileSystemSchemaFactory(String schemaName, List<WorkspaceSchemaFactory> factories) {
-    super();
+    // when the correspondent FileSystemPlugin is not passed in, we dig into ANY workspace factory to get it.
+    if (factories.size() > 0) {
+      this.plugin = factories.get(0).getPlugin();
+    }
+    this.schemaName = schemaName;
+    this.factories = factories;
+  }
+
+  public FileSystemSchemaFactory(FileSystemPlugin plugin, String schemaName, List<WorkspaceSchemaFactory> factories) {
+    this.plugin = plugin;
     this.schemaName = schemaName;
     this.factories = factories;
   }
@@ -73,10 +88,10 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
     public FileSystemSchema(String name, SchemaConfig schemaConfig) throws IOException {
       super(ImmutableList.<String>of(), name);
+      final DrillFileSystem fs = ImpersonationUtil.createFileSystem(schemaConfig.getUserName(), plugin.getFsConf());
       for(WorkspaceSchemaFactory f :  factories){
-        if (f.accessible(schemaConfig.getUserName())) {
-          @SuppressWarnings("resource")
-          WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig);
+        WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig, fs);
+        if (s != null) {
           schemaMap.put(s.getName(), s);
         }
       }

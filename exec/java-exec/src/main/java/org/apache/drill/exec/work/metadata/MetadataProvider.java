@@ -543,7 +543,7 @@ public class MetadataProvider {
   private static <S> PojoRecordReader<S> getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter, final DrillConfig config,
       final SchemaTreeProvider provider, final UserSession userSession) {
     final SchemaPlus rootSchema =
-        provider.createRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(config, userSession, provider));
+        provider.createFullRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(config, userSession, provider));
     return tableType.getRecordReader(rootSchema, filter, userSession.getOptions());
   }
 

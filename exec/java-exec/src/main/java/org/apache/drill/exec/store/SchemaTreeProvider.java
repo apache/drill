@@ -20,12 +20,12 @@ package org.apache.drill.exec.store;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
+import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -105,12 +105,36 @@ public class SchemaTreeProvider implements AutoCloseable {
    * @return
    */
   public SchemaPlus createRootSchema(SchemaConfig schemaConfig) {
+      final SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig);
+      schemaTreesToClose.add(rootSchema);
+      return rootSchema;
+  }
+
+  /**
+   * Return full root schema with schema owner as the given user.
+   *
+   * @param userName Name of the user who is accessing the storage sources.
+   * @param provider {@link SchemaConfigInfoProvider} instance
+   * @return Root of the schema tree.
+   */
+  public SchemaPlus createFullRootSchema(final String userName, final SchemaConfigInfoProvider provider) {
+    final String schemaUser = isImpersonationEnabled ? userName : ImpersonationUtil.getProcessUserName();
+    final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, provider).build();
+    return createFullRootSchema(schemaConfig);
+  }
+  /**
+   * Create and return a Full SchemaTree with given <i>schemaConfig</i>.
+   * @param schemaConfig
+   * @return
+   */
+  public SchemaPlus createFullRootSchema(SchemaConfig schemaConfig) {
     try {
-      final SchemaPlus rootSchema = CalciteSchema.createRootSchema(false, false).plus();
+      final SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig);
       dContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
       schemaTreesToClose.add(rootSchema);
       return rootSchema;
-    } catch(IOException e) {
+    }
+    catch(IOException e) {
       // We can't proceed further without a schema, throw a runtime exception.
       // Improve the error message for client side.
 
@@ -124,6 +148,7 @@ public class SchemaTreeProvider implements AutoCloseable {
           .addContext(contextString)
           .build(logger);
     }
+
   }
 
   @Override

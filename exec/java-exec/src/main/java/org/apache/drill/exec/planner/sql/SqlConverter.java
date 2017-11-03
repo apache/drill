@@ -29,7 +29,7 @@ import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
-import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
@@ -130,9 +130,9 @@ public class SqlConverter {
     this.session = context.getSession();
     this.drillConfig = context.getConfig();
     this.catalog = new DrillCalciteCatalogReader(
-        this.rootSchema,
+        rootSchema,
         parserConfig.caseSensitive(),
-        CalciteSchema.from(defaultSchema).path(null),
+        DynamicSchema.from(defaultSchema).path(null),
         typeFactory,
         drillConfig,
         session);
@@ -375,7 +375,7 @@ public class SqlConverter {
     @Override
     public RelRoot expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
       final DrillCalciteCatalogReader catalogReader = new DrillCalciteCatalogReader(
-          rootSchema, // new root schema
+          rootSchema,
           parserConfig.caseSensitive(),
           schemaPath,
           typeFactory,
@@ -555,7 +555,7 @@ public class SqlConverter {
                               JavaTypeFactory typeFactory,
                               DrillConfig drillConfig,
                               UserSession session) {
-      super(CalciteSchema.from(rootSchema), defaultSchema,
+      super(DynamicSchema.from(rootSchema), defaultSchema,
           typeFactory, getConnectionConfig(caseSensitive));
       this.drillConfig = drillConfig;
       this.session = session;
