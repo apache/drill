@@ -46,6 +46,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
+import org.apache.drill.exec.planner.sql.DynamicSchema;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
@@ -493,5 +494,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
     return availablePlugins;
   }
+
+
 
 }

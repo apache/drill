@@ -282,4 +282,8 @@ public class ClusterFixtureBuilder {
   public ClusterFixture build() {
     return new ClusterFixture(this);
   }
+
+  public ClusterMockStorageFixture buildCustomMockStorage() {
+    return new ClusterMockStorageFixture(this);
+  }
 }

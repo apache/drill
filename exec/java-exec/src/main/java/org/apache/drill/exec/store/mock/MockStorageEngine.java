@@ -55,7 +55,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
 
   public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context, String name) {
     this.configuration = configuration;
-    this.schema = new MockSchema(this);
+    this.schema = new MockSchema(this, name);
   }
 
   @Override
@@ -117,6 +117,11 @@ public class MockStorageEngine extends AbstractStoragePlugin {
 
     public MockSchema(MockStorageEngine engine) {
       super(ImmutableList.<String>of(), MockStorageEngineConfig.NAME);
+      this.engine = engine;
+    }
+
+    public MockSchema(MockStorageEngine engine, String name) {
+      super(ImmutableList.<String>of(), name);
       this.engine = engine;
     }
 
