@@ -1113,7 +1113,7 @@ class DrillMetaImpl extends MetaImpl {
 
   @Override
   public ExecuteResult prepareAndExecute(final StatementHandle handle, final String sql, final long maxRowCount,
-                                         int maxRowsInFirstFrame, final PrepareCallback callback) throws NoSuchStatementException {
+        int maxRowsInFirstFrame, final PrepareCallback callback) throws NoSuchStatementException {
     return prepareAndExecute(handle, sql, maxRowCount, callback);
   }
 
@@ -1133,13 +1133,17 @@ class DrillMetaImpl extends MetaImpl {
   }
 
   @Override
-  public ExecuteResult execute(StatementHandle statementHandle, List<TypedValue> list, long l) throws NoSuchStatementException {
-    throw new UnsupportedOperationException(this.getClass().getSimpleName());
+  public ExecuteResult execute(StatementHandle statementHandle,
+        List<TypedValue> list, long l) throws NoSuchStatementException {
+    return new ExecuteResult(Collections.singletonList(
+        MetaResultSet.create(statementHandle.connectionId, statementHandle.id,
+            true, statementHandle.signature, null)));
   }
 
   @Override
-  public ExecuteResult execute(StatementHandle statementHandle, List<TypedValue> list, int i) throws NoSuchStatementException {
-    return null;
+  public ExecuteResult execute(StatementHandle statementHandle,
+      List<TypedValue> list, int i) throws NoSuchStatementException {
+    return execute(statementHandle, list, (long) i);
   }
 
   @Override

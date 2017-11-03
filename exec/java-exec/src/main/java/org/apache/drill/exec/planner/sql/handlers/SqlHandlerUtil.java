@@ -86,9 +86,9 @@ public class SqlHandlerUtil {
             .build(logger);
       }
 
-      // CTAS's query field list shouldn't have "*" when table's field list is specified.
+      // CTAS's query field list shouldn't have "**" when table's field list is specified.
       for (String field : validatedRowtype.getFieldNames()) {
-        if (field.equals("*")) {
+        if (field.equals("**")) {
           final String tblType = isNewTableView ? "view" : "table";
           throw UserException.validationError()
               .message("%s's query field list has a '*', which is invalid when %s's field list is specified.",

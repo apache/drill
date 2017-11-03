@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
@@ -43,7 +44,10 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
@@ -73,7 +77,6 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.rpc.user.UserSession;
 
 import com.google.common.base.Joiner;
@@ -106,6 +109,7 @@ public class SqlConverter {
 
   private String sql;
   private VolcanoPlanner planner;
+  private boolean useRootSchema = false;
 
 
   public SqlConverter(QueryContext context) {
@@ -217,6 +221,15 @@ public class SqlConverter {
     catalog.disallowTemporaryTables();
   }
 
+  /**
+   * Is root schema path should be used as default schema path.
+   *
+   * @param useRoot flag
+   */
+  public void useRootSchemaAsDefault(boolean useRoot) {
+    useRootSchema = useRoot;
+  }
+
   private class DrillValidator extends SqlValidatorImpl {
     private final Set<SqlValidatorScope> identitySet = Sets.newIdentityHashSet();
 
@@ -273,6 +286,14 @@ public class SqlConverter {
     final SqlToRelConverter sqlToRelConverter =
         new SqlToRelConverter(new Expander(), validator, catalog, cluster, DrillConvertletTable.INSTANCE,
             sqlToRelConverterConfig);
+
+    /*
+     * Sets value to false to avoid simplifying project expressions
+     * during creating new projects since it may cause changing data mode
+     * which causes to assertion errors during type validation
+     */
+    Hook.REL_BUILDER_SIMPLIFY.add(Hook.property(false));
+
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);
     final RelRoot rel2 = rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
@@ -430,6 +451,28 @@ public class SqlConverter {
         boolean matchNullability) {
       return node;
     }
+
+    /**
+     * Creates a call to the CAST operator, expanding if possible, and optionally
+     * also preserving nullability.
+     *
+     * <p>Tries to expand the cast, and therefore the result may be something
+     * other than a {@link RexCall} to the CAST operator, such as a
+     * {@link RexLiteral} if {@code matchNullability} is false.
+     *
+     * @param type             Type to cast to
+     * @param exp              Expression being cast
+     * @param matchNullability Whether to ensure the result has the same
+     *                         nullability as {@code type}
+     * @return Call to CAST operator
+     */
+    @Override
+    public RexNode makeCast(RelDataType type, RexNode exp, boolean matchNullability) {
+      if (matchNullability) {
+        return makeAbstractCast(type, exp);
+      }
+      return super.makeCast(type, exp, false);
+    }
   }
 
   /**
@@ -504,6 +547,14 @@ public class SqlConverter {
       }
 
       return table;
+    }
+
+    @Override
+    public List<List<String>> getSchemaPaths() {
+      if (useRootSchema) {
+        return ImmutableList.<List<String>>of(ImmutableList.<String>of());
+      }
+      return super.getSchemaPaths();
     }
 
     /**

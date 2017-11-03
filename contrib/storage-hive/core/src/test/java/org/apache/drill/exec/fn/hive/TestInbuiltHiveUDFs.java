@@ -95,7 +95,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
   @Test // DRILL-3272
   public void testIf() throws Exception {
     testBuilder()
-        .sqlQuery("select `if`(1999 > 2000, 'latest', 'old') Period from hive.kv limit 1")
+        .sqlQuery("select `if`(1999 > 2000, 'latest', 'old') `Period` from hive.kv limit 1")
         .ordered()
         .baselineColumns("Period")
         .baselineValues("old")

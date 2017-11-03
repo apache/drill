@@ -16,17 +16,16 @@
  */
 package org.apache.drill;
 
-import mockit.Deencapsulation;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
-import org.apache.calcite.util.SaffronProperties;
+import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Properties;
+import java.nio.charset.Charset;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
@@ -47,19 +46,16 @@ public class TestUtf8SupportInQueryString extends BaseTestQuery {
 
   @Test(expected = UserRemoteException.class)
   public void testDisableUtf8SupportInQueryString() throws Exception {
-    Deencapsulation.setField(SaffronProperties.class, "properties", null);
-    final Properties properties = System.getProperties();
     final String charset = "ISO-8859-1";
-    new MockUp<System>()
+
+    // Mocked Util.getDefaultCharset() since it uses static field Util.DEFAULT_CHARSET
+    // which is initialized when declared using SaffronProperties.INSTANCE field which also is initialized
+    // when declared.
+    new MockUp<Util>()
     {
       @Mock
-      Properties getProperties() {
-        Properties newProperties = new Properties();
-        newProperties.putAll(properties);
-        newProperties.put("saffron.default.charset", charset);
-        newProperties.put("saffron.default.nationalcharset", charset);
-        newProperties.put("saffron.default.collation.name", charset + "$en_US");
-        return newProperties;
+      Charset getDefaultCharset() {
+        return Charset.forName(charset);
       }
     };
 
@@ -70,8 +66,6 @@ public class TestUtf8SupportInQueryString extends BaseTestQuery {
       assertThat(e.getMessage(), containsString(
           String.format("Failed to encode '%s' in character set '%s'", hello, charset)));
       throw e;
-    } finally {
-      Deencapsulation.setField(SaffronProperties.class, "properties", null);
     }
   }
 

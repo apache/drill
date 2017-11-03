@@ -120,6 +120,9 @@ public class TestPreparedStatementProvider extends PreparedStatementTestBase {
    */
   @Test
   public void invalidQueryValidationError() throws Exception {
-    createPrepareStmt("SELECT * sdflkgdh", true, ErrorType.PARSE /** Drill returns incorrect error for parse error*/);
+    // CALCITE-1120 allows SELECT without from syntax.
+    // So with this change the query fails with VALIDATION error.
+    createPrepareStmt("SELECT * sdflkgdh", true,
+        ErrorType.VALIDATION /* Drill returns incorrect error for parse error*/);
   }
 }

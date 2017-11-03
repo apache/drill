@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -88,7 +88,7 @@ public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
       final SqlNode arg) {
     final SqlParserPos pos = SqlParserPos.ZERO;
     final SqlNode sum =
-        SqlStdOperatorTable.SUM.createCall(pos, arg);
+        DrillCalciteSqlAggFunctionWrapper.SUM.createCall(pos, arg);
     final SqlNode count =
         SqlStdOperatorTable.COUNT.createCall(pos, arg);
     final SqlNode sumAsDouble =
@@ -128,9 +128,9 @@ public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
     final SqlNode argSquared =
         SqlStdOperatorTable.MULTIPLY.createCall(pos, castHighArg, castHighArg);
     final SqlNode sumArgSquared =
-        SqlStdOperatorTable.SUM.createCall(pos, argSquared);
+        DrillCalciteSqlAggFunctionWrapper.SUM.createCall(pos, argSquared);
     final SqlNode sum =
-        SqlStdOperatorTable.SUM.createCall(pos, castHighArg);
+        DrillCalciteSqlAggFunctionWrapper.SUM.createCall(pos, castHighArg);
     final SqlNode sumSquared =
         SqlStdOperatorTable.MULTIPLY.createCall(pos, sum, sum);
     final SqlNode count =

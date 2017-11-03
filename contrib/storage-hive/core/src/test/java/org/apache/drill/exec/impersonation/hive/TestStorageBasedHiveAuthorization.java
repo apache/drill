@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -469,7 +469,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
     errorMsgTestHelper(
         String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_u1g1_only, u1g1_student_all_755),
-        String.format("Table 'hive.%s.%s' not found", db_u1g1_only, u1g1_student_all_755));
+        String.format("Object '%s' not found within 'hive.%s'", u1g1_student_all_755, db_u1g1_only));
   }
 
   // Try to read the tables "user1" has access to read in db_general.
@@ -489,7 +489,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
     errorMsgTestHelper(
         String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_u0_only, u0_student_all_755),
-        String.format("Table 'hive.%s.%s' not found", db_u0_only, u0_student_all_755));
+        String.format("Object '%s' not found within 'hive.%s'", u0_student_all_755, db_u0_only));
   }
 
   private static void queryViewHelper(final String queryUser, final String query) throws Exception {
