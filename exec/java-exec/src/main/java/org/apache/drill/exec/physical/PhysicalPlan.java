@@ -94,6 +94,14 @@ public class PhysicalPlan {
     for (final PhysicalOperator ops : getSortedOperators()) {
       totalCost += ops.getCost();
     }
+
+    // As it turns out, sometimes the total cost can be out of range.
+    // This throws off other code, so clamp the cost at the maximum
+    // double value.
+
+    if (Double.isNaN(totalCost)) {
+      totalCost = Double.MAX_VALUE;
+    }
     return totalCost;
   }
 
