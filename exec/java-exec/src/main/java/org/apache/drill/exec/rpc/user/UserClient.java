@@ -251,7 +251,7 @@ public class UserClient
     }
 
     // Check if client needs authentication and server doesn't support any security mechanisms.
-    if (clientNeedsAuth(properties) && serverAuthMechanisms == null) {
+    if (clientNeedsAuthExceptPlain(properties) && serverAuthMechanisms == null) {
       throw new NonTransientRpcException(
           "Client needs authentication but server doesn't support any security mechanisms." +
               " Please contact your administrator. [Warn: It may be due to wrong config or a security attack in" +
@@ -262,19 +262,22 @@ public class UserClient
   /**
    * Determine if client needs authenticated connection or not. It checks for following as an indication of
    * requiring authentication from client side:
-   * 1) Any auth mechanism is provided in connection properties with DrillProperties.AUTH_MECHANISM parameter.
+   * 1) Auth mechanism except PLAIN is provided in connection properties with DrillProperties.AUTH_MECHANISM parameter.
    * 2) A service principal is provided in connection properties in which case we treat AUTH_MECHANISM as Kerberos
-   * 3) Username and Password is provided in connection properties in which case we treat AUTH_MECHANISM as Plain
    * @param props - DrillClient connection parameters
-   * @return - true  - If any of above 3 checks is successful.
-   *         - false - If all the above 3 checks failed.
+   * @return - true  - If any of above 2 checks is successful.
+   *         - false - If all the above 2 checks fails.
    */
-  private boolean clientNeedsAuth(DrillProperties props) {
+  private boolean clientNeedsAuthExceptPlain(DrillProperties props) {
 
-    return !Strings.isNullOrEmpty(props.getProperty(DrillProperties.AUTH_MECHANISM)) ||
-        !Strings.isNullOrEmpty(props.getProperty(DrillProperties.SERVICE_PRINCIPAL)) ||
-        (props.containsKey(DrillProperties.USER) && !Strings.isNullOrEmpty(props.getProperty(DrillProperties.PASSWORD)));
+    boolean clientNeedsAuth = false;
+    final String authMechanism =  props.getProperty(DrillProperties.AUTH_MECHANISM);
+    if (!Strings.isNullOrEmpty(authMechanism) && !authMechanism.equalsIgnoreCase(PlainFactory.SIMPLE_NAME)) {
+      clientNeedsAuth = true;
+    }
 
+    clientNeedsAuth |= !Strings.isNullOrEmpty(props.getProperty(DrillProperties.SERVICE_PRINCIPAL));
+    return clientNeedsAuth;
   }
 
   private CheckedFuture<Void, RpcException> connect(final UserToBitHandshake handshake,

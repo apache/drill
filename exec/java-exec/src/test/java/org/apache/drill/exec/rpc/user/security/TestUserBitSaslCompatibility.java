@@ -63,12 +63,12 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
   }
 
   /**
-   * Test showing failure before SASL handshake when Drillbit is not configured for authentication whereas client
-   * explicitly requested for authentication.
+   * Test showing when Drillbit is not configured for authentication whereas client explicitly requested for PLAIN
+   * authentication then connection succeeds without authentication.
    * @throws Exception
    */
   @Test
-  public void testDisableDrillbitAuth_EnableClientAuth() throws Exception {
+  public void testDisableDrillbitAuth_EnableClientAuthPlain() throws Exception {
 
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
@@ -78,6 +78,29 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
     connectionProps.setProperty(DrillProperties.PASSWORD, "anything works!");
+
+    try {
+      updateTestCluster(1, newConfig, connectionProps);
+    } catch (Exception ex) {
+      fail();
+    }
+  }
+
+  /**
+   * Test showing when Drillbit is not configured for authentication whereas client explicitly requested for Kerberos
+   * authentication then connection fails due to new check before SASL Handshake.
+   * @throws Exception
+   */
+  @Test
+  public void testDisableDrillbitAuth_EnableClientAuthKerberos() throws Exception {
+
+    final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
+        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+            ConfigValueFactory.fromAnyRef(false)),
+        false);
+
+    final Properties connectionProps = new Properties();
+    connectionProps.setProperty(DrillProperties.AUTH_MECHANISM, "kerberos");
 
     try {
       updateTestCluster(1, newConfig, connectionProps);
@@ -194,6 +217,8 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         false);
 
     final Properties connectionProps = new Properties();
+    connectionProps.setProperty(DrillProperties.USER, "anonymous");
+    connectionProps.setProperty(DrillProperties.PASSWORD, "anything works!");
 
     try {
       updateTestCluster(1, newConfig, connectionProps);
