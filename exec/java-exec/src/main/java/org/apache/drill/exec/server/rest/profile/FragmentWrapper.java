@@ -19,7 +19,9 @@ package org.apache.drill.exec.server.rest.profile;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
@@ -228,6 +230,8 @@ public class FragmentWrapper {
         Collections2.filter(major.getMinorFragmentProfileList(), Filters.missingOperatorsOrTimes));
 
     Collections.sort(complete, Comparators.minorId);
+
+    Map<String, String> attributeMap = new HashMap<String, String>(); //Reusing for different fragments
     for (final MinorFragmentProfile minor : complete) {
       final ArrayList<OperatorProfile> ops = new ArrayList<>(minor.getOperatorProfileList());
 
@@ -244,7 +248,8 @@ public class FragmentWrapper {
         biggestBatches = Math.max(biggestBatches, batches);
       }
 
-      builder.appendCell(new OperatorPathBuilder().setMajor(major).setMinor(minor).build());
+      attributeMap.put("data-order", String.valueOf(minor.getMinorFragmentId())); //Overwrite values from previous fragments
+      builder.appendCell(new OperatorPathBuilder().setMajor(major).setMinor(minor).build(), attributeMap);
       builder.appendCell(minor.getEndpoint().getAddress());
       builder.appendMillis(minor.getStartTime() - start);
       builder.appendMillis(minor.getEndTime() - start);
