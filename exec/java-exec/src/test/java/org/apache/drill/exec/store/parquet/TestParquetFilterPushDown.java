@@ -384,6 +384,16 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
   }
 
+  @Test
+  public void testMultiRowGroup() throws Exception {
+    // multirowgroup is a parquet file with 2 rowgroups inside. One with a = 1 and the other with a = 2;
+    // FilterPushDown should be able to remove the rowgroup with a = 1 from the scan operator.
+    final String sql = String.format("select * from dfs_test.`%s/parquet/multirowgroup.parquet` where a > 1", TEST_RES_PATH);
+    final String[] expectedPlan = {"numRowGroups=1"};
+    final String[] excludedPlan = {};
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Some test helper functions.
   //////////////////////////////////////////////////////////////////////////////////////////////////
