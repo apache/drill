@@ -18,23 +18,23 @@
 
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.calcite.rel.core.Join;
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rex.RexNode;
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
-import org.apache.drill.exec.physical.impl.common.Comparator;
-import org.apache.drill.exec.planner.logical.DrillAggregateRel;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
@@ -203,32 +203,23 @@ public class JoinUtils {
   }
 
   /**
-   * Utility method to check if a subquery (represented by its root RelNode) is provably scalar. Currently
-   * only aggregates with no group-by are considered scalar. In the future, this method should be generalized
-   * to include more cases and reconciled with Calcite's notion of scalar.
+   * Utility method to check if a subquery (represented by its root RelNode) is provably scalar.
    * @param root The root RelNode to be examined
    * @return True if the root rel or its descendant is scalar, False otherwise
    */
   public static boolean isScalarSubquery(RelNode root) {
-    DrillAggregateRel agg = null;
-    RelNode currentrel = root;
-    while (agg == null && currentrel != null) {
-      if (currentrel instanceof DrillAggregateRel) {
-        agg = (DrillAggregateRel)currentrel;
-      } else if (currentrel instanceof RelSubset) {
-        currentrel = ((RelSubset)currentrel).getBest() ;
-      } else if (currentrel.getInputs().size() == 1) {
-        // If the rel is not an aggregate or RelSubset, but is a single-input rel (could be Project,
-        // Filter, Sort etc.), check its input
-        currentrel = currentrel.getInput(0);
-      } else {
-        break;
+    RelMetadataQuery relMetadataQuery = RelMetadataQuery.instance();
+    RelNode currentRel = root;
+    while (currentRel != null) {
+      if (currentRel instanceof RelSubset) {
+        currentRel = ((RelSubset) currentRel).getBest();
+        continue;
       }
-    }
-
-    if (agg != null) {
-      if (agg.getGroupSet().isEmpty()) {
+      Double rowCount = relMetadataQuery.getMaxRowCount(currentRel);
+      if (rowCount != null && rowCount <= 1.0) {
         return true;
+      } else {
+        return false;
       }
     }
     return false;
