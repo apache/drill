@@ -343,7 +343,7 @@ public class SimpleRepeatedFunctions {
       for (int i = listToSearch.start; i < listToSearch.end; i++) {
         out.value = 0;
         listToSearch.vector.getAccessor().get(i, currVal);
-        charSequenceWrapper.setBuffer(currVal.start, currVal.end, currVal.buffer);
+        charSequenceWrapper.setBuffer(currVal.start, currVal.end, currVal.buffer, -1);
         // Reusing same charSequenceWrapper, no need to pass it in.
         // This saves one method call since reset(CharSequence) calls reset()
         matcher.reset();

@@ -70,8 +70,9 @@ public class StringFunctions{
     @Override
     public void eval() {
       // Reusing same charSequenceWrapper, no need to pass it in.
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
-      out.value = sqlPatternMatcher.match();
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
+      out.value       = sqlPatternMatcher.match();
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -98,8 +99,9 @@ public class StringFunctions{
     @Override
     public void eval() {
       // Reusing same charSequenceWrapper, no need to pass it in.
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
-      out.value = sqlPatternMatcher.match();
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
+      out.value       = sqlPatternMatcher.match();
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -123,11 +125,12 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       // Reusing same charSequenceWrapper, no need to pass it in.
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
-      out.value = matcher.matches()? 1:0;
+      out.value       = matcher.matches()? 1:0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -153,11 +156,12 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       // Reusing same charSequenceWrapper, no need to pass it in.
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
-      out.value = matcher.matches()? 1:0;
+      out.value       = matcher.matches()? 1:0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -180,11 +184,12 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       // Reusing same charSequenceWrapper, no need to pass it in.
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
-      out.value = matcher.matches()? 1:0;
+      out.value       = matcher.matches()? 1:0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -208,11 +213,12 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       // Reusing same charSequenceWrapper, no need to pass it in.
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
-      out.value = matcher.matches()? 1:0;
+      out.value       = matcher.matches()? 1:0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -241,7 +247,7 @@ public class StringFunctions{
     @Override
     public void eval() {
       out.start = 0;
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       final String r = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(replacement.start, replacement.end, replacement.buffer);
       // Reusing same charSequenceWrapper, no need to pass it in.
       matcher.reset();
@@ -266,6 +272,7 @@ public class StringFunctions{
           out.buffer.setBytes(0, input.buffer, input.start, input.end - input.start);
           out.end = input.end - input.start;
       }
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -293,11 +300,12 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       // Reusing same charSequenceWrapper, no need to pass it in.
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
-      out.value = matcher.matches()? 1:0;
+      out.value       = matcher.matches()? 1:0;
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -632,7 +640,7 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
       // Reusing same charSequenceWrapper, no need to pass it in.
       // This saves one method call since reset(CharSequence) calls reset()
       matcher.reset();
@@ -642,6 +650,7 @@ public class StringFunctions{
         out.start = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.start());
         out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(input.buffer, input.start, input.end, matcher.end());
       }
+      input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
     }
   }
 
@@ -667,7 +676,7 @@ public class StringFunctions{
       if (input.isSet == 0) {
         out.isSet = 0;
       } else {
-        charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+        charSequenceWrapper.setBuffer(input.start, input.end, input.buffer, input.asciiMode);
         // Reusing same charSequenceWrapper, no need to pass it in.
         // This saves one method call since reset(CharSequence) calls reset()
         matcher.reset();
@@ -679,6 +688,7 @@ public class StringFunctions{
         } else {
           out.isSet = 0;
         }
+        input.asciiMode = charSequenceWrapper.isAscii() ? VarCharHolder.CHAR_MODE_IS_ASCII : VarCharHolder.CHAR_MODE_NOT_ASCII;
       }
     }
   }
