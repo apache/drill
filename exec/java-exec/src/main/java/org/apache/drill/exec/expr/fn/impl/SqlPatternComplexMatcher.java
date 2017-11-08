@@ -17,18 +17,22 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-public class SqlPatternComplexMatcher implements SqlPatternMatcher {
-  java.util.regex.Matcher matcher;
-  CharSequence charSequenceWrapper;
+import io.netty.buffer.DrillBuf;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
-  public SqlPatternComplexMatcher(String patternString, CharSequence charSequenceWrapper) {
-    this.charSequenceWrapper = charSequenceWrapper;
-    matcher = java.util.regex.Pattern.compile(patternString).matcher("");
-    matcher.reset(charSequenceWrapper);
+public class SqlPatternComplexMatcher implements SqlPatternMatcher {
+  private final Matcher matcher;
+  private final CharSequenceWrapper charSequenceWrapper;
+
+  public SqlPatternComplexMatcher(String patternString) {
+    charSequenceWrapper = new CharSequenceWrapper();
+    matcher = Pattern.compile(patternString).matcher(charSequenceWrapper);
   }
 
   @Override
-  public int match() {
+  public int match(int start, int end, DrillBuf drillBuf) {
+    charSequenceWrapper.setBuffer(start, end, drillBuf);
     matcher.reset();
     return matcher.matches() ? 1 : 0;
   }

@@ -55,7 +55,6 @@ public class StringFunctions{
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
     @Output BitHolder out;
-    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
     @Workspace org.apache.drill.exec.expr.fn.impl.RegexpUtil.SqlPatternInfo sqlPatternInfo;
     @Workspace org.apache.drill.exec.expr.fn.impl.SqlPatternMatcher sqlPatternMatcher;
 
@@ -63,15 +62,12 @@ public class StringFunctions{
     public void setup() {
       sqlPatternInfo = org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike(
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start, pattern.end, pattern.buffer));
-      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
-      sqlPatternMatcher = org.apache.drill.exec.expr.fn.impl.SqlPatternFactory.getSqlPatternMatcher(sqlPatternInfo, charSequenceWrapper);
+      sqlPatternMatcher = org.apache.drill.exec.expr.fn.impl.SqlPatternFactory.getSqlPatternMatcher(sqlPatternInfo);
     }
 
     @Override
     public void eval() {
-      // Reusing same charSequenceWrapper, no need to pass it in.
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
-      out.value = sqlPatternMatcher.match();
+      out.value = sqlPatternMatcher.match(input.start, input.end, input.buffer);
     }
   }
 
@@ -82,7 +78,6 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder pattern;
     @Param(constant=true) VarCharHolder escape;
     @Output BitHolder out;
-    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
     @Workspace org.apache.drill.exec.expr.fn.impl.RegexpUtil.SqlPatternInfo sqlPatternInfo;
     @Workspace org.apache.drill.exec.expr.fn.impl.SqlPatternMatcher sqlPatternMatcher;
 
@@ -91,15 +86,12 @@ public class StringFunctions{
       sqlPatternInfo = org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike(
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer));
-      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
-      sqlPatternMatcher = org.apache.drill.exec.expr.fn.impl.SqlPatternFactory.getSqlPatternMatcher(sqlPatternInfo, charSequenceWrapper);
+      sqlPatternMatcher = org.apache.drill.exec.expr.fn.impl.SqlPatternFactory.getSqlPatternMatcher(sqlPatternInfo);
     }
 
     @Override
     public void eval() {
-      // Reusing same charSequenceWrapper, no need to pass it in.
-      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
-      out.value = sqlPatternMatcher.match();
+      out.value = sqlPatternMatcher.match(input.start, input.end, input.buffer);
     }
   }
 
