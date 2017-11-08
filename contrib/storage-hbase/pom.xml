@@ -275,6 +275,10 @@
             </exclusion>
           </exclusions>
         </dependency>
+        <dependency>
+          <groupId>com.tdunning</groupId>
+          <artifactId>json</artifactId>
+        </dependency>
       </dependencies>
     </profile>
   </profiles>

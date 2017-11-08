@@ -133,7 +133,10 @@
         </exclusion>
       </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>com.tdunning</groupId>
+      <artifactId>json</artifactId>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>com.mapr</groupId>
