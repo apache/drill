@@ -17,14 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
-import static org.junit.Assert.assertEquals;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import mockit.integration.junit4.JMockit;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
@@ -32,12 +25,21 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.OperatorFixture;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import static org.junit.Assert.assertEquals;
 
+@RunWith(JMockit.class)
 public class TestExtendedTypes extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExtendedTypes.class);
 
   @Test
   public void checkReadWriteExtended() throws Exception {
+    mockUtcDateTimeZone();
 
     final String originalFile = "${WORKING_PATH}/src/test/resources/vector/complex/extended.json".replaceAll(
         Pattern.quote("${WORKING_PATH}"),
@@ -53,7 +55,6 @@ public class TestExtendedTypes extends BaseTestQuery {
 
       // check query of table.
       test("select * from dfs_test.tmp.`%s`", newTable);
-
       // check that original file and new file match.
       final byte[] originalData = Files.readAllBytes(Paths.get(originalFile));
       final byte[] newData = Files.readAllBytes(Paths.get(BaseTestQuery.getDfsTestTmpSchemaLocation() + '/' + newTable

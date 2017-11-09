@@ -16,6 +16,7 @@
 */
 package org.apache.drill.exec.fn.impl.testing;
 
+import mockit.integration.junit4.JMockit;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -24,15 +25,15 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
+import org.junit.runner.RunWith;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
 
+@RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateConversions extends BaseTestQuery {
 
@@ -104,6 +105,8 @@ public class TestDateConversions extends BaseTestQuery {
 
   @Test
   public void testJodaTime() throws Exception {
+    mockUsDateFormatSymbols();
+
     String query = String.format("SELECT to_time(time1, 'H:m:ss') = "
       + "to_time(time2, 'h:m:ssa') as col1, "
       + "to_time(time1, 'H:m:ss') = "
@@ -121,6 +124,8 @@ public class TestDateConversions extends BaseTestQuery {
 
   @Test
   public void testPostgresTime() throws Exception {
+    mockUsDateFormatSymbols();
+
     String query = String.format("SELECT sql_to_time(time1, 'HH24:MI:SS') = "
       + "sql_to_time(time2, 'HH12:MI:SSam') as col1, "
       + "sql_to_time(time1, 'HH24:MI:SS') = "
@@ -138,6 +143,8 @@ public class TestDateConversions extends BaseTestQuery {
 
   @Test
   public void testPostgresDateTime() throws Exception {
+    mockUsDateFormatSymbols();
+
     String query = String.format("SELECT sql_to_timestamp(time1, 'yyyy-DD-MMHH24:MI:SS') = "
       + "sql_to_timestamp(time2, 'DDMMyyyyHH12:MI:SSam') as col1, "
       + "sql_to_timestamp(time1, 'yyyy-DD-MMHH24:MI:SS') = "
@@ -151,11 +158,12 @@ public class TestDateConversions extends BaseTestQuery {
       .baselineValues(true, true)
       .baselineValues(false, true)
       .go();
-
   }
 
   @Test
   public void testJodaDateTime() throws Exception {
+    mockUsDateFormatSymbols();
+
     String query = String.format("SELECT to_timestamp(time1, 'yyyy-dd-MMH:m:ss') = "
       + "to_timestamp(time2, 'ddMMyyyyh:m:ssa') as col1, "
       + "to_timestamp(time1, 'yyyy-dd-MMH:m:ss') = "
@@ -173,6 +181,8 @@ public class TestDateConversions extends BaseTestQuery {
 
   @Test
   public void testJodaDateTimeNested() throws Exception {
+    mockUsDateFormatSymbols();
+
     String query = String.format("SELECT date_add(to_date(time1, concat('yyyy-dd-MM','H:m:ss')), 22)= "
       + "date_add(to_date(time2, concat('ddMMyyyy', 'h:m:ssa')), 22) as col1, "
       + "date_add(to_date(time1, concat('yyyy-dd-MM', 'H:m:ss')), 22) = "
@@ -186,11 +196,12 @@ public class TestDateConversions extends BaseTestQuery {
       .baselineValues(true, true)
       .baselineValues(false, true)
       .go();
-
   }
 
   @Test
   public void testPostgresDateTimeNested() throws Exception {
+    mockUsDateFormatSymbols();
+
     String query = String.format("SELECT date_add(sql_to_date(time1, concat('yyyy-DD-MM', 'HH24:MI:SS')), 22) = "
       + "date_add(sql_to_date(time2, concat('DDMMyyyy', 'HH12:MI:SSam')), 22) as col1, "
       + "date_add(sql_to_date(time1, concat('yyyy-DD-MM', 'HH24:MI:SS')), 10) = "

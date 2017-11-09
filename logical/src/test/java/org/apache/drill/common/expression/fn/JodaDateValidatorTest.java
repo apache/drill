@@ -23,9 +23,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
+import java.util.Locale;
 import java.util.Map;
-
 import static org.apache.drill.common.expression.fn.JodaDateValidator.toJodaFormat;
 import static org.joda.time.DateTime.parse;
 import static org.joda.time.format.DateTimeFormat.forPattern;
@@ -125,7 +124,7 @@ public class JodaDateValidatorTest {
     DateTime date = parseDateFromPostgres(hours + ":" + minutes + ":" + seconds + " am", "hh12:mi:ss am");
     Assert.assertTrue(date.getHourOfDay() == hours &&
                         date.getMinuteOfHour() == minutes &&
-                        date.getSecondOfMinute() == Integer.parseInt(seconds));
+                          date.getSecondOfMinute() == Integer.parseInt(seconds));
   }
 
   @Test
@@ -197,7 +196,7 @@ public class JodaDateValidatorTest {
 
   private DateTime parseDateFromPostgres(String date, String pattern) {
     String jodaFormat = toJodaFormat(pattern);
-    DateTimeFormatter format = forPattern(jodaFormat);
+    DateTimeFormatter format = forPattern(jodaFormat).withLocale(Locale.US);
     return parse(date, format).withZoneRetainFields(DateTimeZone.UTC);
   }
 }

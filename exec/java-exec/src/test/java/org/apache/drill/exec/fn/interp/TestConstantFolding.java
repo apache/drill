@@ -17,10 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.exec.fn.interp;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.List;
-
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import mockit.integration.junit4.JMockit;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -29,10 +28,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.List;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-
+@RunWith(JMockit.class)
 @Category(SqlTest.class)
 public class TestConstantFolding extends PlanTestBase {
 
@@ -117,6 +118,8 @@ public class TestConstantFolding extends PlanTestBase {
 
   @Test
   public void testConstantFolding_allTypes() throws Exception {
+    mockUsDateFormatSymbols();
+
     try {
       test("alter session set `store.json.all_text_mode` = true;");
       test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));

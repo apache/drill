@@ -19,6 +19,7 @@ package org.apache.drill.exec.fn.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import mockit.integration.junit4.JMockit;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -26,11 +27,12 @@ import org.apache.drill.common.util.FileUtils;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
+import org.junit.runner.RunWith;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+@RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestCastFunctions extends BaseTestQuery {
 
@@ -77,16 +79,18 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test // DRILL-3769
   public void testToDateForTimeStamp() throws Exception {
-    final String query = "select to_date(to_timestamp(-1)) as col \n" +
-        "from (values(1))";
+    mockUtcDateTimeZone();
+
+    final String query = "select to_date(to_timestamp(-1)) as col \n"
+      + "from (values(1))";
 
     testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .baselineColumns("col")
-        .baselineValues(new DateTime(1969, 12, 31, 0, 0))
-        .build()
-        .run();
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("col")
+      .baselineValues(new DateTime(1969, 12, 31, 0, 0))
+      .build()
+      .run();
   }
 
   @Test
