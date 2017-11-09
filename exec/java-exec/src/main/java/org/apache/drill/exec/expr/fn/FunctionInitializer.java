@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.Java.CompilationUnit;
 import org.codehaus.janino.Parser;
@@ -128,7 +129,7 @@ public class FunctionInitializer {
   private CompilationUnit convertToCompilationUnit(Class<?> clazz) throws IOException {
     String path = clazz.getName();
     path = path.replaceFirst("\\$.*", "");
-    path = path.replace(".", FileUtils.separator);
+    path = path.replace(".", DrillFileUtils.SEPARATOR);
     path = "/" + path + ".java";
 
     logger.trace("Loading function code from the {}", path);

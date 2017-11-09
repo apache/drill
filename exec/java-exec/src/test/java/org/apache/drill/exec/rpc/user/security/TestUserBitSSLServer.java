@@ -18,41 +18,31 @@
 package org.apache.drill.exec.rpc.user.security;
 
 import com.typesafe.config.ConfigValueFactory;
-import junit.framework.TestCase;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.hadoop.conf.Configuration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.text.MessageFormat;
 import java.util.Properties;
 
-import static org.apache.drill.exec.ssl.SSLConfig.HADOOP_SSL_CONF_TPL_KEY;
 import static org.junit.Assert.assertEquals;
 
 public class TestUserBitSSLServer extends BaseTestQuery {
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(TestUserBitSSLServer.class);
-
   private static DrillConfig sslConfig;
   private static Properties initProps; // initial client properties
   private static ClassLoader classLoader;
   private static String ksPath;
   private static String tsPath;
-  private static String emptyTSPath;
 
   @BeforeClass
   public static void setupTest() throws Exception {
-
     classLoader = TestUserBitSSLServer.class.getClassLoader();
     ksPath = new File(classLoader.getResource("ssl/keystore.ks").getFile()).getAbsolutePath();
     tsPath = new File(classLoader.getResource("ssl/truststore.ks").getFile()).getAbsolutePath();
-    emptyTSPath = new File(classLoader.getResource("ssl/emptytruststore.ks").getFile()).getAbsolutePath();
     sslConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_SSL_ENABLED, ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.SSL_KEYSTORE_TYPE, ConfigValueFactory.fromAnyRef("JKS"))
@@ -65,13 +55,6 @@ public class TestUserBitSSLServer extends BaseTestQuery {
     initProps.setProperty(DrillProperties.TRUSTSTORE_PATH, tsPath);
     initProps.setProperty(DrillProperties.TRUSTSTORE_PASSWORD, "drill123");
     initProps.setProperty(DrillProperties.DISABLE_HOST_VERIFICATION, "true");
-  }
-
-  @AfterClass
-  public static void cleanTest() throws Exception {
-    DrillConfig restoreConfig =
-        new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties()), false);
-    updateTestCluster(1, restoreConfig);
   }
 
   @Test
@@ -138,5 +121,4 @@ public class TestUserBitSSLServer extends BaseTestQuery {
     }
     assertEquals(failureCaught, false);
   }
-
 }

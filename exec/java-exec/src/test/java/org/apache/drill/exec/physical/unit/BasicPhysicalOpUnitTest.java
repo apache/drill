@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.unit;
 
-import static org.apache.drill.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
 
 import java.util.List;
 

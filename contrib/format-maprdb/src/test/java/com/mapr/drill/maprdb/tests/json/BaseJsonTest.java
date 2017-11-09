@@ -19,7 +19,7 @@ package com.mapr.drill.maprdb.tests.json;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.AfterClass;

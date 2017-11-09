@@ -19,7 +19,7 @@ package org.apache.drill.exec.store;
 
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.categories.SlowTest;
 import org.junit.Rule;

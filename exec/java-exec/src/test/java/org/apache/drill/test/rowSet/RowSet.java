@@ -85,8 +85,7 @@ public interface RowSet {
    * new row set with the updated columns, then merge the new
    * and old row sets to create a new immutable row set.
    */
-
-  public interface RowSetWriter extends TupleWriter {
+  interface RowSetWriter extends TupleWriter {
     void setRow(Object...values);
     boolean valid();
     int index();
@@ -97,8 +96,7 @@ public interface RowSet {
   /**
    * Reader for all types of row sets.
    */
-
-  public interface RowSetReader extends TupleReader {
+  interface RowSetReader extends TupleReader {
 
     /**
      * Total number of rows in the row set.
@@ -159,7 +157,6 @@ public interface RowSet {
    *
    * @return memory size in bytes
    */
-
   long size();
 
   RowSet merge(RowSet other);
@@ -169,8 +166,7 @@ public interface RowSet {
   /**
    * Row set that manages a single batch of rows.
    */
-
-  public interface SingleRowSet extends RowSet {
+  interface SingleRowSet extends RowSet {
     ValueVector[] vectors();
     SingleRowSet toIndirect();
     SelectionVector2 getSv2();
@@ -181,8 +177,7 @@ public interface RowSet {
    * Once writing is complete, the row set becomes an
    * immutable direct row set.
    */
-
-  public interface ExtendableRowSet extends SingleRowSet {
+  interface ExtendableRowSet extends SingleRowSet {
     void allocate(int recordCount);
     void setRowCount(int rowCount);
     RowSetWriter writer(int initialRowCount);
@@ -192,8 +187,7 @@ public interface RowSet {
    * Row set comprised of multiple single row sets, along with
    * an indirection vector (SV4).
    */
-
-  public interface HyperRowSet extends RowSet {
+  interface HyperRowSet extends RowSet {
     SelectionVector4 getSv4();
     HyperVectorWrapper<ValueVector> getHyperVector(int i);
   }

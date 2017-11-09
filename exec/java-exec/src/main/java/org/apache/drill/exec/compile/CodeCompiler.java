@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionSet;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -108,6 +107,11 @@ public class CodeCompiler {
    */
 
   public static final String DISABLE_CACHE_CONFIG = COMPILE_BASE + ".disable_cache";
+
+  /**
+   * Enables saving generated code for debugging
+   */
+  public static final String ENABLE_SAVE_CODE_FOR_DEBUG_TOPN = COMPILE_BASE + ".codegen.debug.topn";
 
   /**
    * Prefer to generate code as plain Java when the code generator

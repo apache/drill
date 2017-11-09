@@ -149,21 +149,6 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       throw new IllegalStateException(e);
     }
 
-    /*
-    StringBuilder builder = new StringBuilder();
-    for (VectorWrapper w : container) {
-      builder.append(w.getField().getPath());
-      builder.append(" Value capacity: ");
-      builder.append(w.getValueVector().getValueCapacity());
-      if (w.getValueVector() instanceof VariableWidthVector) {
-        builder.append(" Byte capacity: ");
-        builder.append(((VariableWidthVector) w.getValueVector()).getByteCapacity());
-        builder.append("\n");
-      }
-    }
-    logger.debug(builder.toString());
-    */
-
     if (copiedRecords < remainingRecordCount) {
       for(VectorWrapper<?> v : container){
         ValueVector.Mutator m = v.getValueVector().getMutator();
@@ -234,7 +219,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
 
     try {
-      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry(), context.getOptions());
+      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getOptions());
       CopyUtil.generateCopies(cg.getRoot(), incoming, false);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, incoming, this);
@@ -262,7 +247,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
 
     try {
-      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry(), context.getOptions());
+      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getOptions());
       CopyUtil.generateCopies(cg.getRoot(), batch, true);
       cg.plainJavaCapable(true);
       // Uncomment out this line to debug the generated code.

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -75,22 +75,22 @@ public class TestContextFunctions extends BaseTestQuery {
   @Test
   public void currentSchemaUDFWithSingleLevelDefaultSchema() throws Exception {
     testBuilder()
-        .optionSettingQueriesForTestQuery("USE dfs_test")
+        .optionSettingQueriesForTestQuery("USE dfs")
         .sqlQuery("select current_schema from cp.`employee.json` limit 1")
         .unOrdered()
         .baselineColumns("current_schema")
-        .baselineValues("dfs_test")
+        .baselineValues("dfs")
         .go();
   }
 
   @Test
   public void currentSchemaUDFWithMultiLevelDefaultSchema() throws Exception {
     testBuilder()
-        .optionSettingQueriesForTestQuery("USE dfs_test.tmp")
+        .optionSettingQueriesForTestQuery("USE dfs.tmp")
         .sqlQuery("select current_schema from cp.`employee.json` limit 1")
         .unOrdered()
         .baselineColumns("current_schema")
-        .baselineValues("dfs_test.tmp")
+        .baselineValues("dfs.tmp")
         .go();
   }
 

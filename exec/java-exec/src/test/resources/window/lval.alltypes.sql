@@ -9,6 +9,6 @@ select
   last_value(col7) over w as col7,
   last_value(col8) over w as col8
 from
-  dfs_test.`%s/window/fewRowsAllData.parquet`
+  dfs.`window/fewRowsAllData.parquet`
 window w as ()
 limit 1

@@ -41,7 +41,10 @@ public class PStoreTestUtil {
       expectedMap.put(keys[i], values[i]);
       store.put(keys[i], values[i]);
     }
-    // allow one second for puts to propagate back to cache
+
+    // Wait for store caches to update, this is necessary because ZookeeperClient caches can update asynchronously in some cases.
+    waitForNumProps(store, keys.length);
+
     {
       Iterator<Map.Entry<String, String>> iter = store.getAll();
       for(int i =0; i < keys.length; i++){
@@ -61,8 +64,29 @@ public class PStoreTestUtil {
       }
     }
 
-    // allow one second for deletes to propagate back to cache
-
+    // Wait for store caches to update, this is necessary because ZookeeperClient caches can update asynchronously in some cases.
+    waitForNumProps(store, 0);
     assertFalse(store.getAll().hasNext());
+  }
+
+  private static void waitForNumProps(PersistentStore store, int expected) throws InterruptedException {
+    for (int numProps = getNumProps(store);
+         numProps < expected;
+         numProps = getNumProps(store)) {
+      Thread.sleep(100L);
+    }
+  }
+
+  private static int getNumProps(PersistentStore store) {
+    Iterator<Map.Entry<String, String>> iter = store.getAll();
+
+    int numProps = 0;
+
+    while (iter.hasNext()) {
+      iter.next();
+      numProps++;
+    }
+
+    return numProps;
   }
 }

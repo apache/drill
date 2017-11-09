@@ -19,6 +19,7 @@ package org.apache.drill.jdbc.test;
 
 import static java.sql.ResultSetMetaData.columnNoNulls;
 import static java.sql.ResultSetMetaData.columnNullable;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -56,7 +57,6 @@ import org.junit.experimental.categories.Category;
 @Category(JdbcTest.class)
 public class TestInformationSchemaColumns extends JdbcTestBase {
 
-  private static final String VIEW_SCHEMA = "dfs_test.tmp";
   private static final String VIEW_NAME =
       TestInformationSchemaColumns.class.getSimpleName() + "_View";
 
@@ -173,7 +173,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
-    connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    connection = new Driver().connect( "jdbc:drill:zk=local", getDefaultProperties());
     final Statement stmt = connection.createStatement();
 
     ResultSet util;
@@ -206,7 +206,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     TODO(DRILL-3253)(end) */
 
     // Create temporary test-columns view:
-    util = stmt.executeQuery( "USE dfs_test.tmp" );
+    util = stmt.executeQuery( "USE dfs.tmp" );
     assertTrue( util.next() );
     assertTrue( "Error setting schema for test: " + util.getString( 2 ), util.getBoolean( 1 ) );
 
@@ -267,48 +267,48 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
     // Set up result rows for temporary test view and Hivetest columns:
 
-    mdrOptBOOLEAN        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBOOLEAN" );
+    mdrOptBOOLEAN        = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptBOOLEAN" );
 
     // TODO(DRILL-2470): Uncomment when TINYINT is implemented:
     //mdrReqTINYINT        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqTINYINT" );
     // TODO(DRILL-2470): Uncomment when SMALLINT is implemented:
     //mdrOptSMALLINT       = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptSMALLINT" );
-    mdrReqINTEGER        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTEGER" );
-    mdrOptBIGINT         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBIGINT" );
+    mdrReqINTEGER        = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTEGER" );
+    mdrOptBIGINT         = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptBIGINT" );
 
     // TODO(DRILL-2683): Uncomment when REAL is implemented:
     //mdrOptREAL           = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptREAL" );
-    mdrOptFLOAT          = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptFLOAT" );
-    mdrReqDOUBLE         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqDOUBLE" );
+    mdrOptFLOAT          = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptFLOAT" );
+    mdrReqDOUBLE         = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqDOUBLE" );
 
-    mdrReqDECIMAL_5_3    = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqDECIMAL_5_3" );
+    mdrReqDECIMAL_5_3    = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqDECIMAL_5_3" );
 
-    mdrReqVARCHAR_10     = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqVARCHAR_10" );
-    mdrOptVARCHAR        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptVARCHAR" );
-    mdrReqCHAR_5         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqCHAR_5" );
-    mdrOptVARBINARY_16   = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptVARBINARY_16" );
-    mdrOptBINARY_1048576 = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBINARY_1048576" );
+    mdrReqVARCHAR_10     = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqVARCHAR_10" );
+    mdrOptVARCHAR        = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptVARCHAR" );
+    mdrReqCHAR_5         = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqCHAR_5" );
+    mdrOptVARBINARY_16   = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptVARBINARY_16" );
+    mdrOptBINARY_1048576 = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptBINARY_1048576" );
 
-    mdrReqDATE           = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqDATE" );
-    mdrReqTIME           = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqTIME" );
-    mdrOptTIME_7         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptTIME_7" );
-    mdrOptTIMESTAMP      = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptTIMESTAMP" );
+    mdrReqDATE           = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqDATE" );
+    mdrReqTIME           = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqTIME" );
+    mdrOptTIME_7         = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptTIME_7" );
+    mdrOptTIMESTAMP      = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrOptTIMESTAMP" );
 
-    mdrReqINTERVAL_Y     = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_Y" );
-    mdrReqINTERVAL_3Y_Mo = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3Y_Mo" );
-    mdrReqINTERVAL_Mo    = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_Mo" );
-    mdrReqINTERVAL_D     = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_D" );
-    mdrReqINTERVAL_4D_H  = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_4D_H" );
-    mdrReqINTERVAL_3D_Mi = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3D_Mi" );
-    mdrReqINTERVAL_2D_S5 = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_2D_S5" );
-    mdrReqINTERVAL_H     = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_H" );
-    mdrReqINTERVAL_1H_Mi = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_1H_Mi" );
-    mdrReqINTERVAL_3H_S1 = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3H_S1" );
-    mdrReqINTERVAL_Mi    = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_Mi" );
-    mdrReqINTERVAL_5Mi_S = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_5Mi_S" );
-    mdrReqINTERVAL_S     = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_S" );
-    mdrReqINTERVAL_3S    = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3S" );
-    mdrReqINTERVAL_3S1   = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3S1" );
+    mdrReqINTERVAL_Y     = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_Y" );
+    mdrReqINTERVAL_3Y_Mo = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3Y_Mo" );
+    mdrReqINTERVAL_Mo    = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_Mo" );
+    mdrReqINTERVAL_D     = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_D" );
+    mdrReqINTERVAL_4D_H  = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_4D_H" );
+    mdrReqINTERVAL_3D_Mi = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3D_Mi" );
+    mdrReqINTERVAL_2D_S5 = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_2D_S5" );
+    mdrReqINTERVAL_H     = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_H" );
+    mdrReqINTERVAL_1H_Mi = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_1H_Mi" );
+    mdrReqINTERVAL_3H_S1 = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3H_S1" );
+    mdrReqINTERVAL_Mi    = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_Mi" );
+    mdrReqINTERVAL_5Mi_S = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_5Mi_S" );
+    mdrReqINTERVAL_S     = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_S" );
+    mdrReqINTERVAL_3S    = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3S" );
+    mdrReqINTERVAL_3S1   = setUpRow( DFS_TMP_SCHEMA, VIEW_NAME, "mdrReqINTERVAL_3S1" );
 
     /* TODO(DRILL-3253)(start): Update this once we have test plugin supporting all needed types.
     mdrReqARRAY   = setUpRow( "hive_test.default", "infoschematest", "listtype" );
@@ -472,7 +472,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_TABLE_SCHEMA_hasRightValue_mdrOptBOOLEAN() throws SQLException {
-    assertThat( mdrOptBOOLEAN.getString( "TABLE_SCHEMA" ), equalTo( VIEW_SCHEMA ) );
+    assertThat( mdrOptBOOLEAN.getString( "TABLE_SCHEMA" ), equalTo( DFS_TMP_SCHEMA ) );
   }
 
   // Not bothering with other _local_view_ test columns for TABLE_SCHEM.

@@ -17,21 +17,24 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestSchemaChange extends BaseTestQuery {
+import java.nio.file.Paths;
 
-  protected static final String WORKING_PATH = TestTools.getWorkingPath();
-  protected static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+public class TestSchemaChange extends BaseTestQuery {
+  @BeforeClass
+  public static void setupFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("schemachange"));
+  }
 
   @Test //DRILL-1605
   @Ignore("Until DRILL-2171 is fixed")
   public void testMultiFilesWithDifferentSchema() throws Exception {
-    final String query = String.format("select a, b from dfs_test.`%s/schemachange/multi/*.json`", TEST_RES_PATH);
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select a, b from dfs.`schemachange/multi/*.json`")
         .ordered()
         .baselineColumns("a", "b")
         .baselineValues(1L, null)

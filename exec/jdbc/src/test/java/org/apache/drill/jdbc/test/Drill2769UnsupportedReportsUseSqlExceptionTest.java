@@ -34,9 +34,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
-import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
@@ -84,9 +83,7 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
   @BeforeClass
   public static void setUpObjects() throws Exception {
     // (Note: Can't use JdbcTest's connect(...) for this test class.)
-
-    connection = new Driver().connect("jdbc:drill:zk=local",
-                                      JdbcAssert.getDefaultProperties());
+    connection = connect();
 
     plainStatement = connection.createStatement();
     preparedStatement =

@@ -27,17 +27,17 @@
       @id: 2,
       child: 1,
       pop: "fs-writer",
-      "location" : "/tmp/csvtest",
+      "location" : "%TEST_DIR%",
       "storage" : {
         "type" : "file",
         "connection" : "file:///",
         "workspaces" : {
           "root" : {
-            "location" : "/",
+            "location" : "%ROOT_DIR%",
             "writable" : false
           },
           "tmp" : {
-            "location" : "/tmp",
+            "location" : "%TMP_DIR%",
             "writable" : true
           }
         },

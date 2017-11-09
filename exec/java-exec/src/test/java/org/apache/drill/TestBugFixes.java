@@ -20,12 +20,14 @@ package org.apache.drill;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +35,11 @@ import java.util.Map;
 @Category(UnlikelyTest.class)
 public class TestBugFixes extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
-  private static final String WORKING_PATH = TestTools.getWorkingPath();
-  private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("bugs", "DRILL-4192"));
+  }
 
   @Test
   public void leak1() throws Exception {
@@ -157,19 +162,16 @@ public class TestBugFixes extends BaseTestQuery {
 
   @Test
   public void testDRILL4192() throws Exception {
-    String query = (String.format("select dir0, dir1 from dfs_test.`%s/bugs/DRILL-4192` order by dir1", TEST_RES_PATH));
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select dir0, dir1 from dfs.`bugs/DRILL-4192` order by dir1")
         .unOrdered()
         .baselineColumns("dir0", "dir1")
         .baselineValues("single_top_partition", "nested_partition_1")
         .baselineValues("single_top_partition", "nested_partition_2")
         .go();
 
-    query = (String.format("select dir0, dir1 from dfs_test.`%s/bugs/DRILL-4192/*/nested_partition_1` order by dir1", TEST_RES_PATH));
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select dir0, dir1 from dfs.`bugs/DRILL-4192/*/nested_partition_1` order by dir1")
         .unOrdered()
         .baselineColumns("dir0", "dir1")
         .baselineValues("single_top_partition", "nested_partition_1")
@@ -219,11 +221,10 @@ public class TestBugFixes extends BaseTestQuery {
     List<Map<String, Object>> baseline = baselineBuilder.build();
 
     testBuilder()
-            .sqlQuery(String.format("select cast(id as int) as id from dfs_test.`%s/bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id order by 1 limit %s",
-                TEST_RES_PATH, limit))
-            .unOrdered()
-            .baselineRecords(baseline)
-            .go();
+      .sqlQuery("select cast(id as int) as id from cp.`bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id order by 1 limit %s", limit)
+      .unOrdered()
+      .baselineRecords(baseline)
+      .go();
   }
 
   @Test

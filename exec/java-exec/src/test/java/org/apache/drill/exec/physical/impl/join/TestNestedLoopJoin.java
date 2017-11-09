@@ -21,9 +21,11 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.common.util.TestTools;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.nio.file.Paths;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
@@ -32,8 +34,6 @@ import static org.junit.Assert.assertThat;
 public class TestNestedLoopJoin extends PlanTestBase {
 
   private static String nlpattern = "NestedLoopJoin";
-  private static final String WORKING_PATH = TestTools.getWorkingPath();
-  private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   private static final String DISABLE_HJ = "alter session set `planner.enable_hashjoin` = false";
   private static final String ENABLE_HJ = "alter session set `planner.enable_hashjoin` = true";
@@ -78,6 +78,11 @@ public class TestNestedLoopJoin extends PlanTestBase {
 
   private static final String testNlJoinWithLargeRightInput = "select * from cp.`tpch/region.parquet`r " +
       "left join cp.`tpch/nation.parquet` n on r.r_regionkey <> n.n_regionkey";
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "parquet"));
+  }
 
   @Test
   public void testNlJoinExists_1_planning() throws Exception {
@@ -157,9 +162,9 @@ public class TestNestedLoopJoin extends PlanTestBase {
 
   @Test // equality join and non-scalar right input, hj and mj disabled, enforce exchanges
   public void testNlJoinEqualityNonScalar_2_planning() throws Exception {
-    String query = String.format("select n.n_nationkey from cp.`tpch/nation.parquet` n, "
-        + " dfs_test.`%s/multilevel/parquet` o "
-        + " where n.n_regionkey = o.o_orderkey and o.o_custkey > 5", TEST_RES_PATH);
+    String query = "select n.n_nationkey from cp.`tpch/nation.parquet` n, "
+        + " dfs.`multilevel/parquet` o "
+        + " where n.n_regionkey = o.o_orderkey and o.o_custkey > 5";
     test("alter session set `planner.slice_target` = 1");
     test(DISABLE_HJ);
     test(DISABLE_MJ);

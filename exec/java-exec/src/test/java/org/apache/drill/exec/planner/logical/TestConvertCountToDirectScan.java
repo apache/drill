@@ -20,17 +20,25 @@ package org.apache.drill.exec.planner.logical;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
+
 @Category(PlannerTest.class)
 public class TestConvertCountToDirectScan extends PlanTestBase {
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("directcount.parquet"));
+  }
 
   @Test
   public void ensureCaseDoesntConvertToDirectScan() throws Exception {
     testPlanMatchingPatterns(
         "select count(case when n_name = 'ALGERIA' and n_regionkey = 2 then n_nationkey else null end) as cnt\n" +
-            "from dfs.`${WORKING_PATH}/src/test/resources/directcount.parquet`",
+            "from dfs.`directcount.parquet`",
         new String[] { "CASE" },
         new String[]{});
   }
@@ -117,7 +125,7 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
 
   @Test
   public void ensureConvertForSeveralColumns() throws Exception {
-    test("use %s", TEMP_SCHEMA);
+    test("use dfs.tmp");
     final String tableName = "parquet_table_counts";
 
     try {

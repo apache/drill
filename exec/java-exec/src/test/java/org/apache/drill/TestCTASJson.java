@@ -17,18 +17,10 @@
  */
 package org.apache.drill;
 
-
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestCTASJson extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCTASJson.class);
-
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   @Test
   /**
@@ -37,7 +29,7 @@ public class TestCTASJson extends PlanTestBase {
    */
   public void testctas_alltypes_map() throws Exception {
     String testName = "ctas_alltypes_map";
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
@@ -65,7 +57,7 @@ public class TestCTASJson extends PlanTestBase {
    */
   public void testctas_alltypes_map_noskip() throws Exception {
     String testName = "ctas_alltypes_map";
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
@@ -94,7 +86,7 @@ public class TestCTASJson extends PlanTestBase {
    */
   public void testctas_alltypes_repeatedmap() throws Exception {
     String testName = "ctas_alltypes_repeated_map";
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
@@ -124,7 +116,7 @@ public class TestCTASJson extends PlanTestBase {
    */
   public void testctas_alltypes_repeated_map_noskip() throws Exception {
     String testName = "ctas_alltypes_repeated_map";
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";

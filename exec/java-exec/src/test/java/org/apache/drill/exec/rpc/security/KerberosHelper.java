@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 
-import static org.apache.drill.exec.ExecTest.getTempDir;
-
 public class KerberosHelper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KerberosHelper.class);
 
@@ -59,9 +57,9 @@ public class KerberosHelper {
     this.testName = testName;
   }
 
-  public void setupKdc() throws Exception {
+  public void setupKdc(File workspace) throws Exception {
+    this.workspace = workspace;
     kdc = new SimpleKdcServer();
-    workspace = new File(getTempDir("kerberos_target"));
 
     kdcDir = new File(workspace, testName);
     if(!kdcDir.mkdirs()) {

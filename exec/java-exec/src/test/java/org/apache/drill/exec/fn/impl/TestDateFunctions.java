@@ -22,7 +22,7 @@ import com.google.common.io.Files;
 import mockit.integration.junit4.JMockit;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -45,19 +45,16 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateFunctions extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDateFunctions.class);
-
 
   public void testCommon(String[] expectedResults, String physicalPlan, String resourceFile) throws Exception {
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
          Drillbit bit = new Drillbit(CONFIG, serviceSet);
          DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
-
       // run query.
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-        Files.toString(FileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8)
+        Files.toString(DrillFileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8)
           .replace("#{TEST_FILE}", resourceFile));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());

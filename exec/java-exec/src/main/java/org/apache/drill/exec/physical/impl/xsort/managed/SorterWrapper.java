@@ -78,8 +78,7 @@ public class SorterWrapper extends BaseSortWrapper {
 
   private SingleBatchSorter newSorter(VectorAccessible batch) {
     CodeGenerator<SingleBatchSorter> cg = CodeGenerator.get(
-        SingleBatchSorter.TEMPLATE_DEFINITION, context.getFragmentContext().getFunctionRegistry(),
-        context.getFragmentContext().getOptionSet());
+        SingleBatchSorter.TEMPLATE_DEFINITION, context.getFragmentContext().getOptionSet());
     ClassGenerator<SingleBatchSorter> g = cg.getRoot();
     cg.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.

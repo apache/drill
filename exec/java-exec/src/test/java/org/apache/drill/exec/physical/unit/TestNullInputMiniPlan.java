@@ -23,7 +23,7 @@ import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.config.Filter;
@@ -272,7 +272,7 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
 
     RecordBatch left = createScanBatchFromJson(SINGLE_EMPTY_JSON);
 
-    String file = FileUtils.getResourceAsFile("/tpchmulti/region/01.parquet").toURI().toString();
+    String file = DrillFileUtils.getResourceAsFile("/tpchmulti/region/01.parquet").toURI().toString();
 
     RecordBatch scanBatch = new ParquetScanBuilder()
         .fileSystem(fs)
@@ -558,7 +558,7 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
     List<String> inputPaths = new ArrayList<>();
 
     for (String resource : resourcePaths) {
-      inputPaths.add(FileUtils.getResourceAsFile(resource).toURI().toString());
+      inputPaths.add(DrillFileUtils.getResourceAsFile(resource).toURI().toString());
     }
 
     RecordBatch scanBatch = new JsonScanBuilder()

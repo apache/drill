@@ -54,7 +54,6 @@ import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractMapVector
     implements RepeatedValueVector, RepeatedFixedWidthVectorLike {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RepeatedMapVector.class);
 
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
 
@@ -425,9 +424,6 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    //final int expectedBufferSize = getBufferSize();
-    //final int actualBufferSize = super.getBufferSize();
-    //Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
     return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
   }
 

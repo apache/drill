@@ -20,11 +20,10 @@ package org.apache.drill.exec;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.Test;
@@ -47,16 +46,13 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryEmptyJson() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile(SINGLE_EMPTY_JSON).toURI().toString();
-    final String query = String.format("select key, key + 100 as key2 from dfs_test.`%s` ", rootEmpty);
-
     final BatchSchema expectedSchema = new SchemaBuilder()
         .addNullable("key", TypeProtos.MinorType.INT)
         .addNullable("key2", TypeProtos.MinorType.INT)
         .build();
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select key, key + 100 as key2 from cp.`%s`", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -69,22 +65,17 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryStarColEmptyJson() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile(SINGLE_EMPTY_JSON).toURI().toString();
-    final String query1 = String.format("select * from dfs_test.`%s` ", rootEmpty);
-
     final BatchSchema expectedSchema = new SchemaBuilder()
         .build();
 
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("select * from cp.`%s` ", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
 
-    final String query2 = String.format("select *, * from dfs_test.`%s` ", rootEmpty);
-
     testBuilder()
-        .sqlQuery(query2)
+        .sqlQuery("select *, * from cp.`%s` ", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -97,21 +88,16 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryQualifiedStarColEmptyJson() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile(SINGLE_EMPTY_JSON).toURI().toString();
-    final String query1 = String.format("select foo.* from dfs_test.`%s` as foo", rootEmpty);
-
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
 
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("select foo.* from cp.`%s` as foo", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
 
-    final String query2 = String.format("select foo.*, foo.* from dfs_test.`%s` as foo", rootEmpty);
-
     testBuilder()
-        .sqlQuery(query2)
+        .sqlQuery("select foo.*, foo.* from cp.`%s` as foo", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -120,9 +106,6 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testQueryMapArrayEmptyJson() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile(SINGLE_EMPTY_JSON).toURI().toString();
-    final String query = String.format("select foo.a.b as col1, foo.columns[2] as col2, foo.bar.columns[3] as col3 from dfs_test.`%s` as foo", rootEmpty);
-
     final BatchSchema expectedSchema = new SchemaBuilder()
         .addNullable("col1", TypeProtos.MinorType.INT)
         .addNullable("col2", TypeProtos.MinorType.INT)
@@ -130,7 +113,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .build();
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select foo.a.b as col1, foo.columns[2] as col2, foo.bar.columns[3] as col3 from cp.`%s` as foo", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -144,12 +127,6 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryConstExprEmptyJson() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile(SINGLE_EMPTY_JSON).toURI().toString();
-    final String query = String.format("select 1.0 + 100.0 as key, "
-        + " cast(100 as varchar(100)) as name, "
-        + " cast(columns as varchar(100)) as name2 "
-        + " from dfs_test.`%s` ", rootEmpty);
-
     final BatchSchema expectedSchema = new SchemaBuilder()
         .add("key", TypeProtos.MinorType.FLOAT8)
         .add("name", TypeProtos.MinorType.VARCHAR, 100)
@@ -157,7 +134,10 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .build();
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select 1.0 + 100.0 as key, "
+          + " cast(100 as varchar(100)) as name, "
+          + " cast(columns as varchar(100)) as name2 "
+          + " from cp.`%s` ", SINGLE_EMPTY_JSON)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -169,14 +149,11 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryEmptyCsvH() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile(SINGLE_EMPTY_CSVH).toURI().toString();
-    final String query1 = String.format("select * from dfs_test.`%s` ", rootEmpty);
-
     final BatchSchema expectedSchema = new SchemaBuilder()
         .build();
 
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("select * from cp.`%s`", SINGLE_EMPTY_CSVH)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -189,15 +166,12 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryEmptyCsv() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile(SINGLE_EMPTY_CSV).toURI().toString();
-    final String query1 = String.format("select * from dfs_test.`%s` ", rootEmpty);
-
     final BatchSchema expectedSchema = new SchemaBuilder()
         .addArray("columns", TypeProtos.MinorType.VARCHAR)
         .build();
 
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("select * from cp.`%s`", SINGLE_EMPTY_CSV)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();

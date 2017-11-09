@@ -24,12 +24,21 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.physical.impl.xsort.managed.ExternalSortBatch;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.LogFixture.LogFixtureBuilder;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
+import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.file.JsonFileBuilder;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import ch.qos.logback.classic.Level;
@@ -50,7 +59,6 @@ import ch.qos.logback.classic.Level;
  * you can create your cluster fixture in a JUnit <tt>{@literal @}Before</tt>
  * method, and shut it down in <tt>{@literal @}After</tt> method.
  * <p>
- * See {@link org.apache.drill.test.package_info the package overview} for details.
  */
 
 // Note: Test itself is ignored because this is an example, not a
@@ -58,6 +66,15 @@ import ch.qos.logback.classic.Level;
 
 @Ignore
 public class ExampleTest {
+
+  /**
+   * This test watcher creates all the temp directories that are required for an integration test with a Drillbit. The
+   * {@link ClusterFixture} and {@link BaseTestQuery} classes automatically configure their Drillbits to use the temp
+   * directories created by this test watcher. Please see {@link BaseDirTestWatcher} and package-info.java. Please see
+   * {@link #secondTest()} for an example.
+   */
+  @Rule
+  public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
   /**
    * Example of the simplest possible test case: set up a default
@@ -69,38 +86,61 @@ public class ExampleTest {
 
   @Test
   public void firstTest() throws Exception {
-    try (ClusterFixture cluster = ClusterFixture.standardCluster();
+    try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("SELECT * FROM `cp`.`employee.json` LIMIT 10").printCsv();
     }
   }
 
   /**
-   * Example that uses the fixture builder to build a cluster fixture. Lets
-   * you set configuration (boot-time) options, session options, system options
-   * and more.
    * <p>
-   * Also shows how to display the plan JSON and just run a query silently,
-   * getting just the row count, batch count and run time.
-   *
+   *   Example that uses the fixture builder to build a cluster fixture. Lets
+   *   you set configuration (boot-time) options, session options, system options
+   *   and more.
+   * </p>
+   * <p>
+   *   You can write test files to the {@link BaseDirTestWatcher#getRootDir()} and query them in the test.
+   * </p>
+   * <p>
+   *   Also shows how to display the plan JSON and just run a query silently,
+   *   getting just the row count, batch count and run time.
+   * </p>
    * @throws Exception if anything goes wrong
    */
 
   @Test
   public void secondTest() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
-        .configProperty(ExecConstants.SLICE_TARGET, 10)
-        ;
+    try (RootAllocator allocator = new RootAllocator(100_000_000)) {
+      final File tableFile = dirTestWatcher
+        .getRootDir()
+        .toPath()
+        .resolve("employee.json")
+        .toFile();
 
-    try (ClusterFixture cluster = builder.build();
-         ClientFixture client = cluster.clientFixture()) {
-      String sql = "SELECT * FROM `cp`.`employee.json` LIMIT 10";
-      System.out.println( client.queryBuilder().sql(sql).explainJson() );
-      QuerySummary results = client.queryBuilder().sql(sql).run();
-      System.out.println(String.format("Read %d rows", results.recordCount()));
-      // Usually we want to test something. Here, just test that we got
-      // the 10 records.
-      assertEquals(10, results.recordCount());
+      final BatchSchema schema = new SchemaBuilder()
+        .add("id", Types.required(TypeProtos.MinorType.VARCHAR))
+        .add("name", Types.required(TypeProtos.MinorType.VARCHAR))
+        .build();
+
+      final RowSet rowSet = new RowSetBuilder(allocator, schema)
+        .add("1", "kiwi")
+        .add("2", "watermelon")
+        .build();
+
+      new JsonFileBuilder(rowSet).build(tableFile);
+      rowSet.clear();
+
+      ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).configProperty(ExecConstants.SLICE_TARGET, 10);
+
+      try (ClusterFixture cluster = builder.build(); ClientFixture client = cluster.clientFixture()) {
+        String sql = "SELECT * FROM `dfs`.`test/employee.json`";
+        System.out.println(client.queryBuilder().sql(sql).explainJson());
+        QuerySummary results = client.queryBuilder().sql(sql).run();
+        System.out.println(String.format("Read %d rows", results.recordCount()));
+        // Usually we want to test something. Here, just test that we got
+        // the 2 records.
+        assertEquals(2, results.recordCount());
+      }
     }
   }
 
@@ -125,7 +165,7 @@ public class ExampleTest {
 
   @Test
   public void thirdTest() throws Exception {
-    try (ClusterFixture cluster = ClusterFixture.standardCluster();
+    try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
       String sql = "SELECT id_i, name_s10 FROM `mock`.`employees_5`";
       client.queryBuilder().sql(sql).printCsv();
@@ -157,16 +197,15 @@ public class ExampleTest {
         // All debug messages in the xsort package
         .logger("org.apache.drill.exec.physical.impl.xsort", Level.DEBUG)
         // And trace messages for one class.
-        .logger(ExternalSortBatch.class, Level.TRACE)
-        ;
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
+        .logger(ExternalSortBatch.class, Level.TRACE);
+
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         // Easy way to run single threaded for easy debugging
         .maxParallelization(1)
         // Set some session options
         .sessionOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2L * 1024 * 1024 * 1024)
         .sessionOption(PlannerSettings.EXCHANGE.getOptionName(), true)
-        .sessionOption(PlannerSettings.HASHAGG.getOptionName(), false)
-        ;
+        .sessionOption(PlannerSettings.HASHAGG.getOptionName(), false);
 
     try (LogFixture logs = logBuilder.build();
          ClusterFixture cluster = builder.build();
@@ -200,13 +239,11 @@ public class ExampleTest {
    *
    * @throws Exception if anything goes wrong
    */
-
   @Test
   public void fifthTest() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .maxParallelization(1)
-        .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true)
-        ;
+        .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -231,7 +268,6 @@ public class ExampleTest {
    *
    * @param args not used
    */
-
   public static void main(String args) {
     try {
       new ExampleTest().firstTest();

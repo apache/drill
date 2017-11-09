@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -75,12 +75,12 @@ public class TestDrillParquetReader extends BaseTestQuery {
   @Test
   public void test4349() throws Exception {
     // start by creating a parquet file from the input csv file
-    runSQL("CREATE TABLE dfs_test.tmp.`4349` AS SELECT columns[0] id, CAST(NULLIF(columns[1], '') AS DOUBLE) val FROM cp.`parquet2/4349.csv.gz`");
+    runSQL("CREATE TABLE dfs.tmp.`4349` AS SELECT columns[0] id, CAST(NULLIF(columns[1], '') AS DOUBLE) val FROM cp.`parquet2/4349.csv.gz`");
 
     // querying the parquet file should return the same results found in the csv file
     testBuilder()
       .unOrdered()
-      .sqlQuery("SELECT * FROM dfs_test.tmp.`4349` WHERE id = 'b'")
+      .sqlQuery("SELECT * FROM dfs.tmp.`4349` WHERE id = 'b'")
       .sqlBaselineQuery("SELECT columns[0] id, CAST(NULLIF(columns[1], '') AS DOUBLE) val FROM cp.`parquet2/4349.csv.gz` WHERE columns[0] = 'b'")
       .go();
   }

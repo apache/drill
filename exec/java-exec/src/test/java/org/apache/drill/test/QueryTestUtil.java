@@ -15,16 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill;
+package org.apache.drill.test;
 
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.drill.BaseTestQuery.SilentListener;
+import org.apache.drill.test.BaseTestQuery.SilentListener;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.PrintingResultsListener;
@@ -86,16 +85,16 @@ public class QueryTestUtil {
    * Normalize the query relative to the test environment.
    *
    * <p>Looks for "${WORKING_PATH}" in the query string, and replaces it the current
-   * working patch obtained from {@link org.apache.drill.common.util.TestTools#getWorkingPath()}.
+   * working patch obtained from {@link TestTools#WORKING_PATH}.
    *
    * @param query the query string
    * @return the normalized query string
    */
   public static String normalizeQuery(final String query) {
     if (query.contains("${WORKING_PATH}")) {
-      return query.replaceAll(Pattern.quote("${WORKING_PATH}"), Matcher.quoteReplacement(TestTools.getWorkingPath()));
+      return query.replaceAll(Pattern.quote("${WORKING_PATH}"), Matcher.quoteReplacement(TestTools.WORKING_PATH.toString()));
     } else if (query.contains("[WORKING_PATH]")) {
-      return query.replaceAll(Pattern.quote("[WORKING_PATH]"), Matcher.quoteReplacement(TestTools.getWorkingPath()));
+      return query.replaceAll(Pattern.quote("[WORKING_PATH]"), Matcher.quoteReplacement(TestTools.WORKING_PATH.toString()));
     }
     return query;
   }

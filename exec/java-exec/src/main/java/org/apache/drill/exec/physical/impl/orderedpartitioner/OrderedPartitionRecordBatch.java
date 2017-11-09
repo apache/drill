@@ -420,13 +420,12 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private SampleCopier getCopier(SelectionVector4 sv4, VectorContainer incoming, VectorContainer outgoing,
       List<Ordering> orderings, List<ValueVector> localAllocationVectors) throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final ClassGenerator<SampleCopier> cg = CodeGenerator.getRoot(SampleCopier.TEMPLATE_DEFINITION,
-        context.getFunctionRegistry(), context.getOptions());
+    final ClassGenerator<SampleCopier> cg = CodeGenerator.getRoot(SampleCopier.TEMPLATE_DEFINITION, context.getOptions());
     // Note: disabled for now. This may require some debugging:
     // no tests are available for this operator.
-//    cg.getCodeGenerator().plainOldJavaCapable(true);
+    // cg.getCodeGenerator().plainOldJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.getCodeGenerator().saveCodeForDebugging(true);
+    // cg.getCodeGenerator().saveCodeForDebugging(true);
 
     int i = 0;
     for (Ordering od : orderings) {
@@ -592,7 +591,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     final List<TransferPair> transfers = Lists.newArrayList();
 
     final ClassGenerator<OrderedPartitionProjector> cg = CodeGenerator.getRoot(
-        OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+        OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getOptions());
     // Note: disabled for now. This may require some debugging:
     // no tests are available for this operator.
 //    cg.getCodeGenerator().plainOldJavaCapable(true);

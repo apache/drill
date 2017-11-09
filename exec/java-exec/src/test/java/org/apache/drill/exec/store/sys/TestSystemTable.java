@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.BeforeClass;

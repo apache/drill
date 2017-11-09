@@ -37,6 +37,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 
@@ -49,7 +50,7 @@ public class BaseTestImpersonation extends PlanTestBase {
   protected static MiniDFSCluster dfsCluster;
   protected static Configuration dfsConf;
   protected static FileSystem fs;
-  protected static String miniDfsStoragePath;
+  protected static File miniDfsStoragePath;
 
   // Test users and groups
   protected static final String[] org1Users = { "user0_1", "user1_1", "user2_1", "user3_1", "user4_1", "user5_1" };
@@ -93,8 +94,8 @@ public class BaseTestImpersonation extends PlanTestBase {
 
     // Set the MiniDfs base dir to be the temp directory of the test, so that all files created within the MiniDfs
     // are properly cleanup when test exits.
-    miniDfsStoragePath = System.getProperty("java.io.tmpdir") + Path.SEPARATOR + testClass;
-    dfsConf.set("hdfs.minidfs.basedir", miniDfsStoragePath);
+    miniDfsStoragePath = dirTestWatcher.makeRootSubDir(Paths.get("miniDfs"));
+    dfsConf.set("hdfs.minidfs.basedir", miniDfsStoragePath.getCanonicalPath());
 
     if (isImpersonationEnabled) {
       // Set the proxyuser settings so that the user who is running the Drillbits/MiniDfs can impersonate other users.
@@ -126,7 +127,7 @@ public class BaseTestImpersonation extends PlanTestBase {
     // Create a HDFS based storage plugin based on local storage plugin and add it to plugin registry (connection string
     // for mini dfs is varies for each run).
     final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    final FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs_test").getConfig();
+    final FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getConfig();
 
     final FileSystemConfig miniDfsPluginConfig = new FileSystemConfig();
     miniDfsPluginConfig.connection = dfsConf.get(FileSystem.FS_DEFAULT_NAME_KEY);
@@ -156,7 +157,7 @@ public class BaseTestImpersonation extends PlanTestBase {
     }
 
     if (miniDfsStoragePath != null) {
-      FileUtils.deleteQuietly(new File(miniDfsStoragePath));
+      FileUtils.deleteQuietly(miniDfsStoragePath);
     }
   }
 

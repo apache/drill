@@ -37,10 +37,10 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 
-import com.google.common.base.Charsets;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.Text;
+import org.apache.drill.test.BaseTestQuery;
 
 /**
  * Utilities for generating Avro test data.
@@ -62,6 +62,7 @@ public class AvroTestUtil {
     private Schema schema;
     private final DataFileWriter<GenericData.Record> writer;
     private final String filePath;
+    private final String fileName;
 
     private AvroTestRecordWriter(Schema schema, File file) {
       writer = new DataFileWriter<GenericData.Record>(new GenericDatumWriter<GenericData.Record>(schema));
@@ -74,6 +75,7 @@ public class AvroTestUtil {
       currentExpectedRecord = new TreeMap<>();
       expectedRecords = new ArrayList<>();
       filePath = file.getAbsolutePath();
+      fileName = file.getName();
     }
 
     public void startRecord() {
@@ -134,6 +136,10 @@ public class AvroTestUtil {
       return filePath;
     }
 
+    public String getFileName() {
+      return fileName;
+    }
+
     public List<Map<String, Object>>getExpectedRecords() {
       return expectedRecords;
     }
@@ -145,7 +151,6 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateSimplePrimitiveSchema_NoNullValues(int numRecords) throws Exception {
-
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -159,10 +164,9 @@ public class AvroTestUtil {
             .name("h_boolean").type().booleanType().noDefault()
             .endRecord();
 
-    final File file = File.createTempFile("avro-primitive-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-primitive-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
+
     try {
       ByteBuffer bb = ByteBuffer.allocate(2);
       bb.put(0, (byte) 'a');
@@ -189,7 +193,6 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateUnionSchema_WithNullValues() throws Exception {
-
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -204,12 +207,10 @@ public class AvroTestUtil {
             .name("i_union").type().optional().doubleType()
             .endRecord();
 
-    final File file = File.createTempFile("avro-primitive-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-primitive-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
-    try {
 
+    try {
       ByteBuffer bb = ByteBuffer.allocate(1);
       bb.put(0, (byte) 1);
 
@@ -234,7 +235,6 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateUnionSchema_WithNonNullValues() throws Exception {
-
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -249,9 +249,7 @@ public class AvroTestUtil {
             .name("i_union").type().unionOf().doubleType().and().longType().endUnion().noDefault()
             .endRecord();
 
-    final File file = File.createTempFile("avro-primitive-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-primitive-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
 
@@ -279,7 +277,6 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateSimpleEnumSchema_NoNullValues() throws Exception {
-
     final String[] symbols = { "E_SYM_A", "E_SYM_B", "E_SYM_C", "E_SYM_D" };
 
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
@@ -289,9 +286,7 @@ public class AvroTestUtil {
             .name("b_enum").type().enumeration("my_enum").symbols(symbols).noDefault()
             .endRecord();
 
-    final File file = File.createTempFile("avro-primitive-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-primitive-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema enumSchema = schema.getField("b_enum").schema();
 
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
@@ -313,10 +308,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateSimpleArraySchema_NoNullValues() throws Exception {
-
-    final File file = File.createTempFile("avro-array-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-array-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -364,10 +356,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateSimpleNestedSchema_NoNullValues() throws Exception {
-
-    final File file = File.createTempFile("avro-nested-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-nested-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -406,10 +395,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateUnionNestedArraySchema_withNullValues() throws Exception {
-
-    final File file = File.createTempFile("avro-nested-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-nested-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -455,10 +441,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateNestedArraySchema(int numRecords, int numArrayItems) throws IOException {
-
-    final File file = File.createTempFile("avro-nested-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-nested-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest").namespace("org.apache.drill.exec.store.avro")
         .fields().name("a_int").type().intType().noDefault().name("b_array").type().array().items()
         .record("my_record_1").namespace("foo.blah.org").fields().name("nested_1_int").type().optional().intType()
@@ -490,10 +473,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateMapSchema_withNullValues() throws Exception {
-
-    final File file = File.createTempFile("avro-nested-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-nested-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -525,10 +505,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateMapSchemaComplex_withNullValues() throws Exception {
-
-    final File file = File.createTempFile("avro-nested-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-nested-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -574,10 +551,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateUnionNestedSchema_withNullValues() throws Exception {
-
-    final File file = File.createTempFile("avro-nested-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-nested-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -616,10 +590,7 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateDoubleNestedSchema_NoNullValues() throws Exception {
-
-    final File file = File.createTempFile("avro-double-nested-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-double-nested-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -672,10 +643,7 @@ public class AvroTestUtil {
   }
 
   public static String generateLinkedList() throws Exception {
-
-    final File file = File.createTempFile("avro-linkedlist", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-linkedlist", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final Schema schema = SchemaBuilder.record("LongList")
             .namespace("org.apache.drill.exec.store.avro")
             .aliases("LinkedLongs")
@@ -703,7 +671,7 @@ public class AvroTestUtil {
       writer.close();
     }
 
-    return file.getAbsolutePath();
+    return file.getName();
   }
 
   public static AvroTestRecordWriter generateStringAndUtf8Data() throws Exception {
@@ -715,9 +683,7 @@ public class AvroTestUtil {
             .name("b_utf8").type().stringType().noDefault()
             .endRecord();
 
-    final File file = File.createTempFile("avro-primitive-test", ".avro");
-    file.deleteOnExit();
-
+    final File file = File.createTempFile("avro-primitive-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
 

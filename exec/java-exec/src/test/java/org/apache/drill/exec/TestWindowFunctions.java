@@ -17,27 +17,32 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.PlanTestBase;
 
 import org.apache.drill.test.UserExceptionMatcher;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class TestWindowFunctions extends BaseTestQuery {
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+import java.nio.file.Paths;
 
+public class TestWindowFunctions extends BaseTestQuery {
   private static void throwAsUnsupportedException(UserException ex) throws Exception {
     SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
     throw ex;
+  }
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("window"));
   }
 
   @Test // DRILL-3196
@@ -240,7 +245,7 @@ public class TestWindowFunctions extends BaseTestQuery {
           "from testWindowGroupByOnView \n" +
           "group by b";
 
-      test("use dfs_test.tmp");
+      test("use dfs.tmp");
       test(createView);
       test(query);
     } finally {
@@ -406,7 +411,7 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3298
   public void testCountEmptyPartitionByWithExchange() throws Exception {
-    String query = String.format("select count(*) over (order by o_orderpriority) as cnt from dfs.`%s/multilevel/parquet` where o_custkey < 100", TEST_RES_PATH);
+    String query = "select count(*) over (order by o_orderpriority) as cnt from dfs.`multilevel/parquet` where o_custkey < 100";
     try {
       // Validate the plan
       final String[] expectedPlan = {"Window.*partition \\{\\} order by \\[0\\].*COUNT\\(\\)",
@@ -508,9 +513,9 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test
   public void testCompoundIdentifierInWindowDefinition() throws Exception {
-    String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
+    String root = DrillFileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
     String query = String.format("SELECT count(*) OVER w as col1, count(*) OVER w as col2 \n" +
-        "FROM dfs_test.`%s` \n" +
+        "FROM dfs.`%s` \n" +
         "WINDOW w AS (PARTITION BY columns[1] ORDER BY columns[0] DESC)", root);
 
     // Validate the plan
@@ -559,7 +564,7 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3404
   public void testWindowSumAggIsNotNull() throws Exception {
-    String query = String.format("select count(*) cnt from (select sum ( c1 ) over ( partition by c2 order by c1 asc nulls first ) w_sum from dfs.`%s/window/table_with_nulls.parquet` ) sub_query where w_sum is not null", TEST_RES_PATH);
+    String query = "select count(*) cnt from (select sum ( c1 ) over ( partition by c2 order by c1 asc nulls first ) w_sum from dfs.`window/table_with_nulls.parquet` ) sub_query where w_sum is not null";
 
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{1\\} order by \\[0 ASC-nulls-first\\].*SUM\\(\\$0\\)",
@@ -604,11 +609,11 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3567
   public void testMultiplePartitions1() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = DrillFileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
     String query = String.format("select count(*) over(partition by b1 order by c1) as count1, \n" +
         "sum(a1)  over(partition by b1 order by c1) as sum1, \n" +
         "count(*) over(partition by a1 order by c1) as count2 \n" +
-        "from dfs_test.`%s`", root);
+        "from dfs.`%s`", root);
 
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{2\\} order by \\[1\\].*COUNT\\(\\)",
@@ -637,11 +642,11 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3567
   public void testMultiplePartitions2() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = DrillFileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
     String query = String.format("select count(*) over(partition by b1 order by c1) as count1, \n" +
         "count(*) over(partition by a1 order by c1) as count2, \n" +
         "sum(a1)  over(partition by b1 order by c1) as sum1 \n" +
-        "from dfs_test.`%s`", root);
+        "from dfs.`%s`", root);
 
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{2\\} order by \\[1\\].*COUNT\\(\\)",
@@ -670,9 +675,9 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // see DRILL-3574
   public void testWithAndWithoutPartitions() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = DrillFileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
     String query = String.format("select sum(a1) over(partition by b1, c1) as s1, sum(a1) over() as s2 \n" +
-        "from dfs_test.`%s` \n" +
+        "from dfs.`%s` \n" +
         "order by a1", root);
     test("alter session set `planner.slice_target` = 1");
 
@@ -701,10 +706,10 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // see DRILL-3657
   public void testConstantsInMultiplePartitions() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = DrillFileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
     String query = String.format(
         "select sum(1) over(partition by b1 order by a1) as sum1, sum(1) over(partition by a1) as sum2, rank() over(order by b1) as rank1, rank() over(order by 1) as rank2 \n" +
-        "from dfs_test.`%s` \n" +
+        "from dfs.`%s` \n" +
         "order by 1, 2, 3, 4", root);
 
     // Validate the plan
@@ -735,9 +740,9 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3580
   public void testExpressionInWindowFunction() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String root = DrillFileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
     String query = String.format("select a1, b1, sum(b1) over (partition by a1) as c1, sum(a1 + b1) over (partition by a1) as c2\n" +
-        "from dfs_test.`%s`", root);
+        "from dfs.`%s`", root);
 
     // Validate the plan
     final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{0\\} order by \\[\\].*\\[SUM\\(\\$1\\), SUM\\(\\$2\\)\\]"};

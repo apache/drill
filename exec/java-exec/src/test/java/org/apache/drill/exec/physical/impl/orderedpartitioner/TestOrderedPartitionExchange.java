@@ -28,7 +28,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.scanner.ClassPathScanner;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -77,7 +77,7 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
+          Files.toString(DrillFileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
               Charsets.UTF_8));
       int count = 0;
       List<Integer> partitionRecordCounts = Lists.newArrayList();

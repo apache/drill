@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -46,7 +46,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
     try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet); DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile("/physical_single_exchange.json"), Charsets.UTF_8));
+      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile("/physical_single_exchange.json"), Charsets.UTF_8));
       int count = 0;
       for(QueryDataBatch b : results){
         count += b.getHeader().getRowCount();
@@ -66,7 +66,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
     try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet); DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8));
+      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8));
       int count = 0;
       for(QueryDataBatch b : results){
         count += b.getHeader().getRowCount();
@@ -85,7 +85,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
         try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet); DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
             bit1.run();
             client.connect();
-            List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, Files.toString(FileUtils.getResourceAsFile("/scan_screen_logical.json"), Charsets.UTF_8));
+            List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, Files.toString(DrillFileUtils.getResourceAsFile("/scan_screen_logical.json"), Charsets.UTF_8));
             int count = 0;
             for(QueryDataBatch b : results){
                 count += b.getHeader().getRowCount();
@@ -105,7 +105,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
         bit1.run();
         bit2.run();
         client.connect();
-        List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8));
+        List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8));
         int count = 0;
       for(QueryDataBatch b : results){
         count += b.getHeader().getRowCount();

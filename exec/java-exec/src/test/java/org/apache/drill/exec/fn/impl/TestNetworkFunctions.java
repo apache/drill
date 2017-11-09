@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 
 public class TestNetworkFunctions extends BaseTestQuery {

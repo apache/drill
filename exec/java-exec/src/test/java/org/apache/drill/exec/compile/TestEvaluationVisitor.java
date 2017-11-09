@@ -45,8 +45,8 @@ public class TestEvaluationVisitor {
     DrillConfig c = DrillConfig.create();
 
     FunctionImplementationRegistry reg = new FunctionImplementationRegistry(c);
-    EvaluationVisitor v = new EvaluationVisitor(reg);
-    CodeGenerator<?> g = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, reg, null);
+    EvaluationVisitor v = new EvaluationVisitor();
+    CodeGenerator<?> g = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, null);
     SchemaPath path = (SchemaPath) getExpr("a.b[4][2].c[6]");
 
     TypedFieldId id = TypedFieldId.newBuilder() //
@@ -75,13 +75,6 @@ public class TestEvaluationVisitor {
   private LogicalExpression getExpr(String expr) throws Exception{
     ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
     CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-//    tokens.fill();
-//    for(Token t : (List<Token>) tokens.getTokens()){
-//      System.out.println(t + "" + t.getType());
-//    }
-//    tokens.rewind();
-
     ExprParser parser = new ExprParser(tokens);
     parse_return ret = parser.parse();
 

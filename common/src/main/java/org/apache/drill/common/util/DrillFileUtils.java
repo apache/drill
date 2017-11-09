@@ -25,15 +25,15 @@ import java.net.URL;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class FileUtils {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileUtils.class);
-
-  public static final char separatorChar = '/';
-
-  public static final String separator = "" + separatorChar;
+public class DrillFileUtils {
+  // These two seperators are intentionally used instead of Path.SEPERATPR or File.seperator
+  // for loading classes since both alternatives return '\' on Windows. However, in the context
+  // of classpath scanning and loading only '/' is valid.
+  public static final char SEPARATOR_CHAR = '/';
+  public static final String SEPARATOR = "/";
 
   public static File getResourceAsFile(String fileName) throws IOException {
-    URL u = FileUtils.class.getResource(fileName);
+    URL u = DrillFileUtils.class.getResource(fileName);
     if (u == null) {
       throw new FileNotFoundException(String.format("Unable to find file on path %s", fileName));
     }
@@ -43,5 +43,4 @@ public class FileUtils {
   public static String getResourceAsString(String fileName) throws IOException {
     return Files.toString(getResourceAsFile(fileName), Charsets.UTF_8);
   }
-
 }

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.util.JsonStringArrayList;

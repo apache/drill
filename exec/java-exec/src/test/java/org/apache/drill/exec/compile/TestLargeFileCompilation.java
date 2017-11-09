@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.compile;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
+@Category(SlowTest.class)
 public class TestLargeFileCompilation extends BaseTestQuery {
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(150000); // 150secs
 
@@ -120,7 +123,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   @Test
   public void testTEXT_WRITER() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult("use dfs_test.tmp");
+    testNoResult("use dfs.tmp");
     testNoResult("alter session set `%s`='csv'", ExecConstants.OUTPUT_FORMAT_OPTION);
     testNoResult(LARGE_QUERY_WRITER, "wide_table_csv");
   }
@@ -128,7 +131,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   @Test
   public void testPARQUET_WRITER() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult("use dfs_test.tmp");
+    testNoResult("use dfs.tmp");
     testNoResult("alter session set `%s`='parquet'", ExecConstants.OUTPUT_FORMAT_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_WRITER, "wide_table_parquet");
   }
@@ -170,7 +173,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
       testNoResult("alter session set `planner.enable_mergejoin` = false");
       testNoResult("alter session set `planner.enable_nestedloopjoin` = false");
-      testNoResult("use dfs_test.tmp");
+      testNoResult("use dfs.tmp");
       testNoResult(LARGE_TABLE_WRITER, tableName);
       testNoResult(QUERY_WITH_JOIN, tableName);
     } finally {
@@ -188,7 +191,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
       testNoResult("alter session set `planner.enable_hashjoin` = false");
       testNoResult("alter session set `planner.enable_nestedloopjoin` = false");
-      testNoResult("use dfs_test.tmp");
+      testNoResult("use dfs.tmp");
       testNoResult(LARGE_TABLE_WRITER, tableName);
       testNoResult(QUERY_WITH_JOIN, tableName);
     } finally {
@@ -207,7 +210,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       testNoResult("alter session set `planner.enable_nljoin_for_scalar_only` = false");
       testNoResult("alter session set `planner.enable_hashjoin` = false");
       testNoResult("alter session set `planner.enable_mergejoin` = false");
-      testNoResult("use dfs_test.tmp");
+      testNoResult("use dfs.tmp");
       testNoResult(LARGE_TABLE_WRITER, tableName);
       testNoResult(QUERY_WITH_JOIN, tableName);
     } finally {

@@ -22,12 +22,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestComplexToJson extends BaseTestQuery {
@@ -42,7 +43,7 @@ public class TestComplexToJson extends BaseTestQuery {
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.setSupportComplexTypes(false);
     client.connect();
-    results = testSqlWithResults("select * from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
+    results = testSqlWithResults("select * from cp.`store/text/data/regions.csv`");
     loader.load(results.get(0).getHeader().getDef(), results.get(0).getData());
     RecordBatchDef def = results.get(0).getHeader().getDef();
     // the entire row is returned as a single column
@@ -58,7 +59,7 @@ public class TestComplexToJson extends BaseTestQuery {
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.setSupportComplexTypes(true);
     client.connect();
-    results = testSqlWithResults("select * from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
+    results = testSqlWithResults("select * from cp.`store/text/data/regions.csv`");
     loader.load(results.get(0).getHeader().getDef(), results.get(0).getData());
     def = results.get(0).getHeader().getDef();
     // the entire row is returned as a single column
@@ -73,5 +74,4 @@ public class TestComplexToJson extends BaseTestQuery {
 
     client = parent_client;
   }
-
 }

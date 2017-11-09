@@ -17,19 +17,15 @@
  */
 package org.apache.drill;
 
-
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.TestTools;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
 
 public class TestCTASPartitionFilter extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCTASPartitionFilter.class);
-
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   private static void testExcludeFilter(String query, int expectedNumFiles,
       String excludedFilterPattern, int expectedRowCount) throws Exception {
@@ -47,9 +43,14 @@ public class TestCTASPartitionFilter extends PlanTestBase {
     testPlanMatchingPatterns(query, new String[]{numFilesPattern, includedFilterPattern}, new String[]{});
   }
 
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel"));
+  }
+
   @Test
   public void testDrill3965() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create table orders_auto_partition partition by(o_orderpriority) as select * from cp.`tpch/orders.parquet`");
     test("explain plan for select count(*) from `orders_auto_partition/1_0_1.parquet` where o_orderpriority = '5-LOW'");
   }
@@ -58,49 +59,49 @@ public class TestCTASPartitionFilter extends PlanTestBase {
   public void withDistribution() throws Exception {
     test("alter session set `planner.slice_target` = 1");
     test("alter session set `store.partition.hash_distribute` = true");
-    test("use dfs_test.tmp");
-    test(String.format("create table orders_distribution partition by (o_orderpriority) as select * from dfs_test.`%s/multilevel/parquet`", TEST_RES_PATH));
+    test("use dfs.tmp");
+    test("create table orders_distribution partition by (o_orderpriority) as select * from dfs.`multilevel/parquet`");
     String query = "select * from orders_distribution where o_orderpriority = '1-URGENT'";
-    testExcludeFilter(query, 1, "Filter", 24);
+    testExcludeFilter(query, 1, "Filter\\(", 24);
   }
 
   @Test
   public void withoutDistribution() throws Exception {
     test("alter session set `planner.slice_target` = 1");
     test("alter session set `store.partition.hash_distribute` = false");
-    test("use dfs_test.tmp");
-    test(String.format("create table orders_no_distribution partition by (o_orderpriority) as select * from dfs_test.`%s/multilevel/parquet`", TEST_RES_PATH));
+    test("use dfs.tmp");
+    test("create table orders_no_distribution partition by (o_orderpriority) as select * from dfs.`multilevel/parquet`");
     String query = "select * from orders_no_distribution where o_orderpriority = '1-URGENT'";
-    testExcludeFilter(query, 2, "Filter", 24);
+    testExcludeFilter(query, 2, "Filter\\(", 24);
   }
 
   @Test
   public void testDRILL3410() throws Exception {
     test("alter session set `planner.slice_target` = 1");
     test("alter session set `store.partition.hash_distribute` = true");
-    test("use dfs_test.tmp");
-    test(String.format("create table drill_3410 partition by (o_orderpriority) as select * from dfs_test.`%s/multilevel/parquet`", TEST_RES_PATH));
+    test("use dfs.tmp");
+    test("create table drill_3410 partition by (o_orderpriority) as select * from dfs.`multilevel/parquet`");
     String query = "select * from drill_3410 where (o_orderpriority = '1-URGENT' and o_orderkey = 10) or (o_orderpriority = '2-HIGH' or o_orderkey = 11)";
-    testIncludeFilter(query, 1, "Filter", 34);
+    testIncludeFilter(query, 1, "Filter\\(", 34);
   }
 
   @Test
   public void testDRILL3414() throws Exception {
     test("alter session set `planner.slice_target` = 1");
     test("alter session set `store.partition.hash_distribute` = true");
-    test("use dfs_test.tmp");
-    test(String.format("create table drill_3414 partition by (x, y) as select dir0 as x, dir1 as y, columns from dfs_test.`%s/multilevel/csv`", TEST_RES_PATH));
+    test("use dfs.tmp");
+    test("create table drill_3414 partition by (x, y) as select dir0 as x, dir1 as y, columns from dfs.`multilevel/csv`");
     String query = ("select * from drill_3414 where (x=1994 or y='Q1') and (x=1995 or y='Q2' or columns[0] > 5000)");
-    testIncludeFilter(query, 6, "Filter", 20);
+    testIncludeFilter(query, 6, "Filter\\(", 20);
   }
 
   @Test
   public void testDRILL3414_2() throws Exception {
     test("alter session set `planner.slice_target` = 1");
     test("alter session set `store.partition.hash_distribute` = true");
-    test("use dfs_test.tmp");
-    test(String.format("create table drill_3414_2 partition by (x, y) as select dir0 as x, dir1 as y, columns from dfs_test.`%s/multilevel/csv`", TEST_RES_PATH));
+    test("use dfs.tmp");
+    test("create table drill_3414_2 partition by (x, y) as select dir0 as x, dir1 as y, columns from dfs.`multilevel/csv`");
     String query = ("select * from drill_3414_2 where (x=1994 or y='Q1') and (x=1995 or y='Q2' or columns[0] > 5000) or columns[0] < 3000");
-    testIncludeFilter(query, 1, "Filter", 120);
+    testIncludeFilter(query, 1, "Filter\\(", 120);
   }
 }

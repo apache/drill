@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET_DEFAULT;
@@ -34,7 +34,7 @@ import org.junit.rules.Timeout;
  * To run this unit class you need to download the following data file:
  * http://apache-drill.s3.amazonaws.com/files/tpcds-sf1-parquet.tgz
  * and untar it in a some folder (e.g. /tpcds-sf1-parquet) then add the following workspace to
- * exec/java-exec/src/test/resources/bootstrap-storage-plugins.json
+ * the dfs storage plugin
  *
  * ,"tpcds" : {
  *   location: "/tpcds-sf1-parquet",

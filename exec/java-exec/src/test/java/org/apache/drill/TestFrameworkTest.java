@@ -17,8 +17,8 @@
  ******************************************************************************/
 package org.apache.drill;
 
-import static org.apache.drill.TestBuilder.listOf;
-import static org.apache.drill.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +34,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
@@ -43,7 +45,7 @@ import com.google.common.collect.Lists;
 // currently using it with the assumption that the csv and json readers are well tested, and handling diverse
 // types in the test framework would require doing some redundant work to enable casting outside of Drill or
 // some better tooling to generate parquet files that have all of the parquet types
-public class TestFrameworkTest extends BaseTestQuery{
+public class TestFrameworkTest extends BaseTestQuery {
 
   private static String CSV_COLS = " cast(columns[0] as bigint) employee_id, columns[1] as first_name, columns[2] as last_name ";
 
@@ -171,7 +173,7 @@ public class TestFrameworkTest extends BaseTestQuery{
   @Test
   public void testMapOrdering() throws Exception {
     testBuilder()
-        .sqlQuery("select * from cp.`/testframework/map_reordering.json`")
+        .sqlQuery("select * from cp.`testframework/map_reordering.json`")
         .unOrdered()
         .jsonBaselineFile("testframework/map_reordering2.json")
         .build().run();
@@ -203,7 +205,7 @@ public class TestFrameworkTest extends BaseTestQuery{
   @Test
   public void testBaselineValsVerificationWithComplexAndNulls() throws Exception {
     testBuilder()
-        .sqlQuery("select * from cp.`/jsoninput/input2.json` limit 1")
+        .sqlQuery("select * from cp.`jsoninput/input2.json` limit 1")
         .ordered()
         .baselineColumns("integer", "float", "x", "z", "l", "rl")
         .baselineValues(2010l,
@@ -241,7 +243,7 @@ public class TestFrameworkTest extends BaseTestQuery{
   public void testCSVVerification_extra_records_fails() throws Exception {
     try {
       testBuilder()
-          .sqlQuery("select " + CSV_COLS + " from cp.`testframework/small_test_data_extra.tsv`")
+          .sqlQuery("select %s from cp.`testframework/small_test_data_extra.tsv`", CSV_COLS)
           .ordered()
           .csvBaselineFile("testframework/small_test_data.tsv")
           .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)

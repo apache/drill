@@ -18,14 +18,12 @@
 package org.apache.drill.exec;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.io.Files;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.NonStrictExpectations;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
-import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.parser.ExprLexer;
@@ -47,7 +45,6 @@ import org.joda.time.DateTimeUtils;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.BeforeClass;
-import java.io.File;
 import java.io.IOException;
 import java.text.DateFormatSymbols;
 import java.util.Locale;
@@ -86,23 +83,6 @@ public class ExecTest extends DrillTest {
     Configuration configuration = new Configuration();
     configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
     return FileSystem.get(configuration);
-  }
-
-  /**
-   * Create a temp directory to store the given <i>dirName</i>.
-   * Directory will be deleted on exit.
-   * @param dirName directory name
-   * @return Full path including temp parent directory and given directory name.
-   */
-  public static String getTempDir(final String dirName) {
-    final File dir = Files.createTempDir();
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        FileUtils.deleteQuietly(dir);
-      }
-    });
-    return dir.getAbsolutePath() + File.separator + dirName;
   }
 
   protected void mockDrillbitContext(final DrillbitContext bitContext) throws Exception {

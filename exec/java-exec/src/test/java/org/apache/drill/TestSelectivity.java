@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
