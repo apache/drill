@@ -135,6 +135,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
 
   <#assign queueName = model.getProfile().getQueueName() />
   <#assign queued = queueName != "" && queueName != "-" />
+
   <div class="page-header"></div>
   <h3>Query Profile</h3>
   <div class="panel-group" id="query-profile-accordion">
@@ -162,7 +163,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
             </thead>
             <tbody>
               <tr>
-                  <td>${model.getProfile().getState().name()}</td>
+                  <td>${model.getQueryStateDisplayName()}</td>
                   <td>${model.getProfile().getForeman().getAddress()}</td>
                   <td>${model.getProfile().getTotalFragments()}</td>
      <#if queued>

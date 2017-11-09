@@ -148,6 +148,10 @@ public class ProfileWrapper {
     return id;
   }
 
+  public String getQueryStateDisplayName() {
+    return ProfileUtil.getQueryStateDisplayName(profile.getState());
+  }
+
   public String getPlanningDuration() {
     //Check if Planning End is known
     if (profile.getPlanEnd() > 0L) {
