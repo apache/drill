@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.TestBuilder;
+import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.TestBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -25,6 +26,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -32,9 +34,12 @@ import java.util.Map;
 
 public class ParquetInternalsTest extends ClusterTest {
 
+  @ClassRule
+  public static BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+
   @BeforeClass
   public static void setup( ) throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
       // Set options, etc.
       ;
     startCluster(builder);
@@ -44,7 +49,6 @@ public class ParquetInternalsTest extends ClusterTest {
   public void testFixedWidth() throws Exception {
     String sql = "SELECT l_orderkey, l_partkey, l_suppkey, l_linenumber, l_quantity\n" +
                  "FROM `cp`.`tpch/lineitem.parquet` LIMIT 20";
-//    client.queryBuilder().sql(sql).printCsv();
 
     Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
     typeMap.put(TestBuilder.parsePath("l_orderkey"), Types.required(TypeProtos.MinorType.INT));
@@ -66,7 +70,6 @@ public class ParquetInternalsTest extends ClusterTest {
   public void testVariableWidth() throws Exception {
     String sql = "SELECT s_name, s_address, s_phone, s_comment\n" +
                  "FROM `cp`.`tpch/supplier.parquet` LIMIT 20";
-//    client.queryBuilder().sql(sql).printCsv();
 
     Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
     typeMap.put(TestBuilder.parsePath("s_name"), Types.required(TypeProtos.MinorType.VARCHAR));
@@ -87,7 +90,6 @@ public class ParquetInternalsTest extends ClusterTest {
   public void testMixedWidth() throws Exception {
     String sql = "SELECT s_suppkey, s_name, s_address, s_phone, s_acctbal\n" +
                  "FROM `cp`.`tpch/supplier.parquet` LIMIT 20";
-//    client.queryBuilder().sql(sql).printCsv();
 
     Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
     typeMap.put(TestBuilder.parsePath("s_suppkey"), Types.required(TypeProtos.MinorType.INT));
@@ -109,7 +111,6 @@ public class ParquetInternalsTest extends ClusterTest {
   public void testStar() throws Exception {
     String sql = "SELECT *\n" +
                  "FROM `cp`.`tpch/supplier.parquet` LIMIT 20";
-//    client.queryBuilder().sql(sql).printCsv();
 
     Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
     typeMap.put(TestBuilder.parsePath("s_suppkey"), Types.required(TypeProtos.MinorType.INT));
@@ -140,19 +141,17 @@ public class ParquetInternalsTest extends ClusterTest {
     // TODO: Once the "row set" fixture is available, use that to verify
     // that all rows are null.
 
-//    client.queryBuilder().sql(sql).printCsv();
-
     // Can't handle nulls this way...
-//    Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
-//    typeMap.put(TestBuilder.parsePath("s_suppkey"), Types.required(TypeProtos.MinorType.INT));
-//    typeMap.put(TestBuilder.parsePath("bogus"), Types.optional(TypeProtos.MinorType.INT));
-//    client.testBuilder()
-//      .sqlQuery(sql)
-//      .unOrdered()
-//      .csvBaselineFile("parquet/expected/bogus.csv")
-//      .baselineColumns("s_suppkey", "bogus")
-//      .baselineTypes(typeMap)
-//      .build()
-//      .run();
+    //    Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
+    //    typeMap.put(TestBuilder.parsePath("s_suppkey"), Types.required(TypeProtos.MinorType.INT));
+    //    typeMap.put(TestBuilder.parsePath("bogus"), Types.optional(TypeProtos.MinorType.INT));
+    //    client.testBuilder()
+    //      .sqlQuery(sql)
+    //      .unOrdered()
+    //      .csvBaselineFile("parquet/expected/bogus.csv")
+    //      .baselineColumns("s_suppkey", "bogus")
+    //      .baselineTypes(typeMap)
+    //      .build()
+    //      .run();
   }
 }

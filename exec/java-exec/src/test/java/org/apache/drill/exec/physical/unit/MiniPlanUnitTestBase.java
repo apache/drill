@@ -21,7 +21,7 @@ package org.apache.drill.exec.physical.unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import mockit.NonStrictExpectations;
-import org.apache.drill.DrillTestWrapper;
+import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
@@ -35,7 +35,6 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
-import org.apache.drill.exec.util.TestUtilities;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
@@ -51,7 +50,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.apache.drill.DrillTestWrapper.addToCombinedVectorResults;
 import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
 import static org.apache.drill.exec.physical.base.AbstractBase.MAX_ALLOCATION;
 
@@ -403,9 +401,9 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       Iterator<RecordReader> readers = null;
 
       if (jsonBatches != null) {
-        readers = TestUtilities.getJsonReadersFromBatchString(jsonBatches, fragContext, columnsToRead);
+        readers = getJsonReadersFromBatchString(jsonBatches, fragContext, columnsToRead);
       } else {
-        readers = TestUtilities.getJsonReadersFromInputFiles(fs, inputPaths, fragContext, columnsToRead);
+        readers = getJsonReadersFromInputFiles(fs, inputPaths, fragContext, columnsToRead);
       }
 
       List<RecordReader> readerList = new ArrayList<>();

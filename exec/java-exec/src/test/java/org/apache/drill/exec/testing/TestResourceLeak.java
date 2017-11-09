@@ -26,7 +26,7 @@ import java.util.Properties;
 
 import javax.inject.Inject;
 
-import org.apache.drill.QueryTestUtil;
+import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;

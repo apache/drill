@@ -41,7 +41,6 @@ import com.google.common.io.Resources;
 import mockit.Injectable;
 
 public class TestStringFunctions extends ExecTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStringFunctions.class);
 
   private final DrillConfig c = DrillConfig.create();
   private PhysicalPlanReader reader;

@@ -19,7 +19,7 @@ package org.apache.drill.exec.compile;
 
 import java.io.IOException;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -121,7 +121,7 @@ public class TestClassTransformation extends BaseTestQuery {
 
   private <T, X extends T> CodeGenerator<T> newCodeGenerator(Class<T> iface, Class<X> impl) {
     final TemplateClassDefinition<T> template = new TemplateClassDefinition<T>(iface, impl);
-    CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getFunctionImplementationRegistry(), getDrillbitContext().getOptionManager());
+    CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getOptionManager());
     cg.plainJavaCapable(true);
 
     ClassGenerator<T> root = cg.getRoot();

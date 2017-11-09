@@ -19,7 +19,7 @@ package org.apache.drill.exec.rpc.user.security;
 
 import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
@@ -57,7 +57,7 @@ public class TestUserBitKerberos extends BaseTestQuery {
   public static void setupTest() throws Exception {
 
     krbHelper = new KerberosHelper(TestUserBitKerberos.class.getSimpleName());
-    krbHelper.setupKdc();
+    krbHelper.setupKdc(dirTestWatcher.getTmpDir());
 
     // Create a new DrillConfig which has user authentication enabled and authenticator set to
     // UserAuthenticatorTestImpl.

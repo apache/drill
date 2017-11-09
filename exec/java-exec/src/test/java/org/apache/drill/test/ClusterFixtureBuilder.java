@@ -17,18 +17,18 @@
  ******************************************************************************/
 package org.apache.drill.test;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.server.options.OptionDefinition;
 
 /**
  * Build a Drillbit and client with the options provided. The simplest
- * builder starts an embedded Drillbit, with the "dfs_test" name space,
+ * builder starts an embedded Drillbit, with the "dfs" name space,
  * a max width (parallelization) of 2.
  */
 
@@ -48,9 +48,6 @@ public class ClusterFixtureBuilder {
   // in the defaults.
 
   public static final int DEFAULT_ZK_REFRESH = 500; // ms
-  public static final int DEFAULT_SERVER_RPC_THREADS = 10;
-  public static final int DEFAULT_SCAN_THREADS = 8;
-  public static final String OPTION_DEFAULTS_ROOT = "drill.exec.options.";
 
   protected ConfigBuilder configBuilder = new ConfigBuilder();
   protected List<RuntimeOption> sessionOptions;
@@ -60,16 +57,18 @@ public class ClusterFixtureBuilder {
   protected int localZkCount;
   protected ZookeeperHelper zkHelper;
   protected boolean usingZk;
-  protected File tempDir;
-  protected boolean preserveLocalFiles;
   protected Properties clientProps;
+  protected final BaseDirTestWatcher dirTestWatcher;
+
+  public ClusterFixtureBuilder(BaseDirTestWatcher dirTestWatcher) {
+    this.dirTestWatcher = Preconditions.checkNotNull(dirTestWatcher);
+  }
 
   /**
    * The configuration builder which this fixture builder uses.
    * @return the configuration builder for use in setting "advanced"
    * configuration options.
    */
-
   public ConfigBuilder configBuilder() { return configBuilder; }
 
   /**
@@ -87,7 +86,6 @@ public class ClusterFixtureBuilder {
    * @return this builder
    * @see {@link #configProperty(String, Object)}
    */
-
   public ClusterFixtureBuilder configResource(String configResource) {
 
     // TypeSafe gets unhappy about a leading slash, but other functions
@@ -98,21 +96,18 @@ public class ClusterFixtureBuilder {
     return this;
   }
 
-  /**
-   *
-   */
    public ClusterFixtureBuilder setOptionDefault(String key, Object value) {
-     String option_name = OPTION_DEFAULTS_ROOT + key;
+     String option_name = ExecConstants.OPTION_DEFAULTS_ROOT + key;
      configBuilder().put(option_name, value.toString());
      return this;
    }
+
   /**
    * Add an additional boot-time property for the embedded Drillbit.
    * @param key config property name
    * @param value property value
    * @return this builder
    */
-
   public ClusterFixtureBuilder configProperty(String key, Object value) {
     configBuilder.put(key, value.toString());
     return this;
@@ -145,9 +140,7 @@ public class ClusterFixtureBuilder {
    * @param key the name of the session option
    * @param value the value of the session option
    * @return this builder
-   * @see {@link ClusterFixture#alterSession(String, Object)}
    */
-
   public ClusterFixtureBuilder sessionOption(String key, Object value) {
     if (sessionOptions == null) {
       sessionOptions = new ArrayList<>();
@@ -163,9 +156,7 @@ public class ClusterFixtureBuilder {
    * @param key the name of the system option
    * @param value the value of the system option
    * @return this builder
-   * @see {@link ClusterFixture#alterSystem(String, Object)}
    */
-
   public ClusterFixtureBuilder systemOption(String key, Object value) {
     if (systemOptions == null) {
       systemOptions = new ArrayList<>();
@@ -252,44 +243,13 @@ public class ClusterFixtureBuilder {
     return this;
   }
 
-  public ClusterFixtureBuilder tempDir(File path) {
-    this.tempDir = path;
-    return this;
-  }
-
-  /**
-   * Starting with the addition of the CTTAS feature, a Drillbit will
-   * not restart unless we delete all local storage files before
-   * starting the Drillbit again. In particular, the stored copies
-   * of the storage plugin configs cause the temporary workspace
-   * check to fail. Normally the cluster fixture cleans up files
-   * both before starting and after shutting down the cluster. Set this
-   * option to preserve files after shutdown, perhaps to debug the
-   * contents.
-   * <p>
-   * This clean-up is needed only if we enable local storage writes
-   * (which we must do, unfortunately, to capture and analyze
-   * storage profiles.)
-   *
-   * @return this builder
-   */
-
-  public ClusterFixtureBuilder keepLocalFiles() {
-    preserveLocalFiles = true;
-    return this;
-  }
-
   /**
    * Enable saving of query profiles. The only way to save them is
    * to enable local store provider writes, which also saves the
-   * storage plugin configs. Doing so causes the CTTAS feature to
-   * fail on the next run, so the test fixture deletes all local
-   * files on start and close, unless
-   * {@link #keepLocalFiles()} is set.
+   * storage plugin configs.
    *
    * @return this builder
    */
-
   public ClusterFixtureBuilder saveProfiles() {
     configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
     systemOption(ExecConstants.ENABLE_QUERY_PROFILE_OPTION, true);
@@ -319,7 +279,6 @@ public class ClusterFixtureBuilder {
    *
    * @return
    */
-
   public ClusterFixture build() {
     return new ClusterFixture(this);
   }

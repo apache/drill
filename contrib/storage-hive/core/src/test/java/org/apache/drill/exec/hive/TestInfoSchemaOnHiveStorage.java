@@ -19,7 +19,7 @@ package org.apache.drill.exec.hive;
 
 import com.google.common.base.Strings;
 import org.apache.drill.categories.HiveStorageTest;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.test.TestBuilder;
 import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.junit.Test;
@@ -86,9 +86,6 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("dfs.root")
         .baselineValues("dfs.tmp")
         .baselineValues("sys")
-        .baselineValues("dfs_test.home")
-        .baselineValues("dfs_test.default")
-        .baselineValues("dfs_test.tmp")
         .baselineValues("cp.default")
         .baselineValues("INFORMATION_SCHEMA")
         .go();

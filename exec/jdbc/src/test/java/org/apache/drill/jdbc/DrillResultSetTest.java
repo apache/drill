@@ -31,8 +31,6 @@ import java.sql.Statement;
 
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.jdbc.test.JdbcAssert;
-import org.apache.drill.test.DrillTest;
 import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -40,7 +38,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class, JdbcTest.class})
-public class DrillResultSetTest extends DrillTest {
+public class DrillResultSetTest extends JdbcTestBase {
 
   // TODO: Move Jetty status server disabling to DrillTest.
   private static final String STATUS_SERVER_PROPERTY_NAME =
@@ -66,8 +64,7 @@ public class DrillResultSetTest extends DrillTest {
   public void test_next_blocksFurtherAccessAfterEnd()
       throws SQLException
   {
-    Connection connection =
-        new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    Connection connection = connect();
     Statement statement = connection.createStatement();
     ResultSet resultSet =
         statement.executeQuery( "SELECT 1 AS x \n" +
@@ -107,8 +104,7 @@ public class DrillResultSetTest extends DrillTest {
   public void test_next_blocksFurtherAccessWhenNoRows()
     throws Exception
   {
-    Connection connection =
-        new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    Connection connection = connect();
     Statement statement = connection.createStatement();
     ResultSet resultSet =
         statement.executeQuery( "SELECT 'Hi' AS x \n" +
@@ -142,8 +138,7 @@ public class DrillResultSetTest extends DrillTest {
   public void test_getRow_isOneBased()
     throws Exception
   {
-    Connection connection =
-        new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    Connection connection = connect();
     Statement statement = connection.createStatement();
     ResultSet resultSet =
         statement.executeQuery( "VALUES (1), (2)" );

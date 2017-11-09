@@ -6,10 +6,10 @@ select c.c_last_name,
   dj.cnt
 from (
   select ss.ss_ticket_number as sstn, ss.ss_customer_sk as sscsk, count(*) cnt
-  from dfs_test.tpcds.store_sales as ss,
-    dfs_test.tpcds.date_dim as d,
-    dfs_test.tpcds.store as s,
-    dfs_test.tpcds.household_demographics as hd
+  from dfs.tpcds.store_sales as ss,
+    dfs.tpcds.date_dim as d,
+    dfs.tpcds.store as s,
+    dfs.tpcds.household_demographics as hd
   where ss.ss_sold_date_sk = d.d_date_sk
     and ss.ss_store_sk = s.s_store_sk
     and ss.ss_hdemo_sk = hd.hd_demo_sk
@@ -20,7 +20,7 @@ from (
     and ss.ss_sold_date_sk between 2451180 and 2451269
   group by ss.ss_ticket_number, ss.ss_customer_sk
 ) dj,
-  dfs_test.tpcds.customer as c
+  dfs.tpcds.customer as c
 where dj.sscsk = c.c_customer_sk
   and dj.cnt between 1 and 5
 order by dj.cnt desc

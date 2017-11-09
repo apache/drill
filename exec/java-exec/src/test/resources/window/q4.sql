@@ -4,6 +4,6 @@ SELECT
   MAX(employee_id) OVER(PARTITION BY position_id) AS `last_value`
 FROM (
   SELECT *
-  FROM dfs_test.`%s/window/b4.p4`
+  FROM dfs.`window/b4.p4`
   ORDER BY position_id, employee_id
 )

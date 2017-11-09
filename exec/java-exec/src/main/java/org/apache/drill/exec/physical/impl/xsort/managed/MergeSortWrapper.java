@@ -142,9 +142,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
   }
 
   private MSorter createNewMSorter(List<Ordering> orderings, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping) {
-    CodeGenerator<MSorter> cg = CodeGenerator.get(MSorter.TEMPLATE_DEFINITION,
-        context.getFragmentContext().getFunctionRegistry(),
-        context.getFragmentContext().getOptionSet());
+    CodeGenerator<MSorter> cg = CodeGenerator.get(MSorter.TEMPLATE_DEFINITION, context.getFragmentContext().getOptionSet());
     cg.plainJavaCapable(true);
 
     // Uncomment out this line to debug the generated code.

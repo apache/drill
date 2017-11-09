@@ -17,32 +17,38 @@
  */
 package org.apache.drill;
 
-import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.listOf;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
+import java.nio.file.Paths;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({SqlFunctionTest.class, OperatorTest.class, PlannerTest.class})
 public class TestExampleQueries extends BaseTestQuery {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("tpchmulti"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("store","text"));
+  }
 
   @Test // see DRILL-2328
   @Category(UnlikelyTest.class)
   public void testConcatOnNull() throws Exception {
     try {
-      test("use dfs_test.tmp");
+      test("use dfs.tmp");
       test("create view concatNull as (select * from cp.`customer.json` where customer_id < 5);");
 
       // Test Left Null
@@ -131,15 +137,15 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test // see DRILL-985
   public void testViewFileName() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
-    test("select * from dfs_test.tmp.`nation_view_testexamplequeries.view.drill`");
+    test("select * from dfs.tmp.`nation_view_testexamplequeries.view.drill`");
     test("drop view nation_view_testexamplequeries");
   }
 
   @Test
   public void testTextInClasspathStorage() throws Exception {
-    test("select * from cp.`/store/text/classpath_storage_csv_test.csv`");
+    test("select * from cp.`store/text/classpath_storage_csv_test.csv`");
   }
 
   @Test
@@ -207,11 +213,9 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test
   public void testPushExpInJoinConditionLeftJoin() throws Exception {
-    test("select a.n_nationkey, b.r_regionkey from cp.`tpch/nation.parquet` a left join cp.`tpch/region.parquet` b " + "" +
-        " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
-        //    "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
-        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') ");   // right filter
-    //    "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+    test("select a.n_nationkey, b.r_regionkey from cp.`tpch/nation.parquet` a left join cp.`tpch/region.parquet` b " +
+        " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter // left filter
+        " and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') ");   // right filter // non-equal join filter
   }
 
   @Test
@@ -219,8 +223,6 @@ public class TestExampleQueries extends BaseTestQuery {
     test("select a.n_nationkey, b.r_regionkey from cp.`tpch/nation.parquet` a right join cp.`tpch/region.parquet` b " + "" +
         " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
         "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') ");  // left filter
-    //   "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
-    //   "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
   }
 
   @Test
@@ -273,25 +275,19 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test
   public void testText() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
-    String query = String.format("select * from dfs_test.`%s`", root);
-    test(query);
+    test("select * from cp.`store/text/data/regions.csv`");
   }
 
   @Test
   public void testFilterOnArrayTypes() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
-    String query = String.format("select columns[0] from dfs_test.`%s` " +
-        " where cast(columns[0] as int) > 1 and cast(columns[1] as varchar(20))='ASIA'", root);
-    test(query);
+    test("select columns[0] from cp.`store/text/data/regions.csv` " +
+      " where cast(columns[0] as int) > 1 and cast(columns[1] as varchar(20))='ASIA'");
   }
 
   @Test
   @Ignore("DRILL-3774")
   public void testTextPartitions() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/").toURI().toString();
-    String query = String.format("select * from dfs_test.`%s`", root);
-    test(query);
+    test("select * from cp.`store/text/data/`");
   }
 
   @Test
@@ -381,43 +377,33 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test
   public void testTextJoin() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();
-    String root1 = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
-    String query = String.format("select t1.columns[1] from dfs_test.`%s` t1,  dfs_test.`%s` t2 where t1.columns[0] = t2.columns[0]", root, root1);
-    test(query);
+    test("select t1.columns[1] from cp.`store/text/data/nations.csv` t1, cp.`store/text/data/regions.csv` t2 where t1.columns[0] = t2.columns[0]");
   }
 
   @Test // DRILL-811
   public void testDRILL_811View() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
-
     test("select n.n_nationkey, n.n_name, n.n_regionkey from nation_view_testexamplequeries n where n.n_nationkey > 8 order by n.n_regionkey");
-
     test("select n.n_regionkey, count(*) as cnt from nation_view_testexamplequeries n where n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
-
     test("drop view nation_view_testexamplequeries ");
   }
 
   @Test  // DRILL-811
   public void testDRILL_811ViewJoin() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view nation_view_testexamplequeries as select * from cp.`tpch/nation.parquet`;");
     test("create view region_view_testexamplequeries as select * from cp.`tpch/region.parquet`;");
-
     test("select n.n_nationkey, n.n_regionkey, r.r_name from region_view_testexamplequeries r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey ");
-
     test("select n.n_regionkey, count(*) as cnt from region_view_testexamplequeries r , nation_view_testexamplequeries n where r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
-
     test("select n.n_regionkey, count(*) as cnt from region_view_testexamplequeries r join nation_view_testexamplequeries n on r.r_regionkey = n.n_regionkey and n.n_nationkey > 8 group by n.n_regionkey order by n.n_regionkey");
-
     test("drop view region_view_testexamplequeries ");
     test("drop view nation_view_testexamplequeries ");
   }
 
   @Test  // DRILL-811
   public void testDRILL_811Json() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view region_view_testexamplequeries as select * from cp.`region.json`;");
     test("select sales_city, sales_region from region_view_testexamplequeries where region_id > 50 order by sales_country; ");
     test("drop view region_view_testexamplequeries ");
@@ -435,7 +421,7 @@ public class TestExampleQueries extends BaseTestQuery {
     test("select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 where cast(t1.department_id as double) = t2.department_id and cast(t1.position_id as bigint) = t2.department_id");
 
     // See DRILL-3995. Re-enable this once fixed.
-//    test("select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 where t1.department_id = t2.department_id and t1.position_id = t2.department_id");
+    // test("select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 where t1.department_id = t2.department_id and t1.position_id = t2.department_id");
   }
 
   @Test
@@ -580,8 +566,8 @@ public class TestExampleQueries extends BaseTestQuery {
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     // source is CSV
-    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
-    String query = String.format("select rid, x.name from (select columns[0] as RID, columns[1] as NAME from dfs_test.`%s`) X where X.rid = 2", root);
+    String root = DrillFileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String query = String.format("select rid, x.name from (select columns[0] as RID, columns[1] as NAME from dfs.`%s`) X where X.rid = 2", root);
     actualRecordCount = testSql(query);
     expectedRecordCount = 1;
     assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
@@ -668,10 +654,7 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test
   public void testExchangeRemoveForJoinPlan() throws Exception {
-    final String WORKING_PATH = TestTools.getWorkingPath();
-    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
-
-    String sql = String.format("select t2.n_nationkey from dfs_test.`%s/tpchmulti/region` t1 join dfs_test.`%s/tpchmulti/nation` t2 on t2.n_regionkey = t1.r_regionkey", TEST_RES_PATH, TEST_RES_PATH);
+    String sql = "select t2.n_nationkey from dfs.`tpchmulti/region` t1 join dfs.`tpchmulti/nation` t2 on t2.n_regionkey = t1.r_regionkey";
 
     testBuilder()
         .unOrdered()
@@ -679,18 +662,16 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(sql)
         .optionSettingQueriesForBaseline("alter session set `planner.slice_target` = 100000; alter session set `planner.join.row_count_estimate_factor` = 1.0") // Use default option setting.
         .sqlBaselineQuery(sql)
-        .build().run();
-
+        .build()
+        .run();
   }
 
   @Test //DRILL-2163
   public void testNestedTypesPastJoinReportsValidResult() throws Exception {
-    final String query = "select t1.uid, t1.events, t1.events[0].evnt_id as event_id, t2.transactions, " +
-        "t2.transactions[0] as trans, t1.odd, t2.even from cp.`project/complex/a.json` t1, " +
-        "cp.`project/complex/b.json` t2 where t1.uid = t2.uid";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select t1.uid, t1.events, t1.events[0].evnt_id as event_id, t2.transactions, " +
+          "t2.transactions[0] as trans, t1.odd, t2.even from cp.`project/complex/a.json` t1, " +
+          "cp.`project/complex/b.json` t2 where t1.uid = t2.uid")
         .ordered()
         .jsonBaselineFile("project/complex/drill-2163-result.json")
         .build()
@@ -700,13 +681,11 @@ public class TestExampleQueries extends BaseTestQuery {
   @Test
   @Category(UnlikelyTest.class)
   public void testSimilar() throws Exception {
-    String query = "select n_nationkey " +
-        "from cp.`tpch/nation.parquet` " +
-        "where n_name similar to 'CHINA' " +
-        "order by n_regionkey";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select n_nationkey " +
+          "from cp.`tpch/nation.parquet` " +
+          "where n_name similar to 'CHINA' " +
+          "order by n_regionkey")
         .unOrdered()
         .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1")
         .baselineColumns("n_nationkey")
@@ -723,7 +702,7 @@ public class TestExampleQueries extends BaseTestQuery {
         "select cast(r_regionkey as BIGINT) BIGINT_col, cast(r_regionkey as DECIMAL) bigint_col \n" +
         "FROM cp.`tpch/region.parquet`;\n";
 
-    test("USE dfs_test.tmp");
+    test("USE dfs.tmp");
     test(creatTable);
 
     testBuilder()
@@ -763,14 +742,10 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test // DRILL-2094
   public void testOrderbyArrayElement() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/json/orderByArrayElement.json").toURI().toString();
-
-    String query = String.format("select t.id, t.list[0] as SortingElem " +
-        "from dfs_test.`%s` t " +
-        "order by t.list[0]", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select t.id, t.list[0] as SortingElem " +
+          "from cp.`store/json/orderByArrayElement.json` t " +
+          "order by t.list[0]")
         .ordered()
         .baselineColumns("id", "SortingElem")
         .baselineValues((long) 1, (long) 1)
@@ -783,12 +758,10 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test // DRILL-2479
   public void testCorrelatedExistsWithInSubq() throws Exception {
-    String query = "select count(*) as cnt from cp.`tpch/lineitem.parquet` l where exists "
-        + " (select ps.ps_suppkey from cp.`tpch/partsupp.parquet` ps where ps.ps_suppkey = l.l_suppkey and ps.ps_partkey "
-        + " in (select p.p_partkey from cp.`tpch/part.parquet` p where p.p_type like '%NICKEL'))";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select count(*) as cnt from cp.`tpch/lineitem.parquet` l where exists "
+          + " (select ps.ps_suppkey from cp.`tpch/partsupp.parquet` ps where ps.ps_suppkey = l.l_suppkey and ps.ps_partkey "
+          + " in (select p.p_partkey from cp.`tpch/part.parquet` p where p.p_type like '%NICKEL'))")
         .unOrdered()
         .baselineColumns("cnt")
         .baselineValues(60175l)
@@ -797,15 +770,11 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test // DRILL-2094
   public void testOrderbyArrayElementInSubquery() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/json/orderByArrayElement.json").toURI().toString();
-
-    String query = String.format("select s.id from \n" +
-        "(select id \n" +
-        "from dfs_test.`%s` \n" +
-        "order by list[0]) s", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select s.id from " +
+          "(select id " +
+          "from cp.`store/json/orderByArrayElement.json` " +
+          "order by list[0]) s")
         .ordered()
         .baselineColumns("id")
         .baselineValues((long) 1)
@@ -818,17 +787,16 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test // DRILL-1978
   public void testCTASOrderByCoumnNotInSelectClause() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
     String queryCTAS1 = "CREATE TABLE TestExampleQueries_testCTASOrderByCoumnNotInSelectClause1 as " +
         "select r_name from cp.`tpch/region.parquet` order by r_regionkey;";
 
-    String queryCTAS2 = String.format("CREATE TABLE TestExampleQueries_testCTASOrderByCoumnNotInSelectClause2 as " +
-        "SELECT columns[1] as col FROM dfs_test.`%s` ORDER BY cast(columns[0] as double)", root);
+    String queryCTAS2 = "CREATE TABLE TestExampleQueries_testCTASOrderByCoumnNotInSelectClause2 as " +
+        "SELECT columns[1] as col FROM cp.`store/text/data/regions.csv` ORDER BY cast(columns[0] as double)";
 
     String query1 = "select * from TestExampleQueries_testCTASOrderByCoumnNotInSelectClause1";
     String query2 = "select * from TestExampleQueries_testCTASOrderByCoumnNotInSelectClause2";
 
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test(queryCTAS1);
     test(queryCTAS2);
 
@@ -858,12 +826,11 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test // DRILL-2221
   public void createJsonWithEmptyList() throws Exception {
-    final String file = FileUtils.getResourceAsFile("/store/json/record_with_empty_list.json").toURI().toString();
     final String tableName = "jsonWithEmptyList";
-    test("USE dfs_test.tmp");
+    test("USE dfs.tmp");
     test("ALTER SESSION SET `store.format`='json'");
-    test(String.format("CREATE TABLE %s AS SELECT * FROM `%s`", tableName, file));
-    test(String.format("SELECT COUNT(*) FROM %s", tableName));
+    test("CREATE TABLE %s AS SELECT * FROM cp.`store/json/record_with_empty_list.json`", tableName);
+    test("SELECT COUNT(*) FROM %s", tableName);
     test("ALTER SESSION SET `store.format`='parquet'");
   }
 
@@ -986,15 +953,11 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test //DRILL-2953
   public void testGbAndObDifferentExp() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();
-    String query = String.format(
-        "select cast(columns[0] as int) as nation_key " +
-            " from dfs_test.`%s` " +
-            " group by columns[0] " +
-            " order by cast(columns[0] as int)", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select cast(columns[0] as int) as nation_key " +
+          " from cp.`store/text/data/nations.csv` " +
+          " group by columns[0] " +
+          " order by cast(columns[0] as int)")
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
         .baselineTypes(TypeProtos.MinorType.INT)
@@ -1002,14 +965,11 @@ public class TestExampleQueries extends BaseTestQuery {
         .build()
         .run();
 
-    String query2 = String.format(
-        "select cast(columns[0] as int) as nation_key " +
-            " from dfs_test.`%s` " +
-            " group by cast(columns[0] as int) " +
-            " order by cast(columns[0] as int)", root);
-
     testBuilder()
-        .sqlQuery(query2)
+        .sqlQuery("select cast(columns[0] as int) as nation_key " +
+          " from cp.`store/text/data/nations.csv` " +
+          " group by cast(columns[0] as int) " +
+          " order by cast(columns[0] as int)")
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
         .baselineTypes(TypeProtos.MinorType.INT)
@@ -1040,7 +1000,6 @@ public class TestExampleQueries extends BaseTestQuery {
             "ALTER SESSION SET `planner.disable_exchanges` = true")
         .build()
         .run();
-
   }
 
   @Test
@@ -1057,18 +1016,18 @@ public class TestExampleQueries extends BaseTestQuery {
   @Test
   @Ignore
   public void testPartitionCTAS() throws  Exception {
-    test("use dfs_test.tmp; " +
+    test("use dfs.tmp; " +
         "create table mytable1  partition by (r_regionkey, r_comment) as select r_regionkey, r_name, r_comment from cp.`tpch/region.parquet`");
 
-    test("use dfs_test.tmp; " +
+    test("use dfs.tmp; " +
         "create table mytable2  partition by (r_regionkey, r_comment) as select * from cp.`tpch/region.parquet` where r_name = 'abc' ");
 
-    test("use dfs_test.tmp; " +
+    test("use dfs.tmp; " +
         "create table mytable3  partition by (r_regionkey, n_nationkey) as " +
         "  select r.r_regionkey, r.r_name, n.n_nationkey, n.n_name from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
         "  where n.n_regionkey = r.r_regionkey");
 
-    test("use dfs_test.tmp; " +
+    test("use dfs.tmp; " +
         "create table mytable4  partition by (r_regionkey, r_comment) as " +
         "  select  r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
         "  where n.n_regionkey = r.r_regionkey");
@@ -1115,26 +1074,18 @@ public class TestExampleQueries extends BaseTestQuery {
   @Test // see DRILL-3557
   @Category(UnlikelyTest.class)
   public void testEmptyCSVinDirectory() throws Exception {
-    final String root = FileUtils.getResourceAsFile("/store/text/directoryWithEmpyCSV").toURI().toString();
-    final String toFile = FileUtils.getResourceAsFile("/store/text/directoryWithEmpyCSV/empty.csv").toURI().toString();
-
-    String query1 = String.format("explain plan for select * from dfs_test.`%s`", root);
-    String query2 = String.format("explain plan for select * from dfs_test.`%s`", toFile);
-
-    test(query1);
-    test(query2);
+    test("explain plan for select * from dfs.`store/text/directoryWithEmpyCSV`");
+    test("explain plan for select * from cp.`store/text/directoryWithEmpyCSV/empty.csv`");
   }
 
   @Test
   @Category(UnlikelyTest.class)
   public void testNegativeExtractOperator() throws Exception {
-    String query = "select -EXTRACT(DAY FROM birth_date) as col \n" +
-        "from cp.`employee.json` \n" +
-        "order by col \n" +
-        "limit 5";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select -EXTRACT(DAY FROM birth_date) as col \n" +
+          "from cp.`employee.json` \n" +
+          "order by col \n" +
+          "limit 5")
         .ordered()
         .baselineColumns("col")
         .baselineValues(-27l)

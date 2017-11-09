@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.physical.impl.agg;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.junit.Ignore;
 import org.junit.Test;

@@ -41,7 +41,7 @@ public class Drill2439GetBooleanFailsSayingWrongTypeBugTest extends JdbcTestBase
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
-    connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    connection = connect();
     statement = connection.createStatement();
   }
 

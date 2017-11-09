@@ -20,22 +20,58 @@ package org.apache.drill.exec.physical.impl.TopN;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 public interface PriorityQueue {
-  public void add(FragmentContext context, RecordBatchData batch) throws SchemaChangeException;
-  public void init(int limit, FragmentContext context, BufferAllocator allocator, boolean hasSv2) throws SchemaChangeException;
-  public void generate() throws SchemaChangeException;
-  public VectorContainer getHyperBatch();
-  public SelectionVector4 getHeapSv4();
-  public SelectionVector4 getFinalSv4();
-  public boolean validate();
-  public void resetQueue(VectorContainer container, SelectionVector4 vector4) throws SchemaChangeException;
-  public void cleanup();
+  /**
+   * The elements in the given batch are added to the priority queue. Note that the priority queue
+   * only retains the top elements that fit within the size specified by the {@link #init(int, BufferAllocator, boolean)}
+   * method.
+   * @param batch The batch containing elements we want to add.
+   * @throws SchemaChangeException
+   */
+  void add(RecordBatchData batch) throws SchemaChangeException;
 
-  public static TemplateClassDefinition<PriorityQueue> TEMPLATE_DEFINITION = new TemplateClassDefinition<PriorityQueue>(PriorityQueue.class, PriorityQueueTemplate.class);
+  /**
+   * Initializes the priority queue. This method must be called before any other methods on the priority
+   * queue are called.
+   * @param limit The size of the priority queue.
+   * @param allocator The {@link BufferAllocator} to use when creating the priority queue.
+   * @param hasSv2 True when incoming batches have 2 byte selection vectors. False otherwise.
+   * @throws SchemaChangeException
+   */
+  void init(int limit, BufferAllocator allocator, boolean hasSv2) throws SchemaChangeException;
 
+  /**
+   * This method must be called before fetching the final priority queue hyper batch and final Sv4 vector.
+   * @throws SchemaChangeException
+   */
+  void generate() throws SchemaChangeException;
+
+  /**
+   * Retrieves the final priority queue HyperBatch containing the results. <b>Note:</b> this should be called
+   * after {@link #generate()}.
+   * @return The final priority queue HyperBatch containing the results.
+   */
+  VectorContainer getHyperBatch();
+
+  SelectionVector4 getSv4();
+
+  /**
+   * Retrieves the selection vector used to select the elements in the priority queue from the hyper batch
+   * provided by the {@link #getHyperBatch()} method. <b>Note:</b> this should be called after {@link #generate()}.
+   * @return The selection vector used to select the elements in the priority queue.
+   */
+  SelectionVector4 getFinalSv4();
+
+  void resetQueue(VectorContainer container, SelectionVector4 vector4) throws SchemaChangeException;
+
+  /**
+   * Releases all the memory consumed by the priority queue.
+   */
+  void cleanup();
+
+  TemplateClassDefinition<PriorityQueue> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(PriorityQueue.class, PriorityQueueTemplate.class);
 }

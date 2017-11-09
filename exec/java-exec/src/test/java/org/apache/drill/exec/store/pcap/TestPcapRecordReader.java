@@ -16,33 +16,39 @@
  */
 package org.apache.drill.exec.store.pcap;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 public class TestPcapRecordReader extends BaseTestQuery {
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("store", "pcap"));
+  }
 
   @Test
   public void testStarQuery() throws Exception {
-    runSQLVerifyCount("select * from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 16);
-    runSQLVerifyCount("select distinct DST_IP from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
-    runSQLVerifyCount("select distinct DsT_IP from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
-    runSQLVerifyCount("select distinct dst_ip from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select * from dfs.`store/pcap/tcp-1.pcap`", 16);
+    runSQLVerifyCount("select distinct DST_IP from dfs.`store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct DsT_IP from dfs.`store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct dst_ip from dfs.`store/pcap/tcp-1.pcap`", 1);
   }
 
   @Test
   public void testCountQuery() throws Exception {
-    runSQLVerifyCount("select count(*) from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
-    runSQLVerifyCount("select count(*) from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-2.pcap`", 1);
+    runSQLVerifyCount("select count(*) from dfs.`store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select count(*) from dfs.`store/pcap/tcp-2.pcap`", 1);
   }
 
   @Test
   public void testDistinctQuery() throws Exception {
-    runSQLVerifyCount("select distinct * from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct * from dfs.`store/pcap/tcp-1.pcap`", 1);
   }
 
   private void runSQLVerifyCount(String sql, int expectedRowCount) throws Exception {

@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -52,7 +52,7 @@ public class TestInjectionValue extends ExecTest {
   @Test
   public void testInjected() throws Exception{
     PhysicalPlanReader r = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(config);
-    PhysicalPlan p = r.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_screen.json"), Charsets.UTF_8));
+    PhysicalPlan p = r.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/physical_screen.json"), Charsets.UTF_8));
 
     List<PhysicalOperator> o = p.getSortedOperators(false);
 

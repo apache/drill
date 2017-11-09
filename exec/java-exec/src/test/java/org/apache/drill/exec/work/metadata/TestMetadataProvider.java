@@ -27,7 +27,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OptionsTest;
 import org.apache.drill.exec.proto.UserProtos.CatalogMetadata;
 import org.apache.drill.exec.proto.UserProtos.ColumnMetadata;
@@ -103,16 +103,13 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<SchemaMetadata> schemas = resp.getSchemasList();
-    assertEquals(9, schemas.size());
+    assertEquals(6, schemas.size());
 
     verifySchema("INFORMATION_SCHEMA", schemas);
     verifySchema("cp.default", schemas);
     verifySchema("dfs.default", schemas);
     verifySchema("dfs.root", schemas);
     verifySchema("dfs.tmp", schemas);
-    verifySchema("dfs_test.default", schemas);
-    verifySchema("dfs_test.home", schemas);
-    verifySchema("dfs_test.tmp", schemas);
     verifySchema("sys", schemas);
   }
 
@@ -131,21 +128,17 @@ public class TestMetadataProvider extends BaseTestQuery {
 
   @Test
   public void schemasWithCatalogNameFilterAndSchemaNameFilter() throws Exception {
-
-    // test("SELECT * FROM INFORMATION_SCHEMA.SCHEMATA " +
-    //    "WHERE CATALOG_NAME LIKE '%RI%' AND SCHEMA_NAME LIKE '%y%'"); // SQL equivalent
-
     GetSchemasResp resp = client.getSchemas(
         LikeFilter.newBuilder().setPattern("%RI%").build(),
-        LikeFilter.newBuilder().setPattern("%dfs_test%").build()).get();
+        LikeFilter.newBuilder().setPattern("%dfs%").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<SchemaMetadata> schemas = resp.getSchemasList();
     assertEquals(3, schemas.size());
 
-    verifySchema("dfs_test.default", schemas);
-    verifySchema("dfs_test.home", schemas);
-    verifySchema("dfs_test.tmp", schemas);
+    verifySchema("dfs.default", schemas);
+    verifySchema("dfs.root", schemas);
+    verifySchema("dfs.tmp", schemas);
   }
 
   @Test

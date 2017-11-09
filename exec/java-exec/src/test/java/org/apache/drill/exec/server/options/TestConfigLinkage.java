@@ -16,17 +16,17 @@
  * limitations under the License.
  */
 
-package org.apache.drill.test;
+package org.apache.drill.exec.server.options;
 
 import org.apache.drill.categories.OptionsTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.server.options.OptionDefinition;
-import org.apache.drill.exec.server.options.OptionMetaData;
-import org.apache.drill.exec.server.options.OptionValidator;
-import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.TypeValidators;
 import org.apache.drill.exec.store.sys.SystemTable;
+import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -44,6 +44,9 @@ import static org.junit.Assert.assertEquals;
 public class TestConfigLinkage {
   public static final String MOCK_PROPERTY = "mock.prop";
 
+  @Rule
+  public BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+
   public static OptionDefinition createMockPropOptionDefinition() {
     return new OptionDefinition(new TypeValidators.StringValidator(MOCK_PROPERTY), new OptionMetaData(OptionValue.AccessibleScopes.ALL, false, true));
   }
@@ -52,9 +55,9 @@ public class TestConfigLinkage {
   public void testDefaultInternalValue() throws Exception {
     OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
-    ClusterFixtureBuilder builder = ClusterFixture.builder().
-      configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
-      putDefinition(optionDefinition);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a")
+      .putDefinition(optionDefinition);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -72,7 +75,7 @@ public class TestConfigLinkage {
   public void testDefaultValidatorInternalValue() throws Exception {
     OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
-    ClusterFixtureBuilder builder = ClusterFixture.builder().
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).
       putDefinition(optionDefinition).
       configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a");
 
@@ -91,7 +94,8 @@ public class TestConfigLinkage {
   /* Test if session option takes precedence */
   @Test
   public void testSessionOption() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder().sessionOption(ExecConstants.SLICE_TARGET, 10);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .sessionOption(ExecConstants.SLICE_TARGET, 10);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'SESSION'", SystemTable.OPTION_VAL
@@ -104,7 +108,8 @@ public class TestConfigLinkage {
   /* Test if system option takes precedence over the boot option */
   @Test
   public void testSystemOption() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder().systemOption(ExecConstants.SLICE_TARGET, 10000);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .systemOption(ExecConstants.SLICE_TARGET, 10000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'SYSTEM'", SystemTable.OPTION_VAL.getTableName())
@@ -117,7 +122,7 @@ public class TestConfigLinkage {
   public void testInternalSystemOption() throws Exception {
     OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
-    ClusterFixtureBuilder builder = ClusterFixture.builder().
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).
       putDefinition(optionDefinition).
       configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
       systemOption(MOCK_PROPERTY, "blah");
@@ -139,7 +144,7 @@ public class TestConfigLinkage {
   /* Test if config option takes precedence if config option is not set */
   @Test
   public void testConfigOption() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
             .setOptionDefault(ExecConstants.SLICE_TARGET, 1000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -152,7 +157,7 @@ public class TestConfigLinkage {
   /* Test if altering system option takes precedence over config option */
   @Test
   public void testAlterSystem() throws Exception {
-    try (ClusterFixture cluster = ClusterFixture.standardCluster();
+    try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SYSTEM SET `planner.slice_target` = 10000").run();
       String slice_target = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.slice_target' and optionScope = 'SYSTEM'", SystemTable.OPTION_VAL.getTableName())
@@ -164,7 +169,8 @@ public class TestConfigLinkage {
   /* Test if altering session option takes precedence over system option */
   @Test
   public void testSessionPrecedence() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder().systemOption(ExecConstants.SLICE_TARGET, 100000);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .systemOption(ExecConstants.SLICE_TARGET, 100000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SESSION SET `planner.slice_target` = 10000").run();
@@ -177,7 +183,8 @@ public class TestConfigLinkage {
   /* Test if setting maxwidth option through config takes effect */
   @Test
   public void testMaxWidthPerNodeConfig() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder().setOptionDefault(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 2);
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+      .setOptionDefault(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 2);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.width.max_per_node' and optionScope = 'BOOT'", SystemTable.OPTION_VAL.getTableName())
@@ -189,7 +196,8 @@ public class TestConfigLinkage {
   /* Test if setting maxwidth at system level takes precedence */
   @Test
   public void testMaxWidthPerNodeSystem() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder().systemOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 3);
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+      .systemOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 3);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.width.max_per_node' and optionScope = 'SYSTEM'", SystemTable.OPTION_VAL.getTableName())
@@ -201,7 +209,8 @@ public class TestConfigLinkage {
   /* Test if setting maxwidth at session level takes precedence */
   @Test
   public void testMaxWidthPerNodeSession() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder().sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 2);
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+      .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, 2);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String maxWidth = client.queryBuilder().sql("SELECT val FROM sys.%s where name='planner.width.max_per_node' and optionScope = 'SESSION'", SystemTable.OPTION_VAL.getTableName())
@@ -215,7 +224,8 @@ public class TestConfigLinkage {
   */
   @Test
   public void testMaxWidthPerNodeDefault() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder().setOptionDefault(ExecConstants.CPU_LOAD_AVERAGE_KEY, 0.70);
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+      .setOptionDefault(ExecConstants.CPU_LOAD_AVERAGE_KEY, 0.70);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       long maxWidth = ExecConstants.MAX_WIDTH_PER_NODE.computeMaxWidth(0.70, 0);
@@ -228,7 +238,8 @@ public class TestConfigLinkage {
   /* Test if the scope is set during BOOT time and scope is actually BOOT */
   @Test
   public void testScope() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder().setOptionDefault(ExecConstants.SLICE_TARGET, 100000);
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+      .setOptionDefault(ExecConstants.SLICE_TARGET, 100000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String scope = client.queryBuilder()
@@ -241,7 +252,8 @@ public class TestConfigLinkage {
   /* Test if the option is set at SYSTEM scope and the scope is actually SYSTEM */
   @Test
   public void testScopeSystem() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder().systemOption(ExecConstants.SLICE_TARGET, 10000);
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+      .systemOption(ExecConstants.SLICE_TARGET, 10000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String scope = client.queryBuilder()
@@ -254,7 +266,8 @@ public class TestConfigLinkage {
   /* Test if the option is set at SESSION scope and the scope is actually SESSION */
   @Test
   public void testScopeSession() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder().sessionOption(ExecConstants.SLICE_TARGET, 100000);
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+      .sessionOption(ExecConstants.SLICE_TARGET, 100000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String scope = client.queryBuilder()
@@ -267,7 +280,7 @@ public class TestConfigLinkage {
   /* Test if the option is altered at SYSTEM scope and the scope is actually SYSTEM */
   @Test
   public void testScopeAlterSystem() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder();
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SYSTEM set `planner.slice_target`= 10000").run();
@@ -281,7 +294,7 @@ public class TestConfigLinkage {
   /* Test if the option is altered at SESSION scope and the scope is actually SESSION */
   @Test
   public void testScopeAlterSession() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder();
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       client.queryBuilder().sql("ALTER SESSION set `planner.slice_target`= 10000").run();
@@ -296,7 +309,7 @@ public class TestConfigLinkage {
   public void testAlterInternalSystemOption() throws Exception {
     OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
-    ClusterFixtureBuilder builder = ClusterFixture.builder().
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).
       configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
       putDefinition(optionDefinition);
 

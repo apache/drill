@@ -22,20 +22,25 @@ import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
 
 @Category({SqlTest.class, PlannerTest.class})
-public class TestStarQueries extends BaseTestQuery{
+public class TestStarQueries extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "parquet"));
+  }
 
   @Test // see DRILL-2021
   @Category(UnlikelyTest.class)
@@ -248,7 +253,7 @@ public class TestStarQueries extends BaseTestQuery{
   @Test // DRILL-1293
   @Category(UnlikelyTest.class)
   public void testStarView1() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view vt1 as select * from cp.`tpch/region.parquet` r, cp.`tpch/nation.parquet` n where r.r_regionkey = n.n_regionkey");
     test("select * from vt1");
     test("drop view vt1");
@@ -416,11 +421,10 @@ public class TestStarQueries extends BaseTestQuery{
   @Test // DRILL-1500
   @Category(UnlikelyTest.class)
   public void testStarPartitionFilterOrderBy() throws Exception {
-    String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where dir0=1994 and dir1='Q1' order by dir0 limit 1", TEST_RES_PATH);
     org.joda.time.DateTime mydate = new org.joda.time.DateTime("1994-01-20T00:00:00.000");
 
     testBuilder()
-    .sqlQuery(query)
+    .sqlQuery("select * from dfs.`multilevel/parquet` where dir0=1994 and dir1='Q1' order by dir0 limit 1")
     .ordered()
     .baselineColumns("dir0", "dir1", "o_clerk", "o_comment", "o_custkey", "o_orderdate", "o_orderkey",  "o_orderpriority", "o_orderstatus", "o_shippriority",  "o_totalprice")
     .baselineValues("1994", "Q1", "Clerk#000000743", "y pending requests integrate", 1292, mydate, 66, "5-LOW", "F",  0, 104190.66)
@@ -481,19 +485,13 @@ public class TestStarQueries extends BaseTestQuery{
   @Test //DRILL-2802
   @Category(UnlikelyTest.class)
   public void testSelectPartitionColumnOnly() throws Exception {
-    final String table = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
-    final String query1 = String.format("select dir0 from dfs_test.`%s` limit 1 ", table);
-
     final String[] expectedPlan1 = {".*Project.*dir0=\\[\\$0\\]"};
     final String[] excludedPlan1 = {};
-    PlanTestBase.testPlanMatchingPatterns(query1, expectedPlan1, excludedPlan1);
-
-    final String query2 = String.format("select dir0, dir1 from dfs_test.`%s` limit 1 ", table);
+    PlanTestBase.testPlanMatchingPatterns("select dir0 from dfs.`multilevel/parquet` limit 1", expectedPlan1, excludedPlan1);
 
     final String[] expectedPlan2 = {".*Project.*dir0=\\[\\$0\\], dir1=\\[\\$1\\]"};
     final String[] excludedPlan2 = {};
-    PlanTestBase.testPlanMatchingPatterns(query2, expectedPlan2, excludedPlan2);
-
+    PlanTestBase.testPlanMatchingPatterns("select dir0, dir1 from dfs.`multilevel/parquet` limit 1", expectedPlan2, excludedPlan2);
   }
 
   @Test   // DRILL-2053 : column name is case-insensitive when join a CTE with a regluar table.

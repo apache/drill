@@ -22,6 +22,7 @@ import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
 import org.apache.calcite.util.SaffronProperties;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

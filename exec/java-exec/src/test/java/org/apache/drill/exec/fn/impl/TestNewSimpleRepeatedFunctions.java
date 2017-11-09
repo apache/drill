@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

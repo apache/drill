@@ -6,4 +6,4 @@ SELECT
          ORDER by employee_id
          RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS `last_value`
 FROM
-  dfs_test.`%s/window/b4.p4`
+  dfs.`window/b4.p4`

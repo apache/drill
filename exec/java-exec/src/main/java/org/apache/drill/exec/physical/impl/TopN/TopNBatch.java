@@ -18,18 +18,18 @@
 package org.apache.drill.exec.physical.impl.TopN;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -40,6 +40,8 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -53,13 +55,13 @@ import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.exec.record.SimpleRecordBatch;
-import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
@@ -67,17 +69,15 @@ import com.google.common.base.Stopwatch;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.l;
-
 public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
 
-  private  final int batchPurgeThreshold;
+  public final MappingSet mainMapping = createMainMappingSet();
+  public final MappingSet leftMapping = createLeftMappingSet();
+  public final MappingSet rightMapping = createRightMappingSet();
 
-  public final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet RIGHT_MAPPING = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-
+  private final int batchPurgeThreshold;
+  private final boolean codegenDump;
 
   private final RecordBatch incoming;
   private BatchSchema schema;
@@ -95,7 +95,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     super(popConfig, context);
     this.incoming = incoming;
     this.config = popConfig;
-    batchPurgeThreshold = context.getConfig().getInt(ExecConstants.BATCH_PURGE_THRESHOLD);
+    DrillConfig drillConfig = context.getConfig();
+    batchPurgeThreshold = drillConfig.getInt(ExecConstants.BATCH_PURGE_THRESHOLD);
+    codegenDump = drillConfig.getBoolean(CodeCompiler.ENABLE_SAVE_CODE_FOR_DEBUG_TOPN);
   }
 
   @Override
@@ -181,7 +183,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       }
     }
 
-
     try{
       outer: while (true) {
         Stopwatch watch = Stopwatch.createStarted();
@@ -240,9 +241,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           try {
             if (priorityQueue == null) {
               assert !schemaChanged;
-              priorityQueue = createNewPriorityQueue(context, config.getOrderings(), new ExpandableHyperContainer(batch.getContainer()), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+              priorityQueue = createNewPriorityQueue(new ExpandableHyperContainer(batch.getContainer()), config.getLimit());
             }
-            priorityQueue.add(context, batch);
+            priorityQueue.add(batch);
             if (countSincePurge > config.getLimit() && batchCount > batchPurgeThreshold) {
               purge();
               countSincePurge = 0;
@@ -290,7 +291,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     VectorContainer c = priorityQueue.getHyperBatch();
     VectorContainer newContainer = new VectorContainer(oContext);
     @SuppressWarnings("resource")
-    SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
+    SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
     SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     if (copier == null) {
@@ -332,20 +333,42 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     logger.debug("Took {} us to purge", watch.elapsed(TimeUnit.MICROSECONDS));
   }
 
-  public PriorityQueue createNewPriorityQueue(FragmentContext context, List<Ordering> orderings,
-                                                     VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
-          throws ClassTransformationException, IOException, SchemaChangeException{
-    CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+  private PriorityQueue createNewPriorityQueue(VectorAccessible batch, int limit)
+    throws SchemaChangeException, ClassTransformationException, IOException {
+    return createNewPriorityQueue(
+      mainMapping, leftMapping, rightMapping, context.getOptionSet(), context.getFunctionRegistry(), context.getDrillbitContext().getCompiler(),
+      config.getOrderings(), batch, unionTypeEnabled, codegenDump, limit, oContext.getAllocator(), schema.getSelectionVectorMode());
+  }
+
+  public static MappingSet createMainMappingSet() {
+    return new MappingSet((String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  }
+
+  public static MappingSet createLeftMappingSet() {
+    return new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  }
+
+  public static MappingSet createRightMappingSet() {
+    return new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  }
+
+  public static PriorityQueue createNewPriorityQueue(
+    MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping,
+    OptionSet optionSet, FunctionLookupContext functionLookupContext, CodeCompiler codeCompiler,
+    List<Ordering> orderings, VectorAccessible batch, boolean unionTypeEnabled, boolean codegenDump,
+    int limit, BufferAllocator allocator, SelectionVectorMode mode)
+          throws ClassTransformationException, IOException, SchemaChangeException {
+    CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, optionSet);
     cg.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.saveCodeForDebugging(true);
+    cg.saveCodeForDebugging(codegenDump);
     ClassGenerator<PriorityQueue> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 
     for (Ordering od : orderings) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry(), unionTypeEnabled);
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, functionLookupContext, unionTypeEnabled);
       if (collector.hasErrors()) {
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }
@@ -357,8 +380,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh =
-        FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
-                                                       context.getFunctionRegistry());
+        FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right, functionLookupContext);
       HoldingContainer out = g.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
@@ -373,8 +395,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
-    PriorityQueue q = context.getImplementationClass(cg);
-    q.init(config.getLimit(), context, oContext.getAllocator(), schema.getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE);
+    PriorityQueue q = codeCompiler.createInstance(cg);
+    q.init(limit, allocator, mode == BatchSchema.SelectionVectorMode.TWO_BYTE);
     return q;
   }
 
@@ -390,7 +412,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     final VectorContainer c = priorityQueue.getHyperBatch();
     final VectorContainer newContainer = new VectorContainer(oContext);
     @SuppressWarnings("resource")
-    final SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
+    final SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     final SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
     final SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
     copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch, null);
@@ -417,7 +439,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       final VectorContainer newSchemaContainer =  SchemaUtil.coerceContainer(oldSchemaContainer, this.schema, oContext);
       newSchemaContainer.buildSchema(SelectionVectorMode.FOUR_BYTE);
       priorityQueue.cleanup();
-      priorityQueue = createNewPriorityQueue(context, config.getOrderings(), newSchemaContainer, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+      priorityQueue = createNewPriorityQueue(newSchemaContainer, config.getLimit());
       priorityQueue.resetQueue(newSchemaContainer, builder.getSv4().createNewWrapperCurrent());
     } finally {
       builder.clear();
@@ -435,7 +457,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
   }
-
 
   public static class SimpleSV4RecordBatch extends SimpleRecordBatch {
     private SelectionVector4 sv4;
@@ -459,5 +480,4 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       return sv4;
     }
   }
-
 }

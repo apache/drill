@@ -21,14 +21,17 @@ import static org.junit.Assert.assertFalse;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.easy.text.compliant.CompliantTextRecordReader;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.LogFixture;
+import org.apache.drill.test.DirTestWatcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import ch.qos.logback.classic.Level;
@@ -37,6 +40,9 @@ import ch.qos.logback.classic.Level;
 public class TestValidationOptions extends DrillTest {
 
   protected static LogFixture logFixture;
+
+  @Rule
+  public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
@@ -59,13 +65,12 @@ public class TestValidationOptions extends DrillTest {
 
   @Test
   public void testOptions() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .maxParallelization(1)
         .configProperty(ExecConstants.ENABLE_ITERATOR_VALIDATION, false)
         .configProperty(ExecConstants.ENABLE_VECTOR_VALIDATION, false)
         .sessionOption(ExecConstants.ENABLE_ITERATOR_VALIDATION_OPTION, true)
-        .sessionOption(ExecConstants.ENABLE_VECTOR_VALIDATION_OPTION, true)
-        ;
+        .sessionOption(ExecConstants.ENABLE_VECTOR_VALIDATION_OPTION, true);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
 
@@ -93,13 +98,12 @@ public class TestValidationOptions extends DrillTest {
 
   @Test
   public void testConfig() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .maxParallelization(1)
         .configProperty(ExecConstants.ENABLE_ITERATOR_VALIDATION, true)
         .configProperty(ExecConstants.ENABLE_VECTOR_VALIDATION, true)
         .sessionOption(ExecConstants.ENABLE_ITERATOR_VALIDATION_OPTION, false)
-        .sessionOption(ExecConstants.ENABLE_VECTOR_VALIDATION_OPTION, false)
-        ;
+        .sessionOption(ExecConstants.ENABLE_VECTOR_VALIDATION_OPTION, false);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
 
@@ -119,9 +123,8 @@ public class TestValidationOptions extends DrillTest {
 
   @Test
   public void testDefaults() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder()
-        .maxParallelization(1)
-        ;
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .maxParallelization(1);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
 

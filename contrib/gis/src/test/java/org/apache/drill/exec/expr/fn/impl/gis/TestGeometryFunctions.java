@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.impl.gis;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 
 public class TestGeometryFunctions extends BaseTestQuery {
@@ -29,7 +29,7 @@ public class TestGeometryFunctions extends BaseTestQuery {
 
     testBuilder()
     .sqlQuery("select ST_AsText(ST_GeomFromText('" + wktPoint + "')) "
-        + "from cp.`/sample-data/CA-cities.csv` limit 1")
+        + "from cp.`sample-data/CA-cities.csv` limit 1")
     .ordered().baselineColumns("EXPR$0")
     .baselineValues(wktPoint)
     .build()
@@ -41,7 +41,7 @@ public class TestGeometryFunctions extends BaseTestQuery {
 
     testBuilder()
       .sqlQuery("select ST_AsText(ST_Point(-121.895, 37.339)) "
-          + "from cp.`/sample-data/CA-cities.csv` limit 1")
+          + "from cp.`sample-data/CA-cities.csv` limit 1")
       .ordered().baselineColumns("EXPR$0")
       .baselineValues(wktPoint)
       .build()
@@ -55,7 +55,7 @@ public class TestGeometryFunctions extends BaseTestQuery {
       .sqlQuery("select ST_Within(ST_Point(columns[4], columns[3]),"
           + "ST_GeomFromText('POLYGON((-121.95 37.28, -121.94 37.35, -121.84 37.35, -121.84 37.28, -121.95 37.28))')"
           + ") "
-          + "from cp.`/sample-data/CA-cities.csv` where columns[2] = 'San Jose'")
+          + "from cp.`sample-data/CA-cities.csv` where columns[2] = 'San Jose'")
       .ordered().baselineColumns("EXPR$0")
       .baselineValues(true)
       .build()
@@ -66,7 +66,7 @@ public class TestGeometryFunctions extends BaseTestQuery {
     .sqlQuery("select ST_Within(" + "ST_Point(columns[4], columns[3]),"
         + "ST_GeomFromText('POLYGON((-121.95 37.28, -121.94 37.35, -121.84 37.35, -121.84 37.28, -121.95 37.28))')"
         + ") "
-        + "from cp.`/sample-data/CA-cities.csv` where columns[2] = 'San Francisco'")
+        + "from cp.`sample-data/CA-cities.csv` where columns[2] = 'San Francisco'")
     .ordered().baselineColumns("EXPR$0")
     .baselineValues(false)
     .build()

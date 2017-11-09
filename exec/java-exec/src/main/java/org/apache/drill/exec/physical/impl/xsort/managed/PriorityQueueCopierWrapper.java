@@ -80,9 +80,7 @@ public class PriorityQueueCopierWrapper extends BaseSortWrapper {
   private PriorityQueueCopier newCopier(VectorAccessible batch) {
     // Generate the copier code and obtain the resulting class
 
-    CodeGenerator<PriorityQueueCopier> cg = CodeGenerator.get(PriorityQueueCopier.TEMPLATE_DEFINITION,
-        context.getFragmentContext().getFunctionRegistry(),
-        context.getFragmentContext().getOptionSet());
+    CodeGenerator<PriorityQueueCopier> cg = CodeGenerator.get(PriorityQueueCopier.TEMPLATE_DEFINITION, context.getFragmentContext().getOptionSet());
     ClassGenerator<PriorityQueueCopier> g = cg.getRoot();
     cg.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.

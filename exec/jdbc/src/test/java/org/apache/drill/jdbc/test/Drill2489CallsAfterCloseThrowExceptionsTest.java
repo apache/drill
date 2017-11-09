@@ -60,7 +60,7 @@ import org.apache.drill.jdbc.AlreadyClosedSqlException;
  *   {@link Statement},
  *   {@link PreparedStatement},
  *   {@link ResultSet},
- *   {@link ResultSetMetadata}, and
+ *   {@link java.sql.ResultSetMetaData}, and
  *   {@link DatabaseMetaData}.
  * </p>
  * <p>
@@ -89,11 +89,9 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     // (Note: Can't use JdbcTest's connect(...) for this test class.)
 
     final Connection connToClose =
-        new Driver().connect("jdbc:drill:zk=local",
-                             JdbcAssert.getDefaultProperties());
+        new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());
     final Connection connToKeep =
-        new Driver().connect("jdbc:drill:zk=local",
-                             JdbcAssert.getDefaultProperties());
+        new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());
 
     final Statement plainStmtToClose = connToKeep.createStatement();
     final Statement plainStmtToKeep = connToKeep.createStatement();

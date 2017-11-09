@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -41,8 +40,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DrillTest {
-//  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
-
   protected static final ObjectMapper objectMapper;
   static {
     System.setProperty("line.separator", "\n");
@@ -104,7 +101,8 @@ public class DrillTest {
   @AfterClass
   public static void finiDrillTest() throws InterruptedException{
     testReporter.info(String.format("Test Class done (%s): %s.", memWatcher.getMemString(true), className));
-    LOG_OUTCOME.sleepIfFailure();
+    // Clear interrupts for next test
+    Thread.interrupted();
   }
 
   protected static class MemWatcher {
@@ -138,9 +136,7 @@ public class DrillTest {
   }
 
   private static class TestLogReporter extends TestWatcher {
-
     private MemWatcher memWatcher;
-    private int failureCount = 0;
 
     @Override
     protected void starting(Description description) {
@@ -152,22 +148,11 @@ public class DrillTest {
     @Override
     protected void failed(Throwable e, Description description) {
       testReporter.error(String.format("Test Failed (%s): %s", memWatcher.getMemString(), description.getDisplayName()), e);
-      failureCount++;
     }
 
     @Override
     public void succeeded(Description description) {
       testReporter.info(String.format("Test Succeeded (%s): %s", memWatcher.getMemString(), description.getDisplayName()));
-    }
-
-    public void sleepIfFailure() throws InterruptedException {
-      if(failureCount > 0){
-        Thread.sleep(2000);
-        failureCount = 0;
-      } else {
-        // pause to get logger to catch up.
-        Thread.sleep(250);
-      }
     }
   }
 

@@ -56,7 +56,6 @@ public class TestHiveStorage extends HiveTestBase {
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 
-
   @Test // DRILL-4083
   public void testNativeScanWhenNoColumnIsRead() throws Exception {
     try {

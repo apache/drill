@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.record;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -25,7 +24,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-
 
 public class BatchSchema implements Iterable<MaterializedField> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
@@ -74,7 +72,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return "BatchSchema [fields=" + fields + ", selectionVector=" + selectionVectorMode + "]";
   }
 
-  public static enum SelectionVectorMode {
+  public enum SelectionVectorMode {
     NONE(-1, false), TWO_BYTE(2, true), FOUR_BYTE(4, true);
 
     public boolean hasSelectionVector;

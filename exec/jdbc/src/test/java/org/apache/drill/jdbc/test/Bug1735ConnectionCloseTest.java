@@ -19,7 +19,7 @@ package org.apache.drill.jdbc.test;
 
 import java.sql.Connection;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.categories.JdbcTest;
@@ -79,8 +79,7 @@ public class Bug1735ConnectionCloseTest extends JdbcTestQueryBase {
     for ( int i = 1; i <= SMALL_ITERATION_COUNT; i++ ) {
       logger.info( "iteration " + i + ":" );
       System.out.println( "iteration " + i + ":" );
-      Connection connection = new Driver().connect( "jdbc:drill:zk=local",
-                                                     JdbcAssert.getDefaultProperties() );
+      Connection connection = new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());
       connection.close();
     }
   }
@@ -100,8 +99,7 @@ public class Bug1735ConnectionCloseTest extends JdbcTestQueryBase {
 
       // (Note: Can't use JdbcTest's connect(...) because it returns connection
       // that doesn't really close.
-      Connection connection = new Driver().connect( "jdbc:drill:zk=local",
-                                                    JdbcAssert.getDefaultProperties() );
+      Connection connection = new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());
       connection.close();
     }
   }

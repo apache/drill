@@ -27,8 +27,6 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.drill.QueryTestUtil;
-import org.apache.drill.TestBuilder;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -341,7 +339,7 @@ public class ClientFixture implements AutoCloseable {
 
   /**
    * Execute a set of statements from a file.
-   * @param stmts the set of statements, separated by semicolons
+   * @param source the set of statements, separated by semicolons
    * @return the number of statements executed
    */
 

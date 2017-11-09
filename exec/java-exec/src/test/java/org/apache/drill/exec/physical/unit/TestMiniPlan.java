@@ -21,7 +21,7 @@ package org.apache.drill.exec.physical.unit;
 import com.google.common.collect.Lists;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.BatchSchema;
@@ -57,7 +57,7 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
 
   @Test
   public void testSimpleParquetScan() throws Exception {
-    String file = FileUtils.getResourceAsFile("/tpchmulti/region/01.parquet").toURI().toString();
+    String file = DrillFileUtils.getResourceAsFile("/tpchmulti/region/01.parquet").toURI().toString();
 
     RecordBatch scanBatch = new ParquetScanBuilder()
         .fileSystem(fs)

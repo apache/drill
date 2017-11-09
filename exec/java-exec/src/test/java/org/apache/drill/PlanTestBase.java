@@ -36,6 +36,8 @@ import org.apache.calcite.sql.SqlExplain.Depth;
 import org.apache.calcite.sql.SqlExplainLevel;
 
 import com.google.common.base.Strings;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.QueryTestUtil;
 
 public class PlanTestBase extends BaseTestQuery {
 

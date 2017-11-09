@@ -52,14 +52,14 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
     // page of data all at once, see notes above testReadLargeParquetFileFromDFS()
     test(String.format(
         "CREATE TABLE %s.tmp.large_employee AS " +
-            "(SELECT employee_id, full_name FROM cp.`/employee.json`) " +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-        "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)",
+            "(SELECT employee_id, full_name FROM cp.`employee.json`) " +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+        "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)",
         MINIDFS_STORAGE_PLUGIN_NAME));
   }
 

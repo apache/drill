@@ -19,24 +19,33 @@ package org.apache.drill;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
+
 @Category({SqlTest.class, OperatorTest.class})
-public class TestAltSortQueries extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAltSortQueries.class);
+public class TestAltSortQueries extends BaseTestQuery {
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "region.parquet"));
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "regionsSF"));
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "nation.parquet"));
+  }
 
   @Test
   public void testOrderBy() throws Exception{
     test("select R_REGIONKEY " +
-         "from dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` " +
+         "from dfs.`sample-data/region.parquet` " +
          "order by R_REGIONKEY");
   }
 
   @Test
   public void testOrderBySingleFile() throws Exception{
     test("select R_REGIONKEY " +
-         "from dfs_test.`[WORKING_PATH]/../../sample-data/regionsSF/` " +
+         "from dfs.`sample-data/regionsSF/` " +
          "order by R_REGIONKEY");
   }
 
@@ -64,12 +73,11 @@ public class TestAltSortQueries extends BaseTestQuery{
         "  nations.N_NAME,\n" +
         "  regions.R_NAME\n" +
         "FROM\n" +
-        "  dfs_test.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
+        "  dfs.`sample-data/nation.parquet` nations\n" +
         "JOIN\n" +
-        "  dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
+        "  dfs.`sample-data/region.parquet` regions\n" +
         "  on nations.N_REGIONKEY = regions.R_REGIONKEY" +
         " order by regions.R_NAME, nations.N_NAME " +
         " limit 5");
   }
-
 }

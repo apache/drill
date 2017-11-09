@@ -27,22 +27,22 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
-  private static final String TEMP_SCHEMA = "dfs_test.tmp";
-
   protected static HiveTestDataGenerator hiveTest;
 
   @BeforeClass
   public static void generateHive() throws Exception{
-    hiveTest = HiveTestDataGenerator.getInstance();
+    hiveTest = HiveTestDataGenerator.getInstance(dirTestWatcher.getRootDir());
     hiveTest.addHiveTestPlugin(getDrillbitContext().getStorage());
   }
 
   @Test
   public void viewWithStarInDef_StarInQuery() throws Exception{
     testViewHelper(
-        TEMP_SCHEMA,
+         DFS_TMP_SCHEMA,
         null,
         "SELECT * FROM hive.kv",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
@@ -54,7 +54,7 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   @Test
   public void viewWithStarInDef_SelectFieldsInQuery1() throws Exception{
     testViewHelper(
-        TEMP_SCHEMA,
+        DFS_TMP_SCHEMA,
         null,
         "SELECT * FROM hive.kv",
         "SELECT key, `value` FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
@@ -66,7 +66,7 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   @Test
   public void viewWithStarInDef_SelectFieldsInQuery2() throws Exception{
     testViewHelper(
-        TEMP_SCHEMA,
+        DFS_TMP_SCHEMA,
         null,
         "SELECT * FROM hive.kv",
         "SELECT `value` FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
@@ -78,7 +78,7 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   @Test
   public void viewWithSelectFieldsInDef_StarInQuery() throws Exception{
     testViewHelper(
-        TEMP_SCHEMA,
+      DFS_TMP_SCHEMA,
         null,
         "SELECT key, `value` FROM hive.kv",
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
@@ -90,7 +90,7 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
   @Test
   public void viewWithSelectFieldsInDef_SelectFieldsInQuery() throws Exception{
     testViewHelper(
-        TEMP_SCHEMA,
+        DFS_TMP_SCHEMA,
         null,
         "SELECT key, `value` FROM hive.kv",
         "SELECT key, `value` FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",

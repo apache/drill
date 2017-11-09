@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
@@ -24,8 +25,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -171,8 +172,8 @@ public class ClassTransformer {
 
     public ClassNames(String className) {
       dot = className;
-      slash = className.replace('.', FileUtils.separatorChar);
-      clazz = FileUtils.separatorChar + slash + ".class";
+      slash = className.replace('.', DrillFileUtils.SEPARATOR_CHAR);
+      clazz = DrillFileUtils.SEPARATOR_CHAR + slash + ".class";
     }
 
     @Override
@@ -310,7 +311,7 @@ public class ClassTransformer {
         }
 
         for (String s : result.innerClasses) {
-          s = s.replace(FileUtils.separatorChar, '.');
+          s = s.replace(DrillFileUtils.SEPARATOR_CHAR, '.');
           names.add(nextSet.getChild(s));
         }
         classLoader.injectByteCode(nextGenerated.dot, result.bytes);
@@ -319,7 +320,7 @@ public class ClassTransformer {
 
       // adds byte code of the classes that have not been merged to make them accessible for outer class
       for (Map.Entry<String, Pair<byte[], ClassNode>> clazz : classesToMerge.entrySet()) {
-        classLoader.injectByteCode(clazz.getKey().replace(FileUtils.separatorChar, '.'), clazz.getValue().getKey());
+        classLoader.injectByteCode(clazz.getKey().replace(DrillFileUtils.SEPARATOR_CHAR, '.'), clazz.getValue().getKey());
       }
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {

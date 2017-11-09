@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -31,11 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.DrillTestWrapper.TestServices;
-import org.apache.drill.QueryTestUtil;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -57,11 +54,16 @@ import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
-import org.apache.drill.exec.util.TestUtilities;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
+
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
 
 /**
  * Test fixture to start a Drillbit with provide options, create a client, and
@@ -69,10 +71,7 @@ import com.google.common.io.Resources;
  * a builder to set the necessary embedded Drillbit and client options, then
  * creates the requested Drillbit and client.
  */
-
 public class ClusterFixture extends BaseFixture implements AutoCloseable {
-  // private static final org.slf4j.Logger logger =
-  // org.slf4j.LoggerFactory.getLogger(ClientFixture.class);
   public static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
   public static final int MAX_WIDTH_PER_NODE = 2;
 
@@ -87,10 +86,10 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // The CTTAS function requires that the default temporary workspace be
       // writable. By default, the default temporary workspace points to
       // dfs.tmp. But, the test setup marks dfs.tmp as read-only. To work
-      // around this, tests are supposed to use dfs_test. So, we need to
-      // set the default temporary workspace to dfs_test.tmp.
+      // around this, tests are supposed to use dfs. So, we need to
+      // set the default temporary workspace to dfs.tmp.
 
-      put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, BaseTestQuery.TEMP_SCHEMA);
+      put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, DFS_TMP_SCHEMA);
       put(ExecConstants.HTTP_ENABLE, false);
       put(QueryTestUtil.TEST_QUERY_PRINTING_SILENT, true);
       put("drill.catastrophic_to_standard_out", true);
@@ -121,7 +120,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // mode.
 
       put(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT, "/tmp/drill/tests");
-      put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, "file:/tmp/drill/tests");
     }
   };
 
@@ -132,30 +130,22 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   private boolean ownsZK;
   private ZookeeperHelper zkHelper;
   private RemoteServiceSet serviceSet;
-  private File dfsTestTempDir;
   protected List<ClientFixture> clients = new ArrayList<>();
   protected RestClientFixture restClientFixture;
   private boolean usesZk;
-  private boolean preserveLocalFiles;
-  private boolean isLocal;
   private Properties clientProps;
-
-  /**
-   * Temporary directories created for this test cluster.
-   * Each is removed when closing the cluster.
-   */
-
-  private List<File> tempDirs = new ArrayList<>();
+  private final ClusterFixtureBuilder builder;
 
   ClusterFixture(ClusterFixtureBuilder builder) {
+    this.builder = Preconditions.checkNotNull(builder);
 
-    setClientProps(builder);
-    configureZk(builder);
+    setClientProps();
+    configureZk();
     try {
-      createConfig(builder);
+      createConfig();
       allocator = RootAllocatorFactory.newRoot(config);
-      startDrillbits(builder);
-      applyOptions(builder);
+      startDrillbits();
+      applyOptions();
     } catch (Exception e) {
       // Translate exceptions to unchecked to avoid cluttering
       // tests. Failures will simply fail the test itself.
@@ -166,9 +156,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   /**
    * Set the client properties to be used by client fixture.
-   * @param builder {@link ClusterFixtureBuilder#clientProps}
    */
-  private void setClientProps(ClusterFixtureBuilder builder) {
+  private void setClientProps() {
       clientProps = builder.clientProps;
   }
 
@@ -176,8 +165,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     return clientProps;
   }
 
-  private void configureZk(ClusterFixtureBuilder builder) {
-
+  private void configureZk() {
     // Start ZK if requested.
 
     String zkConnect = null;
@@ -213,8 +201,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  private void createConfig(ClusterFixtureBuilder builder) throws Exception {
-
+  private void createConfig() throws Exception {
     // Create a config
     // Because of the way DrillConfig works, we can set the ZK
     // connection string only if a property set is provided.
@@ -226,44 +213,14 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
       serviceSet = null;
       usesZk = true;
-      isLocal = false;
     } else {
       // Embedded Drillbit.
 
       serviceSet = RemoteServiceSet.getLocalServiceSet();
-      isLocal = true;
     }
   }
 
-  private void startDrillbits(ClusterFixtureBuilder builder) throws Exception {
-//    // Ensure that Drill uses the log directory determined here rather than
-//    // it's hard-coded defaults. WIP: seems to be needed some times but
-//    // not others.
-//
-//    String logDir = null;
-//    if (builder.tempDir != null) {
-//      logDir = builder.tempDir.getAbsolutePath();
-//    }
-//    if (logDir == null) {
-//      logDir = config.getString(ExecConstants.DRILL_TMP_DIR);
-//      if (logDir != null) {
-//        logDir += "/drill/log";
-//      }
-//    }
-//    if (logDir == null) {
-//      logDir = "/tmp/drill";
-//    }
-//    new File(logDir).mkdirs();
-//    System.setProperty("drill.log-dir", logDir);
-
-    dfsTestTempDir = makeTempDir("dfs-test");
-
-    // Clean up any files that may have been left from the
-    // last run.
-
-    preserveLocalFiles = builder.preserveLocalFiles;
-    removeLocalFiles();
-
+  private void startDrillbits() throws Exception {
     // Start the Drillbits.
 
     Preconditions.checkArgument(builder.bitCount > 0);
@@ -302,12 +259,16 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   private void configureStoragePlugins(Drillbit bit) throws Exception {
-    // Create the dfs_test name space
+    // Create the dfs name space
+    builder.dirTestWatcher.newDfsTestTmpDir();
 
     @SuppressWarnings("resource")
     final StoragePluginRegistry pluginRegistry = bit.getContext().getStorage();
-    TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, dfsTestTempDir.getAbsolutePath());
-    TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
+    StoragePluginTestUtils.configureFormatPlugins(pluginRegistry);
+
+    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getDfsTestTmpDir(), TMP_SCHEMA);
+    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getRootDir(), ROOT_SCHEMA);
+    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getRootDir(), DEFAULT_SCHEMA);
 
     // Create the mock data plugin
 
@@ -319,8 +280,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     ((StoragePluginRegistryImpl) pluginRegistry).definePlugin(MockStorageEngineConfig.NAME, config, plugin);
   }
 
-  private void applyOptions(ClusterFixtureBuilder builder) throws Exception {
-
+  private void applyOptions() throws Exception {
     // Apply system options
 
     if (builder.systemOptions != null) {
@@ -342,7 +302,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public Drillbit drillbit(String name) { return bits.get(name); }
   public Collection<Drillbit> drillbits() { return bits.values(); }
   public RemoteServiceSet serviceSet() { return serviceSet; }
-  public File getDfsTestTmpDir() { return dfsTestTempDir; }
 
   public ClientFixture.ClientBuilder clientBuilder() {
     return new ClientFixture.ClientBuilder(this);
@@ -442,74 +401,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       }
     }
     zkHelper = null;
-
-    // Delete any local files, if we wrote to the local
-    // persistent store. But, leave the files if the user wants
-    // to review them, for debugging, say. Note that, even if the
-    // files are preserved here, they will be removed when the
-    // next cluster fixture starts, else the CTTAS initialization
-    // will fail.
-
-    if (! preserveLocalFiles) {
-      try {
-        removeLocalFiles();
-      } catch (Exception e) {
-        ex = ex == null ? e : ex;
-      }
-    }
-
-    // Remove temporary directories created for this cluster session.
-
-    try {
-      removeTempDirs();
-    } catch (Exception e) {
-      ex = ex == null ? e : ex;
-    }
-    if (ex != null) {
-      throw ex;
-    }
-  }
-
-  /**
-   * Removes files stored locally in the "local store provider."
-   * Required because CTTAS setup fails if these files are left from one
-   * run to the next.
-   *
-   * @throws IOException if a directory cannot be deleted
-   */
-
-  private void removeLocalFiles() throws IOException {
-
-    // Don't delete if this is not a local Drillbit.
-
-    if (! isLocal) {
-      return;
-    }
-
-    // Remove the local files if they exist.
-
-    String localStoreLocation = config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH);
-    removeDir(new File(localStoreLocation));
-  }
-
-  private void removeTempDirs() throws IOException {
-    IOException ex = null;
-    for (File dir : tempDirs) {
-      try {
-        removeDir(dir);
-      } catch (IOException e) {
-        ex = ex == null ? e : ex;
-      }
-    }
-    if (ex != null) {
-      throw ex;
-    }
-  }
-
-  public void removeDir(File dir) throws IOException {
-    if (dir.exists()) {
-      FileUtils.deleteDirectory(dir);
-    }
   }
 
   /**
@@ -537,7 +428,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * Define a workspace within an existing storage plugin. Useful for
    * pointing to local file system files outside the Drill source tree.
    *
-   * @param pluginName name of the plugin like "dfs" or "dfs_test".
+   * @param pluginName name of the plugin like "dfs".
    * @param schemaName name of the new schema
    * @param path directory location (usually local)
    * @param defaultFormat default format for files in the schema
@@ -584,11 +475,14 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public static final String EXPLAIN_PLAN_TEXT = "text";
   public static final String EXPLAIN_PLAN_JSON = "json";
 
-  public static ClusterFixtureBuilder builder() {
-    ClusterFixtureBuilder builder = new ClusterFixtureBuilder()
+  public static ClusterFixtureBuilder builder(BaseDirTestWatcher dirTestWatcher) {
+      ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
          .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE);
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
+    props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
+    props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
+
     builder.configBuilder.configProps(props);
     return builder;
   }
@@ -603,9 +497,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    *
    * @return a fixture builder with no default properties set
    */
-
-  public static ClusterFixtureBuilder bareBuilder() {
-    return new ClusterFixtureBuilder();
+  public static ClusterFixtureBuilder bareBuilder(BaseDirTestWatcher dirTestWatcher) {
+    return new ClusterFixtureBuilder(dirTestWatcher);
   }
 
   /**
@@ -645,8 +538,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @return a cluster fixture with standard options
    * @throws Exception if something goes wrong
    */
-  public static ClusterFixture standardCluster() {
-    return builder().build();
+  public static ClusterFixture standardCluster(BaseDirTestWatcher dirTestWatcher) {
+    return builder(dirTestWatcher).build();
   }
 
   /**
@@ -660,7 +553,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   public static String stringify(Object value) {
     if (value instanceof String) {
-      return "'" + (String) value + "'";
+      return "'" + value + "'";
     } else {
       return value.toString();
     }
@@ -714,34 +607,20 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   /**
-   * Create a temporary directory which will be removed when the
-   * cluster closes.
-   *
-   * @param dirName the name of the leaf directory
-   * @return the path to the temporary directory which is usually
-   * under the temporary directory structure for this machine
-   */
-
-  public File makeTempDir(final String dirName) {
-    File dir = getTempDir(dirName);
-    tempDirs.add(dir);
-    return dir;
-  }
-
-  /**
    * Create a temporary data directory which will be removed when the
    * cluster closes, and register it as a "dfs" name space.
    *
-   * @param key the name to use for the directory and the name space.
+   * @param key The name to use for the directory and the name space.
    * Access the directory as "dfs.<key>".
-   * @param defaultFormat default storage format for the workspace
+   * @param defaultFormat The default storage format for the workspace.
+   * @param formatPluginConfig The format plugin config.
    * @return location of the directory which can be used to create
    * temporary input files
    */
 
-  public File makeDataDir(String key, String defaultFormat) {
-    File dir = makeTempDir(key);
-    defineWorkspace("dfs", key, dir.getAbsolutePath(), defaultFormat);
+  public File makeDataDir(String key, String defaultFormat, FormatPluginConfig formatPluginConfig) {
+    File dir = builder.dirTestWatcher.makeSubDir(Paths.get(key));
+    defineWorkspace("dfs", key, dir.getAbsolutePath(), defaultFormat, formatPluginConfig);
     return dir;
   }
 

@@ -21,9 +21,8 @@ package org.apache.drill.exec.server.options;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.serialization.JacksonSerializer;
-import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -47,10 +46,10 @@ public class PersistedOptionValueTest {
   private void testHelper(String booleanOptionFile, String doubleOptionFile,
                           String longOptionFile, String stringOptionFile) throws IOException {
     JacksonSerializer serializer = new JacksonSerializer<>(new ObjectMapper(), PersistedOptionValue.class);
-    String booleanOptionJson = FileUtils.getResourceAsString(booleanOptionFile);
-    String doubleOptionJson = FileUtils.getResourceAsString(doubleOptionFile);
-    String longOptionJson = FileUtils.getResourceAsString(longOptionFile);
-    String stringOptionJson = FileUtils.getResourceAsString(stringOptionFile);
+    String booleanOptionJson = DrillFileUtils.getResourceAsString(booleanOptionFile);
+    String doubleOptionJson = DrillFileUtils.getResourceAsString(doubleOptionFile);
+    String longOptionJson = DrillFileUtils.getResourceAsString(longOptionFile);
+    String stringOptionJson = DrillFileUtils.getResourceAsString(stringOptionFile);
 
     PersistedOptionValue booleanValue = (PersistedOptionValue) serializer.deserialize(booleanOptionJson.getBytes());
     PersistedOptionValue doubleValue = (PersistedOptionValue) serializer.deserialize(doubleOptionJson.getBytes());

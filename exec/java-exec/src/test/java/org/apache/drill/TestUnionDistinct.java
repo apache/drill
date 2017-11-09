@@ -25,21 +25,25 @@ import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
-import org.junit.Ignore;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 @Category({SqlTest.class, OperatorTest.class})
 public class TestUnionDistinct extends BaseTestQuery {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionDistinct.class);
-
   private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
   private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
+
+  @BeforeClass
+  public static void setupFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel"));
+  }
 
   @Test  // Simple Union over two scans
   public void testUnionDistinct1() throws Exception {
@@ -183,13 +187,13 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test // Union-Distinct of * column from JSON files in different directories
   public void testUnionDistinct9() throws Exception {
-    String file0 = FileUtils.getResourceAsFile("/multilevel/json/1994/Q1/orders_94_q1.json").toURI().toString();
-    String file1 = FileUtils.getResourceAsFile("/multilevel/json/1995/Q1/orders_95_q1.json").toURI().toString();
-    String query = String.format("select o_custkey, o_orderstatus, o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment, o_orderkey from dfs_test.`%s` union \n" +
-            "select o_custkey, o_orderstatus, o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment, o_orderkey from dfs_test.`%s`", file0, file1);
+    String file0 = "/multilevel/json/1994/Q1/orders_94_q1.json";
+    String file1 = "/multilevel/json/1995/Q1/orders_95_q1.json";
 
     testBuilder()
-        .sqlQuery(query)
+      .sqlQuery("select o_custkey, o_orderstatus, o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment, o_orderkey " +
+        "from cp.`%s` union select o_custkey, o_orderstatus, o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment, o_orderkey from cp.`%s`",
+        file0, file1)
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q9.tsv")
         .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.FLOAT8, TypeProtos.MinorType.VARCHAR,
@@ -202,12 +206,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test // Union-Distinct constant literals
   public void testUnionDistinct10() throws Exception {
-    String query = "(select n_name, 'LEFT' as LiteralConstant, n_nationkey, '1' as NumberConstant from cp.`tpch/nation.parquet`) \n" +
-        "union \n" +
-        "(select 'RIGHT', r_name, '2', r_regionkey from cp.`tpch/region.parquet`)";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("(select n_name, 'LEFT' as LiteralConstant, n_nationkey, '1' as NumberConstant from cp.`tpch/nation.parquet`) " +
+          "union (select 'RIGHT', r_name, '2', r_regionkey from cp.`tpch/region.parquet`)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q10.tsv")
         .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.INT)
@@ -218,17 +219,17 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctViewExpandableStar() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view nation_view_testunion as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
     test("create view region_view_testunion as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
 
-    String query1 = "(select * from dfs_test.tmp.`nation_view_testunion`) \n" +
+    String query1 = "(select * from dfs.tmp.`nation_view_testunion`) \n" +
         "union \n" +
-        "(select * from dfs_test.tmp.`region_view_testunion`)";
+        "(select * from dfs.tmp.`region_view_testunion`)";
 
     String query2 =  "(select r_name, r_regionkey from cp.`tpch/region.parquet`)  \n" +
         "union \n" +
-        "(select * from dfs_test.tmp.`nation_view_testunion`)";
+        "(select * from dfs.tmp.`nation_view_testunion`)";
 
     try {
       testBuilder()
@@ -256,11 +257,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test(expected = UnsupportedRelOperatorException.class)
   public void testUnionDistinctViewUnExpandableStar() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view nation_view_testunion as select * from cp.`tpch/nation.parquet`;");
 
     try {
-      String query = "(select * from dfs_test.tmp.`nation_view_testunion`) \n" +
+      String query = "(select * from dfs.tmp.`nation_view_testunion`) \n" +
           "union (select * from cp.`tpch/region.parquet`)";
       test(query);
     } catch(UserException ex) {
@@ -273,7 +274,7 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testDiffDataTypesAndModes() throws Exception {
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
     test("create view nation_view_testunion as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
     test("create view region_view_testunion as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
 
@@ -301,14 +302,10 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testDistinctOverUnionDistinctwithFullyQualifiedColumnNames() throws Exception {
-    String query = "select distinct sq.x1, sq.x2 \n" +
-        "from \n" +
-        "((select n_regionkey as a1, n_name as b1 from cp.`tpch/nation.parquet`) \n" +
-        "union \n" +
-        "(select r_regionkey as a2, r_name as b2 from cp.`tpch/region.parquet`)) as sq(x1,x2)";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select distinct sq.x1, sq.x2 " +
+          "from ((select n_regionkey as a1, n_name as b1 from cp.`tpch/nation.parquet`) " +
+          "union (select r_regionkey as a2, r_name as b2 from cp.`tpch/region.parquet`)) as sq(x1,x2)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q14.tsv")
         .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
@@ -319,12 +316,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctContainsColumnANumericConstant() throws Exception {
-    String query = "(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 5) \n" +
-        "union \n" +
-        "(select 1, n_regionkey, 'abc' from cp.`tpch/nation.parquet` limit 5)";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 5) " +
+          "union (select 1, n_regionkey, 'abc' from cp.`tpch/nation.parquet` limit 5)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q15.tsv")
         .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
@@ -334,16 +328,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctEmptySides() throws Exception {
-    String query1 = "(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 0) \n" +
-        "union \n" +
-        "(select 1, n_regionkey, 'abc' from cp.`tpch/nation.parquet` limit 5)";
-
-    String query2 = "(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 5) \n" +
-        "union \n" +
-        "(select 1, n_regionkey, 'abc' from cp.`tpch/nation.parquet` limit 0)";
-
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 0) " +
+          "union (select 1, n_regionkey, 'abc' from cp.`tpch/nation.parquet` limit 5)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q16.tsv")
         .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
@@ -352,7 +339,8 @@ public class TestUnionDistinct extends BaseTestQuery {
         .run();
 
     testBuilder()
-        .sqlQuery(query2)
+        .sqlQuery("(select n_nationkey, n_regionkey, n_name from cp.`tpch/nation.parquet`  limit 5) " +
+          "union (select 1, n_regionkey, 'abc' from cp.`tpch/nation.parquet` limit 0)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q17.tsv")
         .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
@@ -363,23 +351,13 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testAggregationOnUnionDistinctOperator() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
-    String query1 = String.format(
-        "(select calc1, max(b1) as `max`, min(b1) as `min`, count(c1) as `count` \n" +
-        "from (select a1 + 10 as calc1, b1, c1 from dfs_test.`%s` \n" +
-        "union \n" +
-        "select a1 + 100 as diff1, b1 as diff2, c1 as diff3 from dfs_test.`%s`) \n" +
-        "group by calc1 order by calc1)", root, root);
-
-    String query2 = String.format(
-        "(select calc1, min(b1) as `min`, max(b1) as `max`, count(c1) as `count` \n" +
-        "from (select a1 + 10 as calc1, b1, c1 from dfs_test.`%s` \n" +
-        "union \n" +
-        "select a1 + 100 as diff1, b1 as diff2, c1 as diff3 from dfs_test.`%s`) \n" +
-        "group by calc1 order by calc1)", root, root);
+    String root = "/store/text/data/t.json";
 
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("(select calc1, max(b1) as `max`, min(b1) as `min`, count(c1) as `count` " +
+            "from (select a1 + 10 as calc1, b1, c1 from cp.`%s` " +
+            "union select a1 + 100 as diff1, b1 as diff2, c1 as diff3 from cp.`%s`) " +
+            "group by calc1 order by calc1)", root, root)
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testAggregationOnUnionDistinctOperator_1.tsv")
         .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT)
@@ -388,7 +366,10 @@ public class TestUnionDistinct extends BaseTestQuery {
         .run();
 
     testBuilder()
-        .sqlQuery(query2)
+        .sqlQuery("(select calc1, min(b1) as `min`, max(b1) as `max`, count(c1) as `count` " +
+          "from (select a1 + 10 as calc1, b1, c1 from cp.`%s` " +
+          "union select a1 + 100 as diff1, b1 as diff2, c1 as diff3 from cp.`%s`) " +
+          "group by calc1 order by calc1)", root, root)
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testAggregationOnUnionDistinctOperator_2.tsv")
         .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT)
@@ -399,39 +380,18 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test(expected = UserException.class)
   public void testUnionDistinctImplicitCastingFailure() throws Exception {
-    String rootInt = FileUtils.getResourceAsFile("/store/json/intData.json").toURI().toString();
-    String rootBoolean = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
-
-    String query = String.format(
-        "(select key from dfs_test.`%s` \n" +
-        "union \n" +
-        "select key from dfs_test.`%s` )", rootInt, rootBoolean);
-
-    test(query);
+    test("(select key from cp.`store/json/intData.json` " +
+      "union select key from cp.`store/json/booleanData.json` )");
   }
 
   @Test
   public void testDateAndTimestampJson() throws Exception {
-    String rootDate = FileUtils.getResourceAsFile("/store/json/dateData.json").toURI().toString();
-    String rootTimpStmp = FileUtils.getResourceAsFile("/store/json/timeStmpData.json").toURI().toString();
-
-    String query1 = String.format(
-        "(select max(key) as key from dfs_test.`%s` \n" +
-        "union \n" +
-        "select key from dfs_test.`%s`)", rootDate, rootTimpStmp);
-
-    String query2 = String.format(
-        "select key from dfs_test.`%s` \n" +
-        "union \n" +
-        "select max(key) as key from dfs_test.`%s`", rootDate, rootTimpStmp);
-
-    String query3 = String.format(
-        "select key from dfs_test.`%s` \n" +
-        "union \n" +
-        "select max(key) as key from dfs_test.`%s`", rootDate, rootTimpStmp);
+    String rootDate = "/store/json/dateData.json";
+    String rootTimpStmp = "/store/json/timeStmpData.json";
 
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("(select max(key) as key from cp.`%s` " +
+            "union select key from cp.`%s`)", rootDate, rootTimpStmp)
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q18_1.tsv")
         .baselineTypes(TypeProtos.MinorType.VARCHAR)
@@ -440,7 +400,8 @@ public class TestUnionDistinct extends BaseTestQuery {
         .run();
 
     testBuilder()
-        .sqlQuery(query2)
+        .sqlQuery("select key from cp.`%s` " +
+            "union select max(key) as key from cp.`%s`", rootDate, rootTimpStmp)
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q18_2.tsv")
         .baselineTypes(TypeProtos.MinorType.VARCHAR)
@@ -449,7 +410,8 @@ public class TestUnionDistinct extends BaseTestQuery {
         .run();
 
     testBuilder()
-        .sqlQuery(query3)
+        .sqlQuery("select key from cp.`%s` " +
+            "union select max(key) as key from cp.`%s`", rootDate, rootTimpStmp)
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/q18_3.tsv")
         .baselineTypes(TypeProtos.MinorType.VARCHAR)
@@ -460,21 +422,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctOneInputContainsAggFunction() throws Exception {
-    String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
-    String query1 = String.format("select * from ((select count(c1) as ct from (select columns[0] c1 from dfs.`%s`)) \n" +
-        "union \n" +
-        "(select columns[0] c2 from dfs.`%s`)) order by ct limit 3", root, root);
-
-    String query2 = String.format("select * from ((select columns[0] ct from dfs.`%s`) \n" +
-        "union \n" +
-        "(select count(c1) as c2 from (select columns[0] c1 from dfs.`%s`))) order by ct limit 3", root, root);
-
-    String query3 = String.format("select * from ((select count(c1) as ct from (select columns[0] c1 from dfs.`%s`) )\n" +
-        "union \n" +
-        "(select count(c1) as c2 from (select columns[0] c1 from dfs.`%s`))) order by ct", root, root);
+    String root = "/multilevel/csv/1994/Q1/orders_94_q1.csv";
 
     testBuilder()
-        .sqlQuery(query1)
+        .sqlQuery("select * from ((select count(c1) as ct from (select columns[0] c1 from cp.`%s`)) " +
+          "union (select columns[0] c2 from dfs.`%s`)) order by ct limit 3", root, root)
         .unOrdered()
         .baselineColumns("ct")
         .baselineValues((long) 10)
@@ -484,7 +436,8 @@ public class TestUnionDistinct extends BaseTestQuery {
         .run();
 
     testBuilder()
-        .sqlQuery(query2)
+        .sqlQuery("select * from ((select columns[0] ct from dfs.`%s`) " +
+          "union (select count(c1) as c2 from (select columns[0] c1 from dfs.`%s`))) order by ct limit 3", root, root)
         .unOrdered()
         .baselineColumns("ct")
         .baselineValues((long) 10)
@@ -494,7 +447,8 @@ public class TestUnionDistinct extends BaseTestQuery {
         .run();
 
     testBuilder()
-        .sqlQuery(query3)
+        .sqlQuery("select * from ((select count(c1) as ct from (select columns[0] c1 from dfs.`%s`))" +
+          "union (select count(c1) as c2 from (select columns[0] c1 from dfs.`%s`))) order by ct", root, root)
         .unOrdered()
         .baselineColumns("ct")
         .baselineValues((long) 10)
@@ -504,11 +458,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctDiffTypesAtPlanning() throws Exception {
-    String query = "select count(c1) as ct from (select cast(r_regionkey as int) c1 from cp.`tpch/region.parquet`) \n" +
-        "union \n" +
-        "(select cast(r_regionkey as int) c2 from cp.`tpch/region.parquet`)";
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select count(c1) as ct from (select cast(r_regionkey as int) c1 from cp.`tpch/region.parquet`) " +
+          "union (select cast(r_regionkey as int) c2 from cp.`tpch/region.parquet`)")
         .unOrdered()
         .baselineColumns("ct")
         .baselineValues((long) 5)
@@ -523,16 +475,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctRightEmptyJson() throws Exception {
-    String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
-    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
-
-    String queryRightEmpty = String.format(
-        "select key from dfs_test.`%s` \n" +
-        "union \n" +
-        "select key from dfs_test.`%s`", rootSimple, rootEmpty);
-
     testBuilder()
-        .sqlQuery(queryRightEmpty)
+        .sqlQuery("select key from cp.`project/pushdown/empty.json` " +
+          "union select key from cp.`store/json/booleanData.json`")
         .unOrdered()
         .baselineColumns("key")
         .baselineValues(true)
@@ -543,18 +488,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctLeftEmptyJson() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
-    final String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
-
-    final String queryLeftEmpty = String.format(
-        "select key from dfs_test.`%s` " +
-            "union " +
-            "select key from dfs_test.`%s`",
-        rootEmpty,
-        rootSimple);
-
     testBuilder()
-        .sqlQuery(queryLeftEmpty)
+        .sqlQuery("select key from cp.`project/pushdown/empty.json` " +
+          "union select key from cp.`store/json/booleanData.json`")
         .unOrdered()
         .baselineColumns("key")
         .baselineValues(true)
@@ -565,14 +501,7 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctBothEmptyJson() throws Exception {
-    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
-    final String query = String.format(
-        "select key from dfs_test.`%s` " +
-            "union " +
-            "select key from dfs_test.`%s`",
-        rootEmpty,
-        rootEmpty);
-
+    final String rootEmpty = "project/pushdown/empty.json";
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.INT)
@@ -581,7 +510,8 @@ public class TestUnionDistinct extends BaseTestQuery {
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select key from cp.`%s` union select key from cp.`%s`",
+          rootEmpty, rootEmpty)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -589,17 +519,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctRightEmptyDataBatch() throws Exception {
-    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
-
-    String queryRightEmptyBatch = String.format(
-        "select key from dfs_test.`%s` " +
-            "union " +
-            "select key from dfs_test.`%s` where 1 = 0",
-        rootSimple,
-        rootSimple);
+    final String rootSimple = "store/json/booleanData.json";
 
     testBuilder()
-        .sqlQuery(queryRightEmptyBatch)
+        .sqlQuery("select key from cp.`%s` union select key from cp.`%s` where 1 = 0",
+          rootSimple, rootSimple)
         .unOrdered()
         .baselineColumns("key")
         .baselineValues(true)
@@ -609,17 +533,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctLeftEmptyDataBatch() throws Exception {
-    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
-
-    final String queryLeftBatch = String.format(
-        "select key from dfs_test.`%s` where 1 = 0 " +
-            "union " +
-            "select key from dfs_test.`%s`",
-        rootSimple,
-        rootSimple);
+    final String rootSimple = "store/json/booleanData.json";
 
     testBuilder()
-        .sqlQuery(queryLeftBatch)
+        .sqlQuery("select key from cp.`%s` where 1 = 0 union select key from cp.`%s`",
+          rootSimple, rootSimple)
         .unOrdered()
         .baselineColumns("key")
         .baselineValues(true)
@@ -630,13 +548,7 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctBothEmptyDataBatch() throws Exception {
-    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
-    final String query = String.format(
-        "select key from dfs_test.`%s` where 1 = 0 " +
-            "union " +
-            "select key from dfs_test.`%s` where 1 = 0",
-        rootSimple,
-        rootSimple);
+    final String rootSimple = "store/json/booleanData.json";
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
@@ -646,7 +558,9 @@ public class TestUnionDistinct extends BaseTestQuery {
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select key from cp.`%s` where 1 = 0 " +
+            "union select key from cp.`%s` where 1 = 0",
+          rootSimple, rootSimple)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -654,13 +568,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testFilterPushDownOverUnionDistinct() throws Exception {
-    String query = "select n_regionkey from \n"
-        + "(select n_regionkey from cp.`tpch/nation.parquet` union select r_regionkey from cp.`tpch/region.parquet`) \n"
-        + "where n_regionkey > 0 and n_regionkey < 2 \n"
-        + "order by n_regionkey";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select n_regionkey from "
+          + "(select n_regionkey from cp.`tpch/nation.parquet` union select r_regionkey from cp.`tpch/region.parquet`) "
+          + "where n_regionkey > 0 and n_regionkey < 2 "
+          + "order by n_regionkey")
         .ordered()
         .baselineColumns("n_regionkey")
         .baselineValues(1)
@@ -670,14 +582,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testInListPushDownOverUnionDistinct() throws Exception {
-    String query = "select n_nationkey \n" +
-        "from (select n1.n_nationkey from cp.`tpch/nation.parquet` n1 inner join cp.`tpch/region.parquet` r1 on n1.n_regionkey = r1.r_regionkey \n" +
-        "union \n" +
-        "select n2.n_nationkey from cp.`tpch/nation.parquet` n2 inner join cp.`tpch/region.parquet` r2 on n2.n_regionkey = r2.r_regionkey) \n" +
-        "where n_nationkey in (1, 2)";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select n_nationkey " +
+          "from (select n1.n_nationkey from cp.`tpch/nation.parquet` n1 inner join cp.`tpch/region.parquet` r1 on n1.n_regionkey = r1.r_regionkey " +
+          "union select n2.n_nationkey from cp.`tpch/nation.parquet` n2 inner join cp.`tpch/region.parquet` r2 on n2.n_regionkey = r2.r_regionkey) " +
+          "where n_nationkey in (1, 2)")
         .unOrdered()
         .baselineColumns("n_nationkey")
         .baselineValues(1)
@@ -688,15 +597,13 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testFilterPushDownOverUnionDistinctCSV() throws Exception {
-    String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
-    String query = String.format("select ct \n" +
-        "from ((select count(c1) as ct from (select columns[0] c1 from dfs.`%s`)) \n" +
-        "union \n" +
-        "(select columns[0] c2 from dfs.`%s`)) \n" +
-        "where ct < 100", root, root);
+    final String root = "/multilevel/csv/1994/Q1/orders_94_q1.csv";
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select ct " +
+          "from ((select count(c1) as ct from (select columns[0] c1 from cp.`%s`)) " +
+          "union (select columns[0] c2 from cp.`%s`)) " +
+          "where ct < 100", root, root)
         .ordered()
         .baselineColumns("ct")
         .baselineValues((long) 10)
@@ -708,12 +615,10 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testProjectPushDownOverUnionDistinctWithProject() throws Exception {
-    String query = "select n_nationkey, n_name from \n" +
-        "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` \n" +
-        "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select n_nationkey, n_name from " +
+          "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` " +
+          "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testProjectPushDownOverUnionDistinctWithProject.tsv")
         .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
@@ -724,12 +629,10 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testProjectPushDownOverUnionDistinctWithoutProject() throws Exception {
-    String query = "select n_nationkey from \n" +
-        "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` \n" +
-        "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select n_nationkey from " +
+          "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` " +
+          "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testProjectPushDownOverUnionDistinctWithoutProject.tsv")
         .baselineTypes(TypeProtos.MinorType.INT)
@@ -740,13 +643,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testProjectWithExpressionPushDownOverUnionDistinct() throws Exception {
-    String query = "select 2 * n_nationkey as col from \n" +
-        "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` \n" +
-        "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)";
-
     // Validate the result
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select 2 * n_nationkey as col from " +
+          "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` " +
+          "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testProjectWithExpressionPushDownOverUnionDistinct.tsv")
         .baselineTypes(TypeProtos.MinorType.INT)
@@ -757,14 +658,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testProjectDownOverUnionDistinctImplicitCasting() throws Exception {
-    String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();
-    String query = String.format("select 2 * n_nationkey as col from \n" +
-        "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` \n" +
-        "union select columns[0], columns[1], columns[2] from dfs.`%s`) \n" +
-        "order by col limit 10", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select 2 * n_nationkey as col from " +
+          "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` " +
+          "union select columns[0], columns[1], columns[2] from cp.`store/text/data/nations.csv`) " +
+          "order by col limit 10")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testProjectDownOverUnionDistinctImplicitCasting.tsv")
         .baselineTypes(TypeProtos.MinorType.INT)
@@ -775,12 +673,10 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testProjectPushDownProjectColumnReorderingAndAlias() throws Exception {
-    String query = "select n_comment as col1, n_nationkey as col2, n_name as col3 from \n" +
-        "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` \n" +
-        "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select n_comment as col1, n_nationkey as col2, n_name as col3 from " +
+          "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` " +
+          "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testProjectPushDownProjectColumnReorderingAndAlias.tsv")
         .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
@@ -791,13 +687,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testProjectFiltertPushDownOverUnionDistinct() throws Exception {
-    String query = "select n_nationkey from \n" +
-        "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` \n" +
-        "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`) \n" +
-        "where n_nationkey > 0 and n_nationkey < 4";
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select n_nationkey from " +
+          "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` " +
+          "union select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`) " +
+          "where n_nationkey > 0 and n_nationkey < 4")
         .unOrdered()
         .csvBaselineFile("testframework/unionDistinct/testProjectFiltertPushDownOverUnionDistinct.tsv")
         .baselineTypes(TypeProtos.MinorType.INT)
@@ -808,9 +702,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test // DRILL-3296
   public void testGroupByUnionDistinct() throws Exception {
-    String query = "select n_nationkey from \n" +
-        "(select n_nationkey from cp.`tpch/nation.parquet` \n" +
-        "union select n_nationkey from cp.`tpch/nation.parquet`) \n" +
+    String query = "select n_nationkey from " +
+        "(select n_nationkey from cp.`tpch/nation.parquet` " +
+        "union select n_nationkey from cp.`tpch/nation.parquet`) " +
         "group by n_nationkey";
 
 
@@ -833,11 +727,11 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test // DRILL-4147 // union-distinct base case
   public void testDrill4147_1() throws Exception {
-    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
-    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+    final String l = "/multilevel/parquet/1994";
+    final String r = "/multilevel/parquet/1995";
 
-    final String query = String.format("SELECT o_custkey FROM dfs_test.`%s` \n" +
-        "Union distinct SELECT o_custkey FROM dfs_test.`%s`", l, r);
+    final String query = String.format("SELECT o_custkey FROM dfs.`%s` \n" +
+        "Union distinct SELECT o_custkey FROM dfs.`%s`", l, r);
 
     // Validate the plan
     final String[] expectedPlan = {"(?s)UnionExchange.*HashAgg.*HashToRandomExchange.*UnionAll.*"};

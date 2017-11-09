@@ -25,7 +25,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.HbaseStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;

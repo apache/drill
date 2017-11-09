@@ -700,10 +700,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     }
   }
 
-//  private boolean isOutgoingFull() {
-//    return outgoingPosition == DEFAULT_ALLOC_RECORD_COUNT;
-//  }
-
   /**
    * Creates a generate class which implements the copy and compare methods.
    *
@@ -713,7 +709,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private MergingReceiverGeneratorBase createMerger() throws SchemaChangeException {
 
     try {
-      final CodeGenerator<MergingReceiverGeneratorBase> cg = CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+      final CodeGenerator<MergingReceiverGeneratorBase> cg = CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getOptions());
       cg.plainJavaCapable(true);
       // Uncomment out this line to debug the generated code.
       // cg.saveCodeForDebugging(true);

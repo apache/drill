@@ -16,7 +16,7 @@
  */
 package org.apache.drill.exec.work.prepare;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;

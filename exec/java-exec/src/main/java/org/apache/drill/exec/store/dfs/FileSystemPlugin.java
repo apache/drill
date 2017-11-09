@@ -65,6 +65,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException{
     this.config = config;
     this.lpPersistance = context.getLpPersistence();
+
     try {
 
       fsConf = new Configuration();

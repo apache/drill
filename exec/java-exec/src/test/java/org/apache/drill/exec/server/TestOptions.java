@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OptionsTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.UserExceptionMatcher;

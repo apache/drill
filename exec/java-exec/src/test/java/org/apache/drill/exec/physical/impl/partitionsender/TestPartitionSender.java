@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
 
@@ -67,11 +68,9 @@ import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 import com.google.common.collect.Lists;
@@ -94,31 +93,22 @@ public class TestPartitionSender extends PlanTestBase {
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
       .build();
 
-
-  public static TemporaryFolder testTempFolder = new TemporaryFolder();
-
-  private final static int NUM_DEPTS = 40;
-  private final static int NUM_EMPLOYEES = 1000;
-  private final static int DRILLBITS_COUNT = 3;
-
-  private static String empTableLocation;
+  private static final int NUM_DEPTS = 40;
+  private static final int NUM_EMPLOYEES = 1000;
+  private static final int DRILLBITS_COUNT = 3;
+  private static final String TABLE = "table";
 
   private static String groupByQuery;
 
   @BeforeClass
-  public static void setupTempFolder() throws IOException {
-    testTempFolder.create();
-  }
-
-  @BeforeClass
   public static void generateTestDataAndQueries() throws Exception {
     // Table consists of two columns "emp_id", "emp_name" and "dept_id"
-    empTableLocation = testTempFolder.newFolder().getAbsolutePath();
+    final File empTableLocation = dirTestWatcher.makeRootSubDir(Paths.get(TABLE));
 
     // Write 100 records for each new file
     final int empNumRecsPerFile = 100;
     for(int fileIndex=0; fileIndex<NUM_EMPLOYEES/empNumRecsPerFile; fileIndex++) {
-      File file = new File(empTableLocation + File.separator + fileIndex + ".json");
+      File file = new File(empTableLocation, fileIndex + ".json");
       PrintWriter printWriter = new PrintWriter(file);
       for (int recordIndex = fileIndex*empNumRecsPerFile; recordIndex < (fileIndex+1)*empNumRecsPerFile; recordIndex++) {
         String record = String.format("{ \"emp_id\" : %d, \"emp_name\" : \"Employee %d\", \"dept_id\" : %d }",
@@ -129,12 +119,7 @@ public class TestPartitionSender extends PlanTestBase {
     }
 
     // Initialize test queries
-    groupByQuery = String.format("SELECT dept_id, count(*) as numEmployees FROM dfs.`%s` GROUP BY dept_id", empTableLocation);
-  }
-
-  @AfterClass
-  public static void cleanupTempFolder() throws IOException {
-    testTempFolder.delete();
+    groupByQuery = String.format("SELECT dept_id, count(*) as numEmployees FROM dfs.`%s` GROUP BY dept_id", TABLE);
   }
 
   @Test

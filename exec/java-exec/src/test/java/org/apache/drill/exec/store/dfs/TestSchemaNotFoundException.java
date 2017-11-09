@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestTools;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -27,7 +27,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testSchemaNotFoundForWrongStoragePlgn() throws Exception {
-        final String table = String.format("%s/empty", TestTools.getTestResourcesPath());
+        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
         final String query = String.format("select * from dfs1.`%s`", table);
         try {
             testNoResult(query);
@@ -41,7 +41,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testSchemaNotFoundForWrongWorkspace() throws Exception {
-        final String table = String.format("%s/empty", TestTools.getTestResourcesPath());
+        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
         final String query = String.format("select * from dfs.tmp1.`%s`", table);
         try {
             testNoResult(query);
@@ -55,7 +55,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testSchemaNotFoundForWrongWorkspaceUsingDefaultWorkspace() throws Exception {
-        final String table = String.format("%s/empty", TestTools.getTestResourcesPath());
+        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
         final String query = String.format("select * from tmp1.`%s`", table);
         try {
             testNoResult("use dfs");
@@ -70,7 +70,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testTableNotFoundException() throws Exception {
-        final String table = String.format("%s/empty1", TestTools.getTestResourcesPath());
+        final String table = String.format("%s/empty1", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
         final String query = String.format("select * from tmp.`%s`", table);
         try {
             testNoResult("use dfs");
