@@ -63,12 +63,6 @@
           <strong>No histograms.</strong>
         </div>
       </div>
-      <h3 id="meters">Meters</h3>
-      <div id="metersVal">
-        <div class="alert alert-info">
-          <strong>No meters.</strong>
-        </div>
-      </div>
       <h3 id="timers">Timers</h3>
       <div id="timersVal">
         <div class="alert alert-info">
@@ -161,7 +155,6 @@
         if(! $.isEmptyObject(metrics.timers)) createTable(metrics.timers, "timers");
         if(! $.isEmptyObject(metrics.histograms)) createTable(metrics.histograms, "histograms");
         if(! $.isEmptyObject(metrics.counters)) createCountersTable(metrics.counters);
-        if(! $.isEmptyObject(metrics.meters)) $("#metersVal").html(JSON.stringify(metrics.meters, null, 2));
       });
     };
 
