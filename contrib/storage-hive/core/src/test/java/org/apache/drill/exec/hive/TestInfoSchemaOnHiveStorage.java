@@ -67,9 +67,10 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("hive.skipper", "kv_text_large")
         .baselineValues("hive.skipper", "kv_incorrect_skip_header")
         .baselineValues("hive.skipper", "kv_incorrect_skip_footer")
-        .baselineValues("hive.skipper", "kv_rcfile_large")
-        .baselineValues("hive.skipper", "kv_parquet_large")
-        .baselineValues("hive.skipper", "kv_sequencefile_large")
+        .baselineValues("hive.skipper", "kv_text_header_only")
+        .baselineValues("hive.skipper", "kv_text_footer_only")
+        .baselineValues("hive.skipper", "kv_text_header_footer_only")
+        .baselineValues("hive.skipper", "kv_text_with_part")
         .go();
   }
 
@@ -258,9 +259,10 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("DRILL", "hive.skipper", "kv_text_large", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_header", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_footer", "TABLE")
-        .baselineValues("DRILL", "hive.skipper", "kv_rcfile_large", "TABLE")
-        .baselineValues("DRILL", "hive.skipper", "kv_parquet_large", "TABLE")
-        .baselineValues("DRILL", "hive.skipper", "kv_sequencefile_large", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_header_only", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_footer_only", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_header_footer_only", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_with_part", "TABLE")
         .go();
   }
 

@@ -493,33 +493,43 @@ public class TestHiveStorage extends HiveTestBase {
     }
   }
 
-  @Test // DRILL-3688
-  public void testIgnoreSkipHeaderFooterForRcfile() throws Exception {
+  @Test
+  public void testTableWithHeaderOnly() throws Exception {
     testBuilder()
-        .sqlQuery("select count(1) as cnt from hive.skipper.kv_rcfile_large")
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_header_only")
         .unOrdered()
         .baselineColumns("cnt")
-        .baselineValues(5000L)
+        .baselineValues(0L)
         .go();
   }
 
-  @Test // DRILL-3688
-  public void testIgnoreSkipHeaderFooterForParquet() throws Exception {
+  @Test
+  public void testTableWithFooterOnly() throws Exception {
     testBuilder()
-        .sqlQuery("select count(1) as cnt from hive.skipper.kv_parquet_large")
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_footer_only")
         .unOrdered()
         .baselineColumns("cnt")
-        .baselineValues(5000L)
+        .baselineValues(0L)
         .go();
   }
 
-  @Test // DRILL-3688
-  public void testIgnoreSkipHeaderFooterForSequencefile() throws Exception {
+  @Test
+  public void testTableWithHeaderFooterOnly() throws Exception {
     testBuilder()
-        .sqlQuery("select count(1) as cnt from hive.skipper.kv_sequencefile_large")
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_header_footer_only")
         .unOrdered()
         .baselineColumns("cnt")
-        .baselineValues(5000L)
+        .baselineValues(0L)
+        .go();
+  }
+
+  @Test
+  public void testSkipHeaderFooterForPartitionedTable() throws Exception {
+    testBuilder()
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_with_part")
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(4980L)
         .go();
   }
 

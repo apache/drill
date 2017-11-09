@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -490,35 +490,37 @@ public class HiveTestDataGenerator {
 
     // Create text tables with skip header and footer table property
     executeQuery(hiveDriver, "create database if not exists skipper");
-    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_small", "textfile", "1", "1"));
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_small", "textfile", "1", "1", false));
     executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_small", 5, 1, 1));
 
-    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_large", "textfile", "2", "2"));
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_large", "textfile", "2", "2", false));
     executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_large", 5000, 2, 2));
 
-    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_header", "textfile", "A", "1"));
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_header", "textfile", "A", "1", false));
     executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_header", 5, 1, 1));
 
-    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_footer", "textfile", "1", "A"));
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_footer", "textfile", "1", "A", false));
     executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_footer", 5, 1, 1));
 
-    // Create rcfile table with skip header and footer table property
-    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_rcfile_large", "rcfile", "1", "1"));
-    executeQuery(hiveDriver, "insert into table skipper.kv_rcfile_large select * from skipper.kv_text_large");
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_header_only", "textfile", "5", "0", false));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_header_only", 0, 5, 0));
 
-    // Create parquet table with skip header and footer table property
-    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_parquet_large", "parquet", "1", "1"));
-    executeQuery(hiveDriver, "insert into table skipper.kv_parquet_large select * from skipper.kv_text_large");
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_footer_only", "textfile", "0", "5", false));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_footer_only", 0, 0, 5));
 
-    // Create sequencefile table with skip header and footer table property
-    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_sequencefile_large", "sequencefile", "1", "1"));
-    executeQuery(hiveDriver, "insert into table skipper.kv_sequencefile_large select * from skipper.kv_text_large");
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_header_footer_only", "textfile", "5", "5", false));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_header_footer_only", 0, 5, 5));
 
-      // Create a table based on json file
-      executeQuery(hiveDriver, "create table default.simple_json(json string)");
-      final String loadData = String.format("load data local inpath '" +
-          Resources.getResource("simple.json") + "' into table default.simple_json");
-      executeQuery(hiveDriver, loadData);
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_with_part", "textfile", "5", "5", true));
+    executeQuery(hiveDriver, "insert overwrite table skipper.kv_text_with_part partition (part) " +
+    "select key, value, key % 2 as part from skipper.kv_text_large");
+
+    // Create a table based on json file
+    executeQuery(hiveDriver, "create table default.simple_json(json string)");
+    final String loadData = "load data local inpath '" +
+        Resources.getResource("simple.json") + "' into table default.simple_json";
+    executeQuery(hiveDriver, loadData);
+
     ss.close();
   }
 
@@ -576,23 +578,41 @@ public class HiveTestDataGenerator {
     return file.getPath();
   }
 
-  private String createTableWithHeaderFooterProperties(String tableName, String format, String headerValue, String footerValue) {
-    return String.format("create table %s (key int, value string) stored as %s tblproperties('%s'='%s', '%s'='%s')",
-        tableName, format, serdeConstants.HEADER_COUNT, headerValue, serdeConstants.FOOTER_COUNT, footerValue);
+  private String createTableWithHeaderFooterProperties(String tableName,
+                                                       String format,
+                                                       String headerValue,
+                                                       String footerValue,
+                                                       boolean hasPartitions) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("create table ").append(tableName);
+    sb.append(" (key int, value string) ");
+    if (hasPartitions) {
+      sb.append("partitioned by (part bigint) ");
+    }
+    sb.append(" stored as ").append(format);
+    sb.append(" tblproperties(");
+    sb.append("'").append(serdeConstants.HEADER_COUNT).append("'='").append(headerValue).append("'");
+    sb.append(",");
+    sb.append("'").append(serdeConstants.FOOTER_COUNT).append("'='").append(footerValue).append("'");
+    sb.append(")");
+
+    return sb.toString();
   }
 
   private String generateTestDataWithHeadersAndFooters(String tableName, int rowCount, int headerLines, int footerLines) {
     StringBuilder sb = new StringBuilder();
     sb.append("insert into table ").append(tableName).append(" (key, value) values ");
-    int length = sb.length();
     sb.append(StringUtils.repeat("('key_header', 'value_header')", ",", headerLines));
+    if (headerLines > 0) {
+      sb.append(",");
+    }
     for (int i  = 1; i <= rowCount; i++) {
-        sb.append(",(").append(i).append(",").append("'key_").append(i).append("')");
+        sb.append("(").append(i).append(",").append("'key_").append(i).append("'),");
     }
-    if (headerLines <= 0) {
-      sb.deleteCharAt(length);
+    if (footerLines <= 0) {
+      sb.deleteCharAt(sb.length() - 1);
     }
-    sb.append(StringUtils.repeat(",('key_footer', 'value_footer')", footerLines));
+    sb.append(StringUtils.repeat("('key_footer', 'value_footer')", ",", footerLines));
 
     return sb.toString();
   }

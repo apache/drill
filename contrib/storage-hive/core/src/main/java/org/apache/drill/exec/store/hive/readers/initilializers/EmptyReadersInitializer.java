@@ -15,26 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.hive;
+package org.apache.drill.exec.store.hive.readers.initilializers;
 
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.hive.HiveSubScan;
+import org.apache.drill.exec.store.hive.readers.HiveAbstractReader;
+import org.apache.drill.exec.store.hive.readers.initilializers.AbstractReadersInitializer;
+import org.apache.hadoop.mapred.InputSplit;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.ScanBatch;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.hive.readers.initilializers.AbstractReadersInitializer;
-import org.apache.drill.exec.store.hive.readers.initilializers.ReadersInitializer;
+/**
+ * If table is empty creates an empty record reader to output the schema.
+ */
+public class EmptyReadersInitializer extends AbstractReadersInitializer {
 
-@SuppressWarnings("unused")
-public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
+  public EmptyReadersInitializer(FragmentContext context, HiveSubScan config, Class<? extends HiveAbstractReader> readerClass) {
+    super(context, config, readerClass);
+  }
 
   @Override
-  public ScanBatch getBatch(FragmentContext context, HiveSubScan config, List<RecordBatch> children)
-      throws ExecutionSetupException {
-    AbstractReadersInitializer readersInitializer = ReadersInitializer.getInitializer(context, config);
-    return new ScanBatch(config, context, readersInitializer.init());
+  public List<RecordReader> init() {
+    List<RecordReader> readers = new ArrayList<>(1);
+    Constructor<? extends HiveAbstractReader> readerConstructor = createReaderConstructor();
+    readers.add(createReader(readerConstructor, null, null));
+    return readers;
   }
 
 }
