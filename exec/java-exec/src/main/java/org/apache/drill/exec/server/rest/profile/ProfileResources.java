@@ -63,7 +63,7 @@ import com.google.common.collect.Lists;
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class ProfileResources {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
 
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
@@ -217,7 +217,8 @@ public class ProfileResources {
             runningQueries.add(
                 new ProfileInfo(work.getContext().getConfig(),
                     runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(),
-                    profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(),
+                    profile.getForeman().getAddress(), profile.getQuery(),
+                    ProfileUtil.getQueryStateDisplayName(profile.getState()),
                     profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
@@ -247,7 +248,8 @@ public class ProfileResources {
             finishedQueries.add(
                 new ProfileInfo(work.getContext().getConfig(),
                     profileEntry.getKey(), profile.getStart(), profile.getEnd(),
-                    profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(),
+                    profile.getForeman().getAddress(), profile.getQuery(),
+                    ProfileUtil.getQueryStateDisplayName(profile.getState()),
                     profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
           }
         } catch (Exception e) {
