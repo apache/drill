@@ -34,6 +34,7 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.hive.readers.HiveDefaultReader;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
@@ -61,7 +62,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
   public ScanBatch getBatch(FragmentContext context, HiveDrillNativeParquetSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
     final HiveTableWithColumnCache table = config.getTable();
-    final List<InputSplit> splits = config.getInputSplits();
+    final List<List<InputSplit>> splits = config.getInputSplits();
     final List<HivePartition> partitions = config.getPartitions();
     final List<SchemaPath> columns = config.getColumns();
     final String partitionDesignator = context.getOptions()
@@ -102,58 +103,60 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
 
     Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
     try {
-      for (InputSplit split : splits) {
-        final FileSplit fileSplit = (FileSplit) split;
-        final Path finalPath = fileSplit.getPath();
-        final JobConf cloneJob =
-            new ProjectionPusher().pushProjectionsAndFilters(new JobConf(conf), finalPath.getParent());
-        final FileSystem fs = finalPath.getFileSystem(cloneJob);
+      for (List<InputSplit> splitGroups : splits) {
+        for (InputSplit split : splitGroups) {
+          final FileSplit fileSplit = (FileSplit) split;
+          final Path finalPath = fileSplit.getPath();
+          final JobConf cloneJob =
+              new ProjectionPusher().pushProjectionsAndFilters(new JobConf(conf), finalPath.getParent());
+          final FileSystem fs = finalPath.getFileSystem(cloneJob);
 
-        ParquetMetadata parquetMetadata = footerCache.get(finalPath.toString());
-        if (parquetMetadata == null){
-          parquetMetadata = ParquetFileReader.readFooter(cloneJob, finalPath);
-          footerCache.put(finalPath.toString(), parquetMetadata);
-        }
-        final List<Integer> rowGroupNums = getRowGroupNumbersFromFileSplit(fileSplit, parquetMetadata);
-
-        for(int rowGroupNum : rowGroupNums) {
-          //DRILL-5009 : Skip the row group if the row count is zero
-          if (parquetMetadata.getBlocks().get(rowGroupNum).getRowCount() == 0) {
-            continue;
+          ParquetMetadata parquetMetadata = footerCache.get(finalPath.toString());
+          if (parquetMetadata == null) {
+            parquetMetadata = ParquetFileReader.readFooter(cloneJob, finalPath);
+            footerCache.put(finalPath.toString(), parquetMetadata);
           }
-          // Drill has only ever written a single row group per file, only detect corruption
-          // in the first row group
-          ParquetReaderUtility.DateCorruptionStatus containsCorruptDates =
-              ParquetReaderUtility.detectCorruptDates(parquetMetadata, config.getColumns(), true);
-          if (logger.isDebugEnabled()) {
-            logger.debug(containsCorruptDates.toString());
-          }
-          readers.add(new ParquetRecordReader(
-                  context,
-                  Path.getPathWithoutSchemeAndAuthority(finalPath).toString(),
-                  rowGroupNum, fs,
-                  CodecFactory.createDirectCodecFactory(fs.getConf(),
-                      new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
-                  parquetMetadata,
-                  newColumns,
-                  containsCorruptDates)
-          );
-          Map<String, String> implicitValues = Maps.newLinkedHashMap();
+          final List<Integer> rowGroupNums = getRowGroupNumbersFromFileSplit(fileSplit, parquetMetadata);
 
-          if (hasPartitions) {
-            List<String> values = partitions.get(currentPartitionIndex).getValues();
-            for (int i = 0; i < values.size(); i++) {
-              if (selectAllQuery || selectedPartitionColumns.contains(i)) {
-                implicitValues.put(partitionDesignator + i, values.get(i));
+          for (int rowGroupNum : rowGroupNums) {
+            //DRILL-5009 : Skip the row group if the row count is zero
+            if (parquetMetadata.getBlocks().get(rowGroupNum).getRowCount() == 0) {
+              continue;
+            }
+            // Drill has only ever written a single row group per file, only detect corruption
+            // in the first row group
+            ParquetReaderUtility.DateCorruptionStatus containsCorruptDates =
+                ParquetReaderUtility.detectCorruptDates(parquetMetadata, config.getColumns(), true);
+            if (logger.isDebugEnabled()) {
+              logger.debug(containsCorruptDates.toString());
+            }
+            readers.add(new ParquetRecordReader(
+                context,
+                Path.getPathWithoutSchemeAndAuthority(finalPath).toString(),
+                rowGroupNum, fs,
+                CodecFactory.createDirectCodecFactory(fs.getConf(),
+                    new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
+                parquetMetadata,
+                newColumns,
+                containsCorruptDates)
+            );
+            Map<String, String> implicitValues = Maps.newLinkedHashMap();
+
+            if (hasPartitions) {
+              List<String> values = partitions.get(currentPartitionIndex).getValues();
+              for (int i = 0; i < values.size(); i++) {
+                if (selectAllQuery || selectedPartitionColumns.contains(i)) {
+                  implicitValues.put(partitionDesignator + i, values.get(i));
+                }
               }
             }
+            implicitColumns.add(implicitValues);
+            if (implicitValues.size() > mapWithMaxColumns.size()) {
+              mapWithMaxColumns = implicitValues;
+            }
           }
-          implicitColumns.add(implicitValues);
-          if (implicitValues.size() > mapWithMaxColumns.size()) {
-            mapWithMaxColumns = implicitValues;
-          }
+          currentPartitionIndex++;
         }
-        currentPartitionIndex++;
       }
     } catch (final IOException|RuntimeException e) {
       AutoCloseables.close(e, readers);
