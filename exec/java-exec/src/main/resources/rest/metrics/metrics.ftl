@@ -98,6 +98,22 @@
       });
     };
 
+    function createCountersTable(counters) {
+      $("#countersVal").html(function() {
+        var table = "<table class=\"table table-striped\" id=\"countersTable\">";
+        table += "<tbody>";
+        $.each(counters, function(key, value) {
+          table += "<tr>";
+          table += "<td>" + key + "</td>";
+          table += "<td>" + value.count + "</td>";
+          table += "</tr>";
+        });
+        table += "</tbody>";
+        table += "</table>";
+        return table;
+      });
+    };
+
     function updateBars(gauges) {
       $.each(["heap","non-heap","total"], function(i, key) {
         var used    = gauges[key + ".used"].value;
@@ -138,21 +154,14 @@
       });
     };
 
-    function updateOthers(metrics) {
-      $.each(["counters", "meters"], function(i, key) {
-        if(! $.isEmptyObject(metrics[key])) {
-          $("#" + key + "Val").html(JSON.stringify(metrics[key], null, 2));
-        }
-      });
-    };
-
     var update = function() {
       $.get("/status/metrics", function(metrics) {
         updateGauges(metrics.gauges);
         updateBars(metrics.gauges);
         if(! $.isEmptyObject(metrics.timers)) createTable(metrics.timers, "timers");
         if(! $.isEmptyObject(metrics.histograms)) createTable(metrics.histograms, "histograms");
-        updateOthers(metrics);
+        if(! $.isEmptyObject(metrics.counters)) createCountersTable(metrics.counters);
+        if(! $.isEmptyObject(metrics.meters)) $("#metersVal").html(JSON.stringify(metrics.meters, null, 2));
       });
     };
 
