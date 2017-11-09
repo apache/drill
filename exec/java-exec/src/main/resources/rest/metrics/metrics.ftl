@@ -63,12 +63,6 @@
           <strong>No histograms.</strong>
         </div>
       </div>
-      <h3 id="meters">Meters</h3>
-      <div id="metersVal">
-        <div class="alert alert-info">
-          <strong>No meters.</strong>
-        </div>
-      </div>
       <h3 id="timers">Timers</h3>
       <div id="timersVal">
         <div class="alert alert-info">
@@ -94,6 +88,22 @@
           table += "</tr>";
         });
         table += "</tbody>";
+        return table;
+      });
+    };
+
+    function createCountersTable(counters) {
+      $("#countersVal").html(function() {
+        var table = "<table class=\"table table-striped\" id=\"countersTable\">";
+        table += "<tbody>";
+        $.each(counters, function(key, value) {
+          table += "<tr>";
+          table += "<td>" + key + "</td>";
+          table += "<td>" + value.count + "</td>";
+          table += "</tr>";
+        });
+        table += "</tbody>";
+        table += "</table>";
         return table;
       });
     };
@@ -138,21 +148,13 @@
       });
     };
 
-    function updateOthers(metrics) {
-      $.each(["counters", "meters"], function(i, key) {
-        if(! $.isEmptyObject(metrics[key])) {
-          $("#" + key + "Val").html(JSON.stringify(metrics[key], null, 2));
-        }
-      });
-    };
-
     var update = function() {
       $.get("/status/metrics", function(metrics) {
         updateGauges(metrics.gauges);
         updateBars(metrics.gauges);
         if(! $.isEmptyObject(metrics.timers)) createTable(metrics.timers, "timers");
         if(! $.isEmptyObject(metrics.histograms)) createTable(metrics.histograms, "histograms");
-        updateOthers(metrics);
+        if(! $.isEmptyObject(metrics.counters)) createCountersTable(metrics.counters);
       });
     };
 
