@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -194,41 +194,40 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   <#assign lowerName = minor.class?uncap_first />
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
   <#assign upperName = minor.class?upper_case />
-  <#assign capName = minor.class?cap_first />
-  <#assign vectName = capName />
-  <#assign vectName = "Nullable${capName}" />
+  <#assign vectName = minor.class?cap_first />
+  <#assign nullableVectName = "Nullable${vectName}" />
 
   <#if minor.class?starts_with("Decimal") >
-  public ${minor.class}Writer ${lowerName}(String name) {
+    @Override
+    public ${vectName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode) {
     // returns existing writer
     final FieldWriter writer = fields.get(name.toLowerCase());
     assert writer != null;
     return writer;
   }
 
-  public ${minor.class}Writer ${lowerName}(String name, int scale, int precision) {
-    final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.OPTIONAL, scale, precision);
+  public ${vectName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode, int scale, int precision) {
+    final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, dataMode, scale, precision);
   <#else>
-  private static final MajorType ${upperName}_TYPE = Types.optional(MinorType.${upperName});
-  @Override
-  public ${minor.class}Writer ${lowerName}(String name) {
+
+  public ${vectName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode) {
+    final MajorType ${upperName}_TYPE = Types.withMode(MinorType.${upperName}, dataMode);
   </#if>
     FieldWriter writer = fields.get(name.toLowerCase());
     if(writer == null) {
       ValueVector vector;
       ValueVector currentVector = container.getChild(name);
-      if (unionEnabled){
-        ${vectName}Vector v = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
-        writer = new PromotableWriter(v, container);
-        vector = v;
+      vector = dataMode == TypeProtos.DataMode.OPTIONAL ? container.addOrGet(name, ${upperName}_TYPE,
+        ${nullableVectName}Vector.class) : container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
+      if (unionEnabled) {
+        writer = new PromotableWriter(vector, container);
       } else {
-        ${vectName}Vector v = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
-        writer = new ${vectName}WriterImpl(v, this);
-        vector = v;
+        writer = dataMode == TypeProtos.DataMode.OPTIONAL ? new ${nullableVectName}WriterImpl((${nullableVectName}Vector) vector, this) :
+          new ${vectName}WriterImpl((${vectName}Vector) vector, this);
       }
       if (currentVector == null || currentVector != vector) {
         vector.allocateNewSafe();
-      } 
+      }
       writer.setPosition(${index});
       fields.put(name.toLowerCase(), writer);
     }

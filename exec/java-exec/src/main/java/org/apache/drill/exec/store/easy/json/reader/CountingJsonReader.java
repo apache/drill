@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,8 +23,7 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import io.netty.buffer.DrillBuf;
 
-import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
-import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor.JsonExceptionProcessingState;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 public class CountingJsonReader extends BaseJsonProcessor {
@@ -54,7 +53,7 @@ public class CountingJsonReader extends BaseJsonProcessor {
         // IllegalStateException(String.format("Cannot read from the middle of a record. Current token was %s",
         // token));
       }
-      writer.rootAsMap().bit("count").writeBit(1);
+      writer.rootAsMap().bit("count", TypeProtos.DataMode.OPTIONAL).writeBit(1);
       parser.skipChildren();
     } catch (com.fasterxml.jackson.core.JsonParseException ex) {
       if (ignoreJSONParseError()) {

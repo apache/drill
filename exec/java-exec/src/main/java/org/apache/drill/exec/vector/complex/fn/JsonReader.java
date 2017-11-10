@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,17 +21,15 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.BitSet;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.ListVectorOutput;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -333,24 +331,24 @@ public class JsonReader extends BaseJsonProcessor {
           break outside;
 
         case VALUE_FALSE: {
-          map.bit(fieldName).writeBit(0);
+          map.bit(fieldName, TypeProtos.DataMode.OPTIONAL).writeBit(0);
           break;
         }
         case VALUE_TRUE: {
-          map.bit(fieldName).writeBit(1);
+          map.bit(fieldName, TypeProtos.DataMode.OPTIONAL).writeBit(1);
           break;
         }
         case VALUE_NULL:
           // do nothing as we don't have a type.
           break;
         case VALUE_NUMBER_FLOAT:
-          map.float8(fieldName).writeFloat8(parser.getDoubleValue());
+          map.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(parser.getDoubleValue());
           break;
         case VALUE_NUMBER_INT:
           if (this.readNumbersAsDouble) {
-            map.float8(fieldName).writeFloat8(parser.getDoubleValue());
+            map.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(parser.getDoubleValue());
           } else {
-            map.bigInt(fieldName).writeBigInt(parser.getLongValue());
+            map.bigInt(fieldName, TypeProtos.DataMode.OPTIONAL).writeBigInt(parser.getLongValue());
           }
           break;
         case VALUE_STRING:
@@ -471,7 +469,7 @@ public class JsonReader extends BaseJsonProcessor {
 
   private void handleString(JsonParser parser, MapWriter writer,
       String fieldName) throws IOException {
-    writer.varChar(fieldName).writeVarChar(0,
+    writer.varChar(fieldName, TypeProtos.DataMode.OPTIONAL).writeVarChar(0,
         workingBuffer.prepareVarCharHolder(parser.getText()),
         workingBuffer.getBuf());
   }

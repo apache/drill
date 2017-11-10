@@ -17,12 +17,23 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import static org.apache.drill.test.TestBuilder.mapOf;
+
 import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.nio.file.Paths;
 
 public class TestParquetComplex extends BaseTestQuery {
 
   private static final String DATAFILE = "cp.`store/parquet/complex/complex.parquet`";
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("store", "parquet", "complex", "files_with_complex_and_primitive_types"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("store", "parquet", "complex", "nested_types.parquet"));
+  }
 
   @Test
   public void sort() throws Exception {
@@ -189,6 +200,38 @@ public class TestParquetComplex extends BaseTestQuery {
         .unOrdered()
         .jsonBaselineFile("store/parquet/complex/baseline8.json")
         .baselineColumns(columns)
+        .build()
+        .run();
+  }
+
+  @Test //DRILL-5970
+  public void testParquetComplexTypesAggregation() throws Exception {
+    final String query = "select bucket, count(*) as number from " +
+        "dfs.`store/parquet/complex/files_with_complex_and_primitive_types` group by bucket";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("bucket", "number")
+        .baselineValues("Bucket1", 2L)
+        .build()
+        .run();
+  }
+
+  @Test //DRILL-5970
+  public void testNestedOptionalRequiredTypes() throws Exception {
+    final String query = "select t.`map_field`.`map`[0] as optional_map from dfs.`store/parquet/complex/nested_types.parquet` t";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("optional_map")
+        .baselineValues(mapOf())
+        .baselineValues(mapOf("key", "Google", "value", 1L))
+        .baselineValues(mapOf())
+        .baselineValues(mapOf("key", "WhatsApp", "value", 2L))
+        .baselineValues(mapOf())
+        .baselineValues(mapOf("key", "Facebook", "value", 3L))
         .build()
         .run();
   }

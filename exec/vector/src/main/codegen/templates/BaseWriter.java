@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,12 +52,11 @@ package org.apache.drill.exec.vector.complex.writer;
     <#list vv.types as type><#list type.minor as minor>
     <#assign lowerName = minor.class?uncap_first />
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
-    <#assign upperName = minor.class?upper_case />
     <#assign capName = minor.class?cap_first />
     <#if minor.class?starts_with("Decimal") >
-    ${capName}Writer ${lowerName}(String name, int scale, int precision);
+    ${capName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode, int scale, int precision);
     </#if>
-    ${capName}Writer ${lowerName}(String name);
+    ${capName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode);
     </#list></#list>
 
     void copyReaderToField(String name, FieldReader reader);
@@ -77,14 +76,23 @@ package org.apache.drill.exec.vector.complex.writer;
     <#list vv.types as type><#list type.minor as minor>
     <#assign lowerName = minor.class?uncap_first />
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
-    <#assign upperName = minor.class?upper_case />
     <#assign capName = minor.class?cap_first />
     ${capName}Writer ${lowerName}();
     </#list></#list>
   }
 
   public interface ScalarWriter extends
-  <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first /> ${name}Writer, </#list></#list> BaseWriter {}
+  <#list vv.types as type><#list type.minor as minor><#list ["Required", "Optional"] as scalarMode>
+  <#if scalarMode == "Optional">
+    <#assign name = "Nullable${minor.class?cap_first}" /> ${name}Writer,
+  <#else>
+    <#assign name = minor.class?cap_first /> ${name}Writer,
+  </#if>
+
+
+  </#list></#list></#list>
+
+  BaseWriter {}
 
   public interface ComplexWriter {
     void allocate();
@@ -106,37 +114,37 @@ package org.apache.drill.exec.vector.complex.writer;
     MapOrListWriter list(String name);
     boolean isMapWriter();
     boolean isListWriter();
-    UInt1Writer uInt1(String name);
-    UInt2Writer uInt2(String name);
-    UInt4Writer uInt4(String name);
-    UInt8Writer uInt8(String name);
-    VarCharWriter varChar(String name);
-    Var16CharWriter var16Char(String name);
-    TinyIntWriter tinyInt(String name);
-    SmallIntWriter smallInt(String name);
-    IntWriter integer(String name);
-    BigIntWriter bigInt(String name);
-    Float4Writer float4(String name);
-    Float8Writer float8(String name);
-    BitWriter bit(String name);
-    VarBinaryWriter varBinary(String name);
+    UInt1Writer uInt1(String name, TypeProtos.DataMode dataMode);
+    UInt2Writer uInt2(String name, TypeProtos.DataMode dataMode);
+    UInt4Writer uInt4(String name, TypeProtos.DataMode dataMode);
+    UInt8Writer uInt8(String name, TypeProtos.DataMode dataMode);
+    VarCharWriter varChar(String name, TypeProtos.DataMode dataMode);
+    Var16CharWriter var16Char(String name, TypeProtos.DataMode dataMode);
+    TinyIntWriter tinyInt(String name, TypeProtos.DataMode dataMode);
+    SmallIntWriter smallInt(String name, TypeProtos.DataMode dataMode);
+    IntWriter integer(String name, TypeProtos.DataMode dataMode);
+    BigIntWriter bigInt(String name, TypeProtos.DataMode dataMode);
+    Float4Writer float4(String name, TypeProtos.DataMode dataMode);
+    Float8Writer float8(String name, TypeProtos.DataMode dataMode);
+    BitWriter bit(String name, TypeProtos.DataMode dataMode);
+    VarBinaryWriter varBinary(String name, TypeProtos.DataMode dataMode);
     /**
      * @deprecated Use {@link #varBinary(String)} instead.
      */
     @Deprecated
-    VarBinaryWriter binary(String name);
-    DateWriter date(String name);
-    TimeWriter time(String name);
-    TimeStampWriter timeStamp(String name);
-    IntervalYearWriter intervalYear(String name);
-    IntervalDayWriter intervalDay(String name);
-    IntervalWriter interval(String name);
-    Decimal9Writer decimal9(String name);
-    Decimal18Writer decimal18(String name);
-    Decimal28DenseWriter decimal28Dense(String name);
-    Decimal38DenseWriter decimal38Dense(String name);
-    Decimal38SparseWriter decimal38Sparse(String name);
-    Decimal28SparseWriter decimal28Sparse(String name);
+    VarBinaryWriter binary(String name, TypeProtos.DataMode dataMode);
+    DateWriter date(String name, TypeProtos.DataMode dataMode);
+    TimeWriter time(String name, TypeProtos.DataMode dataMode);
+    TimeStampWriter timeStamp(String name, TypeProtos.DataMode dataMode);
+    IntervalYearWriter intervalYear(String name, TypeProtos.DataMode dataMode);
+    IntervalDayWriter intervalDay(String name, TypeProtos.DataMode dataMode);
+    IntervalWriter interval(String name, TypeProtos.DataMode dataMode);
+    Decimal9Writer decimal9(String name, TypeProtos.DataMode dataMode);
+    Decimal18Writer decimal18(String name, TypeProtos.DataMode dataMode);
+    Decimal28DenseWriter decimal28Dense(String name, TypeProtos.DataMode dataMode);
+    Decimal38DenseWriter decimal38Dense(String name, TypeProtos.DataMode dataMode);
+    Decimal38SparseWriter decimal38Sparse(String name, TypeProtos.DataMode dataMode);
+    Decimal28SparseWriter decimal28Sparse(String name, TypeProtos.DataMode dataMode);
   }
 
 }

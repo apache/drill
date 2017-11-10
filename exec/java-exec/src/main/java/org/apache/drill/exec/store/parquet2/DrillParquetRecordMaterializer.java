@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,8 @@ public class DrillParquetRecordMaterializer extends RecordMaterializer<Void> {
                                         Collection<SchemaPath> columns, OptionManager options,
                                         ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
     this.complexWriter = complexWriter;
-    root = new DrillParquetGroupConverter(mutator, complexWriter.rootAsMap(), schema, columns, options, containsCorruptedDates);
+    root = new DrillParquetGroupConverter(mutator, complexWriter.rootAsMap(), schema, columns, options,
+        containsCorruptedDates, false);
   }
 
   public void setPosition(int position) {

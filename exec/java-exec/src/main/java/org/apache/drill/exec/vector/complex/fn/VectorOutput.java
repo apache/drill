@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex.fn;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -297,7 +298,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeBinary(boolean isNull) throws IOException {
-      VarBinaryWriter bin = writer.varBinary(fieldName);
+      VarBinaryWriter bin = writer.varBinary(fieldName, TypeProtos.DataMode.OPTIONAL);
       if(!isNull){
         byte[] binaryData = parser.getBinaryValue();
         if (hasType()) {
@@ -316,7 +317,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeDate(boolean isNull) throws IOException {
-      DateWriter dt = writer.date(fieldName);
+      DateWriter dt = writer.date(fieldName, TypeProtos.DataMode.OPTIONAL);
       if(!isNull){
         DateTimeFormatter f = ISODateTimeFormat.date();
         DateTime date = f.parseDateTime(parser.getValueAsString());
@@ -326,7 +327,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeTime(boolean isNull) throws IOException {
-      TimeWriter t = writer.time(fieldName);
+      TimeWriter t = writer.time(fieldName, TypeProtos.DataMode.OPTIONAL);
       if(!isNull){
         DateTimeFormatter f = ISODateTimeFormat.time();
         t.writeTime((int) ((f.parseDateTime(parser.getValueAsString())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
@@ -335,7 +336,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeTimestamp(boolean isNull) throws IOException {
-      TimeStampWriter ts = writer.timeStamp(fieldName);
+      TimeStampWriter ts = writer.timeStamp(fieldName, TypeProtos.DataMode.OPTIONAL);
       if(!isNull){
         switch (parser.getCurrentToken()) {
         case VALUE_NUMBER_INT:
@@ -356,7 +357,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeInterval(boolean isNull) throws IOException {
-      IntervalWriter intervalWriter = writer.interval(fieldName);
+      IntervalWriter intervalWriter = writer.interval(fieldName, TypeProtos.DataMode.OPTIONAL);
       if(!isNull){
         final Period p = ISOPeriodFormat.standard().parsePeriod(parser.getValueAsString());
         int months = DateUtility.monthsFromPeriod(p);
@@ -368,7 +369,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeInteger(boolean isNull) throws IOException {
-      BigIntWriter intWriter = writer.bigInt(fieldName);
+      BigIntWriter intWriter = writer.bigInt(fieldName, TypeProtos.DataMode.OPTIONAL);
       if(!isNull){
         intWriter.writeBigInt(Long.parseLong(parser.getValueAsString()));
       }

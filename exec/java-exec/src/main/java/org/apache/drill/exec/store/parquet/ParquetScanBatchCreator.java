@@ -98,6 +98,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     List<Map<String, String>> implicitColumns = Lists.newArrayList();
     Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
     for(RowGroupReadEntry e : rowGroupScan.getRowGroupReadEntries()){
+      String readEntryPath = e.getPath();
       /*
       Here we could store a map from file names to footers, to prevent re-reading the footer for each row group in a file
       TODO - to prevent reading the footer again in the parquet record reader (it is read earlier in the ParquetStorageEngine)
@@ -107,34 +108,34 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       */
       try {
         Stopwatch timer = Stopwatch.createUnstarted();
-        if (!footers.containsKey(e.getPath())){
+        if (!footers.containsKey(readEntryPath)){
           timer.start();
-          ParquetMetadata footer = ParquetFileReader.readFooter(conf, new Path(e.getPath()));
+          ParquetMetadata footer = ParquetFileReader.readFooter(conf, new Path(readEntryPath));
           long timeToRead = timer.elapsed(TimeUnit.MICROSECONDS);
-          logger.trace("ParquetTrace,Read Footer,{},{},{},{},{},{},{}", "", e.getPath(), "", 0, 0, 0, timeToRead);
-          footers.put(e.getPath(), footer );
+          logger.trace("ParquetTrace,Read Footer,{},{},{},{},{},{},{}", "", readEntryPath, "", 0, 0, 0, timeToRead);
+          footers.put(readEntryPath, footer );
         }
         boolean autoCorrectCorruptDates = rowGroupScan.getFormatConfig().areCorruptDatesAutoCorrected();
-        ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(footers.get(e.getPath()), rowGroupScan.getColumns(),
-                autoCorrectCorruptDates);
+        ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility
+            .detectCorruptDates(footers.get(readEntryPath), rowGroupScan.getColumns(), autoCorrectCorruptDates);
         if (logger.isDebugEnabled()) {
           logger.debug(containsCorruptDates.toString());
         }
-        if (!context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER) && !isComplex(footers.get(e.getPath()))) {
+        if (context.getOptions().getBoolean(ExecConstants.PARQUET_NEW_RECORD_READER) || isComplex(footers.get(e.getPath()))) {
+          ParquetMetadata footer = footers.get(readEntryPath);
+          readers.add(new DrillParquetReader(context, footer, e, columnExplorer.getTableColumns(), fs, containsCorruptDates));
+        } else {
           readers.add(
               new ParquetRecordReader(
-                  context, e.getPath(), e.getRowGroupIndex(), e.getNumRecordsToRead(), fs,
+                  context, readEntryPath, e.getRowGroupIndex(), e.getNumRecordsToRead(), fs,
                   CodecFactory.createDirectCodecFactory(
-                  fs.getConf(),
-                  new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
-                  footers.get(e.getPath()),
+                      fs.getConf(),
+                      new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
+                  footers.get(readEntryPath),
                   rowGroupScan.getColumns(),
                   containsCorruptDates
               )
           );
-        } else {
-          ParquetMetadata footer = footers.get(e.getPath());
-          readers.add(new DrillParquetReader(context, footer, e, columnExplorer.getTableColumns(), fs, containsCorruptDates));
         }
 
         Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(e, rowGroupScan.getSelectionRoot());

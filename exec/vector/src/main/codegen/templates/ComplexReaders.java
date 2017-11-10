@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -116,9 +116,9 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
     ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer;
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
-  
+
   public void copyAsField(String name, MapWriter writer){
-    ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
+    ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name, TypeProtos.DataMode.OPTIONAL);
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
 

@@ -50,161 +50,161 @@ public class MapUtility {
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).tinyInt());
           } else {
-            fieldReader.copyAsValue(mapWriter.tinyInt(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.tinyInt(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case SMALLINT:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).smallInt());
           } else {
-            fieldReader.copyAsValue(mapWriter.smallInt(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.smallInt(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case BIGINT:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).bigInt());
           } else {
-            fieldReader.copyAsValue(mapWriter.bigInt(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.bigInt(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case INT:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).integer());
           } else {
-            fieldReader.copyAsValue(mapWriter.integer(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.integer(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case UINT1:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt1());
           } else {
-            fieldReader.copyAsValue(mapWriter.uInt1(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.uInt1(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case UINT2:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt2());
           } else {
-            fieldReader.copyAsValue(mapWriter.uInt2(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.uInt2(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case UINT4:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt4());
           } else {
-            fieldReader.copyAsValue(mapWriter.uInt4(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.uInt4(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case UINT8:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt8());
           } else {
-            fieldReader.copyAsValue(mapWriter.uInt8(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.uInt8(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case DECIMAL9:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal9());
           } else {
-            fieldReader.copyAsValue(mapWriter.decimal9(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.decimal9(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case DECIMAL18:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal18());
           } else {
-            fieldReader.copyAsValue(mapWriter.decimal18(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.decimal18(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case DECIMAL28SPARSE:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal28Sparse());
           } else {
-            fieldReader.copyAsValue(mapWriter.decimal28Sparse(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.decimal28Sparse(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case DECIMAL38SPARSE:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal38Sparse());
           } else {
-            fieldReader.copyAsValue(mapWriter.decimal38Sparse(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.decimal38Sparse(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case DATE:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).date());
           } else {
-            fieldReader.copyAsValue(mapWriter.date(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.date(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case TIME:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).time());
           } else {
-            fieldReader.copyAsValue(mapWriter.time(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.time(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case TIMESTAMP:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).timeStamp());
           } else {
-            fieldReader.copyAsValue(mapWriter.timeStamp(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.timeStamp(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case INTERVAL:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).interval());
           } else {
-            fieldReader.copyAsValue(mapWriter.interval(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.interval(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case INTERVALDAY:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).intervalDay());
           } else {
-            fieldReader.copyAsValue(mapWriter.intervalDay(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.intervalDay(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case INTERVALYEAR:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).intervalYear());
           } else {
-            fieldReader.copyAsValue(mapWriter.intervalYear(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.intervalYear(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case FLOAT4:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).float4());
           } else {
-            fieldReader.copyAsValue(mapWriter.float4(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.float4(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case FLOAT8:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).float8());
           } else {
-            fieldReader.copyAsValue(mapWriter.float8(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.float8(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case BIT:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).bit());
           } else {
-            fieldReader.copyAsValue(mapWriter.bit(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.bit(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case VARCHAR:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).varChar());
           } else {
-            fieldReader.copyAsValue(mapWriter.varChar(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.varChar(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case VARBINARY:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).varBinary());
           } else {
-            fieldReader.copyAsValue(mapWriter.varBinary(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(mapWriter.varBinary(MappifyUtility.fieldValue, fieldReader.getType().getMode()));
           }
           break;
         case MAP:

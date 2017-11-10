@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -166,22 +167,22 @@ public class TestRepeated {
       innerList.endList();
       list.endList();
 
-      final IntWriter numCol = map.integer("nums");
+      final IntWriter numCol = map.integer("nums", TypeProtos.DataMode.OPTIONAL);
       holder.value = 14;
       numCol.write(holder);
 
       final MapWriter repeatedMap = map.list("b").map();
       repeatedMap.start();
       holder.value = 1;
-      repeatedMap.integer("c").write(holder);
+      repeatedMap.integer("c", TypeProtos.DataMode.OPTIONAL).write(holder);
       repeatedMap.end();
 
       repeatedMap.start();
       holder.value = 2;
-      repeatedMap.integer("c").write(holder);
+      repeatedMap.integer("c", TypeProtos.DataMode.OPTIONAL).write(holder);
       final BigIntHolder h = new BigIntHolder();
       h.value = 15;
-      repeatedMap.bigInt("x").write(h);
+      repeatedMap.bigInt("x", TypeProtos.DataMode.OPTIONAL).write(h);
       repeatedMap.end();
 
       map.end();
@@ -219,22 +220,22 @@ public class TestRepeated {
       innerList.endList();
       list.endList();
 
-      final IntWriter numCol = map.integer("nums");
+      final IntWriter numCol = map.integer("nums", TypeProtos.DataMode.OPTIONAL);
       holder.value = -28;
       numCol.write(holder);
 
       final MapWriter repeatedMap = map.list("b").map();
       repeatedMap.start();
       holder.value = -1;
-      repeatedMap.integer("c").write(holder);
+      repeatedMap.integer("c", TypeProtos.DataMode.OPTIONAL).write(holder);
       repeatedMap.end();
 
       repeatedMap.start();
       holder.value = -2;
-      repeatedMap.integer("c").write(holder);
+      repeatedMap.integer("c", TypeProtos.DataMode.OPTIONAL).write(holder);
       final BigIntHolder h = new BigIntHolder();
       h.value = -30;
-      repeatedMap.bigInt("x").write(h);
+      repeatedMap.bigInt("x", TypeProtos.DataMode.OPTIONAL).write(h);
       repeatedMap.end();
 
       map.end();

@@ -33,6 +33,7 @@ import org.apache.drill.exec.vector.*;
 import org.apache.drill.common.exceptions.*;
 import org.apache.drill.exec.exception.*;
 import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.*;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillStringUtils;

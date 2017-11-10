@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -90,13 +90,13 @@ public class UnionListWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public ${name}Writer <#if uncappedName == "int">integer<#else>${uncappedName}</#if>(String name) {
+  public ${name}Writer <#if uncappedName == "int">integer<#else>${uncappedName}</#if>(String name, TypeProtos.DataMode dataMode) {
     assert inMap;
     mapName = name;
     final int nextOffset = offsets.getAccessor().get(idx() + 1);
     vector.getMutator().setNotNull(idx());
     writer.setPosition(nextOffset);
-    ${name}Writer ${uncappedName}Writer = writer.<#if uncappedName == "int">integer<#else>${uncappedName}</#if>(name);
+    ${name}Writer ${uncappedName}Writer = writer.<#if uncappedName == "int">integer<#else>${uncappedName}</#if>(name, dataMode);
     return ${uncappedName}Writer;
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -120,8 +120,8 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
   <#if !minor.class?starts_with("Decimal") >
 
   @Override
-  public ${capName}Writer ${lowerName}(String name) {
-    return getWriter(MinorType.MAP).${lowerName}(name);
+  public ${capName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode) {
+    return getWriter(MinorType.MAP).${lowerName}(name, dataMode);
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.complex.writer;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.store.TestOutputMutator;
@@ -39,11 +40,11 @@ public class TestPromotableWriter {
 
     rootWriter.setPosition(0);
     {
-      writer.map("map").bigInt("a").writeBigInt(1);
+      writer.map("map").bigInt("a", TypeProtos.DataMode.OPTIONAL).writeBigInt(1);
     }
     rootWriter.setPosition(1);
     {
-      writer.map("map").float4("a").writeFloat4(2.0f);
+      writer.map("map").float4("a", TypeProtos.DataMode.OPTIONAL).writeFloat4(2.0f);
     }
     rootWriter.setPosition(2);
     {
