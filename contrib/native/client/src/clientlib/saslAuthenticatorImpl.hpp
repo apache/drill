@@ -61,8 +61,6 @@ public:
 
     static const std::string KERBEROS_SIMPLE_NAME;
 
-    static const std::string KERBEROS_SASL_NAME;
-
     static const std::string PLAIN_NAME;
 
 private:
