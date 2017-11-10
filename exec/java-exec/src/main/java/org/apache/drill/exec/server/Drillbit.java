@@ -230,7 +230,7 @@ public class Drillbit implements AutoCloseable {
     waitForGracePeriod();
     stateManager.setState(DrillbitState.DRAINING);
     // wait for all the in-flight queries to finish
-    manager.waitToExit(this, forcefulShutdown);
+    manager.waitToExit(forcefulShutdown);
     //safe to exit
     registrationHandle = coord.update(registrationHandle, State.OFFLINE);
     stateManager.setState(DrillbitState.OFFLINE);
