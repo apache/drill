@@ -33,6 +33,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.util.Pointer;
@@ -64,7 +65,7 @@ public class PlanSplitter {
   public QueryPlanFragments planFragments(DrillbitContext dContext, QueryId queryId,
       GetQueryPlanFragments req, UserClientConnection connection) {
     QueryPlanFragments.Builder responseBuilder = QueryPlanFragments.newBuilder();
-    QueryContext queryContext = new QueryContext(connection.getSession(), dContext, queryId);
+    final QueryContext queryContext = new QueryContext(connection.getSession(), dContext, queryId);
 
     responseBuilder.setQueryId(queryId);
 
@@ -79,6 +80,14 @@ public class PlanSplitter {
       responseBuilder.setStatus(QueryState.FAILED);
       responseBuilder.setError(error);
     }
+
+    try {
+      queryContext.close();
+    } catch (Exception e) {
+      logger.error("Error closing QueryContext when getting plan fragments for query {}.",
+        QueryIdHelper.getQueryId(queryId), e);
+    }
+
     return responseBuilder.build();
   }
 

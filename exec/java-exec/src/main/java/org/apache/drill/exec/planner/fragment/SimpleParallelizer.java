@@ -115,7 +115,6 @@ public class SimpleParallelizer implements ParallelizationParameters {
    * @param foremanNode     The driving/foreman node for this query.  (this node)
    * @param queryId         The queryId for this query.
    * @param activeEndpoints The list of endpoints to consider for inclusion in planning this query.
-   * @param reader          Tool used to read JSON plans
    * @param rootFragment    The root node of the PhysicalPlan that we will be parallelizing.
    * @param session         UserSession of user who launched this query.
    * @param queryContextInfo Info related to the context when query has started.

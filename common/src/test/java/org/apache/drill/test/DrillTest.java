@@ -54,7 +54,7 @@ public class DrillTest {
   static MemWatcher memWatcher;
   static String className;
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100_000);
 
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
