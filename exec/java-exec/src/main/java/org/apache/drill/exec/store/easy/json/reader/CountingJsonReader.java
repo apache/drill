@@ -29,8 +29,8 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 public class CountingJsonReader extends BaseJsonProcessor {
 
-  public CountingJsonReader(DrillBuf workBuf) {
-    super(workBuf);
+  public CountingJsonReader(DrillBuf workBuf, boolean enableNanInf) {
+    super(workBuf, enableNanInf);
   }
 
   @Override

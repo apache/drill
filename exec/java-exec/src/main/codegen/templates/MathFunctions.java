@@ -139,8 +139,18 @@ public class GMathFunctions{
     }
 
     public void eval() {
+
+    <#if func.funcName=='trunc' && (type.dataType=='Float4' || type.dataType=='Float8')>
+      if (Double.isInfinite(input1.value) || Double.isNaN(input1.value)){
+        out.value = Double.NaN;
+      } else {
+        java.math.BigDecimal temp = new java.math.BigDecimal(input1.value);
+        out.value = temp.setScale(input2.value, java.math.RoundingMode.${func.mode}).doubleValue();
+      }
+      <#else>
       java.math.BigDecimal temp = new java.math.BigDecimal(input1.value);
       out.value = temp.setScale(input2.value, java.math.RoundingMode.${func.mode}).doubleValue();
+    </#if>
     }
   }
   </#list>

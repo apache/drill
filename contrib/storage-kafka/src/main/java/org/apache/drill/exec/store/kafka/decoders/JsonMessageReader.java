@@ -58,7 +58,11 @@ public class JsonMessageReader implements MessageReader {
   public void init(DrillBuf buf, List<SchemaPath> columns, VectorContainerWriter writer, boolean allTextMode,
       boolean readNumbersAsDouble) {
     // set skipOuterList to false as it doesn't applicable for JSON records and it's only applicable for JSON files.
-    this.jsonReader = new JsonReader(buf, columns, allTextMode, false, readNumbersAsDouble);
+    this.jsonReader = new JsonReader.Builder(buf)
+            .schemaPathColumns(columns)
+            .allTextMode(allTextMode)
+            .readNumbersAsDouble(readNumbersAsDouble)
+            .build();
     this.writer = writer;
   }
 
