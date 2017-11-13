@@ -23,7 +23,7 @@ import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.FixtureBuilder;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.RestClientFixture;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class StatusResourcesTest {
   public void testRetrieveInternalOption() throws Exception {
     OptionDefinition optionDefinition = createMockPropOptionDefinition();
 
-    FixtureBuilder builder = ClusterFixture.builder().
+    ClusterFixtureBuilder builder = ClusterFixture.builder().
       configProperty(ExecConstants.HTTP_ENABLE, true).
       configProperty(ExecConstants.bootDefaultFor(MOCK_PROPERTY), "a").
       configProperty(ExecConstants.HTTP_PORT_HUNT, true).
@@ -60,7 +60,7 @@ public class StatusResourcesTest {
 
   @Test
   public void testRetrievePublicOption() throws Exception {
-    FixtureBuilder builder = ClusterFixture.builder().
+    ClusterFixtureBuilder builder = ClusterFixture.builder().
       configProperty(ExecConstants.HTTP_ENABLE, true).
       configProperty(ExecConstants.HTTP_PORT_HUNT, true).
       configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false).

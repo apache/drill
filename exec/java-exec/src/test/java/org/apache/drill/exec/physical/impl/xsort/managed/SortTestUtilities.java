@@ -62,6 +62,7 @@ public class SortTestUtilities {
     return makeSchema(MinorType.INT, true);
   }
 
+  @SuppressWarnings("resource")
   public static PriorityQueueCopierWrapper makeCopier(OperatorFixture fixture, String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);

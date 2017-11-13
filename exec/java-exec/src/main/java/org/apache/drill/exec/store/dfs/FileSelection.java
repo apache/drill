@@ -208,18 +208,6 @@ public class FileSelection {
     return this.wasAllPartitionsPruned;
   }
 
-  private static String commonPath(final List<FileStatus> statuses) {
-    if (statuses == null || statuses.isEmpty()) {
-      return "";
-    }
-
-    final List<String> files = Lists.newArrayList();
-    for (final FileStatus status : statuses) {
-      files.add(status.getPath().toString());
-    }
-    return commonPathForFiles(files);
-  }
-
   /**
    * Returns longest common path for the given list of files.
    *

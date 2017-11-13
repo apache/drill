@@ -61,13 +61,8 @@ public class TestExtendedTypes extends BaseTestQuery {
           + "/0_0_0.json"));
       assertEquals(new String(originalData), new String(newData));
     } finally {
-      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
-      testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
-          testOptionSet.getDefault(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()).getValue()));
-      testNoResult(String.format("ALTER SESSION SET `%s` = %s",
-          ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
-          testOptionSet.getDefault(ExecConstants.JSON_EXTENDED_TYPES.getOptionName()).getValue()));
+      resetSessionOption(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName());
+      resetSessionOption(ExecConstants.JSON_EXTENDED_TYPES.getOptionName());
     }
   }
 
@@ -92,13 +87,8 @@ public class TestExtendedTypes extends BaseTestQuery {
       String expected = "drill_timestamp_millies,bin,bin1\n2015-07-07T03:59:43.488,drill,drill\n";
       Assert.assertEquals(expected, actual);
     } finally {
-      final OperatorFixture.TestOptionSet testOptionSet = new OperatorFixture.TestOptionSet();
-      testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
-          testOptionSet.getDefault(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()).getValue()));
-      testNoResult(String.format("ALTER SESSION SET `%s` = %s",
-          ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
-          testOptionSet.getDefault(ExecConstants.JSON_EXTENDED_TYPES.getOptionName()).getValue()));
+      resetSessionOption(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName());
+      resetSessionOption(ExecConstants.JSON_EXTENDED_TYPES.getOptionName());
     }
   }
 }

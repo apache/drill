@@ -133,10 +133,14 @@ public class OptionValue implements Comparable<OptionValue> {
       return create(type, name, ((Boolean) val).booleanValue(), scope);
     } else if (val instanceof Long) {
       return create(type, name, ((Long) val).longValue(), scope);
+    } else if (val instanceof Integer) {
+      return create(type, name, ((Integer) val).longValue(), scope);
     } else if (val instanceof String) {
       return create(type, name, (String) val, scope);
     } else if (val instanceof Double) {
       return create(type, name, ((Double) val).doubleValue(), scope);
+    } else if (val instanceof Float) {
+      return create(type, name, ((Float) val).doubleValue(), scope);
     }
 
     throw new IllegalArgumentException(String.format("Unsupported type %s", val.getClass()));

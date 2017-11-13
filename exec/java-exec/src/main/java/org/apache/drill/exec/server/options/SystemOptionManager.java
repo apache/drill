@@ -36,8 +36,10 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.InMemoryStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -223,7 +225,6 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
 
   private final PersistentStoreProvider provider;
 
-  private final DrillConfig bootConfig;
   /**
    * Persistent store for options that have been changed from default.
    * NOTE: CRUD operations must use lowercase keys.
@@ -243,8 +244,21 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
     this.config = PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), PersistedOptionValue.class)
           .name("sys.options")
           .build();
-    this.bootConfig = bootConfig;
     this.definitions = definitions;
+    this.defaults = populateDefaultValues(definitions, bootConfig);
+  }
+
+  /**
+   * Test-only, in-memory version of the system option manager.
+   *
+   * @param bootConfig Drill config
+   */
+
+  @VisibleForTesting
+  public SystemOptionManager(final DrillConfig bootConfig) {
+    this.provider = new InMemoryStoreProvider(100);
+    this.config = null;
+    this.definitions = SystemOptionManager.createDefaultOptionDefinitions();
     this.defaults = populateDefaultValues(definitions, bootConfig);
   }
 
@@ -315,7 +329,13 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
 
   @Override
   public OptionValue getDefault(String optionName) {
-    return defaults.get(optionName);
+    OptionValue value = defaults.get(optionName);
+    if (value == null) {
+      throw UserException.systemError(null)
+        .addContext("Undefined default value for option: " + optionName)
+        .build(logger);
+    }
+    return value;
   }
 
   @Override

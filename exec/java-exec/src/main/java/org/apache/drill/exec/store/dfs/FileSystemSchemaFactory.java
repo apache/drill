@@ -46,7 +46,6 @@ import org.apache.hadoop.fs.Path;
  * This is the top level schema that responds to root level path requests. Also supports
  */
 public class FileSystemSchemaFactory implements SchemaFactory{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemSchemaFactory.class);
 
   public static final String DEFAULT_WS_NAME = "default";
 
@@ -61,6 +60,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+    @SuppressWarnings("resource")
     FileSystemSchema schema = new FileSystemSchema(schemaName, schemaConfig);
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
     schema.setPlus(plusOfThis);
@@ -75,6 +75,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
       super(ImmutableList.<String>of(), name);
       for(WorkspaceSchemaFactory f :  factories){
         if (f.accessible(schemaConfig.getUserName())) {
+          @SuppressWarnings("resource")
           WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig);
           schemaMap.put(s.getName(), s);
         }

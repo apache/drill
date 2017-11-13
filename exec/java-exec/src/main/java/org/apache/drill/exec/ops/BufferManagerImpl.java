@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,7 @@ public class BufferManagerImpl implements BufferManager {
     managedBuffers.clear();
   }
 
+  @Override
   public DrillBuf replace(DrillBuf old, int newSize) {
     if (managedBuffers.remove(old.memoryAddress()) == null) {
       throw new IllegalStateException("Tried to remove unmanaged buffer.");
@@ -52,10 +53,12 @@ public class BufferManagerImpl implements BufferManager {
     return getManagedBuffer(newSize);
   }
 
+  @Override
   public DrillBuf getManagedBuffer() {
     return getManagedBuffer(256);
   }
 
+  @Override
   public DrillBuf getManagedBuffer(int size) {
     DrillBuf newBuf = allocator.buffer(size, this);
     managedBuffers.put(newBuf.memoryAddress(), newBuf);

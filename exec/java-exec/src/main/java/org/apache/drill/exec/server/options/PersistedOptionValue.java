@@ -269,6 +269,7 @@ public class PersistedOptionValue {
    * value of an option. This deserializer is essentially future proof since it only requires a value
    * to be stored for an option.
    */
+  @SuppressWarnings("serial")
   public static class Deserializer extends StdDeserializer<PersistedOptionValue> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Deserializer.class);
 
