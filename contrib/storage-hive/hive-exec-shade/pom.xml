@@ -34,89 +34,92 @@
       <artifactId>hive-exec</artifactId>
       <scope>compile</scope>
       <exclusions>
+        <!--Hive Calcite libraries are not required. When user submits query in Drill via Hive plugin, the query
+        is validated and planned via Drill Calcite. Hive Calcite can be used only to setup Hive store for Drill unit
+        testing, where a lot of Hive specific queries are performed. But Drill Calcite and Avatica versions have
+        conflicts with Hive old Calcite and Avatica versions. That's why Calcite cost based optimizator
+        (ConfVars.HIVE_CBO_ENABLED) is disabled for Drill Hive JUnit test cases. It can be enabled again once Hive
+        will leverage the newest Calcite version. To do that check whether Drill Calcite and Avatica versions are
+        suitable for hive-exec. If no, use Hive Calcite and Avatica versions.
+        Note: Versions of Calcite libraries are controlled by "DependencyManagement" block in Drill's
+        root POM file now-->
         <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>calcite-avatica</artifactId>
           <groupId>org.apache.calcite</groupId>
+          <artifactId>calcite-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.calcite</groupId>
+          <artifactId>calcite-avatica</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.calcite</groupId>
+          <artifactId>calcite-linq4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.calcite</groupId>
+          <artifactId>calcite-druid</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <!--Once newer hive-exec version leverages parquet-column 1.9.0, this dependency can be deleted -->
+    <dependency>
+      <groupId>org.apache.parquet</groupId>
+      <artifactId>parquet-column</artifactId>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <artifactSet>
-                <includes>
-                  <include>org.apache.hive:hive-exec</include>
-                  <include>com.twitter:parquet-column</include>
-                  <include>com.twitter:parquet-hadoop</include>
-                  <include>commons-codec:commons-codec</include>
-                  <include>com.twitter:parquet-format</include>
-                  <include>com.twitter:parquet-common</include>
-                  <include>com.twitter:parquet-jackson</include>
-                  <include>com.twitter:parquet-encoding</include>
-                  <include>com.twitter:parquet-generator</include>
-                  <include>org.apache.calcite:calcite-core</include>
-                  <include>org.apache.calcite.avatica:avatica-core</include>
-                </includes>
-              </artifactSet>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-              <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
-              <relocations>
-                <relocation>
-                  <pattern>com.google.</pattern>
-                  <shadedPattern>hive.com.google.</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>parquet.</pattern>
-                  <shadedPattern>hive.parquet.</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.apache.commons.codec.</pattern>
-                  <shadedPattern>hive.org.apache.commons.codec.</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>net.hydromatic.</pattern>
-                  <shadedPattern>hive.net.hydromatic.</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.eigenbase.</pattern>
-                  <shadedPattern>hive.org.eigenbase.</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.apache.calcite.</pattern>
-                  <shadedPattern>hive.org.apache.calcite.</shadedPattern>
-                </relocation>
-              </relocations>
-              <filters>
-                <filter>
-                  <artifact>org.apache.hive:hive-exec</artifact>
-                  <excludes>
-                    <exclude>org/json/*</exclude>
-                  </excludes>
-                </filter>
-              </filters>
-            </configuration>
-          </execution>
-        </executions>
+        <configuration>
+          <artifactSet>
+            <includes>
+              <include>org.apache.hive:hive-exec</include>
+              <include>org.apache.parquet:parquet-column</include>
+              <include>commons-codec:commons-codec</include>
+              <include>com.fasterxml.jackson.core:jackson-databind</include>
+              <include>com.fasterxml.jackson.core:jackson-annotations</include>
+              <include>com.fasterxml.jackson.core:jackson-core</include>
+            </includes>
+          </artifactSet>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+          <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+          <relocations>
+            <relocation>
+              <pattern>com.google.</pattern>
+              <shadedPattern>hive.com.google.</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.apache.commons.codec.</pattern>
+              <shadedPattern>hive.org.apache.commons.codec.</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>net.hydromatic.</pattern>
+              <shadedPattern>hive.net.hydromatic.</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.eigenbase.</pattern>
+              <shadedPattern>hive.org.eigenbase.</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.fasterxml.jackson.</pattern>
+              <shadedPattern>hive.com.fasterxml.jackson.</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.apache.parquet.</pattern>
+              <shadedPattern>hive.org.apache.parquet.</shadedPattern>
+            </relocation>
+          </relocations>
+          <filters>
+            <filter>
+              <artifact>org.apache.hive:hive-exec</artifact>
+              <excludes>
+                <exclude>org/apache/parquet/schema/*</exclude>
+              </excludes>
+            </filter>
+          </filters>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -153,4 +156,23 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>mapr</id>
+      <properties>
+        <!-- TODO: MapR Hive 2.1 client version libraries use older jackson libraries than Hive 2.3 client.
+        It can be removed after updating onto 2.3 version -->
+        <jackson.databind.mapr.hive.version>2.4.2</jackson.databind.mapr.hive.version>
+      </properties>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.databind.mapr.hive.version}</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+    </profile>
+  </profiles>
 </project>
