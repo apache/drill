@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -73,6 +74,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   private final MongoStoragePlugin plugin;
 
   private final boolean enableAllTextMode;
+  private final boolean enableNanInf;
   private final boolean readNumbersAsDouble;
   private boolean unionEnabled;
   private final boolean isBsonRecordReader;
@@ -92,6 +94,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 
     buildFilters(subScanSpec.getFilter(), mergedFilters);
     enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
+    enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val;
     readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE).bool_val;
     isBsonRecordReader = fragmentContext.getOptions().getOption(ExecConstants.MONGO_BSON_RECORD_READER).bool_val;
     logger.debug("BsonRecordReader is enabled? " + isBsonRecordReader);
@@ -159,8 +162,12 @@ public class MongoRecordReader extends AbstractRecordReader {
           readNumbersAsDouble);
       logger.debug("Initialized BsonRecordReader. ");
     } else {
-      this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()),
-          enableAllTextMode, false, readNumbersAsDouble);
+      this.jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
+          .schemaPathColumns(Lists.newArrayList(getColumns()))
+          .allTextMode(enableAllTextMode)
+          .readNumbersAsDouble(readNumbersAsDouble)
+          .enableNanInf(enableNanInf)
+          .build();
       logger.debug(" Intialized JsonRecordReader. ");
     }
   }

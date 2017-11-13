@@ -278,6 +278,16 @@ public final class ExecConstants {
   public static final DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator("store.text.estimated_row_size_bytes", 1, Long.MAX_VALUE);
 
   /**
+   * Json writer option for writing `NaN` and `Infinity` tokens as numbers (not enclosed with double quotes)
+   */
+  public static final String JSON_WRITER_NAN_INF_NUMBERS = "store.json.writer.allow_nan_inf";
+  public static final BooleanValidator JSON_WRITER_NAN_INF_NUMBERS_VALIDATOR = new BooleanValidator(JSON_WRITER_NAN_INF_NUMBERS);
+  /**
+   * Json reader option that enables parser to read `NaN` and `Infinity` tokens as numbers
+   */
+  public static final String JSON_READER_NAN_INF_NUMBERS = "store.json.reader.allow_nan_inf";
+  public static final BooleanValidator JSON_READER_NAN_INF_NUMBERS_VALIDATOR = new BooleanValidator(JSON_READER_NAN_INF_NUMBERS);
+  /**
    * The column label (for directory levels) in results when querying files in a directory
    * E.g.  labels: dir0   dir1
    *    structure: foo

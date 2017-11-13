@@ -35,13 +35,15 @@ import org.apache.drill.common.exceptions.UserException;
 
 public abstract class BaseJsonProcessor implements JsonProcessor {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper().configure(
-      JsonParser.Feature.ALLOW_COMMENTS, true).configure(
-      JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+  private static final ObjectMapper DEFAULT_MAPPER = getDefaultMapper();
+
+  private static final ObjectMapper NAN_INF_MAPPER = getDefaultMapper()
+      .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
 
   private static final String JACKSON_PARSER_EOF_FILE_MSG = "Unexpected end-of-input:";
+  private final boolean enableNanInf;
 
-  public static enum JsonExceptionProcessingState {
+  public enum JsonExceptionProcessingState {
     END_OF_STREAM, PROC_SUCCEED
   }
 
@@ -49,6 +51,16 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
   protected DrillBuf workBuf;
   protected JsonToken lastSeenJsonToken = null;
   boolean ignoreJSONParseErrors = false; // default False
+
+  /**
+   *
+   * @return Default json mapper
+   */
+  public static ObjectMapper getDefaultMapper() {
+    return new ObjectMapper().configure(
+        JsonParser.Feature.ALLOW_COMMENTS, true).configure(
+        JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+  }
 
   public boolean ignoreJSONParseError() {
     return ignoreJSONParseErrors;
@@ -58,13 +70,18 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
     this.ignoreJSONParseErrors = ignoreJSONParseErrors;
   }
 
-  public BaseJsonProcessor(DrillBuf workBuf) {
+  public BaseJsonProcessor(DrillBuf workBuf, boolean enableNanInf) {
+    this.enableNanInf = enableNanInf;
     workBuf = Preconditions.checkNotNull(workBuf);
   }
 
   @Override
   public void setSource(InputStream is) throws IOException {
-    parser = MAPPER.getFactory().createParser(is);
+    if (enableNanInf) {
+      parser = NAN_INF_MAPPER.getFactory().createParser(is);
+    } else {
+      parser = DEFAULT_MAPPER.getFactory().createParser(is);
+    }
   }
 
   @Override

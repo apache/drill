@@ -95,7 +95,9 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
       stream = fs.create(fileName);
       storageStrategy.applyToFile(fs, fileName);
 
-      JsonGenerator generator = factory.createGenerator(stream).useDefaultPrettyPrinter();
+      JsonGenerator generator = factory.createGenerator(stream).useDefaultPrettyPrinter()
+          .configure(JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS,
+              !Boolean.parseBoolean(writerOptions.get("enableNanInf")));
       if (uglify) {
         generator = generator.setPrettyPrinter(new MinimalPrettyPrinter(LINE_FEED));
       }

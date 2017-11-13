@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.easy.json;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import com.google.common.collect.Lists;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -61,6 +60,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private long runningRecordCount = 0;
   private final FragmentContext fragmentContext;
   private final boolean enableAllTextMode;
+  private final boolean enableNanInf;
   private final boolean readNumbersAsDouble;
   private final boolean unionEnabled;
   private long parseErrorCount;
@@ -114,6 +114,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     this.fragmentContext = fragmentContext;
     // only enable all text mode if we aren't using embedded content mode.
     this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
+    this.enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR);
     this.readNumbersAsDouble = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
     this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
     this.skipMalformedJSONRecords = fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
@@ -139,12 +140,18 @@ public class JSONRecordReader extends AbstractRecordReader {
 
       this.writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
-        this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer());
+        this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer(), enableNanInf);
       } else {
-        this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), ImmutableList.copyOf(getColumns()), enableAllTextMode, true, readNumbersAsDouble);
+        this.jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
+            .schemaPathColumns(ImmutableList.copyOf(getColumns()))
+            .allTextMode(enableAllTextMode)
+            .skipOuterList(true)
+            .readNumbersAsDouble(readNumbersAsDouble)
+            .enableNanInf(enableNanInf)
+            .build();
       }
       setupParser();
-    }catch(final Exception e){
+    } catch (final Exception e){
       handleAndRaise("Failure reading JSON file", e);
     }
   }

@@ -80,26 +80,83 @@ public class JsonReader extends BaseJsonProcessor {
 
   private FieldSelection selection;
 
-  public JsonReader(DrillBuf managedBuf, boolean allTextMode,
-      boolean skipOuterList, boolean readNumbersAsDouble) {
-    this(managedBuf, GroupScan.ALL_COLUMNS, allTextMode, skipOuterList,
-        readNumbersAsDouble);
+  private JsonReader(Builder builder) {
+    super(builder.managedBuf, builder.enableNanInf);
+    selection = FieldSelection.getFieldSelection(builder.columns);
+    workingBuffer = builder.workingBuffer;
+    skipOuterList = builder.skipOuterList;
+    allTextMode = builder.allTextMode;
+    columns = builder.columns;
+    mapOutput = builder.mapOutput;
+    listOutput = builder.listOutput;
+    currentFieldName = builder.currentFieldName;
+    readNumbersAsDouble = builder.readNumbersAsDouble;
   }
 
-  public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns,
-      boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
-    super(managedBuf);
-    assert Preconditions.checkNotNull(columns).size() > 0 : "JSON record reader requires at least one column";
-    this.selection = FieldSelection.getFieldSelection(columns);
-    this.workingBuffer = new WorkingBuffer(managedBuf);
-    this.skipOuterList = skipOuterList;
-    this.allTextMode = allTextMode;
-    this.columns = columns;
-    this.mapOutput = new MapVectorOutput(workingBuffer);
-    this.listOutput = new ListVectorOutput(workingBuffer);
-    this.currentFieldName = "<none>";
-    this.readNumbersAsDouble = readNumbersAsDouble;
+  public static class Builder {
+    private  DrillBuf managedBuf;
+    private  WorkingBuffer workingBuffer;
+    private  List<SchemaPath> columns;
+    private  MapVectorOutput mapOutput;
+    private  ListVectorOutput listOutput;
+    private  String currentFieldName = "<none>";
+    private  boolean readNumbersAsDouble;
+    private  boolean skipOuterList;
+    private  boolean allTextMode;
+    private  boolean enableNanInf;
+
+
+    public Builder(DrillBuf managedBuf) {
+      this.managedBuf = managedBuf;
+      this.workingBuffer = new WorkingBuffer(managedBuf);
+      this.mapOutput = new MapVectorOutput(workingBuffer);
+      this.listOutput = new ListVectorOutput(workingBuffer);
+      this.readNumbersAsDouble = false;
+      this.skipOuterList = false;
+      this.allTextMode = false;
+      this.enableNanInf = true;
+    }
+
+    public Builder readNumbersAsDouble(boolean readNumbersAsDouble) {
+      this.readNumbersAsDouble = readNumbersAsDouble;
+      return this;
+    }
+
+    public Builder skipOuterList(boolean skipOuterList) {
+      this.skipOuterList = skipOuterList;
+      return this;
+    }
+
+    public Builder allTextMode(boolean allTextMode) {
+      this.allTextMode = allTextMode;
+      return this;
+    }
+
+    public Builder enableNanInf(boolean enableNanInf) {
+      this.enableNanInf = enableNanInf;
+      return this;
+    }
+
+    public Builder defaultSchemaPathColumns() {
+      this.columns = GroupScan.ALL_COLUMNS;
+      return this;
+    }
+
+    public Builder schemaPathColumns(List<SchemaPath> columns) {
+      this.columns = columns;
+      return this;
+    }
+
+    public JsonReader build() {
+      if (columns == null) {
+        throw new IllegalStateException("You need to set SchemaPath columns in order to build JsonReader");
+      }
+      assert Preconditions.checkNotNull(columns).size() > 0 : "JSON record reader requires at least one column";
+      return new JsonReader(this);
+    }
   }
+
+
 
   @SuppressWarnings("resource")
   @Override
