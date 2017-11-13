@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 public class KerberosHelper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KerberosHelper.class);
@@ -43,16 +45,20 @@ public class KerberosHelper {
   public String SERVER_PRINCIPAL;
   private final String testName;
 
-  private File keytabDir;
+  public File keytabDir;
   public File clientKeytab;
   public File serverKeytab;
 
   private boolean kdcStarted;
 
-  public KerberosHelper(final String testName) {
+  public KerberosHelper(final String testName, String serverShortName) {
     final String realm = "EXAMPLE.COM";
     CLIENT_PRINCIPAL = CLIENT_SHORT_NAME + "@" + realm;
-    final String serverShortName = System.getProperty("user.name");
+
+    if (serverShortName == null) {
+      serverShortName = System.getProperty("user.name");
+    }
+
     SERVER_PRINCIPAL = serverShortName + "/" + HOSTNAME + "@" + realm;
     this.testName = testName;
   }

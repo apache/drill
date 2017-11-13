@@ -17,23 +17,29 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
+import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.eclipse.jetty.server.handler.ErrorHandler;
+
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Writer;
 
-
+/**
+ * Custom ErrorHandler class for Drill's WebServer to have better error message in case when SPNEGO login failed and
+ * what to do next. In all other cases this would use the generic error page.
+ */
 public class DrillErrorHandler extends ErrorHandler {
 
-    @Override
-    protected void writeErrorPageMessage(HttpServletRequest request, Writer writer, int code, String message, String uri) throws IOException {
+  @Override
+  protected void writeErrorPageMessage(HttpServletRequest request, Writer writer,
+                                       int code, String message, String uri) throws IOException {
 
-        super.writeErrorPageMessage(request,writer,code,message,uri);
+    super.writeErrorPageMessage(request, writer, code, message, uri);
 
-        if(uri.equals("/sn")) {
-            writer.write("<p>Spnego login failed</p>");
-            writer.write("<p>Check the requirements or Use this link to do Form Authentication</p>");
-            writer.write("<a href='/login'> login </a>");
-        }
+    if (uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH)) {
+      writer.write("<p>SPNEGO Login Failed</p>");
+      writer.write("<p>Please check the requirements or use below link to use Form Authentication instead</p>");
+      writer.write("<a href='/login'> login </a>");
     }
+  }
 }

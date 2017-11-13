@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import org.apache.drill.exec.server.rest.LogInLogOutResources;
+import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
 
 import javax.annotation.Priority;
@@ -55,6 +55,9 @@ public class AuthDynamicFeature implements DynamicFeature {
     }
 
     // PermitAll takes precedence over RolesAllowed on the class
+    // This avoids putting AuthCheckFilter in the request flow for all path's which
+    // are defined under PermitAll annotation. That is requests for "/", "/login", "/mainLogin" and "/spnegoLogin"
+    // path's doesn't go through AuthCheckFilter.
     if (am.isAnnotationPresent(PermitAll.class)) {
       // Do nothing.
       return;
@@ -79,8 +82,8 @@ public class AuthDynamicFeature implements DynamicFeature {
           final String destResource =
               URLEncoder.encode(requestContext.getUriInfo().getRequestUri().toString(), "UTF-8");
           final URI loginURI = requestContext.getUriInfo().getBaseUriBuilder()
-              .path(LogInLogOutResources.LOGIN_RESOURCE)
-              .queryParam(LogInLogOutResources.REDIRECT_QUERY_PARM, destResource)
+              .path(WebServerConstants.MAIN_LOGIN_RESOURCE_NAME)
+              .queryParam(WebServerConstants.REDIRECT_QUERY_PARM, destResource)
               .build();
           requestContext.abortWith(Response.temporaryRedirect(loginURI).build()
           );

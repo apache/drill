@@ -19,64 +19,97 @@
 
 package org.apache.drill.exec.server.rest.auth;
 
-
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import java.io.IOException;
-
 public class SpnegoUtil {
 
-    private final DrillConfig config;
-    private UserGroupInformation ugi;
-    private String realm;
-    private String principal;
-    private String keytab;
-    public SpnegoUtil(DrillConfig configuration){
-        this.config = configuration;
+  private UserGroupInformation loggedInUgi;
+
+  //private String realm;
+
+  private String principal;
+
+  private String keytab;
+
+  public SpnegoUtil(DrillConfig config) {
+
+    keytab = config.hasPath(ExecConstants.HTTP_SPNEGO_KEYTAB) ?
+        config.getString(ExecConstants.HTTP_SPNEGO_KEYTAB) :
+        null;
+
+    principal = config.hasPath(ExecConstants.HTTP_SPNEGO_PRINCIPAL) ?
+        config.getString(ExecConstants.HTTP_SPNEGO_PRINCIPAL) :
+        null;
+  }
+
+  //Reads the SPNEGO principal from the config file
+  public String getSpnegoPrincipal() {
+    return principal;
+  }
+
+  public void validateSpnegoConfig() throws DrillException {
+
+    StringBuilder errorMsg = new StringBuilder();
+
+    if (principal != null && keytab != null) {
+      return;
     }
 
-
-    //Reads the SPNEGO principal from the config file
-    public String getSpnegoPrincipal() throws DrillException {
-        principal = config.getString(ExecConstants.HTTP_SPNEGO_PRINCIPAL_).trim();
-        if(principal.isEmpty()){
-            throw new DrillException(" drill.exec.http.spnego.auth.principal in the configuration file can't be empty");
-        }
-        return principal;
+    if (principal == null) {
+      errorMsg.append("\nConfiguration ");
+      errorMsg.append(ExecConstants.HTTP_SPNEGO_PRINCIPAL);
+      errorMsg.append(" is not found");
     }
 
-    //Reads the SPNEGO keytab from the config file
-    public String getSpnegoKeytab() throws DrillException {
-        keytab = config.getString(ExecConstants.HTTP_SPNEGO_KEYTAB_).trim();
-        if(keytab.isEmpty()){
-            throw new DrillException(" drill.exec.http.spnego.auth.keytab in the configuration file can't be empty");
-        }
-        return keytab;
+    if (keytab == null) {
+      errorMsg.append("\nConfiguration ");
+      errorMsg.append(ExecConstants.HTTP_SPNEGO_KEYTAB);
+      errorMsg.append(" is not found");
     }
 
-    //Performs the Server login to KDC for SPNEGO
-    public  UserGroupInformation getUgi() throws DrillException {
-        try {
-        if (!UserGroupInformation.isSecurityEnabled()) {
-            final Configuration newConfig = new Configuration();
-            newConfig.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
-                    UserGroupInformation.AuthenticationMethod.KERBEROS.toString());
-            UserGroupInformation.setConfiguration(newConfig);
-            ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, this.getSpnegoKeytab());
-            final Configuration oldConfig = new Configuration();
-            UserGroupInformation.setConfiguration(oldConfig);
-        } else {
-            ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, this.getSpnegoKeytab());
-        }
-        }catch (Exception e) {
-            throw new DrillException("Login failed for" + principal + "with given keytab");
-        }
-        return ugi;
+    throw new DrillException(errorMsg.toString());
+  }
+
+  //Performs the Server login to KDC for SPNEGO
+  private UserGroupInformation loginAndReturnUgi() throws DrillException {
+
+    validateSpnegoConfig();
+
+    UserGroupInformation ugi;
+    try {
+      // Check if security is not enabled and try to set the security parameter to login the principal.
+      // After the login is performed reset the static UGI state.
+      if (!UserGroupInformation.isSecurityEnabled()) {
+        final Configuration newConfig = new Configuration();
+        newConfig.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
+            UserGroupInformation.AuthenticationMethod.KERBEROS.toString());
+
+        UserGroupInformation.setConfiguration(newConfig);
+        ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
+
+        // Reset the original configuration for static UGI
+        UserGroupInformation.setConfiguration(new Configuration());
+      } else {
+        ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
+      }
+    } catch (Exception e) {
+      throw new DrillException(String.format("Login failed for %s with given keytab", principal));
     }
+    return ugi;
+  }
+
+  public UserGroupInformation getLoggedInUgi() throws DrillException {
+
+    if (loggedInUgi != null) {
+      return loggedInUgi;
+    }
+    loggedInUgi = loginAndReturnUgi();
+    return loggedInUgi;
+  }
 }

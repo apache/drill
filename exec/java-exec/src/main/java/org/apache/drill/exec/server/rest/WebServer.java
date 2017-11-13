@@ -32,7 +32,7 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
-import org.apache.drill.exec.server.rest.auth.DrillSecurityHandler;
+import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -57,6 +57,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -114,7 +115,7 @@ public class WebServer implements AutoCloseable {
   /**
    * Create Jetty based web server.
    *
-   * @param context Bootstrap context.
+   * @param context     Bootstrap context.
    * @param workManager WorkManager instance.
    */
   public WebServer(final BootStrapContext context, final WorkManager workManager, final Drillbit drillbit) {
@@ -185,7 +186,7 @@ public class WebServer implements AutoCloseable {
 
   private ServletContextHandler createServletContextHandler(final boolean authEnabled) throws Exception {
     // Add resources
-    final DrillErrorHandler errorHandler = new DrillErrorHandler();
+    final ErrorHandler errorHandler = new DrillErrorHandler();
 
     errorHandler.setShowStacks(true);
     errorHandler.setShowMessageInTitle(true);
@@ -205,17 +206,16 @@ public class WebServer implements AutoCloseable {
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
     // Get resource URL for Drill static assets, based on where Drill icon is located
     String drillIconResourcePath =
-      Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
-    staticHolder.setInitParameter(
-      "resourceBase",
-      drillIconResourcePath.substring(0,  drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
+        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
+    staticHolder.setInitParameter("resourceBase",
+        drillIconResourcePath.substring(0, drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
     if (authEnabled) {
       //DrillSecurityHandler is used to support SPNEGO and FORM authentication together
-      servletContextHandler.setSecurityHandler(new DrillSecurityHandler(config, workManager.getContext()));
+      servletContextHandler.setSecurityHandler(new DrillHttpSecurityHandlerProvider(config, workManager.getContext()));
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
@@ -228,13 +228,13 @@ public class WebServer implements AutoCloseable {
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
       FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
       holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM,
-        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
+          StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM,
-        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
+          StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM,
-        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
+          StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
-        String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
+          String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
 
       for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*"}) {
         servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
@@ -313,8 +313,7 @@ public class WebServer implements AutoCloseable {
     if (config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
       try {
         serverConnector = createHttpsConnector(port);
-      }
-      catch(DrillException e){
+      } catch (DrillException e) {
         throw new DrillbitStartupException(e.getMessage(), e);
       }
     } else {
@@ -365,11 +364,10 @@ public class WebServer implements AutoCloseable {
       final DateTime now = DateTime.now();
 
       // Create builder for certificate attributes
-      final X500NameBuilder nameBuilder =
-          new X500NameBuilder(BCStyle.INSTANCE)
-              .addRDN(BCStyle.OU, "Apache Drill (auth-generated)")
-              .addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)")
-              .addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
+      final X500NameBuilder nameBuilder = new X500NameBuilder(BCStyle.INSTANCE)
+          .addRDN(BCStyle.OU, "Apache Drill (auth-generated)")
+          .addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)")
+          .addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
 
       final Date notBefore = now.minusMinutes(1).toDate();
       final Date notAfter = now.plusYears(5).toDate();
@@ -421,6 +419,7 @@ public class WebServer implements AutoCloseable {
 
   /**
    * Create HTTP connector.
+   *
    * @return Initialized {@link ServerConnector} instance for HTTP connections.
    * @throws Exception
    */

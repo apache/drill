@@ -17,10 +17,14 @@
         </div>
         <div class="container container-table">
         <div align="center" class="table-responsive">
+        <#if model?? && model.isFormEnabled()>
         <a href ="/login" class="btn btn-primary"> Login using FORM AUTHENTICATION </a>
+        </#if>
+        <#if model?? && model.isSpnegoEnabled()>
         <a href = "/spnegoLogin" class="btn btn-primary"> Login using SPNEGO </a>
-        <#if model??>
-        <p style="color:red">${model}</p></br>
+        </#if>
+        <#if model?? && model.getError()??>
+        <p style="color:red">${model.getError()}</p></br>
         </#if>
         </div>
         </div>

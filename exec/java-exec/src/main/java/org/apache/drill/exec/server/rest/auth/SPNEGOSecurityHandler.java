@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,20 +17,21 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.exec.server.DrillbitContext;
 
-/** Class that extends the ConstraintSecurityHandler that helps to initiate two both the Form and SecurityHandlers**/
-public class DrillConstraintSecurityHandler extends ConstraintSecurityHandler {
+public class SPNEGOSecurityHandler extends DrillHttpConstraintSecurityHandler {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SPNEGOSecurityHandler.class);
 
+  public static final String HANDLER_NAME = "SPNEGO";
 
-    @Override
-    public void doStart() throws Exception {
-        super.doStart();
-    }
+  @Override
+  public String getImplName() {
+    return HANDLER_NAME;
+  }
 
-    @Override
-    public void doStop() throws Exception {
-        super.doStop();
-    }
-
+  @Override
+  public void doSetup(DrillbitContext dbContext) throws DrillException {
+    setup(new DrillSpnegoAuthenticator(HANDLER_NAME), new DrillSpnegoLoginService(dbContext));
+  }
 }
