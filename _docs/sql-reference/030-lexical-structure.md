@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: 2017-08-08 21:12:19 UTC
+date: 2017-11-14 15:31:15 UTC
 parent: "SQL Reference"
 ---
 
@@ -78,7 +78,7 @@ If you have dates and times in other formats, use a [data type conversion functi
 An identifier is a letter followed by any sequence of letters, digits, or the underscore. For example, names of tables, columns, and aliases are identifiers. Maximum length is 1024 characters. Enclose the following identifiers with identifier quotes:
 
 * Keywords
-* Identifiers that SQL cannot parse
+* Identifiers that SQL cannot parse  
 
 For example, enclose the SQL keywords date and time in identifier quotes when referring to column names, but not when referring to data types:
 
@@ -92,7 +92,7 @@ For example, enclose the SQL keywords date and time in identifier quotes when re
 
 Table and column names are case-insensitive. Use identifier quotes to enclose names that contain special characters. Special characters are those other than the 52 Latin alphabet characters. For example, space and @ are special characters. 
 
-The following example shows the keyword Year enclosed in identifier quotes. Because the column alias contains the special space character, also enclose the alias in back ticks, as shown in the following example:
+The following example shows the keyword Year enclosed in identifier quotes. Because the column alias contains the special space character, also enclose the alias in backticks, as shown in the following example:
 
     SELECT extract(year from transdate) AS `Year`, t.user_info.cust_id AS `Customer Number` FROM dfs.tmp.`sampleparquet` t;
     +------------+-----------------+
@@ -108,7 +108,7 @@ The following example shows the keyword Year enclosed in identifier quotes. Beca
 
 
 ### Identifier Quotes
-Prior to Drill 1.11, the SQL parser in Drill only supported back ticks as identifier quotes. As of Drill 1.11, the SQL parser can also use double quotes and square brackets. The default setting for identifier quotes is back ticks. You can configure the type of identifier quotes used with the  `planner.parser.quoting_identifiers` configuration option, at the system or session level, as shown:  
+Prior to Drill 1.11, the SQL parser in Drill only supported backticks as identifier quotes. As of Drill 1.11, the SQL parser can also use double quotes and square brackets. The default setting for identifier quotes is backticks. You can configure the type of identifier quotes used with the  `planner.parser.quoting_identifiers` configuration option, at the system or session level, as shown:  
 
        ALTER SYSTEM|SESSION SET planner.parser.quoting_identifiers = '"';  
        ALTER SYSTEM|SESSION SET planner.parser.quoting_identifiers = '[';  
@@ -118,7 +118,7 @@ The following table lists the supported identifier quotes with their correspondi
  
 | Quoting   Identifier | Unicode   Character                                                   |
 |----------------------|-----------------------------------------------------------------------|
-| Back ticks           | 'GRAVE   ACCENT' (U+0060)                                             |
+| Backticks            | 'GRAVE   ACCENT' (U+0060)                                             |
 | Double quotes        | 'QUOTATION   MARK' (U+0022)                                           |
 | Square brackets      | 'LEFT   SQUARE BRACKET' (U+005B) and 'RIGHT SQUARE BRACKET' (U+005D) |  
 
@@ -153,6 +153,26 @@ The following queries show the use of each type of identifier quotes:
        | 1            | Sheri Nowmer  |
        +--------------+---------------+
        1 row selected (0.14 seconds)  
+
+### Dots in Column Names  
+As of Drill 1.12, Drill supports dots in column names if the data source itself allows dots in column names, such as JSON and Parquet , as shown in the following example:  
+
+       SELECT * FROM `test.json`;
+       
+       +--------------------------------------------------------+----------------------------------------------------------+
+       |                      0.0.1                             |                      0.1.2                               |             
+       +--------------------------------------------------------+----------------------------------------------------------+
+       | {"version":"0.0.1","date_created":"2014-03-15"}        | {"version":"0.1.2","date_created":"2014-05-21"}          |
+       +--------------------------------------------------------+----------------------------------------------------------+  
+
+When referencing column names with dots in queries, you must escape the dots with [identifier quotes]({{site.baseurl}}/docs/lexical-structure/#identifier-quotes), as shown in the following query:  
+
+       SELECT t.`0.1.2`.version FROM dfs.tmp.`test.json` t WHERE t.`0.1.2`.date_created='2014-05-21'  
+
+Drill also supports associative array indexing, for example `SELECT a, b.c, b['d.e']...`.  
+
+Note that in this example, the `“d.e”` field is selected, not a map `“d”` with field `“e”` inside of it.   
+
 
 ### Integer
 An integer value consists of an optional minus sign, -, followed by one or more digits.
