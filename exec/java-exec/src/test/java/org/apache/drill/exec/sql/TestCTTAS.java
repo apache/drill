@@ -75,7 +75,7 @@ public class TestCTTAS extends BaseTestQuery {
 
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getConfig();
-    pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(tmp2.getAbsolutePath(), true, null));
+    pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(tmp2.getAbsolutePath(), true, null, false));
     pluginRegistry.createOrUpdate(DFS_PLUGIN_NAME, pluginConfig, true);
 
     fs = getLocalFileSystem();

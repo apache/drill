@@ -252,11 +252,15 @@ public class FileSelection {
     return builder.toString();
   }
 
-  public static FileSelection create(final DrillFileSystem fs, final String parent, final String path) throws IOException {
+  public static FileSelection create(final DrillFileSystem fs, final String parent, final String path,
+      final boolean allowAccessOutsideWorkspace) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
     boolean hasWildcard = path.contains(WILD_CARD);
 
     final Path combined = new Path(parent, removeLeadingSlash(path));
+    if (!allowAccessOutsideWorkspace) {
+      checkBackPaths(parent, combined.toString(), path);
+    }
     final FileStatus[] statuses = fs.globStatus(combined); // note: this would expand wildcards
     if (statuses == null) {
       return null;
@@ -359,13 +363,28 @@ public class FileSelection {
     }
   }
 
-  private static String removeLeadingSlash(String path) {
-    if (path.charAt(0) == '/') {
+  public static String removeLeadingSlash(String path) {
+    if (!path.isEmpty() && path.charAt(0) == '/') {
       String newPath = path.substring(1);
       return removeLeadingSlash(newPath);
     } else {
       return path;
     }
+  }
+
+  // Check if the path is a valid sub path under the parent after removing backpaths. Throw an exception if
+  // it is not
+  // We pass subpath in as a parameter only for the error message
+  public static boolean checkBackPaths(String parent, String combinedPath, String subpath) {
+    Preconditions.checkArgument(!parent.isEmpty());
+    Preconditions.checkArgument(!combinedPath.isEmpty());
+
+    if (!combinedPath.startsWith(parent)) {
+      StringBuilder msg = new StringBuilder();
+      msg.append("Invalid path : ").append(subpath).append(" takes you outside the workspace.");
+      throw new IllegalArgumentException(msg.toString());
+    }
+    return true;
   }
 
   public List<FileStatus> getFileStatuses() {

@@ -77,7 +77,7 @@ public class StoragePluginTestUtils {
     for (String schema: schemas) {
       WorkspaceConfig workspaceConfig = pluginConfig.workspaces.get(schema);
       String inputFormat = workspaceConfig == null ? null: workspaceConfig.getDefaultInputFormat();
-      WorkspaceConfig newWorkspaceConfig = new WorkspaceConfig(tmpDirPath.getAbsolutePath(), true, inputFormat);
+      WorkspaceConfig newWorkspaceConfig = new WorkspaceConfig(tmpDirPath.getAbsolutePath(), true, inputFormat, false);
       workspaces.put(schema, newWorkspaceConfig);
     }
 
