@@ -1,12 +1,12 @@
 ---
 title: "Throttling"
-date: 2016-11-21 22:28:44 UTC
+date: 2017-11-14 21:36:24 UTC
 parent: "Query Plans and Tuning"
 --- 
 
 Drill 1.12 introduces throttling. Throttling limits the number of concurrent queries that run to prevent queries from failing with out-of-memory errors. When you enable throttling, you configure the number of concurrent queries that can run and the resource requirements for each query. Drill calculates the amount of memory to assign per query per node.
 
-If throttling is disabled, you most likely need to increase the amount of memory assigned to the planner.memory.max_query_memory_per_node option based on the amount of direct memory that Drill will allocate to the Sort and Hash Aggregate operators during each query on a node. Drill must decide how much memory to assign to each of these operators, without knowing how many concurrent queries might run. If Drill does not give enough memory to the Sort and Hash Aggregate operators, queries fail. Using the throttling feature prevents this from happening.
+If throttling is disabled, you most likely need to increase the amount of memory assigned to the planner.memory.max_query_memory_per_node option based on the amount of direct memory that Drill will allocate to the [Sort and Hash Aggregate operators]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/) during each query on a node. Drill must decide how much memory to assign to each of these operators, without knowing how many concurrent queries might run. If Drill does not give enough memory to the Sort and Hash Aggregate operators, queries fail. Using the throttling feature prevents this from happening.
    
 
 ## Configuring Throttling  

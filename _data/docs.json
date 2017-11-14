@@ -2540,8 +2540,8 @@
             "next_title": "Identifying Performance Issues", 
             "next_url": "/docs/identifying-performance-issues/", 
             "parent": "Query Plans and Tuning", 
-            "previous_title": "Enabling Query Queuing", 
-            "previous_url": "/docs/enabling-query-queuing/", 
+            "previous_title": "Throttling", 
+            "previous_url": "/docs/throttling/", 
             "relative_path": "_docs/performance-tuning/query-plans-and-tuning/070-controlling-parallelization-to-balance-performance-with-multi-tenancy.md", 
             "title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
             "url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/"
@@ -3887,8 +3887,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
-            "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+            "next_title": "Throttling", 
+            "next_url": "/docs/throttling/", 
             "parent": "Query Plans and Tuning", 
             "previous_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
             "previous_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
@@ -7025,8 +7025,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
-                            "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                            "next_title": "Throttling", 
+                            "next_url": "/docs/throttling/", 
                             "parent": "Query Plans and Tuning", 
                             "previous_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
                             "previous_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
@@ -7046,11 +7046,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Identifying Performance Issues", 
-                            "next_url": "/docs/identifying-performance-issues/", 
+                            "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                            "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
                             "parent": "Query Plans and Tuning", 
                             "previous_title": "Enabling Query Queuing", 
                             "previous_url": "/docs/enabling-query-queuing/", 
+                            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/065-throttling.md", 
+                            "title": "Throttling", 
+                            "url": "/docs/throttling/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Query Plans and Tuning", 
+                                    "url": "/docs/query-plans-and-tuning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Identifying Performance Issues", 
+                            "next_url": "/docs/identifying-performance-issues/", 
+                            "parent": "Query Plans and Tuning", 
+                            "previous_title": "Throttling", 
+                            "previous_url": "/docs/throttling/", 
                             "relative_path": "_docs/performance-tuning/query-plans-and-tuning/070-controlling-parallelization-to-balance-performance-with-multi-tenancy.md", 
                             "title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
                             "url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/"
@@ -8023,8 +8044,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
-                    "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "next_title": "Throttling", 
+                    "next_url": "/docs/throttling/", 
                     "parent": "Query Plans and Tuning", 
                     "previous_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
                     "previous_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
@@ -8044,11 +8065,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Identifying Performance Issues", 
-                    "next_url": "/docs/identifying-performance-issues/", 
+                    "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
                     "parent": "Query Plans and Tuning", 
                     "previous_title": "Enabling Query Queuing", 
                     "previous_url": "/docs/enabling-query-queuing/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/065-throttling.md", 
+                    "title": "Throttling", 
+                    "url": "/docs/throttling/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Plans and Tuning", 
+                            "url": "/docs/query-plans-and-tuning/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Identifying Performance Issues", 
+                    "next_url": "/docs/identifying-performance-issues/", 
+                    "parent": "Query Plans and Tuning", 
+                    "previous_title": "Throttling", 
+                    "previous_url": "/docs/throttling/", 
                     "relative_path": "_docs/performance-tuning/query-plans-and-tuning/070-controlling-parallelization-to-balance-performance-with-multi-tenancy.md", 
                     "title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
                     "url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/"
@@ -12483,6 +12525,27 @@
             "title": "Text Files: CSV, TSV, PSV", 
             "url": "/docs/text-files-csv-tsv-psv/"
         }, 
+        "Throttling": {
+            "breadcrumbs": [
+                {
+                    "title": "Query Plans and Tuning", 
+                    "url": "/docs/query-plans-and-tuning/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+            "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+            "parent": "Query Plans and Tuning", 
+            "previous_title": "Enabling Query Queuing", 
+            "previous_url": "/docs/enabling-query-queuing/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/065-throttling.md", 
+            "title": "Throttling", 
+            "url": "/docs/throttling/"
+        }, 
         "Troubleshooting": {
             "breadcrumbs": [], 
             "children": [], 
@@ -16365,8 +16428,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
-                            "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                            "next_title": "Throttling", 
+                            "next_url": "/docs/throttling/", 
                             "parent": "Query Plans and Tuning", 
                             "previous_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
                             "previous_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
@@ -16386,11 +16449,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Identifying Performance Issues", 
-                            "next_url": "/docs/identifying-performance-issues/", 
+                            "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                            "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
                             "parent": "Query Plans and Tuning", 
                             "previous_title": "Enabling Query Queuing", 
                             "previous_url": "/docs/enabling-query-queuing/", 
+                            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/065-throttling.md", 
+                            "title": "Throttling", 
+                            "url": "/docs/throttling/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Query Plans and Tuning", 
+                                    "url": "/docs/query-plans-and-tuning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Identifying Performance Issues", 
+                            "next_url": "/docs/identifying-performance-issues/", 
+                            "parent": "Query Plans and Tuning", 
+                            "previous_title": "Throttling", 
+                            "previous_url": "/docs/throttling/", 
                             "relative_path": "_docs/performance-tuning/query-plans-and-tuning/070-controlling-parallelization-to-balance-performance-with-multi-tenancy.md", 
                             "title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
                             "url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/"
