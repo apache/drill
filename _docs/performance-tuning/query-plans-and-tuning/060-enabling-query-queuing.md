@@ -1,12 +1,12 @@
 ---
 title: "Enabling Query Queuing"
-date: 2016-11-21 22:28:44 UTC
+date: 2017-11-14 21:25:01 UTC
 parent: "Query Plans and Tuning"
 --- 
 
 Drill runs all queries concurrently by default. However, Drill performance increases when a small number of queries run concurrently. You can enable query queues to limit the maximum number of queries that run concurrently. Splitting large queries into multiple small queries and enabling query queuing improves query performance.
  
-When you enable query queuing, you configure large and small queues. Drill determines which queue to route a query to at runtime based on the size of the query. Drill can quickly complete the queries and then continue on to the next set of queries.
+When you enable query queuing, you configure large and small queues. Drill determines which queue to route a query to at runtime based on the size of the query. Drill can quickly complete the queries and then continue on to the next set of queries.   
 
 ## Example Configuration  
 
@@ -44,6 +44,8 @@ Use the ALTER SYSTEM or ALTER SESSION commands with the options below to enable 
 
 * **exec.queue.timeout_millis**  
     Indicates how long a query can wait in queue before the query fails.  
-    Range: 0-9223372036854775807 Default: 300000
+    Range: 0-9223372036854775807 Default: 300000  
+
+
 
 
