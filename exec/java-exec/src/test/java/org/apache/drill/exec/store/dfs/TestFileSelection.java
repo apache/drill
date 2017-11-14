@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -26,6 +27,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
 public class TestFileSelection extends BaseTestQuery {
@@ -59,4 +61,55 @@ public class TestFileSelection extends BaseTestQuery {
       throw ex;
     }
   }
+
+  @Test
+  public void testBackPathBad() throws Exception {
+    final String[][] badPaths =
+        {
+            {"/tmp", "../../bad"},   //  goes beyond root and outside parent; resolves to /../bad
+            {"/tmp", "../etc/bad"},  //  goes outside parent; resolves to /etc/bad
+            {"", "/bad"},            //  empty parent
+            {"/", ""},               //  empty path
+        } ;
+
+
+    for (int i = 0; i < badPaths.length; i++) {
+      boolean isPathGood = true;
+      try {
+        String parent = badPaths[i][0];
+        String subPath = FileSelection.removeLeadingSlash(badPaths[i][1]);
+        String path = new Path(parent, subPath).toString();
+        FileSelection.checkBackPaths(parent, path, subPath);
+      } catch (IllegalArgumentException e) {
+        isPathGood = false;
+      }
+      if (isPathGood) {
+        fail("Failed to catch invalid file selection paths.");
+      }
+    }
+  }
+
+  @Test
+  public void testBackPathGood() throws Exception {
+    final String[][] goodPaths =
+        {
+            {"/tmp", "../tmp/good"},
+            {"/", "/tmp/good/../../good"},
+            {"/", "etc/tmp/../../good"},   //  no leading slash in path
+            {"/", "../good"},              //  resolves to /../good which is OK
+            {"/", "/good"}
+        } ;
+
+    for (int i = 0; i < goodPaths.length; i++) {
+      try {
+        String parent = goodPaths[i][0];
+        String subPath = FileSelection.removeLeadingSlash(goodPaths[i][1]);
+        String path = new Path(parent, subPath).toString();
+        FileSelection.checkBackPaths(parent, path, subPath);
+      } catch (IllegalArgumentException e) {
+        fail("Valid path not allowed by selection path validation.");
+      }
+    }
+  }
+
 }

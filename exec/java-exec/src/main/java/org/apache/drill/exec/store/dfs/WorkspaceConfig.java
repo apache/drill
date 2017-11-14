@@ -26,22 +26,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *  - writable flag to indicate whether the location supports creating new tables.
  *  - default storage format for new tables created in this workspace.
  */
-@JsonIgnoreProperties(value = {"storageformat"})
+@JsonIgnoreProperties(value = {"storageformat"}, ignoreUnknown = true)
+
 public class WorkspaceConfig {
 
   /** Default workspace is a root directory which supports read, but not write. */
-  public static final WorkspaceConfig DEFAULT = new WorkspaceConfig("/", false, null);
+  public static final WorkspaceConfig DEFAULT = new WorkspaceConfig("/", false, null, false);
 
   private final String location;
   private final boolean writable;
   private final String defaultInputFormat;
-
+  private final boolean allowAccessOutsideWorkspace; // do not allow access outside the workspace by default.
+                                                     // For backward compatibility, the user can turn this
+                                                     // on.
   public WorkspaceConfig(@JsonProperty("location") String location,
                          @JsonProperty("writable") boolean writable,
-                         @JsonProperty("defaultInputFormat") String defaultInputFormat) {
+                         @JsonProperty("defaultInputFormat") String defaultInputFormat,
+                         @JsonProperty("allowAccessOutsideWorkspace") boolean allowAccessOutsideWorkspace
+      ) {
     this.location = location;
     this.writable = writable;
     this.defaultInputFormat = defaultInputFormat;
+    this.allowAccessOutsideWorkspace = allowAccessOutsideWorkspace;
   }
 
   public String getLocation() {
@@ -56,6 +62,12 @@ public class WorkspaceConfig {
     return defaultInputFormat;
   }
 
+  @JsonProperty
+  public Boolean allowAccessOutsideWorkspace() {
+    return allowAccessOutsideWorkspace;
+  }
+
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -63,6 +75,7 @@ public class WorkspaceConfig {
     result = prime * result + ((defaultInputFormat == null) ? 0 : defaultInputFormat.hashCode());
     result = prime * result + ((location == null) ? 0 : location.hashCode());
     result = prime * result + (writable ? 1231 : 1237);
+    result = prime * result + (allowAccessOutsideWorkspace ? 1231 : 1237);
     return result;
   }
 
@@ -93,6 +106,9 @@ public class WorkspaceConfig {
       return false;
     }
     if (writable != other.writable) {
+      return false;
+    }
+    if (allowAccessOutsideWorkspace != other.allowAccessOutsideWorkspace) {
       return false;
     }
     return true;
