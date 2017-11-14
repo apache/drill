@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.apache.calcite.avatica.util.Quoting;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.proto.UserProtos.GetServerMetaResp;
 import org.apache.drill.exec.proto.UserProtos.RequestStatus;
 import org.apache.drill.exec.proto.UserProtos.ServerMeta;

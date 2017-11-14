@@ -20,9 +20,9 @@ package org.apache.drill.exec.pop;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.drill.QueryTestUtil;
+import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.FragmentSetupException;
@@ -70,7 +70,7 @@ public abstract class PopUnitTestBase  extends ExecTest{
 
   public static Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException,
       IOException, ForemanSetupException {
-    return getRootFragmentFromPlanString(reader, Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
+    return getRootFragmentFromPlanString(reader, Files.toString(DrillFileUtils.getResourceAsFile(file), Charsets.UTF_8));
   }
 
 

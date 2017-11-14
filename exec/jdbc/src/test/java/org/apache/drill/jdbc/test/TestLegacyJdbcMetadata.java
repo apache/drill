@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 public class TestLegacyJdbcMetadata extends TestJdbcMetadata {
   @BeforeClass
   public static void openClient() throws Exception {
-    Properties defaultProperties = JdbcAssert.getDefaultProperties();
+    Properties defaultProperties = getDefaultProperties();
     defaultProperties.setProperty("server.metadata.disabled", "true");
 
     connection = DriverManager.getConnection("jdbc:drill:zk=local", defaultProperties);

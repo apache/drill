@@ -18,7 +18,7 @@
 package org.apache.drill;
 
 import org.apache.drill.categories.PlannerTest;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;

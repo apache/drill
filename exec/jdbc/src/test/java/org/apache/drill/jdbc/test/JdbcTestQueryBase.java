@@ -17,14 +17,13 @@
  */
 package org.apache.drill.jdbc.test;
 
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
@@ -38,16 +37,13 @@ public class JdbcTestQueryBase extends JdbcTestBase {
   @Rule
   public TestRule TIMEOUT = TestTools.getTimeoutRule(40000);
 
-  protected static final String WORKING_PATH;
   static{
     Driver.load();
-    WORKING_PATH = Paths.get("").toAbsolutePath().toString();
-
   }
 
   protected static void testQuery(String sql) throws Exception{
     boolean success = false;
-    try (Connection conn = connect("jdbc:drill:zk=local")) {
+    try (Connection conn = connect()) {
       for (int x = 0; x < 1; x++) {
         Stopwatch watch = Stopwatch.createStarted();
         Statement s = conn.createStatement();

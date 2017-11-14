@@ -30,7 +30,7 @@ import java.util.Properties;
 import org.apache.drill.categories.MemoryTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -204,7 +204,7 @@ public class TestAllocators extends DrillTest {
       // Get a few physical operators. Easiest way is to read a physical plan.
       PhysicalPlanReader planReader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(bitContext,
           storageRegistry);
-      PhysicalPlan plan = planReader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(planFile),
+      PhysicalPlan plan = planReader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile(planFile),
           Charsets.UTF_8));
       List<PhysicalOperator> physicalOperators = plan.getSortedOperators();
       Iterator<PhysicalOperator> physicalOperatorIterator = physicalOperators.iterator();

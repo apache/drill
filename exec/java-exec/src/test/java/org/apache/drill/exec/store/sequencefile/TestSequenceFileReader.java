@@ -21,8 +21,7 @@ import java.io.DataOutputStream;
 import java.io.ByteArrayOutputStream;
 
 import org.junit.Test;
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.io.BytesWritable;
 
 public class TestSequenceFileReader extends BaseTestQuery {
@@ -37,11 +36,9 @@ public class TestSequenceFileReader extends BaseTestQuery {
 
   @Test
   public void testSequenceFileReader() throws Exception {
-    String root = FileUtils.getResourceAsFile("/sequencefiles/simple.seq").toURI().toString();
-    final String query = String.format("select convert_from(t.binary_key, 'UTF8') as k, convert_from(t.binary_value, 'UTF8') as v " +
-      "from dfs_test.`%s` t", root);
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("select convert_from(t.binary_key, 'UTF8') as k, convert_from(t.binary_value, 'UTF8') as v " +
+        "from cp.`sequencefiles/simple.seq` t")
       .ordered()
       .baselineColumns("k", "v")
       .baselineValues(byteWritableString("key0"), byteWritableString("value0"))

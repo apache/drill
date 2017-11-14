@@ -25,6 +25,8 @@ import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.test.rowSet.RowSet.RowSetReader;
 import org.bouncycastle.util.Arrays;
 
+import java.util.Comparator;
+
 /**
  * For testing, compare the contents of two row sets (record batches)
  * to verify that they are identical. Supports masks to exclude certain
@@ -252,6 +254,41 @@ public class RowSetComparison {
         break;
       default:
         throw new IllegalStateException( "Unexpected type: " + ea.valueType());
+      }
+    }
+  }
+
+  // TODO make a native RowSetComparison comparator
+  public static class ObjectComparator implements Comparator<Object> {
+    public static final ObjectComparator INSTANCE = new ObjectComparator();
+
+    private ObjectComparator() {
+    }
+
+    @Override
+    public int compare(Object a, Object b) {
+      if (a instanceof Integer) {
+        int aInt = (Integer) a;
+        int bInt = (Integer) b;
+        return aInt - bInt;
+      } else if (a instanceof Long) {
+        Long aLong = (Long) a;
+        Long bLong = (Long) b;
+        return aLong.compareTo(bLong);
+      } else if (a instanceof Float) {
+        Float aFloat = (Float) a;
+        Float bFloat = (Float) b;
+        return aFloat.compareTo(bFloat);
+      } else if (a instanceof Double) {
+        Double aDouble = (Double) a;
+        Double bDouble = (Double) b;
+        return aDouble.compareTo(bDouble);
+      } else if (a instanceof String) {
+        String aString = (String) a;
+        String bString = (String) b;
+        return aString.compareTo(bString);
+      } else {
+        throw new UnsupportedOperationException(String.format("Unsupported type %s", a.getClass().getCanonicalName()));
       }
     }
   }

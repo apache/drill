@@ -29,13 +29,16 @@ import java.io.PrintWriter;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.DirTestWatcher;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -49,20 +52,21 @@ public class TestCsv extends ClusterTest {
 
   private static File testDir;
 
+  @ClassRule
+  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+
   @BeforeClass
   public static void setup() throws Exception {
-    startCluster(ClusterFixture.builder()
-        .maxParallelization(1)
-        );
+    startCluster(ClusterFixture.builder(dirTestWatcher).maxParallelization(1));
 
     // Set up CSV storage plugin using headers.
 
-    testDir = cluster.makeTempDir("csv");
     TextFormatConfig csvFormat = new TextFormatConfig();
     csvFormat.fieldDelimiter = ',';
     csvFormat.skipFirstLine = false;
     csvFormat.extractHeader = true;
-    cluster.defineWorkspace("dfs", "data", testDir.getAbsolutePath(), "csv", csvFormat);
+
+    testDir = cluster.makeDataDir("data", "csv", csvFormat);
   }
 
   String emptyHeaders[] = {
@@ -136,8 +140,8 @@ public class TestCsv extends ClusterTest {
   public void testCsvHeadersCaseInsensitive() throws IOException {
     String fileName = "case2.csv";
     buildFile(fileName, validHeaders);
-    String sql = "SELECT A, b, C FROM `dfs.data`.`" + fileName + "`";
-    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT A, b, C FROM `dfs.data`.`%s`";
+    RowSet actual = client.queryBuilder().sql(sql, fileName).rowSet();
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("A", MinorType.VARCHAR)

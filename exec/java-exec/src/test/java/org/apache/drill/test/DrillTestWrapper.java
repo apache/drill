@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill;
+package org.apache.drill.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -53,6 +53,8 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.test.rowSet.RowSetComparison;
+import org.junit.Assert;
 
 /**
  * An object to encapsulate the options for a Drill unit test, as well as the execution methods to perform the tests and
@@ -112,6 +114,7 @@ public class DrillTestWrapper {
   // if the baseline is a single option test writers can provide the baseline values and columns
   // without creating a file, these are provided to the builder in the baselineValues() and baselineColumns() methods
   // and translated into a map in the builder
+  private String[] baselineColumns;
   private List<Map<String, Object>> baselineRecords;
 
   private int expectedNumBatches;
@@ -119,7 +122,7 @@ public class DrillTestWrapper {
   public DrillTestWrapper(TestBuilder testBuilder, TestServices services, Object query, QueryType queryType,
       String baselineOptionSettingQueries, String testOptionSettingQueries,
       QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
-      List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
+      String[] baselineColumns, List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
     this.testBuilder = testBuilder;
     this.services = services;
     this.query = query;
@@ -129,6 +132,7 @@ public class DrillTestWrapper {
     this.baselineOptionSettingQueries = baselineOptionSettingQueries;
     this.testOptionSettingQueries = testOptionSettingQueries;
     this.highPerformanceComparison = highPerformanceComparison;
+    this.baselineColumns = baselineColumns;
     this.baselineRecords = baselineRecords;
     this.expectedNumBatches = expectedNumBatches;
   }
@@ -523,7 +527,7 @@ public class DrillTestWrapper {
     List<QueryDataBatch> actual = Collections.emptyList();
     List<QueryDataBatch> expected = Collections.emptyList();
     Map<String, List<Object>> actualSuperVectors;
-    Map<String, List<Object>> expectedSuperVectors;
+    Map<String, List<Object>> expectedSuperVectors = null;
 
     try {
       test(testOptionSettingQueries);
@@ -541,11 +545,16 @@ public class DrillTestWrapper {
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
-        test(baselineOptionSettingQueries);
-        expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
-        BatchIterator exBatchIter = new BatchIterator(expected, loader);
-        expectedSuperVectors = addToCombinedVectorResults(exBatchIter);
-        exBatchIter.close();
+        if (baselineQueryType == null && baselineColumns != null) {
+          checkAscendingOrdering(actualSuperVectors);
+          return;
+        } else {
+          test(baselineOptionSettingQueries);
+          expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+          BatchIterator exBatchIter = new BatchIterator(expected, loader);
+          expectedSuperVectors = addToCombinedVectorResults(exBatchIter);
+          exBatchIter.close();
+        }
       } else {
         // data is built in the TestBuilder in a row major format as it is provided by the user
         // translate it here to vectorized, the representation expected by the ordered comparison
@@ -557,6 +566,22 @@ public class DrillTestWrapper {
       throw new Exception(e.getMessage() + "\nFor query: " + query , e);
     } finally {
       cleanupBatches(expected, actual);
+    }
+  }
+
+  private void checkAscendingOrdering(Map<String, List<Object>> results) {
+    int numRecords = results.get(baselineColumns[0]).size();
+
+    for (int index = 1; index < numRecords; index++) {
+      int prevIndex = index - 1;
+
+      for (String column: baselineColumns) {
+        List<Object> objects = results.get(column);
+        Object prevObject = objects.get(prevIndex);
+        Object currentObject = objects.get(index);
+
+        Assert.assertTrue(RowSetComparison.ObjectComparator.INSTANCE.compare(prevObject, currentObject) <= 0);
+      }
     }
   }
 
@@ -670,18 +695,18 @@ public class DrillTestWrapper {
     }
     if (expected == null) {
       throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: null " +
-          "but received " + actual + "(" + actual.getClass().getSimpleName() + ")");
+        "but received " + actual + "(" + actual.getClass().getSimpleName() + ")");
     }
     if (actual == null) {
       throw new Exception("unexpected null at position " + counter + " column '" + column + "' should have been:  " + expected);
     }
     if (actual instanceof byte[]) {
       throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: "
-          + new String((byte[])expected, "UTF-8") + " but received " + new String((byte[])actual, "UTF-8"));
+        + new String((byte[])expected, "UTF-8") + " but received " + new String((byte[])actual, "UTF-8"));
     }
     if (!expected.equals(actual)) {
       throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: "
-          + expected + "(" + expected.getClass().getSimpleName() + ") but received " + actual + "(" + actual.getClass().getSimpleName() + ")");
+        + expected + "(" + expected.getClass().getSimpleName() + ") but received " + actual + "(" + actual.getClass().getSimpleName() + ")");
     }
     return true;
   }
@@ -701,7 +726,7 @@ public class DrillTestWrapper {
       return false;
     }
     if (actual instanceof byte[]) {
-      if ( ! Arrays.equals((byte[]) expected, (byte[]) actual)) {
+      if (!Arrays.equals((byte[]) expected, (byte[]) actual)) {
         return false;
       } else {
         if (VERBOSE_DEBUG) {
@@ -728,7 +753,6 @@ public class DrillTestWrapper {
    * @throws Exception
    */
   private void compareResults(List<Map<String, Object>> expectedRecords, List<Map<String, Object>> actualRecords) throws Exception {
-
     assertEquals("Different number of records returned", expectedRecords.size(), actualRecords.size());
 
     int i = 0;
@@ -743,7 +767,7 @@ public class DrillTestWrapper {
           if (!expectedRecord.containsKey(s)) {
             throw new Exception("Unexpected column '" + s + "' returned by query.");
           }
-          if ( ! compareValues(expectedRecord.get(s), actualRecord.get(s), counter, s)) {
+          if (!compareValues(expectedRecord.get(s), actualRecord.get(s), counter, s)) {
             i++;
             continue findMatch;
           }

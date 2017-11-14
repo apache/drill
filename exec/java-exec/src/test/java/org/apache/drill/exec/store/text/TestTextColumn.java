@@ -14,24 +14,21 @@ package org.apache.drill.exec.store.text;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class TestTextColumn extends BaseTestQuery {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTextColumn.class);
-
   @Test
   public void testCsvColumnSelection() throws Exception {
-    test("select columns[0] as region_id, columns[1] as country from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
+    test("select columns[0] as region_id, columns[1] as country from cp.`store/text/data/regions.csv`");
   }
 
   @Test
   public void testDefaultDelimiterColumnSelection() throws Exception {
     List<QueryDataBatch> actualResults = testSqlWithResults("SELECT columns[0] as entire_row "
-        + "from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/letters.txt`");
+        + "from cp.`store/text/data/letters.txt`");
 
     final TestResultSet expectedResultSet = new TestResultSet();
     expectedResultSet.addRow("a, b,\",\"c\",\"d,, \\n e");
@@ -45,7 +42,7 @@ public class TestTextColumn extends BaseTestQuery {
   @Test
   public void testCsvColumnSelectionCommasInsideQuotes() throws Exception {
     List<QueryDataBatch> actualResults = testSqlWithResults("SELECT columns[0] as col1, columns[1] as col2, columns[2] as col3,"
-        + "columns[3] as col4 from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/letters.csv`");
+        + "columns[3] as col4 from cp.`store/text/data/letters.csv`");
 
     final TestResultSet expectedResultSet = new TestResultSet();
     expectedResultSet.addRow("a, b,", "c", "d,, \\n e", "f\\\"g");

@@ -24,7 +24,7 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
 /**
  * Fluent builder to quickly build up an row set (record batch)
- * programmatically. Starting with an {@link OperatorFixture}:
+ * programmatically. Starting with an {@link org.apache.drill.test.OperatorFixture}:
  * <pre></code>
  * OperatorFixture fixture = ...
  * RowSet rowSet = fixture.rowSetBuilder(batchSchema)

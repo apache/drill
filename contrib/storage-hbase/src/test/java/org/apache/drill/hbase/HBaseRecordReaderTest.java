@@ -22,7 +22,7 @@ import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static org.apache.drill.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
 
 @Category({SlowTest.class, HbaseStorageTest.class})
 public class HBaseRecordReaderTest extends BaseHBaseTest {

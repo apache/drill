@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.server.options.OptionSet;
 
 import com.google.common.base.Preconditions;
@@ -90,12 +89,11 @@ public class CodeGenerator<T> {
   private String generatedCode;
   private String generifiedCode;
 
-  CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
-    this(ClassGenerator.getDefaultMapping(), definition, funcRegistry, optionManager);
+  CodeGenerator(TemplateClassDefinition<T> definition, OptionSet optionManager) {
+    this(ClassGenerator.getDefaultMapping(), definition, optionManager);
   }
 
-  CodeGenerator(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-     FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
+  CodeGenerator(MappingSet mappingSet, TemplateClassDefinition<T> definition, OptionSet optionManager) {
     Preconditions.checkNotNull(definition.getSignature(),
         "The signature for defintion %s was incorrectly initialized.", definition);
     this.definition = definition;
@@ -104,8 +102,9 @@ public class CodeGenerator<T> {
     try {
       this.model = new JCodeModel();
       JDefinedClass clazz = model._package(PACKAGE_NAME)._class(className);
-      rootGenerator = new ClassGenerator<>(this, mappingSet, definition.getSignature(), new EvaluationVisitor(
-          funcRegistry), clazz, model, optionManager);
+      rootGenerator = new ClassGenerator<>(this, mappingSet,
+        definition.getSignature(), new EvaluationVisitor(),
+        clazz, model, optionManager);
     } catch (JClassAlreadyExistsException e) {
       throw new IllegalStateException(e);
     }
@@ -218,29 +217,24 @@ public class CodeGenerator<T> {
 
   public String getClassName() { return className; }
 
-  public static <T> CodeGenerator<T> get(TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry) {
-    return get(definition, funcRegistry, null);
+  public static <T> CodeGenerator<T> get(TemplateClassDefinition<T> definition) {
+    return get(definition, null);
   }
 
-  public static <T> CodeGenerator<T> get(TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
-    return new CodeGenerator<T>(definition, funcRegistry, optionManager);
+  public static <T> CodeGenerator<T> get(TemplateClassDefinition<T> definition, OptionSet optionManager) {
+    return new CodeGenerator<T>(definition, optionManager);
   }
 
-  public static <T> ClassGenerator<T> getRoot(TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
-    return get(definition, funcRegistry, optionManager).getRoot();
+  public static <T> ClassGenerator<T> getRoot(TemplateClassDefinition<T> definition, OptionSet optionManager) {
+    return get(definition, optionManager).getRoot();
   }
 
-  public static <T> ClassGenerator<T> getRoot(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
-    return get(mappingSet, definition, funcRegistry, optionManager).getRoot();
+  public static <T> ClassGenerator<T> getRoot(MappingSet mappingSet, TemplateClassDefinition<T> definition, OptionSet optionManager) {
+    return get(mappingSet, definition, optionManager).getRoot();
   }
 
-  public static <T> CodeGenerator<T> get(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
-    return new CodeGenerator<T>(mappingSet, definition, funcRegistry, optionManager);
+  public static <T> CodeGenerator<T> get(MappingSet mappingSet, TemplateClassDefinition<T> definition, OptionSet optionManager) {
+    return new CodeGenerator<T>(mappingSet, definition, optionManager);
   }
 
   @Override

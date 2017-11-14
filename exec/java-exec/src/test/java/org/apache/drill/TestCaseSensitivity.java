@@ -20,6 +20,7 @@ package org.apache.drill;
 
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

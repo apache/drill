@@ -19,7 +19,7 @@ package org.apache.drill.exec.server;
 
 import com.google.common.base.Joiner;
 import com.typesafe.config.ConfigValueFactory;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillStringUtils;
@@ -42,10 +42,6 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
-
-
-
-
 import java.util.Properties;
 
 /**
@@ -129,7 +125,7 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
   @Test
   public void testAdminUserOptions() throws Exception {
 
-    try (ClusterFixture cluster = ClusterFixture.standardCluster();
+    try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
       OptionManager optionManager = cluster.drillbit().getContext().getOptionManager();
 

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -50,7 +50,7 @@ public class TestHashToRandomExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/sender/hash_exchange.json"),
+          Files.toString(DrillFileUtils.getResourceAsFile("/sender/hash_exchange.json"),
               Charsets.UTF_8));
       int count = 0;
       for (QueryDataBatch b : results) {

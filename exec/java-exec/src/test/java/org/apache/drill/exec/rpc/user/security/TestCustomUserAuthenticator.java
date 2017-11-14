@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.user.security;
 
 import com.typesafe.config.ConfigValueFactory;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;

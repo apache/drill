@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.FileInputStream;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -64,7 +64,7 @@ public class DumpCatTest  extends ExecTest {
       mockDrillbitContext(bitContext);
 
       final PhysicalPlanReader reader = defaultPhysicalPlanReader(c);
-      final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));
+      final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));
       final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
       final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
       final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

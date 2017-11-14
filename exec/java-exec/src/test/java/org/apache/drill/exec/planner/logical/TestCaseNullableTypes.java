@@ -16,7 +16,7 @@
 */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;

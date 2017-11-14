@@ -62,7 +62,6 @@ import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -85,12 +84,7 @@ import com.sun.codemodel.JVar;
 public class EvaluationVisitor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EvaluationVisitor.class);
 
-
-  private final FunctionImplementationRegistry registry;
-
-  public EvaluationVisitor(FunctionImplementationRegistry registry) {
-    super();
-    this.registry = registry;
+  public EvaluationVisitor() {
   }
 
   public HoldingContainer addExpr(LogicalExpression e, ClassGenerator<?> generator) {
@@ -497,7 +491,6 @@ public class EvaluationVisitor {
         }
 
         if (complex || repeated) {
-          MajorType finalType = e.getFieldId().getFinalType();
           // //
           JVar complexReader = generator.declareClassField("reader", generator.getModel()._ref(FieldReader.class));
 

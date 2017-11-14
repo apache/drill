@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector;
 import java.io.Closeable;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;

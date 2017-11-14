@@ -18,16 +18,13 @@
 package org.apache.drill.jdbc.test;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.junit.AfterClass;
@@ -35,34 +32,28 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
 import com.google.common.base.Stopwatch;
 
 public class JdbcTestActionBase extends JdbcTestBase {
   // Set a timeout unless we're debugging.
+  static Connection connection;
+
+  static {
+    Driver.load();
+  }
+
   @Rule
   public TestRule TIMEOUT = TestTools.getTimeoutRule(40000);
 
-  protected static final String WORKING_PATH;
-  static {
-    Driver.load();
-    WORKING_PATH = Paths.get("").toAbsolutePath().toString();
-
+  @BeforeClass
+  public static void openClient() throws Exception {
+    connection = connect();
   }
 
-  protected void testQuery(final String sql) throws Exception {
-    testAction(new JdbcAction() {
-
-      @Override
-      public ResultSet getResult(Connection c) throws SQLException {
-        Statement s = c.createStatement();
-        ResultSet r = s.executeQuery(sql);
-        return r;
-      }
-
-    });
+  @AfterClass
+  public static void closeClient() throws IOException, SQLException {
+    connection.close();
   }
 
   protected void testAction(JdbcAction action) throws Exception {
@@ -103,36 +94,7 @@ public class JdbcTestActionBase extends JdbcTestBase {
 
   }
 
-  public static interface JdbcAction {
+  public interface JdbcAction {
     ResultSet getResult(Connection c) throws SQLException;
   }
-
-  static void resetConnection() throws Exception {
-    closeClient();
-    openClient();
-  }
-
-  static Connection connection;
-
-  @BeforeClass
-  public static void openClient() throws Exception {
-    connection = DriverManager.getConnection("jdbc:drill:zk=local", JdbcAssert.getDefaultProperties());
-  }
-
-  @AfterClass
-  public static void closeClient() throws IOException, SQLException {
-    connection.close();
-  }
-
-  public final TestRule resetWatcher = new TestWatcher() {
-    @Override
-    protected void failed(Throwable e, Description description) {
-      try {
-        resetConnection();
-      } catch (Exception e1) {
-        throw new RuntimeException("Failure while resetting client.", e1);
-      }
-    }
-  };
-
 }

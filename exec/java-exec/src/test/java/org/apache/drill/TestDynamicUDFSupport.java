@@ -19,12 +19,14 @@ package org.apache.drill;
 
 import com.google.common.collect.Lists;
 import mockit.Deencapsulation;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -35,24 +37,30 @@ import org.apache.drill.exec.proto.UserBitShared.Registry;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
+import static org.apache.drill.test.HadoopUtils.hadoopToJavaPath;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -72,28 +80,51 @@ import static org.mockito.Mockito.verify;
 @Category({SlowTest.class, SqlFunctionTest.class})
 public class TestDynamicUDFSupport extends BaseTestQuery {
 
-  private static final Path jars = new Path(TestTools.getWorkingPath(), "src/test/resources/jars");
+  private static final Path jars = TestTools.WORKING_PATH
+    .resolve(TestTools.TEST_RESOURCES)
+    .resolve("jars");
   private static final String default_binary_name = "DrillUDF-1.0.jar";
+  private static final String UDF_SUB_DIR = "udf";
   private static final String default_source_name = JarUtil.getSourceName(default_binary_name);
-
-  @Rule
-  public final TemporaryFolder base = new TemporaryFolder();
-
-  private static FileSystem localFileSystem;
+  private static URI fsUri;
+  private static File udfDir;
 
   @BeforeClass
-  public static void init() throws IOException {
-    localFileSystem = getLocalFileSystem();
-  }
+  public static void setup() throws IOException {
+    udfDir = dirTestWatcher.makeSubDir(Paths.get(UDF_SUB_DIR));
 
-  @Before
-  public void setup() {
     Properties overrideProps = new Properties();
-    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, base.getRoot().getPath());
-    overrideProps.setProperty(ExecConstants.DRILL_TMP_DIR, base.getRoot().getPath());
+    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, udfDir.getAbsolutePath());
     overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
     updateTestCluster(1, DrillConfig.create(overrideProps));
+
+    fsUri = getLocalFileSystem().getUri();
   }
+
+  @Rule
+  public final TestWatcher clearDirs = new TestWatcher() {
+    @Override
+    protected void succeeded(Description description) {
+      reset();
+    }
+
+    @Override
+    protected void failed(Throwable e, Description description) {
+      reset();
+    }
+
+    private void reset() {
+      try {
+        closeClient();
+        FileUtils.cleanDirectory(udfDir);
+        dirTestWatcher.clear();
+        setupDefaultTestCluster();
+        setup();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  };
 
   @Test
   public void testSyntax() throws Exception {
@@ -132,11 +163,10 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Test
   public void testAbsentBinaryInStaging() throws Exception {
-    Path staging = getDrillbitContext().getRemoteFunctionRegistry().getStagingArea();
-    FileSystem fs = getDrillbitContext().getRemoteFunctionRegistry().getFs();
+    final Path staging = hadoopToJavaPath(getDrillbitContext().getRemoteFunctionRegistry().getStagingArea());
 
     String summary = String.format("File %s does not exist on file system %s",
-        new Path(staging, default_binary_name).toUri().getPath(), fs.getUri());
+        staging.resolve(default_binary_name).toUri().getPath(), fsUri);
 
     testBuilder()
         .sqlQuery("create function using jar '%s'", default_binary_name)
@@ -148,12 +178,12 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Test
   public void testAbsentSourceInStaging() throws Exception {
-    Path staging = getDrillbitContext().getRemoteFunctionRegistry().getStagingArea();
-    FileSystem fs = getDrillbitContext().getRemoteFunctionRegistry().getFs();
-    copyJar(fs, jars, staging, default_binary_name);
+    final Path staging = hadoopToJavaPath(getDrillbitContext().getRemoteFunctionRegistry().getStagingArea());
+
+    copyJar(jars, staging, default_binary_name);
 
     String summary = String.format("File %s does not exist on file system %s",
-        new Path(staging, default_source_name).toUri().getPath(), fs.getUri());
+        staging.resolve(default_source_name).toUri().getPath(), fsUri);
 
     testBuilder()
         .sqlQuery("create function using jar '%s'", default_binary_name)
@@ -214,10 +244,12 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     assertFalse("Staging area should be empty", fs.listFiles(remoteFunctionRegistry.getStagingArea(), false).hasNext());
     assertFalse("Temporary area should be empty", fs.listFiles(remoteFunctionRegistry.getTmpArea(), false).hasNext());
 
+    final Path path = hadoopToJavaPath(remoteFunctionRegistry.getRegistryArea());
+
     assertTrue("Binary should be present in registry area",
-        fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
+      path.resolve(default_binary_name).toFile().exists());
     assertTrue("Source should be present in registry area",
-        fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
+      path.resolve(default_source_name).toFile().exists());
 
     Registry registry = remoteFunctionRegistry.getRegistry(new DataChangeVersion());
     assertEquals("Registry should contain one jar", registry.getJarList().size(), 1);
@@ -243,8 +275,10 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   @Test
   public void testDuplicatedJarInLocalRegistry() throws Exception {
     copyDefaultJarsToStagingArea();
+
     test("create function using jar '%s'", default_binary_name);
     test("select custom_lower('A') from (values(1))");
+
     copyDefaultJarsToStagingArea();
 
     String summary = "Jar with %s name has been already registered";
@@ -291,7 +325,11 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Test
   public void testSuccessfulRegistrationAfterSeveralRetryAttempts() throws Exception {
-    RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    final RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    final Path registryPath = hadoopToJavaPath(remoteFunctionRegistry.getRegistryArea());
+    final Path stagingPath = hadoopToJavaPath(remoteFunctionRegistry.getStagingArea());
+    final Path tmpPath = hadoopToJavaPath(remoteFunctionRegistry.getTmpArea());
+
     copyDefaultJarsToStagingArea();
 
     doThrow(new VersionMismatchException("Version mismatch detected", 1))
@@ -312,15 +350,13 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     verify(remoteFunctionRegistry, times(3))
             .updateRegistry(any(Registry.class), any(DataChangeVersion.class));
 
-    FileSystem fs = remoteFunctionRegistry.getFs();
-
-    assertFalse("Staging area should be empty", fs.listFiles(remoteFunctionRegistry.getStagingArea(), false).hasNext());
-    assertFalse("Temporary area should be empty", fs.listFiles(remoteFunctionRegistry.getTmpArea(), false).hasNext());
+    assertTrue("Staging area should be empty", ArrayUtils.isEmpty(stagingPath.toFile().listFiles()));
+    assertTrue("Temporary area should be empty", ArrayUtils.isEmpty(tmpPath.toFile().listFiles()));
 
     assertTrue("Binary should be present in registry area",
-            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
+      registryPath.resolve(default_binary_name).toFile().exists());
     assertTrue("Source should be present in registry area",
-            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
+      registryPath.resolve(default_source_name).toFile().exists());
 
     Registry registry = remoteFunctionRegistry.getRegistry(new DataChangeVersion());
     assertEquals("Registry should contain one jar", registry.getJarList().size(), 1);
@@ -361,7 +397,11 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Test
   public void testExceedRetryAttemptsDuringRegistration() throws Exception {
-    RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    final RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    final Path registryPath = hadoopToJavaPath(remoteFunctionRegistry.getRegistryArea());
+    final Path stagingPath = hadoopToJavaPath(remoteFunctionRegistry.getStagingArea());
+    final Path tmpPath = hadoopToJavaPath(remoteFunctionRegistry.getTmpArea());
+
     copyDefaultJarsToStagingArea();
 
     doThrow(new VersionMismatchException("Version mismatch detected", 1))
@@ -379,17 +419,13 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     verify(remoteFunctionRegistry, times(remoteFunctionRegistry.getRetryAttempts() + 1))
         .updateRegistry(any(Registry.class), any(DataChangeVersion.class));
 
-    FileSystem fs = remoteFunctionRegistry.getFs();
-
     assertTrue("Binary should be present in staging area",
-            fs.exists(new Path(remoteFunctionRegistry.getStagingArea(), default_binary_name)));
+            stagingPath.resolve(default_binary_name).toFile().exists());
     assertTrue("Source should be present in staging area",
-            fs.exists(new Path(remoteFunctionRegistry.getStagingArea(), default_source_name)));
+            stagingPath.resolve(default_source_name).toFile().exists());
 
-    assertFalse("Registry area should be empty",
-        fs.listFiles(remoteFunctionRegistry.getRegistryArea(), false).hasNext());
-    assertFalse("Temporary area should be empty",
-        fs.listFiles(remoteFunctionRegistry.getTmpArea(), false).hasNext());
+    assertTrue("Registry area should be empty", ArrayUtils.isEmpty(registryPath.toFile().listFiles()));
+    assertTrue("Temporary area should be empty", ArrayUtils.isEmpty(tmpPath.toFile().listFiles()));
 
     assertEquals("Registry should be empty",
         remoteFunctionRegistry.getRegistry(new DataChangeVersion()).getJarList().size(), 0);
@@ -397,7 +433,9 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Test
   public void testExceedRetryAttemptsDuringUnregistration() throws Exception {
-    RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    final RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    final Path registryPath = hadoopToJavaPath(remoteFunctionRegistry.getRegistryArea());
+
     copyDefaultJarsToStagingArea();
     test("create function using jar '%s'", default_binary_name);
 
@@ -417,12 +455,10 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     verify(remoteFunctionRegistry, times(remoteFunctionRegistry.getRetryAttempts() + 1))
         .updateRegistry(any(Registry.class), any(DataChangeVersion.class));
 
-    FileSystem fs = remoteFunctionRegistry.getFs();
-
     assertTrue("Binary should be present in registry area",
-            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
+      registryPath.resolve(default_binary_name).toFile().exists());
     assertTrue("Source should be present in registry area",
-            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
+      registryPath.resolve(default_source_name).toFile().exists());
 
     Registry registry = remoteFunctionRegistry.getRegistry(new DataChangeVersion());
     assertEquals("Registry should contain one jar", registry.getJarList().size(), 1);
@@ -446,13 +482,13 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         .baselineValues("a")
         .go();
 
-    Path localUdfDirPath = Deencapsulation.getField(
-        getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir");
+    Path localUdfDirPath = hadoopToJavaPath((org.apache.hadoop.fs.Path) Deencapsulation.getField(
+        getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir"));
 
     assertTrue("Binary should exist in local udf directory",
-        localFileSystem.exists(new Path(localUdfDirPath, default_binary_name)));
+      localUdfDirPath.resolve(default_binary_name).toFile().exists());
     assertTrue("Source should exist in local udf directory",
-        localFileSystem.exists(new Path(localUdfDirPath, default_source_name)));
+      localUdfDirPath.resolve(default_source_name).toFile().exists());
   }
 
   @Test
@@ -513,13 +549,13 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     test("create function using jar '%s'", default_binary_name);
     test("select custom_lower('A') from (values(1))");
 
-    Path localUdfDirPath = Deencapsulation.getField(
-        getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir");
+    Path localUdfDirPath = hadoopToJavaPath((org.apache.hadoop.fs.Path)Deencapsulation.getField(
+      getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir"));
 
     assertTrue("Binary should exist in local udf directory",
-        localFileSystem.exists(new Path(localUdfDirPath, default_binary_name)));
+      localUdfDirPath.resolve(default_binary_name).toFile().exists());
     assertTrue("Source should exist in local udf directory",
-        localFileSystem.exists(new Path(localUdfDirPath, default_source_name)));
+      localUdfDirPath.resolve(default_source_name).toFile().exists());
 
     String summary = "The following UDFs in jar %s have been unregistered:\n" +
         "[custom_lower(VARCHAR-REQUIRED)]";
@@ -537,20 +573,21 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
       assertThat(e.getMessage(), containsString("No match found for function signature custom_lower(<CHARACTER>)"));
     }
 
-    RemoteFunctionRegistry remoteFunctionRegistry = getDrillbitContext().getRemoteFunctionRegistry();
+    final RemoteFunctionRegistry remoteFunctionRegistry = getDrillbitContext().getRemoteFunctionRegistry();
+    final Path registryPath = hadoopToJavaPath(remoteFunctionRegistry.getRegistryArea());
+
     assertEquals("Remote registry should be empty",
         remoteFunctionRegistry.getRegistry(new DataChangeVersion()).getJarList().size(), 0);
 
-    FileSystem fs = remoteFunctionRegistry.getFs();
     assertFalse("Binary should not be present in registry area",
-        fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
+      registryPath.resolve(default_binary_name).toFile().exists());
     assertFalse("Source should not be present in registry area",
-        fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
+      registryPath.resolve(default_source_name).toFile().exists());
 
     assertFalse("Binary should not be present in local udf directory",
-        localFileSystem.exists(new Path(localUdfDirPath, default_binary_name)));
+      localUdfDirPath.resolve(default_binary_name).toFile().exists());
     assertFalse("Source should not be present in local udf directory",
-        localFileSystem.exists(new Path(localUdfDirPath, default_source_name)));
+      localUdfDirPath.resolve(default_source_name).toFile().exists());
   }
 
   @Test
@@ -567,7 +604,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     Thread.sleep(1000);
 
-    Path src = new Path(jars, "v2");
+    Path src = jars.resolve("v2");
     copyJarsToStagingArea(src, default_binary_name, default_source_name);
     test("create function using jar '%s'", default_binary_name);
     testBuilder()
@@ -593,15 +630,18 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   @Test
   public void testRegistrationFailDuringRegistryUpdate() throws Exception {
     final RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
-    final FileSystem fs = remoteFunctionRegistry.getFs();
+    final Path registryPath = hadoopToJavaPath(remoteFunctionRegistry.getRegistryArea());
+    final Path stagingPath = hadoopToJavaPath(remoteFunctionRegistry.getStagingArea());
+    final Path tmpPath = hadoopToJavaPath(remoteFunctionRegistry.getTmpArea());
+
     final String errorMessage = "Failure during remote registry update.";
     doAnswer(new Answer<Void>() {
       @Override
       public Void answer(InvocationOnMock invocation) throws Throwable {
         assertTrue("Binary should be present in registry area",
-            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
+            registryPath.resolve(default_binary_name).toFile().exists());
         assertTrue("Source should be present in registry area",
-            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
+            registryPath.resolve(default_source_name).toFile().exists());
         throw new RuntimeException(errorMessage);
       }
     }).when(remoteFunctionRegistry).updateRegistry(any(Registry.class), any(DataChangeVersion.class));
@@ -615,15 +655,11 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         .baselineValues(false, errorMessage)
         .go();
 
-    assertFalse("Registry area should be empty",
-        fs.listFiles(remoteFunctionRegistry.getRegistryArea(), false).hasNext());
-    assertFalse("Temporary area should be empty",
-        fs.listFiles(remoteFunctionRegistry.getTmpArea(), false).hasNext());
+    assertTrue("Registry area should be empty", ArrayUtils.isEmpty(registryPath.toFile().listFiles()));
+    assertTrue("Temporary area should be empty", ArrayUtils.isEmpty(tmpPath.toFile().listFiles()));
 
-    assertTrue("Binary should be present in staging area",
-        fs.exists(new Path(remoteFunctionRegistry.getStagingArea(), default_binary_name)));
-    assertTrue("Source should be present in staging area",
-        fs.exists(new Path(remoteFunctionRegistry.getStagingArea(), default_source_name)));
+    assertTrue("Binary should be present in staging area", stagingPath.resolve(default_binary_name).toFile().exists());
+    assertTrue("Source should be present in staging area", stagingPath.resolve(default_source_name).toFile().exists());
   }
 
   @Test
@@ -914,13 +950,17 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   private void copyJarsToStagingArea(Path src, String binaryName, String sourceName) throws IOException {
     RemoteFunctionRegistry remoteFunctionRegistry = getDrillbitContext().getRemoteFunctionRegistry();
-    copyJar(remoteFunctionRegistry.getFs(), src, remoteFunctionRegistry.getStagingArea(), binaryName);
-    copyJar(remoteFunctionRegistry.getFs(), src, remoteFunctionRegistry.getStagingArea(), sourceName);
+
+    final Path path = hadoopToJavaPath(remoteFunctionRegistry.getStagingArea());
+
+    copyJar(src, path, binaryName);
+    copyJar(src, path, sourceName);
   }
 
-  private void copyJar(FileSystem fs, Path src, Path dest, String name) throws IOException {
-    Path jarPath = new Path(src, name);
-    fs.copyFromLocalFile(jarPath, dest);
+  private void copyJar(Path src, Path dest, String name) throws IOException {
+    final File destFile = dest.resolve(name).toFile();
+    FileUtils.deleteQuietly(destFile);
+    FileUtils.copyFile(src.resolve(name).toFile(), destFile);
   }
 
   private RemoteFunctionRegistry spyRemoteFunctionRegistry() {

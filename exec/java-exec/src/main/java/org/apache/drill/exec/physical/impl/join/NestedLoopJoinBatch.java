@@ -43,7 +43,6 @@ import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
-import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.MaterializedField;
@@ -221,10 +220,10 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
    */
   private NestedLoopJoin setupWorker() throws IOException, ClassTransformationException, SchemaChangeException {
     final CodeGenerator<NestedLoopJoin> nLJCodeGenerator = CodeGenerator.get(
-        NestedLoopJoin.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+        NestedLoopJoin.TEMPLATE_DEFINITION, context.getOptions());
     nLJCodeGenerator.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    nLJCodeGenerator.saveCodeForDebugging(true);
+    // nLJCodeGenerator.saveCodeForDebugging(true);
     final ClassGenerator<NestedLoopJoin> nLJClassGenerator = nLJCodeGenerator.getRoot();
 
     // generate doEval

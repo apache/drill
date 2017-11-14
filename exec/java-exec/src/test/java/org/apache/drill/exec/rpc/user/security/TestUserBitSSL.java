@@ -20,10 +20,10 @@ package org.apache.drill.exec.rpc.user.security;
 import com.typesafe.config.ConfigValueFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import junit.framework.TestCase;
-import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -39,9 +39,6 @@ import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 
 public class TestUserBitSSL extends BaseTestQuery {
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(TestUserBitSSL.class);
-
   private static DrillConfig newConfig;
   private static Properties initProps; // initial client properties
   private static ClassLoader classLoader;

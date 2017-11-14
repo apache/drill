@@ -31,8 +31,6 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 
 public abstract class BaseValueVector implements ValueVector {
-//  private static final Logger logger = LoggerFactory.getLogger(BaseValueVector.class);
-
   /**
    * Physical maximum allocation. This is the value prior to Drill 1.11.
    * This size causes memory fragmentation. Please use

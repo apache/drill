@@ -6,5 +6,5 @@ select
   dense_rank() over pos_win `dense_rank`,
   cume_dist() over pos_win `cume_dist`,
   percent_rank() over pos_win `percent_rank`
-from dfs_test.`%s/window/%s`
+from dfs.`window/%s`
 window pos_win as %s

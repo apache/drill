@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import mockit.integration.junit4.JMockit;
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.util.Text;
 import org.junit.Ignore;
@@ -1408,22 +1408,13 @@ public class TestStringFunctions extends BaseTestQuery {
 
   @Test // DRILL-5424
   public void testReverseLongVarChars() throws Exception {
-    File path = new File(BaseTestQuery.getTempDir("input"));
-    try {
-      path.mkdirs();
-      String pathString = path.toPath().toString();
-
-      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "table_with_long_varchars.json")))) {
-        for (int i = 0; i < 10; i++) {
-          writer.write("{ \"a\": \"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz\"}");
-        }
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), "table_with_long_varchars.json")))) {
+      for (int i = 0; i < 10; i++) {
+        writer.write("{ \"a\": \"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz\"}");
       }
-
-      test("select reverse(a) from dfs_test.`%s/table_with_long_varchars.json` t", pathString);
-
-    } finally {
-      FileUtils.deleteQuietly(path);
     }
+
+    test("select reverse(a) from dfs.`table_with_long_varchars.json` t");
   }
 
   @Test

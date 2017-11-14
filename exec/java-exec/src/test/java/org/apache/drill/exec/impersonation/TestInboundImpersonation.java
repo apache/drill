@@ -90,7 +90,7 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
     final String tableName = "lineitem";
     updateClient(OWNER, OWNER_PASSWORD);
     test("USE " + getWSSchema(OWNER));
-    test(String.format("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`;", tableName, tableName));
+    test("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`", tableName, tableName);
 
     // Change the ownership and permissions manually.
     // Currently there is no option to specify the default permissions and ownership for new tables.
@@ -101,9 +101,9 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
     // Create a view on top of lineitem table; allow IMPERSONATION_TARGET to read the view
     // /user/user0_1    u0_lineitem    750    user0_1:group0_1
     final String viewName = "u0_lineitem";
-    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
-    test(String.format("CREATE VIEW %s.%s AS SELECT l_orderkey, l_partkey FROM %s.%s;",
-        getWSSchema(OWNER), viewName, getWSSchema(OWNER), "lineitem"));
+    test("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750);
+    test("CREATE VIEW %s.%s AS SELECT l_orderkey, l_partkey FROM %s.%s",
+        getWSSchema(OWNER), viewName, getWSSchema(OWNER), "lineitem");
     // Verify the view file created has the expected permissions and ownership
     final Path viewFilePath = new Path(getUserHome(OWNER), viewName + DotDrillType.VIEW.getEnding());
     final FileStatus status = fs.getFileStatus(viewFilePath);

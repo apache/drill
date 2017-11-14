@@ -17,11 +17,10 @@
 package org.apache.drill.exec.fn.impl.testing;
 
 import mockit.integration.junit4.JMockit;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,26 +35,19 @@ import static org.junit.Assert.assertThat;
 @RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateConversions extends BaseTestQuery {
-
-  private static String TEMP_DIR;
-
   @BeforeClass
   public static void generateTestFiles() throws IOException {
-    File path = new File(BaseTestQuery.getTempDir("json/input"));
-    path.mkdirs();
-    TEMP_DIR = path.toPath().toString();
-
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "joda_postgres_date.json")))) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), "joda_postgres_date.json")))) {
       writer.write("{\"date1\" : \"1970-01-02\",\n \"date2\" : \"01021970\",\n \"date3\" : \"32/1970\"\n}\n"
         + "{\"date1\" : \"2010-05-03\",\n \"date2\" : \"01021970\",\n \"date3\" : \"64/2010\"\n}");
     }
 
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "joda_postgres_time.json")))) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), "joda_postgres_time.json")))) {
       writer.write("{\"time1\" : \"23:11:59\",\n \"time2\" : \"11:11:59pm\",\n \"time3\" : \"591111pm\"\n}\n"
         + "{\"time1\" : \"17:33:41\",\n \"time2\" : \"5:33:41am\",\n \"time3\" : \"413305pm\"\n}");
     }
 
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "joda_postgres_date_time.json")))) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), "joda_postgres_date_time.json")))) {
       writer.write("{ \"time1\" : \"1970-01-0223:11:59\",\n \"time2\" : \"0102197011:11:59pm\",\n"
         + "  \"time3\" : \"32/1970591111pm\"\n}\n"
         + "{\"time1\" : \"2010-05-0317:33:41\",\n \"time2\" : \"0102197005:33:41am\",\n"
@@ -63,22 +55,13 @@ public class TestDateConversions extends BaseTestQuery {
     }
   }
 
-  @AfterClass
-  public static void deleteTestFiles() throws IOException {
-    java.nio.file.Files.delete(new File(TEMP_DIR, "joda_postgres_date.json").toPath());
-    java.nio.file.Files.delete(new File(TEMP_DIR, "joda_postgres_time.json").toPath());
-    java.nio.file.Files.delete(new File(TEMP_DIR, "joda_postgres_date_time.json").toPath());
-  }
-
   @Test
   public void testJodaDate() throws Exception {
-    String query = String.format("SELECT to_date(date1, 'yyyy-dd-MM') = "
-      + "to_date(date2, 'ddMMyyyy') as col1, " + "to_date(date1, 'yyyy-dd-MM') = "
-      + "to_date(date3, 'D/yyyy') as col2 "
-      + "from dfs_test.`%s/joda_postgres_date.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT to_date(date1, 'yyyy-dd-MM') = "
+        + "to_date(date2, 'ddMMyyyy') as col1, " + "to_date(date1, 'yyyy-dd-MM') = "
+        + "to_date(date3, 'D/yyyy') as col2 "
+        + "from dfs.`joda_postgres_date.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)
@@ -88,14 +71,12 @@ public class TestDateConversions extends BaseTestQuery {
 
   @Test
   public void testPostgresDate() throws Exception {
-    String query = String.format("SELECT sql_to_date(date1, 'yyyy-DD-MM') = "
-      + "sql_to_date(date2, 'DDMMyyyy') as col1, "
-      + "sql_to_date(date1, 'yyyy-DD-MM') = "
-      + "sql_to_date(date3, 'DDD/yyyy') as col2 "
-      + "from dfs_test.`%s/joda_postgres_date.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT sql_to_date(date1, 'yyyy-DD-MM') = "
+        + "sql_to_date(date2, 'DDMMyyyy') as col1, "
+        + "sql_to_date(date1, 'yyyy-DD-MM') = "
+        + "sql_to_date(date3, 'DDD/yyyy') as col2 "
+        + "from dfs.`joda_postgres_date.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)
@@ -107,14 +88,12 @@ public class TestDateConversions extends BaseTestQuery {
   public void testJodaTime() throws Exception {
     mockUsDateFormatSymbols();
 
-    String query = String.format("SELECT to_time(time1, 'H:m:ss') = "
-      + "to_time(time2, 'h:m:ssa') as col1, "
-      + "to_time(time1, 'H:m:ss') = "
-      + "to_time(time3, 'ssmha') as col2 "
-      + "from dfs_test.`%s/joda_postgres_time.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT to_time(time1, 'H:m:ss') = "
+        + "to_time(time2, 'h:m:ssa') as col1, "
+        + "to_time(time1, 'H:m:ss') = "
+        + "to_time(time3, 'ssmha') as col2 "
+        + "from dfs.`joda_postgres_time.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)
@@ -126,14 +105,12 @@ public class TestDateConversions extends BaseTestQuery {
   public void testPostgresTime() throws Exception {
     mockUsDateFormatSymbols();
 
-    String query = String.format("SELECT sql_to_time(time1, 'HH24:MI:SS') = "
-      + "sql_to_time(time2, 'HH12:MI:SSam') as col1, "
-      + "sql_to_time(time1, 'HH24:MI:SS') = "
-      + "sql_to_time(time3, 'SSMIHH12am') as col2 "
-      + "from dfs_test.`%s/joda_postgres_time.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT sql_to_time(time1, 'HH24:MI:SS') = "
+        + "sql_to_time(time2, 'HH12:MI:SSam') as col1, "
+        + "sql_to_time(time1, 'HH24:MI:SS') = "
+        + "sql_to_time(time3, 'SSMIHH12am') as col2 "
+        + "from dfs.`joda_postgres_time.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)
@@ -145,14 +122,12 @@ public class TestDateConversions extends BaseTestQuery {
   public void testPostgresDateTime() throws Exception {
     mockUsDateFormatSymbols();
 
-    String query = String.format("SELECT sql_to_timestamp(time1, 'yyyy-DD-MMHH24:MI:SS') = "
-      + "sql_to_timestamp(time2, 'DDMMyyyyHH12:MI:SSam') as col1, "
-      + "sql_to_timestamp(time1, 'yyyy-DD-MMHH24:MI:SS') = "
-      + "sql_to_timestamp(time3, 'DDD/yyyySSMIHH12am') as col2 "
-      + "from dfs_test.`%s/joda_postgres_date_time.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT sql_to_timestamp(time1, 'yyyy-DD-MMHH24:MI:SS') = "
+        + "sql_to_timestamp(time2, 'DDMMyyyyHH12:MI:SSam') as col1, "
+        + "sql_to_timestamp(time1, 'yyyy-DD-MMHH24:MI:SS') = "
+        + "sql_to_timestamp(time3, 'DDD/yyyySSMIHH12am') as col2 "
+        + "from dfs.`joda_postgres_date_time.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)
@@ -164,14 +139,12 @@ public class TestDateConversions extends BaseTestQuery {
   public void testJodaDateTime() throws Exception {
     mockUsDateFormatSymbols();
 
-    String query = String.format("SELECT to_timestamp(time1, 'yyyy-dd-MMH:m:ss') = "
-      + "to_timestamp(time2, 'ddMMyyyyh:m:ssa') as col1, "
-      + "to_timestamp(time1, 'yyyy-dd-MMH:m:ss') = "
-      + "to_timestamp(time3, 'DDD/yyyyssmha') as col2 "
-      + "from dfs_test.`%s/joda_postgres_date_time.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT to_timestamp(time1, 'yyyy-dd-MMH:m:ss') = "
+        + "to_timestamp(time2, 'ddMMyyyyh:m:ssa') as col1, "
+        + "to_timestamp(time1, 'yyyy-dd-MMH:m:ss') = "
+        + "to_timestamp(time3, 'DDD/yyyyssmha') as col2 "
+        + "from dfs.`joda_postgres_date_time.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)
@@ -183,14 +156,12 @@ public class TestDateConversions extends BaseTestQuery {
   public void testJodaDateTimeNested() throws Exception {
     mockUsDateFormatSymbols();
 
-    String query = String.format("SELECT date_add(to_date(time1, concat('yyyy-dd-MM','H:m:ss')), 22)= "
-      + "date_add(to_date(time2, concat('ddMMyyyy', 'h:m:ssa')), 22) as col1, "
-      + "date_add(to_date(time1, concat('yyyy-dd-MM', 'H:m:ss')), 22) = "
-      + "date_add(to_date(time3, concat('DDD/yyyy', 'ssmha')), 22) as col2 "
-      + "from dfs_test.`%s/joda_postgres_date_time.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT date_add(to_date(time1, concat('yyyy-dd-MM','H:m:ss')), 22)= "
+        + "date_add(to_date(time2, concat('ddMMyyyy', 'h:m:ssa')), 22) as col1, "
+        + "date_add(to_date(time1, concat('yyyy-dd-MM', 'H:m:ss')), 22) = "
+        + "date_add(to_date(time3, concat('DDD/yyyy', 'ssmha')), 22) as col2 "
+        + "from dfs.`joda_postgres_date_time.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)
@@ -202,14 +173,12 @@ public class TestDateConversions extends BaseTestQuery {
   public void testPostgresDateTimeNested() throws Exception {
     mockUsDateFormatSymbols();
 
-    String query = String.format("SELECT date_add(sql_to_date(time1, concat('yyyy-DD-MM', 'HH24:MI:SS')), 22) = "
-      + "date_add(sql_to_date(time2, concat('DDMMyyyy', 'HH12:MI:SSam')), 22) as col1, "
-      + "date_add(sql_to_date(time1, concat('yyyy-DD-MM', 'HH24:MI:SS')), 10) = "
-      + "date_add(sql_to_date(time3, concat('DDD/yyyySSMI', 'HH12am')), 10) as col2 "
-      + "from dfs_test.`%s/joda_postgres_date_time.json`", TEMP_DIR);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("SELECT date_add(sql_to_date(time1, concat('yyyy-DD-MM', 'HH24:MI:SS')), 22) = "
+        + "date_add(sql_to_date(time2, concat('DDMMyyyy', 'HH12:MI:SSam')), 22) as col1, "
+        + "date_add(sql_to_date(time1, concat('yyyy-DD-MM', 'HH24:MI:SS')), 10) = "
+        + "date_add(sql_to_date(time3, concat('DDD/yyyySSMI', 'HH12am')), 10) as col2 "
+        + "from dfs.`joda_postgres_date_time.json`")
       .unOrdered()
       .baselineColumns("col1", "col2")
       .baselineValues(true, true)

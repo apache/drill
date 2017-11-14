@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.util.Pair;
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.QueryTestUtil;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.concurrent.ExtendedLatch;

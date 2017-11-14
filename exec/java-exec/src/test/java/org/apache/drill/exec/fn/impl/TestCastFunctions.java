@@ -20,10 +20,9 @@ package org.apache.drill.exec.fn.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import mockit.integration.junit4.JMockit;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.common.util.FileUtils;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,13 +47,8 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test // DRILL-2827
   public void testImplicitCastStringToBoolean() throws Exception {
-    String boolTable= FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
-
-    String query = String.format(
-        "(select * from dfs_test.`%s` where key = 'true' or key = 'false')", boolTable);
-
     testBuilder()
-      .sqlQuery(query)
+      .sqlQuery("(select * from cp.`store/json/booleanData.json` where key = 'true' or key = 'false')")
       .unOrdered()
       .baselineColumns("key")
       .baselineValues(true)
@@ -114,18 +108,18 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (float value : values.keySet()) {
       try {
-        test("create table dfs_test.tmp.table_with_float as\n" +
+        test("create table dfs.tmp.table_with_float as\n" +
               "(select cast(%1$s as float) c1 from (values(1)))", value);
 
         testBuilder()
-          .sqlQuery("select cast(c1 as int) col1 from dfs_test.tmp.table_with_float")
+          .sqlQuery("select cast(c1 as int) col1 from dfs.tmp.table_with_float")
           .unOrdered()
           .baselineColumns("col1")
           .baselineValues(values.get(value))
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_float");
+        test("drop table if exists dfs.tmp.table_with_float");
       }
     }
   }
@@ -144,20 +138,20 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (int value : values) {
       try {
-        test("create table dfs_test.tmp.table_with_int as\n" +
+        test("create table dfs.tmp.table_with_int as\n" +
               "(select cast(%1$s as int) c1 from (values(1)))", value);
 
         testBuilder()
           .sqlQuery("select cast(c1 as float) col1,\n" +
                             "cast(c1 as double) col2\n" +
-                    "from dfs_test.tmp.table_with_int")
+                    "from dfs.tmp.table_with_int")
           .unOrdered()
           .baselineColumns("col1", "col2")
           .baselineValues((float) value, (double) value)
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_int");
+        test("drop table if exists dfs.tmp.table_with_int");
       }
     }
   }
@@ -183,18 +177,18 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (float value : values.keySet()) {
       try {
-        test("create table dfs_test.tmp.table_with_float as\n" +
+        test("create table dfs.tmp.table_with_float as\n" +
               "(select cast(%1$s as float) c1 from (values(1)))", value);
 
         testBuilder()
-          .sqlQuery("select cast(c1 as bigInt) col1 from dfs_test.tmp.table_with_float")
+          .sqlQuery("select cast(c1 as bigInt) col1 from dfs.tmp.table_with_float")
           .unOrdered()
           .baselineColumns("col1")
           .baselineValues(values.get(value))
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_float");
+        test("drop table if exists dfs.tmp.table_with_float");
       }
     }
   }
@@ -215,20 +209,20 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (long value : values) {
       try {
-        test("create table dfs_test.tmp.table_with_bigint as\n" +
+        test("create table dfs.tmp.table_with_bigint as\n" +
               "(select cast(%1$s as bigInt) c1 from (values(1)))", value);
 
         testBuilder()
           .sqlQuery("select cast(c1 as float) col1,\n" +
                             "cast(c1 as double) col2\n" +
-                    "from dfs_test.tmp.table_with_bigint")
+                    "from dfs.tmp.table_with_bigint")
           .unOrdered()
           .baselineColumns("col1", "col2")
           .baselineValues((float) value, (double) value)
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_bigint");
+        test("drop table if exists dfs.tmp.table_with_bigint");
       }
     }
   }
@@ -254,18 +248,18 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (double value : values.keySet()) {
       try {
-        test("create table dfs_test.tmp.table_with_double as\n" +
+        test("create table dfs.tmp.table_with_double as\n" +
               "(select cast(%1$s as double) c1 from (values(1)))", value);
 
         testBuilder()
-          .sqlQuery("select cast(c1 as int) col1 from dfs_test.tmp.table_with_double")
+          .sqlQuery("select cast(c1 as int) col1 from dfs.tmp.table_with_double")
           .unOrdered()
           .baselineColumns("col1")
           .baselineValues(values.get(value))
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_double");
+        test("drop table if exists dfs.tmp.table_with_double");
       }
     }
   }
@@ -291,18 +285,18 @@ public class TestCastFunctions extends BaseTestQuery {
     values.put(Double.MIN_VALUE, 0L);
     for (double value : values.keySet()) {
       try {
-        test("create table dfs_test.tmp.table_with_double as\n" +
+        test("create table dfs.tmp.table_with_double as\n" +
               "(select cast(%1$s as double) c1 from (values(1)))", value);
 
         testBuilder()
-          .sqlQuery("select cast(c1 as bigInt) col1 from dfs_test.tmp.table_with_double")
+          .sqlQuery("select cast(c1 as bigInt) col1 from dfs.tmp.table_with_double")
           .unOrdered()
           .baselineColumns("col1")
           .baselineValues(values.get(value))
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_double");
+        test("drop table if exists dfs.tmp.table_with_double");
       }
     }
   }
@@ -320,20 +314,20 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (int value : values) {
       try {
-        test("create table dfs_test.tmp.table_with_int as\n" +
+        test("create table dfs.tmp.table_with_int as\n" +
               "(select cast(%1$s as int) c1, cast(%1$s as bigInt) c2 from (values(1)))", value);
 
         testBuilder()
           .sqlQuery("select cast(c1 as bigint) col1,\n" +
                             "cast(c1 as int) col2\n" +
-                    "from dfs_test.tmp.table_with_int")
+                    "from dfs.tmp.table_with_int")
           .unOrdered()
           .baselineColumns("col1", "col2")
           .baselineValues((long) value, value)
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_int");
+        test("drop table if exists dfs.tmp.table_with_int");
       }
     }
   }
@@ -356,7 +350,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
     for (double value : values) {
       try {
-        test("create table dfs_test.tmp.table_with_float as\n" +
+        test("create table dfs.tmp.table_with_float as\n" +
               "(select cast(%1$s as float) c1,\n" +
                       "cast(%1$s as double) c2\n" +
               "from (values(1)))", value);
@@ -364,14 +358,14 @@ public class TestCastFunctions extends BaseTestQuery {
         testBuilder()
           .sqlQuery("select cast(c1 as double) col1,\n" +
                             "cast(c2 as float) col2\n" +
-                    "from dfs_test.tmp.table_with_float")
+                    "from dfs.tmp.table_with_float")
           .unOrdered()
           .baselineColumns("col1", "col2")
           .baselineValues((double) ((float) (value)), (float) value)
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_float");
+        test("drop table if exists dfs.tmp.table_with_float");
       }
     }
   }
@@ -406,7 +400,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .build()
           .run();
       } finally {
-        test("drop table if exists dfs_test.tmp.table_with_int");
+        test("drop table if exists dfs.tmp.table_with_int");
         test("alter session reset planner.enable_decimal_data_type");
       }
   }
@@ -429,7 +423,7 @@ public class TestCastFunctions extends BaseTestQuery {
         .build()
         .run();
     } finally {
-      test("drop table if exists dfs_test.tmp.table_with_int");
+      test("drop table if exists dfs.tmp.table_with_int");
       test("alter session reset planner.enable_decimal_data_type");
     }
   }
@@ -452,7 +446,7 @@ public class TestCastFunctions extends BaseTestQuery {
         .build()
         .run();
     } finally {
-      test("drop table if exists dfs_test.tmp.table_with_int");
+      test("drop table if exists dfs.tmp.table_with_int");
       test("alter session reset planner.enable_decimal_data_type");
     }
   }
@@ -460,7 +454,7 @@ public class TestCastFunctions extends BaseTestQuery {
   @Test // DRILL-4970
   public void testCastNegativeFloatToInt() throws Exception {
     try {
-      test("create table dfs_test.tmp.table_with_float as\n" +
+      test("create table dfs.tmp.table_with_float as\n" +
               "(select cast(-255.0 as double) as double_col,\n" +
                       "cast(-255.0 as float) as float_col\n" +
               "from (values(1)))");
@@ -473,7 +467,7 @@ public class TestCastFunctions extends BaseTestQuery {
       castTypes.add("int");
       castTypes.add("bigInt");
 
-      final String query = "select count(*) as c from dfs_test.tmp.table_with_float\n" +
+      final String query = "select count(*) as c from dfs.tmp.table_with_float\n" +
                             "where (cast(%1$s as %2$s) >= -255 and (%1$s <= -5)) or (%1$s <= -256)";
 
       for (String columnName : columnNames) {
@@ -488,7 +482,7 @@ public class TestCastFunctions extends BaseTestQuery {
         }
       }
     } finally {
-      test("drop table if exists dfs_test.tmp.table_with_float");
+      test("drop table if exists dfs.tmp.table_with_float");
     }
   }
 
@@ -497,7 +491,7 @@ public class TestCastFunctions extends BaseTestQuery {
     try {
       test("alter session set planner.enable_decimal_data_type = true");
 
-      test("create table dfs_test.tmp.table_with_decimal as" +
+      test("create table dfs.tmp.table_with_decimal as" +
               "(select cast(cast(manager_id as double) * (-1) as decimal(9, 0)) as decimal9_col,\n" +
                       "cast(cast(manager_id as double) * (-1) as decimal(18, 0)) as decimal18_col\n" +
               "from cp.`parquet/fixedlenDecimal.parquet` limit 1)");
@@ -506,7 +500,7 @@ public class TestCastFunctions extends BaseTestQuery {
       columnNames.add("decimal9_col");
       columnNames.add("decimal18_col");
 
-      final String query = "select count(*) as c from dfs_test.tmp.table_with_decimal\n" +
+      final String query = "select count(*) as c from dfs.tmp.table_with_decimal\n" +
                             "where (cast(%1$s as varchar) = '-124' and (%1$s <= -5)) or (%1$s <= -256)";
 
       for (String colName : columnNames) {
@@ -519,7 +513,7 @@ public class TestCastFunctions extends BaseTestQuery {
           .run();
       }
     } finally {
-      test("drop table if exists dfs_test.tmp.table_with_decimal");
+      test("drop table if exists dfs.tmp.table_with_decimal");
       test("alter session reset planner.enable_decimal_data_type");
     }
   }

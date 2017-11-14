@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.junit.Ignore;
 import org.junit.Test;

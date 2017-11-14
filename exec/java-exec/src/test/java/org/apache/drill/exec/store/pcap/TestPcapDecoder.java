@@ -17,10 +17,9 @@
 package org.apache.drill.exec.store.pcap;
 
 import com.google.common.io.Resources;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;

@@ -22,8 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryNTimes;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.TestWithZookeeper;
 import org.apache.drill.exec.coord.zk.PathUtils;
@@ -32,22 +33,22 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.PersistedOptionValue;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
-import org.apache.drill.testutils.DirTestWatcher;
 import org.apache.zookeeper.CreateMode;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 
+@Category(SlowTest.class)
 public class TestPStoreProviders extends TestWithZookeeper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPStoreProviders.class);
-
   @Rule
-  public DirTestWatcher dirTestWatcher = new DirTestWatcher();
+  public BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
   @Test
   public void verifyLocalStore() throws Exception {
@@ -79,17 +80,13 @@ public class TestPStoreProviders extends TestWithZookeeper {
   private void localLoadTestHelper(String propertiesDir) throws Exception {
     File localOptionsResources = new File(propertiesDir);
 
-    String optionsDirPath = String.format("%s/sys.options", dirTestWatcher.getDirPath());
-    File optionsDir = new File(optionsDirPath);
-    optionsDir.mkdirs();
-
-    org.apache.commons.io.FileUtils.copyDirectory(localOptionsResources, optionsDir);
-
-    ClusterFixtureBuilder builder = ClusterFixture.builder().
-      configProperty(ExecConstants.HTTP_ENABLE, false).
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).
       configProperty(ExecConstants.SYS_STORE_PROVIDER_CLASS, LocalPersistentStoreProvider.class.getCanonicalName()).
-      configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, String.format("file://%s", dirTestWatcher.getDirPath())).
       configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
+
+    File optionsDir = new File(dirTestWatcher.getStoreDir(), "sys.options");
+    optionsDir.mkdirs();
+    org.apache.commons.io.FileUtils.copyDirectory(localOptionsResources, optionsDir);
 
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
@@ -129,7 +126,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
       try (ZookeeperClient zkClient = new ZookeeperClient(curator,
         PathUtils.join("/", storeConfig.getName()), CreateMode.PERSISTENT)) {
         zkClient.start();
-        String oldOptionJson = FileUtils.getResourceAsString("/options/old_booleanopt.json");
+        String oldOptionJson = DrillFileUtils.getResourceAsString("/options/old_booleanopt.json");
         zkClient.put(oldName, oldOptionJson.getBytes(), null);
       }
 

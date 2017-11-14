@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill;
+package org.apache.drill.test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,7 +30,7 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.DrillTestWrapper.TestServices;
+import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
@@ -128,7 +128,7 @@ public class TestBuilder {
       throw new Exception("High performance comparison only available for ordered checks, to enforce this restriction, ordered() must be called first.");
     }
     return new DrillTestWrapper(this, services, query, queryType, baselineOptionSettingQueries, testOptionSettingQueries,
-        getValidationQueryType(), ordered, highPerformanceComparison, baselineRecords, expectedNumBatches);
+        getValidationQueryType(), ordered, highPerformanceComparison, baselineColumns, baselineRecords, expectedNumBatches);
   }
 
   public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
@@ -248,6 +248,12 @@ public class TestBuilder {
     if (singleExplicitBaselineRecord()) {
       return null;
     }
+
+    if (ordered) {
+      // If there are no base line records or no baseline query then we will check to make sure that the records are in ascending order
+      return null;
+    }
+
     throw new RuntimeException("Must provide some kind of baseline, either a baseline file or another query");
   }
 

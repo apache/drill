@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -60,7 +60,7 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/join/mj_multi_condition.json"),
+          Files.toString(DrillFileUtils.getResourceAsFile("/join/mj_multi_condition.json"),
               Charsets.UTF_8));
       int count = 0;
       for (QueryDataBatch b : results) {
@@ -85,7 +85,7 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "INNER"));
+          Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "INNER"));
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
@@ -110,7 +110,7 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "LEFT"));
+          Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "LEFT"));
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {

@@ -17,18 +17,24 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.TestBuilder;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.file.JsonFileBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.nio.file.Paths;
 
 @Category({SlowTest.class, OperatorTest.class})
 public class TestExternalSort extends BaseTestQuery {
@@ -45,29 +51,48 @@ public class TestExternalSort extends BaseTestQuery {
 
   private void testNumericTypes(boolean testLegacy) throws Exception {
     final int record_count = 10000;
-    String dfs_temp = getDfsTestTmpSchemaLocation();
-    System.out.println(dfs_temp);
-    File table_dir = new File(dfs_temp, "numericTypes");
-    table_dir.mkdir();
-    try(BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")))) {
-      String format = "{ a : %d }%n";
+    final String tableDirName = "numericTypes";
+
+    {
+      final BatchSchema schema = new SchemaBuilder()
+        .add("a", Types.required(TypeProtos.MinorType.INT))
+        .build();
+      final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
+
       for (int i = 0; i <= record_count; i += 2) {
-        os.write(String.format(format, i).getBytes());
+        rowSetBuilder.add(i);
       }
+
+      final RowSet rowSet = rowSetBuilder.build();
+      final File tableFile = createTableFile(tableDirName, "a.json");
+      new JsonFileBuilder(rowSet).build(tableFile);
+      rowSet.clear();
     }
-    try(BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "b.json")))) {
-      String format = "{ a : %.2f }%n";
-      for (int i = 1; i <= record_count; i+=2) {
-        os.write(String.format(format, (float) i).getBytes());
+
+    {
+      final BatchSchema schema = new SchemaBuilder()
+        .add("a", Types.required(TypeProtos.MinorType.FLOAT4))
+        .build();
+      final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
+
+      for (int i = 1; i <= record_count; i += 2) {
+        rowSetBuilder.add((float) i);
       }
+
+      final RowSet rowSet = rowSetBuilder.build();
+      final File tableFile = createTableFile(tableDirName, "b.json");
+      new JsonFileBuilder(rowSet)
+        .setCustomFormatter("a", "%.2f")
+        .build(tableFile);
+      rowSet.clear();
     }
-    String query = "select * from dfs_test.tmp.numericTypes order by a desc";
+
     TestBuilder builder = testBuilder()
-            .sqlQuery(query)
-            .optionSettingQueriesForTestQuery(getOptions(testLegacy))
-            .ordered()
-            .baselineColumns("a");
-    for (int i = record_count; i >= 0;) {
+      .sqlQuery("select * from dfs.`%s` order by a desc", tableDirName)
+      .optionSettingQueriesForTestQuery(getOptions(testLegacy))
+      .ordered()
+      .baselineColumns("a");
+    for (int i = record_count; i >= 0; ) {
       builder.baselineValues((long) i--);
       if (i >= 0) {
         builder.baselineValues((double) i--);
@@ -97,25 +122,44 @@ public class TestExternalSort extends BaseTestQuery {
 
   private void testNumericAndStringTypes(boolean testLegacy) throws Exception {
     final int record_count = 10000;
-    String dfs_temp = getDfsTestTmpSchemaLocation();
-    System.out.println(dfs_temp);
-    File table_dir = new File(dfs_temp, "numericAndStringTypes");
-    table_dir.mkdir();
-    try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")))) {
-      String format = "{ a : %d }%n";
+    final String tableDirName = "numericAndStringTypes";
+
+    {
+      final BatchSchema schema = new SchemaBuilder()
+        .add("a", Types.required(TypeProtos.MinorType.INT))
+        .build();
+      final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
+
       for (int i = 0; i <= record_count; i += 2) {
-        os.write(String.format(format, i).getBytes());
+        rowSetBuilder.add(i);
       }
+
+      final RowSet rowSet = rowSetBuilder.build();
+      final File tableFile = createTableFile(tableDirName, "a.json");
+      new JsonFileBuilder(rowSet).build(tableFile);
+      rowSet.clear();
     }
-    try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "b.json")))) {
-      String format = "{ a : \"%05d\" }%n";
-      for (int i = 1; i <= record_count; i+=2) {
-        os.write(String.format(format, i).getBytes());
+
+    {
+      final BatchSchema schema = new SchemaBuilder()
+        .add("a", Types.required(TypeProtos.MinorType.INT))
+        .build();
+      final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
+
+      for (int i = 1; i <= record_count; i += 2) {
+        rowSetBuilder.add(i);
       }
+
+      final RowSet rowSet = rowSetBuilder.build();
+      final File tableFile = createTableFile(tableDirName, "b.json");
+      new JsonFileBuilder(rowSet)
+        .setCustomFormatter("a", "\"%05d\"")
+        .build(tableFile);
+      rowSet.clear();
     }
-    String query = "select * from dfs_test.tmp.numericAndStringTypes order by a desc";
+
     TestBuilder builder = testBuilder()
-            .sqlQuery(query)
+            .sqlQuery("select * from dfs.`%s` order by a desc", tableDirName)
             .ordered()
             .optionSettingQueriesForTestQuery(getOptions(testLegacy))
             .baselineColumns("a");
@@ -138,7 +182,6 @@ public class TestExternalSort extends BaseTestQuery {
     testNewColumns(false);
   }
 
-
   @Test
   public void testNewColumnsLegacy() throws Exception {
     testNewColumns(true);
@@ -146,26 +189,45 @@ public class TestExternalSort extends BaseTestQuery {
 
   private void testNewColumns(boolean testLegacy) throws Exception {
     final int record_count = 10000;
-    String dfs_temp = getDfsTestTmpSchemaLocation();
-    System.out.println(dfs_temp);
-    File table_dir = new File(dfs_temp, "newColumns");
-    table_dir.mkdir();
-    try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")))) {
-      String format = "{ a : %d, b : %d }%n";
+    final String tableDirName = "newColumns";
+
+    {
+      final BatchSchema schema = new SchemaBuilder()
+        .add("a", Types.required(TypeProtos.MinorType.INT))
+        .add("b", Types.required(TypeProtos.MinorType.INT))
+        .build();
+      final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
+
       for (int i = 0; i <= record_count; i += 2) {
-        os.write(String.format(format, i, i).getBytes());
+        rowSetBuilder.add(i, i);
       }
+
+      final RowSet rowSet = rowSetBuilder.build();
+      final File tableFile = createTableFile(tableDirName, "a.json");
+      new JsonFileBuilder(rowSet).build(tableFile);
+      rowSet.clear();
     }
-    try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "b.json")))) {
-      String format = "{ a : %d, c : %d }%n";
-      for (int i = 1; i <= record_count; i+=2) {
-        os.write(String.format(format, i, i).getBytes());
+
+    {
+      final BatchSchema schema = new SchemaBuilder()
+        .add("a", Types.required(TypeProtos.MinorType.INT))
+        .add("c", Types.required(TypeProtos.MinorType.INT))
+        .build();
+      final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
+
+      for (int i = 1; i <= record_count; i += 2) {
+        rowSetBuilder.add(i, i);
       }
+
+      final RowSet rowSet = rowSetBuilder.build();
+      final File tableFile = createTableFile(tableDirName, "b.json");
+      new JsonFileBuilder(rowSet).build(tableFile);
+      rowSet.clear();
     }
-    String query = "select a, b, c from dfs_test.tmp.newColumns order by a desc";
-//    Test framework currently doesn't handle changing schema (i.e. new columns) on the client side
+
+    // Test framework currently doesn't handle changing schema (i.e. new columns) on the client side
     TestBuilder builder = testBuilder()
-            .sqlQuery(query)
+            .sqlQuery("select a, b, c from dfs.`%s` order by a desc", tableDirName)
             .ordered()
             .optionSettingQueriesForTestQuery(getOptions(testLegacy))
             .baselineColumns("a", "b", "c");
@@ -176,7 +238,14 @@ public class TestExternalSort extends BaseTestQuery {
       }
     }
     builder.go();
-    String newQuery = "select * from dfs_test.tmp.newColumns order by a desc";
-    test(newQuery);
+    test("select * from dfs.`%s` order by a desc", tableDirName);
+  }
+
+  private File createTableFile(final String tableDirName, final String fileName) {
+    return dirTestWatcher
+      .getRootDir()
+      .toPath()
+      .resolve(Paths.get(tableDirName, fileName))
+      .toFile();
   }
 }

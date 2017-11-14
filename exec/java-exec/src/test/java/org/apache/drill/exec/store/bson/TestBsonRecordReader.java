@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;

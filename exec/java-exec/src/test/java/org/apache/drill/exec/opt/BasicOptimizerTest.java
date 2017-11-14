@@ -20,7 +20,7 @@ package org.apache.drill.exec.opt;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class BasicOptimizerTest extends ExecTest {
     public void parseSimplePlan() throws Exception{
         DrillConfig c = DrillConfig.create();
         LogicalPlanPersistence lpp = PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c);
-        LogicalPlan plan = LogicalPlan.parse(lpp, FileUtils.getResourceAsString("/scan_screen_logical.json"));
+        LogicalPlan plan = LogicalPlan.parse(lpp, DrillFileUtils.getResourceAsString("/scan_screen_logical.json"));
         String unparse = plan.unparse(lpp);
 //        System.out.println(unparse);
         //System.out.println( new BasicOptimizer(DrillConfig.create()).convert(plan).unparse(c.getMapper().writer()));

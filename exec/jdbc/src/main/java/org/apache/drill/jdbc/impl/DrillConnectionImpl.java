@@ -17,6 +17,7 @@
  */
 package org.apache.drill.jdbc.impl;
 
+import java.io.File;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -58,7 +59,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillConnection;
 import org.apache.drill.jdbc.DrillConnectionConfig;
@@ -67,6 +67,16 @@ import org.apache.drill.jdbc.JdbcApiSqlException;
 import org.slf4j.Logger;
 
 import com.google.common.base.Throwables;
+
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DEFAULT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_DFS_DEFAULT_PROP;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_DFS_ROOT_PROP;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_DFS_TMP_PROP;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.UNIT_TEST_PROP_PREFIX;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.updateSchemaLocation;
 
 /**
  * Drill's implementation of {@link Connection}.
@@ -817,16 +827,36 @@ class DrillConnectionImpl extends AvaticaConnection
   /**
    * Test only code to make JDBC tests run concurrently. If the property <i>drillJDBCUnitTests</i> is set to
    * <i>true</i> in connection properties:
-   *   - Update dfs_test.tmp workspace location with a temp directory. This temp is for exclusive use for test jvm.
+   *   - Update dfs.tmp workspace location with a temp directory. This temp is for exclusive use for test jvm.
    *   - Update dfs.tmp workspace to immutable, so that test writer don't try to create views in dfs.tmp
    * @param pluginRegistry
    */
   private static void makeTmpSchemaLocationsUnique(StoragePluginRegistry pluginRegistry, Properties props) {
     try {
-      if (props != null && "true".equalsIgnoreCase(props.getProperty("drillJDBCUnitTests"))) {
-        final String tmpDirPath = TestUtilities.createTempDir();
-        TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, tmpDirPath);
-        TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
+      if (props != null && "true".equalsIgnoreCase(props.getProperty(UNIT_TEST_PROP_PREFIX))) {
+        final String logMessage = "The {} property was not configured";
+
+        final String dfsTmpPath = props.getProperty(UNIT_TEST_DFS_TMP_PROP);
+        final String dfsRootPath = props.getProperty(UNIT_TEST_DFS_ROOT_PROP);
+        final String dfsDefaultPath = props.getProperty(UNIT_TEST_DFS_DEFAULT_PROP);
+
+        if (dfsTmpPath == null) {
+          logger.warn(logMessage, UNIT_TEST_DFS_TMP_PROP);
+        } else {
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsTmpPath), TMP_SCHEMA);
+        }
+
+        if (dfsRootPath == null) {
+          logger.warn(logMessage, UNIT_TEST_DFS_ROOT_PROP);
+        } else {
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsRootPath), ROOT_SCHEMA);
+        }
+
+        if (dfsDefaultPath == null) {
+          logger.warn(logMessage, UNIT_TEST_DFS_DEFAULT_PROP);
+        } else {
+          updateSchemaLocation(DFS_PLUGIN_NAME, pluginRegistry, new File(dfsDefaultPath), DEFAULT_SCHEMA);
+        }
       }
     } catch(Throwable e) {
       // Reason for catching Throwable is to capture NoSuchMethodError etc which depend on certain classed to be

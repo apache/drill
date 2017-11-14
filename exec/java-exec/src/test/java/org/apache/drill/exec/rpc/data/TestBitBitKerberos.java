@@ -26,7 +26,7 @@ import mockit.Injectable;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.NonStrictExpectations;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
@@ -96,7 +96,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     final Config config = DrillConfig.create(cloneDefaultTestConfigProperties());
     krbHelper = new KerberosHelper(TestBitBitKerberos.class.getSimpleName());
-    krbHelper.setupKdc();
+    krbHelper.setupKdc(dirTestWatcher.getTmpDir());
 
     newConfig = new DrillConfig(
         config.withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
