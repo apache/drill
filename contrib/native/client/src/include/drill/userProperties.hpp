@@ -28,6 +28,17 @@ class DECLSPEC_DRILL_CLIENT DrillUserProperties{
         static const std::map<std::string, uint32_t> USER_PROPERTIES;
 
         DrillUserProperties(){};
+        
+        /// @brief Update the property value associate with the property key if the value is 
+        /// empty.
+        /// 
+        /// @param in_propName              The property name.
+        /// @param in_propValue             The property value.
+        void setDefaultProperty(const std::string& in_propName, const std::string& in_propValue){
+            if (!isPropSet(in_propName) || m_properties[in_propName].empty()){
+                m_properties[in_propName] = in_propValue;
+            }
+        }
 
         void setProperty( const std::string& propName, const std::string& propValue){
             std::pair< std::string, std::string> in = make_pair(propName, propValue);
