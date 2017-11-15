@@ -224,7 +224,6 @@ public class TestBitBitKerberos extends BaseTestQuery {
   public void success(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus) throws Exception {
 
     new NonStrictExpectations() {{
-      workBus.getFragmentManagerIfExists((FragmentHandle) any); result = manager;
       workBus.getFragmentManager( (FragmentHandle) any); result = manager;
     }};
 
@@ -272,7 +271,6 @@ public class TestBitBitKerberos extends BaseTestQuery {
     updateTestCluster(1, newConfig);
 
     new NonStrictExpectations() {{
-      workBus.getFragmentManagerIfExists((FragmentHandle) any); result = manager;
       workBus.getFragmentManager( (FragmentHandle) any); result = manager;
     }};
 
@@ -321,7 +319,6 @@ public class TestBitBitKerberos extends BaseTestQuery {
     updateTestCluster(1, newConfig);
 
     new NonStrictExpectations() {{
-      workBus.getFragmentManagerIfExists((FragmentHandle) any); result = manager;
       workBus.getFragmentManager( (FragmentHandle) any); result = manager;
     }};
 
