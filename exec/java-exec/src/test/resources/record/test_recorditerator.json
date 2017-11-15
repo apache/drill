@@ -60,7 +60,7 @@
         @id:2,
         child:1,
         pop:"project",
-        exprs:[ { ref : "`*`", expr : "`*`"} ]
+        exprs:[ { ref : "`**`", expr : "`**`"} ]
       },
       {
         @id:3,

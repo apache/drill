@@ -32,6 +32,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.store.AbstractSchema;
 
 import org.apache.calcite.tools.ValidationException;
@@ -203,7 +204,8 @@ public class SqlHandlerUtil {
             }
           };
 
-      return RelOptUtil.createProject(input, refs, names, false);
+      return RelOptUtil.createProject(input, refs, names, false,
+          DrillRelFactories.LOGICAL_BUILDER.create(input.getCluster(), null));
     }
   }
 

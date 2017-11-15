@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,12 +27,13 @@ public class DrillScanRule  extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillScanRule();
 
   private DrillScanRule() {
-    super(RelOptHelper.any(EnumerableTableScan.class), "DrillTableRule");
+    super(RelOptHelper.any(EnumerableTableScan.class),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillTableRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final EnumerableTableScan access = (EnumerableTableScan) call.rel(0);
+    final EnumerableTableScan access = call.rel(0);
     final RelTraitSet traits = access.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     call.transformTo(new DrillScanRel(access.getCluster(), traits, access.getTable()));
   }

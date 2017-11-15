@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,23 +23,18 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.util.Pair;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
-import org.apache.drill.exec.store.parquet.ParquetGroupScan;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 public abstract class DrillPushLimitToScanRule extends RelOptRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillPushLimitToScanRule.class);
 
   private DrillPushLimitToScanRule(RelOptRuleOperand operand, String description) {
-    super(operand, description);
+    super(operand, DrillRelFactories.LOGICAL_BUILDER, description);
   }
 
-  public static DrillPushLimitToScanRule LIMIT_ON_SCAN = new DrillPushLimitToScanRule(
-      RelOptHelper.some(DrillLimitRel.class, RelOptHelper.any(DrillScanRel.class)), "DrillPushLimitToScanRule_LimitOnScan") {
+  public static DrillPushLimitToScanRule LIMIT_ON_SCAN =
+      new DrillPushLimitToScanRule(RelOptHelper.some(DrillLimitRel.class, RelOptHelper.any(DrillScanRel.class)),
+          "DrillPushLimitToScanRule_LimitOnScan") {
     @Override
     public boolean matches(RelOptRuleCall call) {
       DrillLimitRel limitRel = call.rel(0);
@@ -60,8 +55,11 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
     }
   };
 
-  public static DrillPushLimitToScanRule LIMIT_ON_PROJECT = new DrillPushLimitToScanRule(
-      RelOptHelper.some(DrillLimitRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))), "DrillPushLimitToScanRule_LimitOnProject") {
+  public static DrillPushLimitToScanRule LIMIT_ON_PROJECT =
+      new DrillPushLimitToScanRule(
+          RelOptHelper.some(DrillLimitRel.class, RelOptHelper.some(
+              DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))),
+          "DrillPushLimitToScanRule_LimitOnProject") {
     @Override
     public boolean matches(RelOptRuleCall call) {
       DrillLimitRel limitRel = call.rel(0);

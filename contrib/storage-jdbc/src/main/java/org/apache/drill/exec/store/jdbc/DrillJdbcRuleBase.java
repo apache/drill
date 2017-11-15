@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Predicates;
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
 import org.apache.calcite.plan.Convention;
@@ -34,6 +35,7 @@ import org.apache.calcite.rex.RexNode;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
 abstract class DrillJdbcRuleBase extends ConverterRule {
 
@@ -50,7 +52,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
   protected final JdbcConvention out;
 
   private DrillJdbcRuleBase(Class<? extends RelNode> clazz, RelTrait in, JdbcConvention out, String description) {
-    super(clazz, in, out, description);
+    super(clazz, Predicates.<RelNode>alwaysTrue(), in, out, DrillRelFactories.LOGICAL_BUILDER, description);
     this.out = out;
   }
 
@@ -71,7 +73,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
     public boolean matches(RelOptRuleCall call) {
       try {
 
-        final LogicalProject project = (LogicalProject) call.rel(0);
+        final LogicalProject project = call.rel(0);
         for (RexNode node : project.getChildExps()) {
           if (!checkedExpressions.get(node)) {
             return false;
@@ -102,7 +104,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
     public boolean matches(RelOptRuleCall call) {
       try {
 
-        final LogicalFilter filter = (LogicalFilter) call.rel(0);
+        final LogicalFilter filter = call.rel(0);
         for (RexNode node : filter.getChildExps()) {
           if (!checkedExpressions.get(node)) {
             return false;

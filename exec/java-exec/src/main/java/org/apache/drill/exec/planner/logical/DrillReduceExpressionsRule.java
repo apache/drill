@@ -20,12 +20,9 @@ package org.apache.drill.exec.planner.logical;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.core.Calc;
-import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
-import org.apache.calcite.rel.logical.LogicalCalc;
-import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 
@@ -42,7 +39,7 @@ public class DrillReduceExpressionsRule {
   private static class DrillReduceFilterRule extends ReduceExpressionsRule.FilterReduceExpressionsRule {
 
     DrillReduceFilterRule() {
-      super(DrillFilterRel.class, RelFactories.LOGICAL_BUILDER);
+      super(Filter.class, DrillRelFactories.LOGICAL_BUILDER);
     }
 
     /**
@@ -61,7 +58,7 @@ public class DrillReduceExpressionsRule {
   private static class DrillReduceCalcRule extends ReduceExpressionsRule.CalcReduceExpressionsRule {
 
     DrillReduceCalcRule() {
-      super(Calc.class, RelFactories.LOGICAL_BUILDER);
+      super(Calc.class, DrillRelFactories.LOGICAL_BUILDER);
     }
 
     /**

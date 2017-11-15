@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,7 +25,7 @@ import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.rules.FilterAggregateTransposeRule;
-import org.apache.calcite.tools.RelBuilder;
+import org.apache.drill.exec.planner.DrillRelBuilder;
 
 public class DrillFilterAggregateTransposeRule extends FilterAggregateTransposeRule{
 
@@ -35,14 +35,16 @@ public class DrillFilterAggregateTransposeRule extends FilterAggregateTransposeR
   public static final FilterAggregateTransposeRule INSTANCE = new DrillFilterAggregateTransposeRule();
 
   private DrillFilterAggregateTransposeRule() {
-    super(Filter.class, RelBuilder.proto(Contexts.of(RelFactories.DEFAULT_FILTER_FACTORY)), Aggregate.class);
+    super(Filter.class, DrillRelBuilder.proto(Contexts.of(RelFactories.DEFAULT_FILTER_FACTORY)),
+        Aggregate.class);
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final Filter filter = (Filter) call.rel(0);
-    final Aggregate aggregate = (Aggregate) call.rel(1);
-    return filter.getTraitSet().getTrait(ConventionTraitDef.INSTANCE) == aggregate.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
+    final Filter filter = call.rel(0);
+    final Aggregate aggregate = call.rel(1);
+    return filter.getTraitSet().getTrait(ConventionTraitDef.INSTANCE)
+        == aggregate.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
   }
 
 }

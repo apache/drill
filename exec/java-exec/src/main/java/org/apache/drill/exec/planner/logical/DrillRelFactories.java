@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.plan.Contexts;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.CorrelationId;
@@ -27,9 +28,22 @@ import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.tools.RelBuilderFactory;
+import org.apache.drill.exec.planner.DrillRelBuilder;
 
 import java.util.List;
 import java.util.Set;
+
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_AGGREGATE_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_FILTER_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_JOIN_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_MATCH_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_PROJECT_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SEMI_JOIN_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SET_OP_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_TABLE_SCAN_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
 
 /**
  * Contains factory implementation for creating various Drill Logical Rel nodes.
@@ -45,6 +59,22 @@ public class DrillRelFactories {
 
   public static final RelFactories.JoinFactory DRILL_LOGICAL_JOIN_FACTORY = new DrillJoinFactoryImpl();
 
+  /**
+   * A {@link RelBuilderFactory} that creates a {@link DrillRelBuilder} that will
+   * create logical relational expressions for everything.
+   */
+  public static final RelBuilderFactory LOGICAL_BUILDER =
+      DrillRelBuilder.proto(
+          Contexts.of(DEFAULT_PROJECT_FACTORY,
+              DEFAULT_FILTER_FACTORY,
+              DEFAULT_JOIN_FACTORY,
+              DEFAULT_SEMI_JOIN_FACTORY,
+              DEFAULT_SORT_FACTORY,
+              DEFAULT_AGGREGATE_FACTORY,
+              DEFAULT_MATCH_FACTORY,
+              DEFAULT_SET_OP_FACTORY,
+              DEFAULT_VALUES_FACTORY,
+              DEFAULT_TABLE_SCAN_FACTORY));
 
   /**
    * Implementation of {@link RelFactories.ProjectFactory} that returns a vanilla
@@ -55,13 +85,12 @@ public class DrillRelFactories {
     public RelNode createProject(RelNode child,
                                  List<? extends RexNode> childExprs, List<String> fieldNames) {
       final RelOptCluster cluster = child.getCluster();
-      final RelDataType rowType = RexUtil.createStructType(cluster.getTypeFactory(), childExprs, fieldNames);
-      final RelNode project = DrillProjectRel.create(cluster, child.getTraitSet(), child, childExprs, rowType);
+      final RelDataType rowType =
+          RexUtil.createStructType(cluster.getTypeFactory(), childExprs, fieldNames, null);
 
-      return project;
+      return DrillProjectRel.create(cluster, child.getTraitSet(), child, childExprs, rowType);
     }
   }
-
 
   /**
    * Implementation of {@link RelFactories.FilterFactory} that
@@ -73,7 +102,6 @@ public class DrillRelFactories {
       return DrillFilterRel.create(child, condition);
     }
   }
-
 
   /**
    * Implementation of {@link RelFactories.JoinFactory} that returns a vanilla

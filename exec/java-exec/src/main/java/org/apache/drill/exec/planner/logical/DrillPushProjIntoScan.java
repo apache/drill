@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,17 +38,16 @@ import com.google.common.collect.Lists;
 public class DrillPushProjIntoScan extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillPushProjIntoScan(LogicalProject.class, EnumerableTableScan.class);
 
-  public static final RelOptRule DRILL_LOGICAL_INSTANCE = new DrillPushProjIntoScan(DrillProjectRel.class, DrillScanRel.class);
-
-  private DrillPushProjIntoScan(Class<? extends Project> projectClass, Class<? extends TableScan> scanClass) {
-    super(RelOptHelper.some(projectClass, RelOptHelper.any(scanClass)), "DrillPushProjIntoScan");
+  private DrillPushProjIntoScan(Class<? extends Project> projectClass,
+      Class<? extends TableScan> scanClass) {
+    super(RelOptHelper.some(projectClass, RelOptHelper.any(scanClass)),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillPushProjIntoScan");
   }
-
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final Project proj = (Project) call.rel(0);
-    final TableScan scan = (TableScan) call.rel(1);
+    final Project proj = call.rel(0);
+    final TableScan scan = call.rel(1);
 
     try {
       ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());

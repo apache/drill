@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.rules.ProjectFilterTransposeRule;
@@ -29,7 +28,7 @@ public class DrillPushProjectPastFilterRule extends ProjectFilterTransposeRule {
   public final static RelOptRule INSTANCE = new DrillPushProjectPastFilterRule(DrillConditions.PRESERVE_ITEM);
 
   protected DrillPushProjectPastFilterRule(PushProjector.ExprCondition preserveExprCondition) {
-    super(LogicalProject.class, LogicalFilter.class, RelFactories.LOGICAL_BUILDER, preserveExprCondition);
+    super(LogicalProject.class, LogicalFilter.class,
+        DrillRelFactories.LOGICAL_BUILDER, preserveExprCondition);
   }
-
 }

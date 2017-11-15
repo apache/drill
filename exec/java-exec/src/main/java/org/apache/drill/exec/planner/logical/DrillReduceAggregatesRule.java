@@ -99,7 +99,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
   //~ Constructors -----------------------------------------------------------
 
   protected DrillReduceAggregatesRule(RelOptRuleOperand operand) {
-    super(operand);
+    super(operand, DrillRelFactories.LOGICAL_BUILDER, null);
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -204,7 +204,9 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                   input.getRowType().getFieldNames(),
                   Collections.<String>nCopies(
                       extraArgCount,
-                      null)));
+                      null)),
+              false,
+              relBuilderFactory.create(input.getCluster(), null));
     }
     Aggregate newAggRel =
         newAggregateRel(
@@ -661,7 +663,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
     public DrillConvertSumToSumZero(RelOptRuleOperand operand) {
-      super(operand);
+      super(operand, DrillRelFactories.LOGICAL_BUILDER, null);
     }
 
     @Override
@@ -725,7 +727,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
 
   private static class DrillConvertWindowSumToSumZero extends RelOptRule {
     public DrillConvertWindowSumToSumZero(RelOptRuleOperand operand) {
-      super(operand);
+      super(operand, DrillRelFactories.LOGICAL_BUILDER, null);
     }
 
     @Override

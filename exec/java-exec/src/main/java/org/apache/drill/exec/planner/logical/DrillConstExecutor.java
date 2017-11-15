@@ -68,7 +68,6 @@ import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
@@ -316,9 +315,9 @@ public class DrillConstExecutor implements RexExecutor {
                 milliseconds = intervalDayOut.milliseconds;
               }
               return rexBuilder.makeLiteral(
-                new BigDecimal(days * DateUtility.daysToStandardMillis + milliseconds),
-                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY, newCall.getType().isNullable()),
-                false);
+                  new BigDecimal(days * (long) DateUtility.daysToStandardMillis + milliseconds),
+                  TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY,
+                      newCall.getType().isNullable()), false);
             }
             // The list of known unsupported types is used to trigger this behavior of re-using the input expression
             // before the expression is even attempted to be evaluated, this is just here as a last precaution a

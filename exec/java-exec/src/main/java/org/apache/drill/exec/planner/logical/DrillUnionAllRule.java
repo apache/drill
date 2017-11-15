@@ -39,7 +39,8 @@ public class DrillUnionAllRule extends RelOptRule {
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillUnionAllRule() {
-    super(RelOptHelper.any(LogicalUnion.class, Convention.NONE), "DrillUnionRule");
+    super(RelOptHelper.any(LogicalUnion.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillUnionRule");
   }
 
   @Override

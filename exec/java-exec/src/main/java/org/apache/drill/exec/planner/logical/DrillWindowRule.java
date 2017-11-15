@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,8 @@ public class DrillWindowRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillWindowRule();
 
   private DrillWindowRule() {
-    super(RelOptHelper.some(Window.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillWindowRule");
+    super(RelOptHelper.some(Window.class, Convention.NONE, RelOptHelper.any(RelNode.class)),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillWindowRule");
   }
 
   @Override

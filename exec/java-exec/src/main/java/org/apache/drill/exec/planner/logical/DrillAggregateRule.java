@@ -36,7 +36,11 @@ public class DrillAggregateRule extends RelOptRule {
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillAggregateRule() {
-    super(RelOptHelper.some(LogicalAggregate.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillAggregateRule");
+    super(
+        RelOptHelper.some(LogicalAggregate.class,
+            Convention.NONE, RelOptHelper.any(RelNode.class)),
+        DrillRelFactories.LOGICAL_BUILDER,
+        "DrillAggregateRule");
   }
 
   @Override

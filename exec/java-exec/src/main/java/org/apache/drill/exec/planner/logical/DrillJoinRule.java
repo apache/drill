@@ -46,8 +46,8 @@ public class DrillJoinRule extends RelOptRule {
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillJoinRule() {
-    super(
-        RelOptHelper.any(LogicalJoin.class, Convention.NONE),
+    super(RelOptHelper.any(LogicalJoin.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER,
         "DrillJoinRule");
   }
 
@@ -64,7 +64,6 @@ public class DrillJoinRule extends RelOptRule {
     List<Integer> leftKeys = Lists.newArrayList();
     List<Integer> rightKeys = Lists.newArrayList();
     List<Boolean> filterNulls = Lists.newArrayList();
-    int numLeftFields = convertedLeft.getRowType().getFieldCount();
 
     boolean addFilter = false;
     RexNode origJoinCondition = join.getCondition();

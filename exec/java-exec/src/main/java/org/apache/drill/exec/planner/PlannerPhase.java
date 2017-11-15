@@ -21,21 +21,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
 import org.apache.calcite.rel.core.RelFactories;
-import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
-import org.apache.calcite.rel.rules.AggregateRemoveRule;
-import org.apache.calcite.rel.rules.FilterMergeRule;
-import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
-import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
 import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
-import org.apache.calcite.rel.rules.ProjectRemoveRule;
-import org.apache.calcite.rel.rules.ProjectToWindowRule;
-import org.apache.calcite.rel.rules.ProjectWindowTransposeRule;
-import org.apache.calcite.rel.rules.ReduceExpressionsRule;
-import org.apache.calcite.rel.rules.SortRemoveRule;
-import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.RuleSets;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
@@ -92,6 +80,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Returns RuleSet for concrete planner phase.
+ * Only rules which use DrillRelFactories should be used in this enum.
+ */
 public enum PlannerPhase {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
@@ -109,8 +101,8 @@ public enum PlannerPhase {
   WINDOW_REWRITE("Window Function rewrites") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return RuleSets.ofList(
-          ReduceExpressionsRule.CALC_INSTANCE,
-          ProjectToWindowRule.PROJECT
+          RuleInstance.CALC_INSTANCE,
+          RuleInstance.PROJECT_TO_LOGICAL_PROJECT_AND_WINDOW_RULE
           );
     }
   },
@@ -132,7 +124,7 @@ public enum PlannerPhase {
         rules.add(DRILL_JOIN_TO_MULTIJOIN_RULE);
         rules.add(DRILL_LOPT_OPTIMIZE_JOIN_RULE);
       }
-      rules.add(ProjectRemoveRule.INSTANCE);
+      rules.add(RuleInstance.PROJECT_REMOVE_RULE);
       return PlannerPhase.mergedRuleSets(
           RuleSets.ofList(rules),
           getStorageRules(context, plugins, this)
@@ -208,11 +200,13 @@ public enum PlannerPhase {
   }
 
 
-  static final RelOptRule DRILL_JOIN_TO_MULTIJOIN_RULE = new JoinToMultiJoinRule(DrillJoinRel.class);
-  static final RelOptRule DRILL_LOPT_OPTIMIZE_JOIN_RULE = new LoptOptimizeJoinRule(
-      DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY,
-      DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY,
-      DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY);
+  static final RelOptRule DRILL_JOIN_TO_MULTIJOIN_RULE =
+      new JoinToMultiJoinRule(DrillJoinRel.class, DrillRelFactories.LOGICAL_BUILDER);
+  static final RelOptRule DRILL_LOPT_OPTIMIZE_JOIN_RULE =
+      new LoptOptimizeJoinRule(DrillRelBuilder.proto(
+          DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY,
+          DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY,
+          DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY));
 
   /**
    * Get a list of logical rules that can be turned on or off by session/system options.
@@ -236,7 +230,7 @@ public enum PlannerPhase {
 
     if (ps.isConstantFoldingEnabled()) {
       // TODO - DRILL-2218
-      userConfigurableRules.add(ReduceExpressionsRule.PROJECT_INSTANCE);
+      userConfigurableRules.add(RuleInstance.PROJECT_INSTANCE);
       userConfigurableRules.add(DrillReduceExpressionsRule.FILTER_INSTANCE_DRILL);
       userConfigurableRules.add(DrillReduceExpressionsRule.CALC_INSTANCE_DRILL);
     }
@@ -250,12 +244,12 @@ public enum PlannerPhase {
    */
   final static ImmutableSet<RelOptRule> staticRuleSet = ImmutableSet.<RelOptRule> builder().add(
       // Add support for Distinct Union (by using Union-All followed by Distinct)
-      UnionToDistinctRule.INSTANCE,
+      RuleInstance.UNION_TO_DISTINCT_RULE,
 
       // Add support for WHERE style joins.
       DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
       DrillFilterJoinRules.DRILL_JOIN,
-      JoinPushExpressionsRule.INSTANCE,
+      RuleInstance.JOIN_PUSH_EXPRESSIONS_RULE,
       // End support for WHERE style joins.
 
       /*
@@ -266,12 +260,12 @@ public enum PlannerPhase {
       //FilterSetOpTransposeRule.INSTANCE,
       DrillFilterAggregateTransposeRule.INSTANCE,
 
-      FilterMergeRule.INSTANCE,
-      AggregateRemoveRule.INSTANCE,
-      ProjectRemoveRule.INSTANCE,
-      SortRemoveRule.INSTANCE,
+      RuleInstance.FILTER_MERGE_RULE,
+      RuleInstance.AGGREGATE_REMOVE_RULE,
+      RuleInstance.PROJECT_REMOVE_RULE,
+      RuleInstance.SORT_REMOVE_RULE,
 
-      AggregateExpandDistinctAggregatesRule.JOIN,
+      RuleInstance.AGGREGATE_EXPAND_DISTINCT_AGGREGATES_RULE,
       DrillReduceAggregatesRule.INSTANCE,
 
       /*
@@ -281,13 +275,13 @@ public enum PlannerPhase {
       DrillPushProjectPastJoinRule.INSTANCE,
       // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
       //DrillProjectSetOpTransposeRule.INSTANCE,
-      ProjectWindowTransposeRule.INSTANCE,
+      RuleInstance.PROJECT_WINDOW_TRANSPOSE_RULE,
       DrillPushProjIntoScan.INSTANCE,
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.
        */
-      ExpandConversionRule.INSTANCE,
+      RuleInstance.EXPAND_CONVERSION_RULE,
       DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
       DrillProjectRule.INSTANCE,
@@ -393,9 +387,9 @@ public enum PlannerPhase {
 
   // Ruleset for join permutation, used only in VolcanoPlanner.
   static RuleSet getJoinPermRules(OptimizerRulesContext optimizerRulesContext) {
-    return RuleSets.ofList(ImmutableSet.<RelOptRule> builder().add( //
-        JoinPushThroughJoinRule.RIGHT,
-        JoinPushThroughJoinRule.LEFT
+    return RuleSets.ofList(ImmutableSet.<RelOptRule> builder().add(
+        RuleInstance.JOIN_PUSH_THROUGH_JOIN_RULE_RIGHT,
+        RuleInstance.JOIN_PUSH_THROUGH_JOIN_RULE_LEFT
         ).build());
   }
 
@@ -404,7 +398,7 @@ public enum PlannerPhase {
     ));
 
   static final RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
-    final List<RelOptRule> ruleList = new ArrayList<RelOptRule>();
+    final List<RelOptRule> ruleList = new ArrayList<>();
     final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
     ruleList.add(ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN);
@@ -414,7 +408,7 @@ public enum PlannerPhase {
     ruleList.add(ProjectPrule.INSTANCE);
     ruleList.add(ScanPrule.INSTANCE);
     ruleList.add(ScreenPrule.INSTANCE);
-    ruleList.add(ExpandConversionRule.INSTANCE);
+    ruleList.add(RuleInstance.EXPAND_CONVERSION_RULE);
     ruleList.add(FilterPrule.INSTANCE);
     ruleList.add(LimitPrule.INSTANCE);
     ruleList.add(WriterPrule.INSTANCE);

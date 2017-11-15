@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -40,6 +39,7 @@ import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
 /**
@@ -121,7 +121,8 @@ public abstract class DrillRelOptUtil {
           }
         };
 
-    return RelOptUtil.createProject(rel, refs, fieldNames, false);
+    return RelOptUtil.createProject(rel, refs, fieldNames, false,
+        DrillRelFactories.LOGICAL_BUILDER.create(rel.getCluster(), null));
   }
 
   public static boolean isTrivialProject(Project project, boolean useNamesInIdentityProjCalc) {

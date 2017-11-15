@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,6 +27,7 @@ import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.util.Pair;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
 import java.util.List;
@@ -39,7 +40,8 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     super(
         operand(
             LogicalFilter.class,
-            operand(LogicalProject.class, any())));
+            operand(LogicalProject.class, any())),
+        DrillRelFactories.LOGICAL_BUILDER, null);
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -73,15 +75,17 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
 
     // convert the filter to one that references the child of the project
     RexNode newCondition =
-        RelOptUtil.pushFilterPastProject(qualifedPred, projRel);
+        RelOptUtil.pushPastProject(qualifedPred, projRel);
 
     Filter newFilterRel = LogicalFilter.create(projRel.getInput(), newCondition);
 
     Project newProjRel =
         (Project) RelOptUtil.createProject(
             newFilterRel,
-            projRel.getNamedProjects(),
-            false);
+            Pair.left(projRel.getNamedProjects()),
+            Pair.right(projRel.getNamedProjects()),
+            false,
+            relBuilderFactory.create(projRel.getCluster(), null));
 
     final RexNode unqualifiedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), unqualifiedPredList, true);
 
