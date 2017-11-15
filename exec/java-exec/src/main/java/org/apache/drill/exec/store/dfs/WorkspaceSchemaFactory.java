@@ -70,6 +70,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -151,17 +152,35 @@ public class WorkspaceSchemaFactory {
    */
   public boolean accessible(final String userName) throws IOException {
     final FileSystem fs = ImpersonationUtil.createFileSystem(userName, fsConf);
+    boolean tryListStatus = false;
     try {
-      // We have to rely on the listStatus as a FileSystem can have complicated controls such as regular unix style
-      // permissions, Access Control Lists (ACLs) or Access Control Expressions (ACE). Hadoop 2.7 version of FileSystem
-      // has a limited private API (FileSystem.access) to check the permissions directly
-      // (see https://issues.apache.org/jira/browse/HDFS-6570). Drill currently relies on Hadoop 2.5.0 version of
-      // FileClient. TODO: Update this when DRILL-3749 is fixed.
-      fs.listStatus(wsPath);
+      // access API checks if a user has certain permissions on a file or directory.
+      // returns normally if requested permissions are granted and throws an exception
+      // if access is denied. This API was added in HDFS 2.6 (see HDFS-6570).
+      // It is less expensive (than listStatus which was being used before) and hides the
+      // complicated access control logic underneath.
+      fs.access(wsPath, FsAction.READ);
     } catch (final UnsupportedOperationException e) {
-      logger.trace("The filesystem for this workspace does not support this operation.", e);
+      logger.debug("The filesystem for this workspace does not support access operation.", e);
+      tryListStatus = true;
     } catch (final FileNotFoundException | AccessControlException e) {
-      return false;
+      logger.debug("not found or cannot be accessed exception while accessing file {} : ", wsPath.toString(), e);
+      tryListStatus = true;
+    } catch (final IOException e) {
+      logger.debug("IO Exception accessing file {}", wsPath.toString(), e);
+      tryListStatus = true;
+    }
+
+    // if fs.access fails for some reason, fall back to listStatus.
+    if (tryListStatus) {
+      try {
+        fs.listStatus(wsPath);
+      } catch (final UnsupportedOperationException e) {
+        logger.debug("The filesystem for this workspace does not support listStatus operation.", e);
+      } catch (final FileNotFoundException | AccessControlException e) {
+        logger.debug("not found or cannot be accessed exception with listStatus for file {} ", wsPath.toString(), e);
+        return false;
+      }
     }
 
     return true;
