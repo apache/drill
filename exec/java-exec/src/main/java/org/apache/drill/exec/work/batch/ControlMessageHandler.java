@@ -193,7 +193,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
 
     // Case 2: Cancel active intermediate fragment. Such a fragment will be in the work bus. Delegate cancel to the
     // work bus.
-    final boolean removed = bee.getContext().getWorkBus().cancelAndRemoveFragmentManagerIfExists(handle);
+    final boolean removed = bee.getContext().getWorkBus().removeFragmentManager(handle, true);
     if (removed) {
       return Acks.OK;
     }
@@ -217,7 +217,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
 
   private Ack resumeFragment(final FragmentHandle handle) {
     // resume a pending fragment
-    final FragmentManager manager = bee.getContext().getWorkBus().getFragmentManagerIfExists(handle);
+    final FragmentManager manager = bee.getContext().getWorkBus().getFragmentManager(handle);
     if (manager != null) {
       manager.unpause();
       return Acks.OK;
@@ -237,14 +237,12 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
 
   private Ack receivingFragmentFinished(final FinishedReceiver finishedReceiver) {
 
-    final FragmentManager manager =
-        bee.getContext().getWorkBus().getFragmentManagerIfExists(finishedReceiver.getSender());
+    final FragmentManager manager = bee.getContext().getWorkBus().getFragmentManager(finishedReceiver.getSender());
 
-    FragmentExecutor executor;
     if (manager != null) {
       manager.receivingFragmentFinished(finishedReceiver.getReceiver());
     } else {
-      executor = bee.getFragmentRunner(finishedReceiver.getSender());
+      final FragmentExecutor executor = bee.getFragmentRunner(finishedReceiver.getSender());
       if (executor != null) {
         executor.receivingFragmentFinished(finishedReceiver.getReceiver());
       } else {
