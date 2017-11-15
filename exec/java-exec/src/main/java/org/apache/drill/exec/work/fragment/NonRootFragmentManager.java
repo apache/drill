@@ -57,9 +57,4 @@ public class NonRootFragmentManager extends AbstractFragmentManager {
   public void receivingFragmentFinished(final FragmentHandle handle) {
     fragmentExecutor.receivingFragmentFinished(handle);
   }
-
-  @Override
-  public synchronized void cancel() {
-    super.cancel();
-  }
 }
