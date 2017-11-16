@@ -84,7 +84,7 @@ connectionStatus_t DrillClientImpl::connect(const char* connStr, DrillUserProper
         handleConnError(m_pChannel->getError());
         return ret;
     }
-    props->setProperty(USERPROP_SERVICE_HOST, m_pChannel->getEndpoint()->getHost());
+    props->setDefaultProperty(USERPROP_SERVICE_HOST, m_pChannel->getEndpoint()->getHost());
     m_bIsConnected = true;
     return ret;
 }
@@ -116,7 +116,7 @@ connectionStatus_t DrillClientImpl::connect(const char* host, const char* port, 
         handleConnError(m_pChannel->getError());
         return ret;
     }
-    props->setProperty(USERPROP_SERVICE_HOST, m_pChannel->getEndpoint()->getHost());
+    props->setDefaultProperty(USERPROP_SERVICE_HOST, m_pChannel->getEndpoint()->getHost());
     m_bIsConnected = true;
     return ret;
 }
