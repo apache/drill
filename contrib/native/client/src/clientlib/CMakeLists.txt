@@ -16,6 +16,13 @@
 # limitations under the License.
 #
 
+if(MSVC)
+    configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/version.rc.in
+      ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+      @ONLY)
+endif()
+
 # Drill Client library
 
 set (CLIENTLIB_SRC_FILES
@@ -51,7 +58,9 @@ set_property(
 
 if(MSVC)
     add_definitions(-DDRILL_CLIENT_EXPORTS -D_SCL_SECURE_NO_WARNINGS)
+    add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+else()
+    add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES})
 endif()
 
-add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES} )
 target_link_libraries(drillClient ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${Zookeeper_LIBRARIES} ${SASL_LIBRARIES} ${OPENSSL_LIBRARIES} protomsgs y2038)
