@@ -23,20 +23,18 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.NullableIntHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_geomfromtext", scope = FunctionTemplate.FunctionScope.SIMPLE,
+@FunctionTemplate(name = "st_difference", scope = FunctionTemplate.FunctionScope.SIMPLE,
   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class STGeomFromTextSrid implements DrillSimpleFunc {
+public class STDifference implements DrillSimpleFunc {
   @Param
-  NullableVarCharHolder input;
+  VarBinaryHolder geom1Param;
 
   @Param
-  NullableIntHolder sridParam;
+  VarBinaryHolder geom2Param;
 
   @Output
   VarBinaryHolder out;
@@ -48,21 +46,21 @@ public class STGeomFromTextSrid implements DrillSimpleFunc {
   }
 
   public void eval() {
-    int srid = sridParam.value;
-    String wktText = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end,
-        input.buffer);
+    com.esri.core.geometry.ogc.OGCGeometry geom1;
+    com.esri.core.geometry.ogc.OGCGeometry geom2;
+    geom1 = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end - geom1Param.start));
+    geom2 = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(geom2Param.buffer.nioBuffer(geom2Param.start, geom2Param.end - geom2Param.start));
 
-    com.esri.core.geometry.ogc.OGCGeometry geom;
+    com.esri.core.geometry.ogc.OGCGeometry diffGeom = geom1.difference(geom2);
 
-    geom = com.esri.core.geometry.ogc.OGCGeometry.fromText(wktText);
-    geom.setSpatialReference(com.esri.core.geometry.SpatialReference.create(srid));
+    java.nio.ByteBuffer bufferedGeomBytes = diffGeom.asBinary();
 
-    java.nio.ByteBuffer pointBytes = geom.asBinary();
-
-    int outputSize = pointBytes.remaining();
+    int outputSize = bufferedGeomBytes.remaining();
     buffer = out.buffer = buffer.reallocIfNeeded(outputSize);
     out.start = 0;
     out.end = outputSize;
-    buffer.setBytes(0, pointBytes);
+    buffer.setBytes(0, bufferedGeomBytes);
   }
 }
