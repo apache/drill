@@ -23,6 +23,7 @@ import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.planner.sql.handlers.ViewHandler;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
@@ -32,7 +33,6 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
-import org.apache.calcite.sql.parser.SqlParserPos;
 
 import java.util.List;
 
@@ -47,20 +47,19 @@ public class SqlCreateView extends DrillSqlCall {
   private SqlIdentifier viewName;
   private SqlNodeList fieldList;
   private SqlNode query;
-  private boolean replaceView;
+  private SqlLiteral createViewType;
 
-  public SqlCreateView(SqlParserPos pos, SqlIdentifier viewName, SqlNodeList fieldList,
-      SqlNode query, SqlLiteral replaceView) {
-    this(pos, viewName, fieldList, query, replaceView.booleanValue());
+  public enum SqlCreateViewType {
+    SIMPLE, OR_REPLACE, IF_NOT_EXISTS
   }
 
   public SqlCreateView(SqlParserPos pos, SqlIdentifier viewName, SqlNodeList fieldList,
-                       SqlNode query, boolean replaceView) {
+                       SqlNode query, SqlLiteral createViewType) {
     super(pos);
     this.viewName = viewName;
     this.query = query;
-    this.replaceView = replaceView;
     this.fieldList = fieldList;
+    this.createViewType = createViewType;
   }
 
   @Override
@@ -74,18 +73,29 @@ public class SqlCreateView extends DrillSqlCall {
     ops.add(viewName);
     ops.add(fieldList);
     ops.add(query);
-    ops.add(SqlLiteral.createBoolean(replaceView, SqlParserPos.ZERO));
+    ops.add(createViewType);
     return ops;
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("CREATE");
-    if (replaceView) {
-      writer.keyword("OR");
-      writer.keyword("REPLACE");
+    switch (SqlCreateViewType.valueOf(createViewType.toValue())) {
+      case SIMPLE:
+        writer.keyword("VIEW");
+        break;
+      case OR_REPLACE:
+        writer.keyword("OR");
+        writer.keyword("REPLACE");
+        writer.keyword("VIEW");
+        break;
+      case IF_NOT_EXISTS:
+        writer.keyword("VIEW");
+        writer.keyword("IF");
+        writer.keyword("NOT");
+        writer.keyword("EXISTS");
+        break;
     }
-    writer.keyword("VIEW");
     viewName.unparse(writer, leftPrec, rightPrec);
     if (fieldList.size() > 0) {
       SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, fieldList);
@@ -124,6 +134,7 @@ public class SqlCreateView extends DrillSqlCall {
   }
 
   public SqlNode getQuery() { return query; }
-  public boolean getReplace() { return replaceView; }
+
+  public SqlCreateViewType getcreateViewType() { return SqlCreateViewType.valueOf(createViewType.toValue()); }
 
 }
