@@ -383,6 +383,66 @@ public class TestCTTAS extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-5952
+  public void testCreateTemporaryTableIfNotExistsWhenTableWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTemporaryTableIfNotExistsWhenATableWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE TEMPORARY TABLE %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      ctasQuery =
+        String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s AS SELECT * FROM cp.`employee.json`", newTblName);
+
+      testBuilder()
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTemporaryTableIfNotExistsWhenViewWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTemporaryTableIfNotExistsWhenAViewWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE VIEW %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      ctasQuery =
+        String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      testBuilder()
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
+    } finally {
+      test(String.format("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTemporaryTableIfNotExistsWhenTableWithSameNameDoesNotExist() throws Exception{
+    final String newTblName = "createTemporaryTableIfNotExistsWhenATableWithSameNameDoesNotExist";
+
+    try {
+      String ctasQuery = String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+    }
+  }
+
   @Test
   public void testManualDropWithoutSchema() throws Exception {
     String temporaryTableName = "temporary_table_to_drop_without_schema";

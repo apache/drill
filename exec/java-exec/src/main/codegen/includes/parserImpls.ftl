@@ -172,26 +172,34 @@ SqlNodeList ParseRequiredFieldList(String relType) :
 
 /**
  * Parses a create view or replace existing view statement.
- *   CREATE [OR REPLACE] VIEW view_name [ (field1, field2 ...) ] AS select_statement
+ *   CREATE { [OR REPLACE] VIEW | VIEW [IF NOT EXISTS] | VIEW } view_name [ (field1, field2 ...) ] AS select_statement
  */
 SqlNode SqlCreateOrReplaceView() :
 {
     SqlParserPos pos;
-    boolean replaceView = false;
     SqlIdentifier viewName;
     SqlNode query;
     SqlNodeList fieldList;
+    String createViewType = "0";
 }
 {
     <CREATE> { pos = getPos(); }
-    [ <OR> <REPLACE> { replaceView = true; } ]
+    [ <OR> <REPLACE> { createViewType = "1"; } ]
     <VIEW>
+    [
+        <IF> <NOT> <EXISTS> {
+            if (createViewType == "1") {
+                throw new ParseException("Create view statement cannot have both <OR REPLACE> and <IF NOT EXISTS> clause");
+            }
+            createViewType = "2";
+        }
+    ]
     viewName = CompoundIdentifier()
     fieldList = ParseOptionalFieldList("View")
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
-        return new SqlCreateView(pos, viewName, fieldList, query, replaceView);
+        return new SqlCreateView(pos, viewName, fieldList, query, SqlLiteral.createExactNumeric(createViewType, getPos()));
     }
 }
 
@@ -215,11 +223,12 @@ SqlNode SqlDropView() :
 
 /**
  * Parses a CTAS or CTTAS statement.
- * CREATE [TEMPORARY] TABLE tblname [ (field1, field2, ...) ] AS select_statement.
+ * CREATE [TEMPORARY] TABLE [IF NOT EXISTS] tblname [ (field1, field2, ...) ] AS select_statement.
  */
 SqlNode SqlCreateTable() :
 {
     SqlParserPos pos;
+    boolean tableNonExistenceCheck = false;
     SqlIdentifier tblName;
     SqlNodeList fieldList;
     SqlNodeList partitionFieldList;
@@ -233,6 +242,7 @@ SqlNode SqlCreateTable() :
     <CREATE> { pos = getPos(); }
     ( <TEMPORARY> { isTemporary = true; } )?
     <TABLE>
+    ( <IF> <NOT> <EXISTS> { tableNonExistenceCheck = true; } )?
     tblName = CompoundIdentifier()
     fieldList = ParseOptionalFieldList("Table")
     (   <PARTITION> <BY>
@@ -241,8 +251,9 @@ SqlNode SqlCreateTable() :
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
-        return new SqlCreateTable(pos,tblName, fieldList, partitionFieldList, query,
-                                    SqlLiteral.createBoolean(isTemporary, getPos()));
+        return new SqlCreateTable(pos, tblName, fieldList, partitionFieldList, query,
+                                    SqlLiteral.createBoolean(isTemporary, getPos()),
+                                    SqlLiteral.createBoolean(tableNonExistenceCheck, getPos()));
     }
 }
 

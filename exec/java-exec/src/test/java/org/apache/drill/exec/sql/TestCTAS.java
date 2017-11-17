@@ -32,6 +32,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.junit.Assert.assertEquals;
 
 @Category(SqlTest.class)
@@ -251,6 +252,66 @@ public class TestCTAS extends BaseTestQuery {
     } finally {
       test("alter session reset `%s`", ExecConstants.PERSISTENT_TABLE_UMASK);
       test("drop table if exists %s", tableName);
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTableIfNotExistsWhenTableWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTableIfNotExistsWhenATableWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE TABLE %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      ctasQuery =
+        String.format("CREATE TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      testBuilder()
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTableIfNotExistsWhenViewWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTableIfNotExistsWhenAViewWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE VIEW %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      ctasQuery =
+        String.format("CREATE TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      testBuilder()
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
+    } finally {
+      test(String.format("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTableIfNotExistsWhenTableWithSameNameDoesNotExist() throws Exception{
+    final String newTblName = "createTableIfNotExistsWhenATableWithSameNameDoesNotExist";
+
+    try {
+      String ctasQuery = String.format("CREATE TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
     }
   }
 

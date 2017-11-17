@@ -382,6 +382,9 @@ public class SqlConverter {
    * @return The sql with a ^ character under the error
    */
   static String formatSQLParsingError(String sql, SqlParserPos pos) {
+    if (pos == null) {
+      return sql;
+    }
     StringBuilder sb = new StringBuilder();
     String[] lines = sql.split("\n");
     for (int i = 0; i < lines.length; i++) {
