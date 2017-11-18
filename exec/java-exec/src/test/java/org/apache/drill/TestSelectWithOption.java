@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,12 +19,15 @@ package org.apache.drill;
 
 import static java.lang.String.format;
 import static org.apache.drill.test.TestBuilder.listOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
@@ -274,6 +277,18 @@ public class TestSelectWithOption extends BaseTestQuery {
       testWithResult(format("select length(columns[0]) as columns from table(%s ('JSON'))", jsonTableName), 1L);
     } finally {
       test("use sys");
+    }
+  }
+
+  @Test(expected = UserRemoteException.class)
+  public void testAbsentTable() throws Exception {
+    String schema = "cp.default";
+    String tableName = "absent_table";
+    try {
+      test("select * from table(`%s`.`%s`(type=>'parquet'))", schema, tableName);
+    } catch (UserRemoteException e) {
+      assertThat(e.getMessage(), containsString(String.format("Unable to find table [%s] in schema [%s]", tableName, schema)));
+      throw e;
     }
   }
 }

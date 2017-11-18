@@ -37,7 +37,6 @@ import org.apache.hadoop.fs.Path;
  */
 public class FileSelection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSelection.class);
-  private static final String PATH_SEPARATOR = System.getProperty("file.separator");
   private static final String WILD_CARD = "*";
 
   private List<FileStatus> statuses;
@@ -224,7 +223,7 @@ public class FileSelection {
     int shortest = Integer.MAX_VALUE;
     for (int i = 0; i < total; i++) {
       final Path path = new Path(files.get(i));
-      folders[i] = Path.getPathWithoutSchemeAndAuthority(path).toString().split(PATH_SEPARATOR);
+      folders[i] = Path.getPathWithoutSchemeAndAuthority(path).toString().split(Path.SEPARATOR);
       shortest = Math.min(shortest, folders[i].length);
     }
 
@@ -247,7 +246,7 @@ public class FileSelection {
   private static String buildPath(final String[] path, final int folderIndex) {
     final StringBuilder builder = new StringBuilder();
     for (int i=0; i<folderIndex; i++) {
-      builder.append(path[i]).append(PATH_SEPARATOR);
+      builder.append(path[i]).append(Path.SEPARATOR);
     }
     builder.deleteCharAt(builder.length()-1);
     return builder.toString();
