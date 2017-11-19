@@ -101,6 +101,16 @@ public final class CoordinationProtos {
      */
     com.google.protobuf.ByteString
         getVersionBytes();
+
+    // optional int32 http_port = 7;
+    /**
+     * <code>optional int32 http_port = 7;</code>
+     */
+    boolean hasHttpPort();
+    /**
+     * <code>optional int32 http_port = 7;</code>
+     */
+    int getHttpPort();
   }
   /**
    * Protobuf type {@code exec.DrillbitEndpoint}
@@ -189,6 +199,11 @@ public final class CoordinationProtos {
             case 50: {
               bitField0_ |= 0x00000020;
               version_ = input.readBytes();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              httpPort_ = input.readInt32();
               break;
             }
           }
@@ -387,6 +402,22 @@ public final class CoordinationProtos {
       }
     }
 
+    // optional int32 http_port = 7;
+    public static final int HTTP_PORT_FIELD_NUMBER = 7;
+    private int httpPort_;
+    /**
+     * <code>optional int32 http_port = 7;</code>
+     */
+    public boolean hasHttpPort() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional int32 http_port = 7;</code>
+     */
+    public int getHttpPort() {
+      return httpPort_;
+    }
+
     private void initFields() {
       address_ = "";
       userPort_ = 0;
@@ -394,6 +425,7 @@ public final class CoordinationProtos {
       dataPort_ = 0;
       roles_ = org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance();
       version_ = "";
+      httpPort_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -424,6 +456,9 @@ public final class CoordinationProtos {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(6, getVersionBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt32(7, httpPort_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -457,6 +492,10 @@ public final class CoordinationProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, getVersionBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, httpPort_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -591,6 +630,8 @@ public final class CoordinationProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         version_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
+        httpPort_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -647,6 +688,10 @@ public final class CoordinationProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.version_ = version_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.httpPort_ = httpPort_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -684,6 +729,9 @@ public final class CoordinationProtos {
           bitField0_ |= 0x00000020;
           version_ = other.version_;
           onChanged();
+        }
+        if (other.hasHttpPort()) {
+          setHttpPort(other.getHttpPort());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1072,6 +1120,39 @@ public final class CoordinationProtos {
   }
   bitField0_ |= 0x00000020;
         version_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 http_port = 7;
+      private int httpPort_ ;
+      /**
+       * <code>optional int32 http_port = 7;</code>
+       */
+      public boolean hasHttpPort() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 http_port = 7;</code>
+       */
+      public int getHttpPort() {
+        return httpPort_;
+      }
+      /**
+       * <code>optional int32 http_port = 7;</code>
+       */
+      public Builder setHttpPort(int value) {
+        bitField0_ |= 0x00000040;
+        httpPort_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 http_port = 7;</code>
+       */
+      public Builder clearHttpPort() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        httpPort_ = 0;
         onChanged();
         return this;
       }
@@ -2575,19 +2656,19 @@ public final class CoordinationProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022Coordination.proto\022\004exec\"\214\001\n\020DrillbitE" +
+      "\n\022Coordination.proto\022\004exec\"\237\001\n\020DrillbitE" +
       "ndpoint\022\017\n\007address\030\001 \001(\t\022\021\n\tuser_port\030\002 " +
       "\001(\005\022\024\n\014control_port\030\003 \001(\005\022\021\n\tdata_port\030\004" +
       " \001(\005\022\032\n\005roles\030\005 \001(\0132\013.exec.Roles\022\017\n\007vers" +
-      "ion\030\006 \001(\t\"i\n\024DrillServiceInstance\022\n\n\002id\030" +
-      "\001 \001(\t\022\033\n\023registrationTimeUTC\030\002 \001(\003\022(\n\010en" +
-      "dpoint\030\003 \001(\0132\026.exec.DrillbitEndpoint\"\227\001\n" +
-      "\005Roles\022\027\n\tsql_query\030\001 \001(\010:\004true\022\032\n\014logic" +
-      "al_plan\030\002 \001(\010:\004true\022\033\n\rphysical_plan\030\003 \001" +
-      "(\010:\004true\022\033\n\rjava_executor\030\004 \001(\010:\004true\022\037\n",
-      "\021distributed_cache\030\005 \001(\010:\004trueB3\n\033org.ap" +
-      "ache.drill.exec.protoB\022CoordinationProto" +
-      "sH\001"
+      "ion\030\006 \001(\t\022\021\n\thttp_port\030\007 \001(\005\"i\n\024DrillSer" +
+      "viceInstance\022\n\n\002id\030\001 \001(\t\022\033\n\023registration" +
+      "TimeUTC\030\002 \001(\003\022(\n\010endpoint\030\003 \001(\0132\026.exec.D" +
+      "rillbitEndpoint\"\227\001\n\005Roles\022\027\n\tsql_query\030\001" +
+      " \001(\010:\004true\022\032\n\014logical_plan\030\002 \001(\010:\004true\022\033" +
+      "\n\rphysical_plan\030\003 \001(\010:\004true\022\033\n\rjava_exec",
+      "utor\030\004 \001(\010:\004true\022\037\n\021distributed_cache\030\005 " +
+      "\001(\010:\004trueB3\n\033org.apache.drill.exec.proto" +
+      "B\022CoordinationProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2599,7 +2680,7 @@ public final class CoordinationProtos {
           internal_static_exec_DrillbitEndpoint_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_DrillbitEndpoint_descriptor,
-              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", "Version", });
+              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", "Version", "HttpPort", });
           internal_static_exec_DrillServiceInstance_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_exec_DrillServiceInstance_fieldAccessorTable = new

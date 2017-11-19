@@ -48,6 +48,8 @@ public final class SchemaCoordinationProtos
 
                 if(message.hasVersion())
                     output.writeString(6, message.getVersion(), false);
+                if(message.hasHttpPort())
+                    output.writeInt32(7, message.getHttpPort(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint message)
             {
@@ -106,6 +108,9 @@ public final class SchemaCoordinationProtos
                         case 6:
                             builder.setVersion(input.readString());
                             break;
+                        case 7:
+                            builder.setHttpPort(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -152,6 +157,7 @@ public final class SchemaCoordinationProtos
                 case 4: return "dataPort";
                 case 5: return "roles";
                 case 6: return "version";
+                case 7: return "httpPort";
                 default: return null;
             }
         }
@@ -169,6 +175,7 @@ public final class SchemaCoordinationProtos
             fieldMap.put("dataPort", 4);
             fieldMap.put("roles", 5);
             fieldMap.put("version", 6);
+            fieldMap.put("httpPort", 7);
         }
     }
 

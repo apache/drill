@@ -156,7 +156,7 @@ public class Drillbit implements AutoCloseable {
     if (profileStoreProvider != storeProvider) {
       profileStoreProvider.start();
     }
-    final DrillbitEndpoint md = engine.start();
+    DrillbitEndpoint md = engine.start();
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider, profileStoreProvider);
     @SuppressWarnings("resource")
     final DrillbitContext drillbitContext = manager.getContext();
@@ -165,8 +165,10 @@ public class Drillbit implements AutoCloseable {
     drillbitContext.getOptionManager().init();
     javaPropertiesToSystemOptions();
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
-    registrationHandle = coord.register(md);
     webServer.start();
+    int port = webServer.getPort();
+    md = md.toBuilder().setHttpPort(port).build();
+    registrationHandle = coord.register(md);
 
     // Must start the RM after the above since it needs to read system options.
 
