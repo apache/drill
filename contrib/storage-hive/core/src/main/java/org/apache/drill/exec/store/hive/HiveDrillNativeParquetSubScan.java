@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,7 +38,7 @@ public class HiveDrillNativeParquetSubScan extends HiveSubScan {
   @JsonCreator
   public HiveDrillNativeParquetSubScan(@JacksonInject StoragePluginRegistry registry,
                                        @JsonProperty("userName") String userName,
-                                       @JsonProperty("splits") List<String> splits,
+                                       @JsonProperty("splits") List<List<String>> splits,
                                        @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
                                        @JsonProperty("splitClasses") List<String> splitClasses,
                                        @JsonProperty("columns") List<SchemaPath> columns,

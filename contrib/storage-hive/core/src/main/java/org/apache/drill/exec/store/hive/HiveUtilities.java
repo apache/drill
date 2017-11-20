@@ -51,13 +51,13 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.typeinfo.BaseCharTypeInfo;
@@ -80,7 +80,7 @@ import java.util.Properties;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
 public class HiveUtilities {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
 
   /** Partition value is received in string format. Convert it into appropriate object based on the type. */
   public static Object convertPartitionType(TypeInfo typeInfo, String value, final String defaultPartitionValue) {
@@ -333,7 +333,7 @@ public class HiveUtilities {
         return TypeProtos.MinorType.BIT;
       case DECIMAL: {
 
-        if (options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
+        if (!options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val) {
           throw UserException.unsupportedError()
               .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
               .build(logger);
@@ -397,7 +397,6 @@ public class HiveUtilities {
    *
    * @param job {@link JobConf} instance.
    * @param properties New config properties
-   * @param hiveConf HiveConf of Hive storage plugin
    */
   public static void addConfToJob(final JobConf job, final Properties properties) {
     for (Object obj : properties.keySet()) {
@@ -469,6 +468,44 @@ public class HiveUtilities {
     throw UserException.unsupportedError()
         .message(errMsg.toString())
         .build(logger);
+  }
+
+  /**
+   * Returns property value. If property is absent, return given default value.
+   * If property value is non-numeric will fail.
+   *
+   * @param tableProperties table properties
+   * @param propertyName property name
+   * @param defaultValue default value used in case if property is absent
+   * @return property value
+   * @throws NumberFormatException if property value is not numeric
+   */
+  public static int retrieveIntProperty(Properties tableProperties, String propertyName, int defaultValue) {
+    Object propertyObject = tableProperties.get(propertyName);
+    if (propertyObject == null) {
+      return defaultValue;
+    }
+
+    try {
+      return Integer.valueOf(propertyObject.toString());
+    } catch (NumberFormatException e) {
+      throw new NumberFormatException(String.format("Hive table property %s value '%s' is non-numeric",
+          propertyName, propertyObject.toString()));
+    }
+  }
+
+  /**
+   * Checks if given table has header or footer.
+   * If at least one of them has value more then zero, method will return true.
+   *
+   * @param table table with column cache instance
+   * @return true if table contains header or footer, false otherwise
+   */
+  public static boolean hasHeaderOrFooter(HiveTableWithColumnCache table) {
+    Properties tableProperties = getTableMetadata(table);
+    int skipHeader = retrieveIntProperty(tableProperties, serdeConstants.HEADER_COUNT, -1);
+    int skipFooter = retrieveIntProperty(tableProperties, serdeConstants.FOOTER_COUNT, -1);
+    return skipHeader > 0 || skipFooter > 0;
   }
 }
 
