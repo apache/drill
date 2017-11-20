@@ -230,7 +230,12 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     return context;
   }
 
-  public SchemaPlus getRootSchema() {
+  /**
+   * This method is only used to construt InfoSchemaReader, it is for the reader to get full schema, so here we
+   * are going to return a fully initialized schema tree.
+   * @return root schema's plus
+   */
+  public SchemaPlus getFullRootSchema() {
     if (queryContext == null) {
       fail(new UnsupportedOperationException("Schema tree can only be created in root fragment. " +
           "This is a non-root fragment."));
@@ -248,7 +253,7 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
         .setIgnoreAuthErrors(isImpersonationEnabled)
         .build();
 
-    return queryContext.getRootSchema(schemaConfig);
+    return queryContext.getFullRootSchema(schemaConfig);
   }
 
   /**
