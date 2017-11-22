@@ -11,6 +11,64 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
+
+<script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
+<script>
+    $(document).ready(function() {
+      $("#profileList").DataTable( {
+        //Preserve order
+        "ordering": false,
+        "searching": true,
+        "paging": true,
+        "pagingType": "first_last_numbers",
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "lengthChange": true,
+        "info": true,
+        //Ref: https://legacy.datatables.net/ref#sDom
+        "sDom": '<"top"lftip><"bottom"><"clear">',
+        //Customized info labels
+        "language": {
+            "lengthMenu": "Display _MENU_ profiles per page",
+            "zeroRecords": "No matching profiles found!",
+            "info": "Showing page _PAGE_ of _PAGES_ ",
+            "infoEmpty": "No profiles available",
+            "infoFiltered": "(filtered _TOTAL_ from _MAX_)",
+            "search": "Search Profiles  "
+        }
+      } );
+    } );
+</script>
+
+<!-- CSS to control DataTable Elements -->
+<style type="text/css" class="init">
+  /* Control Padding for length and filter as a pair */
+  div.dataTables_length {
+    float: right;
+  }
+  div.dataTables_filter {
+    float: left;
+  }
+  div.dataTables_info {
+    padding-right: 2em;
+    float: right;
+  }
+
+  /* Add spaces between pagination links */
+  #profileList_paginate * {
+    padding-right: 0.55em;
+    float:left
+  }
+  /* Normal wt for search text */
+  #profileList_filter input {
+    font-weight: normal;
+    padding-left: 0.45em;
+  }
+  #profileList_length * {
+    font-weight: normal;
+  }
+
+</style>
+
 </#macro>
 
 <#macro page_body>
@@ -54,9 +112,9 @@
     <tr>
       <td><h3>Completed Queries</h3></td>
       <td align="right">
-        <form name="profileFetch" action="/profiles" onsubmit="return checkMaxFetch();" method="get"><span title="Max number of profiles to list">Showing <b>${model.getFinishedQueries()?size}</b> profiles. Max: </span>
-        <input id="fetchMax" type="text" size="7" name="max" value="">
-        <input type="submit" value="Refresh">
+        <form name="profileFetch" action="/profiles" onsubmit="return checkMaxFetch();" method="get"><span title="Max number of profiles to load">Loaded <b>${model.getFinishedQueries()?size}</b> profiles </span>
+        <input id="fetchMax" type="text" size="5" name="max" value="" style="text-align: right" />
+        <input type="submit" value="Reload"/>
       </form></td>
     </tr></table>
     <!-- Placed after textbox to allow for DOM to contain "fetchMax" element -->
@@ -78,9 +136,9 @@
 
 <#macro list_queries queries>
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table id="profileList" class="table table-hover dataTable" role="grid">
             <thead>
-            <tr>
+            <tr role="row">
                 <th>Time</th>
                 <th>User</th>
                 <th>Query</th>
@@ -107,6 +165,7 @@
             </tbody>
         </table>
     </div>
+    <div style="padding-bottom: 2em;"/>
 </#macro>
 
 <@page_html/>

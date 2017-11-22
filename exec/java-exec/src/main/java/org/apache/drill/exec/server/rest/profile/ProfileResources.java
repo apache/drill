@@ -71,6 +71,9 @@ public class ProfileResources {
   @Inject SecurityContext sc;
 
   public static class ProfileInfo implements Comparable<ProfileInfo> {
+    private static final int QUERY_SNIPPET_MAX_CHAR = 150;
+    private static final int QUERY_SNIPPET_MAX_LINES = 8;
+
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     private final String queryId;
@@ -93,7 +96,7 @@ public class ProfileResources {
       this.time = new Date(startTime);
       this.foreman = foreman;
       this.link = generateLink(drillConfig, foreman, queryId);
-      this.query = query.substring(0,  Math.min(query.length(), 150));
+      this.query = extractQuerySnippet(query);
       this.state = state;
       this.user = user;
       this.totalCost = totalCost;
@@ -127,6 +130,10 @@ public class ProfileResources {
 
     public String getForeman() { return foreman; }
 
+    public double getTotalCost() { return totalCost; }
+
+    public String getQueueName() { return queueName; }
+
     /**
      * Generates link which will return query profile in json representation.
      *
@@ -151,9 +158,33 @@ public class ProfileResources {
       return sb.toString();
     }
 
-    public double getTotalCost() { return totalCost; }
-
-    public String getQueueName() { return queueName; }
+    /**
+     * Extract only the first 150 characters of the query.
+     * If this spans more than 8 lines, we truncate excess lines for sake of readability
+     * @param queryText
+     * @return truncated text
+     */
+    private String extractQuerySnippet(String queryText) {
+      //Extract upto max char limit as snippet
+      String sizeCappedQuerySnippet = queryText.substring(0,  Math.min(queryText.length(), QUERY_SNIPPET_MAX_CHAR));
+      String[] queryParts = sizeCappedQuerySnippet.split(System.lineSeparator());
+      //Trimming down based on line-count
+      if (QUERY_SNIPPET_MAX_LINES < queryParts.length) {
+        int linesConstructed = 0;
+        StringBuilder lineCappedQuerySnippet = new StringBuilder();
+        for (String qPart : queryParts) {
+          lineCappedQuerySnippet.append(qPart);
+          if (++linesConstructed < QUERY_SNIPPET_MAX_LINES) {
+            lineCappedQuerySnippet.append(System.lineSeparator());
+          } else {
+            lineCappedQuerySnippet.append(" ... ");
+            break;
+          }
+        }
+        return lineCappedQuerySnippet.toString();
+      }
+      return sizeCappedQuerySnippet;
+    }
   }
 
   protected PersistentStoreProvider getProvider() {
