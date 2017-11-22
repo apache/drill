@@ -22,7 +22,8 @@
   <form id="updateForm" role="form" action="/storage/${model.getName()}" method="POST">
     <input type="hidden" name="name" value="${model.getName()}" />
     <div class="form-group">
-      <textarea class="form-control" id="config" rows="20" cols="50" name="config" style="font-family: Courier;">
+      <div id="editor" class="form-control"></div>
+      <textarea class="form-control" id="config" name="config" data-editor="json" style="display: none;" >
       </textarea>
     </div>
     <a class="btn btn-default" href="/storage">Back</a>
@@ -41,10 +42,33 @@
   <br>
   <div id="message" class="hidden alert alert-info">
   </div>
+  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
   <script>
+    var editor = ace.edit("editor");
+    var textarea = $('textarea[name="config"]');
+
+
+    editor.setAutoScrollEditorIntoView(true);
+    editor.setOption("maxLines", 25);
+    editor.setOption("minLines", 10);
+    editor.renderer.setShowGutter(true);
+    editor.renderer.setOption('showLineNumbers', true);
+    editor.renderer.setOption('showPrintMargin', false);
+    editor.getSession().setMode("ace/mode/json");
+    editor.setTheme("ace/theme/eclipse");
+
+    // copy back to textarea on form submit...
+    editor.getSession().on('change', function(){
+      textarea.val(editor.getSession().getValue());
+    });
+
     $.get("/storage/${model.getName()}.json", function(data) {
       $("#config").val(JSON.stringify(data.config, null, 2));
+      editor.getSession().setValue( JSON.stringify(data.config, null, 2) );
     });
+
+
     $("#enabled").click(function() {
       $.get("/storage/${model.getName()}/enable/<#if model.enabled()>false<#else>true</#if>", function(data) {
         $("#message").removeClass("hidden").text(data.result).alert();
