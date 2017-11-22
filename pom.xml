@@ -56,6 +56,8 @@
     <fmpp.version>0.9.15</fmpp.version>
     <freemarker.version>2.3.26-incubating</freemarker.version>
     <javassist.version>3.16.1-GA</javassist.version>
+    <msgpack.version>0.6.6</msgpack.version>
+    <reflections.version>0.9.8</reflections.version>
     <excludedGroups></excludedGroups>
   </properties>
 
@@ -692,6 +694,22 @@
   <!-- Managed Dependencies -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.msgpack</groupId>
+        <artifactId>msgpack</artifactId>
+        <version>${msgpack.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.reflections</groupId>
+        <artifactId>reflections</artifactId>
+        <version>${reflections.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javassist</groupId>
+            <artifactId>javassist</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>

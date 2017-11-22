@@ -62,25 +62,11 @@
     <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack</artifactId>
-      <version>0.6.6</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.javassist</groupId>
-          <artifactId>javassist</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>org.reflections</groupId>
       <artifactId>reflections</artifactId>
-      <version>0.9.8</version>
-      <exclusions>
-        <exclusion>
-          <groupId>javassist</groupId>
-          <artifactId>javassist</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
