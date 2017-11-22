@@ -12,7 +12,6 @@
 <#include "*/generic.ftl">
 <#macro page_head>
   <script src="/static/js/jquery.form.js"></script>
-  <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 </#macro>
 
 <#macro page_body>
@@ -23,40 +22,9 @@
   <form id="updateForm" role="form" action="/storage/${model.getName()}" method="POST">
     <input type="hidden" name="name" value="${model.getName()}" />
     <div class="form-group">
-      <textarea class="form-control" id="config" name="config" style="font-family: Courier;" data-editor="json">
+      <div id="editor" class="form-control"></div>
+      <textarea class="form-control" id="config" name="config" data-editor="json" style="display: none;" >
       </textarea>
-    <!-- edits-->
-    <script>
-        // Hook up ACE editor to all textareas with data-editor attribute
-        $(function () {
-            $('textarea[data-editor]').each(function () {
-                var textarea = $(this);
-                var mode = textarea.data('editor');
-                var editDiv = $('<div>', {
-                    //position: 'absolute',
-                    //width: textarea.width(),
-                    //height: textarea.height(),
-                    'class': textarea.attr('class')
-                }).insertBefore(textarea);
-                textarea.css('visibility', 'hidden');
-                var editor = ace.edit(editDiv[0]);
-                editor.setAutoScrollEditorIntoView(true);
-                editor.setOption("maxLines", 25);
-                editor.setOption("minLines", 10);
-                editor.renderer.setShowGutter(true);
-                editor.renderer.setOption('showLineNumbers', true);
-                editor.renderer.setOption('showPrintMargin', false);
-                editor.getSession().setValue(textarea.val());
-                editor.getSession().setMode("ace/mode/" + mode);
-
-
-                // copy back to textarea on form submit...
-                textarea.closest('form').submit(function () {
-                    textarea.val(editor.getSession().getValue());
-                })
-            });
-        });
-    </script>
     </div>
     <a class="btn btn-default" href="/storage">Back</a>
     <button class="btn btn-default" type="submit" onclick="doUpdate();">
@@ -74,10 +42,33 @@
   <br>
   <div id="message" class="hidden alert alert-info">
   </div>
+  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
   <script>
+    var editor = ace.edit("editor");
+    var textarea = $('textarea[name="config"]');
+
+
+    editor.setAutoScrollEditorIntoView(true);
+    editor.setOption("maxLines", 25);
+    editor.setOption("minLines", 10);
+    editor.renderer.setShowGutter(true);
+    editor.renderer.setOption('showLineNumbers', true);
+    editor.renderer.setOption('showPrintMargin', false);
+    editor.getSession().setMode("ace/mode/json");
+    editor.setTheme("ace/theme/eclipse");
+
+    // copy back to textarea on form submit...
+    editor.getSession().on('change', function(){
+      textarea.val(editor.getSession().getValue());
+    });
+
     $.get("/storage/${model.getName()}.json", function(data) {
       $("#config").val(JSON.stringify(data.config, null, 2));
+      editor.getSession().setValue( JSON.stringify(data.config, null, 2) );
     });
+
+
     $("#enabled").click(function() {
       $.get("/storage/${model.getName()}/enable/<#if model.enabled()>false<#else>true</#if>", function(data) {
         $("#message").removeClass("hidden").text(data.result).alert();
