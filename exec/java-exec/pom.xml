@@ -647,6 +647,20 @@
       </dependencies>
     </profile>
     <profile>
+      <id>mapr</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.mapr.hadoop</groupId>
+          <artifactId>maprfs</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>com.tdunning</groupId>
+          <artifactId>json</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
       <id>hdp</id>
       <dependencies>
         <dependency>
