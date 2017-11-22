@@ -46,6 +46,9 @@
     <kerby.version>1.0.0-RC2</kerby.version>
     <findbugs.version>3.0.0</findbugs.version>
     <netty.tcnative.classifier></netty.tcnative.classifier>
+    <commons.io.version>2.4</commons.io.version>
+    <junit.version>4.11</junit.version>
+    <hamcrest.core.version>1.3</hamcrest.core.version>
 
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
@@ -60,6 +63,7 @@
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.8</reflections.version>
     <excludedGroups></excludedGroups>
+    <memoryMb>4096</memoryMb>
   </properties>
 
   <scm>
@@ -439,10 +443,25 @@
           <version>1.3.1</version>
         </plugin>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.17</version>
+          <executions>
+            <execution>
+              <id>default-test</id>
+              <phase>test</phase>
+              <goals><goal>test</goal></goals>
+            </execution>
+          </executions>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.surefire</groupId>
+              <artifactId>surefire-junit47</artifactId>
+              <version>2.19.1</version>
+            </dependency>
+          </dependencies>
           <configuration>
-            <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false
+            <argLine>-Xms512m -Xmx${memoryMb}m -Ddrill.exec.http.enabled=false
               -Ddrill.exec.sys.store.provider.local.write=false
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -Ddrill.test.query.printing.silent=true
@@ -621,7 +640,7 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.4</version>
+      <version>${commons.io.version}</version>
     </dependency>
 
     <!-- Test Dependencies -->
@@ -716,6 +735,12 @@
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
         <version>${javassist.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest-core</artifactId>
+        <version>${hamcrest.core.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.freemarker</groupId>

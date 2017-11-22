@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
+import org.apache.drill.categories.KafkaStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.store.kafka.cluster.EmbeddedKafkaCluster;
 import org.apache.drill.exec.store.kafka.decoders.MessageReaderFactoryTest;
@@ -30,19 +32,19 @@ import org.apache.kafka.common.security.JaasUtils;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 
+@Category({KafkaStorageTest.class, SlowTest.class})
 @RunWith(Suite.class)
 @SuiteClasses({ KafkaQueriesTest.class, MessageIteratorTest.class, MessageReaderFactoryTest.class })
 public class TestKafkaSuit {

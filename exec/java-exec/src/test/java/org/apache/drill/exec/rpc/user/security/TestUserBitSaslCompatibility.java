@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc.user.security;
 
 import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
@@ -27,6 +28,7 @@ import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.security.sasl.SaslException;
 import java.util.Properties;
@@ -38,9 +40,8 @@ import static junit.framework.TestCase.fail;
  * Helps to test different scenarios based on security configuration on client and Drillbit side with respect to SASL
  * and specifically using PLAIN mechanism
  */
+@Category({SecurityTest.class})
 public class TestUserBitSaslCompatibility extends BaseTestQuery {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUserClient.class);
-
   @BeforeClass
   public static void setup() {
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())

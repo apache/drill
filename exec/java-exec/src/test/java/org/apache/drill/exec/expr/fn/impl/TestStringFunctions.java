@@ -20,7 +20,7 @@ package org.apache.drill.exec.expr.fn.impl;
 import static org.junit.Assert.assertTrue;
 
 import mockit.integration.junit4.JMockit;
-import org.apache.commons.io.FileUtils;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.util.Text;
@@ -36,7 +36,7 @@ import java.io.File;
 import java.io.FileWriter;
 
 @RunWith(JMockit.class)
-@Category(SqlFunctionTest.class)
+@Category({SqlFunctionTest.class, UnlikelyTest.class})
 public class TestStringFunctions extends BaseTestQuery {
 
   @Test

@@ -42,7 +42,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestSimpleExternalSort extends DrillTest {
   @Rule
   public final TestRule TIMEOUT = TestTools.getTimeoutRule(160_000);

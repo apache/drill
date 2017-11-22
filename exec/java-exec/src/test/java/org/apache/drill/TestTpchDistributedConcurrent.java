@@ -48,7 +48,7 @@ import static org.junit.Assert.assertNull;
  * unstable from running a lot of queries concurrently -- it's not about
  * any particular order of execution. We ignore the results.
  */
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestTpchDistributedConcurrent extends BaseTestQuery {
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(360000); // Longer timeout than usual.
 

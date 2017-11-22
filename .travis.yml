@@ -17,5 +17,8 @@ before_install: git fetch --unshallow
 language: java
 jdk:
   - openjdk7
+cache:
+  directories:
+  - "$HOME/.m2"
 install: MAVEN_OPTS="-Xms1G -Xmx1G" mvn install --batch-mode -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true
-script: echo "Done"
+script: mvn install -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill.categories.SecurityTest" -DforkCount=1 -DmemoryMb=3584
