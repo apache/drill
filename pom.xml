@@ -55,6 +55,7 @@
     <hbase.version>1.1.3</hbase.version>
     <fmpp.version>0.9.15</fmpp.version>
     <freemarker.version>2.3.26-incubating</freemarker.version>
+    <javassist.version>3.16.1-GA</javassist.version>
     <excludedGroups></excludedGroups>
   </properties>
 
@@ -691,6 +692,11 @@
   <!-- Managed Dependencies -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>${javassist.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.freemarker</groupId>
         <artifactId>freemarker</artifactId>
