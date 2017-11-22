@@ -18,17 +18,19 @@
 package org.apache.drill.exec.cache;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.cache.VectorSerializer.Reader;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.cache.VectorSerializer.Reader;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.test.DirTestWatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
@@ -40,10 +42,15 @@ import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class TestBatchSerialization extends DrillTest {
 
+  @ClassRule
+  public static final DirTestWatcher dirTestWatcher = new DirTestWatcher();
   public static OperatorFixture fixture;
 
   @BeforeClass
@@ -117,12 +124,21 @@ public class TestBatchSerialization extends DrillTest {
    */
   private void verifySerialize(SingleRowSet rowSet, SingleRowSet expected) throws IOException {
 
-    File dir = OperatorFixture.getTempDir("serial");
-    File outFile = new File(dir, "serialze.dat");
-    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile))) {
-      VectorSerializer.writer(fixture.allocator(), out)
-        .write(rowSet.container(), rowSet.getSv2());
+    File dir = DirTestWatcher.createTempDir(dirTestWatcher.getDir());
+    FileChannel channel = FileChannel.open(new File(dir, "serialize.dat").toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+    VectorSerializer.Writer writer = VectorSerializer.writer(channel);
+    VectorContainer container = rowSet.container();
+    SelectionVector2 sv2 = rowSet.getSv2();
+    writer.write(container, sv2);
+    container.clear();
+    if (sv2 != null) {
+      sv2.clear();
     }
+    writer.close();
+
+    File outFile = new File(dir, "serialize.dat");
+    assertTrue(outFile.exists());
+    assertTrue(outFile.isFile());
 
     RowSet result;
     try (InputStream in = new BufferedInputStream(new FileInputStream(outFile))) {
