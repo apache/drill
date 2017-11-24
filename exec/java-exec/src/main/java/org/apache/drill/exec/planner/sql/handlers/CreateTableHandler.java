@@ -40,6 +40,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -70,8 +71,8 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
-    SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
-    String originalTableName = sqlCreateTable.getName();
+    final SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
+    final String originalTableName = sqlCreateTable.getName();
 
     final ConvertedRelNode convertedRelNode = validateAndConvert(sqlCreateTable.getQuery());
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
@@ -82,8 +83,14 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
     final DrillConfig drillConfig = context.getConfig();
     final AbstractSchema drillSchema = resolveSchema(sqlCreateTable, config.getConverter().getDefaultSchema(), drillConfig);
+    final boolean checkTableNonExistence = sqlCreateTable.checkTableNonExistence();
+    final String schemaPath = drillSchema.getFullSchemaName();
 
-    checkDuplicatedObjectExistence(drillSchema, originalTableName, drillConfig, context.getSession());
+    // Check table creation possibility
+    if(!checkTableCreationPossibility(drillSchema, originalTableName, drillConfig, context.getSession(), schemaPath, checkTableNonExistence)) {
+      return DirectPlan.createDirectPlan(context, false,
+        String.format("A table or view with given name [%s] already exists in schema [%s]", originalTableName, schemaPath));
+    }
 
     final RelNode newTblRelNodeWithPCol = SqlHandlerUtil.qualifyPartitionCol(newTblRelNode,
         sqlCreateTable.getPartitionColumns());
@@ -289,28 +296,36 @@ public class CreateTableHandler extends DefaultSqlHandler {
   }
 
   /**
-   * Checks if any object (persistent table / temporary table / view)
-   * with the same name as table to be created exists in indicated schema.
+   * Validates if table can be created in indicated schema
+   * Checks if any object (persistent table / temporary table / view) with the same name exists
+   * or if object with the same name exists but if not exists flag is set.
    *
    * @param drillSchema schema where table will be created
    * @param tableName table name
    * @param config drill config
    * @param userSession current user session
-   * @throws UserException if duplicate is found
+   * @param schemaPath schema path
+   * @param checkTableNonExistence whether duplicate check is requested
+   * @return if duplicate found in indicated schema
+   * @throws UserException if duplicate found in indicated schema and no duplicate check requested
    */
-  private void checkDuplicatedObjectExistence(AbstractSchema drillSchema,
+  private boolean checkTableCreationPossibility(AbstractSchema drillSchema,
                                               String tableName,
                                               DrillConfig config,
-                                              UserSession userSession) {
-    String schemaPath = drillSchema.getFullSchemaName();
+                                              UserSession userSession,
+                                              String schemaPath,
+                                              boolean checkTableNonExistence) {
     boolean isTemporaryTable = userSession.isTemporaryTable(drillSchema, config, tableName);
 
     if (isTemporaryTable || SqlHandlerUtil.getTableFromSchema(drillSchema, tableName) != null) {
-      throw UserException
-          .validationError()
-          .message("A table or view with given name [%s] already exists in schema [%s]",
-              tableName, schemaPath)
+      if (checkTableNonExistence) {
+        return false;
+      } else {
+        throw UserException.validationError()
+          .message("A table or view with given name [%s] already exists in schema [%s]", tableName, schemaPath)
           .build(logger);
+      }
     }
+    return true;
   }
 }
