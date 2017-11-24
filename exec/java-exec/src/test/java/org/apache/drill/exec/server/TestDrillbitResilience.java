@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.util.Pair;
+import org.apache.drill.exec.work.foreman.FragmentsRunner;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
@@ -757,7 +758,7 @@ public class TestDrillbitResilience extends DrillTest {
     final String exceptionDesc = "send-fragments";
     final Class<? extends Throwable> exceptionClass = ForemanException.class;
     final String controls = Controls.newBuilder()
-    .addException(Foreman.class, exceptionDesc, exceptionClass)
+    .addException(FragmentsRunner.class, exceptionDesc, exceptionClass)
       .build();
     assertFailsWithException(controls, exceptionClass, exceptionDesc);
 

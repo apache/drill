@@ -167,6 +167,8 @@ message QueryResult {
 	  FAILED = 4;
 	  CANCELLATION_REQUESTED = 5; // cancellation has been requested, and is being processed
 	  ENQUEUED = 6; // query has been enqueued. this is pre-starting.
+	  PREPARING = 7; // query is at preparation stage, foreman is initializing
+	  PLANNING = 8; // query is at planning stage (includes logical or / and physical planning)
 	}
 
 	optional QueryState query_state = 1;

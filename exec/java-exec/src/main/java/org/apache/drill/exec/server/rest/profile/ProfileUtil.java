@@ -19,30 +19,35 @@ package org.apache.drill.exec.server.rest.profile;
 
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 
-public class ProfileUtil {
-  // Display names for QueryState enum in UserBitShared.proto
-  private static final String[] queryStateDisplayNames = {
-    "Starting", // STARTING = 0
-    "Running", // RUNNING = 1
-    "Succeeded", // COMPLETED = 2
-    "Canceled", // CANCELED = 3
-    "Failed", // FAILED = 4
-    "CancellationRequested", // CANCELLATION_REQUESTED = 5
-    "Enqueued" // ENQUEUED = 6
-  };
+import java.util.HashMap;
+import java.util.Map;
 
+public class ProfileUtil {
+
+  private static final Map<QueryState, String> queryStateDisplayMap = new HashMap<>(QueryState.values().length);
+
+  static {
+    queryStateDisplayMap.put(QueryState.PREPARING, "Preparing");
+    queryStateDisplayMap.put(QueryState.PLANNING, "Planning");
+    queryStateDisplayMap.put(QueryState.ENQUEUED, "Enqueued");
+    queryStateDisplayMap.put(QueryState.STARTING, "Starting");
+    queryStateDisplayMap.put(QueryState.RUNNING, "Running");
+    queryStateDisplayMap.put(QueryState.COMPLETED, "Succeeded");
+    queryStateDisplayMap.put(QueryState.FAILED, "Failed");
+    queryStateDisplayMap.put(QueryState.CANCELLATION_REQUESTED, "Cancellation Requested");
+    queryStateDisplayMap.put(QueryState.CANCELED, "Canceled");
+  }
 
   /**
-   * Utility to return display name for query state
-   * @param queryState
+   * Utility method to return display name for query state
+   * @param queryState query state
    * @return display string for query state
    */
-  public final static String getQueryStateDisplayName(QueryState queryState) {
-    int queryStateOrdinal = queryState.getNumber();
-    if (queryStateOrdinal >= queryStateDisplayNames.length) {
-      return queryState.name();
-    } else {
-      return queryStateDisplayNames[queryStateOrdinal];
+  public static String getQueryStateDisplayName(QueryState queryState) {
+    String displayName = queryStateDisplayMap.get(queryState);
+    if (displayName == null) {
+      displayName = queryState.name();
     }
+    return displayName;
   }
 }
