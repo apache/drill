@@ -50,7 +50,7 @@ public class SqlCreateView extends DrillSqlCall {
   private SqlLiteral createViewType;
 
   public enum SqlCreateViewType {
-    SIMPLE, ORREPLACE, IFNOTEXISTS
+    SIMPLE, OR_REPLACE, IF_NOT_EXISTS
   }
 
   public SqlCreateView(SqlParserPos pos, SqlIdentifier viewName, SqlNodeList fieldList,
@@ -84,12 +84,12 @@ public class SqlCreateView extends DrillSqlCall {
       case SIMPLE:
         writer.keyword("VIEW");
         break;
-      case ORREPLACE:
+      case OR_REPLACE:
         writer.keyword("OR");
         writer.keyword("REPLACE");
         writer.keyword("VIEW");
         break;
-      case IFNOTEXISTS:
+      case IF_NOT_EXISTS:
         writer.keyword("VIEW");
         writer.keyword("IF");
         writer.keyword("NOT");

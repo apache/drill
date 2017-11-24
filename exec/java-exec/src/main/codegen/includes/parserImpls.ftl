@@ -184,14 +184,14 @@ SqlNode SqlCreateOrReplaceView() :
 }
 {
     <CREATE> { pos = getPos(); }
-    [ <OR> <REPLACE> { createViewType = "ORREPLACE"; } ]
+    [ <OR> <REPLACE> { createViewType = "OR_REPLACE"; } ]
     <VIEW>
     [
         <IF> <NOT> <EXISTS> {
-            if (createViewType == "ORREPLACE") {
+            if (createViewType == "OR_REPLACE") {
                 throw new ParseException("Create view statement cannot have both <OR REPLACE> and <IF NOT EXISTS> clause");
             }
-            createViewType = "IFNOTEXISTS";
+            createViewType = "IF_NOT_EXISTS";
         }
     ]
     viewName = CompoundIdentifier()

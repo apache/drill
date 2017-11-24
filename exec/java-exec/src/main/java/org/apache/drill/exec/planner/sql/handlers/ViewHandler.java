@@ -127,7 +127,7 @@ public abstract class ViewHandler extends DefaultSqlHandler {
               .build(logger);
           }
           break;
-        case ORREPLACE:
+        case OR_REPLACE:
           if (isTable) {
             throw UserException
               .validationError()
@@ -135,7 +135,7 @@ public abstract class ViewHandler extends DefaultSqlHandler {
               .build(logger);
           }
           break;
-        case IFNOTEXISTS:
+        case IF_NOT_EXISTS:
           if (isTable || isView) {
             return false;
           }
