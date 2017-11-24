@@ -180,18 +180,18 @@ SqlNode SqlCreateOrReplaceView() :
     SqlIdentifier viewName;
     SqlNode query;
     SqlNodeList fieldList;
-    String createViewType = "0";
+    String createViewType = "SIMPLE";
 }
 {
     <CREATE> { pos = getPos(); }
-    [ <OR> <REPLACE> { createViewType = "1"; } ]
+    [ <OR> <REPLACE> { createViewType = "ORREPLACE"; } ]
     <VIEW>
     [
         <IF> <NOT> <EXISTS> {
-            if (createViewType == "1") {
+            if (createViewType == "ORREPLACE") {
                 throw new ParseException("Create view statement cannot have both <OR REPLACE> and <IF NOT EXISTS> clause");
             }
-            createViewType = "2";
+            createViewType = "IFNOTEXISTS";
         }
     ]
     viewName = CompoundIdentifier()
@@ -199,7 +199,7 @@ SqlNode SqlCreateOrReplaceView() :
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
-        return new SqlCreateView(pos, viewName, fieldList, query, SqlLiteral.createExactNumeric(createViewType, getPos()));
+        return new SqlCreateView(pos, viewName, fieldList, query, SqlLiteral.createCharString(createViewType, getPos()));
     }
 }
 
@@ -228,12 +228,12 @@ SqlNode SqlDropView() :
 SqlNode SqlCreateTable() :
 {
     SqlParserPos pos;
-    boolean tableNonExistenceCheck = false;
     SqlIdentifier tblName;
     SqlNodeList fieldList;
     SqlNodeList partitionFieldList;
     SqlNode query;
     boolean isTemporary = false;
+    boolean tableNonExistenceCheck = false;
 }
 {
     {

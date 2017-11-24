@@ -71,8 +71,8 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
-    SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
-    String originalTableName = sqlCreateTable.getName();
+    final SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
+    final String originalTableName = sqlCreateTable.getName();
 
     final ConvertedRelNode convertedRelNode = validateAndConvert(sqlCreateTable.getQuery());
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
@@ -83,20 +83,13 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
     final DrillConfig drillConfig = context.getConfig();
     final AbstractSchema drillSchema = resolveSchema(sqlCreateTable, config.getConverter().getDefaultSchema(), drillConfig);
+    final boolean checkTableNonExistence = sqlCreateTable.checkTableNonExistence();
+    final String schemaPath = drillSchema.getFullSchemaName();
 
-    String schemaPath = drillSchema.getFullSchemaName();
-
-    // Check duplicate object existence
-    boolean isTemporaryTable = context.getSession().isTemporaryTable(drillSchema, drillConfig, originalTableName);
-    if (isTemporaryTable || SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName) != null) {
-      if (sqlCreateTable.checkTableNonExistence()) {
-        return DirectPlan.createDirectPlan(context, false,
-          String.format("A table or view with given name [%s] already exists in schema [%s]", originalTableName, schemaPath));
-      } else {
-        throw UserException.validationError()
-          .message("A table or view with given name [%s] already exists in schema [%s]", originalTableName, schemaPath)
-          .build(logger);
-      }
+    // Check table creation possibility
+    if(!checkTableCreationPossibility(drillSchema, originalTableName, drillConfig, context.getSession(), schemaPath, checkTableNonExistence)) {
+      return DirectPlan.createDirectPlan(context, false,
+        String.format("A table or view with given name [%s] already exists in schema [%s]", originalTableName, schemaPath));
     }
 
     final RelNode newTblRelNodeWithPCol = SqlHandlerUtil.qualifyPartitionCol(newTblRelNode,
@@ -302,4 +295,37 @@ public class CreateTableHandler extends DefaultSqlHandler {
     return resolvedSchema;
   }
 
+  /**
+   * Validates if table can be created in indicated schema
+   * Checks if any object (persistent table / temporary table / view) with the same name exists
+   * or if object with the same name exists but if not exists flag is set.
+   *
+   * @param drillSchema schema where table will be created
+   * @param tableName table name
+   * @param config drill config
+   * @param userSession current user session
+   * @param schemaPath schema path
+   * @param checkTableNonExistence whether duplicate check is requested
+   * @return if duplicate found in indicated schema
+   * @throws UserException if duplicate found in indicated schema and no duplicate check requested
+   */
+  private boolean checkTableCreationPossibility(AbstractSchema drillSchema,
+                                              String tableName,
+                                              DrillConfig config,
+                                              UserSession userSession,
+                                              String schemaPath,
+                                              boolean checkTableNonExistence) {
+    boolean isTemporaryTable = userSession.isTemporaryTable(drillSchema, config, tableName);
+
+    if (isTemporaryTable || SqlHandlerUtil.getTableFromSchema(drillSchema, tableName) != null) {
+      if (checkTableNonExistence) {
+        return false;
+      } else {
+        throw UserException.validationError()
+          .message("A table or view with given name [%s] already exists in schema [%s]", tableName, schemaPath)
+          .build(logger);
+      }
+    }
+    return true;
+  }
 }

@@ -328,7 +328,7 @@ public class TestViewSupport extends TestBaseViewSupport {
         .unOrdered()
         .baselineColumns("ok", "summary")
         .baselineValues(false,
-          String.format("A non-view table with given name [%s] already exists in schema [%s]", tableName, DFS_TMP_SCHEMA))
+          String.format("A table or view with given name [%s] already exists in schema [%s]", tableName, DFS_TMP_SCHEMA))
         .go();
 
     } finally {
@@ -355,8 +355,29 @@ public class TestViewSupport extends TestBaseViewSupport {
         .unOrdered()
         .baselineColumns("ok", "summary")
         .baselineValues(false,
-          String.format("A view with given name [%s] already exists in schema [%s]", viewName, DFS_TMP_SCHEMA))
+          String.format("A table or view with given name [%s] already exists in schema [%s]", viewName, DFS_TMP_SCHEMA))
         .go();
+
+      // Make sure the view created returns the data expected.
+      queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName),
+        new String[]{"region_id", "sales_city"},
+        ImmutableList.of(new Object[]{0L, "None"})
+      );
+    } finally {
+      dropViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA);
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateViewIfNotExists() throws Exception {
+    final String viewName = generateViewName();
+
+    try {
+      final String viewDef = "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id` LIMIT 2";
+
+      final String createViewSql = String.format("CREATE VIEW IF NOT EXISTS %s.`%s` AS %s", DFS_TMP_SCHEMA, viewName, viewDef);
+
+      test(createViewSql);
 
       // Make sure the view created returns the data expected.
       queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName),

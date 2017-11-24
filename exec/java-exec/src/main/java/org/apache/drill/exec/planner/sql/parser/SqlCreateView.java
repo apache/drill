@@ -49,6 +49,10 @@ public class SqlCreateView extends DrillSqlCall {
   private SqlNode query;
   private SqlLiteral createViewType;
 
+  public enum SqlCreateViewType {
+    SIMPLE, ORREPLACE, IFNOTEXISTS
+  }
+
   public SqlCreateView(SqlParserPos pos, SqlIdentifier viewName, SqlNodeList fieldList,
                        SqlNode query, SqlLiteral createViewType) {
     super(pos);
@@ -76,16 +80,16 @@ public class SqlCreateView extends DrillSqlCall {
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("CREATE");
-    switch (createViewType.intValue(true)) {
-      case 0 :
+    switch (SqlCreateViewType.valueOf(createViewType.toValue())) {
+      case SIMPLE:
         writer.keyword("VIEW");
         break;
-      case 1 :
+      case ORREPLACE:
         writer.keyword("OR");
         writer.keyword("REPLACE");
         writer.keyword("VIEW");
         break;
-      case 2 :
+      case IFNOTEXISTS:
         writer.keyword("VIEW");
         writer.keyword("IF");
         writer.keyword("NOT");
@@ -131,6 +135,6 @@ public class SqlCreateView extends DrillSqlCall {
 
   public SqlNode getQuery() { return query; }
 
-  public int getcreateViewType() { return createViewType.intValue(true); }
+  public SqlCreateViewType getcreateViewType() { return SqlCreateViewType.valueOf(createViewType.toValue()); }
 
 }

@@ -274,7 +274,7 @@ public class TestCTAS extends BaseTestQuery {
         .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
         .go();
     } finally {
-      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+      test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
     }
   }
 
@@ -297,7 +297,7 @@ public class TestCTAS extends BaseTestQuery {
         .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
         .go();
     } finally {
-      test(String.format("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+      test("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
     }
   }
 
@@ -311,7 +311,7 @@ public class TestCTAS extends BaseTestQuery {
       test(ctasQuery);
 
     } finally {
-      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+      test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
     }
   }
 
