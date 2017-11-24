@@ -23,11 +23,14 @@ import java.util.List;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class QueryWorkUnit {
 
@@ -111,5 +114,47 @@ public class QueryWorkUnit {
     for (MinorFragmentDefn defn : minorFragmentDefns) {
       fragments.add(defn.applyPlan(reader));
     }
+  }
+
+  /**
+   * Converts list of stored fragments into their string representation,
+   * in case of exception returns text indicating that string was malformed.
+   * Is used for debugging purposes.
+   *
+   * @return fragments information
+   */
+  public String stringifyFragments() {
+    StringBuilder stringBuilder = new StringBuilder();
+    final int fragmentCount = fragments.size();
+    int fragmentIndex = 0;
+    for (final PlanFragment planFragment : fragments) {
+      final ExecProtos.FragmentHandle fragmentHandle = planFragment.getHandle();
+      stringBuilder.append("PlanFragment(");
+      stringBuilder.append(++fragmentIndex);
+      stringBuilder.append('/');
+      stringBuilder.append(fragmentCount);
+      stringBuilder.append(") major_fragment_id ");
+      stringBuilder.append(fragmentHandle.getMajorFragmentId());
+      stringBuilder.append(" minor_fragment_id ");
+      stringBuilder.append(fragmentHandle.getMinorFragmentId());
+      stringBuilder.append('\n');
+
+      final CoordinationProtos.DrillbitEndpoint endpointAssignment = planFragment.getAssignment();
+      stringBuilder.append("  DrillbitEndpoint address ");
+      stringBuilder.append(endpointAssignment.getAddress());
+      stringBuilder.append('\n');
+
+      String jsonString = "<<malformed JSON>>";
+      stringBuilder.append("  fragment_json: ");
+      final ObjectMapper objectMapper = new ObjectMapper();
+      try {
+        final Object json = objectMapper.readValue(planFragment.getFragmentJson(), Object.class);
+        jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+      } catch (final Exception e) {
+        // we've already set jsonString to a fallback value
+      }
+      stringBuilder.append(jsonString);
+    }
+    return stringBuilder.toString();
   }
 }
