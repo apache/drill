@@ -21,6 +21,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,17 +37,24 @@ import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,9 +70,9 @@ public class HiveMetadataProvider {
   private final HiveReadEntry hiveReadEntry;
   private final UserGroupInformation ugi;
   private final boolean isPartitionedTable;
-  private final Map<Partition, List<InputSplitWrapper>> partitionInputSplitMap;
+  private final Map<Partition, List<LogicalInputSplit>> partitionInputSplitMap;
   private final HiveConf hiveConf;
-  private List<InputSplitWrapper> tableInputSplits;
+  private List<LogicalInputSplit> tableInputSplits;
 
   private final Stopwatch watch = Stopwatch.createUnstarted();
 
@@ -117,7 +130,7 @@ public class HiveMetadataProvider {
   }
 
   /** Helper method which return InputSplits for non-partitioned table */
-  private List<InputSplitWrapper> getTableInputSplits() throws Exception {
+  private List<LogicalInputSplit> getTableInputSplits() throws Exception {
     Preconditions.checkState(!isPartitionedTable, "Works only for non-partitioned tables");
     if (tableInputSplits != null) {
       return tableInputSplits;
@@ -132,34 +145,33 @@ public class HiveMetadataProvider {
   /** Helper method which returns the InputSplits for given partition. InputSplits are cached to speed up subsequent
    * metadata cache requests for the same partition(s).
    */
-  private List<InputSplitWrapper> getPartitionInputSplits(final HivePartition partition) throws Exception {
+  private List<LogicalInputSplit> getPartitionInputSplits(final HivePartition partition) throws Exception {
     if (partitionInputSplitMap.containsKey(partition)) {
       return partitionInputSplitMap.get(partition);
     }
 
     final Properties properties = HiveUtilities.getPartitionMetadata(partition, hiveReadEntry.getTable());
-    final List<InputSplitWrapper> splits = splitInputWithUGI(properties, partition.getSd(), partition);
+    final List<LogicalInputSplit> splits = splitInputWithUGI(properties, partition.getSd(), partition);
     partitionInputSplitMap.put(partition, splits);
 
     return splits;
   }
 
   /**
-   * Return {@link InputSplitWrapper}s for given {@link HiveReadEntry}. First splits are looked up in cache, if not
+   * Return {@link LogicalInputSplit}s for given {@link HiveReadEntry}. First splits are looked up in cache, if not
    * found go through {@link InputFormat#getSplits(JobConf, int)} to find the splits.
    *
    * @param hiveReadEntry Subset of the {@link HiveReadEntry} used when creating this object.
-   *
-   * @return
+   * @return list of logically grouped input splits
    */
-  public List<InputSplitWrapper> getInputSplits(final HiveReadEntry hiveReadEntry) {
+  public List<LogicalInputSplit> getInputSplits(final HiveReadEntry hiveReadEntry) {
     final Stopwatch timeGetSplits = Stopwatch.createStarted();
     try {
       if (!isPartitionedTable) {
         return getTableInputSplits();
       }
 
-      final List<InputSplitWrapper> splits = Lists.newArrayList();
+      final List<LogicalInputSplit> splits = Lists.newArrayList();
       for (HivePartition p : hiveReadEntry.getPartitions()) {
         splits.addAll(getPartitionInputSplits(p));
       }
@@ -220,41 +232,60 @@ public class HiveMetadataProvider {
   }
 
   /**
-   * Estimate the stats from the given list of InputSplits.
-   * @param inputSplits
-   * @return
-   * @throws IOException
+   * Estimate the stats from the given list of logically grouped input splits.
+   *
+   * @param inputSplits list of logically grouped input splits
+   * @return hive stats usually numRows and totalSizeInBytes which used
    */
-  private HiveStats getStatsEstimateFromInputSplits(final List<InputSplitWrapper> inputSplits) throws IOException {
+  private HiveStats getStatsEstimateFromInputSplits(final List<LogicalInputSplit> inputSplits) throws IOException {
     long data = 0;
-    for (final InputSplitWrapper split : inputSplits) {
-      data += split.getSplit().getLength();
+    for (final LogicalInputSplit split : inputSplits) {
+      data += split.getLength();
     }
 
     return new HiveStats(data/RECORD_SIZE, data);
   }
 
-  private List<InputSplitWrapper> splitInputWithUGI(final Properties properties, final StorageDescriptor sd,
-      final Partition partition) throws Exception {
+  /**
+   * Gets list of input splits based on table location.
+   * These input splits are grouped logically by file name
+   * if skip header / footer logic should be applied later on.
+   *
+   * @param properties table or partition properties
+   * @param sd storage descriptor
+   * @param partition hive partition
+   * @return list of logically grouped input splits
+   */
+  private List<LogicalInputSplit> splitInputWithUGI(final Properties properties, final StorageDescriptor sd, final Partition partition) {
     watch.start();
     try {
-      return ugi.doAs(new PrivilegedExceptionAction<List<InputSplitWrapper>>() {
-        public List<InputSplitWrapper> run() throws Exception {
-          final List<InputSplitWrapper> splits = Lists.newArrayList();
+      return ugi.doAs(new PrivilegedExceptionAction<List<LogicalInputSplit>>() {
+        public List<LogicalInputSplit> run() throws Exception {
+          final List<LogicalInputSplit> splits = Lists.newArrayList();
           final JobConf job = new JobConf(hiveConf);
           HiveUtilities.addConfToJob(job, properties);
           job.setInputFormat(HiveUtilities.getInputFormatClass(job, sd, hiveReadEntry.getTable()));
           final Path path = new Path(sd.getLocation());
           final FileSystem fs = path.getFileSystem(job);
-
           if (fs.exists(path)) {
             FileInputFormat.addInputPath(job, path);
             final InputFormat<?, ?> format = job.getInputFormat();
-            for (final InputSplit split : format.getSplits(job, 1)) {
-              splits.add(new InputSplitWrapper(split, partition));
+            InputSplit[] inputSplits = format.getSplits(job, 1);
+
+            // if current table with text input format and has header / footer,
+            // we need to make sure that splits of the same file are grouped together
+            if (TextInputFormat.class.getCanonicalName().equals(sd.getInputFormat()) &&
+                HiveUtilities.hasHeaderOrFooter(hiveReadEntry.getTable())) {
+              Multimap<Path, FileSplit> inputSplitMultimap = transformFileSplits(inputSplits);
+              for (Collection<FileSplit> logicalInputSplit : inputSplitMultimap.asMap().values()) {
+                splits.add(new LogicalInputSplit(logicalInputSplit, partition));
+              }
+            } else {
+              for (final InputSplit split : inputSplits) {
+                splits.add(new LogicalInputSplit(split, partition));
+              }
             }
           }
-
           return splits;
         }
       });
@@ -268,22 +299,113 @@ public class HiveMetadataProvider {
     }
   }
 
-  /** Contains InputSplit along with the Partition. If non-partitioned tables, the partition field is null. */
-  public static class InputSplitWrapper {
-    private InputSplit split;
-    private Partition partition;
+  /**
+   * <p>
+   * Groups input splits by file path. Each inout split group is ordered by starting bytes
+   * to ensure file parts in correct order.
+   * </p>
+   * <p>
+   * Example:
+   * <pre>
+   * hdfs:///tmp/table/file_1.txt  -> hdfs:///tmp/table/file_1.txt:0+10000
+   *                                  hdfs:///tmp/table/file_1.txt:10001+20000
+   * hdfs:///tmp/table/file_2.txt  -> hdfs:///tmp/table/file_2.txt:0+10000
+   * </pre>
+   * </p>
+   * @param inputSplits input splits
+   * @return multimap where key is file path and value is group of ordered file splits
+   */
+  private Multimap<Path, FileSplit> transformFileSplits(InputSplit[] inputSplits) {
+    Multimap<Path, FileSplit> inputSplitGroups = TreeMultimap.create(Ordering.<Path>natural(),
+        new Comparator<FileSplit>() {
+      @Override
+      public int compare(FileSplit f1, FileSplit f2) {
+        return Long.compare(f1.getStart(), f2.getStart());
+      }
+    });
 
-    public InputSplitWrapper(final InputSplit split, final Partition partition) {
-      this.split = split;
+    for (InputSplit inputSplit : inputSplits) {
+      FileSplit fileSplit = (FileSplit) inputSplit;
+      inputSplitGroups.put(fileSplit.getPath(), fileSplit);
+    }
+    return inputSplitGroups;
+  }
+
+  /**
+   * Contains group of input splits along with the partition. For non-partitioned tables, the partition field is null.
+   * Input splits can be logically grouped together, for example, in case of when table has header / footer.
+   * In this case all splits from the same file should be processed together.
+   */
+  public static class LogicalInputSplit {
+
+    private final Collection<InputSplit> inputSplits = new ArrayList<>();
+    private final Partition partition;
+
+    public LogicalInputSplit(InputSplit inputSplit, Partition partition) {
+      inputSplits.add(inputSplit);
       this.partition = partition;
     }
 
-    public InputSplit getSplit() {
-      return split;
+    public LogicalInputSplit(Collection<? extends InputSplit> inputSplits, Partition partition) {
+      this.inputSplits.addAll(inputSplits);
+      this.partition = partition;
+    }
+
+    public Collection<InputSplit> getInputSplits() {
+      return inputSplits;
     }
 
     public Partition getPartition() {
       return partition;
+    }
+
+    /**
+     * @return returns total length of all stored input splits
+     */
+    public long getLength() throws IOException {
+      long length = 0L;
+      for (InputSplit inputSplit: inputSplits) {
+        length += inputSplit.getLength();
+      }
+      return length;
+    }
+
+    /**
+     * @return collection of unique locations where inout splits are stored
+     */
+    public Collection<String> getLocations() throws IOException {
+      Set<String> locations = new HashSet<>();
+      for (InputSplit inputSplit: inputSplits) {
+        Collections.addAll(locations, inputSplit.getLocations());
+      }
+      return locations;
+    }
+
+    /**
+     * Serializes each input split to string using Base64 encoding.
+     *
+     * @return list of serialized input splits
+     */
+    public List<String> serialize() throws IOException {
+      List<String> serializedInputSplits = new ArrayList<>();
+      for (InputSplit inputSplit : inputSplits) {
+        final ByteArrayDataOutput byteArrayOutputStream = ByteStreams.newDataOutput();
+        inputSplit.write(byteArrayOutputStream);
+        final String encoded = Base64.encodeBase64String(byteArrayOutputStream.toByteArray());
+        logger.debug("Encoded split string for split {} : {}", inputSplit, encoded);
+        serializedInputSplits.add(encoded);
+      }
+      return serializedInputSplits;
+    }
+
+    /**
+     * @return returns input split class name if at least one input split is present, null otherwise.
+     */
+    public String getType() {
+      if (inputSplits.isEmpty()) {
+        return null;
+      }
+      return inputSplits.iterator().next().getClass().getName();
     }
   }
 

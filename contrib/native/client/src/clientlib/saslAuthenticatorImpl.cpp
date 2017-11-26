@@ -28,16 +28,16 @@
 
 namespace Drill {
 
-static const std::string DEFAULT_SERVICE_NAME = "drill";
+const std::string DEFAULT_SERVICE_NAME = "drill";
+const int PREFERRED_MIN_SSF = 56;
+const std::string SaslAuthenticatorImpl::KERBEROS_SIMPLE_NAME = "kerberos";
+const std::string SaslAuthenticatorImpl::PLAIN_NAME = "plain";
 
-static const std::string KERBEROS_SIMPLE_NAME = "kerberos";
-static const std::string KERBEROS_SASL_NAME = "gssapi";
-static const std::string PLAIN_NAME = "plain";
-static const int PREFERRED_MIN_SSF = 56;
+const std::string KERBEROS_SASL_NAME = "gssapi";
 
 const std::map<std::string, std::string> SaslAuthenticatorImpl::MECHANISM_MAPPING = boost::assign::map_list_of
-    (KERBEROS_SIMPLE_NAME, KERBEROS_SASL_NAME)
-    (PLAIN_NAME, PLAIN_NAME)
+    (SaslAuthenticatorImpl::KERBEROS_SIMPLE_NAME, KERBEROS_SASL_NAME)
+    (SaslAuthenticatorImpl::PLAIN_NAME, SaslAuthenticatorImpl::PLAIN_NAME)
 ;
 
 boost::mutex SaslAuthenticatorImpl::s_mutex;
@@ -138,15 +138,17 @@ int SaslAuthenticatorImpl::init(const std::vector<std::string>& mechanisms, exec
             m_ppwdSecret = (sasl_secret_t *) malloc(sizeof(sasl_secret_t) + length);
             std::memcpy(m_ppwdSecret->data, value.c_str(), length);
             m_ppwdSecret->len = length;
-            authMechanismToUse = PLAIN_NAME;
+            authMechanismToUse = SaslAuthenticatorImpl::PLAIN_NAME;
         } else if (USERPROP_USERNAME == key) {
             m_username = value;
         } else if (USERPROP_AUTH_MECHANISM == key) {
             authMechanismToUse = value;
         }
     }
-    // clientNeedsAuthentication() cannot be false if the code above picks an authMechanism
-    assert (authMechanismToUse.empty() || DrillClientImpl::clientNeedsAuthentication(m_pUserProperties));
+    // clientNeedsAuthentication() cannot be false if the code above picks an authMechanism other than PLAIN
+    assert (authMechanismToUse.empty() || authMechanismToUse == SaslAuthenticatorImpl::PLAIN_NAME ||
+            DrillClientImpl::clientNeedsAuthentication(m_pUserProperties));
+
     m_authMechanismName = authMechanismToUse;
     if (authMechanismToUse.empty()) return SASL_NOMECH;
 

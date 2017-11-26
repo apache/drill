@@ -321,13 +321,17 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
             return respBuilder.build();
           }
 
-          final boolean clientSupportsSasl = inbound.hasSaslSupport() &&
-              (inbound.getSaslSupport().ordinal() > SaslSupport.UNKNOWN_SASL_SUPPORT.ordinal());
+          // If sasl_support field is absent in handshake message then treat the client as < 1.10 client
+          final boolean clientSupportsSasl = inbound.hasSaslSupport();
 
+          // saslSupportOrdinal will be set to UNKNOWN_SASL_SUPPORT, if sasl_support field in handshake is set to a
+          // value which is unknown to this server. We will treat those clients as one which knows SASL protocol.
           final int saslSupportOrdinal = (clientSupportsSasl) ? inbound.getSaslSupport().ordinal()
                                                               : SaslSupport.UNKNOWN_SASL_SUPPORT.ordinal();
 
-          if (saslSupportOrdinal <= SaslSupport.SASL_AUTH.ordinal() && config.isEncryptionEnabled()) {
+          // Check if client doesn't support SASL or only supports SASL_AUTH and server has encryption enabled
+          if ((!clientSupportsSasl || saslSupportOrdinal == SaslSupport.SASL_AUTH.ordinal())
+              && config.isEncryptionEnabled()) {
             throw new UserAuthenticationException("The server doesn't allow client without encryption support." +
                 " Please upgrade your client or talk to your system administrator.");
           }

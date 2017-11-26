@@ -679,7 +679,7 @@ public final class UserBitShared {
      * <code>KAFKA_SUB_SCAN = 38;</code>
      */
     public static final int KAFKA_SUB_SCAN_VALUE = 38;
-
+    
 
     public final int getNumber() { return value; }
 
@@ -24004,7 +24004,7 @@ public final class UserBitShared {
       "REPARED_STATEMENT\020\005*\207\001\n\rFragmentState\022\013\n" +
       "\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007R" +
       "UNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n",
-      "\006FAILED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\204\006" +
+      "\006FAILED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\360\005" +
       "\n\020CoreOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n" +
       "\020BROADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_" +
       "AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN" +
@@ -24023,12 +24023,11 @@ public final class UserBitShared {
       "CHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n" +
       "\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!" +
       "\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAV" +
-      "RO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_SCAN\020%\022\022\n\016KAFK",
-      "A_SUB_SCAN\020&*g\n\nSaslStatus\022\020\n\014SASL_UNKNO" +
-      "WN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS" +
-      "\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n" +
-      "\033org.apache.drill.exec.protoB\rUserBitSha" +
-      "redH\001"
+      "RO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_SCAN\020%*g\n\nSasl",
+      "Status\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001" +
+      "\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003" +
+      "\022\017\n\013SASL_FAILED\020\004B.\n\033org.apache.drill.ex" +
+      "ec.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

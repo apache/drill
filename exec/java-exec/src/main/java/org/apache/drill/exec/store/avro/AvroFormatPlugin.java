@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,6 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
-import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -105,13 +104,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
         FileSelection selection, FileSystemPlugin fsPlugin,
         String storageEngineName, String userName) throws IOException {
       if (isFileReadable(fs, selection.getFirstPath(fs))) {
-        if (plugin.getName() != null) {
-          NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
-          namedConfig.name = plugin.getName();
-          return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(namedConfig, selection));
-        } else {
-          return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(plugin.getConfig(), selection));
-        }
+        return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(plugin.getConfig(), selection));
       }
       return null;
     }

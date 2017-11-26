@@ -164,9 +164,6 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   ) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName));
     this.columns = columns;
-    if (formatConfig == null) {
-      formatConfig = new ParquetFormatConfig();
-    }
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
@@ -345,6 +342,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return true;
   }
 
+  @JsonIgnore
   @Override
   public Collection<String> getFiles() {
     return fileSet;

@@ -43,7 +43,7 @@ public class QueryWrapper {
   @JsonCreator
   public QueryWrapper(@JsonProperty("query") String query, @JsonProperty("queryType") String queryType) {
     this.query = query;
-    this.queryType = queryType;
+    this.queryType = queryType.toUpperCase();
   }
 
   public String getQuery() {

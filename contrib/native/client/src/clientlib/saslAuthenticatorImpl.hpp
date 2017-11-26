@@ -59,6 +59,10 @@ public:
 
     const char *getErrorMessage(int errorCode);
 
+    static const std::string KERBEROS_SIMPLE_NAME;
+
+    static const std::string PLAIN_NAME;
+
 private:
 
     static const std::map<std::string, std::string> MECHANISM_MAPPING;
