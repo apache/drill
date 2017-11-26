@@ -265,6 +265,7 @@ public class DrillRoot {
     private final String userPort;
     private final String controlPort;
     private final String dataPort;
+    private final String httpPort;
     private final String version;
     private final boolean current;
     private final boolean versionMatch;
@@ -275,6 +276,7 @@ public class DrillRoot {
       this.userPort = String.valueOf(drillbit.getUserPort());
       this.controlPort = String.valueOf(drillbit.getControlPort());
       this.dataPort = String.valueOf(drillbit.getDataPort());
+      this.httpPort = String.valueOf(drillbit.getHttpPort());
       this.version = Strings.isNullOrEmpty(drillbit.getVersion()) ? "Undefined" : drillbit.getVersion();
       this.current = current;
       this.versionMatch = versionMatch;
@@ -287,6 +289,8 @@ public class DrillRoot {
     public String getControlPort() { return controlPort; }
 
     public String getDataPort() { return dataPort; }
+
+    public String getHttpPort() { return httpPort; }
 
     public String getVersion() { return version; }
 

@@ -53,6 +53,7 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
     private int dataPort;
     private Roles roles;
     private String version;
+    private int httpPort;
 
     public DrillbitEndpoint()
     {
@@ -139,6 +140,19 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         return this;
     }
 
+    // httpPort
+
+    public int getHttpPort()
+    {
+        return httpPort;
+    }
+
+    public DrillbitEndpoint setHttpPort(int httpPort)
+    {
+        this.httpPort = httpPort;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -212,6 +226,9 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
                 case 6:
                     message.version = input.readString();
                     break;
+                case 7:
+                    message.httpPort = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -239,6 +256,9 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
 
         if(message.version != null)
             output.writeString(6, message.version, false);
+
+        if(message.httpPort != 0)
+            output.writeInt32(7, message.httpPort, false);
     }
 
     public String getFieldName(int number)
@@ -251,6 +271,7 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
             case 4: return "dataPort";
             case 5: return "roles";
             case 6: return "version";
+            case 7: return "httpPort";
             default: return null;
         }
     }
@@ -270,6 +291,7 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         __fieldMap.put("dataPort", 4);
         __fieldMap.put("roles", 5);
         __fieldMap.put("version", 6);
+        __fieldMap.put("httpPort", 7);
     }
     
 }
