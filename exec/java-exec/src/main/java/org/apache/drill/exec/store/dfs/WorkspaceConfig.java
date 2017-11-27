@@ -47,7 +47,8 @@ public class WorkspaceConfig {
     this.location = location;
     this.writable = writable;
     this.defaultInputFormat = defaultInputFormat;
-    this.allowAccessOutsideWorkspace = allowAccessOutsideWorkspace != null ? allowAccessOutsideWorkspace : false ;
+    //this.allowAccessOutsideWorkspace = allowAccessOutsideWorkspace != null ? allowAccessOutsideWorkspace : false ;
+    this.allowAccessOutsideWorkspace = true;
   }
 
   public String getLocation() {

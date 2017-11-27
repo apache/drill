@@ -63,7 +63,7 @@ public class TestFileSelection extends BaseTestQuery {
   }
 
   @Test
-  public void testBackPath() throws Exception {
+  public void testBackPathBad() throws Exception {
     final String[][] badPaths =
         {
             {"/tmp", "../../bad"},   //  goes beyond root and outside parent; resolves to /../bad
@@ -74,12 +74,12 @@ public class TestFileSelection extends BaseTestQuery {
 
 
     for (int i = 0; i < badPaths.length; i++) {
-      boolean isPathGood;
+      boolean isPathGood = true;
       try {
         String parent = badPaths[i][0];
         String subPath = FileSelection.removeLeadingSlash(badPaths[i][1]);
         String path = new Path(parent, subPath).toString();
-        isPathGood = FileSelection.checkBackPaths(parent, path, subPath);
+        FileSelection.checkBackPaths(parent, path, subPath);
       } catch (IllegalArgumentException e) {
         isPathGood = false;
       }
@@ -87,7 +87,10 @@ public class TestFileSelection extends BaseTestQuery {
         fail("Failed to catch invalid file selection paths.");
       }
     }
+  }
 
+  @Test
+  public void testBackPathGood() throws Exception {
     final String[][] goodPaths =
         {
             {"/tmp", "../tmp/good"},
@@ -107,7 +110,6 @@ public class TestFileSelection extends BaseTestQuery {
         fail("Valid path not allowed by selection path validation.");
       }
     }
-
   }
 
 }
