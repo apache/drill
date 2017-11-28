@@ -19,6 +19,7 @@
 package org.apache.drill.exec.server.options;
 
 import org.apache.drill.categories.OptionsTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.sys.SystemTable;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -40,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  * i.e., if the value is not set in system/session.
  * */
 
-@Category(OptionsTest.class)
+@Category({OptionsTest.class, SlowTest.class})
 public class TestConfigLinkage {
   public static final String MOCK_PROPERTY = "mock.prop";
 

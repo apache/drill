@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -39,7 +40,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class})
 public class TestStringFunctions extends ExecTest {
 
   private final DrillConfig c = DrillConfig.create();

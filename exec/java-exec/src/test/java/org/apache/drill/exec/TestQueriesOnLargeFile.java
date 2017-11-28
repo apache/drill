@@ -37,7 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestQueriesOnLargeFile extends BaseTestQuery {
   private static File dataFile = null;
   private static int NUM_RECORDS = 15000;

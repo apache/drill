@@ -26,8 +26,6 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
-      <version>1.3</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kerby</groupId>
@@ -687,35 +685,6 @@
         </dependency>
       </dependencies>
     </profile>
-    <profile>
-      <id>largeTests</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>include-large-tests</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <configuration>
-                  <includes>
-                    <include>**/TestLargeFileCompilation.java</include>
-                  </includes>
-                  <groups>org.apache.drill.categories.SlowTest</groups>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 
   <build>
@@ -899,22 +868,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <executions>
-          <execution>
-            <!-- we override the default test execution to exclude tests
-              that would take unusually long time to run (> 1 minute) and run such tests
-              in a different profile -->
-            <id>default-test</id>
-            <phase>test</phase>
-            <goals><goal>test</goal></goals>
-            <configuration>
-              <!--  Legacy: exclude by file name -->
-              <excludes>
-                <exclude>**/TestLargeFileCompilation.java</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
     <pluginManagement>

@@ -28,7 +28,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestColumnListCache {
 
   @Test

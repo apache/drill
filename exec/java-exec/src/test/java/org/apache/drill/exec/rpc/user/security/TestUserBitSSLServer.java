@@ -18,19 +18,21 @@
 package org.apache.drill.exec.rpc.user.security;
 
 import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
+@Category({SecurityTest.class})
 public class TestUserBitSSLServer extends BaseTestQuery {
   private static DrillConfig sslConfig;
   private static Properties initProps; // initial client properties
