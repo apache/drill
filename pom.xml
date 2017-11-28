@@ -460,7 +460,7 @@
             </dependency>
           </dependencies>
           <configuration>
-            <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false
+            <argLine>-Xms512m -Xmx4096g -Ddrill.exec.http.enabled=false
               -Ddrill.exec.sys.store.provider.local.write=false
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -Ddrill.test.query.printing.silent=true
