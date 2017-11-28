@@ -196,15 +196,20 @@ public class TestParquetComplex extends BaseTestQuery {
   }
 
   @Test //DRILL-5971
-  public void checkLogicalIntTypes() throws Exception {
-    String query = String.format("select t.int32, t.int64, t.complextype  \n" +
-            "from cp.`store/parquet/complex/test_logical_int.parquet` t" );
-    String[] columns = {"int32", "int64", "complextype"};
+  public void checkComplexLogicalIntTypes() throws Exception {
+    String query = String.format("select t.complextype as complextype,  " +
+            "t.uint_64 as uint_64, t.uint_32 as uint_32, t.uint_16 as uint_16, t.uint_8 as uint_8,  " +
+            "t.int_64 as int_64, t.int_32 as int_32, t.int_16 as int_16, t.int_8 as int_8  " +
+            "from cp.`store/parquet/complex/logical_int_complex.parquet` t" );
+    String[] columns = {"complextype", "uint_64", "uint_32", "uint_16", "uint_8", "int_64", "int_32", "int_16", "int_8" };
     testBuilder()
         .sqlQuery(query)
-        .ordered()
+        .unOrdered()
         .baselineColumns(columns)
-        .baselineValues(new Integer(3), new Long(1501286406429L), mapOf("a","a","b","b") )
+        .baselineValues( mapOf("a","a","b","b")  , 0L                   , 0           , 0        , 0       , 0L                    , 0            , 0       ,0       )
+        .baselineValues( mapOf("a","a","b","b")  , -1L                  , -1          , -1       , -1      , -1L                   , -1           , -1      , -1     )
+        .baselineValues( mapOf("a","a","b","b")  , 1L                   , 1           , 1        , 1       , -9223372036854775808L , 1            , 1       , 1      )
+        .baselineValues( mapOf("a","a","b","b")  , 9223372036854775807L , 2147483647  , 65535    , 255     , 9223372036854775807L  , -2147483648  , -32768  , -128   )
         .build()
         .run();
   }

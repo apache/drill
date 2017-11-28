@@ -98,4 +98,24 @@ public class TestDrillParquetReader extends BaseTestQuery {
       .baselineValues(null, null, null, null, null, null, 0, 0, 0, 0L, 0, 0)
       .go();
   }
+
+  @Test
+  public void testLogicalIntTypes() throws Exception {
+    String query = String.format("select " +
+        "t.uint_64 as uint_64, t.uint_32 as uint_32, t.uint_16 as uint_16, t.uint_8 as uint_8,  " +
+        "t.int_64 as int_64, t.int_32 as int_32, t.int_16 as int_16, t.int_8 as int_8  " +
+        "from cp.`parquet/logical_int.parquet` t" );
+    String[] columns = {"uint_64", "uint_32", "uint_16", "uint_8", "int_64", "int_32", "int_16", "int_8" };
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns(columns)
+        .baselineValues( 0L                   , 0           , 0        , 0       , 0L                    , 0            , 0       ,0       )
+        .baselineValues( -1L                  , -1          , -1       , -1      , -1L                   , -1           , -1      , -1     )
+        .baselineValues( 1L                   , 1           , 1        , 1       , -9223372036854775808L , 1            , 1       , 1      )
+        .baselineValues( 9223372036854775807L , 2147483647  , 65535    , 255     , 9223372036854775807L  , -2147483648  , -32768  , -128   )
+        .build()
+        .run();
+  }
+
 }

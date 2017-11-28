@@ -61,6 +61,8 @@ public class ParquetToDrillTypeConverter {
           return (TypeProtos.MinorType.BIGINT);
         }
         switch(convertedType) {
+          case INT_64:
+            return TypeProtos.MinorType.BIGINT;
           case UINT_64:
             return TypeProtos.MinorType.UINT8;
           case DECIMAL:
@@ -85,6 +87,7 @@ public class ParquetToDrillTypeConverter {
             return TypeProtos.MinorType.UINT4;
           case INT_8:
           case INT_16:
+          case INT_32:
             return TypeProtos.MinorType.INT;
           case DECIMAL:
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
