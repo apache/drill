@@ -47,20 +47,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-common</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-      </exclusions>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
@@ -267,9 +253,6 @@
             <additionalClasspathElements>${settings.localRepository}/org/hamcrest/hamcrest-core/${hamcrest.core.version}/hamcrest-core-${hamcrest.core.version}.jar</additionalClasspathElements>
             <additionalClasspathElements>${project.build.directory}/test-classes/</additionalClasspathElements>
           </additionalClasspathElements>
-          <classpathDependencyExcludes>
-            <classpathDependencyExcludes>*:*</classpathDependencyExcludes>
-          </classpathDependencyExcludes>
 
           <systemPropertyVariables>
             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
