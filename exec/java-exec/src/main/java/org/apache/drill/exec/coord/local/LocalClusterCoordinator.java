@@ -18,6 +18,7 @@
 package org.apache.drill.exec.coord.local;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +34,7 @@ import org.apache.drill.exec.coord.store.TransientStore;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
 
 import com.google.common.collect.Maps;
 
@@ -69,9 +71,10 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
   }
 
   @Override
-  public RegistrationHandle register(final DrillbitEndpoint data) {
+  public RegistrationHandle register( DrillbitEndpoint data) {
     logger.debug("Endpoint registered {}.", data);
-    final Handle h = new Handle();
+    final Handle h = new Handle(data);
+    data = data.toBuilder().setState(State.ONLINE).build();
     endpoints.put(h, data);
     return h;
   }
@@ -85,13 +88,62 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
     endpoints.remove(handle);
   }
 
+  /**
+   * Update drillbit endpoint state. Drillbit advertises its
+   * state. State information is used during planning and initial
+   * client connection phases.
+   */
+  @Override
+  public RegistrationHandle update(RegistrationHandle handle, State state) {
+    DrillbitEndpoint endpoint = handle.getEndPoint();
+    endpoint = endpoint.toBuilder().setState(state).build();
+    handle.setEndPoint(endpoint);
+    endpoints.put(handle,endpoint);
+    return handle;
+  }
+
   @Override
   public Collection<DrillbitEndpoint> getAvailableEndpoints() {
     return endpoints.values();
   }
 
+  /**
+   * Get a collection of ONLINE Drillbit endpoints by excluding the drillbits
+   * that are in QUIESCENT state (drillbits shutting down). Primarily used by the planner
+   * to plan queries only on ONLINE drillbits and used by the client during initial connection
+   * phase to connect to a drillbit (foreman)
+   * @return A collection of ONLINE endpoints
+   */
+  @Override
+  public Collection<DrillbitEndpoint> getOnlineEndPoints() {
+    Collection<DrillbitEndpoint> runningEndPoints = new ArrayList<>();
+    for (DrillbitEndpoint endpoint: endpoints.values()){
+      if(isDrillbitInState(endpoint, State.ONLINE)) {
+        runningEndPoints.add(endpoint);
+      }
+    }
+    return runningEndPoints;
+  }
+
   private class Handle implements RegistrationHandle {
     private final UUID id = UUID.randomUUID();
+    private DrillbitEndpoint drillbitEndpoint;
+
+    /**
+     * Get the drillbit endpoint associated with the registration handle
+     * @return drillbit endpoint
+     */
+    public DrillbitEndpoint getEndPoint() {
+      return drillbitEndpoint;
+    }
+
+    public void setEndPoint(DrillbitEndpoint endpoint) {
+      this.drillbitEndpoint = endpoint;
+    }
+
+    private Handle(DrillbitEndpoint data) {
+      drillbitEndpoint = data;
+    }
 
     @Override
     public int hashCode() {
