@@ -308,6 +308,18 @@ public final class ExecConstants {
 
   public static final BooleanValidator ENABLE_UNION_TYPE = new BooleanValidator("exec.enable_union_type");
 
+  // Kafka plugin related options.
+  public static final String KAFKA_ALL_TEXT_MODE = "store.kafka.all_text_mode";
+  public static final OptionValidator KAFKA_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(KAFKA_ALL_TEXT_MODE);
+  public static final String KAFKA_READER_READ_NUMBERS_AS_DOUBLE = "store.kafka.read_numbers_as_double";
+  public static final OptionValidator KAFKA_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(
+      KAFKA_READER_READ_NUMBERS_AS_DOUBLE);
+  public static final String KAFKA_RECORD_READER = "store.kafka.record.reader";
+  public static final OptionValidator KAFKA_RECORD_READER_VALIDATOR = new StringValidator(KAFKA_RECORD_READER);
+  public static final String KAFKA_POLL_TIMEOUT = "store.kafka.poll.timeout";
+  public static final PositiveLongValidator KAFKA_POLL_TIMEOUT_VALIDATOR = new PositiveLongValidator(KAFKA_POLL_TIMEOUT,
+      Long.MAX_VALUE);
+
   // TODO: We need to add a feature that enables storage plugins to add their own options. Currently we have to declare
   // in core which is not right. Move this option and above two mongo plugin related options once we have the feature.
   public static final String HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS = "store.hive.optimize_scan_with_native_readers";
