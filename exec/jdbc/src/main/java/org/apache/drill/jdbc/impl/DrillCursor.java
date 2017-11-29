@@ -21,6 +21,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.common.base.Stopwatch;
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -52,6 +54,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.jdbc.SchemaChangeListener;
+import org.apache.drill.jdbc.SqlTimeoutException;
 import org.slf4j.Logger;
 
 import com.google.common.collect.Queues;
@@ -100,13 +103,18 @@ class DrillCursor implements Cursor {
     final LinkedBlockingDeque<QueryDataBatch> batchQueue =
         Queues.newLinkedBlockingDeque();
 
+    private final DrillCursor parent;
+    Stopwatch elapsedTimer = null;
 
     /**
      * ...
-     * @param  batchQueueThrottlingThreshold
-     *         queue size threshold for throttling server
+     * @param parent
+     *        reference to DrillCursor
+     * @param batchQueueThrottlingThreshold
+     *        queue size threshold for throttling server
      */
-    ResultsListener( int batchQueueThrottlingThreshold ) {
+    ResultsListener(DrillCursor parent, int batchQueueThrottlingThreshold ) {
+      this.parent = parent;
       instanceId = nextInstanceId++;
       this.batchQueueThrottlingThreshold = batchQueueThrottlingThreshold;
       logger.debug( "[#{}] Query listener created.", instanceId );
@@ -139,8 +147,17 @@ class DrillCursor implements Cursor {
       return stopped;
     }
 
-    public void awaitFirstMessage() throws InterruptedException {
-      firstMessageReceived.await();
+    public void awaitFirstMessage() throws InterruptedException, SQLTimeoutException {
+      //Check if a non-zero timeout has been set
+      if ( parent.timeoutInMilliseconds > 0 ) {
+        //Identifying remaining in milliseconds to maintain a granularity close to integer value of timeout
+        long timeToTimeout = parent.timeoutInMilliseconds - parent.elapsedTimer.elapsed(TimeUnit.MILLISECONDS);
+        if ( timeToTimeout <= 0 || !firstMessageReceived.await(timeToTimeout, TimeUnit.MILLISECONDS)) {
+            throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(parent.timeoutInMilliseconds));
+        }
+      } else {
+        firstMessageReceived.await();
+      }
     }
 
     private void releaseIfFirst() {
@@ -212,7 +229,7 @@ class DrillCursor implements Cursor {
      * @throws InterruptedException
      *         if waiting on the queue was interrupted
      */
-    QueryDataBatch getNext() throws UserException, InterruptedException {
+    QueryDataBatch getNext() throws UserException, InterruptedException, SQLTimeoutException {
       while (true) {
         if (executionFailureException != null) {
           logger.debug( "[#{}] Dequeued query failure exception: {}.",
@@ -239,6 +256,11 @@ class DrillCursor implements Cursor {
             }
             return qdb;
           }
+
+          // Check and throw SQLTimeoutException
+          if ( parent.timeoutInMilliseconds > 0 && parent.elapsedTimer.elapsed(TimeUnit.MILLISECONDS) >= parent.timeoutInMilliseconds ) {
+            throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(parent.timeoutInMilliseconds));
+          }
         }
       }
     }
@@ -251,6 +273,7 @@ class DrillCursor implements Cursor {
                       instanceId, batchQueue.size() );
       }
       while (!batchQueue.isEmpty()) {
+        // Don't bother with query timeout, we're closing the cursor
         QueryDataBatch qdb = batchQueue.poll();
         if (qdb != null && qdb.getData() != null) {
           qdb.getData().release();
@@ -318,13 +341,17 @@ class DrillCursor implements Cursor {
    * (Not <i>row</i> number.) */
   private int currentRecordNumber = -1;
 
+  //Track timeout period
+  private long timeoutInMilliseconds = 0L;
+  private Stopwatch elapsedTimer;
 
   /**
    *
    * @param statement
    * @param signature
+   * @throws SQLException
    */
-  DrillCursor(DrillConnectionImpl connection, AvaticaStatement statement, Signature signature) {
+  DrillCursor(DrillConnectionImpl connection, AvaticaStatement statement, Signature signature) throws SQLException {
     this.connection = connection;
     this.statement = statement;
     this.signature = signature;
@@ -333,8 +360,9 @@ class DrillCursor implements Cursor {
     final int batchQueueThrottlingThreshold =
         client.getConfig().getInt(
             ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD );
-    resultsListener = new ResultsListener(batchQueueThrottlingThreshold);
+    resultsListener = new ResultsListener(this, batchQueueThrottlingThreshold);
     currentBatchHolder = new RecordBatchLoader(client.getAllocator());
+    setTimeout(this.statement.getQueryTimeout());
   }
 
   protected int getCurrentRecordNumber() {
@@ -374,6 +402,19 @@ class DrillCursor implements Cursor {
     }
     resultsListener.close();
     currentBatchHolder.clear();
+  }
+
+  long getTimeoutInMilliseconds() {
+    return timeoutInMilliseconds;
+  }
+
+  //Set the cursor's timeout in seconds
+  void setTimeout(int timeoutDurationInSeconds) {
+    this.timeoutInMilliseconds = TimeUnit.SECONDS.toMillis(timeoutDurationInSeconds);
+    //Starting the timer, since this is invoked via the ResultSet.execute() call
+    if (timeoutInMilliseconds > 0) {
+      elapsedTimer = Stopwatch.createStarted();
+    }
   }
 
   /**
@@ -613,6 +654,10 @@ class DrillCursor implements Cursor {
   @Override
   public boolean wasNull() throws SQLException {
     return accessors.wasNull();
+  }
+
+  public Stopwatch getElapsedTimer() {
+    return elapsedTimer;
   }
 
 }
