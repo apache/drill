@@ -21,12 +21,13 @@ import org.apache.drill.categories.SlowTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestLargeFileCompilation extends BaseTestQuery {
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(150000); // 150secs
 
@@ -120,6 +121,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
     return sb.append("full_name\nfrom cp.`employee.json` limit 1)").toString();
   }
 
+  @Ignore // TODO DRILL-5997
   @Test
   public void testTEXT_WRITER() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
@@ -136,6 +138,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
     testNoResult(ITERATION_COUNT, LARGE_QUERY_WRITER, "wide_table_parquet");
   }
 
+  @Ignore // TODO DRILL-5997
   @Test
   public void testGROUP_BY() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
@@ -154,6 +157,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
     testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY_WITH_LIMIT);
   }
 
+  @Ignore // TODO DRILL-5997
   @Test
   public void testFILTER() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);

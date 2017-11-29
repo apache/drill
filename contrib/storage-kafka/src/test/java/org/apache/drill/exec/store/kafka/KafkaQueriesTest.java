@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.categories.KafkaStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
@@ -30,7 +32,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import org.junit.experimental.categories.Category;
 
+@Category({KafkaStorageTest.class, SlowTest.class})
 public class KafkaQueriesTest extends KafkaTestBase {
 
   @Test

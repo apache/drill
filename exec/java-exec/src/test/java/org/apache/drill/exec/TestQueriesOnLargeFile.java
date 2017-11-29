@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.List;
 
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -34,7 +35,9 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class})
 public class TestQueriesOnLargeFile extends BaseTestQuery {
   private static File dataFile = null;
   private static int NUM_RECORDS = 15000;

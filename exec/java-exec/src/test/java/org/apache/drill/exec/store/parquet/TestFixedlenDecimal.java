@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class})
 public class TestFixedlenDecimal extends BaseTestQuery {
   // enable decimal data type
   @BeforeClass

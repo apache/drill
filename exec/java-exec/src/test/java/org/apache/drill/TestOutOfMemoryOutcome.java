@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.CoordinationProtos;
@@ -25,11 +26,13 @@ import org.apache.drill.exec.testing.ControlsInjectionUtil;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Run several tpch queries and inject an OutOfMemoryException in ScanBatch that will cause an OUT_OF_MEMORY outcome to
  * be propagated downstream. Make sure the proper "memory error" message is sent to the client.
  */
+@Category({UnlikelyTest.class})
 public class TestOutOfMemoryOutcome extends BaseTestQuery {
 
   private static final String SINGLE_MODE = "ALTER SESSION SET `planner.disable_exchanges` = true";
