@@ -17,12 +17,15 @@
  */
 
 package org.apache.drill.test;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.Drillbit;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,7 +40,7 @@ import java.io.BufferedWriter;
 
 
 
-
+@Category({SlowTest.class})
 public class TestGracefulShutdown extends BaseTestQuery{
 
   @BeforeClass
