@@ -27,8 +27,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-
-
 @Category({SlowTest.class})
 public class TestLargeFileCompilation extends BaseTestQuery {
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(150000); // 150secs

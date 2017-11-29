@@ -54,7 +54,10 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
       }
       assertEquals(100, count);
     }
+
+
   }
+
 
   @Test
   public void oneBitOneExchangeTwoEntryRun() throws Exception{
