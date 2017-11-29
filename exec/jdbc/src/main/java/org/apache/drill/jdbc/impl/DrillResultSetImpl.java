@@ -32,6 +32,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLTimeoutException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Time;
@@ -42,6 +43,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaSite;
@@ -54,7 +56,9 @@ import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
+import org.apache.drill.jdbc.SqlTimeoutException;
 
+import com.google.common.base.Stopwatch;
 
 /**
  * Drill's implementation of {@link ResultSet}.
@@ -66,6 +70,10 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   private final DrillConnectionImpl connection;
   private volatile boolean hasPendingCancelationNotification = false;
+
+  //Timeout Support Variables
+  private Stopwatch elapsedTimer;
+  private long queryTimeoutInMilliseconds;
 
   DrillResultSetImpl(AvaticaStatement statement, QueryState state, Meta.Signature signature,
                      ResultSetMetaData resultSetMetaData, TimeZone timeZone,
@@ -86,6 +94,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
    */
   private void throwIfClosed() throws AlreadyClosedSqlException,
                                       ExecutionCanceledSqlException,
+                                      SQLTimeoutException,
                                       SQLException {
     if ( isClosed() ) {
       if (cursor instanceof DrillCursor && hasPendingCancelationNotification) {
@@ -95,6 +104,14 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
       }
       else {
         throw new AlreadyClosedSqlException( "ResultSet is already closed." );
+      }
+    }
+
+    //Implicit check for whether timeout is set
+    if (elapsedTimer != null) {
+      //The timer has already been started by the DrillCursor at this point
+      if (elapsedTimer.elapsed(TimeUnit.MILLISECONDS) > this.queryTimeoutInMilliseconds) {
+        throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(this.queryTimeoutInMilliseconds));
       }
     }
   }
@@ -127,6 +144,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public boolean next() throws SQLException {
     throwIfClosed();
+
     // TODO:  Resolve following comments (possibly obsolete because of later
     // addition of preceding call to throwIfClosed.  Also, NOTE that the
     // following check, and maybe some throwIfClosed() calls, probably must
@@ -1889,6 +1907,10 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
     }
     else {
       DrillCursor drillCursor = new DrillCursor(connection, statement, signature);
+      //Getting handle to elapsed timer for timeout purposes
+      this.elapsedTimer = drillCursor.getElapsedTimer();
+      //Setting this to ensure future calls to change timeouts for an active Statement doesn't affect ResultSet
+      this.queryTimeoutInMilliseconds = drillCursor.getTimeoutInMilliseconds();
       super.execute2(drillCursor, this.signature.columns);
 
       // Read first (schema-only) batch to initialize result-set metadata from
