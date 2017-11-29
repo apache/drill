@@ -461,7 +461,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     @SuppressWarnings("resource")
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
-    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat);
+    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat, false);
 
     pluginConfig.workspaces.remove(schemaName);
     pluginConfig.workspaces.put(schemaName, newTmpWSConfig);

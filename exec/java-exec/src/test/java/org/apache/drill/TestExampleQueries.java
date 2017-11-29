@@ -566,8 +566,8 @@ public class TestExampleQueries extends BaseTestQuery {
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
     // source is CSV
-    String root = DrillFileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
-    String query = String.format("select rid, x.name from (select columns[0] as RID, columns[1] as NAME from dfs.`%s`) X where X.rid = 2", root);
+    String root = "store/text/data/regions.csv";
+    String query = String.format("select rid, x.name from (select columns[0] as RID, columns[1] as NAME from cp.`%s`) X where X.rid = 2", root);
     actualRecordCount = testSql(query);
     expectedRecordCount = 1;
     assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",

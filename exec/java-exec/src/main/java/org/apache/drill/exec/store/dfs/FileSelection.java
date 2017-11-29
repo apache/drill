@@ -252,11 +252,15 @@ public class FileSelection {
     return builder.toString();
   }
 
-  public static FileSelection create(final DrillFileSystem fs, final String parent, final String path) throws IOException {
+  public static FileSelection create(final DrillFileSystem fs, final String parent, final String path,
+      final boolean allowAccessOutsideWorkspace) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
     boolean hasWildcard = path.contains(WILD_CARD);
 
     final Path combined = new Path(parent, removeLeadingSlash(path));
+    if (!allowAccessOutsideWorkspace) {
+      checkBackPaths(new Path(parent).toUri().getPath(), combined.toUri().getPath(), path);
+    }
     final FileStatus[] statuses = fs.globStatus(combined); // note: this would expand wildcards
     if (statuses == null) {
       return null;
@@ -359,12 +363,31 @@ public class FileSelection {
     }
   }
 
-  private static String removeLeadingSlash(String path) {
-    if (path.charAt(0) == '/') {
+  public static String removeLeadingSlash(String path) {
+    if (!path.isEmpty() && path.charAt(0) == '/') {
       String newPath = path.substring(1);
       return removeLeadingSlash(newPath);
     } else {
       return path;
+    }
+  }
+
+  /**
+   * Check if the path is a valid sub path under the parent after removing backpaths. Throw an exception if
+   * it is not. We pass subpath in as a parameter only for the error message
+   *
+   * @param parent The parent path (the workspace directory).
+   * @param combinedPath The workspace directory and (relative) subpath path combined.
+   * @param subpath For error message only, the subpath
+   */
+  public static void checkBackPaths(String parent, String combinedPath, String subpath) {
+    Preconditions.checkArgument(!parent.isEmpty(), "Invalid root (" + parent + ") in file selection path.");
+    Preconditions.checkArgument(!combinedPath.isEmpty(), "Empty path (" + combinedPath + "( in file selection path.");
+
+    if (!combinedPath.startsWith(parent)) {
+      StringBuilder msg = new StringBuilder();
+      msg.append("Invalid path : ").append(subpath).append(" takes you outside the workspace.");
+      throw new IllegalArgumentException(msg.toString());
     }
   }
 

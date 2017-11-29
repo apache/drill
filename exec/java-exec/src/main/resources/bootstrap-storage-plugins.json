@@ -6,11 +6,13 @@
       workspaces: {
         "root" : {
           location: "/",
-          writable: false
+          writable: false,
+          allowAccessOutsideWorkspace: false
         },
         "tmp" : {
           location: "/tmp",
-          writable: true
+          writable: true,
+          allowAccessOutsideWorkspace: false
         }
       },
       formats: {

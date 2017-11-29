@@ -171,7 +171,7 @@ public class WorkspaceSchemaFactory {
        * In other cases, we use access method since it is cheaper.
        */
       if (SystemUtils.IS_OS_WINDOWS && fs.getUri().getScheme().equalsIgnoreCase(FileSystemSchemaFactory.LOCAL_FS_SCHEME)) {
-        fs.listStatus(wsPath);
+      fs.listStatus(wsPath);
       }
       else {
         fs.access(wsPath, FsAction.READ);
@@ -192,7 +192,7 @@ public class WorkspaceSchemaFactory {
   public WorkspaceSchema createSchema(List<String> parentSchemaPath, SchemaConfig schemaConfig, DrillFileSystem fs) throws IOException {
     if (!accessible(fs)) {
       return null;
-    }
+  }
     return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig, fs);
   }
 
@@ -257,7 +257,7 @@ public class WorkspaceSchemaFactory {
             .validationError()
             .message("Unable to find table [%s] in schema [%s]", sig.name, schema.getFullSchemaName())
             .build(logger);
-      }
+    }
       return new DrillTranslatableTable(drillTable);
     }
 
@@ -605,7 +605,8 @@ public class WorkspaceSchemaFactory {
     @Override
     public DrillTable create(TableInstance key) {
       try {
-        final FileSelection fileSelection = FileSelection.create(getFS(), config.getLocation(), key.sig.name);
+        final FileSelection fileSelection = FileSelection
+            .create(getFS(), config.getLocation(), key.sig.name, config.allowAccessOutsideWorkspace());
         if (fileSelection == null) {
           return null;
         }
@@ -684,7 +685,8 @@ public class WorkspaceSchemaFactory {
      * @throws IOException is case of problems accessing table files
      */
     private boolean isHomogeneous(String tableName) throws IOException {
-      FileSelection fileSelection = FileSelection.create(getFS(), config.getLocation(), tableName);
+      FileSelection fileSelection =
+          FileSelection.create(getFS(), config.getLocation(), tableName, config.allowAccessOutsideWorkspace());
 
       if (fileSelection == null) {
         throw UserException
