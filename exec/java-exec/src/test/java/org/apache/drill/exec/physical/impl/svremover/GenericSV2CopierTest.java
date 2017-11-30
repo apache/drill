@@ -17,13 +17,25 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
-
-public class GenericSV2Copier extends AbstractSV2Copier {
+import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
+public class GenericSV2CopierTest extends AbstractGenericCopierTest {
   @Override
-  public void copyEntry(int inIndex, int outIndex) throws SchemaChangeException {
-    for ( int i = 0;  i < vvIn.length;  i++ ) {
-      vvOut[i].copyEntry(outIndex, vvIn[i], inIndex);
-    }
+  public RowSet createSrcRowSet(RootAllocator allocator) {
+    return new RowSetBuilder(allocator, createTestSchema(BatchSchema.SelectionVectorMode.TWO_BYTE))
+      .addRow(row1())
+      .addSelection(false, row4())
+      .addRow(row2())
+      .addSelection(false, row5())
+      .addRow(row3())
+      .withSv2()
+      .build();
+  }
+
+  @Override
+  public Copier createCopier() {
+    return new GenericSV2Copier();
   }
 }

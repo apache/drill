@@ -17,6 +17,7 @@
  */
 package org.apache.drill.test.rowSet;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
 import org.apache.drill.exec.physical.rowSet.model.SchemaInference;
@@ -33,6 +34,8 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetWriterImpl.WriterIndexImpl;
+
+import java.util.Set;
 
 /**
  * Implementation of a single row set with no indirection (selection)
@@ -140,8 +143,14 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
 
   @Override
   public SingleRowSet toIndirect() {
-    return new IndirectRowSet(this);
+    return new IndirectRowSet(this, Sets.<Integer>newHashSet());
   }
+
+  @Override
+  public SingleRowSet toIndirect(Set<Integer> skipIndices) {
+    return new IndirectRowSet(this, skipIndices);
+  }
+
 
   @Override
   public SelectionVector2 getSv2() { return null; }

@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.compile.ClassBuilder;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
@@ -72,6 +74,7 @@ import com.google.common.io.Resources;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.ClusterFixture;
+import org.junit.ClassRule;
 
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
@@ -152,10 +155,12 @@ public class BaseTestQuery extends ExecTest {
 
   protected static Properties cloneDefaultTestConfigProperties() {
     final Properties props = new Properties();
+
     for(String propName : TEST_CONFIGURATIONS.stringPropertyNames()) {
       props.put(propName, TEST_CONFIGURATIONS.getProperty(propName));
     }
 
+    props.setProperty(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getCodegenDir().getAbsolutePath());
     props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
 
