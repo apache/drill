@@ -38,8 +38,7 @@ public class TestVectorContainer extends DrillTest {
 
   // TODO: Replace the following with an extension of SubOperatorTest class
   // once that is available.
-
-  protected volatile static OperatorFixture fixture;
+  protected static OperatorFixture fixture;
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {

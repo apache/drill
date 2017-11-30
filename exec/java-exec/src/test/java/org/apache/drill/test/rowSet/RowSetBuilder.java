@@ -17,13 +17,15 @@
  */
 package org.apache.drill.test.rowSet;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.exec.record.TupleSchema;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+
+import java.util.Set;
 
 /**
  * Fluent builder to quickly build up an row set (record batch)
@@ -41,6 +43,7 @@ public final class RowSetBuilder {
   private DirectRowSet rowSet;
   private RowSetWriter writer;
   private boolean withSv2;
+  private Set<Integer> skipIndices = Sets.newHashSet();
 
   public RowSetBuilder(BufferAllocator allocator, BatchSchema schema) {
     this(allocator, TupleSchema.fromFields(schema), 10);
@@ -75,6 +78,17 @@ public final class RowSetBuilder {
     return this;
   }
 
+  public RowSetBuilder addSelection(boolean selected, Object...values) {
+    final int index = writer.rowIndex();
+    writer.setRow(values);
+
+    if (!selected) {
+      skipIndices.add(index);
+    }
+
+    return this;
+  }
+
   /**
    * The {@link #addRow(Object...)} method uses Java variable-length arguments to
    * pass a row of values. But, when the row consists of a single array, Java
@@ -106,6 +120,10 @@ public final class RowSetBuilder {
     return addRow(new Object[] { value });
   }
 
+  public RowSetBuilder addSingleCol(boolean selected, Object value) {
+    return addSelection(selected, new Object[] { value });
+  }
+
   /**
    * Build the row set with a selection vector 2. The SV2 is
    * initialized to have a 1:1 index to the rows: SV2 0 points
@@ -122,7 +140,7 @@ public final class RowSetBuilder {
   public SingleRowSet build() {
     SingleRowSet result = writer.done();
     if (withSv2) {
-      return result.toIndirect();
+      return rowSet.toIndirect(skipIndices);
     }
     return result;
   }
