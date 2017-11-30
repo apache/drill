@@ -24,6 +24,7 @@ import java.util.Set;
 import com.google.common.base.Strings;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.jdbc.CalciteSchemaImpl;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
@@ -116,9 +117,9 @@ public class SqlConverter {
     this.session = context.getSession();
     this.drillConfig = context.getConfig();
     this.catalog = new DrillCalciteCatalogReader(
-        rootSchema,
+        this.rootSchema,
         parserConfig.caseSensitive(),
-        DynamicSchema.from(defaultSchema).path(null),
+        CalciteSchemaImpl.from(defaultSchema).path(null),
         typeFactory,
         drillConfig,
         session);
@@ -296,7 +297,7 @@ public class SqlConverter {
     @Override
     public RelNode expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
       final DrillCalciteCatalogReader catalogReader = new DrillCalciteCatalogReader(
-          rootSchema,
+          rootSchema, // new root schema
           parserConfig.caseSensitive(),
           schemaPath,
           typeFactory,
@@ -445,7 +446,7 @@ public class SqlConverter {
                               JavaTypeFactory typeFactory,
                               DrillConfig drillConfig,
                               UserSession session) {
-      super(DynamicSchema.from(rootSchema), caseSensitive, defaultSchema, typeFactory);
+      super(CalciteSchemaImpl.from(rootSchema), caseSensitive, defaultSchema, typeFactory);
       this.drillConfig = drillConfig;
       this.session = session;
       this.allowTemporaryTables = true;

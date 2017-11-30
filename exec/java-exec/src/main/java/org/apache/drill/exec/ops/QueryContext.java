@@ -163,23 +163,14 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   /**
-   *  Create and return a SchemaTree with given <i>schemaConfig</i> but some schemas (from storage plugins)
-   *  could be initialized later.
+   *  Create and return a SchemaTree with given <i>schemaConfig</i>.
    * @param schemaConfig
    * @return
    */
   public SchemaPlus getRootSchema(SchemaConfig schemaConfig) {
     return schemaTreeProvider.createRootSchema(schemaConfig);
   }
-  /**
-   *  Create and return a fully initialized SchemaTree with given <i>schemaConfig</i>.
-   * @param schemaConfig
-   * @return
-   */
 
-  public SchemaPlus getFullRootSchema(SchemaConfig schemaConfig) {
-    return schemaTreeProvider.createFullRootSchema(schemaConfig);
-  }
   /**
    * Get the user name of the user who issued the query that is managed by this QueryContext.
    * @return

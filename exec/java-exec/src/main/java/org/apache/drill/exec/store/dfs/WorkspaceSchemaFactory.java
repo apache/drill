@@ -42,7 +42,6 @@ import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.TableMacro;
 import org.apache.calcite.schema.TranslatableTable;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -71,7 +70,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -152,30 +150,14 @@ public class WorkspaceSchemaFactory {
    * @return True if the user has access. False otherwise.
    */
   public boolean accessible(final String userName) throws IOException {
-    final DrillFileSystem fs = ImpersonationUtil.createFileSystem(userName, fsConf);
-    return accessible(fs);
-  }
-
-  /**
-   * Checks whether a FileSystem object has the permission to list/read workspace directory
-   * @param fs a DrillFileSystem object that was created with certain user privilege
-   * @return True if the user has access. False otherwise.
-   * @throws IOException
-   */
-  public boolean accessible(DrillFileSystem fs) throws IOException {
+    final FileSystem fs = ImpersonationUtil.createFileSystem(userName, fsConf);
     try {
-      /**
-       * For Windows local file system, fs.access ends up using DeprecatedRawLocalFileStatus which has
-       * TrustedInstaller as owner, and a member of Administrators group could not satisfy the permission.
-       * In this case, we will still use method listStatus.
-       * In other cases, we use access method since it is cheaper.
-       */
-      if (SystemUtils.IS_OS_WINDOWS && fs.getUri().getScheme().equalsIgnoreCase(FileSystemSchemaFactory.LOCAL_FS_SCHEME)) {
+      // We have to rely on the listStatus as a FileSystem can have complicated controls such as regular unix style
+      // permissions, Access Control Lists (ACLs) or Access Control Expressions (ACE). Hadoop 2.7 version of FileSystem
+      // has a limited private API (FileSystem.access) to check the permissions directly
+      // (see https://issues.apache.org/jira/browse/HDFS-6570). Drill currently relies on Hadoop 2.5.0 version of
+      // FileClient. TODO: Update this when DRILL-3749 is fixed.
       fs.listStatus(wsPath);
-      }
-      else {
-        fs.access(wsPath, FsAction.READ);
-      }
     } catch (final UnsupportedOperationException e) {
       logger.trace("The filesystem for this workspace does not support this operation.", e);
     } catch (final FileNotFoundException | AccessControlException e) {
@@ -189,19 +171,8 @@ public class WorkspaceSchemaFactory {
     return DotDrillType.VIEW.getPath(config.getLocation(), name);
   }
 
-  public WorkspaceSchema createSchema(List<String> parentSchemaPath, SchemaConfig schemaConfig, DrillFileSystem fs) throws IOException {
-    if (!accessible(fs)) {
-      return null;
-  }
-    return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig, fs);
-  }
-
-  public String getSchemaName() {
-    return schemaName;
-  }
-
-  public FileSystemPlugin getPlugin() {
-    return plugin;
+  public WorkspaceSchema createSchema(List<String> parentSchemaPath, SchemaConfig schemaConfig) throws IOException {
+    return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig);
   }
 
   /**
@@ -409,12 +380,12 @@ public class WorkspaceSchemaFactory {
   public class WorkspaceSchema extends AbstractSchema implements ExpandingConcurrentMap.MapValueFactory<TableInstance, DrillTable> {
     private final ExpandingConcurrentMap<TableInstance, DrillTable> tables = new ExpandingConcurrentMap<>(this);
     private final SchemaConfig schemaConfig;
-    private DrillFileSystem fs;
+    private final DrillFileSystem fs;
 
-    public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) throws IOException {
+    public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig) throws IOException {
       super(parentSchemaPath, wsName);
       this.schemaConfig = schemaConfig;
-      this.fs = fs;
+      this.fs = ImpersonationUtil.createFileSystem(schemaConfig.getUserName(), fsConf);
     }
 
     DrillTable getDrillTable(TableInstance key) {
@@ -424,10 +395,10 @@ public class WorkspaceSchemaFactory {
     @Override
     public boolean createView(View view) throws IOException {
       Path viewPath = getViewPath(view.getName());
-      boolean replaced = getFS().exists(viewPath);
+      boolean replaced = fs.exists(viewPath);
       final FsPermission viewPerms =
           new FsPermission(schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
-      try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
+      try (OutputStream stream = DrillFileSystem.create(fs, viewPath, viewPerms)) {
         mapper.writeValue(stream, view);
       }
       return replaced;
@@ -450,7 +421,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public void dropView(String viewName) throws IOException {
-      getFS().delete(getViewPath(viewName), false);
+      fs.delete(getViewPath(viewName), false);
     }
 
     private Set<String> getViews() {
@@ -458,7 +429,7 @@ public class WorkspaceSchemaFactory {
       // Look for files with ".view.drill" extension.
       List<DotDrillFile> files;
       try {
-        files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()), DotDrillType.VIEW);
+        files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), DotDrillType.VIEW);
         for (DotDrillFile f : files) {
           viewSet.add(f.getBaseName());
         }
@@ -527,7 +498,7 @@ public class WorkspaceSchemaFactory {
       List<DotDrillFile> files = Collections.emptyList();
       try {
         try {
-          files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()), tableName, DotDrillType.VIEW);
+          files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), tableName, DotDrillType.VIEW);
         } catch (AccessControlException e) {
           if (!schemaConfig.getIgnoreAuthErrors()) {
             logger.debug(e.getMessage());
@@ -599,19 +570,18 @@ public class WorkspaceSchemaFactory {
     }
 
     private DrillTable isReadable(FormatMatcher m, FileSelection fileSelection) throws IOException {
-      return m.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+      return m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
     }
 
     @Override
     public DrillTable create(TableInstance key) {
       try {
-        final FileSelection fileSelection = FileSelection
-            .create(getFS(), config.getLocation(), key.sig.name, config.allowAccessOutsideWorkspace());
+        final FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key.sig.name, config.allowAccessOutsideWorkspace());
         if (fileSelection == null) {
           return null;
         }
 
-        final boolean hasDirectories = fileSelection.containsDirectories(getFS());
+        final boolean hasDirectories = fileSelection.containsDirectories(fs);
         if (key.sig.params.size() > 0) {
           FormatPluginConfig fconfig = optionExtractor.createConfigForTable(key);
           return new DynamicDrillTable(
@@ -621,7 +591,7 @@ public class WorkspaceSchemaFactory {
         if (hasDirectories) {
           for (final FormatMatcher matcher : dirMatchers) {
             try {
-              DrillTable table = matcher.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+              DrillTable table = matcher.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
               if (table != null) {
                 return table;
               }
@@ -631,13 +601,13 @@ public class WorkspaceSchemaFactory {
           }
         }
 
-        final FileSelection newSelection = hasDirectories ? fileSelection.minusDirectories(getFS()) : fileSelection;
+        final FileSelection newSelection = hasDirectories ? fileSelection.minusDirectories(fs) : fileSelection;
         if (newSelection == null) {
           return null;
         }
 
         for (final FormatMatcher matcher : fileMatchers) {
-          DrillTable table = matcher.isReadable(getFS(), newSelection, plugin, storageEngineName, schemaConfig.getUserName());
+          DrillTable table = matcher.isReadable(fs, newSelection, plugin, storageEngineName, schemaConfig.getUserName());
           if (table != null) {
             return table;
           }
@@ -662,7 +632,7 @@ public class WorkspaceSchemaFactory {
       FormatMatcher matcher = null;
       try {
         for (FormatMatcher m : dropFileMatchers) {
-          if (m.isFileReadable(getFS(), file)) {
+          if (m.isFileReadable(fs, file)) {
             return m;
           }
         }
@@ -685,8 +655,7 @@ public class WorkspaceSchemaFactory {
      * @throws IOException is case of problems accessing table files
      */
     private boolean isHomogeneous(String tableName) throws IOException {
-      FileSelection fileSelection =
-          FileSelection.create(getFS(), config.getLocation(), tableName, config.allowAccessOutsideWorkspace());
+      FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), tableName, config.allowAccessOutsideWorkspace());
 
       if (fileSelection == null) {
         throw UserException
@@ -697,15 +666,15 @@ public class WorkspaceSchemaFactory {
 
       FormatMatcher matcher = null;
       Queue<FileStatus> listOfFiles = new LinkedList<>();
-      listOfFiles.addAll(fileSelection.getStatuses(getFS()));
+      listOfFiles.addAll(fileSelection.getStatuses(fs));
 
       while (!listOfFiles.isEmpty()) {
         FileStatus currentFile = listOfFiles.poll();
         if (currentFile.isDirectory()) {
-          listOfFiles.addAll(DrillFileSystemUtil.listFiles(getFS(), currentFile.getPath(), true));
+          listOfFiles.addAll(DrillFileSystemUtil.listFiles(fs, currentFile.getPath(), true));
         } else {
           if (matcher != null) {
-            if (!matcher.isFileReadable(getFS(), currentFile)) {
+            if (!matcher.isFileReadable(fs, currentFile)) {
               return false;
             }
           } else {
@@ -794,7 +763,7 @@ public class WorkspaceSchemaFactory {
       // Then look for files that start with this name and end in .drill.
       List<DotDrillFile> files = Collections.emptyList();
       try {
-        files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()), DotDrillType.VIEW);
+        files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), DotDrillType.VIEW);
       } catch (AccessControlException e) {
         if (!schemaConfig.getIgnoreAuthErrors()) {
           logger.debug(e.getMessage());
