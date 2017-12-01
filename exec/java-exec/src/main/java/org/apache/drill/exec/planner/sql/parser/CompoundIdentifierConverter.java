@@ -19,10 +19,14 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
+import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
@@ -43,13 +47,14 @@ import com.google.common.collect.Maps;
 public class CompoundIdentifierConverter extends SqlShuttle {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompoundIdentifierConverter.class);
 
+  private Set<DrillCompoundIdentifier> fullSchemasSet = Sets.newHashSet();
   private boolean enableComplex = true;
 
   @Override
   public SqlNode visit(SqlIdentifier id) {
     if(id instanceof DrillCompoundIdentifier){
       if(enableComplex){
-        return ((DrillCompoundIdentifier) id).getAsSqlNode();
+        return ((DrillCompoundIdentifier) id).getAsSqlNode(fullSchemasSet);
       }else{
         return ((DrillCompoundIdentifier) id).getAsCompoundIdentifier();
       }
@@ -115,6 +120,7 @@ public class CompoundIdentifierConverter extends SqlShuttle {
           enableComplex = true;
         }
       }
+      setFullSchemasSet(expr);
       SqlNode newOperand = operand.accept(CompoundIdentifierConverter.this);
       enableComplex = localEnableComplex;
       if (newOperand != operand) {
@@ -183,6 +189,49 @@ public class CompoundIdentifierConverter extends SqlShuttle {
   // each data field in the class
   private static RewriteType[] R(RewriteType... types){
     return types;
+  }
+
+  /**
+   * This is the method which fills fullSchemasSet with full schema identifiers.
+   * @param expr {@link SqlNode} (SQL parse tree) of input query.
+   */
+  private void setFullSchemasSet(SqlNode expr) {
+    if (expr.getKind() == SqlKind.SELECT) {
+      SqlSelect sqlSelect = (SqlSelect) expr;
+      for (SqlNode field: sqlSelect.getSelectList().getList()) {
+        setFullSchemasSet(field);
+      }
+      if (sqlSelect.getFrom() instanceof DrillCompoundIdentifier) {
+        fullSchemasSet.add((DrillCompoundIdentifier) sqlSelect.getFrom());
+      }
+      if (sqlSelect.getFrom() instanceof SqlJoin) {
+        SqlJoin sqlJoin = (SqlJoin) sqlSelect.getFrom();
+        if (((SqlJoin) sqlSelect.getFrom()).getLeft() instanceof DrillCompoundIdentifier) {
+          fullSchemasSet.add((DrillCompoundIdentifier) (sqlJoin.getLeft()));
+        }
+        if (((SqlJoin) sqlSelect.getFrom()).getRight() instanceof DrillCompoundIdentifier) {
+          fullSchemasSet.add((DrillCompoundIdentifier) (sqlJoin.getRight()));
+        }
+      }
+      if (sqlSelect.getWhere() instanceof SqlBasicCall) {
+        findSelectInOperandList((SqlBasicCall) sqlSelect.getWhere());
+      }
+    }
+  }
+
+  /**
+   * This is the method which finds SqlSelect in where operand list.
+   * If {@link SqlSelect} is found setFullSchemasSet() method is run.
+   * @param operandList Keeps the list of operands.
+   */
+  private void findSelectInOperandList(SqlBasicCall operandList) {
+    for (SqlNode operand : operandList.getOperandList()) {
+      if (operand instanceof SqlSelect) {
+        setFullSchemasSet(operand);
+      } else if (operand instanceof SqlBasicCall) {
+        findSelectInOperandList((SqlBasicCall) operand);
+      }
+    }
   }
 
 }
