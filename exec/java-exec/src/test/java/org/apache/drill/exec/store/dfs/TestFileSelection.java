@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,9 +19,7 @@ package org.apache.drill.exec.store.dfs;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -45,20 +43,6 @@ public class TestFileSelection extends BaseTestQuery {
           assertNull(selection);
         }
       }
-    }
-  }
-
-  @Test(expected = Exception.class)
-  public void testEmptyFolderThrowsTableNotFound() throws Exception {
-    final String emptyDirPath = dirTestWatcher.makeRootSubDir(Paths.get("empty")).getAbsolutePath();
-    final String query = String.format("select * from dfs.`%s`", emptyDirPath);
-    try {
-      testNoResult(query);
-    } catch (Exception ex) {
-      final String pattern = String.format("%s' not found", emptyDirPath).toLowerCase();
-      final boolean isTableNotFound = ex.getMessage().toLowerCase().contains(pattern);
-      assertTrue(isTableNotFound);
-      throw ex;
     }
   }
 

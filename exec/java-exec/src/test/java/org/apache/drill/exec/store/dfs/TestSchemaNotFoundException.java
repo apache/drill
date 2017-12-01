@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -70,7 +70,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testTableNotFoundException() throws Exception {
-        final String table = String.format("%s/empty1", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
+        final String table = String.format("%s/missing.parquet", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
         final String query = String.format("select * from tmp.`%s`", table);
         try {
             testNoResult("use dfs");

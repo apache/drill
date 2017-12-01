@@ -23,7 +23,9 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -209,21 +211,15 @@ public class TestParquetMetadataCache extends PlanTestBase {
   @Test //DRILL-4511
   @Category(UnlikelyTest.class)
   public void testTableDoesNotExistWithEmptyDirectory() throws Exception {
-    String dirName = "empty_directory";
-    File path = new File(dirTestWatcher.getRootDir(), dirName);
-    path.mkdirs();
+    final String emptyDirName = "empty_directory";
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirName));
 
-    try {
-      path.mkdir();
-      testBuilder()
-          .sqlQuery("refresh table metadata dfs.`%s`", dirName)
-          .unOrdered()
-          .baselineColumns("ok", "summary")
-          .baselineValues(false, String.format("Table %s does not exist.", dirName))
-          .go();
-    } finally {
-      FileUtils.deleteQuietly(path);
-    }
+    testBuilder()
+        .sqlQuery("refresh table metadata dfs.tmp.`%s`", emptyDirName)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("Table %s is empty and doesn't contain any parquet files.", emptyDirName))
+        .go();
   }
 
   @Test //DRILL-4511
@@ -927,6 +923,42 @@ public class TestParquetMetadataCache extends PlanTestBase {
     } finally {
       test("drop table if exists dfs.tmp.`t7`");
     }
+  }
+
+  @Test
+  public void testEmptyDirectoryWithMetadataFile() throws Exception {
+    final String emptyDirNameWithMetadataFile = "empty_directory";
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile));
+    dirTestWatcher.copyResourceToTestTmp(
+        Paths.get("parquet", "metadata_files_with_old_versions", "v3_1", "metadata_table.requires_replace.txt"),
+        Paths.get(emptyDirNameWithMetadataFile, Metadata.METADATA_FILENAME));
+
+    final BatchSchema expectedSchema = new SchemaBuilder().build();
+
+    testBuilder()
+        .sqlQuery("select * from dfs.tmp.`%s`", emptyDirNameWithMetadataFile)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testEmptyDirectoryWithMetadataDirFile() throws Exception {
+    final String emptyDirNameWithMetadataFile = "empty_directory";
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile));
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile, "t2"));
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile, "t1"));
+    dirTestWatcher.copyResourceToTestTmp(
+            Paths.get("parquet", "metadata_files_with_old_versions", "v3_1", "metadata_directories.requires_replace.txt"),
+            Paths.get(emptyDirNameWithMetadataFile, Metadata.METADATA_DIRECTORIES_FILENAME));
+
+    final BatchSchema expectedSchema = new SchemaBuilder().build();
+
+    testBuilder()
+            .sqlQuery("select * from dfs.tmp.`%s`", emptyDirNameWithMetadataFile)
+            .schemaBaseLine(expectedSchema)
+            .build()
+            .run();
   }
 
   /**
