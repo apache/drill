@@ -69,7 +69,6 @@ import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -632,7 +631,9 @@ public class WorkspaceSchemaFactory {
 
         final FileSelection newSelection = hasDirectories ? fileSelection.minusDirectories(getFS()) : fileSelection;
         if (newSelection == null) {
-          return null;
+          // empty directory / selection means that this is the empty and schemaless table
+          fileSelection.setEmptyDirectoryStatus();
+          return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
         }
 
         for (final FormatMatcher matcher : fileMatchers) {

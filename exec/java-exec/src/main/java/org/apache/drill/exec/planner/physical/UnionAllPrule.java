@@ -40,8 +40,7 @@ public class UnionAllPrule extends Prule {
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private UnionAllPrule() {
-    super(
-        RelOptHelper.any(DrillUnionRel.class), "Prel.UnionAllPrule");
+    super(RelOptHelper.any(DrillUnionRel.class), "Prel.UnionAllPrule");
   }
 
   @Override

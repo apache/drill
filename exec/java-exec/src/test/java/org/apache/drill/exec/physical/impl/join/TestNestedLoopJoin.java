@@ -20,28 +20,17 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.rpc.RpcException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import java.nio.file.Paths;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 @Category(OperatorTest.class)
 public class TestNestedLoopJoin extends JoinTestBase {
-
-  private static final String NLJ_PATTERN = "NestedLoopJoin";
-
-  private static final String DISABLE_HJ = "alter session set `planner.enable_hashjoin` = false";
-  private static final String ENABLE_HJ = "alter session set `planner.enable_hashjoin` = true";
-  private static final String RESET_HJ = "alter session reset `planner.enable_hashjoin`";
-  private static final String DISABLE_MJ = "alter session set `planner.enable_mergejoin` = false";
-  private static final String ENABLE_MJ = "alter session set `planner.enable_mergejoin` = true";
-  private static final String DISABLE_NLJ_SCALAR = "alter session set `planner.enable_nljoin_for_scalar_only` = false";
-  private static final String ENABLE_NLJ_SCALAR = "alter session set `planner.enable_nljoin_for_scalar_only` = true";
-  private static final String DISABLE_JOIN_OPTIMIZATION = "alter session set `planner.enable_join_optimization` = false";
-  private static final String RESET_JOIN_OPTIMIZATION = "alter session reset `planner.enable_join_optimization`";
 
   // Test queries used by planning and execution tests
   private static final String testNlJoinExists_1 = "select r_regionkey from cp.`tpch/region.parquet` "
@@ -335,30 +324,35 @@ public class TestNestedLoopJoin extends JoinTestBase {
   @Test
   public void testNestedLeftJoinWithEmptyTable() throws Exception {
     try {
-      alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
-      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "left outer", NLJ_PATTERN, 1155L);
+      enableJoin(false, false, true);
+      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "left outer", new String[] {NLJ_PATTERN, LEFT_JOIN_TYPE}, 1155L);
     } finally {
-      resetSessionOption(PlannerSettings.HASHJOIN.getOptionName());
+      resetJoinOptions();
     }
   }
 
   @Test
   public void testNestedInnerJoinWithEmptyTable() throws Exception {
     try {
-      alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
-      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", NLJ_PATTERN, 0L);
+      enableJoin(false, false, true);
+      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", new String[] {NLJ_PATTERN, INNER_JOIN_TYPE}, 0L);
     } finally {
-      resetSessionOption(PlannerSettings.HASHJOIN.getOptionName());
+      resetJoinOptions();
     }
   }
 
-  @Test
-  public void testNestRightJoinWithEmptyTable() throws Exception {
+  @Test(expected = RpcException.class)
+  public void testNestedRightJoinWithEmptyTable() throws Exception {
     try {
-      alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
-      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", NLJ_PATTERN, 0L);
+      enableJoin(false, false, true);
+      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", new String[] {NLJ_PATTERN, RIGHT_JOIN_TYPE}, 0L);
+    } catch (RpcException e) {
+      assertTrue("Not expected exception is obtained while performing the query with RIGHT JOIN logical operator " +
+          "by using nested loop join physical operator",
+          e.getMessage().contains("SYSTEM ERROR: CannotPlanException"));
+      throw e;
     } finally {
-      resetSessionOption(PlannerSettings.HASHJOIN.getOptionName());
+      resetJoinOptions();
     }
   }
 }

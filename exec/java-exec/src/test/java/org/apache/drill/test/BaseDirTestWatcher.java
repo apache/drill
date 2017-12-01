@@ -68,7 +68,7 @@ public class BaseDirTestWatcher extends DirTestWatcher {
 
   /**
    * Creates a {@link BaseDirTestWatcher}.
-   * @param deleteDirAtEnd If true, temp directories are deleted at the end of tests. If fals, temp directories are not deleted at the end of tests.
+   * @param deleteDirAtEnd If true, temp directories are deleted at the end of tests. If false, temp directories are not deleted at the end of tests.
    */
   public BaseDirTestWatcher(boolean deleteDirAtEnd) {
     super(deleteDirAtEnd);
