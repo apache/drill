@@ -15,6 +15,10 @@
 <script src="/static/js/dagre-d3.min.js"></script>
 <script src="/static/js/graph.js"></script>
 <script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
+<#if model.isOnlyImpersonationEnabled()>
+    <script src="/static/js/jquery.form.js"></script>
+    <script src="/static/js/querySubmission.js"></script>
+</#if>
 
 <script>
     var globalconfig = {
@@ -71,7 +75,15 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
     </div>
     <div id="query-edit" class="tab-pane">
       <p>
-        <form role="form" action="/query" method="POST">
+
+        <#if model.isOnlyImpersonationEnabled()>
+          <div class="form-group">
+            <label for="userName">User Name</label>
+            <input type="text" size="30" name="userName" id="userName" placeholder="User Name" value="${model.getProfile().user}">
+          </div>
+        </#if>
+
+        <form role="form" id="queryForm" action="/query" method="POST">
           <div class="form-group">
             <textarea class="form-control" id="query" name="query" style="font-family: Courier;">${model.getProfile().query}</textarea>
           </div>
@@ -95,7 +107,9 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
               </label>
             </div>
             </div>
-            <button type="submit" class="btn btn-default">Re-run query</button>
+            <button class="btn btn-default" type=<#if model.isOnlyImpersonationEnabled()>"button" onclick="doSubmitQueryWithUserName()"<#else>"submit"</#if>>
+            Re-run query
+            </button>
           </form>
       </p>
       <p>

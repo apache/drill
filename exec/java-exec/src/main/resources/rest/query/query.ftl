@@ -13,6 +13,7 @@
 <#macro page_head>
     <#if model?? && model>
       <script src="/static/js/jquery.form.js"></script>
+      <script src="/static/js/querySubmission.js"></script>
     </#if>
 </#macro>
 
@@ -59,38 +60,10 @@
       <textarea class="form-control" id="query" rows="5" name="query" style="font-family: Courier;"></textarea>
     </div>
 
-    <button class="btn btn-default" type=<#if model?? && model>"button" onclick="doSubmit()"<#else>"submit"</#if>>
+    <button class="btn btn-default" type=<#if model?? && model>"button" onclick="doSubmitQueryWithUserName()"<#else>"submit"</#if>>
       Submit
     </button>
   </form>
-
-    <#if model?? && model>
-      <script>
-        function doSubmit() {
-          var userName = document.getElementById("userName").value;
-          if (!userName.trim()) {
-              alert("Please fill in User Name field");
-              return;
-          }
-          $.ajax({
-            type: "POST",
-            beforeSend: function (request) {
-              request.setRequestHeader("User-Name", userName);
-            },
-            url: "/query",
-            data: $("#queryForm").serializeArray(),
-            success: function (response) {
-              var newDoc = document.open("text/html", "replace");
-              newDoc.write(response);
-              newDoc.close();
-            },
-            error: function (request, textStatus, errorThrown) {
-              alert(errorThrown);
-            }
-          });
-        }
-      </script>
-    </#if>
 </#macro>
 
 <@page_html/>
