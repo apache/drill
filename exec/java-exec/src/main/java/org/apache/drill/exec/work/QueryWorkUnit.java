@@ -117,13 +117,13 @@ public class QueryWorkUnit {
   }
 
   /**
-   * Converts list of stores fragments into json,
-   * in case of exception returns text indicating that json was malformed.
+   * Converts list of stored fragments into their string representation,
+   * in case of exception returns text indicating that string was malformed.
    * Is used for debugging purposes.
    *
-   * @return fragments json
+   * @return fragments information
    */
-  public String convertFragmentToJson() {
+  public String stringifyFragments() {
     StringBuilder stringBuilder = new StringBuilder();
     final int fragmentCount = fragments.size();
     int fragmentIndex = 0;

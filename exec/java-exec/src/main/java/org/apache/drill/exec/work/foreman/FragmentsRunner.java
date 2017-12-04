@@ -26,9 +26,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
-import org.apache.drill.exec.proto.BitControl;
+import org.apache.drill.exec.proto.BitControl.InitializeFragments;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -83,15 +83,11 @@ public class FragmentsRunner {
     return bee;
   }
 
-  public void setPlanFragments(List<PlanFragment> planFragments) {
+  public void setFragmentsInfo(List<PlanFragment> planFragments,
+                                  PlanFragment rootPlanFragment,
+                                  FragmentRoot rootOperator) {
     this.planFragments = planFragments;
-  }
-
-  public void setRootPlanFragment(PlanFragment rootPlanFragment) {
     this.rootPlanFragment = rootPlanFragment;
-  }
-
-  public void setRootOperator(FragmentRoot rootOperator) {
     this.rootOperator = rootOperator;
   }
 
@@ -99,36 +95,23 @@ public class FragmentsRunner {
    * Submits root and non-root fragments fragments for running.
    * In case of success move query to the running state.
    */
-  public void submit() {
-    try {
-      assert planFragments != null;
-      assert rootPlanFragment != null;
-      assert rootOperator != null;
+  public void submit() throws ExecutionSetupException {
+    assert planFragments != null;
+    assert rootPlanFragment != null;
+    assert rootOperator != null;
 
-      QueryId queryId = foreman.getQueryId();
-      assert queryId == rootPlanFragment.getHandle().getQueryId();
+    QueryId queryId = foreman.getQueryId();
+    assert queryId == rootPlanFragment.getHandle().getQueryId();
 
-      QueryManager queryManager = foreman.getQueryManager();
+    QueryManager queryManager = foreman.getQueryManager();
+    drillbitContext.getWorkBus().addFragmentStatusListener(queryId, queryManager.getFragmentStatusListener());
+    drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
 
-      try {
-        drillbitContext.getWorkBus().addFragmentStatusListener(queryId, queryManager.getFragmentStatusListener());
-        drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
-
-        logger.debug("Submitting fragments to run.");
-        // set up the root fragment first so we'll have incoming buffers available.
-        setupRootFragment(rootPlanFragment, rootOperator);
-        setupNonRootFragments(planFragments);
-
-      } catch (ExecutionSetupException e) {
-        foreman.moveToState(QueryState.FAILED, e);
-      }
-
-      foreman.moveToState(QueryState.RUNNING, null);
-      logger.debug("Fragments running.");
-    } finally {
-      foreman.startProcessingEvents();
-    }
-
+    logger.debug("Submitting fragments to run.");
+    // set up the root fragment first so we'll have incoming buffers available.
+    setupRootFragment(rootPlanFragment, rootOperator);
+    setupNonRootFragments(planFragments);
+    logger.debug("Fragments running.");
   }
 
   /**
@@ -139,7 +122,6 @@ public class FragmentsRunner {
    * @throws ExecutionSetupException
    */
   private void setupRootFragment(final PlanFragment rootFragment, final FragmentRoot rootOperator) throws ExecutionSetupException {
-
     QueryManager queryManager = foreman.getQueryManager();
     final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, foreman.getQueryContext(),
         initiatingClient, drillbitContext.getFunctionImplementationRegistry());
@@ -165,9 +147,8 @@ public class FragmentsRunner {
    * Messages are sent immediately, so they may start returning data even before we complete this.
    *
    * @param fragments the fragments
-   * @throws ForemanException
    */
-  private void setupNonRootFragments(final Collection<PlanFragment> fragments) throws ForemanException {
+  private void setupNonRootFragments(final Collection<PlanFragment> fragments) throws ExecutionSetupException {
     if (fragments.isEmpty()) {
       // nothing to do here
       return;
@@ -182,12 +163,12 @@ public class FragmentsRunner {
      *
      * This will help to schedule local
      */
-    final Multimap<CoordinationProtos.DrillbitEndpoint, PlanFragment> remoteLeafFragmentMap = ArrayListMultimap.create();
+    final Multimap<DrillbitEndpoint, PlanFragment> remoteLeafFragmentMap = ArrayListMultimap.create();
     final List<PlanFragment> localLeafFragmentList = new ArrayList<>();
-    final Multimap<CoordinationProtos.DrillbitEndpoint, PlanFragment> remoteIntFragmentMap = ArrayListMultimap.create();
+    final Multimap<DrillbitEndpoint, PlanFragment> remoteIntFragmentMap = ArrayListMultimap.create();
     final List<PlanFragment> localIntFragmentList = new ArrayList<>();
 
-    final CoordinationProtos.DrillbitEndpoint localDrillbitEndpoint = drillbitContext.getEndpoint();
+    final DrillbitEndpoint localDrillbitEndpoint = drillbitContext.getEndpoint();
     // record all fragments for status purposes.
     for (final PlanFragment planFragment : fragments) {
 
@@ -225,7 +206,7 @@ public class FragmentsRunner {
      * Send the remote (leaf) fragments; we don't wait for these. Any problems will come in through
      * the regular sendListener event delivery.
      */
-    for (final CoordinationProtos.DrillbitEndpoint ep : remoteLeafFragmentMap.keySet()) {
+    for (final DrillbitEndpoint ep : remoteLeafFragmentMap.keySet()) {
       sendRemoteFragments(ep, remoteLeafFragmentMap.get(ep), null, null);
     }
 
@@ -243,17 +224,17 @@ public class FragmentsRunner {
    * @param latch the countdown latch used to track the requests to all endpoints
    * @param fragmentSubmitFailures the submission failure counter used to track the requests to all endpoints
    */
-  private void sendRemoteFragments(final CoordinationProtos.DrillbitEndpoint assignment, final Collection<PlanFragment> fragments,
+  private void sendRemoteFragments(final DrillbitEndpoint assignment, final Collection<PlanFragment> fragments,
                                    final CountDownLatch latch, final FragmentSubmitFailures fragmentSubmitFailures) {
     @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
-    final BitControl.InitializeFragments.Builder fb = BitControl.InitializeFragments.newBuilder();
+    final InitializeFragments.Builder fb = InitializeFragments.newBuilder();
     for(final PlanFragment planFragment : fragments) {
       fb.addFragment(planFragment);
     }
-    final BitControl.InitializeFragments initFrags = fb.build();
+    final InitializeFragments initFrags = fb.build();
 
-    logger.debug("Sending remote fragments to \nNode:\n{} \n\nData:\n{}", assignment, initFrags);
+    logger.debug("Sending remote fragments to node: {}\nData: {}", assignment, initFrags);
     final FragmentSubmitListener listener =
         new FragmentSubmitListener(assignment, initFrags, latch, fragmentSubmitFailures);
     controller.getTunnel(assignment).sendFragments(listener, initFrags);
@@ -268,10 +249,10 @@ public class FragmentsRunner {
    * @param localFragmentList local fragment list
    * @param remoteFragmentMap remote fragment map
    */
-  private void updateFragmentCollection(final PlanFragment planFragment, final CoordinationProtos.DrillbitEndpoint localEndPoint,
+  private void updateFragmentCollection(final PlanFragment planFragment, final DrillbitEndpoint localEndPoint,
                                         final List<PlanFragment> localFragmentList,
-                                        final Multimap<CoordinationProtos.DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
-    final CoordinationProtos.DrillbitEndpoint assignedDrillbit = planFragment.getAssignment();
+                                        final Multimap<DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
+    final DrillbitEndpoint assignedDrillbit = planFragment.getAssignment();
 
     if (assignedDrillbit.equals(localEndPoint)) {
       localFragmentList.add(planFragment);
@@ -286,14 +267,14 @@ public class FragmentsRunner {
    *
    * @param remoteFragmentMap - Map of Drillbit Endpoint to list of PlanFragment's
    */
-  private void scheduleRemoteIntermediateFragments(final Multimap<CoordinationProtos.DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
+  private void scheduleRemoteIntermediateFragments(final Multimap<DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
 
     final int numIntFragments = remoteFragmentMap.keySet().size();
     final ExtendedLatch endpointLatch = new ExtendedLatch(numIntFragments);
     final FragmentSubmitFailures fragmentSubmitFailures = new FragmentSubmitFailures();
 
     // send remote intermediate fragments
-    for (final CoordinationProtos.DrillbitEndpoint ep : remoteFragmentMap.keySet()) {
+    for (final DrillbitEndpoint ep : remoteFragmentMap.keySet()) {
       sendRemoteFragments(ep, remoteFragmentMap.get(ep), endpointLatch, fragmentSubmitFailures);
     }
 
@@ -311,12 +292,12 @@ public class FragmentsRunner {
         fragmentSubmitFailures.submissionExceptions;
 
     if (submissionExceptions.size() > 0) {
-      Set<CoordinationProtos.DrillbitEndpoint> endpoints = Sets.newHashSet();
+      Set<DrillbitEndpoint> endpoints = Sets.newHashSet();
       StringBuilder sb = new StringBuilder();
       boolean first = true;
 
       for (FragmentSubmitFailures.SubmissionException e : fragmentSubmitFailures.submissionExceptions) {
-        CoordinationProtos.DrillbitEndpoint endpoint = e.drillbitEndpoint;
+        DrillbitEndpoint endpoint = e.drillbitEndpoint;
         if (endpoints.add(endpoint)) {
           if (first) {
             first = false;
@@ -337,31 +318,21 @@ public class FragmentsRunner {
    * Start the locally assigned leaf or intermediate fragment
    *
    * @param fragment fragment
-   * @throws ForemanException
    */
-  private void startLocalFragment(final PlanFragment fragment) throws ForemanException {
-
+  private void startLocalFragment(final PlanFragment fragment) throws ExecutionSetupException {
     logger.debug("Received local fragment start instruction", fragment);
 
-    try {
-      final FragmentContext fragmentContext = new FragmentContext(drillbitContext, fragment,
-          drillbitContext.getFunctionImplementationRegistry());
-      final FragmentStatusReporter statusReporter = new FragmentStatusReporter(fragmentContext);
-      final FragmentExecutor fragmentExecutor = new FragmentExecutor(fragmentContext, fragment, statusReporter);
+    final FragmentContext fragmentContext = new FragmentContext(drillbitContext, fragment, drillbitContext.getFunctionImplementationRegistry());
+    final FragmentStatusReporter statusReporter = new FragmentStatusReporter(fragmentContext);
+    final FragmentExecutor fragmentExecutor = new FragmentExecutor(fragmentContext, fragment, statusReporter);
 
-      // we either need to start the fragment if it is a leaf fragment, or set up a fragment manager if it is non leaf.
-      if (fragment.getLeafFragment()) {
-        bee.addFragmentRunner(fragmentExecutor);
-      } else {
-        // isIntermediate, store for incoming data.
-        final NonRootFragmentManager manager = new NonRootFragmentManager(fragment, fragmentExecutor, statusReporter);
-        drillbitContext.getWorkBus().addFragmentManager(manager);
-      }
-
-    } catch (final ExecutionSetupException ex) {
-      throw new ForemanException("Failed to create fragment context", ex);
-    } catch (final Exception ex) {
-      throw new ForemanException("Failed while trying to start local fragment", ex);
+    // we either need to start the fragment if it is a leaf fragment, or set up a fragment manager if it is non leaf.
+    if (fragment.getLeafFragment()) {
+      bee.addFragmentRunner(fragmentExecutor);
+    } else {
+      // isIntermediate, store for incoming data.
+      final NonRootFragmentManager manager = new NonRootFragmentManager(fragment, fragmentExecutor, statusReporter);
+      drillbitContext.getWorkBus().addFragmentManager(manager);
     }
   }
 
@@ -370,10 +341,10 @@ public class FragmentsRunner {
    */
   private static class FragmentSubmitFailures {
     static class SubmissionException {
-      final CoordinationProtos.DrillbitEndpoint drillbitEndpoint;
+      final DrillbitEndpoint drillbitEndpoint;
       final RpcException rpcException;
 
-      SubmissionException(final CoordinationProtos.DrillbitEndpoint drillbitEndpoint,
+      SubmissionException(final DrillbitEndpoint drillbitEndpoint,
                           final RpcException rpcException) {
         this.drillbitEndpoint = drillbitEndpoint;
         this.rpcException = rpcException;
@@ -382,12 +353,12 @@ public class FragmentsRunner {
 
     final List<SubmissionException> submissionExceptions = new LinkedList<>();
 
-    void addFailure(final CoordinationProtos.DrillbitEndpoint drillbitEndpoint, final RpcException rpcException) {
+    void addFailure(final DrillbitEndpoint drillbitEndpoint, final RpcException rpcException) {
       submissionExceptions.add(new SubmissionException(drillbitEndpoint, rpcException));
     }
   }
 
-  private class FragmentSubmitListener extends EndpointListener<GeneralRPCProtos.Ack, BitControl.InitializeFragments> {
+  private class FragmentSubmitListener extends EndpointListener<GeneralRPCProtos.Ack, InitializeFragments> {
     private final CountDownLatch latch;
     private final FragmentSubmitFailures fragmentSubmitFailures;
 
@@ -399,7 +370,7 @@ public class FragmentsRunner {
      * @param latch the latch to count down when the status is known; may be null
      * @param fragmentSubmitFailures the counter to use for failures; must be non-null iff latch is non-null
      */
-    public FragmentSubmitListener(final CoordinationProtos.DrillbitEndpoint endpoint, final BitControl.InitializeFragments value,
+    public FragmentSubmitListener(final DrillbitEndpoint endpoint, final InitializeFragments value,
                                   final CountDownLatch latch, final FragmentSubmitFailures fragmentSubmitFailures) {
       super(endpoint, value);
       Preconditions.checkState((latch == null) == (fragmentSubmitFailures == null));

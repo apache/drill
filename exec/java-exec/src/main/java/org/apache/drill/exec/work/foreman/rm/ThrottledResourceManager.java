@@ -22,19 +22,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
 import org.apache.drill.exec.work.foreman.Foreman;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueLease;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -273,7 +275,6 @@ public class ThrottledResourceManager extends AbstractResourceManager {
 
     private final Foreman foreman;
     private QueueLease lease;
-    private Thread queueAcquirerThread;
 
     public QueuedQueryResourceManager(final ThrottledResourceManager rm,
         final Foreman foreman) {
@@ -287,10 +288,8 @@ public class ThrottledResourceManager extends AbstractResourceManager {
     }
 
     @Override
-    public void admit() {
-      QueueAcquirer queueAcquirer = new QueueAcquirer(rm.queue(), foreman, queryCost);
-      queueAcquirerThread = new Thread(queueAcquirer);
-      queueAcquirerThread.start();
+    public void admit() throws QueueTimeoutException, QueryQueueException {
+      lease = rm.queue().enqueue(foreman.getQueryId(), queryCost);
     }
 
     @Override
@@ -316,48 +315,12 @@ public class ThrottledResourceManager extends AbstractResourceManager {
     }
 
     @Override
-    public void cancel() {
-      if (queueAcquirerThread != null) {
-        queueAcquirerThread.interrupt();
-      }
-      foreman.moveToState(QueryState.CANCELED, null);
-    }
-
-    @Override
     public boolean hasQueue() { return true; }
 
     @Override
     public String queueName() {
       return lease == null ? null : lease.queueName();
     }
-
-    /**
-     * Is used to start query enqueue process in separate thread.
-     * Changes query state depending on the result.
-     */
-    private class QueueAcquirer implements Runnable {
-
-      private final QueryQueue queryQueue;
-      private final Foreman foreman;
-      private final double queryCost;
-
-      QueueAcquirer(QueryQueue queryQueue, Foreman foreman, double queryCost) {
-        this.queryQueue = queryQueue;
-        this.foreman = foreman;
-        this.queryCost = queryCost;
-      }
-
-      @Override
-      public void run() {
-        try {
-          queryQueue.enqueue(foreman.getQueryId(), queryCost);
-          foreman.moveToState(QueryState.STARTING, null);
-        } catch (Exception e) {
-          foreman.moveToState(QueryState.FAILED, e);
-        }
-      }
-    }
-
   }
 
   private final QueryQueue queue;

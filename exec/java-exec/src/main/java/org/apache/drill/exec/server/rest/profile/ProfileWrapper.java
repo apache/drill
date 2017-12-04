@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -195,8 +195,10 @@ public class ProfileWrapper {
   }
 
   public String getExecutionDuration() {
-    //Check if State is STARTING or RUNNING
-    if (profile.getState() == QueryState.STARTING ||
+    //Check if State is PREPARING, PLANNING, STARTING, ENQUEUED or RUNNING
+    if (profile.getState() == QueryState.PREPARING ||
+        profile.getState() == QueryState.PLANNING ||
+        profile.getState() == QueryState.STARTING ||
         profile.getState() == QueryState.ENQUEUED ||
         profile.getState() == QueryState.RUNNING) {
       return NOT_AVAILABLE_LABEL;

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import com.codahale.metrics.Counter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -25,7 +24,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.drill.common.CatastrophicFailure;
-import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -33,7 +31,6 @@ import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -64,6 +61,8 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -100,15 +99,6 @@ public class Foreman implements Runnable {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-
-  private static final Counter planningQueries = DrillMetrics.getRegistry().counter("drill.queries.planning");
-  private static final Counter enqueuedQueries = DrillMetrics.getRegistry().counter("drill.queries.enqueued");
-  private static final Counter runningQueries = DrillMetrics.getRegistry().counter("drill.queries.running");
-  private static final Counter completedQueries = DrillMetrics.getRegistry().counter("drill.queries.completed");
-  private static final Counter succeededQueries = DrillMetrics.getRegistry().counter("drill.queries.succeeded");
-  private static final Counter failedQueries = DrillMetrics.getRegistry().counter("drill.queries.failed");
-  private static final Counter canceledQueries = DrillMetrics.getRegistry().counter("drill.queries.canceled");
-
   private final QueryId queryId;
   private final String queryIdString;
   private final RunQuery queryRequest;
@@ -116,18 +106,16 @@ public class Foreman implements Runnable {
   private final QueryManager queryManager; // handles lower-level details of query execution
   private final DrillbitContext drillbitContext;
   private final UserClientConnection initiatingClient; // used to send responses
-  private volatile QueryState state;
   private boolean resume = false;
   private final ProfileOption profileOption;
 
   private final QueryResourceManager queryRM;
 
   private final ResponseSendListener responseListener = new ResponseSendListener();
-  private final StateSwitch stateSwitch = new StateSwitch();
-  private final ForemanResult foremanResult = new ForemanResult();
   private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
   private final ChannelFuture closeFuture;
   private final FragmentsRunner fragmentsRunner;
+  private final QueryStateProcessor queryStateProcessor;
 
   private String queryText;
 
@@ -146,40 +134,41 @@ public class Foreman implements Runnable {
     this.queryIdString = QueryIdHelper.getQueryId(queryId);
     this.queryRequest = queryRequest;
     this.drillbitContext = drillbitContext;
-
-    initiatingClient = connection;
-    closeFuture = initiatingClient.getChannelClosureFuture();
+    this.initiatingClient = connection;
+    this.closeFuture = initiatingClient.getChannelClosureFuture();
     closeFuture.addListener(closeListener);
 
-    queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
-    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
+    this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
+    this.queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
         drillbitContext.getClusterCoordinator(), this);
-
-    recordNewState(QueryState.PREPARING);
-
-    queryRM = drillbitContext.getResourceManager().newQueryRM(this);
-    fragmentsRunner = new FragmentsRunner(bee, initiatingClient, drillbitContext, this);
-
-    profileOption = setProfileOption(queryContext.getOptions());
+    this.queryRM = drillbitContext.getResourceManager().newQueryRM(this);
+    this.fragmentsRunner = new FragmentsRunner(bee, initiatingClient, drillbitContext, this);
+    this.queryStateProcessor = new QueryStateProcessor(queryIdString, queryManager, drillbitContext, new ForemanResult());
+    this.profileOption = setProfileOption(queryContext.getOptions());
   }
 
-  private ProfileOption setProfileOption(OptionManager options) {
-    if (! options.getOption(ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR)) {
-      return ProfileOption.NONE;
-    }
-    if (options.getOption(ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR)) {
-      return ProfileOption.SYNC;
-    } else {
-      return ProfileOption.ASYNC;
-    }
+
+  /**
+   * @return query id
+   */
+  public QueryId getQueryId() {
+    return queryId;
   }
 
-  private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
-    @Override
-    public void operationComplete(Future<Void> future) throws Exception {
-      cancel();
-    }
+  /**
+   * @return current query state
+   */
+  public QueryState getState() {
+    return queryStateProcessor.getState();
   }
+
+  /**
+   * @return sql query text of the query request
+   */
+  public String getQueryText() {
+    return queryText;
+  }
+
 
   /**
    * Get the QueryContext created for the query.
@@ -200,16 +189,21 @@ public class Foreman implements Runnable {
   }
 
   /**
-   * Cancel the query. Asynchronous -- it may take some time for all remote fragments to be terminated.
-   * For planning and enqueued states we cancel immediately since these states are done locally.
-   *
-   * Note this can be called from outside of run() on another thread, or after run() completes
+   * Cancel the query (move query in cancellation requested state).
+   * Query execution will be canceled once possible.
    */
   public void cancel() {
-    if (QueryState.PLANNING == state || QueryState.ENQUEUED == state) {
-      moveToState(QueryState.CANCELLATION_REQUESTED, null);
-    }
-    addToEventQueue(QueryState.CANCELLATION_REQUESTED, null);
+    queryStateProcessor.cancel();
+  }
+
+  /**
+   * Adds query status in the event queue to process it when foreman is ready.
+   *
+   * @param state new query state
+   * @param exception exception if failure has occurred
+   */
+  public void addToEventQueue(QueryState state, Exception exception) {
+    queryStateProcessor.addToEventQueue(state, exception);
   }
 
   /**
@@ -238,22 +232,18 @@ public class Foreman implements Runnable {
     currentThread.setName(queryIdString + ":foreman");
     try {
       /*
-       Check if the foreman is ONLINE. If not dont accept any new queries.
+       Check if the foreman is ONLINE. If not don't accept any new queries.
       */
       if (!drillbitContext.isForemanOnline()) {
         throw new ForemanException("Query submission failed since Foreman is shutting down.");
       }
     } catch (ForemanException e) {
       logger.debug("Failure while submitting query", e);
-      addToEventQueue(QueryState.FAILED, e);
+      queryStateProcessor.addToEventQueue(QueryState.FAILED, e);
     }
-    // track how long the query takes
-    queryManager.markStartTime();
-    runningQueries.inc();
 
     queryText = queryRequest.getPlan();
-    recordNewState(QueryState.PLANNING);
-    planningQueries.inc();
+    queryStateProcessor.moveToState(QueryState.PLANNING, null);
 
     try {
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-beginning", ForemanException.class);
@@ -284,18 +274,15 @@ public class Foreman implements Runnable {
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
     } catch (final OutOfMemoryException e) {
-      moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
+      queryStateProcessor.moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
     } catch (final ForemanException e) {
-      moveToState(QueryState.FAILED, e);
+      queryStateProcessor.moveToState(QueryState.FAILED, e);
     } catch (AssertionError | Exception ex) {
-      moveToState(QueryState.FAILED,
+      queryStateProcessor.moveToState(QueryState.FAILED,
           new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
     } catch (final OutOfMemoryError e) {
       if ("Direct buffer memory".equals(e.getMessage())) {
-        moveToState(QueryState.FAILED,
-            UserException.resourceError(e)
-                .message("One or more nodes ran out of memory while executing the query.")
-                .build(logger));
+        queryStateProcessor.moveToState(QueryState.FAILED, UserException.resourceError(e).message("One or more nodes ran out of memory while executing the query.").build(logger));
       } else {
         /*
          * FragmentExecutors use a DrillbitStatusListener to watch out for the death of their query's Foreman. So, if we
@@ -317,34 +304,28 @@ public class Foreman implements Runnable {
      */
   }
 
+  /**
+   * While one fragments where sanding out, other might have been completed. We don't want to process completed / failed
+   * events until all fragments are sent out. This method triggers events processing when all fragments were sent out.
+   */
   public void startProcessingEvents() {
-      /*
-       * Begin accepting external events.
-       *
-       * Doing this here in the finally clause will guarantee that it occurs. Otherwise, if there
-       * is an exception anywhere during setup, it wouldn't occur, and any events that are generated
-       * as a result of any partial setup that was done (such as the FragmentSubmitListener,
-       * the ResponseSendListener, or an external call to cancel()), will hang the thread that makes the
-       * event delivery call.
-       *
-       * If we do throw an exception during setup, and have already moved to QueryState.FAILED, we just need to
-       * make sure that we can't make things any worse as those events are delivered, but allow
-       * any necessary remaining cleanup to proceed.
-       *
-       * Note that cancellations cannot be simulated before this point, i.e. pauses can be injected, because Foreman
-       * would wait on the cancelling thread to signal a resume and the cancelling thread would wait on the Foreman
-       * to accept events.
-       */
-    try {
-      stateSwitch.start();
-    } catch (Exception ex) {
-      moveToState(QueryState.FAILED, ex);
-    }
+    queryStateProcessor.startProcessingEvents();
 
     // If we received the resume signal before fragments are setup, the first call does not actually resume the
     // fragments. Since setup is done, all fragments must have been delivered to remote nodes. Now we can resume.
-    if(resume) {
+    if (resume) {
       resume();
+    }
+  }
+
+  private ProfileOption setProfileOption(OptionManager options) {
+    if (! options.getOption(ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR)) {
+      return ProfileOption.NONE;
+    }
+    if (options.getOption(ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR)) {
+      return ProfileOption.SYNC;
+    } else {
+      return ProfileOption.ASYNC;
     }
   }
 
@@ -424,18 +405,9 @@ public class Foreman implements Runnable {
     work.applyPlan(drillbitContext.getPlanReader());
     logWorkUnit(work);
 
-    fragmentsRunner.setPlanFragments(work.getFragments());
-    fragmentsRunner.setRootPlanFragment(work.getRootFragment());
-    fragmentsRunner.setRootOperator(work.getRootOperator());
+    fragmentsRunner.setFragmentsInfo(work.getFragments(), work.getRootFragment(), work.getRootOperator());
 
-    admit();
-  }
-
-  private void admit() throws ForemanSetupException {
-    queryManager.markPlanningEndTime();
-    planningQueries.dec();
-    moveToState(QueryState.ENQUEUED, null);
-    queryRM.admit();
+    startQueryProcessing();
   }
 
   /**
@@ -476,11 +448,65 @@ public class Foreman implements Runnable {
     }
     queryRM.setCost(rootOperator.getCost());
 
-    fragmentsRunner.setPlanFragments(planFragments);
-    fragmentsRunner.setRootPlanFragment(rootFragment);
-    fragmentsRunner.setRootOperator(rootOperator);
+    fragmentsRunner.setFragmentsInfo(planFragments, rootFragment, rootOperator);
 
-    admit();
+    startQueryProcessing();
+  }
+
+  /**
+   * Enqueues the query and once enqueued, starts sending out query fragments for further execution.
+   * Moves query to RUNNING state.
+   */
+  private void startQueryProcessing() {
+    enqueue();
+    runFragments();
+    queryStateProcessor.moveToState(QueryState.RUNNING, null);
+  }
+
+  /**
+   * Move query to ENQUEUED state. Enqueues query if queueing is enabled.
+   * Foreman run will be blocked until query is enqueued.
+   * In case of failures (ex: queue timeout exception) will move query to FAILED state.
+   */
+  private void enqueue() {
+    queryStateProcessor.moveToState(QueryState.ENQUEUED, null);
+
+    try {
+      queryRM.admit();
+      queryStateProcessor.moveToState(QueryState.STARTING, null);
+    } catch (QueueTimeoutException | QueryQueueException e) {
+      queryStateProcessor.moveToState(QueryState.FAILED, e);
+    } finally {
+      String queueName = queryRM.queueName();
+      queryManager.setQueueName(queueName == null ? "Unknown" : queueName);
+    }
+  }
+
+  private void runFragments() {
+    try {
+      fragmentsRunner.submit();
+    } catch (Exception e) {
+      queryStateProcessor.moveToState(QueryState.FAILED, e);
+    } finally {
+       /*
+       * Begin accepting external events.
+       *
+       * Doing this here in the finally clause will guarantee that it occurs. Otherwise, if there
+       * is an exception anywhere during setup, it wouldn't occur, and any events that are generated
+       * as a result of any partial setup that was done (such as the FragmentSubmitListener,
+       * the ResponseSendListener, or an external call to cancel()), will hang the thread that makes the
+       * event delivery call.
+       *
+       * If we do throw an exception during setup, and have already moved to QueryState.FAILED, we just need to
+       * make sure that we can't make things any worse as those events are delivered, but allow
+       * any necessary remaining cleanup to proceed.
+       *
+       * Note that cancellations cannot be simulated before this point, i.e. pauses can be injected, because Foreman
+       * would wait on the cancelling thread to signal a resume and the cancelling thread would wait on the Foreman
+       * to accept events.
+       */
+      startProcessingEvents();
+    }
   }
 
   /**
@@ -533,8 +559,24 @@ public class Foreman implements Runnable {
       return;
     }
     logger.trace(String.format("PlanFragments for query %s \n%s",
-        queryId, queryWorkUnit.convertFragmentToJson()));
+        queryId, queryWorkUnit.stringifyFragments()));
   }
+
+  private void runSQL(final String sql) throws ExecutionSetupException {
+    final Pointer<String> textPlan = new Pointer<>();
+    final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
+    queryManager.setPlanText(textPlan.value);
+    runPhysicalPlan(plan);
+  }
+
+  private PhysicalPlan convert(final LogicalPlan plan) throws OptimizerException {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(queryContext.getLpPersistence()));
+    }
+    return new BasicOptimizer(queryContext, initiatingClient).optimize(
+        new BasicOptimizer.BasicOptimizationContext(queryContext), plan);
+  }
+
 
   /**
    * Manages the end-state processing for Foreman.
@@ -549,7 +591,7 @@ public class Foreman implements Runnable {
    * The idea here is to make close()ing the ForemanResult do the final cleanup and
    * sending. Closing the result must be the last thing that is done by Foreman.
    */
-  private class ForemanResult implements AutoCloseable {
+  public class ForemanResult implements AutoCloseable {
     private QueryState resultState = null;
     private volatile Exception resultException = null;
     private boolean isClosed = false;
@@ -659,7 +701,7 @@ public class Foreman implements Runnable {
             queryText,
             new Date(queryContext.getQueryContextInfo().getQueryStartTime()),
             new Date(System.currentTimeMillis()),
-            state,
+            queryStateProcessor.getState(),
             queryContext.getSession().getCredentials().getUserName(),
             initiatingClient.getRemoteAddress());
         queryLogger.info(MAPPER.writeValueAsString(q));
@@ -673,9 +715,6 @@ public class Foreman implements Runnable {
     public void close() {
       Preconditions.checkState(!isClosed);
       Preconditions.checkState(resultState != null);
-
-      // to track how long the query takes
-      queryManager.markEndTime();
 
       logger.debug(queryIdString + ": cleaning up.");
       injector.injectPause(queryContext.getExecutionControls(), "foreman-cleanup", logger);
@@ -698,11 +737,11 @@ public class Foreman implements Runnable {
        *
        * We only need to do this if the resultState differs from the last recorded state
        */
-      if (resultState != state) {
+      if (resultState != queryStateProcessor.getState()) {
         suppressingClose(new AutoCloseable() {
           @Override
           public void close() throws Exception {
-            recordNewState(resultState);
+            queryStateProcessor.recordNewState(resultState);
           }
         });
       }
@@ -768,21 +807,9 @@ public class Foreman implements Runnable {
         logger.warn("unable to close query manager", e);
       }
 
-      // Incrementing QueryState counters
-      switch (state) {
-        case FAILED:
-          failedQueries.inc();
-          break;
-        case CANCELED:
-          canceledQueries.inc();
-          break;
-        case COMPLETED:
-          succeededQueries.inc();
-          break;
-      }
 
-      runningQueries.dec();
-      completedQueries.inc();
+      queryStateProcessor.close();
+
       try {
         queryRM.exit();
       } finally {
@@ -791,203 +818,12 @@ public class Foreman implements Runnable {
     }
   }
 
-  private static class StateEvent {
-    final QueryState newState;
-    final Exception exception;
-
-    StateEvent(final QueryState newState, final Exception exception) {
-      this.newState = newState;
-      this.exception = exception;
-    }
-  }
-
-  public synchronized void moveToState(final QueryState newState, final Exception exception) {
-    logger.debug(queryIdString + ": State change requested {} --> {}", state, newState, exception);
-    switch (state) {
-      case PLANNING:
-        switch (newState) {
-          case ENQUEUED:
-            recordNewState(newState);
-            enqueuedQueries.inc();
-            return;
-          case CANCELLATION_REQUESTED:
-            assert exception == null;
-            recordNewState(newState);
-            foremanResult.setCompleted(QueryState.CANCELED);
-            foremanResult.close();
-            return;
-          case FAILED:
-            assert exception != null;
-            recordNewState(newState);
-            foremanResult.setFailed(exception);
-            foremanResult.close();
-            return;
-        }
-        break;
-      case ENQUEUED:
-        enqueuedQueries.dec();
-        queryManager.markQueueWaitEndTime();
-        switch (newState) {
-          case STARTING:
-            recordNewState(newState);
-            queryManager.setQueueName(queryRM.queueName());
-            fragmentsRunner.submit();
-            return;
-          case CANCELLATION_REQUESTED:
-            assert exception == null;
-            recordNewState(newState);
-            queryRM.cancel();
-            foremanResult.setCompleted(QueryState.CANCELED);
-            return;
-          case FAILED:
-            assert exception != null;
-            recordNewState(newState);
-            foremanResult.setFailed(exception);
-            foremanResult.close();
-            return;
-        }
-        break;
-      case STARTING:
-        switch (newState) {
-          case RUNNING:
-            recordNewState(QueryState.RUNNING);
-            return;
-          case CANCELLATION_REQUESTED:
-            // since during starting state fragments are sent to the remote nodes,
-            // we don't want to cancel until they all are sent out
-            addToEventQueue(QueryState.CANCELLATION_REQUESTED, null);
-            return;
-        }
-
-        //$FALL-THROUGH$
-
-      case RUNNING: {
-      /*
-       * For cases that cancel executing fragments, we have to record the new
-       * state first, because the cancellation of the local root fragment will
-       * cause this to be called recursively.
-       */
-        switch (newState) {
-          case CANCELLATION_REQUESTED: {
-            assert exception == null;
-            recordNewState(QueryState.CANCELLATION_REQUESTED);
-            queryManager.cancelExecutingFragments(drillbitContext);
-            foremanResult.setCompleted(QueryState.CANCELED);
-        /*
-         * We don't close the foremanResult until we've gotten
-         * acknowledgments, which happens below in the case for current state
-         * == CANCELLATION_REQUESTED.
-         */
-            return;
-          }
-
-          case COMPLETED: {
-            assert exception == null;
-            recordNewState(QueryState.COMPLETED);
-            foremanResult.setCompleted(QueryState.COMPLETED);
-            foremanResult.close();
-            return;
-          }
-
-          case FAILED: {
-            assert exception != null;
-            recordNewState(QueryState.FAILED);
-            queryManager.cancelExecutingFragments(drillbitContext);
-            foremanResult.setFailed(exception);
-            foremanResult.close();
-            return;
-          }
-
-        }
-        break;
-      }
-
-      case CANCELLATION_REQUESTED:
-        if ((newState == QueryState.CANCELED) || (newState == QueryState.COMPLETED) || (newState == QueryState.FAILED)) {
-
-          if (drillbitContext.getConfig().getBoolean(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS)) {
-            if (newState == QueryState.FAILED) {
-              assert exception != null;
-              recordNewState(QueryState.FAILED);
-              foremanResult.setForceFailure(exception);
-            }
-          }
-        /*
-         * These amount to a completion of the cancellation requests' cleanup;
-         * now we can clean up and send the result.
-         */
-          foremanResult.close();
-        }
-        return;
-
-      case CANCELED:
-      case COMPLETED:
-      case FAILED:
-        logger.warn("Dropping request to move to {} state as query is already at {} state (which is terminal).", newState, state);
-        return;
-    }
-
-    throw new IllegalStateException(String.format("Failure trying to change states: %s --> %s", state.name(), newState.name()));
-  }
-
-  private class StateSwitch extends EventProcessor<StateEvent> {
-    public void addEvent(final QueryState newState, final Exception exception) {
-      sendEvent(new StateEvent(newState, exception));
-    }
-
+  private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
     @Override
-    protected void processEvent(final StateEvent event) {
-      moveToState(event.newState, event.exception);
+    public void operationComplete(Future<Void> future) throws Exception {
+      cancel();
     }
   }
-
-  /**
-   * Tells the foreman to move to a new state.<br>
-   * This will be added to the end of the event queue and will be processed once the foreman is ready
-   * to accept external events.
-   *
-   * @param newState the state to move to
-   * @param exception if not null, the exception that drove this state transition (usually a failure)
-   */
-  public void addToEventQueue(final QueryState newState, final Exception exception) {
-    stateSwitch.addEvent(newState, exception);
-  }
-
-  private void recordNewState(final QueryState newState) {
-    state = newState;
-    queryManager.updateEphemeralState(newState);
-  }
-
-  private void runSQL(final String sql) throws ExecutionSetupException {
-    final Pointer<String> textPlan = new Pointer<>();
-    final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
-    queryManager.setPlanText(textPlan.value);
-    runPhysicalPlan(plan);
-  }
-
-  private PhysicalPlan convert(final LogicalPlan plan) throws OptimizerException {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(queryContext.getLpPersistence()));
-    }
-    return new BasicOptimizer(queryContext, initiatingClient).optimize(
-        new BasicOptimizer.BasicOptimizationContext(queryContext), plan);
-  }
-
-  public QueryId getQueryId() {
-    return queryId;
-  }
-
-  public QueryState getState() {
-    return state;
-  }
-
-  /**
-   * @return sql query text of the query request
-   */
-  public String getQueryText() {
-    return queryText;
-  }
-
 
   /**
    * Listens for the status of the RPC response sent to the user for the query.

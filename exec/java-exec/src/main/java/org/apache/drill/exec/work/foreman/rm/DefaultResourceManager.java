@@ -20,7 +20,7 @@ package org.apache.drill.exec.work.foreman.rm;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.util.MemoryAllocationUtilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -59,12 +59,10 @@ public class DefaultResourceManager implements ResourceManager {
 
     @SuppressWarnings("unused")
     private final DefaultResourceManager rm;
-    private final Foreman foreman;
 
     public DefaultQueryResourceManager(final DefaultResourceManager rm, final Foreman foreman) {
       super(foreman.getQueryContext());
       this.rm = rm;
-      this.foreman = foreman;
     }
 
     @Override
@@ -75,18 +73,11 @@ public class DefaultResourceManager implements ResourceManager {
     @Override
     public void admit() {
       // No queueing by default
-      foreman.moveToState(UserBitShared.QueryResult.QueryState.STARTING, null);
     }
 
     @Override
     public void exit() {
       // No queueing by default
-    }
-
-    @Override
-    public void cancel() {
-      // No queueing by default
-      foreman.moveToState(UserBitShared.QueryResult.QueryState.CANCELED, null);
     }
 
     @Override

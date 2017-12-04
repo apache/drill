@@ -303,7 +303,7 @@ public class QueryManager implements AutoCloseable {
           runningProfileStore.remove(stringQueryId);
           inTransientStore = false;
         } catch (final Exception e) {
-          logger.warn("Failure while trying to delete the estore profile for this query.", e);
+          logger.warn("Failure while trying to delete the stored profile for the query [{}]", stringQueryId, e);
         }
         break;
 
