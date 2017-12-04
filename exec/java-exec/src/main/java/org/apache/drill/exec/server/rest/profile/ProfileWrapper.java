@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
@@ -35,6 +36,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.rest.WebServer;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
@@ -47,15 +49,16 @@ public class ProfileWrapper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
-  private QueryProfile profile;
-  private String id;
+  private final QueryProfile profile;
+  private final String id;
   private final List<FragmentWrapper> fragmentProfiles;
   private final List<OperatorWrapper> operatorProfiles;
-  private OptionList options;
   private final HashMap<String, Long> majorFragmentTallyMap;
-  private long majorFragmentTallyTotal;
+  private final long majorFragmentTallyTotal;
+  private final OptionList options;
+  private final boolean onlyImpersonationEnabled;
 
-  public ProfileWrapper(final QueryProfile profile) {
+  public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig) {
     this.profile = profile;
     this.id = QueryIdHelper.getQueryId(profile.getId());
 
@@ -68,7 +71,7 @@ public class ProfileWrapper {
       fragmentProfiles.add(new FragmentWrapper(major, profile.getStart()));
     }
     this.fragmentProfiles = fragmentProfiles;
-    majorFragmentTallyMap = new HashMap<String, Long>(majors.size());
+    this.majorFragmentTallyMap = new HashMap<>(majors.size());
     this.majorFragmentTallyTotal = tallyMajorFragmentCost(majors);
 
     final List<OperatorWrapper> ows = new ArrayList<>();
@@ -108,12 +111,16 @@ public class ProfileWrapper {
     }
     this.operatorProfiles = ows;
 
+    OptionList options;
     try {
       options = mapper.readValue(profile.getOptionsJson(), OptionList.class);
     } catch (Exception e) {
       logger.error("Unable to deserialize query options", e);
       options = new OptionList();
     }
+    this.options = options;
+
+    this.onlyImpersonationEnabled = WebServer.isImpersonationOnlyEnabled(drillConfig);
   }
 
   private long tallyMajorFragmentCost(List<MajorFragmentProfile> majorFragments) {
@@ -296,5 +303,13 @@ public class ProfileWrapper {
       map.put(option.getName(), String.valueOf(option.getValue()));
     }
     return map;
+  }
+
+  /**
+   * @return true if impersonation is enabled without authentication,
+   *         is needed to indicated if user name should be included when re-running the query
+   */
+  public boolean isOnlyImpersonationEnabled() {
+    return onlyImpersonationEnabled;
   }
 }
