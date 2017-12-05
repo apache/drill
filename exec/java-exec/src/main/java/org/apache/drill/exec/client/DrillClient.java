@@ -440,7 +440,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
     client.connect(endpoint, properties, getUserCredentials());
-    logger.info("Foreman drillbit is" + endpoint.getAddress());
+    logger.info("Foreman drillbit is {}", endpoint.getAddress());
   }
 
   public BufferAllocator getAllocator() {
