@@ -103,7 +103,7 @@ public class DrillRoot {
     final DrillConfig config = work.getContext().getConfig();
     final int gracePeriod = config.getInt(ExecConstants.GRACE_PERIOD);
     Map<String, Integer> gracePeriodMap = new HashMap<String, Integer>();
-    gracePeriodMap.put("graceperiod", gracePeriod);
+    gracePeriodMap.put("gracePeriod", gracePeriod);
     return gracePeriodMap;
   }
 
