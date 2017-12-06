@@ -1918,10 +1918,6 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <artifactId>commons-logging</artifactId>
-                <groupId>commons-logging</groupId>
-              </exclusion>
-              <exclusion>
                 <artifactId>core</artifactId>
                 <groupId>org.eclipse.jdt</groupId>
               </exclusion>
@@ -2002,10 +1998,6 @@
               </exclusion>
               <exclusion>
                 <artifactId>commons-logging-api</artifactId>
-                <groupId>commons-logging</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>commons-logging</artifactId>
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
