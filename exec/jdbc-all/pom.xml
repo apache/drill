@@ -26,6 +26,12 @@
   <artifactId>drill-jdbc-all</artifactId>
   <name>JDBC JAR with all dependencies</name>
 
+  <!-- Since we are packaging hadoop dependencies under the namespace with "oadd." prefix by default,
+       "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
+  <properties>
+    <package.namespace.prefix>oadd.</package.namespace.prefix>
+  </properties>
+
   <dependencies>
 
     <dependency>
@@ -535,19 +541,10 @@
   </pluginRepositories>
 
   <profiles>
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <package.namespace.prefix>oadd.</package.namespace.prefix>
-      </properties>
-    </profile>
       <profile>
         <id>mapr</id>
         <properties>
-          <package.namespace.prefix></package.namespace.prefix>
+          <package.namespace.prefix />
         </properties>
 
         <build>

@@ -54,14 +54,13 @@ public class SecurityConfiguration extends Configuration {
    * Update the GroupMapping class name to add namespace prefix retrieved from System Property. This is needed since
    * in drill-jdbc-all jar we are packaging hadoop dependencies under that namespace. This will help application
    * using this jar as driver to avoid conflict with it's own hadoop dependency if any. The property is needed only
-   * when Hadoop classes are relocated to different namespace which is done inside jdbc-all package. For normal build
-   * this property is not required as Hadoop classes will be used normally.
+   * when Hadoop classes are relocated to different namespace which is done inside jdbc-all package.
    */
   private void updateGroupMapping() {
     final String originalClassName = get(CommonConfigurationKeys.HADOOP_SECURITY_GROUP_MAPPING);
     final String profilePrefix = System.getProperty("drill.security.namespacePrefix");
 
-    if (!Strings.isNullOrEmpty(profilePrefix)) {
+    if (originalClassName != null && !Strings.isNullOrEmpty(profilePrefix) && !originalClassName.startsWith(profilePrefix)) {
       set(CommonConfigurationKeys.HADOOP_SECURITY_GROUP_MAPPING, profilePrefix + originalClassName);
     }
   }
