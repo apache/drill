@@ -185,11 +185,10 @@
       </div>
   </div>
    <script charset="utf-8">
-      var refreshTime = 2000;
+      var refreshTime = 10000;
       var refresh = getRefreshTime();
       var portNum = 0;
       var port = getPortNum();
-      console.log(portNum);
       var timeout;
       var size = $("#size").html();
 
@@ -206,19 +205,21 @@
       }
 
       function getRefreshTime() {
-          var refresh = $.ajax({
-                          type: 'GET',
-                          url: '/gracePeriod',
-                          dataType: "json",
-                          complete: function(data) {
-                                refreshTime = data.responseJSON["graceperiod"];
-                                refreshTime = refreshTime/3;
-                                timeout = setTimeout(reloadStatus,refreshTime );
-                                }
-                          });
+          $.ajax({
+              type: 'GET',
+              url: '/gracePeriod',
+              dataType: "json",
+              complete: function (data) {
+                  var gracePeriod = data.responseJSON["gracePeriod"];
+                  if (gracePeriod > 0) {
+                      refreshTime = gracePeriod / 3;
+                  }
+                  timeout = setTimeout(reloadStatus, refreshTime);
+              }
+          });
       }
+
       function reloadStatus () {
-          console.log(refreshTime);
           var result = $.ajax({
                       type: 'GET',
                       url: '/state',
