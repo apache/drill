@@ -79,9 +79,11 @@
                   </span>
                 </td>
                 <td id="status" >${drillbit.getState()}</td>
-                <td>
-                    <button type="button" id="shutdown" onClick="shutdown('${drillbit.getAddress()}',$(this));"> SHUTDOWN </button>
-                </td>
+                <#if model.shouldShowAdminInfo()>
+                  <td>
+                      <button type="button" id="shutdown" onClick="shutdown('${drillbit.getAddress()}',$(this));"> SHUTDOWN </button>
+                  </td>
+                </#if>
                 <td id="queriesCount">  </td>
               </tr>
               <#assign i = i + 1>
@@ -112,7 +114,7 @@
       </div>
   </div>
 
-   <#if model.shouldShowUserInfo()>
+   <#if model.shouldShowAdminInfo()>
        <div class="row">
             <div class="col-md-12">
               <h3>User Info </h3>
