@@ -189,7 +189,7 @@ public class DrillRoot {
     String adminUsers = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
     String adminUserGroups = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
 
-    final boolean shouldShowUserInfo = isUserLoggedIn &&
+    final boolean shouldShowAdminInfo = isUserLoggedIn &&
             ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
 
     for (DrillbitEndpoint endpoint : work.getContext().getAvailableBits()) {
@@ -202,11 +202,11 @@ public class DrillRoot {
       drillbits.add(drillbit);
     }
     logger.debug("Admin info: user: "  + adminUsers +  " user group: " + adminUserGroups +
-            " userLoggedIn "  + isUserLoggedIn + " shouldShowUserInfo: " + shouldShowUserInfo );
+            " userLoggedIn "  + isUserLoggedIn + " shouldShowAdminInfo: " + shouldShowAdminInfo );
 
     return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
             userEncryptionEnabled, bitEncryptionEnabled, processUser, processUserGroups, adminUsers,
-            adminUserGroups, shouldShowUserInfo, QueueInfo.build(dbContext.getResourceManager()));
+            adminUserGroups, shouldShowAdminInfo, QueueInfo.build(dbContext.getResourceManager()));
   }
 
   public Response setResponse(Map entity) {
@@ -327,7 +327,7 @@ public static class ClusterInfo {
   private final String adminUserGroups;
   private final String processUser;
   private final String processUserGroups;
-  private final boolean shouldShowUserInfo;
+  private final boolean shouldShowAdminInfo;
   private final QueueInfo queueInfo;
 
   @JsonCreator
@@ -340,7 +340,7 @@ public static class ClusterInfo {
                      String processUserGroups,
                      String adminUsers,
                      String adminUserGroups,
-                     boolean shouldShowUserInfo,
+                     boolean shouldShowAdminInfo,
                      QueueInfo queueInfo) {
     this.drillbits = Sets.newTreeSet(drillbits);
     this.currentVersion = currentVersion;
@@ -351,7 +351,7 @@ public static class ClusterInfo {
     this.processUserGroups = processUserGroups;
     this.adminUsers = adminUsers;
     this.adminUserGroups = adminUserGroups;
-    this.shouldShowUserInfo = shouldShowUserInfo;
+    this.shouldShowAdminInfo = shouldShowAdminInfo;
     this.queueInfo = queueInfo;
   }
 
@@ -379,7 +379,7 @@ public static class ClusterInfo {
 
   public String getAdminUserGroups() { return adminUserGroups; }
 
-  public boolean shouldShowUserInfo() { return shouldShowUserInfo; }
+  public boolean shouldShowAdminInfo() { return shouldShowAdminInfo; }
 
   public QueueInfo queueInfo() { return queueInfo; }
 }
