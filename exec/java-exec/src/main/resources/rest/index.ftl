@@ -268,18 +268,20 @@
                               }
                         });
       }
-      function shutdown(address,button) {
-          url = "http://"+address+":"+portNum+"/gracefulShutdown";
-          var result = $.ajax({
-                type: 'POST',
-                url: url,
-                contentType : 'text/plain',
-                complete: function(data) {
-                    alert(data.responseJSON["response"]);
-                    button.prop('disabled',true).css('opacity',0.5);
-                }
-          });
-      }
+       <#if model.shouldShowAdminInfo()>
+          function shutdown(address,button) {
+              url = "http://"+address+":"+portNum+"/gracefulShutdown";
+              var result = $.ajax({
+                    type: 'POST',
+                    url: url,
+                    contentType : 'text/plain',
+                    complete: function(data) {
+                        alert(data.responseJSON["response"]);
+                        button.prop('disabled',true).css('opacity',0.5);
+                    }
+              });
+          }
+      </#if>
     </script>
 </#macro>
 
