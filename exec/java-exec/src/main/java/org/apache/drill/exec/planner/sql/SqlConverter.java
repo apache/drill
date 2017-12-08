@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import com.google.common.base.Strings;
@@ -26,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.config.CalciteConnectionConfigImpl;
+import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -537,7 +540,8 @@ public class SqlConverter {
                               JavaTypeFactory typeFactory,
                               DrillConfig drillConfig,
                               UserSession session) {
-      super(CalciteSchema.from(rootSchema), caseSensitive, defaultSchema, typeFactory);
+      super(CalciteSchema.from(rootSchema), defaultSchema,
+          typeFactory, getConnectionConfig(caseSensitive));
       this.drillConfig = drillConfig;
       this.session = session;
       this.allowTemporaryTables = true;
@@ -649,5 +653,18 @@ public class SqlConverter {
           SchemaUtilites.isTemporaryWorkspace(
               SchemaUtilites.SCHEMA_PATH_JOINER.join(defaultSchemaPath, schemaPath), drillConfig);
     }
+  }
+
+  /**
+   * Creates {@link CalciteConnectionConfigImpl} instance with specified caseSensitive property.
+   *
+   * @param caseSensitive is case sensitive.
+   * @return {@link CalciteConnectionConfigImpl} instance
+   */
+  private static CalciteConnectionConfigImpl getConnectionConfig(boolean caseSensitive) {
+    Properties properties = new Properties();
+    properties.setProperty(CalciteConnectionProperty.CASE_SENSITIVE.camelName(),
+        String.valueOf(caseSensitive));
+    return new CalciteConnectionConfigImpl(properties);
   }
 }

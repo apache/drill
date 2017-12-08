@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,12 +19,15 @@ package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
 
+import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -121,6 +124,16 @@ public abstract class DrillTable implements Table {
   @Override
   public TableType getJdbcTableType() {
     return tableType;
+  }
+
+  @Override
+  public boolean rolledUpColumnValidInsideAgg(String column,
+      SqlCall call, SqlNode parent, CalciteConnectionConfig config) {
+    return true;
+  }
+
+  @Override public boolean isRolledUp(String column) {
+    return false;
   }
 
   @Override

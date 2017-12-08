@@ -154,19 +154,19 @@ SqlNodeList ParseOptionalFieldList(String relType) :
 /** Parses a required field list and makes sure no field is a "*". */
 SqlNodeList ParseRequiredFieldList(String relType) :
 {
-    SqlNodeList fieldList;
+    Pair<SqlNodeList, SqlNodeList> fieldList;
 }
 {
     <LPAREN>
     fieldList = ParenthesizedCompoundIdentifierList()
     <RPAREN>
     {
-        for(SqlNode node : fieldList)
+        for(SqlNode node : fieldList.left)
         {
-            if (((SqlIdentifier)node).isStar())
+            if (((SqlIdentifier) node).isStar())
                 throw new ParseException(String.format("%s's field list has a '*', which is invalid.", relType));
         }
-        return fieldList;
+        return fieldList.left;
     }
 }
 
@@ -357,7 +357,7 @@ SqlNode SqlDropFunction() :
 /**
 * Parses a comma-separated list of simple identifiers.
 */
-SqlNodeList ParenthesizedCompoundIdentifierList() :
+Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
 {
     List<SqlIdentifier> list = new ArrayList<SqlIdentifier>();
     SqlIdentifier id;
@@ -367,7 +367,7 @@ SqlNodeList ParenthesizedCompoundIdentifierList() :
     (
    <COMMA> id = SimpleIdentifier() {list.add(id);}) *
     {
-       return new SqlNodeList(list, getPos());
+       return Pair.of(new SqlNodeList(list, getPos()), null);
     }
 }
 </#if>

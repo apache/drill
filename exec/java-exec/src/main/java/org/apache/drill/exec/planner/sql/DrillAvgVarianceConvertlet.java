@@ -20,11 +20,11 @@ package org.apache.drill.exec.planner.sql;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.fun.SqlAvgAggFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
@@ -42,7 +42,7 @@ import org.apache.calcite.util.Util;
  */
 public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
 
-  private final SqlAvgAggFunction.Subtype subtype;
+  private final SqlKind subtype;
   private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false,
       new SqlReturnTypeInference() {
         @Override
@@ -54,7 +54,7 @@ public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
         }
       }, false);
 
-  public DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype subtype) {
+  public DrillAvgVarianceConvertlet(SqlKind subtype) {
     this.subtype = subtype;
   }
 

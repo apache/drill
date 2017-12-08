@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,16 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -37,15 +39,15 @@ import java.util.List;
 import java.util.Set;
 
 public class HiveDatabaseSchema extends AbstractSchema{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveDatabaseSchema.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveDatabaseSchema.class);
 
   private final HiveSchema hiveSchema;
   private Set<String> tables;
   private final DrillHiveMetaStoreClient mClient;
   private final SchemaConfig schemaConfig;
 
-  public HiveDatabaseSchema( //
-      HiveSchema hiveSchema, //
+  public HiveDatabaseSchema(
+      HiveSchema hiveSchema,
       String name,
       DrillHiveMetaStoreClient mClient,
       SchemaConfig schemaConfig) {
@@ -125,6 +127,17 @@ public class HiveDatabaseSchema extends AbstractSchema{
     @Override
     public Schema.TableType getJdbcTableType() {
       return tableType;
+    }
+
+    @Override
+    public boolean rolledUpColumnValidInsideAgg(String column,
+        SqlCall call, SqlNode parent, CalciteConnectionConfig config) {
+      return true;
+    }
+
+    @Override
+    public boolean isRolledUp(String column) {
+      return false;
     }
   }
 

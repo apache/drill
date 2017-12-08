@@ -36,7 +36,7 @@
     <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
-    <calcite.version>1.13.0-drill-r0</calcite.version>
+    <calcite.version>1.15.0-drill-r0</calcite.version>
     <avatica.version>1.10.0</avatica.version>
     <janino.version>2.7.6</janino.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>

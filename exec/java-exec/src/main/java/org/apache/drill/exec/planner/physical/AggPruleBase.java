@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
 
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.BitSets;
 
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
@@ -71,8 +72,11 @@ public abstract class AggPruleBase extends Prule {
 
     for (AggregateCall aggCall : aggregate.getAggCallList()) {
       String name = aggCall.getAggregation().getName();
-      if ( ! (name.equals("SUM") || name.equals("MIN") || name.equals("MAX") || name.equals("COUNT")
-              || name.equals("$SUM0"))) {
+      if (!(name.equals(SqlKind.SUM.name())
+          || name.equals(SqlKind.MIN.name())
+          || name.equals(SqlKind.MAX.name())
+          || name.equals(SqlKind.COUNT.name())
+          || name.equals("$SUM0"))) {
         return false;
       }
     }

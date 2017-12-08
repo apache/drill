@@ -907,7 +907,7 @@ public class TestWindowFunctions extends BaseTestQuery {
           + " window w1 as (partition by l_suppkey)";
       test(query);
     } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'tpch/nation.parquet.l_suppkey' is not being grouped"));
+      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
     }
 
     try {
@@ -932,7 +932,7 @@ public class TestWindowFunctions extends BaseTestQuery {
           + " window w2 as (partition by n_nationkey)";
       test(query);
     } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'tpch/nation.parquet.n_nationkey' is not being grouped"));
+      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
     }
   }
 }

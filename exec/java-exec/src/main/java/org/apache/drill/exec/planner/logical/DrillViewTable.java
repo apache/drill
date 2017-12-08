@@ -18,11 +18,14 @@
 package org.apache.drill.exec.planner.logical;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.schema.TranslatableTable;
 
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptTable;
@@ -90,5 +93,15 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
   @Override
   public String getViewSql() {
     return view.getSql();
+  }
+
+  @Override
+  public boolean rolledUpColumnValidInsideAgg(String column,
+      SqlCall call, SqlNode parent, CalciteConnectionConfig config) {
+    return true;
+  }
+
+  @Override public boolean isRolledUp(String column) {
+    return false;
   }
 }
