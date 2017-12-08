@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -31,6 +32,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
@@ -55,6 +57,8 @@ import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
+
 @Path("/")
 @PermitAll
 public class DrillRoot {
@@ -68,10 +72,6 @@ public class DrillRoot {
   SecurityContext sc;
   @Inject
   Drillbit drillbit;
-
-  public enum ShutdownMode {
-    forcefulShutdown, gracefulShutdown, quiescent
-  }
 
   @GET
   @Produces(MediaType.TEXT_HTML)
@@ -90,8 +90,7 @@ public class DrillRoot {
     for (DrillbitInfo drillbit : drillbits) {
       drillStatusMap.put(drillbit.getAddress() + "-" + drillbit.getUserPort(), drillbit.getState());
     }
-    Response response = setResponse(drillStatusMap);
-    return response;
+    return setResponse(drillStatusMap);
   }
 
   @SuppressWarnings("resource")
@@ -99,7 +98,6 @@ public class DrillRoot {
   @Path("/gracePeriod")
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, Integer> getGracePeriod() {
-
     final DrillConfig config = work.getContext().getConfig();
     final int gracePeriod = config.getInt(ExecConstants.GRACE_PERIOD);
     Map<String, Integer> gracePeriodMap = new HashMap<String, Integer>();
@@ -125,43 +123,41 @@ public class DrillRoot {
   @Path("/queriesCount")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getRemainingQueries() {
-    Map<String, Integer> queriesInfo = new HashMap<String, Integer>();
-    queriesInfo = work.getRemainingQueries();
-    Response response = setResponse(queriesInfo);
-    return response;
+    Map<String, Integer> queriesInfo = work.getRemainingQueries();
+    return setResponse(queriesInfo);
   }
 
   @SuppressWarnings("resource")
   @POST
   @Path("/gracefulShutdown")
   @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed(ADMIN_ROLE)
   public Response shutdownDrillbit() throws Exception {
     String resp = "Graceful Shutdown request is triggered";
     return shutdown(resp);
-
   }
 
   @SuppressWarnings("resource")
   @POST
   @Path("/shutdown")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response ShutdownForcefully() throws Exception {
+  @RolesAllowed(ADMIN_ROLE)
+  public Response shutdownForcefully() throws Exception {
     drillbit.setForcefulShutdown(true);
     String resp = "Forceful shutdown request is triggered";
     return shutdown(resp);
-
   }
 
   @SuppressWarnings("resource")
   @POST
   @Path("/quiescent")
   @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed(ADMIN_ROLE)
   public Response drillbitToQuiescentMode() throws Exception {
     drillbit.setQuiescentMode(true);
     String resp = "Request to put drillbit in Quiescent mode is triggered";
     return shutdown(resp);
   }
-
 
   @SuppressWarnings("resource")
   @GET
@@ -180,36 +176,59 @@ public class DrillRoot {
             config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED) ||
                     config .getBoolean(ExecConstants.USER_SSL_ENABLED);
     final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
-    // If the user is logged in and is admin user then show the admin user info
-    // For all other cases the user info need-not or should-not be displayed
+
     OptionManager optionManager = work.getContext().getOptionManager();
     final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
-    final String processUser = ImpersonationUtil.getProcessUserName();
-    final String processUserGroups = Joiner.on(", ").join(ImpersonationUtil.getProcessUserGroupNames());
-    String adminUsers = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
-    String adminUserGroups = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
-
     final boolean shouldShowUserInfo = isUserLoggedIn &&
             ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
 
     for (DrillbitEndpoint endpoint : work.getContext().getAvailableBits()) {
       final DrillbitInfo drillbit = new DrillbitInfo(endpoint,
-              currentDrillbit.equals(endpoint),
+              isDrillbitsTheSame(currentDrillbit, endpoint),
               currentVersion.equals(endpoint.getVersion()));
       if (!drillbit.isVersionMatch()) {
         mismatchedVersions.add(drillbit.getVersion());
       }
       drillbits.add(drillbit);
     }
-    logger.debug("Admin info: user: "  + adminUsers +  " user group: " + adminUserGroups +
-            " userLoggedIn "  + isUserLoggedIn + " shouldShowUserInfo: " + shouldShowUserInfo );
+
+    // If the user is logged in and is admin user then show the admin user info
+    // For all other cases the user info need-not or should-not be displayed
+    if (shouldShowUserInfo) {
+      final String processUser = ImpersonationUtil.getProcessUserName();
+      final String processUserGroups = Joiner.on(", ").join(ImpersonationUtil.getProcessUserGroupNames());
+      String adminUsers = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+      String adminUserGroups = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+
+      logger.debug("Admin info: user: "  + adminUsers +  " user group: " + adminUserGroups +
+          " userLoggedIn "  + isUserLoggedIn + " shouldShowUserInfo: " + shouldShowUserInfo );
+
+      return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
+          userEncryptionEnabled, bitEncryptionEnabled, shouldShowUserInfo,
+          QueueInfo.build(dbContext.getResourceManager()),
+          processUser, processUserGroups, adminUsers, adminUserGroups);
+    }
 
     return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
-            userEncryptionEnabled, bitEncryptionEnabled, processUser, processUserGroups, adminUsers,
-            adminUserGroups, shouldShowUserInfo, QueueInfo.build(dbContext.getResourceManager()));
+        userEncryptionEnabled, bitEncryptionEnabled, shouldShowUserInfo,
+        QueueInfo.build(dbContext.getResourceManager()));
   }
 
-  public Response setResponse(Map entity) {
+  /**
+   * Compares two drillbits based on their address and ports (control, data, user).
+   *
+   * @param endpoint1 first drillbit to compare
+   * @param endpoint2 second drillbit to compare
+   * @return true if drillbit are the same
+   */
+  private boolean isDrillbitsTheSame(DrillbitEndpoint endpoint1, DrillbitEndpoint endpoint2) {
+    return endpoint1.getAddress().equals(endpoint2.getAddress()) &&
+        endpoint1.getControlPort() == endpoint2.getControlPort() &&
+        endpoint1.getDataPort() == endpoint2.getDataPort() &&
+        endpoint1.getUserPort() == endpoint2.getUserPort();
+  }
+
+  private Response setResponse(Map entity) {
     return Response.ok()
             .entity(entity)
             .header("Access-Control-Allow-Origin", "*")
@@ -218,7 +237,7 @@ public class DrillRoot {
             .allow("OPTIONS").build();
   }
 
-  public Response shutdown(String resp) throws Exception {
+  private Response shutdown(String resp) throws Exception {
     Map<String, String> shutdownInfo = new HashMap<String, String>();
     new Thread(new Runnable() {
         public void run() {
@@ -230,10 +249,8 @@ public class DrillRoot {
         }
       }).start();
     shutdownInfo.put("response",resp);
-    Response response = setResponse(shutdownInfo);
-    return response;
+    return setResponse(shutdownInfo);
   }
-
 
 /**
  * Pretty-printing wrapper class around the ZK-based queue summary.
@@ -317,18 +334,20 @@ public static class QueueInfo {
 }
 
 @XmlRootElement
+@JsonInclude(JsonInclude.Include.NON_ABSENT)
 public static class ClusterInfo {
   private final Collection<DrillbitInfo> drillbits;
   private final String currentVersion;
   private final Collection<String> mismatchedVersions;
   private final boolean userEncryptionEnabled;
   private final boolean bitEncryptionEnabled;
-  private final String adminUsers;
-  private final String adminUserGroups;
-  private final String processUser;
-  private final String processUserGroups;
   private final boolean shouldShowUserInfo;
   private final QueueInfo queueInfo;
+
+  private String adminUsers;
+  private String adminUserGroups;
+  private String processUser;
+  private String processUserGroups;
 
   @JsonCreator
   public ClusterInfo(Collection<DrillbitInfo> drillbits,
@@ -336,10 +355,6 @@ public static class ClusterInfo {
                      Collection<String> mismatchedVersions,
                      boolean userEncryption,
                      boolean bitEncryption,
-                     String processUser,
-                     String processUserGroups,
-                     String adminUsers,
-                     String adminUserGroups,
                      boolean shouldShowUserInfo,
                      QueueInfo queueInfo) {
     this.drillbits = Sets.newTreeSet(drillbits);
@@ -347,12 +362,27 @@ public static class ClusterInfo {
     this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
     this.userEncryptionEnabled = userEncryption;
     this.bitEncryptionEnabled = bitEncryption;
+    this.shouldShowUserInfo = shouldShowUserInfo;
+    this.queueInfo = queueInfo;
+  }
+
+  @JsonCreator
+  public ClusterInfo(Collection<DrillbitInfo> drillbits,
+                     String currentVersion,
+                     Collection<String> mismatchedVersions,
+                     boolean userEncryption,
+                     boolean bitEncryption,
+                     boolean shouldShowUserInfo,
+                     QueueInfo queueInfo,
+                     String processUser,
+                     String processUserGroups,
+                     String adminUsers,
+                     String adminUserGroups) {
+    this(drillbits, currentVersion, mismatchedVersions, userEncryption, bitEncryption, shouldShowUserInfo, queueInfo);
     this.processUser = processUser;
     this.processUserGroups = processUserGroups;
     this.adminUsers = adminUsers;
     this.adminUserGroups = adminUserGroups;
-    this.shouldShowUserInfo = shouldShowUserInfo;
-    this.queueInfo = queueInfo;
   }
 
   public Collection<DrillbitInfo> getDrillbits() {
