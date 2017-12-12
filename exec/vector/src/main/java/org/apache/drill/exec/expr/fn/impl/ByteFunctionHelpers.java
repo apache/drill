@@ -21,10 +21,11 @@ package org.apache.drill.exec.expr.fn.impl;
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
-import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.util.DecimalUtility;
 
 import com.google.common.primitives.UnsignedLongs;
+
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);
@@ -41,10 +42,7 @@ public class ByteFunctionHelpers {
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
   public static final int equal(final DrillBuf left, int lStart, int lEnd, final DrillBuf right, int rStart, int rEnd){
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      left.checkBytes(lStart, lEnd);
-      right.checkBytes(rStart, rEnd);
-    }
+    rangeCheck(left, lStart, lEnd, right, rStart, rEnd);
     return memEqual(left.memoryAddress(), lStart, lEnd, right.memoryAddress(), rStart, rEnd);
   }
 
@@ -95,10 +93,7 @@ public class ByteFunctionHelpers {
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
   public static final int compare(final DrillBuf left, int lStart, int lEnd, final DrillBuf right, int rStart, int rEnd){
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      left.checkBytes(lStart, lEnd);
-      right.checkBytes(rStart, rEnd);
-    }
+    rangeCheck(left, lStart, lEnd, right, rStart, rEnd);
     return memcmp(left.memoryAddress(), lStart, lEnd, right.memoryAddress(), rStart, rEnd);
   }
 
@@ -150,9 +145,7 @@ public class ByteFunctionHelpers {
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
   public static final int compare(final DrillBuf left, int lStart, int lEnd, final byte[] right, int rStart, final int rEnd) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      left.checkBytes(lStart, lEnd);
-    }
+    rangeCheck(left, lStart, lEnd);
     return memcmp(left.memoryAddress(), lStart, lEnd, right, rStart, rEnd);
   }
 

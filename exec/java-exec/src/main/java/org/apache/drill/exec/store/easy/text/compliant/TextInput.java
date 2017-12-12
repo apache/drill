@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Seekable;
@@ -33,6 +32,8 @@ import org.apache.hadoop.io.compress.CompressionInputStream;
 
 import com.google.common.base.Preconditions;
 import com.univocity.parsers.common.Format;
+
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 /**
  * Class that fronts an InputStream to provide a byte consumption interface.
@@ -301,9 +302,7 @@ final class TextInput {
       throw StreamFinishedPseudoException.INSTANCE;
     }
 
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      buffer.checkBytes(bufferPtr - 1, bufferPtr);
-    }
+    rangeCheck(buffer, bufferPtr - 1, bufferPtr);
 
     byte byteChar = PlatformDependent.getByte(bStartMinus1 + bufferPtr);
 
