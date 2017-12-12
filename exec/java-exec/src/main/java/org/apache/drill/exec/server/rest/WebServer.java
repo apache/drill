@@ -66,6 +66,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.joda.time.DateTime;
 
@@ -161,7 +162,7 @@ public class WebServer implements AutoCloseable {
     int retry = 0;
 
     for (; retry < PORT_HUNT_TRIES; retry++) {
-      embeddedJetty = new Server();
+      embeddedJetty = new Server(new QueuedThreadPool(config.getInt(ExecConstants.WEB_SERVER_MAX_THREADS)));
       embeddedJetty.setHandler(createServletContextHandler(authEnabled));
       embeddedJetty.addConnector(createConnector(port));
 
