@@ -23,10 +23,11 @@ import io.netty.util.internal.PlatformDependent;
 
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.BoundsChecking;
 import org.joda.time.chrono.ISOChronology;
 
 import com.google.common.base.Charsets;
+
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 public class StringFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
@@ -205,9 +206,7 @@ public class StringFunctionHelpers {
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();
 
   public static long getDate(DrillBuf buf, int start, int end){
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      buf.checkBytes(start, end);
-    }
+    rangeCheck(buf, start, end);
     int[] dateFields = memGetDate(buf.memoryAddress(), start, end);
     return CHRONOLOGY.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
   }
