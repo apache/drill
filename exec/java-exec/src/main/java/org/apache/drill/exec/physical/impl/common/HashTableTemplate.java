@@ -578,7 +578,7 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   public int getHashCode(int incomingRowIdx) throws SchemaChangeException {
-    return getHashBuild(incomingRowIdx);
+    return getHashBuild(incomingRowIdx, 0);
   }
 
   /** put() uses the hash code (from gethashCode() above) to insert the key(s) from the incoming
@@ -667,7 +667,8 @@ public abstract class HashTableTemplate implements HashTable {
   // Return -1 if key is not found in the hash table. Otherwise, return the global index of the key
   @Override
   public int containsKey(int incomingRowIdx, boolean isProbe) throws SchemaChangeException {
-    int hash = isProbe ? getHashProbe(incomingRowIdx) : getHashBuild(incomingRowIdx);
+    int seedValue = 0;
+    int hash = isProbe ? getHashProbe(incomingRowIdx, seedValue) : getHashBuild(incomingRowIdx, seedValue);
     int bucketIndex = getBucketIndex(hash, numBuckets());
 
     for ( currentIdxHolder.value = startIndices.getAccessor().get(bucketIndex);
@@ -814,8 +815,8 @@ public abstract class HashTableTemplate implements HashTable {
   // These methods will be code-generated in the context of the outer class
   protected abstract void doSetup(@Named("incomingBuild") RecordBatch incomingBuild, @Named("incomingProbe") RecordBatch incomingProbe) throws SchemaChangeException;
 
-  protected abstract int getHashBuild(@Named("incomingRowIdx") int incomingRowIdx) throws SchemaChangeException;
+  protected abstract int getHashBuild(@Named("incomingRowIdx") int incomingRowIdx, @Named("seedValue") int seedValue) throws SchemaChangeException;
 
-  protected abstract int getHashProbe(@Named("incomingRowIdx") int incomingRowIdx) throws SchemaChangeException;
+  protected abstract int getHashProbe(@Named("incomingRowIdx") int incomingRowIdx, @Named("seedValue") int seedValue) throws SchemaChangeException;
 
 }
