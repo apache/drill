@@ -31,13 +31,25 @@
       <script> window.jQuery  || document.write('<script type="text/javascript" language="javascript" src="../static/js/jquery-3.2.1.min.js">\x3C/script>')
       </script>
       <script src="/static/js/bootstrap.min.js"></script>
+      <script src="/static/js/src-min-noconflict/ace.js"></script>
 
       <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
       <!--[if lt IE 9]>
         <script src="/static/js/html5shiv.js"></script>
         <script src="/static/js/1.4.2/respond.min.js"></script>
       <![endif]-->
-
+<style type="text/css" media="screen">
+ 	     .ace_editor {
+ 		border: 1px solid lightgray;
+ 		margin: auto;
+ 		height: 125px;
+ 		width: 98%;
+ 	  }
+ 	  .scrollmargin {
+ 		height: 80px;
+         text-align: center;
+ 	 }
+      </style>
       <@page_head/>
     </head>
 
