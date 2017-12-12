@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SqlTest;
@@ -32,6 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -751,6 +753,39 @@ public class TestUnionDistinct extends BaseTestQuery {
         .run();
     } finally {
       test(sliceTargetDefault);
+    }
+  }
+
+  @Test
+  public void testUnionWithManyColumns() throws Exception {
+    int columnsCount = 1200;
+    File file = new File(dirTestWatcher.getRootDir(), "union_for_" + columnsCount + "_columns.csv");
+
+    StringBuilder line = new StringBuilder();
+    StringBuilder columns = new StringBuilder();
+
+    for (int i = 0; i <= columnsCount; i++) {
+      line.append(i).append(",");
+      columns.append("columns[").append(i).append("]").append(",");
+    }
+    line.deleteCharAt(line.length() - 1);
+    columns.deleteCharAt(columns.length() - 1);
+
+    try {
+      /*
+      0,1,2...1200
+      0,1,2...1200
+       */
+      FileUtils.writeStringToFile(file, String.format("%1$s\n%1$s", line.toString()));
+
+      /*
+      select columns[0], columns[1] ... columns[1200] from dfs.`union_for_1200_columns.csv`
+      union
+      select columns[0], columns[1] ... columns[1200] from dfs.`union_for_1200_columns.csv`
+       */
+      test("select %1$s from dfs.`%2$s` union select %1$s from dfs.`%2$s`", columns.toString(), file.getName());
+    } finally {
+      FileUtils.deleteQuietly(file);
     }
   }
 

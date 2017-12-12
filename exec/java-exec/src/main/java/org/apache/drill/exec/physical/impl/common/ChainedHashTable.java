@@ -18,13 +18,14 @@
 package org.apache.drill.exec.physical.impl.common;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -154,7 +155,6 @@ public class ChainedHashTable {
 
     ErrorCollector collector = new ErrorCollectorImpl();
     VectorContainer htContainerOrig = new VectorContainer(); // original ht container from which others may be cloned
-    LogicalExpression[] htKeyExprs = new LogicalExpression[htConfig.getKeyExprsBuild().size()];
     TypedFieldId[] htKeyFieldIds = new TypedFieldId[htConfig.getKeyExprsBuild().size()];
 
     int i = 0;
@@ -241,10 +241,10 @@ public class ChainedHashTable {
       return;
     }
 
-    for (int i=0; i<keyExprs.length; i++) {
+    for (int i = 0; i < keyExprs.length; i++) {
       final LogicalExpression expr = keyExprs[i];
       cg.setMappingSet(incomingMapping);
-      HoldingContainer left = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
+      HoldingContainer left = cg.addExpr(expr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
 
       cg.setMappingSet(htableMapping);
       ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
@@ -286,7 +286,7 @@ public class ChainedHashTable {
       boolean useSetSafe = !Types.isFixedWidthType(expr.getMajorType()) || Types.isRepeated(expr.getMajorType());
       ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(htKeyFieldIds[i++], expr, useSetSafe);
 
-      cg.addExpr(vvwExpr, ClassGenerator.BlkCreateMode.FALSE); // this will write to the htContainer at htRowIdx
+      cg.addExpr(vvwExpr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
     }
   }
 
@@ -320,11 +320,22 @@ public class ChainedHashTable {
      * aggregate. For join we need to hash everything as double (both for distribution and for comparison) but
      * for aggregation we can avoid the penalty of casting to double
      */
-    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs), incomingProbe != null);
-    final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
-    HoldingContainer hash = cg.addExpr(materializedExpr);
-    cg.getEvalBlock()._return(hash.getValue());
 
 
+    /*
+      Generate logical expression for each key so expression can be split into blocks if number of expressions in method exceeds upper limit.
+      `seedValue` is used as holder to pass generated seed value for the new methods.
+    */
+    String seedValue = "seedValue";
+    LogicalExpression seed = ValueExpressions.getParameterExpression(seedValue, Types.required(TypeProtos.MinorType.INT));
+
+    for (LogicalExpression expr : keyExprs) {
+      LogicalExpression hashExpression = HashPrelUtil.getHashExpression(expr, seed, incomingProbe != null);
+      LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
+      HoldingContainer hash = cg.addExpr(materializedExpr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
+      cg.getEvalBlock().assign(JExpr.ref(seedValue), hash.getValue());
+    }
+
+    cg.getEvalBlock()._return(JExpr.ref(seedValue));
   }
 }

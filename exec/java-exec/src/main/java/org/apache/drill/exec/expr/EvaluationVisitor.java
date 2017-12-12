@@ -37,6 +37,7 @@ import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
@@ -348,6 +349,28 @@ public class EvaluationVisitor {
         return super.visitUnknown(e, generator);
       }
 
+    }
+
+    /**
+     * <p>
+     * Creates local variable based on given parameter type and name and assigns parameter to this local instance.
+     * </p>
+     *
+     * <p>
+     * Example: <br/>
+     * IntHolder seedValue0 = new IntHolder();<br/>
+     * seedValue0 .value = seedValue;
+     * </p>
+     *
+     * @param e parameter expression
+     * @param generator class generator
+     * @return holder instance
+     */
+    @Override
+    public HoldingContainer visitParameter(ValueExpressions.ParameterExpression e, ClassGenerator<?> generator) {
+      HoldingContainer out = generator.declare(e.getMajorType(), e.getName(), true);
+      generator.getEvalBlock().assign(out.getValue(), JExpr.ref(e.getName()));
+      return out;
     }
 
     private HoldingContainer visitValueVectorWriteExpression(ValueVectorWriteExpression e, ClassGenerator<?> generator) {
