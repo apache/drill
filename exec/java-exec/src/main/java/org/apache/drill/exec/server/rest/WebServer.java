@@ -162,7 +162,7 @@ public class WebServer implements AutoCloseable {
     int retry = 0;
 
     for (; retry < PORT_HUNT_TRIES; retry++) {
-      embeddedJetty = new Server(new QueuedThreadPool(config.getInt(ExecConstants.WEB_SERVER_MAX_THREADS)));
+      embeddedJetty = new Server(new QueuedThreadPool(config.getInt(ExecConstants.WEB_SERVER_THREAD_POOL_MAX)));
       embeddedJetty.setHandler(createServletContextHandler(authEnabled));
       embeddedJetty.addConnector(createConnector(port));
 
