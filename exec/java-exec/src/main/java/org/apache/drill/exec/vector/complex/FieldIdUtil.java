@@ -47,7 +47,13 @@ public class FieldIdUtil {
           return null;
         }
       }
+    } else {
+      if (addToBreadCrumb) {
+        builder.intermediateType(unionVector.getField().getType());
+      }
+      return builder.finalType(unionVector.getField().getType()).build();
     }
+
     return null;
   }
 

@@ -720,4 +720,21 @@ public class TestJsonReader extends BaseTestQuery {
       .baselineValues("1", "2", "1", null, "a")
       .go();
   }
+
+  @Test // DRILL-6020
+  public void testUntypedPathWithUnion() throws Exception {
+    String fileName = "table.json";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"rk\": {\"a\": {\"b\": \"1\"}}}");
+      writer.write("{\"rk\": {\"a\": \"2\"}}");
+    }
+
+    testBuilder()
+      .sqlQuery("select t.rk.a as a from dfs.`%s` t", fileName)
+      .ordered()
+      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
+      .baselineColumns("a")
+      .baselineValues("{\"b\": \"1\"}", "2")
+      .go();
+  }
 }
