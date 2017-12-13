@@ -446,6 +446,61 @@ public class TestSqlPatterns {
     assertEquals(1, sqlPatternComplex.match(0, byteBuffer.limit(), drillBuf)); // should match
   }
 
+  @Test
+  public void testSqlPatternContainsMUltipleMatchers() {
+    final String inputString = "Drill supports a variety of NoSQL databases and file systems, including HBase, MongoDB, MapR-DB, HDFS, MapR-FS, Amazon S3, Azure Blob Storage, Google Cloud Storage, Swift, "
+        + "NAS and local files. A single query can join data from multiple datastores. For example, you can join a user profile collection in MongoDB with a directory of event logs in Hadoop.";
+
+    // Setting the input
+    setDrillBuf(inputString);
+
+    // Matcher with pattern of length I
+    RegexpUtil.SqlPatternInfo patternInfo = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "N");
+    SqlPatternMatcher sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(1, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should match
+
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "&");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(0, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should not match
+
+    // Matcher with pattern of length II
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "SQ");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(1, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should match
+
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "eT");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(0, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should not match
+
+    // Matcher with pattern of length III
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "SQL");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(1, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should match
+
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "cas");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(0, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should not match
+
+    // Matcher with pattern of length 3 < length < 10
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "MongoDB");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(1, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should match
+
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "MongoDz");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(0, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should not match
+
+    // Matcher with pattern of length > 10
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "multiple datastores");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(1, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should match
+
+    patternInfo         = new RegexpUtil.SqlPatternInfo(RegexpUtil.SqlPatternType.CONTAINS, "", "multiple datastorb");
+    sqlPatternContains  = SqlPatternFactory.getSqlPatternMatcher(patternInfo);
+    assertEquals(0, sqlPatternContains.match(0, byteBuffer.limit(), drillBuf)); // should not match
+  }
+
+
   @After
   public void cleanup() {
     drillBuf.close();
