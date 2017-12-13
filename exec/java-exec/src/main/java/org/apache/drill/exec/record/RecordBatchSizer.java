@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Map;
 
@@ -27,6 +30,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
@@ -108,6 +112,10 @@ public class RecordBatchSizer {
     public final float estElementCountPerArray;
     public final boolean isVariableWidth;
 
+    public ColumnSize(ValueVector v) {
+      this(v, "");
+    }
+
     public ColumnSize(ValueVector v, String prefix) {
       this.prefix = prefix;
       valueCount = v.getAccessor().getValueCount();
@@ -124,6 +132,12 @@ public class RecordBatchSizer {
         elementCount = 1;
         estElementCountPerArray = 1;
       }
+
+      if (v instanceof FixedWidthVector) {
+        estSize = ((FixedWidthVector)v).getValueWidth();
+        return;
+      }
+
       switch (metadata.getType().getMinorType()) {
       case LIST:
         buildList(v);
@@ -132,6 +146,9 @@ public class RecordBatchSizer {
       case UNION:
         // No standard size for Union type
         dataSize = v.getPayloadByteCount(valueCount);
+        break;
+      case GENERIC_OBJECT:
+        // We cannot provide a size for Generic Objects
         break;
       default:
         dataSize = v.getPayloadByteCount(valueCount);
@@ -142,7 +159,9 @@ public class RecordBatchSizer {
           stdSize = 0;
         }
       }
-      estSize = safeDivide(dataSize, valueCount);
+
+      // A column should atleast have 1 byte per record
+      estSize = Math.max(safeDivide(dataSize, valueCount), 1);
       netSize = v.getPayloadByteCount(valueCount);
     }
 
@@ -252,8 +271,6 @@ public class RecordBatchSizer {
     return new ColumnSize(v, prefix);
   }
 
-  public static final int MAX_VECTOR_SIZE = ValueVector.MAX_BUFFER_SIZE; // 16 MiB
-
   private Map<String, ColumnSize> columnSizes = CaseInsensitiveMap.newHashMap();
 
   /**
@@ -281,7 +298,6 @@ public class RecordBatchSizer {
    * vectors are partially full; prevents overestimating row width.
    */
   private int netRowWidth;
-  private int netRowWidthCap50;
   private boolean hasSv2;
   private int sv2Size;
   private int avgDensity;
@@ -371,20 +387,6 @@ public class RecordBatchSizer {
     computeEstimates();
   }
 
-  /**
-   *  Round up (if needed) to the next power of 2 (only up to 64)
-   * @param arg Number to round up (must be < 64)
-   * @return power of 2 result
-   */
-  private int roundUpToPowerOf2(int arg) {
-    if ( arg <= 2 ) { return 2; }
-    if ( arg <= 4 ) { return 4; }
-    if ( arg <= 8 ) { return 8; }
-    if ( arg <= 16 ) { return 16; }
-    if ( arg <= 32 ) { return 32; }
-    return 64;
-  }
-
   private void measureColumn(ValueVector v, String prefix) {
 
     ColumnSize colSize = new ColumnSize(v, prefix);
@@ -414,10 +416,8 @@ public class RecordBatchSizer {
         v.collectLedgers(ledgers);
     }
 
+    columnSizes.put(v.getField().getName(), colSize);
     netRowWidth += colSize.estSize;
-    netRowWidthCap50 += ! colSize.isVariableWidth ? colSize.estSize :
-        8 /* offset vector */ + roundUpToPowerOf2(Math.min(colSize.estSize,50));
-        // above change 8 to 4 after DRILL-5446 is fixed
   }
 
   private void expandMap(AbstractMapVector mapVector, String prefix) {
@@ -454,13 +454,6 @@ public class RecordBatchSizer {
   public int netRowWidth() { return netRowWidth; }
   public Map<String, ColumnSize> columns() { return columnSizes; }
 
-  /**
-   * Compute the "real" width of the row, taking into account each varchar column size
-   * (historically capped at 50, and rounded up to power of 2 to match drill buf allocation)
-   * and null marking columns.
-   * @return "real" width of the row
-   */
-  public int netRowWidthCap50() { return netRowWidthCap50 + nullableCount; }
   public long actualSize() { return accountedMemorySize; }
   public boolean hasSv2() { return hasSv2; }
   public int avgDensity() { return avgDensity; }

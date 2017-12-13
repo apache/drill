@@ -34,7 +34,6 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 
 public interface HashAggregator {
-
   TemplateClassDefinition<HashAggregator> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<HashAggregator>(HashAggregator.class, HashAggTemplate.class);
 
@@ -46,8 +45,10 @@ public interface HashAggregator {
   // OK - batch returned, NONE - end of data, RESTART - call again
   enum AggIterOutcome { AGG_OK, AGG_NONE, AGG_RESTART }
 
-  void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing,
-             LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException, ClassTransformationException;
+  void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context,
+             OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing,
+             LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds,
+             VectorContainer outContainer) throws SchemaChangeException, IOException, ClassTransformationException;
 
   IterOutcome getOutcome();
 

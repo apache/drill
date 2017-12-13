@@ -24,6 +24,8 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
 
+import java.util.Map;
+
 public interface HashTable {
   TemplateClassDefinition<HashTable> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(HashTable.class, HashTableTemplate.class);
@@ -69,7 +71,7 @@ public interface HashTable {
 
   void reset();
 
-  void setMaxVarcharSize(int size);
+  void setKeySizes(Map<String, Integer> keySizes);
 
   boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords, int numExpectedRecords);
 }

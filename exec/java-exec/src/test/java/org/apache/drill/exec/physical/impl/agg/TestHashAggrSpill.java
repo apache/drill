@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.physical.impl.agg;
 
-import ch.qos.logback.classic.Level;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
@@ -30,7 +29,6 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.ProfileParser;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.categories.SlowTest;
@@ -53,59 +51,54 @@ public class TestHashAggrSpill extends DrillTest {
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
-    /**
-     *  A template for Hash Aggr spilling tests
-     *
-     * @throws Exception
-     */
-    private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel, boolean fallback ,boolean predict,
-                           String sql, long expectedRows, int cycle, int fromPart, int toPart) throws Exception {
-        LogFixture.LogFixtureBuilder logBuilder = LogFixture.builder()
-          .toConsole()
-          .logger("org.apache.drill", Level.WARN);
+  /**
+   * A template for Hash Aggr spilling tests
+   *
+   * @throws Exception
+   */
+  private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel,
+                         boolean fallback, boolean predict, String sql, long expectedRows,
+                         int cycle, int fromPart, int toPart) throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .sessionOption(ExecConstants.HASHAGG_MAX_MEMORY_KEY, maxMem)
+      .sessionOption(ExecConstants.HASHAGG_NUM_PARTITIONS_KEY, numPartitions)
+      .sessionOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_KEY, minBatches)
+      .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false)
+      .sessionOption(PlannerSettings.FORCE_2PHASE_AGGR_KEY, true)
+      .sessionOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY, fallback)
+      .sessionOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_KEY, predict)
+      .maxParallelization(maxParallel).saveProfiles();
+    String sqlStr = sql != null ? sql :  // if null then use this default query
+      "SELECT empid_s17, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1200K` GROUP BY empid_s17, dept_i, branch_i";
 
-        ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-          .sessionOption(ExecConstants.HASHAGG_MAX_MEMORY_KEY,maxMem)
-          .sessionOption(ExecConstants.HASHAGG_NUM_PARTITIONS_KEY,numPartitions)
-          .sessionOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_KEY,minBatches)
-          .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false)
-          .sessionOption(PlannerSettings.FORCE_2PHASE_AGGR_KEY,true)
-          .sessionOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY, fallback)
-          .sessionOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_KEY,predict)
-          .maxParallelization(maxParallel)
-          .saveProfiles();
-        String sqlStr = sql != null ? sql :  // if null then use this default query
-          "SELECT empid_s17, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1200K` GROUP BY empid_s17, dept_i, branch_i";
+    try (ClusterFixture cluster = builder.build(); ClientFixture client = cluster.clientFixture()) {
+      runAndDump(client, sqlStr, expectedRows, cycle, fromPart, toPart);
+    }
+  }
 
-        try (LogFixture logs = logBuilder.build();
-             ClusterFixture cluster = builder.build();
-             ClientFixture client = cluster.clientFixture()) {
-            runAndDump(client, sqlStr, expectedRows, cycle, fromPart,toPart);
-        }
-    }
-    /**
-     * Test "normal" spilling: Only 2 (or 3) partitions (out of 4) would require spilling
-     * ("normal spill" means spill-cycle = 1 )
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testSimpleHashAggrSpill() throws Exception {
-        testSpill(68_000_000, 16, 2, 2, false, true, null,
-          1_200_000, 1,2, 3
-          );
-    }
-    /**
-     * Test with "needed memory" prediction turned off
-     * (i.e., do exercise code paths that catch OOMs from the Hash Table and recover)
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testNoPredictHashAggrSpill() throws Exception {
-      testSpill(58_000_000, 16, 2, 2, false, false /* no prediction */, null,
-        1_200_000, 1, 1, 1);
-    }
+  /**
+   * Test "normal" spilling: Only 2 (or 3) partitions (out of 4) would require spilling
+   * ("normal spill" means spill-cycle = 1 )
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testSimpleHashAggrSpill() throws Exception {
+    testSpill(68_000_000, 16, 2, 2, false,
+      true, null, 1_200_000, 1, 2, 3);
+  }
+
+  /**
+   * Test with "needed memory" prediction turned off
+   * (i.e., do exercise code paths that catch OOMs from the Hash Table and recover)
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testNoPredictHashAggrSpill() throws Exception {
+    testSpill(58_000_000, 16, 2, 2, false,
+      false /* no prediction */, null, 1_200_000, 1, 1, 3);
+  }
 
   private void runAndDump(ClientFixture client, String sql, long expectedRows, long spillCycle, long fromSpilledPartitions, long toSpilledPartitions) throws Exception {
     QueryBuilder.QuerySummary summary = client.queryBuilder().sql(sql).run();

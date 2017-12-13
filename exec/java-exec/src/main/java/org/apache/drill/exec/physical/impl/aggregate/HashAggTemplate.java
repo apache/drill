@@ -19,8 +19,8 @@ package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
@@ -31,6 +31,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorSerializer.Writer;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -84,13 +85,6 @@ import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_SIZE;
 public abstract class HashAggTemplate implements HashAggregator {
   protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
 
-  private static final int VARIABLE_MAX_WIDTH_VALUE_SIZE = 50;
-  private static final int VARIABLE_MIN_WIDTH_VALUE_SIZE = 8;
-
-  private static final boolean EXTRA_DEBUG_1 = false;
-  private static final boolean EXTRA_DEBUG_2 = false;
-  private static final boolean EXTRA_DEBUG_SPILL = false;
-
   // Fields needed for partitioning (the groups into partitions)
   private int numPartitions = 0; // must be 2 to the power of bitsInMask (set in setup())
   private int partitionMask; // numPartitions - 1
@@ -113,14 +107,11 @@ public abstract class HashAggTemplate implements HashAggregator {
   private boolean retrySameIndex = false; // in case put failed during 1st phase - need to output early, then retry
   private boolean useMemoryPrediction = false; // whether to use memory prediction to decide when to spill
   private long estMaxBatchSize = 0; // used for adjusting #partitions and deciding when to spill
-  private long estRowWidth = 0; // the size of the internal "row" (keys + values + extra columns)
-  private long estValuesRowWidth = 0; // the size of the internal values ( values + extra )
   private long estOutputRowWidth = 0; // the size of the output "row" (no extra columns)
   private long estValuesBatchSize = 0; // used for "reserving" memory for the Values batch to overcome an OOM
   private long estOutgoingAllocSize = 0; // used for "reserving" memory for the Outgoing Output Values to overcome an OOM
   private long reserveValueBatchMemory; // keep "reserve memory" for Values Batch
   private long reserveOutgoingMemory; // keep "reserve memory" for the Outgoing (Values only) output
-  private int maxColumnWidth = VARIABLE_MIN_WIDTH_VALUE_SIZE; // to control memory allocation for varchars
   private long minBatchesPerPartition; // for tuning - num partitions and spill decision
   private long plannedBatches = 0; // account for planned, but not yet allocated batches
 
@@ -140,6 +131,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private OperatorContext oContext;
   private BufferAllocator allocator;
 
+  private Map<String, Integer> keySizes;
   private HashTable htables[];
   private ArrayList<BatchHolder> batchHolders[];
   private int outBatchIndex[];
@@ -156,7 +148,6 @@ public abstract class HashAggTemplate implements HashAggregator {
   private static class SpilledPartition { public int spilledBatches; public String spillFile; int cycleNum; int origPartn; int prevOrigPartn; }
 
   private ArrayList<SpilledPartition> spilledPartitionsList;
-  private int operatorId; // for the spill file name
 
   private IndexPointer htIdxHolder; // holder for the Hashtable's internal index returned by put()
   private IndexPointer outStartIdxHolder;
@@ -215,6 +206,7 @@ public abstract class HashAggTemplate implements HashAggregator {
           MaterializedField outputField = materializedValueFields[i];
           // Create a type-specific ValueVector for this value
           vector = TypeHelper.getNewVector(outputField, allocator);
+          int columnSize = new RecordBatchSizer.ColumnSize(vector).estSize;
 
           // Try to allocate space to store BATCH_SIZE records. Key stored at index i in HashTable has its workspace
           // variables (such as count, sum etc) stored at index i in HashAgg. HashTable and HashAgg both have
@@ -226,7 +218,7 @@ public abstract class HashAggTemplate implements HashAggregator {
             ((FixedWidthVector) vector).allocateNew(HashTable.BATCH_SIZE);
           } else if (vector instanceof VariableWidthVector) {
             // This case is never used .... a varchar falls under ObjectVector which is allocated on the heap !
-            ((VariableWidthVector) vector).allocateNew(maxColumnWidth, HashTable.BATCH_SIZE);
+            ((VariableWidthVector) vector).allocateNew(columnSize, HashTable.BATCH_SIZE);
           } else if (vector instanceof ObjectVector) {
             ((ObjectVector) vector).allocateNew(HashTable.BATCH_SIZE);
           } else {
@@ -263,9 +255,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       for (int i = batchOutputCount; i <= maxOccupiedIdx; i++) {
         try { outputRecordValues(i, batchOutputCount); }
         catch (SchemaChangeException sc) { throw new UnsupportedOperationException(sc);}
-        if (EXTRA_DEBUG_2) {
-          logger.debug("Outputting values to output index: {}", batchOutputCount);
-        }
+        logger.debug("Outputting values to output index: {}", batchOutputCount);
         batchOutputCount++;
         outNumRecordsHolder.value++;
       }
@@ -300,9 +290,11 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   @Override
-  public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext,
-                    RecordBatch incoming, HashAggBatch outgoing, LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds,
-                    TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException {
+  public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig,
+                    FragmentContext context, OperatorContext oContext,
+                    RecordBatch incoming, HashAggBatch outgoing,
+                    LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds,
+                    TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer) throws SchemaChangeException, IOException {
 
     if (valueExprs == null || valueFieldIds == null) {
       throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
@@ -318,7 +310,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.incoming = incoming;
     this.outgoing = outgoing;
     this.outContainer = outContainer;
-    this.operatorId = hashAggrConfig.getOperatorId();
     this.useMemoryPrediction = context.getOptions().getOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_VALIDATOR);
 
     is2ndPhase = hashAggrConfig.getAggPhase() == AggPrelBase.OperatorPhase.PHASE_2of2;
@@ -374,10 +365,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.groupByOutFieldIds = groupByOutFieldIds; // retain these for delayedSetup, and to allow recreating hash tables (after a spill)
     numGroupByOutFields = groupByOutFieldIds.length;
 
-    // Start calculating the row widths (with the extra columns; the rest would be done in updateEstMaxBatchSize() )
-    estRowWidth = extraRowBytes;
-    estValuesRowWidth = extraRowBytes;
-
     doSetup(incoming);
   }
 
@@ -397,11 +384,9 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
     numPartitions = BaseAllocator.nextPowerOfTwo(numPartitions); // in case not a power of 2
 
-    if ( schema == null ) { estValuesBatchSize = estOutgoingAllocSize = estMaxBatchSize = 0; } // incoming was an empty batch
-    else {
-      // Estimate the max batch size; should use actual data (e.g. lengths of varchars)
-      updateEstMaxBatchSize(incoming);
-    }
+    // Estimate the max batch size; should use actual data (e.g. lengths of varchars)
+    updateEstMaxBatchSize(incoming);
+
     // create "reserved memory" and adjust the memory limit down
     reserveValueBatchMemory = reserveOutgoingMemory = estValuesBatchSize ;
     long newMemoryLimit = allocator.getLimit() - reserveValueBatchMemory - reserveOutgoingMemory ;
@@ -465,7 +450,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     for (int i = 0; i < numPartitions; i++ ) {
       try {
         this.htables[i] = baseHashTable.createAndSetupHashTable(groupByOutFieldIds, numPartitions);
-        this.htables[i].setMaxVarcharSize(maxColumnWidth);
+        this.htables[i].setKeySizes(keySizes);
       } catch (ClassTransformationException e) {
         throw UserException.unsupportedError(e)
             .message("Code generation error - likely an error in the code.")
@@ -516,43 +501,48 @@ public abstract class HashAggTemplate implements HashAggregator {
    * @param incoming
    */
   private void updateEstMaxBatchSize(RecordBatch incoming) {
-    if ( estMaxBatchSize > 0 ) { return; }  // no handling of a schema (or varchar) change
     // Use the sizer to get the input row width and the length of the longest varchar column
-    RecordBatchSizer sizer = new RecordBatchSizer(incoming);
-    logger.trace("Incoming sizer: {}",sizer);
-    // An empty batch only has the schema, can not tell actual length of varchars
-    // else use the actual varchars length, each capped at 50 (to match the space allocation)
-    long estInputRowWidth = sizer.rowCount() == 0 ? sizer.stdRowWidth() : sizer.netRowWidthCap50();
+    final RecordBatchSizer incomingColumnSizes = new RecordBatchSizer(incoming);
+    final Map<String, RecordBatchSizer.ColumnSize> columnSizeMap = incomingColumnSizes.columns();
+    keySizes = CaseInsensitiveMap.newHashMap();
 
-    // Get approx max (varchar) column width to get better memory allocation
-    maxColumnWidth = Math.max(sizer.maxAvgColumnSize(), VARIABLE_MIN_WIDTH_VALUE_SIZE);
-    maxColumnWidth = Math.min(maxColumnWidth, VARIABLE_MAX_WIDTH_VALUE_SIZE);
+    logger.trace("Incoming sizer: {}",incomingColumnSizes);
 
-    //
     // Calculate the estimated max (internal) batch (i.e. Keys batch + Values batch) size
     // (which is used to decide when to spill)
     // Also calculate the values batch size (used as a reserve to overcome an OOM)
-    //
-    Iterator<VectorWrapper<?>> outgoingIter = outContainer.iterator();
-    int fieldId = 0;
-    while (outgoingIter.hasNext()) {
-      ValueVector vv = outgoingIter.next().getValueVector();
-      MaterializedField mr = vv.getField();
-      int fieldSize = vv instanceof VariableWidthVector ? maxColumnWidth :
-          TypeHelper.getSize(mr.getType());
-      estRowWidth += fieldSize;
-      estOutputRowWidth += fieldSize;
-      if ( fieldId < numGroupByOutFields ) { fieldId++; }
-      else { estValuesRowWidth += fieldSize; }
+
+    for (int columnIndex = 0; columnIndex < numGroupByOutFields; columnIndex++) {
+      final VectorWrapper vectorWrapper = outContainer.getValueVector(columnIndex);
+      final String columnName = vectorWrapper.getField().getName();
+      final int columnSize = columnSizeMap.get(columnName).estSize;
+      keySizes.put(columnName, columnSize);
+      estOutputRowWidth += columnSize;
     }
+
+    long estValuesRowWidth = 0;
+
+    for (int columnIndex = numGroupByOutFields; columnIndex < outContainer.getNumberOfColumns(); columnIndex++) {
+      VectorWrapper vectorWrapper = outContainer.getValueVector(columnIndex);
+      RecordBatchSizer.ColumnSize columnSize = new RecordBatchSizer.ColumnSize(vectorWrapper.getValueVector());
+      estOutputRowWidth += columnSize.estSize;
+      estValuesRowWidth += columnSize.estSize;
+    }
+
     // multiply by the max number of rows in a batch to get the final estimated max size
-    estMaxBatchSize = Math.max(estRowWidth, estInputRowWidth) * MAX_BATCH_SIZE;
+    estMaxBatchSize = Math.max(estOutputRowWidth, 1) * MAX_BATCH_SIZE;
     // (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
+    // Note: estValuesBatchSize cannot be 0 because a zero value for estValuesBatchSize will cause reserveValueBatchMemory to have a value of 0. And the meaning
+    // of a reserveValueBatchMemory value of 0 has multiple meanings in different contexts. So estValuesBatchSize has an enforced minimum value of 1, without this
+    // estValuesBatchsize could have a value of 0 in the case were there are no value columns and all the columns are key columns.
     estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_SIZE;
     estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
 
-    logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}  max column width: {}",
-        isTwoPhase?(is2ndPhase?"2nd":"1st"):"Single",estRowWidth,estValuesRowWidth,estMaxBatchSize,allocator.getLimit(),maxColumnWidth);
+    if (logger.isTraceEnabled()) {
+      logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}",
+        isTwoPhase ? (is2ndPhase ? "2nd" : "1st") : "Single",
+        estOutputRowWidth, estValuesRowWidth, estMaxBatchSize, allocator.getLimit());
+    }
 
     if ( estMaxBatchSize > allocator.getLimit() ) {
       logger.warn("HashAggregate: Estimated max batch size {} is larger than the memory limit {}",estMaxBatchSize,allocator.getLimit());
@@ -579,16 +569,11 @@ public abstract class HashAggTemplate implements HashAggregator {
         delayedSetup();
       }
 
-      //
-      //  loop through existing records in this batch, aggregating the values as necessary.
-      //
-      if (EXTRA_DEBUG_1) {
-        logger.debug("Starting outer loop of doWork()...");
-      }
+      // loop through existing records in this batch, aggregating the values as necessary.
+      logger.debug("Starting outer loop of doWork()...");
+
       while (underlyingIndex < currentBatchRecordCount) {
-        if (EXTRA_DEBUG_2) {
-          logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
-        }
+        logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
         checkGroupAndAggrValues(currentIndex);
 
         if ( retrySameIndex ) { retrySameIndex = false; }  // need to retry this row (e.g. we had an OOM)
@@ -596,15 +581,13 @@ public abstract class HashAggTemplate implements HashAggregator {
 
         // If adding a group discovered a memory pressure during 1st phase, then start
         // outputing some partition downstream in order to free memory.
-        if ( earlyOutput ) {
+        if (earlyOutput) {
           outputCurrentBatch();
           return AggOutcome.RETURN_OUTCOME;
         }
       }
 
-      if (EXTRA_DEBUG_1) {
-        logger.debug("Processed {} records", underlyingIndex);
-      }
+      logger.debug("Processed {} records", underlyingIndex);
 
       // Cleanup the previous batch since we are done processing it.
       for (VectorWrapper<?> v : incoming) {
@@ -627,14 +610,12 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       // If incoming batch is bigger than our estimate - adjust the estimate to match
       if ( estMaxBatchSize < incomingBatchSize) {
-        logger.debug("Found a bigger next {} batch: {} , prior estimate was: {}, mem allocated {}",handlingSpills ? "spill" : "incoming",
+        logger.debug("Found a bigger next {} batch: {} , prior estimate was: {}, mem allocated {}", handlingSpills ? "spill" : "incoming",
             incomingBatchSize, estMaxBatchSize, memAllocAfterNext);
         estMaxBatchSize = incomingBatchSize;
       }
 
-      if (EXTRA_DEBUG_1) {
-        logger.debug("Received IterOutcome of {}", outcome);
-      }
+      logger.debug("Received IterOutcome of {}", outcome);
 
       // Handle various results from getting the next batch
       switch (outcome) {
@@ -643,9 +624,7 @@ public abstract class HashAggTemplate implements HashAggregator {
           return AggOutcome.RETURN_OUTCOME;
 
         case OK_NEW_SCHEMA:
-          if (EXTRA_DEBUG_1) {
-            logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
-          }
+          logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
           this.cleanup();
           // TODO: new schema case needs to be handled appropriately
           return AggOutcome.UPDATE_AGGREGATOR;
@@ -655,9 +634,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
           resetIndex(); // initialize index (a new batch needs to be processed)
 
-          if (EXTRA_DEBUG_1) {
-            logger.debug("Continue to start processing the next batch");
-          }
+          logger.debug("Continue to start processing the next batch");
           break;
 
         case NONE:
@@ -733,22 +710,17 @@ public abstract class HashAggTemplate implements HashAggregator {
    * @param records
    */
   private void allocateOutgoing(int records) {
-    // Skip the keys and only allocate for outputting the workspace values
-    // (keys will be output through splitAndTransfer)
-    Iterator<VectorWrapper<?>> outgoingIter = outContainer.iterator();
-    for (int i = 0; i < numGroupByOutFields; i++) {
-      outgoingIter.next();
-    }
-
     // try to preempt an OOM by using the reserved memory
     useReservedOutgoingMemory();
     long allocatedBefore = allocator.getAllocatedMemory();
 
-    while (outgoingIter.hasNext()) {
+    for (int columnIndex = numGroupByOutFields; columnIndex < outContainer.getNumberOfColumns(); columnIndex++) {
+      final VectorWrapper wrapper = outContainer.getValueVector(columnIndex);
       @SuppressWarnings("resource")
-      ValueVector vv = outgoingIter.next().getValueVector();
+      final ValueVector vv = wrapper.getValueVector();
 
-      AllocationHelper.allocatePrecomputedChildCount(vv, records, maxColumnWidth, 0);
+      int columnSize = new RecordBatchSizer.ColumnSize(wrapper.getValueVector()).estSize;
+      AllocationHelper.allocatePrecomputedChildCount(vv, records, columnSize, 0);
     }
 
     long memAdded = allocator.getAllocatedMemory() - allocatedBefore;
@@ -816,7 +788,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     if ( newIncoming != null ) { newIncoming.close();  }
     spillSet.close(); // delete the spill directory(ies)
     htIdxHolder = null;
-    materializedValueFields = null;
     outStartIdxHolder = null;
     outNumRecordsHolder = null;
   }
@@ -920,9 +891,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     ArrayList<BatchHolder> currPartition = batchHolders[part];
     rowsInPartition = 0;
-    if ( EXTRA_DEBUG_SPILL ) {
-      logger.debug("HashAggregate: Spilling partition {} current cycle {} part size {}", part, cycleNum, currPartition.size());
-    }
+    logger.debug("HashAggregate: Spilling partition {} current cycle {} part size {}", part, cycleNum, currPartition.size());
 
     if ( currPartition.size() == 0 ) { return; } // in case empty - nothing to spill
 
@@ -956,21 +925,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       this.htables[part].outputKeys(currOutBatchIndex, this.outContainer, outStartIdxHolder.value, outNumRecordsHolder.value, numPendingOutput);
 
       // set the value count for outgoing batch value vectors
-      /* int i = 0; */
       for (VectorWrapper<?> v : outgoing) {
         v.getValueVector().getMutator().setValueCount(numOutputRecords);
-        /*
-        // print out the first row to be spilled ( varchar, varchar, bigint )
-        try {
-          if (i++ < 2) {
-            NullableVarCharVector vv = ((NullableVarCharVector) v.getValueVector());
-            logger.info("FIRST ROW = {}", vv.getAccessor().get(0));
-          } else {
-            NullableBigIntVector vv = ((NullableBigIntVector) v.getValueVector());
-            logger.info("FIRST ROW = {}", vv.getAccessor().get(0));
-          }
-        } catch (Exception e) { logger.info("While printing the first row - Got an exception = {}",e); }
-        */
       }
 
       outContainer.setRecordCount(numPendingOutput);
@@ -997,7 +953,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     BatchHolder bh = newBatchHolder();
     batchHolders[part].add(bh);
-    if (EXTRA_DEBUG_1) {
+    if (logger.isDebugEnabled()) {
       logger.debug("HashAggregate: Added new batch; num batches = {}.", batchHolders[part].size());
     }
 
@@ -1103,10 +1059,8 @@ public abstract class HashAggTemplate implements HashAggregator {
           if ( cycleNum == 4 ) { logger.warn("QUATERNARY SPILLING "); }
           if ( cycleNum == 5 ) { logger.warn("QUINARY SPILLING "); }
         }
-        if ( EXTRA_DEBUG_SPILL ) {
-          logger.debug("Start reading spilled partition {} (prev {}) from cycle {} (with {} batches). More {} spilled partitions left.",
+        logger.debug("Start reading spilled partition {} (prev {}) from cycle {} (with {} batches). More {} spilled partitions left.",
               sp.origPartn, sp.prevOrigPartn, sp.cycleNum, sp.spilledBatches, spilledPartitionsList.size());
-        }
         return AggIterOutcome.AGG_RESTART;
       }
 
@@ -1128,11 +1082,11 @@ public abstract class HashAggTemplate implements HashAggregator {
     currPartition.get(currOutBatchIndex).outputValues(outStartIdxHolder, outNumRecordsHolder);
     int numOutputRecords = outNumRecordsHolder.value;
 
-    if (EXTRA_DEBUG_1) {
-      logger.debug("After output values: outStartIdx = {}, outNumRecords = {}", outStartIdxHolder.value, outNumRecordsHolder.value);
-    }
+    logger.debug("After output values: outStartIdx = {}, outNumRecords = {}", outStartIdxHolder.value, outNumRecordsHolder.value);
 
-    this.htables[partitionToReturn].outputKeys(currOutBatchIndex, this.outContainer, outStartIdxHolder.value, outNumRecordsHolder.value, numPendingOutput);
+    this.htables[partitionToReturn].outputKeys(currOutBatchIndex, outContainer, outStartIdxHolder.value, outNumRecordsHolder.value, numPendingOutput);
+
+    outContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
     // set the value count for outgoing batch value vectors
     for (VectorWrapper<?> v : outgoing) {
@@ -1141,18 +1095,15 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     this.outcome = IterOutcome.OK;
 
-    if ( EXTRA_DEBUG_SPILL && is2ndPhase ) {
-      logger.debug("So far returned {} + SpilledReturned {}  total {} (spilled {})",rowsNotSpilled,rowsSpilledReturned,
-        rowsNotSpilled+rowsSpilledReturned,
-        rowsSpilled);
-    }
+    logger.debug("So far returned {} + SpilledReturned {}  total {} (spilled {})",
+      rowsNotSpilled, rowsSpilledReturned, rowsNotSpilled + rowsSpilledReturned, rowsSpilled);
 
     lastBatchOutputCount = numOutputRecords;
     outBatchIndex[partitionToReturn]++;
     // if just flushed the last batch in the partition
     if (outBatchIndex[partitionToReturn] == currPartition.size()) {
 
-      if ( EXTRA_DEBUG_SPILL ) {
+      if (logger.isDebugEnabled()) {
         logger.debug("HashAggregate: {} Flushed partition {} with {} batches total {} rows",
             earlyOutput ? "(Early)" : "",
             partitionToReturn, outBatchIndex[partitionToReturn], rowsInPartition);
@@ -1164,7 +1115,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       if ( earlyOutput ) {
 
-        if ( EXTRA_DEBUG_SPILL ) {
+        if ( logger.isDebugEnabled() ) {
           logger.debug("HASH AGG: Finished (early) re-init partition {}, mem allocated: {}", earlyPartition, allocator.getAllocatedMemory());
         }
         outBatchIndex[earlyPartition] = 0; // reset, for next time
@@ -1229,37 +1180,10 @@ public abstract class HashAggTemplate implements HashAggregator {
     assert incomingRowIdx >= 0;
     assert ! earlyOutput;
 
-    /** for debugging
-     Object tmp = (incoming).getValueAccessorById(0, BigIntVector.class).getValueVector();
-     BigIntVector vv0 = null;
-     BigIntHolder holder = null;
-
-     if (tmp != null) {
-     vv0 = ((BigIntVector) tmp);
-     holder = new BigIntHolder();
-     holder.value = vv0.getAccessor().get(incomingRowIdx) ;
-     }
-     */
-    /*
-    if ( handlingSpills && ( incomingRowIdx == 0 ) ) {
-      // for debugging -- show the first row from a spilled batch
-      Object tmp0 = (incoming).getValueAccessorById(NullableVarCharVector.class, 0).getValueVector();
-      Object tmp1 = (incoming).getValueAccessorById(NullableVarCharVector.class, 1).getValueVector();
-      Object tmp2 = (incoming).getValueAccessorById(NullableBigIntVector.class, 2).getValueVector();
-
-      if (tmp0 != null && tmp1 != null && tmp2 != null) {
-        NullableVarCharVector vv0 = ((NullableVarCharVector) tmp0);
-        NullableVarCharVector vv1 = ((NullableVarCharVector) tmp1);
-        NullableBigIntVector  vv2 = ((NullableBigIntVector) tmp2);
-        logger.debug("The first row = {} , {} , {}", vv0.getAccessor().get(incomingRowIdx), vv1.getAccessor().get(incomingRowIdx), vv2.getAccessor().get(incomingRowIdx));
-      }
-    }
-    */
     // The hash code is computed once, then its lower bits are used to determine the
     // partition to use, and the higher bits determine the location in the hash table.
     int hashCode;
     try {
-      // htables[0].updateBatches();
       hashCode = htables[0].getHashCode(incomingRowIdx);
     } catch (SchemaChangeException e) {
       throw new UnsupportedOperationException("Unexpected schema change", e);
@@ -1293,7 +1217,6 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     } catch (RetryAfterSpillException re) {
       if ( ! canSpill ) { throw new OutOfMemoryException(getOOMErrorMsg("Can not spill")); }
-
       logger.trace("HT put failed with an OOM, trying to {} a partition and retry Hash Table put() again.",
             is1stPhase ? "early return" : "spill");
 
@@ -1455,10 +1378,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         // 1st phase need to return a partition early in order to free some memory
         earlyOutput = true;
         earlyPartition = victimPartition;
-
-        if ( EXTRA_DEBUG_SPILL ) {
-          logger.debug("picked partition {} for early output", victimPartition);
-        }
+        logger.debug("picked partition {} for early output", victimPartition);
       }
     }
   }

@@ -19,9 +19,13 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.inject.Named;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -45,6 +49,9 @@ public abstract class HashTableTemplate implements HashTable {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashTable.class);
   private static final boolean EXTRA_DEBUG = false;
+
+  // TODO remove these defaults. We should require key sizes to be specified.
+  private static final int DEFAULT_VAR_CHAR_SIZE = 8;
 
   private static final int EMPTY_SLOT = -1;
 
@@ -99,7 +106,7 @@ public abstract class HashTableTemplate implements HashTable {
 
   private int resizingTime = 0;
 
-  private int maxVarcharSize = 8; // for varchar allocation
+  private Map<String, Integer> keySizes; // for varchar allocation
 
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
@@ -117,7 +124,6 @@ public abstract class HashTableTemplate implements HashTable {
     private IntVector hashValues;
 
     private int maxOccupiedIdx = -1;
-//    private int batchOutputCount = 0;
 
     private int batchIndex = 0;
 
@@ -129,7 +135,8 @@ public abstract class HashTableTemplate implements HashTable {
       boolean success = false;
       try {
         for (VectorWrapper<?> w : htContainerOrig) {
-          ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
+          final ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
+          final String name = vv.getField().getName();
           htContainer.add(vv); // add to container before actual allocation (to allow clearing in case of an OOM)
 
           // Capacity for "hashValues" and "links" vectors is BATCH_SIZE records. It is better to allocate space for
@@ -140,9 +147,10 @@ public abstract class HashTableTemplate implements HashTable {
           if (vv instanceof FixedWidthVector) {
             ((FixedWidthVector) vv).allocateNew(BATCH_SIZE);
           } else if (vv instanceof VariableWidthVector) {
+            final int keySize = getKeySize(name, DEFAULT_VAR_CHAR_SIZE);
             long beforeMem = allocator.getAllocatedMemory();
-            ((VariableWidthVector) vv).allocateNew(maxVarcharSize * BATCH_SIZE, BATCH_SIZE);
-            logger.trace("HT allocated {} for varchar of max width {}",allocator.getAllocatedMemory() - beforeMem, maxVarcharSize);
+            ((VariableWidthVector) vv).allocateNew(keySize * BATCH_SIZE, BATCH_SIZE);
+            logger.trace("HT allocated {} for varchar size {}",allocator.getAllocatedMemory() - beforeMem, keySize);
           } else {
             vv.allocateNew();
           }
@@ -157,6 +165,22 @@ public abstract class HashTableTemplate implements HashTable {
           if (links != null) { links.clear();}
         }
       }
+    }
+
+    private int getKeySize(final String name, final int defaultSize)
+    {
+      if (keySizes == null) {
+        return defaultSize;
+      }
+
+      final Integer size = keySizes.get(name);
+
+      if (size == null) {
+        final String message = String.format(keySizes + " Could not find size for column %s", name);
+        throw new IllegalStateException(message);
+      }
+
+      return size;
     }
 
     private void init(IntVector links, IntVector hashValues, int size) {
@@ -323,12 +347,6 @@ public abstract class HashTableTemplate implements HashTable {
     }
 
     private boolean outputKeys(VectorContainer outContainer, int outStartIndex, int numRecords, int numExpectedRecords) {
-
-      /** for debugging
-      BigIntVector vv0 = getValueVector(0);
-      BigIntHolder holder = new BigIntHolder();
-      */
-
       // set the value count for htContainer's value vectors before the transfer ..
       setValueCount();
 
@@ -352,26 +370,6 @@ public abstract class HashTableTemplate implements HashTable {
         }
       }
 
-/*
-      logger.debug("Attempting to output keys for batch index: {} from index {} to maxOccupiedIndex {}.",
-      this.batchIndex, 0, maxOccupiedIdx);
-      for (int i = batchOutputCount; i <= maxOccupiedIdx; i++) {
-        if (outputRecordKeys(i, batchOutputCount) ) {
-          if (EXTRA_DEBUG) logger.debug("Outputting keys to output index: {}", batchOutputCount) ;
-
-          // debugging
-          // holder.value = vv0.getAccessor().get(i);
-          // if (holder.value == 100018 || holder.value == 100021) {
-          //  logger.debug("Outputting key = {} at index - {} to outgoing index = {}.", holder.value, i,
-          //      batchOutputCount);
-          // }
-
-          batchOutputCount++;
-        } else {
-          return false;
-        }
-      }
- */
       return true;
     }
 
@@ -805,7 +803,12 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   @Override
-  public void setMaxVarcharSize(int size) { maxVarcharSize = size; }
+  public void setKeySizes(Map<String, Integer> keySizes) {
+    Preconditions.checkNotNull(keySizes);
+
+    this.keySizes = CaseInsensitiveMap.newHashMap();
+    this.keySizes.putAll(keySizes);
+  }
 
   // These methods will be code-generated in the context of the outer class
   protected abstract void doSetup(@Named("incomingBuild") RecordBatch incomingBuild, @Named("incomingProbe") RecordBatch incomingProbe) throws SchemaChangeException;

@@ -211,6 +211,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     data.setZero(0, data.capacity());
   }
 
+  @Override
+  public int getValueWidth() {
+    return VALUE_WIDTH;
+  }
+
   public void copyFrom(int inIndex, int outIndex, BitVector from) {
     this.mutator.set(outIndex, from.accessor.get(inIndex));
   }

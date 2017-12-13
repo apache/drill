@@ -92,6 +92,11 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
   }
 
   @Override
+  public int getValueWidth() {
+    return VALUE_WIDTH;
+  }
+
+  @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
     Preconditions.checkArgument(this.field.getName().equals(metadata.getNamePart().getName()),
         "The field %s doesn't match the provided metadata %s.", this.field, metadata);
