@@ -230,7 +230,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     @Override
     public RelNode convert(RelNode in) {
       return new JdbcDrel(in.getCluster(), in.getTraitSet().replace(DrillRel.DRILL_LOGICAL),
-          convert(in, in.getTraitSet().replace(this.getInTrait())));
+          convert(in, in.getTraitSet().replace(this.getInTrait()).simplify()));
     }
 
   }

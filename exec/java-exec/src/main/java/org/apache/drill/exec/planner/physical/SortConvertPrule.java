@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.convert.ConverterRule;
@@ -47,9 +48,10 @@ public class SortConvertPrule extends ConverterRule {
   @Override
   public RelNode convert(RelNode r) {
     Sort rel = (Sort) r;
+    RelTraitSet traits = rel.getInput().getTraitSet().replace(Prel.DRILL_PHYSICAL);
     return new SortPrel(rel.getCluster(),
-                        rel.getInput().getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(rel.getCollation()),
-                        convert(rel.getInput(), rel.getInput().getTraitSet().replace(Prel.DRILL_PHYSICAL)),
+                        traits.plus(rel.getCollation()),
+                        convert(rel.getInput(), traits.simplify()),
                         rel.getCollation());
   }
 }

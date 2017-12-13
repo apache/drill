@@ -65,7 +65,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
     public RelNode convert(RelNode rel) {
       LogicalProject project = (LogicalProject) rel;
       return new JdbcRules.JdbcProject(rel.getCluster(), rel.getTraitSet().replace(this.out), convert(
-          project.getInput(), project.getInput().getTraitSet().replace(this.out)), project.getProjects(),
+          project.getInput(), project.getInput().getTraitSet().replace(this.out).simplify()), project.getProjects(),
           project.getRowType());
     }
 
@@ -97,7 +97,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
       LogicalFilter filter = (LogicalFilter) rel;
 
       return new JdbcRules.JdbcFilter(rel.getCluster(), rel.getTraitSet().replace(this.out), convert(filter.getInput(),
-          filter.getInput().getTraitSet().replace(this.out)), filter.getCondition());
+          filter.getInput().getTraitSet().replace(this.out).simplify()), filter.getCondition());
     }
 
     @Override

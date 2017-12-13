@@ -37,7 +37,7 @@ public class DrillWindowRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     final Window window = call.rel(0);
     final RelNode input = call.rel(1);
-    final RelTraitSet traits = window.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
+    final RelTraitSet traits = window.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify();
     final RelNode convertedInput = convert(input, traits);
     call.transformTo(
         new DrillWindowRel(

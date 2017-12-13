@@ -41,7 +41,7 @@ public abstract class Prule extends RelOptRule {
       toTraits = toTraits.replace(DrillDistributionTrait.ANY);
     }
 
-    return RelOptRule.convert(rel, toTraits);
+    return RelOptRule.convert(rel, toTraits.simplify());
   }
 
   public static boolean isSingleMode(RelOptRuleCall call) {
