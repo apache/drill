@@ -35,6 +35,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.drill.exec.util.JsonStringHashMap;
+import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -718,6 +720,27 @@ public class TestJsonReader extends BaseTestQuery {
       .unOrdered()
       .baselineColumns("a", "b", "c", "d", "e")
       .baselineValues("1", "2", "1", null, "a")
+      .go();
+  }
+
+  @Test // DRILL-6020
+  public void testUntypedPathWithUnion() throws Exception {
+    String fileName = "table.json";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"rk\": {\"a\": {\"b\": \"1\"}}}");
+      writer.write("{\"rk\": {\"a\": \"2\"}}");
+    }
+
+    JsonStringHashMap<String, Text> map = new JsonStringHashMap<>();
+    map.put("b", new Text("1"));
+
+    testBuilder()
+      .sqlQuery("select t.rk.a as a from dfs.`%s` t", fileName)
+      .ordered()
+      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
+      .baselineColumns("a")
+      .baselineValues(map)
+      .baselineValues("2")
       .go();
   }
 }

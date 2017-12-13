@@ -31,21 +31,29 @@ public class FieldIdUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldIdUtil.class);
 
   public static TypedFieldId getFieldIdIfMatchesUnion(UnionVector unionVector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg.isNamed()) {
-      ValueVector v = unionVector.getMap();
-      if (v != null) {
-        return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
-      } else {
-        return null;
+    if (seg != null) {
+      if (seg.isNamed()) {
+        ValueVector v = unionVector.getMap();
+        if (v != null) {
+          return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
+        } else {
+          return null;
+        }
+      } else if (seg.isArray()) {
+        ValueVector v = unionVector.getList();
+        if (v != null) {
+          return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
+        } else {
+          return null;
+        }
       }
-    } else if (seg.isArray()) {
-      ValueVector v = unionVector.getList();
-      if (v != null) {
-        return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
-      } else {
-        return null;
+    } else {
+      if (addToBreadCrumb) {
+        builder.intermediateType(unionVector.getField().getType());
       }
+      return builder.finalType(unionVector.getField().getType()).build();
     }
+
     return null;
   }
 
@@ -131,7 +139,7 @@ public class FieldIdUtil {
     } else if(v instanceof ListVector) {
       ListVector list = (ListVector) v;
       return getFieldIdIfMatches(list, builder, addToBreadCrumb, seg.getChild());
-    } else if (v instanceof  UnionVector && !seg.isLastPath()) {
+    } else if (v instanceof  UnionVector) {
       return getFieldIdIfMatchesUnion((UnionVector) v, builder, addToBreadCrumb, seg.getChild());
     } else {
       if (seg.isNamed()) {
