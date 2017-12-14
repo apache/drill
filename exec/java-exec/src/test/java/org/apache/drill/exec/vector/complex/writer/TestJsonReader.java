@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -729,12 +730,15 @@ public class TestJsonReader extends BaseTestQuery {
       writer.write("{\"rk\": {\"a\": \"2\"}}");
     }
 
+    JsonStringHashMap<String, Object> map = new JsonStringHashMap<>();
+    map.put("b", "1");
+
     testBuilder()
       .sqlQuery("select t.rk.a as a from dfs.`%s` t", fileName)
       .ordered()
       .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
       .baselineColumns("a")
-      .baselineValues("{\"b\": \"1\"}")
+      .baselineValues(map)
       .baselineValues("2")
       .go();
   }
