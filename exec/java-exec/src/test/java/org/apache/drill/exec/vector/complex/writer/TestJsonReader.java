@@ -734,7 +734,8 @@ public class TestJsonReader extends BaseTestQuery {
       .ordered()
       .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
       .baselineColumns("a")
-      .baselineValues("{\"b\": \"1\"}", "2")
+      .baselineValues("{\"b\": \"1\"}")
+      .baselineValues("2")
       .go();
   }
 }
