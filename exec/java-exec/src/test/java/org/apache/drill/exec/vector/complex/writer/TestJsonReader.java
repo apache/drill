@@ -734,13 +734,18 @@ public class TestJsonReader extends BaseTestQuery {
     JsonStringHashMap<String, Text> map = new JsonStringHashMap<>();
     map.put("b", new Text("1"));
 
-    testBuilder()
-      .sqlQuery("select t.rk.a as a from dfs.`%s` t", fileName)
-      .ordered()
-      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
-      .baselineColumns("a")
-      .baselineValues(map)
-      .baselineValues("2")
-      .go();
+    try {
+      testBuilder()
+        .sqlQuery("select t.rk.a as a from dfs.`%s` t", fileName)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
+        .baselineColumns("a")
+        .baselineValues(map)
+        .baselineValues("2")
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `exec.enable_union_type`");
+    }
   }
 }
