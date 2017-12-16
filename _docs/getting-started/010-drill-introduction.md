@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2017-07-31 04:43:33 UTC
+date: 2017-12-16 06:24:22 UTC
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -9,6 +9,28 @@ the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.  
+
+## What's New in Apache Drill 1.12  
+
+Drill 1.12 provides the following new features and improvements:  
+ 
+- Kafka and OpenTSDB storage plugins (DRILL-4779, DRILL-5337)
+- SSL/TLS support (DRILL-5431)
+- Network encryption support (DRILL-5682)
+- Queue-based memory assignment for buffering operators (DRILL-5716)
+- A collection of networking functions that facilitate network analysis using Drill (DRILL-5834)
+- Support for the libpam4j PAM authenticator (DRILL-5820)
+- Filter pushdown for Parquet can handle files with multiple rowgroups (DRILL-5795)
+- UTF-8 is enabled in the query string by default (DRILL-5772)
+- IF NOT EXISTS support for CREATE TABLE and CREATE VIEWS (DRILL-5952)
+- Geometry functions, `ST_AsGeoJSON` and `ST_AsJSON`, that return GeoJSON and JSON representations (DRILL-5962, DRILL-5960) 
+- JMX metrics for failed and canceled queries (DRILL-5909)
+- Syntax highlighting and error checking for storage plugin configurations (DRILL-5981)
+- System options improvements, including a new internal system options table (DRILL-5723)
+- Ability to prevent users from accessing a path outside the current workspace (DRILL-5964)
+- Ability to put the server in quiescent mode for a graceful shutdown (DRILL-4286)
+- The Drill Web Console lists the completion of successfully completed queries as "successful" (DRILL-5923)
+
 
 ## What's New in Apache Drill 1.11  
 
