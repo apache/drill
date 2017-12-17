@@ -47,7 +47,7 @@ public class TestExternalSortInternals extends DrillTest {
     // Zero means no artificial limit
     assertEquals(0, sortConfig.maxMemory());
     // Zero mapped to large number
-    assertEquals(Integer.MAX_VALUE, sortConfig.mergeLimit());
+    assertEquals(SortConfig.DEFAULT_MERGE_LIMIT, sortConfig.mergeLimit());
     // Default size: 256 MiB
     assertEquals(256 * ONE_MEG, sortConfig.spillFileSize());
     // Default size: 1 MiB
@@ -622,14 +622,12 @@ public class TestExternalSortInternals extends DrillTest {
     int spillRunCount = mergeLimitConstraint;
     long allocMemory = batchSize * memBatchCount;
     MergeTask task = memManager.consolidateBatches(allocMemory, memBatchCount, spillRunCount);
-    assertEquals(MergeAction.NONE, task.action);
+    assertEquals(MergeAction.SPILL, task.action);
 
-    // One more run than can merge in one go. But, we have plenty of
-    // memory to merge and hold the in-memory batches. So, just merge.
+    // too many to merge, spill
 
-    task = memManager.consolidateBatches(allocMemory, memBatchCount, spillRunCount + 1);
-    assertEquals(MergeAction.MERGE, task.action);
-    assertEquals(2, task.count);
+    task = memManager.consolidateBatches(allocMemory, 1, spillRunCount);
+    assertEquals(MergeAction.SPILL, task.action);
 
     // One more runs than can merge in one go, intermediate merge
 
