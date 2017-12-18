@@ -281,6 +281,10 @@ public class DrillParquetGroupConverter extends GroupConverter {
             VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
             return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
           }
+          case ENUM: {
+            VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
+            return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
+          }
           //TODO not sure if BINARY/DECIMAL is actually supported
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);

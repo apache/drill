@@ -114,7 +114,7 @@ public class ParquetFixedWidthDictionaryReaders {
         Binary currDictValToWrite = null;
         for (int i = 0; i < recordsReadInThisIteration; i++){
           currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-          mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer(), 0,
+          mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer().slice(), 0,
               currDictValToWrite.length());
         }
         // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding

@@ -394,9 +394,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       final int offsetIndex = index * VALUE_WIDTH;
       final int months  = data.getInt(offsetIndex);
       final int days    = data.getInt(offsetIndex + ${minor.daysOffset});
-      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
+      int millis = data.getInt(offsetIndex + 8);
       final Period p = new Period();
-      return p.plusMonths(months).plusDays(days).plusMillis(millis);
+      final int seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      return p.plusMonths(months).plusDays(days).plusSeconds(seconds).plusMillis(millis);
     }
 
     public StringBuilder getAsStringBuilder(int index) {
