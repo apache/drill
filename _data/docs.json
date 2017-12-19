@@ -462,7 +462,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.11.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-11-0-release-notes/", 
-            "relative_path": "_docs/rn/002-1.10.0-rn.md", 
+            "relative_path": "_docs/rn/011-1.10.0-rn.md", 
             "title": "Apache Drill 1.10.0 Release Notes", 
             "url": "/docs/apache-drill-1-10-0-release-notes/"
         }, 
@@ -477,11 +477,28 @@
             "next_title": "Apache Drill 1.10.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-10-0-release-notes/", 
             "parent": "Release Notes", 
-            "previous_title": "Release Notes", 
-            "previous_url": "/docs/release-notes/", 
-            "relative_path": "_docs/rn/001-1.11.0-rn.md", 
+            "previous_title": "Apache Drill 1.12.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-12-0-release-notes/", 
+            "relative_path": "_docs/rn/010-1.11.0-rn.md", 
             "title": "Apache Drill 1.11.0 Release Notes", 
             "url": "/docs/apache-drill-1-11-0-release-notes/"
+        }, 
+        "Apache Drill 1.12.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Apache Drill 1.11.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
+            "parent": "Release Notes", 
+            "previous_title": "Release Notes", 
+            "previous_url": "/docs/release-notes/", 
+            "relative_path": "_docs/rn/001-1.12.0-rn.md", 
+            "title": "Apache Drill 1.12.0 Release Notes", 
+            "url": "/docs/apache-drill-1-12-0-release-notes/"
         }, 
         "Apache Drill 1.2.0 Release Notes": {
             "breadcrumbs": [
@@ -496,7 +513,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.3.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-3-0-release-notes/", 
-            "relative_path": "_docs/rn/010-1.2.0-rn.md", 
+            "relative_path": "_docs/rn/019-1.2.0-rn.md", 
             "title": "Apache Drill 1.2.0 Release Notes", 
             "url": "/docs/apache-drill-1-2-0-release-notes/"
         }, 
@@ -513,7 +530,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.4.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-4-0-release-notes/", 
-            "relative_path": "_docs/rn/009-1.3.0-rn.md", 
+            "relative_path": "_docs/rn/018-1.3.0-rn.md", 
             "title": "Apache Drill 1.3.0 Release Notes", 
             "url": "/docs/apache-drill-1-3-0-release-notes/"
         }, 
@@ -530,7 +547,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.5.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-5-0-release-notes/", 
-            "relative_path": "_docs/rn/008-1.4.0-rn.md", 
+            "relative_path": "_docs/rn/017-1.4.0-rn.md", 
             "title": "Apache Drill 1.4.0 Release Notes", 
             "url": "/docs/apache-drill-1-4-0-release-notes/"
         }, 
@@ -547,7 +564,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.6.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-6-0-release-notes/", 
-            "relative_path": "_docs/rn/007-1.5.0-rn.md", 
+            "relative_path": "_docs/rn/016-1.5.0-rn.md", 
             "title": "Apache Drill 1.5.0 Release Notes", 
             "url": "/docs/apache-drill-1-5-0-release-notes/"
         }, 
@@ -564,7 +581,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.7.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-7-0-release-notes/", 
-            "relative_path": "_docs/rn/006-1.6.0-rn.md", 
+            "relative_path": "_docs/rn/015-1.6.0-rn.md", 
             "title": "Apache Drill 1.6.0 Release Notes", 
             "url": "/docs/apache-drill-1-6-0-release-notes/"
         }, 
@@ -581,7 +598,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.8.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-8-0-release-notes/", 
-            "relative_path": "_docs/rn/005-1.7.0-rn.md", 
+            "relative_path": "_docs/rn/014-1.7.0-rn.md", 
             "title": "Apache Drill 1.7.0 Release Notes", 
             "url": "/docs/apache-drill-1-7-0-release-notes/"
         }, 
@@ -598,7 +615,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.9.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-9-0-release-notes/", 
-            "relative_path": "_docs/rn/004-1.8.0-rn.md", 
+            "relative_path": "_docs/rn/013-1.8.0-rn.md", 
             "title": "Apache Drill 1.8.0 Release Notes", 
             "url": "/docs/apache-drill-1-8-0-release-notes/"
         }, 
@@ -615,7 +632,7 @@
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 1.10.0 Release Notes", 
             "previous_url": "/docs/apache-drill-1-10-0-release-notes/", 
-            "relative_path": "_docs/rn/003-1.9.0-rn.md", 
+            "relative_path": "_docs/rn/012-1.9.0-rn.md", 
             "title": "Apache Drill 1.9.0 Release Notes", 
             "url": "/docs/apache-drill-1-9-0-release-notes/"
         }, 
@@ -8884,12 +8901,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.10.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-10-0-release-notes/", 
+                    "next_title": "Apache Drill 1.11.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
-                    "relative_path": "_docs/rn/001-1.11.0-rn.md", 
+                    "relative_path": "_docs/rn/001-1.12.0-rn.md", 
+                    "title": "Apache Drill 1.12.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-12-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.10.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-10-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.12.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-12-0-release-notes/", 
+                    "relative_path": "_docs/rn/010-1.11.0-rn.md", 
                     "title": "Apache Drill 1.11.0 Release Notes", 
                     "url": "/docs/apache-drill-1-11-0-release-notes/"
                 }, 
@@ -8906,7 +8940,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.11.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-11-0-release-notes/", 
-                    "relative_path": "_docs/rn/002-1.10.0-rn.md", 
+                    "relative_path": "_docs/rn/011-1.10.0-rn.md", 
                     "title": "Apache Drill 1.10.0 Release Notes", 
                     "url": "/docs/apache-drill-1-10-0-release-notes/"
                 }, 
@@ -8923,7 +8957,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.10.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-10-0-release-notes/", 
-                    "relative_path": "_docs/rn/003-1.9.0-rn.md", 
+                    "relative_path": "_docs/rn/012-1.9.0-rn.md", 
                     "title": "Apache Drill 1.9.0 Release Notes", 
                     "url": "/docs/apache-drill-1-9-0-release-notes/"
                 }, 
@@ -8940,7 +8974,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.9.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-9-0-release-notes/", 
-                    "relative_path": "_docs/rn/004-1.8.0-rn.md", 
+                    "relative_path": "_docs/rn/013-1.8.0-rn.md", 
                     "title": "Apache Drill 1.8.0 Release Notes", 
                     "url": "/docs/apache-drill-1-8-0-release-notes/"
                 }, 
@@ -8957,7 +8991,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-8-0-release-notes/", 
-                    "relative_path": "_docs/rn/005-1.7.0-rn.md", 
+                    "relative_path": "_docs/rn/014-1.7.0-rn.md", 
                     "title": "Apache Drill 1.7.0 Release Notes", 
                     "url": "/docs/apache-drill-1-7-0-release-notes/"
                 }, 
@@ -8974,7 +9008,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.7.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-7-0-release-notes/", 
-                    "relative_path": "_docs/rn/006-1.6.0-rn.md", 
+                    "relative_path": "_docs/rn/015-1.6.0-rn.md", 
                     "title": "Apache Drill 1.6.0 Release Notes", 
                     "url": "/docs/apache-drill-1-6-0-release-notes/"
                 }, 
@@ -8991,7 +9025,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.6.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-6-0-release-notes/", 
-                    "relative_path": "_docs/rn/007-1.5.0-rn.md", 
+                    "relative_path": "_docs/rn/016-1.5.0-rn.md", 
                     "title": "Apache Drill 1.5.0 Release Notes", 
                     "url": "/docs/apache-drill-1-5-0-release-notes/"
                 }, 
@@ -9008,7 +9042,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.5.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-5-0-release-notes/", 
-                    "relative_path": "_docs/rn/008-1.4.0-rn.md", 
+                    "relative_path": "_docs/rn/017-1.4.0-rn.md", 
                     "title": "Apache Drill 1.4.0 Release Notes", 
                     "url": "/docs/apache-drill-1-4-0-release-notes/"
                 }, 
@@ -9025,7 +9059,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.4.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-4-0-release-notes/", 
-                    "relative_path": "_docs/rn/009-1.3.0-rn.md", 
+                    "relative_path": "_docs/rn/018-1.3.0-rn.md", 
                     "title": "Apache Drill 1.3.0 Release Notes", 
                     "url": "/docs/apache-drill-1-3-0-release-notes/"
                 }, 
@@ -9042,7 +9076,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.3.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-3-0-release-notes/", 
-                    "relative_path": "_docs/rn/010-1.2.0-rn.md", 
+                    "relative_path": "_docs/rn/019-1.2.0-rn.md", 
                     "title": "Apache Drill 1.2.0 Release Notes", 
                     "url": "/docs/apache-drill-1-2-0-release-notes/"
                 }, 
@@ -9217,8 +9251,8 @@
                     "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
                 }
             ], 
-            "next_title": "Apache Drill 1.11.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
+            "next_title": "Apache Drill 1.12.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
@@ -18631,12 +18665,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.10.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-10-0-release-notes/", 
+                    "next_title": "Apache Drill 1.11.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
-                    "relative_path": "_docs/rn/001-1.11.0-rn.md", 
+                    "relative_path": "_docs/rn/001-1.12.0-rn.md", 
+                    "title": "Apache Drill 1.12.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-12-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.10.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-10-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.12.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-12-0-release-notes/", 
+                    "relative_path": "_docs/rn/010-1.11.0-rn.md", 
                     "title": "Apache Drill 1.11.0 Release Notes", 
                     "url": "/docs/apache-drill-1-11-0-release-notes/"
                 }, 
@@ -18653,7 +18704,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.11.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-11-0-release-notes/", 
-                    "relative_path": "_docs/rn/002-1.10.0-rn.md", 
+                    "relative_path": "_docs/rn/011-1.10.0-rn.md", 
                     "title": "Apache Drill 1.10.0 Release Notes", 
                     "url": "/docs/apache-drill-1-10-0-release-notes/"
                 }, 
@@ -18670,7 +18721,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.10.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-10-0-release-notes/", 
-                    "relative_path": "_docs/rn/003-1.9.0-rn.md", 
+                    "relative_path": "_docs/rn/012-1.9.0-rn.md", 
                     "title": "Apache Drill 1.9.0 Release Notes", 
                     "url": "/docs/apache-drill-1-9-0-release-notes/"
                 }, 
@@ -18687,7 +18738,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.9.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-9-0-release-notes/", 
-                    "relative_path": "_docs/rn/004-1.8.0-rn.md", 
+                    "relative_path": "_docs/rn/013-1.8.0-rn.md", 
                     "title": "Apache Drill 1.8.0 Release Notes", 
                     "url": "/docs/apache-drill-1-8-0-release-notes/"
                 }, 
@@ -18704,7 +18755,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-8-0-release-notes/", 
-                    "relative_path": "_docs/rn/005-1.7.0-rn.md", 
+                    "relative_path": "_docs/rn/014-1.7.0-rn.md", 
                     "title": "Apache Drill 1.7.0 Release Notes", 
                     "url": "/docs/apache-drill-1-7-0-release-notes/"
                 }, 
@@ -18721,7 +18772,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.7.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-7-0-release-notes/", 
-                    "relative_path": "_docs/rn/006-1.6.0-rn.md", 
+                    "relative_path": "_docs/rn/015-1.6.0-rn.md", 
                     "title": "Apache Drill 1.6.0 Release Notes", 
                     "url": "/docs/apache-drill-1-6-0-release-notes/"
                 }, 
@@ -18738,7 +18789,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.6.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-6-0-release-notes/", 
-                    "relative_path": "_docs/rn/007-1.5.0-rn.md", 
+                    "relative_path": "_docs/rn/016-1.5.0-rn.md", 
                     "title": "Apache Drill 1.5.0 Release Notes", 
                     "url": "/docs/apache-drill-1-5-0-release-notes/"
                 }, 
@@ -18755,7 +18806,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.5.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-5-0-release-notes/", 
-                    "relative_path": "_docs/rn/008-1.4.0-rn.md", 
+                    "relative_path": "_docs/rn/017-1.4.0-rn.md", 
                     "title": "Apache Drill 1.4.0 Release Notes", 
                     "url": "/docs/apache-drill-1-4-0-release-notes/"
                 }, 
@@ -18772,7 +18823,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.4.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-4-0-release-notes/", 
-                    "relative_path": "_docs/rn/009-1.3.0-rn.md", 
+                    "relative_path": "_docs/rn/018-1.3.0-rn.md", 
                     "title": "Apache Drill 1.3.0 Release Notes", 
                     "url": "/docs/apache-drill-1-3-0-release-notes/"
                 }, 
@@ -18789,7 +18840,7 @@
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 1.3.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-1-3-0-release-notes/", 
-                    "relative_path": "_docs/rn/010-1.2.0-rn.md", 
+                    "relative_path": "_docs/rn/019-1.2.0-rn.md", 
                     "title": "Apache Drill 1.2.0 Release Notes", 
                     "url": "/docs/apache-drill-1-2-0-release-notes/"
                 }, 
@@ -18964,8 +19015,8 @@
                     "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
                 }
             ], 
-            "next_title": "Apache Drill 1.11.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
+            "next_title": "Apache Drill 1.12.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 

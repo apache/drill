@@ -1,23 +1,24 @@
 ---
 title: "Configuring Plain Security"
-date: 2017-05-17 01:38:50 UTC
+date: 2017-12-19 00:31:35 UTC
 parent: "Securing Drill"
 ---
-Linux PAM provides a Plain (or username and password) authentication module that interface with any installed PAM authentication entity, such as the local operating system password file (`/etc/passwd`) or LDAP. 
-When using PAM for authentication, each user that has permission to run Drill queries must exist in the list of users that resides on each Drill node in the cluster. The username (including `uid`) and password for each user must be identical across all Drill nodes. 
+Linux PAM provides a Plain (username and password) authentication module that interfaces with any installed PAM authentication entity, such as the local operating system password file (`/etc/passwd`) or LDAP. 
+ 
+When using PAM for authentication, each user that has permission to run Drill queries must exist in the list of users that resides on each Drill node in the cluster. The username (including the `uid`) and password for each user must be identical across all Drill nodes. 
 
-If you use PAM with `/etc/passwd` for authentication, verify that the users with permission to start the Drill process are part of the shadow user group on all nodes in the cluster. This enables Drill to read the `/etc/shadow` file for authentication.
+If you use PAM with `/etc/passwd` for authentication, verify that users with permission to start the Drill process belong to the shadow user group on all nodes in the cluster. This enables Drill to read the `/etc/shadow` file for authentication.
 
 This section includes the following topics:
 
 - [Authentication Process]({{site.baseurl}}/docs/configuring-plain-security/#authentication-process)
 - [Connecting with SQLLine]({{site.baseurl}}/docs/configuring-plain-security/#connecting-with-sqlline)
 - [Connecting with BI Tools]({{site.baseurl}}/docs/configuring-plain-security/#connecting-with-bi-tools)
-- [Installing and Configuring Plain Security]({{site.baseurl}}/docs/configuring-plain-security/#installing-and-configuring-plain-security)
+- [Configuring Plain Security]({{site.baseurl}}/docs/configuring-plain-security/#configuring-plain-security)
 
 ## Authentication Process
 
-The following image illustrates the PAM user authentication process in Drill.  The client passes a username and password to the drillbit as part of the connection request, which then passes the credentials to PAM.  If PAM authenticates the user, the connection request passes the authentication phase and the connection is established. The user will be authorized to access Drill and issue queries against the file system or other storage plugins, such as Hive or HBase.  
+The following image illustrates the PAM user authentication process in Drill.  The client passes a username and password to the Drillbit as part of the connection request, which then passes the credentials to PAM.  If PAM authenticates the user, the connection request passes the authentication phase and the connection is established. The user will be authorized to access Drill and issue queries against the file system or other storage plugins, such as Hive or HBase.  
 
 ![plain auth process]({{ site.baseurl }}/docs/img/plain-auth-process.png)
 
@@ -27,7 +28,7 @@ For more PAM information (including a *JPAM User Guide*), see [JPAM](http://jpam
 
 ## Connecting with SQLLine
 
-When Plain user authentication is enabled with PAM, each user that accesses the drillbit process through a client, such as SQLLine, must provide username and password credentials for access. Users can include the `–n` and `–p` parameters with their username and password when launching SQLLine. 
+When Plain user authentication is enabled with PAM, each user that accesses the Drillbit process through a client, such as SQLLine, must provide username and password credentials for access. Users can include the `–n` and `–p` parameters with their username and password when launching SQLLine. 
 
 **Example**
 
@@ -59,58 +60,14 @@ To connect to a Drill from a BI tool, such as Tableau, the ODBC driver prompts y
 
 ![User Auth BI Tools](http://i.imgur.com/J5X1Tds.png)
 
-##Installing and Configuring Plain Security
+##Configuring Plain Security
 
-Install and configure the provided Drill PAM for Plain (or username and password) authentication. Drill only supports the PAM provided here. Optionally, you can build and implement a custom authenticator.  
-
-{% include startnote.html %}Do not point to an existing directory where other Hadoop components are installed. Other file system libraries can conflict with the Drill libraries and cause system errors.{% include endnote.html %}
-
-
-Complete the following steps to install and configure PAM for Drill:
-
-1. Download the `tar.gz` file for the Linux platform:
-
-	`http://sourceforge.net/projects/jpam/files/jpam/jpam-1.1`/
-
-1. Untar the file, and copy the `libjpam.so` file into a directory that does not contain other Hadoop components. For example, `/opt/pam/`
-
-
-1. Add the following line to `<DRILL_HOME>/conf/drill-env.sh`, including the directory where the `libjpam.s`o file is located: 
-
-    `export DRILLBIT_JAVA_OPTS="-Djava.library.path=<directory>"` 
-
-	**Example**
-
-    	`export DRILLBIT_JAVA_OPTS="-Djava.library.path=/opt/pam/"` 
-
-1. Add the following configuration to the drill.exec block in `<DRILL_HOME>/conf/drill-override.conf`: 
-		
-              drill.exec: {
-                cluster-id: "drillbits1",
-                zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.lab:5181",
-                impersonation: {
-                  enabled: true,
-                  max_chained_user_hops: 3
-                },
-                security: {          
-                        auth.mechanisms : ["PLAIN"],
-                         },
-                security.user.auth: {
-                        enabled: true,
-                        packages += "org.apache.drill.exec.rpc.user.security",
-                        impl: "pam",
-                        pam_profiles: [ "sudo", "login" ]
-                 }
-               }
-
-1. (Optional) To add or remove different PAM profiles, add or delete the profile names in the “pam_profiles” array shown above. 
-
-1. Restart the Drillbit process on each Drill node. 
-
-    `<DRILLINSTALL_HOME>/bin/drillbit.sh restart`
+As of Drill 1.12, the libpam4j module is packaged with Drill. There is no download or external dependency required to use libpam4j. You can either use jpam or libpam4j as the PAM authenticator with Drill. Optionally, you can build and implement a custom authenticator.  
 
 
 
+- To configure Drill to use libpam4j as the PAM authenticator, see [Using libpam4j as the PAM Authenticator]({{site.baseurl}}/docs/using-libpam4j-as-the-pam-authenticator/).
+- To configure Drill to use jpam as the PAM authenticator, see [Using jpam as the PAM Authenticator]({{site.baseurl}}/docs/using-jpam-as-the-pam-authenticator/).  
 
 
 
