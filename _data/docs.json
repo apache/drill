@@ -1301,8 +1301,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Kerberos Security", 
-                            "next_url": "/docs/configuring-kerberos-security/", 
+                            "next_title": "Using libpam4j as the PAM Authenticator", 
+                            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring User Security", 
                             "previous_url": "/docs/configuring-user-security/", 
@@ -1322,11 +1322,53 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Web Console and REST API Security", 
-                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                            "next_title": "Using jpam as the PAM Authenticator", 
+                            "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Plain Security", 
                             "previous_url": "/docs/configuring-plain-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+                            "title": "Using libpam4j as the PAM Authenticator", 
+                            "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Kerberos Security", 
+                            "next_url": "/docs/configuring-kerberos-security/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Using libpam4j as the PAM Authenticator", 
+                            "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+                            "title": "Using jpam as the PAM Authenticator", 
+                            "url": "/docs/using-jpam-as-the-pam-authenticator/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Web Console and REST API Security", 
+                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Using jpam as the PAM Authenticator", 
+                            "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
                             "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
                             "title": "Configuring Kerberos Security", 
                             "url": "/docs/configuring-kerberos-security/"
@@ -1680,8 +1722,8 @@
             "next_title": "Configuring Web Console and REST API Security", 
             "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
             "parent": "Securing Drill", 
-            "previous_title": "Configuring Plain Security", 
-            "previous_url": "/docs/configuring-plain-security/", 
+            "previous_title": "Using jpam as the PAM Authenticator", 
+            "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
             "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
             "title": "Configuring Kerberos Security", 
             "url": "/docs/configuring-kerberos-security/"
@@ -1926,8 +1968,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Kerberos Security", 
-            "next_url": "/docs/configuring-kerberos-security/", 
+            "next_title": "Using libpam4j as the PAM Authenticator", 
+            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
             "parent": "Securing Drill", 
             "previous_title": "Configuring User Security", 
             "previous_url": "/docs/configuring-user-security/", 
@@ -12034,8 +12076,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Kerberos Security", 
-                    "next_url": "/docs/configuring-kerberos-security/", 
+                    "next_title": "Using libpam4j as the PAM Authenticator", 
+                    "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring User Security", 
                     "previous_url": "/docs/configuring-user-security/", 
@@ -12055,11 +12097,53 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Web Console and REST API Security", 
-                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "next_title": "Using jpam as the PAM Authenticator", 
+                    "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring Plain Security", 
                     "previous_url": "/docs/configuring-plain-security/", 
+                    "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+                    "title": "Using libpam4j as the PAM Authenticator", 
+                    "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Securing Drill", 
+                            "url": "/docs/securing-drill/"
+                        }, 
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Kerberos Security", 
+                    "next_url": "/docs/configuring-kerberos-security/", 
+                    "parent": "Securing Drill", 
+                    "previous_title": "Using libpam4j as the PAM Authenticator", 
+                    "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+                    "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+                    "title": "Using jpam as the PAM Authenticator", 
+                    "url": "/docs/using-jpam-as-the-pam-authenticator/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Securing Drill", 
+                            "url": "/docs/securing-drill/"
+                        }, 
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Web Console and REST API Security", 
+                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "parent": "Securing Drill", 
+                    "previous_title": "Using jpam as the PAM Authenticator", 
+                    "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
                     "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
                     "title": "Configuring Kerberos Security", 
                     "url": "/docs/configuring-kerberos-security/"
@@ -13522,6 +13606,48 @@
             "title": "Using Tibco Spotfire Desktop with Drill", 
             "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
         }, 
+        "Using jpam as the PAM Authenticator": {
+            "breadcrumbs": [
+                {
+                    "title": "Securing Drill", 
+                    "url": "/docs/securing-drill/"
+                }, 
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Kerberos Security", 
+            "next_url": "/docs/configuring-kerberos-security/", 
+            "parent": "Securing Drill", 
+            "previous_title": "Using libpam4j as the PAM Authenticator", 
+            "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+            "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+            "title": "Using jpam as the PAM Authenticator", 
+            "url": "/docs/using-jpam-as-the-pam-authenticator/"
+        }, 
+        "Using libpam4j as the PAM Authenticator": {
+            "breadcrumbs": [
+                {
+                    "title": "Securing Drill", 
+                    "url": "/docs/securing-drill/"
+                }, 
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using jpam as the PAM Authenticator", 
+            "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
+            "parent": "Securing Drill", 
+            "previous_title": "Configuring Plain Security", 
+            "previous_url": "/docs/configuring-plain-security/", 
+            "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+            "title": "Using libpam4j as the PAM Authenticator", 
+            "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
+        }, 
         "Using the JDBC Driver": {
             "breadcrumbs": [
                 {
@@ -14577,8 +14703,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Kerberos Security", 
-                            "next_url": "/docs/configuring-kerberos-security/", 
+                            "next_title": "Using libpam4j as the PAM Authenticator", 
+                            "next_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring User Security", 
                             "previous_url": "/docs/configuring-user-security/", 
@@ -14598,11 +14724,53 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Web Console and REST API Security", 
-                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                            "next_title": "Using jpam as the PAM Authenticator", 
+                            "next_url": "/docs/using-jpam-as-the-pam-authenticator/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Plain Security", 
                             "previous_url": "/docs/configuring-plain-security/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/081-using-libpam4j-as-the-pam-authenticator.md", 
+                            "title": "Using libpam4j as the PAM Authenticator", 
+                            "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Kerberos Security", 
+                            "next_url": "/docs/configuring-kerberos-security/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Using libpam4j as the PAM Authenticator", 
+                            "previous_url": "/docs/using-libpam4j-as-the-pam-authenticator/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/082-using-jpam-as-the-pam-authenticator.md", 
+                            "title": "Using jpam as the PAM Authenticator", 
+                            "url": "/docs/using-jpam-as-the-pam-authenticator/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Web Console and REST API Security", 
+                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Using jpam as the PAM Authenticator", 
+                            "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
                             "relative_path": "_docs/configure-drill/securing-drill/090-configuring-kerberos-security.md", 
                             "title": "Configuring Kerberos Security", 
                             "url": "/docs/configuring-kerberos-security/"
