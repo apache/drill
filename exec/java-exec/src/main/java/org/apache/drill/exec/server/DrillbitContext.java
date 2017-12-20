@@ -35,6 +35,9 @@ import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
+import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
+import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -43,6 +46,8 @@ import org.apache.drill.exec.work.foreman.rm.ResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ResourceManagerBuilder;
 
 import java.util.Collection;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -277,6 +282,10 @@ public class DrillbitContext implements AutoCloseable {
 
   public AuthenticatorProvider getAuthProvider() {
     return context.getAuthProvider();
+  }
+
+  public Set<Entry<BitToUserConnection, BitToUserConnectionConfig>> getUserConnections() {
+    return UserServer.getUserConnections();
   }
 
   @Override

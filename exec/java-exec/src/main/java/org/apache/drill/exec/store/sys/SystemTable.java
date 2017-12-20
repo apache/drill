@@ -87,6 +87,13 @@ public enum SystemTable {
     }
   },
 
+  CONNECTIONS("connections", true, BitToUserConnectionIterator.ConnectionInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new BitToUserConnectionIterator(context);
+    }
+  },
+
   PROFILES("profiles", false, ProfileInfoIterator.ProfileInfo.class) {
     @Override
     public Iterator<Object> getIterator(final FragmentContext context) {

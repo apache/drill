@@ -71,6 +71,11 @@ public class TestSystemTable extends BaseTestQuery {
   }
 
   @Test
+  public void connectionsTable() throws Exception {
+    test("select * from sys.connections");
+  }
+
+  @Test
   public void profilesTable() throws Exception {
     test("select * from sys.profiles");
   }
