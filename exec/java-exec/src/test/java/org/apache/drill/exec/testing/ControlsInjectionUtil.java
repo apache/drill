@@ -133,6 +133,18 @@ public class ControlsInjectionUtil {
   }
 
   /**
+   * Create a time-bound pause injection. Note this format is not directly accepted by the injection mechanism. Use the
+   * {@link Controls} to build exceptions.
+   */
+  public static String createTimedPause(final Class<?> siteClass, final String desc, final int nSkip, final long msPause) {
+    return "{ \"type\" : \"pause\"," +
+      "\"siteClass\" : \"" + siteClass.getName() + "\","
+      + "\"desc\" : \"" + desc + "\","
+      + "\"nSkip\" : " + nSkip + ","
+      + "\"msPause\" : " + msPause + "}";
+  }
+
+  /**
    * Create a pause injection on a specific bit. Note this format is not directly accepted by the injection
    * mechanism. Use the {@link Controls} to build exceptions.
    */
@@ -142,6 +154,21 @@ public class ControlsInjectionUtil {
       "\"siteClass\" : \"" + siteClass.getName() + "\","
       + "\"desc\" : \"" + desc + "\","
       + "\"nSkip\" : " + nSkip + ","
+      + "\"address\":\"" + endpoint.getAddress() + "\","
+      + "\"port\":\"" + endpoint.getUserPort() + "\"}";
+  }
+
+  /**
+   * Create a pause injection on a specific bit. Note this format is not directly accepted by the injection
+   * mechanism. Use the {@link Controls} to build exceptions.
+   */
+  public static String createTimedPauseOnBit(final Class<?> siteClass, final String desc, final int nSkip,
+                                        final DrillbitEndpoint endpoint, final long msPause) {
+    return "{ \"type\" : \"pause\"," +
+      "\"siteClass\" : \"" + siteClass.getName() + "\","
+      + "\"desc\" : \"" + desc + "\","
+      + "\"nSkip\" : " + nSkip + ","
+      + "\"msPause\" : " + msPause + ","
       + "\"address\":\"" + endpoint.getAddress() + "\","
       + "\"port\":\"" + endpoint.getUserPort() + "\"}";
   }

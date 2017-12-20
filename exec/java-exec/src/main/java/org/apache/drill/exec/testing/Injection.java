@@ -32,9 +32,10 @@ public abstract class Injection {
   protected final String desc; // description of the injection site; useful for multiple exception injections in a single class
   private final AtomicInteger nSkip; // the number of times to skip the injection; starts >= 0
   private final AtomicInteger nFire;  // the number of times to do the injection, after any skips; starts > 0
+  private final long msPause; // duration of the injection (only applies to pause injections)
 
   protected Injection(final String address, final int port, final String siteClass, final String desc,
-                      final int nSkip, final int nFire) throws InjectionConfigurationException {
+                      final int nSkip, final int nFire, final long msPause) throws InjectionConfigurationException {
     if (desc == null || desc.isEmpty()) {
       throw new InjectionConfigurationException("Injection desc is null or empty.");
     }
@@ -57,6 +58,7 @@ public abstract class Injection {
     this.desc = desc;
     this.nSkip = new AtomicInteger(nSkip);
     this.nFire = new AtomicInteger(nFire);
+    this.msPause = msPause;
   }
 
   /**
@@ -80,5 +82,9 @@ public abstract class Injection {
   public final boolean isValidForBit(final DrillbitEndpoint endpoint) {
     return address == null ||
       (address.equals(endpoint.getAddress()) && port == endpoint.getUserPort());
+  }
+
+  public long getMsPause() {
+    return msPause;
   }
 }
