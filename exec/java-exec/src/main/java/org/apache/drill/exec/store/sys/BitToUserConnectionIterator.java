@@ -1,0 +1,120 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.store.sys;
+
+import java.sql.Timestamp;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.Map.Entry;
+import java.util.TimeZone;
+
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
+import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
+import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.rest.profile.SimpleDurationFormat;
+import org.joda.time.DateTime;
+
+/**
+ * Add a system table for listing connected users on a cluster
+ */
+public class BitToUserConnectionIterator implements Iterator<Object> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitToUserConnectionIterator.class);
+
+  Iterator<ConnectionInfo> itr;
+
+  public BitToUserConnectionIterator(FragmentContext context) {
+    itr = iterateConnectionInfo(context);
+  }
+
+  private Iterator<ConnectionInfo> iterateConnectionInfo(FragmentContext context) {
+    Set<Entry<BitToUserConnection, BitToUserConnectionConfig>> activeConnections =
+        context.getDrillbitContext().getUserConnections();
+
+    String hostname = context.getIdentity().getAddress();
+    List<ConnectionInfo> connectionInfos = new LinkedList<>();
+
+    for (Entry<BitToUserConnection, BitToUserConnectionConfig> connection : activeConnections) {
+      connectionInfos.add(new ConnectionInfo(connection, hostname));
+    }
+    return connectionInfos.iterator();
+  }
+
+  @Override
+  public boolean hasNext() {
+    return itr.hasNext();
+  }
+
+  @Override
+  public Object next() {
+    return itr.next();
+  }
+
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
+  }
+
+  public static class ConnectionInfo {
+    public String user;
+    public String targetUser;
+    public String client;
+    public String drillbit;
+    public Timestamp established;
+    public String duration;
+    public int queries;
+    public boolean isAuthenticated;
+    public boolean isEncrypted;
+    public boolean usingSSL;
+    public String session;
+
+    public ConnectionInfo(Entry<BitToUserConnection, BitToUserConnectionConfig> connectionConfigPair, String hostname) {
+      BitToUserConnection connection = connectionConfigPair.getKey();
+      BitToUserConnectionConfig config = connectionConfigPair.getValue();
+      UserSession userSession = connection.getSession();
+      this.user = userSession.getCredentials().getUserName();
+      this.targetUser = userSession.getTargetUserName();
+      if (targetUser == null) {
+        this.targetUser = this.user;
+      }
+      DateTime dateTime = config.getEstablished();
+      this.established = new Timestamp(
+          dateTime
+          .plusMillis(TimeZone.getDefault().getOffset(dateTime.getMillis())) //Adjusting for -Duser.timezone
+          .getMillis());
+      this.duration = (new SimpleDurationFormat(dateTime.getMillis(), System.currentTimeMillis()))
+          .verbose();
+      this.client = extractIpAddr(connection.getRemoteAddress().toString());
+      this.drillbit = hostname;
+      this.session = userSession.getSessionId();
+      this.queries = userSession.getQueryCount();
+      this.isAuthenticated = config.isAuthEnabled();
+      this.isEncrypted = config.isEncryptionEnabled();
+      this.usingSSL = config.isSSLEnabled();
+    }
+
+    private String extractIpAddr(String clientAddrString) {
+      String ipAddr = clientAddrString
+          .replaceFirst("/","") //Remove any leading '/'
+          .split(":")[0]; //Remove any connected port reference
+      return ipAddr;
+    }
+  }
+}
