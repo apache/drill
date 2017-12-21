@@ -129,13 +129,13 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (disablePushdown) {
-      transformed.add(Utilities.STAR_COLUMN);
+      transformed.add(SchemaPath.STAR_COLUMN);
       includeId = true;
       return transformed;
     }
 
     if (isStarQuery()) {
-      transformed.add(Utilities.STAR_COLUMN);
+      transformed.add(SchemaPath.STAR_COLUMN);
       includeId = true;
       if (isSkipQuery()) {
     	// `SELECT COUNT(*)` query

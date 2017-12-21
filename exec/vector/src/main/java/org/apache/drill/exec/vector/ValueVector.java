@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector;
 import java.io.Closeable;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -85,6 +84,12 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
 
   int MAX_ROW_COUNT = Character.MAX_VALUE + 1;
+
+  // Commonly-used internal vector names
+
+  String BITS_VECTOR_NAME = "$bits$";
+  String OFFSETS_VECTOR_NAME = "$offsets$";
+  String VALUES_VECTOR_NAME = "$values$";
 
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,7 +25,6 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 public abstract class FormatPluginConfigBase implements FormatPluginConfig{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginConfigBase.class);
 
-
   /**
    * scan for implementations of {@see FormatPlugin}.
    *
@@ -38,7 +37,7 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
       StringBuilder sb = new StringBuilder();
       sb.append("Found ");
       sb.append(pluginClasses.size());
-      sb.append("format plugin configuration classes:\n");
+      sb.append(" format plugin configuration classes:\n");
       for (Class<?> c : pluginClasses) {
         sb.append('\t');
         sb.append(c.getName());
@@ -54,5 +53,4 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
 
   @Override
   public abstract int hashCode();
-
 }

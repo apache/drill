@@ -26,6 +26,7 @@ import java.util.Objects;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -38,7 +39,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 public class MaterializedField {
   private final String name;
-  private final MajorType type;
+  private MajorType type;
   // use an ordered set as existing code relies on order (e,g. parquet writer)
   private final LinkedHashSet<MaterializedField> children;
 
@@ -87,13 +88,47 @@ public class MaterializedField {
     children.add(field);
   }
 
+  public void removeChild(MaterializedField field) {
+    children.remove(field);
+  }
+
+  /**
+   * Replace the type with a new one that has the same minor type
+   * and mode, but with perhaps different details.
+   * <p>
+   * The type is immutable. But, it contains subtypes, used or lists
+   * and unions. To add a subtype, we must create a whole new major type.
+   * <p>
+   * It appears that the <tt>MaterializedField</tt> class was also meant
+   * to be immutable. But, it holds the children for a map, and contains
+   * methods to add children. So, it is not immutable.
+   * <p>
+   * This method allows evolving a list or union without the need to create
+   * a new <tt>MaterializedField</tt>. Doing so is problematic for nested
+   * maps because the map (or list, or union) holds onto the
+   * <tt>MaterializedField</tt>'s of its children. There is no way for
+   * an inner map to reach out and change the child of its parent.
+   * <p>
+   * By allowing the non-critical metadata to change, we preserve the
+   * child relationships as a list or union evolves.
+   * @param type
+   */
+
+  public void replaceType(MajorType newType) {
+    assert type.getMinorType() == newType.getMinorType();
+    assert type.getMode() == newType.getMode();
+    type = newType;
+  }
+
   @Override
   public MaterializedField clone() {
     return withPathAndType(name, getType());
   }
 
   public MaterializedField cloneEmpty() {
-    return create(name, type);
+    return create(name, type.toBuilder()
+        .clearSubType()
+        .build());
   }
 
   public MaterializedField withType(MajorType type) {
@@ -213,16 +248,7 @@ public class MaterializedField {
     // But, unset fields are equivalent to 0. Can't use the protobuf-provided
     // isEquals(), that treats set and unset fields as different.
 
-    if (type.getMinorType() != other.type.getMinorType()) {
-      return false;
-    }
-    if (type.getMode() != other.type.getMode()) {
-      return false;
-    }
-    if (type.getScale() != other.type.getScale()) {
-      return false;
-    }
-    if (type.getPrecision() != other.type.getPrecision()) {
+    if (! Types.isEquivalent(type, other.type)) {
       return false;
     }
 
@@ -256,6 +282,76 @@ public class MaterializedField {
   }
 
   /**
+   * Determine if the present column schema can be promoted to the
+   * given schema. Promotion is possible if the schemas are
+   * equivalent, or if required mode is promoted to nullable, or
+   * if scale or precision can be increased.
+   *
+   * @param other the field to which this one is to be promoted
+   * @return true if promotion is possible, false otherwise
+   */
+
+  public boolean isPromotableTo(MaterializedField other, boolean allowModeChange) {
+    if (! name.equalsIgnoreCase(other.name)) {
+      return false;
+    }
+
+    // Requires full type equality, including fields such as precision and scale.
+    // But, unset fields are equivalent to 0. Can't use the protobuf-provided
+    // isEquals(), that treats set and unset fields as different.
+
+    if (type.getMinorType() != other.type.getMinorType()) {
+      return false;
+    }
+    if (type.getMode() != other.type.getMode()) {
+
+      // Modes differ, but type can be promoted from required to
+      // nullable
+
+      if (! allowModeChange) {
+        return false;
+      }
+      if (! (type.getMode() == DataMode.REQUIRED && other.type.getMode() == DataMode.OPTIONAL)) {
+        return false;
+      }
+    }
+    if (type.getScale() > other.type.getScale()) {
+      return false;
+    }
+    if (type.getPrecision() > other.type.getPrecision()) {
+      return false;
+    }
+
+    // Compare children -- but only for maps, not the internal children
+    // for Varchar, repeated or nullable types.
+
+    if (type.getMinorType() != MinorType.MAP) {
+      return true;
+    }
+
+    if (children == null  ||  other.children == null) {
+      return children == other.children;
+    }
+    if (children.size() != other.children.size()) {
+      return false;
+    }
+
+    // Maps are name-based, not position. But, for our
+    // purposes, we insist on identical ordering.
+
+    Iterator<MaterializedField> thisIter = children.iterator();
+    Iterator<MaterializedField> otherIter = other.children.iterator();
+    while (thisIter.hasNext()) {
+      MaterializedField thisChild = thisIter.next();
+      MaterializedField otherChild = otherIter.next();
+      if (! thisChild.isPromotableTo(otherChild, allowModeChange)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * <p>Creates materialized field string representation.
    * Includes field name, its type with precision and scale if any and data mode.
    * Nested fields if any are included. Number of nested fields to include is limited to 10.</p>
@@ -269,30 +365,45 @@ public class MaterializedField {
   @Override
   public String toString() {
     final int maxLen = 10;
-    String childString = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
     StringBuilder builder = new StringBuilder();
     builder
-        .append(name)
-        .append("(")
-        .append(type.getMinorType().name());
+      .append("[`")
+      .append(name)
+      .append("` (")
+      .append(type.getMinorType().name());
 
     if (type.hasPrecision()) {
       builder.append("(");
       builder.append(type.getPrecision());
       if (type.hasScale()) {
-        builder.append(",");
+        builder.append(", ");
         builder.append(type.getScale());
       }
       builder.append(")");
     }
 
     builder
-        .append(":")
-        .append(type.getMode().name())
-        .append(")")
-        .append(childString);
+      .append(":")
+      .append(type.getMode().name())
+      .append(")");
 
-    return builder.toString();
+    if (type.getSubTypeCount() > 0) {
+      builder
+        .append(", subtypes=(")
+        .append(type.getSubTypeList().toString())
+        .append(")");
+    }
+
+    if (children != null && ! children.isEmpty()) {
+      builder
+        .append(", children=(")
+        .append(toString(children, maxLen))
+        .append(")");
+    }
+
+    return builder
+        .append("]")
+        .toString();
   }
 
   /**
@@ -307,7 +418,6 @@ public class MaterializedField {
 
   private String toString(Collection<?> collection, int maxLen) {
     StringBuilder builder = new StringBuilder();
-    builder.append(" [");
     int i = 0;
     for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
       if (i > 0){
@@ -315,7 +425,6 @@ public class MaterializedField {
       }
       builder.append(iterator.next());
     }
-    builder.append("]");
     return builder.toString();
   }
 }

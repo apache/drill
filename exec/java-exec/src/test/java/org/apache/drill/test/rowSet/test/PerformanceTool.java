@@ -30,13 +30,10 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.IntColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.NullableScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
 import org.apache.drill.test.OperatorFixture;
-import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 
 import com.google.common.base.Stopwatch;
@@ -277,20 +274,5 @@ public class PerformanceTool {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-  }
-
-  @SuppressWarnings("unused")
-  private static void testWriter2(TupleMetadata rowSchema,
-      OperatorFixture fixture, Stopwatch timer) {
-    ExtendableRowSet rs = fixture.rowSet(rowSchema);
-    RowSetWriter writer = rs.writer(4096);
-    ScalarWriter colWriter = writer.scalar(0);
-    timer.start();
-    for (int i = 0; i < ROW_COUNT; i++) {
-      colWriter.setInt(i);
-      writer.save();
-    }
-    timer.stop();
-    writer.done().clear();
   }
 }

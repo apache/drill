@@ -320,6 +320,23 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     return clients.get(0);
   }
 
+  /**
+   * Create a test client for a specific host and port.
+   *
+   * @param host host, must be one of those created by this
+   * fixture
+   * @param port post, must be one of those created by this
+   * fixture
+   * @return a test client. Client will be closed when this cluster
+   * fixture closes, or can be closed early
+   */
+
+  public ClientFixture client(String host, int port) {
+    return clientBuilder()
+      .property(DrillProperties.DRILLBIT_CONNECTION, String.format("%s:%d", host, port))
+      .build();
+  }
+
   public RestClientFixture restClientFixture() {
     if (restClientFixture == null) {
       restClientFixture = restClientBuilder().build();

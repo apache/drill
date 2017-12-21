@@ -92,19 +92,19 @@ public class ${className} {
     public void eval() {
   <#if fromUnit == "Interval">
     <#if toUnit == "Year">
-      out.value = (in.months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      out.value = (in.months / org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
     <#elseif toUnit == "Month">
-      out.value = (in.months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      out.value = (in.months % org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
     <#elseif toUnit == "Day">
       out.value = in.days;
     <#elseif toUnit == "Hour">
-      out.value = in.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      out.value = in.milliseconds/(org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
     <#elseif toUnit == "Minute">
-      int millis = in.milliseconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      int millis = in.milliseconds % (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
+      out.value = millis / (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
     <#elseif toUnit == "Second">
-      long millis = in.milliseconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
-      out.value = (double) millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long millis = in.milliseconds % org.apache.drill.exec.vector.DateUtilities.minutesToMillis;
+      out.value = (double) millis / (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
     </#if>
   <#elseif fromUnit == "IntervalDay">
     <#if toUnit == "Year" || toUnit == "Month">
@@ -112,19 +112,19 @@ public class ${className} {
     <#elseif toUnit == "Day">
       out.value = in.days;
     <#elseif toUnit == "Hour">
-      out.value = in.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      out.value = in.milliseconds/(org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
     <#elseif toUnit == "Minute">
-      int millis = in.milliseconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      int millis = in.milliseconds % (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
+      out.value = millis / (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
     <#elseif toUnit == "Second">
-      long millis = in.milliseconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
-      out.value = (double) millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long millis = in.milliseconds % org.apache.drill.exec.vector.DateUtilities.minutesToMillis;
+      out.value = (double) millis / (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
     </#if>
   <#else> <#-- IntervalYear type -->
     <#if toUnit == "Year">
-      out.value = (in.value / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      out.value = (in.value / org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
     <#elseif toUnit == "Month">
-      out.value = (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      out.value = (in.value % org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
     <#else>
       out.value = 0;
     </#if>

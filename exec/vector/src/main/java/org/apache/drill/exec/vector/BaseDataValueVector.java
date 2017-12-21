@@ -107,6 +107,9 @@ public abstract class BaseDataValueVector extends BaseValueVector {
 
   @Override
   public void exchange(ValueVector other) {
+
+    // Exchange the data buffers
+
     BaseDataValueVector target = (BaseDataValueVector) other;
     DrillBuf temp = data;
     data = target.data;

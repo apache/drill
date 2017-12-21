@@ -44,7 +44,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
@@ -67,19 +66,19 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   public void eval() {
 
-      int years  = (in.months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-      int months = (in.months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      int years  = (in.months / org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
+      int months = (in.months % org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
 
       long millis = in.milliseconds;
 
-      long hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      long hours  = millis / (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
+      millis     = millis % (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
 
-      long minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      long minutes = millis / (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
+      millis      = millis % (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
 
-      long seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long seconds = millis / (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
+      millis      = millis % (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
 
       String yearString = (Math.abs(years) == 1) ? " year " : " years ";
       String monthString = (Math.abs(months) == 1) ? " month " : " months ";
@@ -124,7 +123,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}",
@@ -143,8 +141,8 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   }
 
   public void eval() {
-      int years  = (in.value / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-      int months = (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      int years  = (in.value / org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
+      int months = (in.value % org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
 
       String yearString = (Math.abs(years) == 1) ? " year " : " years ";
       String monthString = (Math.abs(months) == 1) ? " month " : " months ";
@@ -184,7 +182,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
 
@@ -208,14 +205,14 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   public void eval() {
       long millis = in.milliseconds;
 
-      long hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      long hours  = millis / (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
+      millis     = millis % (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
 
-      long minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      long minutes = millis / (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
+      millis      = millis % (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
 
-      long seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long seconds = millis / (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
+      millis      = millis % (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
 
       String dayString = (Math.abs(in.days) == 1) ? " day " : " days ";
 

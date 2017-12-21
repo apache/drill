@@ -32,9 +32,15 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.drill.exec.vector.complex.impl.ComplexCopier;
+
+import com.google.common.base.Preconditions;
+
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
+import org.apache.drill.exec.record.MaterializedField;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
@@ -43,14 +49,37 @@ import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 
 
 /**
- * A vector which can hold values of different types. It does so by using a MapVector which contains a vector for each
- * primitive type that is stored. MapVector is used in order to take advantage of its serialization/deserialization methods,
- * as well as the addOrGet method.
+ * A vector which can hold values of different types. It does so by using a
+ * MapVector which contains a vector for each primitive type that is stored.
+ * MapVector is used in order to take advantage of its
+ * serialization/deserialization methods, as well as the addOrGet method.
  *
- * For performance reasons, UnionVector stores a cached reference to each subtype vector, to avoid having to do the map lookup
- * each time the vector is accessed.
+ * For performance reasons, UnionVector stores a cached reference to each
+ * subtype vector, to avoid having to do the map lookup each time the vector is
+ * accessed.
  */
 public class UnionVector implements ValueVector {
+
+  public static final int NULL_MARKER = 0;
+  public static final String TYPE_VECTOR_NAME = "types";
+  public static final String INTERNAL_MAP_NAME = "internal";
+  
+  private static final MajorType MAJOR_TYPES[] = new MajorType[MinorType.values().length];
+  
+  static {
+    MAJOR_TYPES[MinorType.MAP.ordinal()] = Types.optional(MinorType.MAP);
+    MAJOR_TYPES[MinorType.LIST.ordinal()] = Types.optional(MinorType.LIST);
+    <#list vv.types as type>
+      <#list type.minor as minor>
+        <#assign name = minor.class?cap_first />
+        <#assign fields = minor.fields!type.fields />
+        <#assign uncappedName = name?uncap_first/>
+        <#if !minor.class?starts_with("Decimal")>
+    MAJOR_TYPES[MinorType.${name?upper_case}.ordinal()] = Types.optional(MinorType.${name?upper_case});
+        </#if>
+      </#list>
+    </#list>
+  }
 
   private MaterializedField field;
   private BufferAllocator allocator;
@@ -58,28 +87,53 @@ public class UnionVector implements ValueVector {
   private Mutator mutator = new Mutator();
   private int valueCount;
 
+  /**
+   * Map which holds one vector for each subtype, along with a vector that indicates
+   * types and the null state. There appears to be no reason other than convenience
+   * for using a map. Future implementations may wish to store vectors directly in
+   * the union vector, but must then implement the required vector serialization/
+   * deserialization and other functionality.
+   */
+  
   private MapVector internalMap;
+  
+  /**
+   * Cached type vector. The vector's permament location is in the
+   * internal map, it is cached for performance. Call
+   * {@link #getTypeVector()} to get the cached copy, or to refresh
+   * the cache from the internal map if not set.
+   */
+  
   private UInt1Vector typeVector;
 
-  private MapVector mapVector;
-  private ListVector listVector;
+  /**
+   * Set of cached vectors that duplicate vectors store in the
+   * internal map. Used to avoid a name lookup on every access.
+   * The cache is populated as vectors are added. But, after the
+   * union is sent over the wire, the map is populated, but the
+   * array is not. It will be repopulated upon first access to
+   * the deserialized vectors.
+   */
+  
+  private ValueVector cachedSubtypes[] = new ValueVector[MinorType.values().length];
 
   private FieldReader reader;
-  private NullableBitVector bit;
-
-  private int singleType = 0;
-  private ValueVector singleVector;
-  private MajorType majorType;
 
   private final CallBack callBack;
 
   public UnionVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
+    
+    // The metadata may start off listing subtypes for which vectors
+    // do not actually exist. It appears that the semantics are to list
+    // the subtypes that *could* appear. For example, in a sort we may
+    // have two types: one batch has type A, the other type B, but the
+    // batches must list both A and B as subtypes.
+    
     this.field = field.clone();
     this.allocator = allocator;
-    this.internalMap = new MapVector("internal", allocator, callBack);
-    this.typeVector = internalMap.addOrGet("types", Types.required(MinorType.UINT1), UInt1Vector.class);
+    this.internalMap = new MapVector(INTERNAL_MAP_NAME, allocator, callBack);
+    this.typeVector = internalMap.addOrGet(TYPE_VECTOR_NAME, Types.required(MinorType.UINT1), UInt1Vector.class);
     this.field.addChild(internalMap.getField().clone());
-    this.majorType = field.getType();
     this.callBack = callBack;
   }
 
@@ -87,94 +141,180 @@ public class UnionVector implements ValueVector {
   public BufferAllocator getAllocator() {
     return allocator;
   }
-
+  
   public List<MinorType> getSubTypes() {
-    return majorType.getSubTypeList();
+    return field.getType().getSubTypeList();
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T extends ValueVector> T subtype(MinorType type) {
+    return (T) cachedSubtypes[type.ordinal()];
   }
 
+  
+  /**
+   * Add an externally-created subtype vector. The vector must represent a type that
+   * does not yet exist in the union, and must be of OPTIONAL mode. Does not call
+   * the callback since the client (presumably) knows that it is adding the type.
+   * The caller must also allocate the buffer for the vector.
+   * 
+   * @param vector subtype vector to add
+   */
+  
+  public void addType(ValueVector vector) {
+    MinorType type = vector.getField().getType().getMinorType();
+    assert subtype(type) == null;
+    assert vector.getField().getType().getMode() == DataMode.OPTIONAL;
+    assert vector.getField().getName().equals(type.name().toLowerCase());
+    cachedSubtypes[type.ordinal()] = vector;
+    internalMap.putChild(type.name(), vector);
+    addSubType(type);
+  }
+  
   public void addSubType(MinorType type) {
-    if (majorType.getSubTypeList().contains(type)) {
+    if (field.getType().getSubTypeList().contains(type)) {
       return;
     }
-    majorType =  MajorType.newBuilder(this.majorType).addSubType(type).build();
-    field = MaterializedField.create(field.getName(), majorType);
+    field.replaceType(
+        MajorType.newBuilder(field.getType()).addSubType(type).build());
     if (callBack != null) {
       callBack.doWork();
     }
   }
 
-  private static final MajorType MAP_TYPE = Types.optional(MinorType.MAP);
+  /**
+   * "Classic" way to add a subtype when working directly with a union vector.
+   * Creates the vector, adds it to the internal structures and creates a
+   * new buffer of the default size.
+   * 
+   * @param type the type to add
+   * @param vectorClass class of the vector to create
+   * @return typed form of the new value vector
+   */
+  
+  private <T extends ValueVector> T classicAddType(MinorType type, Class<? extends ValueVector> vectorClass) {
+    int vectorCount = internalMap.size();
+    @SuppressWarnings("unchecked")
+    T vector = (T) internalMap.addOrGet(type.name().toLowerCase(), MAJOR_TYPES[type.ordinal()], vectorClass);
+    cachedSubtypes[type.ordinal()] = vector;
+    if (internalMap.size() > vectorCount) {
+      vector.allocateNew();
+      addSubType(type);
+      if (callBack != null) {
+        callBack.doWork();
+      }
+    }
+    return vector;
+  }
 
   public MapVector getMap() {
+    MapVector mapVector = subtype(MinorType.MAP);
     if (mapVector == null) {
-      int vectorCount = internalMap.size();
-      mapVector = internalMap.addOrGet("map", MAP_TYPE, MapVector.class);
-      addSubType(MinorType.MAP);
-      if (internalMap.size() > vectorCount) {
-        mapVector.allocateNew();
-      }
+      mapVector = classicAddType(MinorType.MAP, MapVector.class);
     }
     return mapVector;
   }
-  <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
-  <#assign fields = minor.fields!type.fields />
-  <#assign uncappedName = name?uncap_first/>
-  <#if !minor.class?starts_with("Decimal")>
-
-  private Nullable${name}Vector ${uncappedName}Vector;
-  private static final MajorType ${name?upper_case}_TYPE = Types.optional(MinorType.${name?upper_case});
-
-  public Nullable${name}Vector get${name}Vector() {
-    if (${uncappedName}Vector == null) {
-      int vectorCount = internalMap.size();
-      ${uncappedName}Vector = internalMap.addOrGet("${uncappedName}", ${name?upper_case}_TYPE, Nullable${name}Vector.class);
-      addSubType(MinorType.${name?upper_case});
-      if (internalMap.size() > vectorCount) {
-        ${uncappedName}Vector.allocateNew();
-      }
-    }
-    return ${uncappedName}Vector;
-  }
-  </#if>
-  </#list></#list>
-
-  private static final MajorType LIST_TYPE = Types.optional(MinorType.LIST);
 
   public ListVector getList() {
+    ListVector listVector = subtype(MinorType.LIST);
     if (listVector == null) {
-      int vectorCount = internalMap.size();
-      listVector = internalMap.addOrGet("list", LIST_TYPE, ListVector.class);
-      addSubType(MinorType.LIST);
-      if (internalMap.size() > vectorCount) {
-        listVector.allocateNew();
-      }
+      listVector = classicAddType(MinorType.LIST, ListVector.class);
     }
     return listVector;
   }
+  <#-- Generating a method per type is probably overkill. However, existing code
+       depends on these methods, so didn't want to remove them. Over time, a
+       generic, parameterized addOrGet(MinorType type) would be more compact.
+       Would need a function to map from minor type to vector class, which
+       can be generated here or in TypeHelper. -->
+  <#list vv.types as type>
+    <#list type.minor as minor>
+      <#assign name = minor.class?cap_first />
+      <#assign fields = minor.fields!type.fields />
+      <#assign uncappedName = name?uncap_first/>
+      <#if !minor.class?starts_with("Decimal")>
+
+  public Nullable${name}Vector get${name}Vector() {
+    Nullable${name}Vector vector = subtype(MinorType.${name?upper_case});
+    if (vector == null) {
+      vector = classicAddType(MinorType.${name?upper_case}, Nullable${name}Vector.class);
+    }
+    return vector;
+  }
+      </#if>
+    </#list>
+  </#list>
+  
+  /**
+   * Add or get a type member given the type.
+   * 
+   * @param type the type of the vector to retrieve
+   * @return the (potentially newly created) vector that backs the given type
+   */
+  
+  public ValueVector getMember(MinorType type) {
+    switch (type) {
+    case MAP:
+      return getMap();
+    case LIST:
+      return getList();
+  <#-- This awkard switch statement and call to type-specific method logic
+       can be generalized as described above. -->
+  <#list vv.types as type>
+    <#list type.minor as minor>
+      <#assign name = minor.class?cap_first />
+      <#assign fields = minor.fields!type.fields />
+      <#assign uncappedName = name?uncap_first/>
+      <#if !minor.class?starts_with("Decimal")>
+    case ${name?upper_case}:
+      return get${name}Vector();
+      </#if>
+    </#list>
+  </#list>
+    default:
+      throw new UnsupportedOperationException(type.toString());
+    }
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T extends ValueVector> T member(MinorType type) {
+    return (T) getMember(type);
+  }
 
   public int getTypeValue(int index) {
-    return typeVector.getAccessor().get(index);
+    return getTypeVector().getAccessor().get(index);
   }
 
   public UInt1Vector getTypeVector() {
+    if (typeVector == null) {
+      typeVector = (UInt1Vector) internalMap.getChild(TYPE_VECTOR_NAME);
+    }
     return typeVector;
+  }
+  
+  @VisibleForTesting
+  public MapVector getTypeMap() {
+    return internalMap;
   }
 
   @Override
   public void allocateNew() throws OutOfMemoryException {
     internalMap.allocateNew();
-    if (typeVector != null) {
-      typeVector.zeroVector();
-    }
+    getTypeVector().zeroVector();
+  }
+
+  public void allocateNew(int rowCount) throws OutOfMemoryException {
+    // The map vector does not have a form that takes a row count,
+    // but it should.
+    internalMap.allocateNew();
+    getTypeVector().zeroVector();
   }
 
   @Override
   public boolean allocateNewSafe() {
     boolean safe = internalMap.allocateNewSafe();
     if (safe) {
-      if (typeVector != null) {
-        typeVector.zeroVector();
-      }
+      getTypeVector().zeroVector();
     }
     return safe;
   }
@@ -184,7 +324,7 @@ public class UnionVector implements ValueVector {
 
   @Override
   public int getValueCapacity() {
-    return Math.min(typeVector.getValueCapacity(), internalMap.getValueCapacity());
+    return Math.min(getTypeVector().getValueCapacity(), internalMap.getValueCapacity());
   }
 
   @Override
@@ -200,12 +340,7 @@ public class UnionVector implements ValueVector {
 
   @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
-    // Most vectors are held inside the internal map.
-
     internalMap.collectLedgers(ledgers);
-    if (bit != null) {
-      bit.collectLedgers(ledgers);
-    }
   }
 
   @Override
@@ -231,7 +366,6 @@ public class UnionVector implements ValueVector {
   public void transferTo(UnionVector target) {
     internalMap.makeTransferPair(target.internalMap).transfer();
     target.valueCount = valueCount;
-    target.majorType = majorType;
   }
 
   public void copyFrom(int inIndex, int outIndex, UnionVector from) {
@@ -249,15 +383,47 @@ public class UnionVector implements ValueVector {
     copyFromSafe(fromIndex, toIndex, (UnionVector) from);
   }
 
+  /**
+   * Add a vector that matches the argument. Transfer the buffer from the argument
+   * to the new vector.
+   * 
+   * @param v the vector to clone and add
+   * @return the cloned vector that now holds the data from the argument
+   */
+  
   public ValueVector addVector(ValueVector v) {
     String name = v.getField().getType().getMinorType().name().toLowerCase();
     MajorType type = v.getField().getType();
+    MinorType minorType = type.getMinorType();
     Preconditions.checkState(internalMap.getChild(name) == null, String.format("%s vector already exists", name));
-    final ValueVector newVector = internalMap.addOrGet(name, type, BasicTypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+    final ValueVector newVector = internalMap.addOrGet(name, type, BasicTypeHelper.getValueVectorClass(minorType, type.getMode()));
     v.makeTransferPair(newVector).transfer();
     internalMap.putChild(name, newVector);
-    addSubType(v.getField().getType().getMinorType());
+    cachedSubtypes[minorType.ordinal()] = newVector;
+    addSubType(minorType);
     return newVector;
+  }
+  
+  // Called from SchemaUtil
+  
+  public ValueVector setFirstType(ValueVector v, int newValueCount) {
+    
+    // We can't check that this really is the first subtype since
+    // the subtypes can be declared before vectors are added.
+    
+    Preconditions.checkState(accessor.getValueCount() == 0);
+    final ValueVector vv = addVector(v);
+    MinorType type = v.getField().getType().getMinorType();
+    ValueVector.Accessor vAccessor = vv.getAccessor();
+    for (int i = 0; i < newValueCount; i++) {
+      if (! vAccessor.isNull(i)) {
+        mutator.setType(i, type);
+      } else {
+        mutator.setNull(i);
+      }
+    }
+    mutator.setValueCount(newValueCount);
+    return vv;
   }
 
   @Override
@@ -267,7 +433,7 @@ public class UnionVector implements ValueVector {
 
   private class TransferImpl implements TransferPair {
 
-    UnionVector to;
+    private final UnionVector to;
 
     public TransferImpl(MaterializedField field, BufferAllocator allocator) {
       to = new UnionVector(field, allocator, null);
@@ -319,13 +485,12 @@ public class UnionVector implements ValueVector {
 
   @Override
   public UserBitShared.SerializedField getMetadata() {
-    SerializedField.Builder b = getField() //
-            .getAsBuilder() //
-            .setBufferLength(getBufferSize()) //
-            .setValueCount(valueCount);
-
-    b.addChild(internalMap.getMetadata());
-    return b.build();
+    return getField()
+            .getAsBuilder()
+            .setBufferLength(getBufferSize())
+            .setValueCount(valueCount)
+            .addChild(internalMap.getMetadata())
+            .build();
   }
 
   @Override
@@ -366,18 +531,16 @@ public class UnionVector implements ValueVector {
 
   @Override
   public Iterator<ValueVector> iterator() {
-    List<ValueVector> vectors = Lists.newArrayList(internalMap.iterator());
-    vectors.add(typeVector);
-    return vectors.iterator();
+    return internalMap.iterator();
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {
 
     @Override
     public Object getObject(int index) {
-      int type = typeVector.getAccessor().get(index);
+      int type = getTypeVector().getAccessor().get(index);
       switch (type) {
-      case 0:
+      case NULL_MARKER:
         return null;
       <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
       <#assign fields = minor.fields!type.fields />
@@ -386,7 +549,6 @@ public class UnionVector implements ValueVector {
       case MinorType.${name?upper_case}_VALUE:
         return get${name}Vector().getAccessor().getObject(index);
       </#if>
-
       </#list></#list>
       case MinorType.MAP_VALUE:
         return getMap().getAccessor().getObject(index);
@@ -412,7 +574,12 @@ public class UnionVector implements ValueVector {
 
     @Override
     public boolean isNull(int index) {
-      return typeVector.getAccessor().get(index) == 0;
+      
+      // Note that type code == 0 is used to indicate a null.
+      // This corresponds to the LATE type, not the NULL type.
+      // This is presumably an artifact of an earlier implementation...
+      
+      return getTypeVector().getAccessor().get(index) == NULL_MARKER;
     }
 
     public int isSet(int index) {
@@ -449,14 +616,12 @@ public class UnionVector implements ValueVector {
         break;
       </#if>
       </#list></#list>
-      case MAP: {
+      case MAP:
         ComplexCopier.copy(reader, writer);
         break;
-      }
-      case LIST: {
+      case LIST:
         ComplexCopier.copy(reader, writer);
         break;
-      }
       default:
         throw new UnsupportedOperationException();
       }
@@ -475,7 +640,11 @@ public class UnionVector implements ValueVector {
     </#list></#list>
 
     public void setType(int index, MinorType type) {
-      typeVector.getMutator().setSafe(index, type.getNumber());
+      getTypeVector().getMutator().setSafe(index, type.getNumber());
+    }
+    
+    public void setNull(int index) {
+      getTypeVector().getMutator().setSafe(index, NULL_MARKER);
     }
 
     @Override

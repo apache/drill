@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
@@ -49,11 +51,8 @@ package org.apache.drill.exec.vector;
  */
 
 public final class ${className} extends BaseDataValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector, NullableVector {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${className}.class);
 
   private final FieldReader reader = new Nullable${minor.class}ReaderImpl(Nullable${minor.class}Vector.this);
-
-  private final MaterializedField bitsField = MaterializedField.create("$bits$", Types.required(MinorType.UINT1));
 
   /**
    * Set value flag. Meaning:
@@ -67,13 +66,26 @@ public final class ${className} extends BaseDataValueVector implements <#if type
    */
 
   private final UInt1Vector bits = new UInt1Vector(bitsField, allocator);
-  private final ${valuesName} values = new ${minor.class}Vector(field, allocator);
+
+  private final ${valuesName} values;
 
   private final Mutator mutator = new Mutator();
-  private final Accessor accessor = new Accessor();
+  private final Accessor accessor;
 
   public ${className}(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
+    
+    // The values vector has its own name, and has the same type and attributes
+    // as the nullable vector. This ensures that
+    // things like scale and precision are preserved in the values vector.
+    
+    values = new ${minor.class}Vector(
+        MaterializedField.create(VALUES_VECTOR_NAME, field.getType()),
+        allocator);
+    
+    field.addChild(bits.getField());
+    field.addChild(values.getField());
+    accessor = new Accessor();
   }
 
   @Override
@@ -128,6 +140,11 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   @Override
+  public int getAllocatedSize(){
+    return bits.getAllocatedSize() + values.getAllocatedSize();
+  }
+
+  @Override
   public DrillBuf getBuffer() {
     return values.getBuffer();
   }
@@ -138,6 +155,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   @Override
   public UInt1Vector getBitsVector() { return bits; }
 
+  <#if type.major == "VarLen">
+  @Override
+  public UInt4Vector getOffsetVector() {
+    return ((VariableWidthVector) values).getOffsetVector();
+  }
+
+  </#if>
   @Override
   public void setInitialCapacity(int numRecords) {
     bits.setInitialCapacity(numRecords);

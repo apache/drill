@@ -65,8 +65,6 @@ import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
@@ -107,9 +105,6 @@ public class BaseTestQuery extends ExecTest {
   private int[] columnWidths = new int[] { 8 };
 
   private static ScanResult classpathScan;
-
-  @ClassRule
-  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {

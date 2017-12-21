@@ -20,6 +20,9 @@ package org.apache.drill.common.types;
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
 import java.sql.ResultSetMetaData;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -54,9 +57,9 @@ public class Types {
     case LIST:
     case MAP:
       return true;
+    default:
+      return false;
     }
-
-    return false;
   }
 
   public static boolean isRepeated(final MajorType type) {
@@ -460,9 +463,9 @@ public class Types {
 
   public static boolean softEquals(final MajorType a, final MajorType b, final boolean allowNullSwap) {
     if (a.getMinorType() != b.getMinorType()) {
-        return false;
+      return false;
     }
-    if(allowNullSwap) {
+    if (allowNullSwap) {
       switch (a.getMode()) {
       case OPTIONAL:
       case REQUIRED:
@@ -470,7 +473,9 @@ public class Types {
         case OPTIONAL:
         case REQUIRED:
           return true;
+        default:
         }
+      default:
       }
     }
     return a.getMode() == b.getMode();
@@ -728,4 +733,59 @@ public class Types {
     return type.getMinorType() == MinorType.LATE;
   }
 
+  public static boolean isEquivalent(MajorType type1, MajorType type2) {
+
+    // Requires full type equality, including fields such as precision and scale.
+    // But, unset fields are equivalent to 0. Can't use the protobuf-provided
+    // isEquals() which treats set and unset fields as different.
+
+    if (type1.getMinorType() != type2.getMinorType() ||
+        type1.getMode() != type2.getMode() ||
+        type1.getScale() != type2.getScale() ||
+        type1.getPrecision() != type2.getPrecision()) {
+      return false;
+    }
+
+    // Subtypes are only for unions and are seldom used.
+
+    if (type1.getMinorType() != MinorType.UNION) {
+      return true;
+    }
+
+    List<MinorType> subtypes1 = type1.getSubTypeList();
+    List<MinorType> subtypes2 = type2.getSubTypeList();
+    if (subtypes1 == subtypes2) { // Only occurs if both are null
+      return true;
+    }
+    if (subtypes1 == null || subtypes2 == null) {
+      return false;
+    }
+    if (subtypes1.size() != subtypes2.size()) {
+      return false;
+    }
+
+    // Now it gets slow because subtype lists are not ordered.
+
+    List<MinorType> copy1 = new ArrayList<>();
+    List<MinorType> copy2 = new ArrayList<>();
+    copy1.addAll(subtypes1);
+    copy2.addAll(subtypes2);
+    Collections.sort(copy1);
+    Collections.sort(copy2);
+    return copy1.equals(copy2);
+  }
+
+  /**
+   * The union vector is a map of types. The following method provides
+   * the standard name to use in the type map. It replaces the many
+   * ad-hoc appearances of this code in each reference to the map.
+   *
+   * @param type Drill data type
+   * @return string key to use for this type in a union vector type
+   * map
+   */
+
+  public static String typeKey(MinorType type) {
+    return type.name().toLowerCase();
+  }
 }

@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.common.exceptions.UserException;
+
 import com.google.common.base.Charsets;
 
 /**
@@ -66,23 +68,6 @@ public class HeaderBuilder extends TextOutput {
    */
 
   public static final String ANONYMOUS_COLUMN_PREFIX = "column_";
-
-  /**
-   * Exception that reports header errors. Is an unchecked exception
-   * to avoid cluttering the normal field reader interface.
-   */
-  public static class HeaderError extends RuntimeException {
-
-    private static final long serialVersionUID = 1L;
-
-    public HeaderError(String msg) {
-      super(msg);
-    }
-
-    public HeaderError(int colIndex, String msg) {
-      super("Column " + (colIndex + 1) + ": " + msg);
-    }
-  }
 
   public final List<String> headers = new ArrayList<>();
   public final ByteBuffer currentField = ByteBuffer.allocate(MAX_HEADER_LEN);
@@ -204,14 +189,18 @@ public class HeaderBuilder extends TextOutput {
     try {
       currentField.put(data);
     } catch (BufferOverflowException e) {
-      throw new HeaderError(headers.size(), "Column exceeds maximum length of " + MAX_HEADER_LEN);
+      throw UserException.dataReadError()
+        .message("Column exceeds maximum length of %d", MAX_HEADER_LEN)
+        .build(logger);
     }
   }
 
   @Override
   public void finishRecord() {
     if (headers.isEmpty()) {
-      throw new HeaderError("The file must define at least one header.");
+      throw UserException.dataReadError()
+        .message("The file must define at least one header.")
+        .build(logger);
     }
 
     // Force headers to be unique.
