@@ -41,13 +41,25 @@ public class TestExternalSort extends BaseTestQuery {
 
   @Test
   public void testNumericTypesManaged() throws Exception {
-    testNumericTypes( false );
+    testNumericTypes(false);
   }
 
   @Test
   public void testNumericTypesLegacy() throws Exception {
-    testNumericTypes( true );
+    testNumericTypes(true);
   }
+
+  /**
+   * Test union type support in sort using numeric types: BIGINT and FLOAT8
+   * Drill does not support union types fully. Sort was adapted to handle them.
+   * This test simply verifies that the sort handles these types, even though
+   * Drill does not.
+   *
+   * @param testLegacy
+   *          true to test the old (pre-1.11) sort, false to test the new (1.11
+   *          and later) sort
+   * @throws Exception
+   */
 
   private void testNumericTypes(boolean testLegacy) throws Exception {
     final int record_count = 10000;
@@ -103,8 +115,9 @@ public class TestExternalSort extends BaseTestQuery {
 
   private String getOptions(boolean testLegacy) {
     String options = "alter session set `exec.enable_union_type` = true";
-    options += ";alter session set `" + ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName() + "` = " +
-        Boolean.toString(testLegacy);
+    options += ";alter session set `"
+        + ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName()
+        + "` = " + Boolean.toString(testLegacy);
     return options;
   }
 
@@ -159,10 +172,10 @@ public class TestExternalSort extends BaseTestQuery {
     }
 
     TestBuilder builder = testBuilder()
-            .sqlQuery("select * from dfs.`%s` order by a desc", tableDirName)
-            .ordered()
-            .optionSettingQueriesForTestQuery(getOptions(testLegacy))
-            .baselineColumns("a");
+        .sqlQuery("select * from dfs.`%s` order by a desc", tableDirName)
+        .ordered()
+        .optionSettingQueriesForTestQuery(getOptions(testLegacy))
+        .baselineColumns("a");
     // Strings come first because order by is desc
     for (int i = record_count; i >= 0;) {
       i--;
@@ -225,12 +238,13 @@ public class TestExternalSort extends BaseTestQuery {
       rowSet.clear();
     }
 
-    // Test framework currently doesn't handle changing schema (i.e. new columns) on the client side
+    // Test framework currently doesn't handle changing schema (i.e. new
+    // columns) on the client side
     TestBuilder builder = testBuilder()
-            .sqlQuery("select a, b, c from dfs.`%s` order by a desc", tableDirName)
-            .ordered()
-            .optionSettingQueriesForTestQuery(getOptions(testLegacy))
-            .baselineColumns("a", "b", "c");
+        .sqlQuery("select a, b, c from dfs.`%s` order by a desc", tableDirName)
+        .ordered()
+        .optionSettingQueriesForTestQuery(getOptions(testLegacy))
+        .baselineColumns("a", "b", "c");
     for (int i = record_count; i >= 0;) {
       builder.baselineValues((long) i, (long) i--, null);
       if (i >= 0) {
@@ -238,6 +252,9 @@ public class TestExternalSort extends BaseTestQuery {
       }
     }
     builder.go();
+
+    // TODO: Useless test: just dumps to console
+
     test("select * from dfs.`%s` order by a desc", tableDirName);
   }
 

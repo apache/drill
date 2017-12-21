@@ -30,8 +30,8 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelConversionException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
@@ -107,7 +107,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
       RexBuilder builder = new RexBuilder(factory);
       allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
 
-      if(fieldNames.get(index).contains(StarColumnHelper.STAR_COLUMN)) {
+      if(fieldNames.get(index).contains(SchemaPath.WILDCARD)) {
         relDataTypes.add(new RelDataTypeFieldImpl(fieldNames.get(index), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
       } else {
         relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + exprIndex, allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));

@@ -61,11 +61,11 @@ public static class G${type}Difference implements DrillSimpleFunc {
         <#if type == "Time">
         out.milliseconds = left.value - right.value;
         <#elseif type == "Date">
-        out.days = (int) ((left.value - right.value) / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.days = (int) ((left.value - right.value) / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         <#elseif type == "TimeStamp">
         long difference = (left.value - right.value);
-        out.milliseconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-        out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.milliseconds = (int) (difference % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+        out.days = (int) (difference / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         </#if>
     }
 }

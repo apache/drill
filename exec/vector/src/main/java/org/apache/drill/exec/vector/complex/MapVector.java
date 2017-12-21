@@ -49,7 +49,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 
 public class MapVector extends AbstractMapVector {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
 
   public final static MajorType TYPE = Types.required(MinorType.MAP);
 
@@ -58,11 +57,11 @@ public class MapVector extends AbstractMapVector {
   private final Mutator mutator = new Mutator();
   private int valueCount;
 
-  public MapVector(String path, BufferAllocator allocator, CallBack callBack){
+  public MapVector(String path, BufferAllocator allocator, CallBack callBack) {
     this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
-  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
+  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field, allocator, callBack);
   }
 
@@ -73,14 +72,14 @@ public class MapVector extends AbstractMapVector {
   transient private MapSingleCopier ephPair2;
 
   public void copyFromSafe(int fromIndex, int thisIndex, MapVector from) {
-    if(ephPair == null || ephPair.from != from) {
+    if (ephPair == null || ephPair.from != from) {
       ephPair = (MapTransferPair) from.makeTransferPair(this);
     }
     ephPair.copyValueSafe(fromIndex, thisIndex);
   }
 
   public void copyFromSafe(int fromSubIndex, int thisIndex, RepeatedMapVector from) {
-    if(ephPair2 == null || ephPair2.from != from) {
+    if (ephPair2 == null || ephPair2.from != from) {
       ephPair2 = from.makeSingularCopier(this);
     }
     ephPair2.copySafe(fromSubIndex, thisIndex);
@@ -143,9 +142,6 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    //int expectedSize = getBufferSize();
-    //int actualSize   = super.getBufferSize();
-    //Preconditions.checkArgument(expectedSize == actualSize);
     return super.getBuffers(clear);
   }
 
@@ -294,9 +290,9 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public SerializedField getMetadata() {
-    SerializedField.Builder b = getField() //
-        .getAsBuilder() //
-        .setBufferLength(getBufferSize()) //
+    SerializedField.Builder b = getField()
+        .getAsBuilder()
+        .setBufferLength(getBufferSize())
         .setValueCount(valueCount);
 
 
@@ -309,13 +305,6 @@ public class MapVector extends AbstractMapVector {
   @Override
   public Mutator getMutator() {
     return mutator;
-  }
-
-  @Override
-  public void exchange(ValueVector other) {
-    // Exchange is used for look-ahead writers, but writers manage
-    // map member vectors directly.
-    throw new UnsupportedOperationException("Exchange() not supported for maps");
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {
@@ -356,6 +345,14 @@ public class MapVector extends AbstractMapVector {
   public ValueVector getVectorById(int id) {
     return getChildByOrdinal(id);
   }
+
+  /**
+   * Set the value count for the map without setting the counts for the contained
+   * vectors. Use this only when the values of the contained vectors are set
+   * elsewhere in the code.
+   *
+   * @param valueCount number of items in the map
+   */
 
   public void setMapValueCount(int valueCount) {
     this.valueCount = valueCount;
@@ -401,5 +398,14 @@ public class MapVector extends AbstractMapVector {
   @Override
   public void toNullable(ValueVector nullableVector) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    super.exchange(other);
+    MapVector otherMap = (MapVector) other;
+    int temp = otherMap.valueCount;
+    otherMap.valueCount = valueCount;
+    valueCount = temp;
   }
 }

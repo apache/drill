@@ -71,18 +71,8 @@ public interface OperatorContext {
   ExecutionControls getExecutionControls();
 
   /**
-   * A write-only interface to the Drill statistics mechanism. Allows
+   * Drill statistics mechanism. Allows
    * operators to update statistics.
-   * @return operator statistics
-   */
-
-  OperatorStatReceiver getStatsWriter();
-
-  /**
-   * Full operator stats (for legacy code). Prefer
-   * <tt>getStatsWriter()</tt> to allow code to easily run in a
-   * test environment.
-   *
    * @return operator statistics
    */
 

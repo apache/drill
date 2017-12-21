@@ -86,11 +86,11 @@ public class SelectionVector2 implements AutoCloseable {
   }
 
   public void setBuffer(DrillBuf bufferHandle) {
-      /* clear the existing buffer */
-      clear();
+    /* clear the existing buffer */
+    clear();
 
-      this.buffer = bufferHandle;
-      buffer.retain(1);
+    this.buffer = bufferHandle;
+    buffer.retain(1);
   }
 
   public char getIndex(int index) {
@@ -106,7 +106,7 @@ public class SelectionVector2 implements AutoCloseable {
   }
 
   public void setIndex(int index, int value) {
-    buffer.setChar(index, value);
+    buffer.setChar(index * RECORD_SIZE, value);
   }
 
   public boolean allocateNewSafe(int size) {

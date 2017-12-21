@@ -85,7 +85,7 @@ public class KafkaRecordReader extends AbstractRecordReader {
         transformed.add(column);
       }
     } else {
-      transformed.add(Utilities.STAR_COLUMN);
+      transformed.add(SchemaPath.STAR_COLUMN);
     }
     return transformed;
   }

@@ -29,16 +29,13 @@ import java.io.PrintWriter;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
-import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.SchemaBuilder;
-import org.apache.drill.test.DirTestWatcher;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -51,9 +48,6 @@ import org.junit.Test;
 public class TestCsv extends ClusterTest {
 
   private static File testDir;
-
-  @ClassRule
-  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
   @BeforeClass
   public static void setup() throws Exception {

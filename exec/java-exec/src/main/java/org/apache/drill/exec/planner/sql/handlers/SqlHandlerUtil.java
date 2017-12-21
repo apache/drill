@@ -30,7 +30,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -157,7 +157,7 @@ public class SqlHandlerUtil {
             .message("Partition column %s is not in the SELECT list of CTAS!", col)
             .build(logger);
       } else {
-        if (field.getName().startsWith(StarColumnHelper.STAR_COLUMN)) {
+        if (field.getName().startsWith(SchemaPath.WILDCARD)) {
           colRefStarNames.add(col);
 
           final List<RexNode> operands = Lists.newArrayList();
@@ -191,10 +191,12 @@ public class SqlHandlerUtil {
 
       final List<RexNode> refs =
           new AbstractList<RexNode>() {
+            @Override
             public int size() {
               return originalFieldSize + colRefStarExprs.size();
             }
 
+            @Override
             public RexNode get(int index) {
               if (index < originalFieldSize) {
                 return RexInputRef.of(index, inputRowType.getFieldList());

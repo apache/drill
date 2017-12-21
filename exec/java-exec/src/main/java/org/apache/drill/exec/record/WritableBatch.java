@@ -177,7 +177,7 @@ public class WritableBatch implements AutoCloseable {
     return b;
   }
 
-  public static WritableBatch get(RecordBatch batch) {
+  public static WritableBatch get(VectorAccessible batch) {
     if (batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
       throw new UnsupportedOperationException("Only batches without hyper selections vectors are writable.");
     }
@@ -198,5 +198,4 @@ public class WritableBatch implements AutoCloseable {
       drillBuf.release(1);
     }
   }
-
 }

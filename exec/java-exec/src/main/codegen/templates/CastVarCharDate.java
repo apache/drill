@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,7 +39,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
 
@@ -54,8 +53,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
   
-  public void setup() {
-  }
+  public void setup() { }
 
   public void eval() {
 
@@ -76,7 +74,6 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeFormatter();
       out.value = (int) ((f.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
       </#if>
-
   }
 }
 </#if> <#-- type.major -->

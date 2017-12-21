@@ -17,22 +17,23 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import com.google.common.base.Charsets;
+import java.util.Iterator;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 //import org.apache.drill.common.types.DataMode;
 import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.MapUtility;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
-import io.netty.buffer.DrillBuf;
+import com.google.common.base.Charsets;
 
-import java.util.Iterator;
+import io.netty.buffer.DrillBuf;
 
 public class MappifyUtility {
 

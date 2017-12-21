@@ -35,7 +35,6 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.bson.BsonRecordReader;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
@@ -113,7 +112,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     } else {
       // Tale all the fields including the _id
       this.fields.remove(DrillMongoConstants.ID);
-      transformed.add(Utilities.STAR_COLUMN);
+      transformed.add(SchemaPath.STAR_COLUMN);
     }
     return transformed;
   }

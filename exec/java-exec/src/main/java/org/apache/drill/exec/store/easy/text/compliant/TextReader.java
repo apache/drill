@@ -372,15 +372,18 @@ final class TextReader {
         throw new TextParsingException(context, "Cannot use newline character within quoted string");
       }
 
-      if(success){
+      if (success) {
         if (recordsToRead > 0 && context.currentRecord() >= recordsToRead) {
           context.stop();
         }
         return true;
-      }else{
+      } else {
         return false;
       }
 
+    } catch (UserException ex) {
+      stopParsing();
+      throw ex;
     } catch (StreamFinishedPseudoException ex) {
       stopParsing();
       return false;

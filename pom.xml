@@ -31,7 +31,7 @@
   <properties>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
-    <dep.junit.version>4.11</dep.junit.version>
+    <dep.junit.version>4.12</dep.junit.version>
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
     <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>

@@ -486,7 +486,19 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   @Override
   public void close() {
+
+    // Sanity check: if close is called twice, just ignore
+    // the second call.
+
+    if (sortImpl == null) {
+      return;
+    }
+
     RuntimeException ex = null;
+
+    // If we got far enough to have a results iterator, close
+    // that first.
+
     try {
       if (resultsIterator != null) {
         resultsIterator.close();
@@ -495,6 +507,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     } catch (RuntimeException e) {
       ex = (ex == null) ? e : ex;
     }
+
+    // Then close the "guts" of the sort operation.
+
     try {
       if (sortImpl != null) {
         sortImpl.close();
@@ -506,14 +521,22 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     // The call to super.close() clears out the output container.
     // Doing so requires the allocator here, so it must be closed
-    // after the super call.
+    // (when closing the operator context) after the super call.
 
     try {
       super.close();
     } catch (RuntimeException e) {
       ex = (ex == null) ? e : ex;
     }
-    // Note: allocator is closed by the FragmentManager
+
+    // Finally close the operator context (which closes the
+    // child allocator.)
+
+    try {
+      oContext.close();
+    } catch (RuntimeException e) {
+      ex = ex == null ? e : ex;
+    }
     if (ex != null) {
       throw ex;
     }

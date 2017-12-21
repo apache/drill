@@ -20,7 +20,9 @@ package org.apache.drill.test;
 import java.io.IOException;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.test.rowSet.RowSet;
 import org.junit.AfterClass;
+import org.junit.ClassRule;
 
 /**
  * Base class for tests that use a single cluster fixture for a set of
@@ -72,6 +74,9 @@ import org.junit.AfterClass;
 
 public class ClusterTest extends DrillTest {
 
+  @ClassRule
+  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+
   protected static ClusterFixture cluster;
   protected static ClientFixture client;
 
@@ -115,5 +120,35 @@ public class ClusterTest extends DrillTest {
 
   public QueryBuilder queryBuilder( ) {
     return client.queryBuilder();
+  }
+
+  /**
+   * Handy development-time tool to run a query and print the results. Use this
+   * when first developing tests. Then, encode the expected results using
+   * the appropriate tool and verify them rather than just printing them to
+   * create the final test.
+   *
+   * @param sql the query to run
+   */
+
+  protected void runAndPrint(String sql) {
+    QueryResultSet results = client.queryBuilder().sql(sql).resultSet();
+    try {
+      for (;;) {
+        RowSet rowSet = results.next();
+        if (rowSet == null) {
+          break;
+        }
+        if (rowSet.rowCount() > 0) {
+          rowSet.print();
+        }
+        rowSet.clear();
+      }
+      System.out.println(results.recordCount());
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    } finally {
+      results.close();
+    }
   }
 }

@@ -105,9 +105,6 @@ public class SchemaUtil {
         if (field.getType().getMinorType() == MinorType.UNION) {
           UnionVector u = (UnionVector) tp.getTo();
           for (MinorType t : field.getType().getSubTypeList()) {
-            if (u.getField().getType().getSubTypeList().contains(t)) {
-              continue;
-            }
             u.addSubType(t);
           }
         }
@@ -116,22 +113,7 @@ public class SchemaUtil {
         ValueVector newVector = TypeHelper.getNewVector(field, allocator);
         Preconditions.checkState(field.getType().getMinorType() == MinorType.UNION, "Can only convert vector to Union vector");
         UnionVector u = (UnionVector) newVector;
-        final ValueVector vv = u.addVector(tp.getTo());
-        MinorType type = v.getField().getType().getMinorType();
-        for (int i = 0; i < valueCount; i++) {
-          if (!vv.getAccessor().isNull(i)) {
-            u.getMutator().setType(i, type);
-          } else {
-            u.getMutator().setType(i, MinorType.LATE);
-          }
-        }
-        for (MinorType t : field.getType().getSubTypeList()) {
-          if (u.getField().getType().getSubTypeList().contains(t)) {
-            continue;
-          }
-          u.addSubType(t);
-        }
-        u.getMutator().setValueCount(valueCount);
+        u.setFirstType(tp.getTo(), valueCount);
         return u;
       }
     } else {

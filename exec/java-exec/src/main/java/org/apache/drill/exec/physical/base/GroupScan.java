@@ -40,7 +40,7 @@ public interface GroupScan extends Scan, HasAffinity{
    *                             2) NULL is interpreted as ALL_COLUMNS.
    *  How to handle skipAll query is up to each storage plugin, with different policy in corresponding RecordReader.
    */
-  public static final List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.getSimplePath("*"));
+  public static final List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.STAR_COLUMN);
 
   public static final long NO_COLUMN_STATS = -1;
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,10 @@ package org.apache.drill.exec.record.selection;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
 
 public class SelectionVector4 implements AutoCloseable {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
 
   private ByteBuf data;
   private int recordCount;
@@ -31,13 +31,25 @@ public class SelectionVector4 implements AutoCloseable {
   private int length;
 
   public SelectionVector4(ByteBuf vector, int recordCount, int batchRecordCount) throws SchemaChangeException {
-    if (recordCount > Integer.MAX_VALUE /4) {
-      throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size.  You requested an allocation of %d bytes.", recordCount * 4));
+    if (recordCount > Integer.MAX_VALUE / 4) {
+      throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size. " +
+          "You requested an allocation of %d bytes.", recordCount * 4L));
     }
     this.recordCount = recordCount;
     this.start = 0;
     this.length = Math.min(batchRecordCount, recordCount);
     this.data = vector;
+  }
+
+  public SelectionVector4(BufferAllocator allocator, int recordCount) {
+    if (recordCount > Integer.MAX_VALUE / 4) {
+      throw new IllegalStateException(String.format("Currently, Drill can only support allocations up to 2gb in size. " +
+          "You requested an allocation of %d bytes.", recordCount * 4L));
+    }
+    this.recordCount = recordCount;
+    this.start = 0;
+    this.length = recordCount;
+    this.data = allocator.buffer(recordCount * 4);
   }
 
   public int getTotalCount() {
@@ -54,15 +66,15 @@ public class SelectionVector4 implements AutoCloseable {
   }
 
   public void set(int index, int compound) {
-    data.setInt(index*4, compound);
+    data.setInt(index * 4, compound);
   }
 
   public void set(int index, int recordBatch, int recordIndex) {
-    data.setInt(index*4, (recordBatch << 16) | (recordIndex & 65535));
+    data.setInt(index * 4, (recordBatch << 16) | (recordIndex & 65535));
   }
 
   public int get(int index) {
-    return data.getInt( (start+index)*4);
+    return data.getInt((start+index) * 4);
   }
 
   /**

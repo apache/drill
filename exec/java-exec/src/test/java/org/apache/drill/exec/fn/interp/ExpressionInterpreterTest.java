@@ -156,7 +156,6 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   protected void doTest(String expressionStr, String[] colNames, TypeProtos.MajorType[] colTypes, String[] expectFirstTwoValues, BitControl.PlanFragment planFragment) throws Exception {
     @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-    @SuppressWarnings("resource")
     final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
 
     bit1.run();
@@ -173,7 +172,6 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(10, false, 0, 1, columns);
     final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", false, java.util.Collections.singletonList(entry));
 
-    @SuppressWarnings("resource")
     final ScanBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
 
     batch.next();
@@ -202,7 +200,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     try {
       final FragmentContext context =
           new FragmentContext(bit.getContext(), planFragment, null, bit.getContext().getFunctionImplementationRegistry());
-      return creator.getBatch(context,scanPOP, children);
+      return (ScanBatch) creator.getBatch(context, scanPOP, children);
     } catch (Exception ex) {
       throw new DrillRuntimeException("Error when setup fragment context" + ex);
     }

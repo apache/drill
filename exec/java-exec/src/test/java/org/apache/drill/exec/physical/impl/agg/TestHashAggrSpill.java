@@ -29,6 +29,7 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.ProfileParser;
 import org.apache.drill.test.QueryBuilder;
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertTrue;
  * Test spilling for the Hash Aggr operator (using the mock reader)
  */
 @Category({SlowTest.class, OperatorTest.class})
-public class TestHashAggrSpill {
+public class TestHashAggrSpill extends DrillTest {
 
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();

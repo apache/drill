@@ -18,9 +18,6 @@
 package org.apache.drill.exec.record;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -42,13 +39,14 @@ import com.google.common.collect.Sets;
 
 public class VectorContainer implements VectorAccessible {
 
+  private final BufferAllocator allocator;
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
   private int recordCount = -1;
-  private BufferAllocator allocator;
   private boolean schemaChanged = true; // Schema has changed since last built. Must rebuild schema
 
   public VectorContainer() {
+    allocator = null;
   }
 
   public VectorContainer(OperatorContext oContext) {
@@ -336,9 +334,13 @@ public class VectorContainer implements VectorAccessible {
   }
 
   public void clear() {
-    schema = null;
     zeroVectors();
+    removeAll();
+  }
+
+  public void removeAll() {
     wrappers.clear();
+    schema = null;
   }
 
   public void setRecordCount(int recordCount) {
@@ -365,13 +367,17 @@ public class VectorContainer implements VectorAccessible {
 
   /**
    * Clears the contained vectors.  (See {@link ValueVector#clear}).
+   * Note that the name <tt>zeroVector()</tt> in a value vector is
+   * used for the action to set all vectors to zero. Here it means
+   * to free the vector's memory. Sigh...
    */
+
   public void zeroVectors() {
     VectorAccessibleUtilities.clear(this);
   }
 
   public int getNumberOfColumns() {
-    return this.wrappers.size();
+    return wrappers.size();
   }
 
   public void allocateNew() {
@@ -414,5 +420,31 @@ public class VectorContainer implements VectorAccessible {
     merged.wrappers.addAll(otherContainer.wrappers);
     merged.schemaChanged = false;
     return merged;
+  }
+
+  /**
+   * Exchange buffers between two identical vector containers.
+   * The schemas must be identical in both column schemas and
+   * order. That is, after this call, data is exchanged between
+   * the containers. Requires that both containers be owned
+   * by the same allocator.
+   *
+   * @param other the target container with buffers to swap
+   */
+
+  public void exchange(VectorContainer other) {
+    assert schema.isEquivalent(other.schema);
+    assert wrappers.size() == other.wrappers.size();
+    assert allocator != null  &&  allocator == other.allocator;
+    for (int i = 0; i < wrappers.size(); i++) {
+      wrappers.get(i).getValueVector().exchange(
+          other.wrappers.get(i).getValueVector());
+    }
+    int temp = recordCount;
+    recordCount = other.recordCount;
+    other.recordCount = temp;
+    boolean temp2 = schemaChanged;
+    schemaChanged = other.schemaChanged;
+    other.schemaChanged = temp2;
   }
 }

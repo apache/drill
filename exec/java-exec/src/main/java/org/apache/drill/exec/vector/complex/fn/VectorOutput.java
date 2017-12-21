@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector.complex.fn;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
@@ -30,6 +29,7 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
@@ -258,9 +258,9 @@ abstract class VectorOutput {
       IntervalWriter intervalWriter = writer.interval();
       if(!isNull){
         final Period p = ISOPeriodFormat.standard().parsePeriod(parser.getValueAsString());
-        int months = DateUtility.monthsFromPeriod(p);
+        int months = DateUtilities.monthsFromPeriod(p);
         int days = p.getDays();
-        int millis = DateUtility.millisFromPeriod(p);
+        int millis = DateUtilities.periodToMillis(p);
         intervalWriter.writeInterval(months, days, millis);
       }
     }
@@ -295,6 +295,7 @@ abstract class VectorOutput {
       return innerRun();
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void writeBinary(boolean isNull) throws IOException {
       VarBinaryWriter bin = writer.varBinary(fieldName);
@@ -326,6 +327,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeTime(boolean isNull) throws IOException {
+      @SuppressWarnings("resource")
       TimeWriter t = writer.time(fieldName);
       if(!isNull){
         DateTimeFormatter f = ISODateTimeFormat.time();
@@ -333,6 +335,7 @@ abstract class VectorOutput {
       }
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void writeTimestamp(boolean isNull) throws IOException {
       TimeStampWriter ts = writer.timeStamp(fieldName);
@@ -359,15 +362,16 @@ abstract class VectorOutput {
       IntervalWriter intervalWriter = writer.interval(fieldName);
       if(!isNull){
         final Period p = ISOPeriodFormat.standard().parsePeriod(parser.getValueAsString());
-        int months = DateUtility.monthsFromPeriod(p);
+        int months = DateUtilities.monthsFromPeriod(p);
         int days = p.getDays();
-        int millis = DateUtility.millisFromPeriod(p);
+        int millis = DateUtilities.periodToMillis(p);
         intervalWriter.writeInterval(months, days, millis);
       }
     }
 
     @Override
     public void writeInteger(boolean isNull) throws IOException {
+      @SuppressWarnings("resource")
       BigIntWriter intWriter = writer.bigInt(fieldName);
       if(!isNull){
         intWriter.writeBigInt(Long.parseLong(parser.getValueAsString()));

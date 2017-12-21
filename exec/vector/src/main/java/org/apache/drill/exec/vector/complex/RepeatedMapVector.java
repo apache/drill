@@ -64,9 +64,7 @@ public class RepeatedMapVector extends AbstractMapVector
   private final EmptyValuePopulator emptyPopulator;
 
   public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
-    super(field, allocator, callBack);
-    this.offsets = new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator);
-    this.emptyPopulator = new EmptyValuePopulator(offsets);
+    this(field, new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator), callBack);
   }
 
   public RepeatedMapVector(MaterializedField field, UInt4Vector offsets, CallBack callBack) {
@@ -150,7 +148,7 @@ public class RepeatedMapVector extends AbstractMapVector
     }
 
     long bufferSize = offsets.getBufferSizeFor(valueCount);
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
+    for (final ValueVector v : this) {
       bufferSize += v.getBufferSizeFor(valueCount);
     }
 
@@ -424,9 +422,8 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public void exchange(ValueVector other) {
-    // Exchange is used for look-ahead writers, but writers manage
-    // map member vectors directly.
-    throw new UnsupportedOperationException("Exchange() not supported for maps");
+    super.exchange(other);
+    offsets.exchange(((RepeatedMapVector) other).offsets);
   }
 
   @Override
@@ -459,13 +456,13 @@ public class RepeatedMapVector extends AbstractMapVector
     assert bufOffset == buffer.writerIndex();
   }
 
-
   @Override
   public SerializedField getMetadata() {
-    SerializedField.Builder builder = getField() //
-        .getAsBuilder() //
-        .setBufferLength(getBufferSize()) //
-        // while we don't need to actually read this on load, we need it to make sure we don't skip deserialization of this vector
+    SerializedField.Builder builder = getField()
+        .getAsBuilder()
+        .setBufferLength(getBufferSize())
+        // while we don't need to actually read this on load, we need it to
+        // make sure we don't skip deserialization of this vector
         .setValueCount(accessor.getValueCount());
     builder.addChild(offsets.getMetadata());
     for (final ValueVector child : getChildren()) {

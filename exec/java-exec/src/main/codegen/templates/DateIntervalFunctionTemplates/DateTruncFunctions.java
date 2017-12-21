@@ -213,19 +213,19 @@ public class GDateTimeTruncateFunctions {
         <#if toUnit == "Second"> <#--  Start UnitType -->
       out.months = right.months;
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis))*
-          (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.vector.DateUtilities.secondsToMillis))*
+          (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
         <#elseif toUnit == "Minute">
       out.months = right.months;
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis))*
-          (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.vector.DateUtilities.minutesToMillis))*
+          (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
         <#elseif toUnit == "Hour">
       out.months = right.months;
       out.days = right.days;
       out.milliseconds =
-          (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis))*
-              (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+          (right.milliseconds/(org.apache.drill.exec.vector.DateUtilities.hoursToMillis))*
+              (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
         <#elseif toUnit == "Day">
       out.months = right.months;
       out.days = right.days;
@@ -258,17 +258,17 @@ public class GDateTimeTruncateFunctions {
       <#elseif type == "IntervalDay">
         <#if toUnit == "Second"> <#--  Start UnitType -->
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis))*
-        (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.vector.DateUtilities.secondsToMillis))*
+        (org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
         <#elseif toUnit == "Minute">
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis))*
-          (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.vector.DateUtilities.minutesToMillis))*
+          (org.apache.drill.exec.vector.DateUtilities.minutesToMillis);
         <#elseif toUnit == "Hour">
       out.days = right.days;
       out.milliseconds =
-          (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis))*
-              (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+          (right.milliseconds/(org.apache.drill.exec.vector.DateUtilities.hoursToMillis))*
+              (org.apache.drill.exec.vector.DateUtilities.hoursToMillis);
         <#elseif toUnit == "Day">
       out.days = right.days;
       out.milliseconds = 0;

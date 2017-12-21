@@ -31,7 +31,6 @@ import java.util.Collection;
 
 public class Utilities {
 
-  public static final SchemaPath STAR_COLUMN = SchemaPath.getSimplePath("*");
   public static final String COL_NULL_ERROR = "Columns cannot be null. Use star column to select all fields.";
 
   public static String getFileNameForQueryFragment(FragmentContext context, String location, String tag) {
@@ -87,7 +86,7 @@ public class Utilities {
     return Iterables.tryFind(Preconditions.checkNotNull(projected, COL_NULL_ERROR), new Predicate<SchemaPath>() {
       @Override
       public boolean apply(SchemaPath path) {
-        return Preconditions.checkNotNull(path).equals(STAR_COLUMN);
+        return Preconditions.checkNotNull(path).equals(SchemaPath.STAR_COLUMN);
       }
     }).isPresent();
   }
