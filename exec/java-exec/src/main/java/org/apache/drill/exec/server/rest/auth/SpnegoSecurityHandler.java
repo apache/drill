@@ -18,33 +18,19 @@
 package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.common.exceptions.DrillException;
-import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.rest.WebServerConstants;
-import org.eclipse.jetty.security.authentication.FormAuthenticator;
+import org.eclipse.jetty.util.security.Constraint;
 
-public class FORMSecurityHanlder extends DrillHttpConstraintSecurityHandler {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FORMSecurityHanlder.class);
-
-  public static final String HANDLER_NAME = "FORM";
+public class SpnegoSecurityHandler extends DrillHttpConstraintSecurityHandler {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpnegoSecurityHandler.class);
 
   @Override
   public String getImplName() {
-    return HANDLER_NAME;
+    return Constraint.__SPNEGO_AUTH;
   }
 
   @Override
   public void doSetup(DrillbitContext dbContext) throws DrillException {
-
-    // Check if PAMAuthenticator is available or not which is required for FORM authentication
-    if (!dbContext.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
-      throw new DrillException("FORM mechanism was configured but PLAIN mechanism is not enabled to provide an " +
-          "authenticator. Please configure user authentication with PLAIN mechanism and authenticator to use " +
-          "FORM authentication");
-    }
-
-    setup(new FormAuthenticator(WebServerConstants.FORM_LOGIN_RESOURCE_PATH,
-        WebServerConstants.FORM_LOGIN_RESOURCE_PATH, true), new DrillRestLoginService(dbContext));
+    setup(new DrillSpnegoAuthenticator(getImplName()), new DrillSpnegoLoginService(dbContext));
   }
-
 }

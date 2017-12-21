@@ -184,7 +184,7 @@ public class WebServer implements AutoCloseable {
     }
   }
 
-  private ServletContextHandler createServletContextHandler(final boolean authEnabled) throws Exception {
+  private ServletContextHandler createServletContextHandler(final boolean authEnabled) throws DrillbitStartupException {
     // Add resources
     final ErrorHandler errorHandler = new DrillErrorHandler();
 

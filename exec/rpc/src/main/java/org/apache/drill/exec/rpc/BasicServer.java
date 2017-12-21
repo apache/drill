@@ -203,8 +203,6 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
           continue;
         }
 
-        e.printStackTrace();
-
         final UserException bindException =
             UserException
               .resourceError( e )

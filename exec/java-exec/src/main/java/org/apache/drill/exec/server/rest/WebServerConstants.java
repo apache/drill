@@ -20,8 +20,9 @@ package org.apache.drill.exec.server.rest;
 /**
  * Holds various constants used by WebServer components.
  */
-public class WebServerConstants {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServerConstants.class);
+public final class WebServerConstants {
+
+  private WebServerConstants() {}
 
   public static final String REDIRECT_QUERY_PARM = "redirect";
   public static final String WEBSERVER_ROOT_PATH = "/";

@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
 
 public class KerberosHelper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KerberosHelper.class);
@@ -45,7 +43,7 @@ public class KerberosHelper {
   public String SERVER_PRINCIPAL;
   private final String testName;
 
-  public File keytabDir;
+  private File keytabDir;
   public File clientKeytab;
   public File serverKeytab;
 

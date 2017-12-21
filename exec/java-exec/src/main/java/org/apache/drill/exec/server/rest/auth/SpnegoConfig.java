@@ -19,7 +19,6 @@
 
 package org.apache.drill.exec.server.rest.auth;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
@@ -27,17 +26,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.UserGroupInformation;
 
-public class SpnegoUtil {
+public class SpnegoConfig {
 
   private UserGroupInformation loggedInUgi;
 
-  //private String realm;
+  private final String principal;
 
-  private String principal;
+  private final String keytab;
 
-  private String keytab;
-
-  public SpnegoUtil(DrillConfig config) {
+  public SpnegoConfig(DrillConfig config) {
 
     keytab = config.hasPath(ExecConstants.HTTP_SPNEGO_KEYTAB) ?
         config.getString(ExecConstants.HTTP_SPNEGO_KEYTAB) :
@@ -76,6 +73,15 @@ public class SpnegoUtil {
     throw new DrillException(errorMsg.toString());
   }
 
+  public UserGroupInformation getLoggedInUgi() throws DrillException {
+
+    if (loggedInUgi != null) {
+      return loggedInUgi;
+    }
+    loggedInUgi = loginAndReturnUgi();
+    return loggedInUgi;
+  }
+
   //Performs the Server login to KDC for SPNEGO
   private UserGroupInformation loginAndReturnUgi() throws DrillException {
 
@@ -99,17 +105,8 @@ public class SpnegoUtil {
         ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
       }
     } catch (Exception e) {
-      throw new DrillException(String.format("Login failed for %s with given keytab", principal));
+      throw new DrillException(String.format("Login failed for %s with given keytab", principal), e);
     }
     return ugi;
-  }
-
-  public UserGroupInformation getLoggedInUgi() throws DrillException {
-
-    if (loggedInUgi != null) {
-      return loggedInUgi;
-    }
-    loggedInUgi = loginAndReturnUgi();
-    return loggedInUgi;
   }
 }

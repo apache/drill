@@ -17,6 +17,16 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.rpc.security.AuthStringUtil;
+import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
+import org.apache.drill.exec.work.WorkManager;
+import org.eclipse.jetty.security.authentication.FormAuthenticator;
+import org.eclipse.jetty.util.security.Constraint;
+import org.glassfish.jersey.server.mvc.Viewable;
+
 import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -32,18 +42,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.rpc.security.AuthStringUtil;
-import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
-import org.apache.drill.exec.server.rest.auth.FORMSecurityHanlder;
-import org.apache.drill.exec.server.rest.auth.SPNEGOSecurityHandler;
-import org.apache.drill.exec.work.WorkManager;
-import org.eclipse.jetty.security.authentication.FormAuthenticator;
-import org.glassfish.jersey.server.mvc.Viewable;
-
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.Set;
@@ -55,6 +53,24 @@ public class LogInLogOutResources {
   @Inject
   WorkManager workManager;
 
+
+  /**
+   * Update the destination URI to be redirect URI if specified in the request URL so that after the login is
+   * successful, request is forwarded to redirect page.
+   * @param redirect - Redirect parameter in the request URI
+   * @param request - Http Servlet Request
+   * @throws Exception
+   */
+  private void updateSessionRedirectInfo(String redirect, HttpServletRequest request) throws Exception {
+    if (!StringUtils.isEmpty(redirect)) {
+      // If the URL has redirect in it, set the redirect URI in session, so that after the login is successful, request
+      // is forwarded to the redirect page.
+      final HttpSession session = request.getSession(true);
+      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
+      session.setAttribute(FormAuthenticator.__J_URI, destURI.toString());
+    }
+  }
+
   @GET
   @Path(WebServerConstants.FORM_LOGIN_RESOURCE_PATH)
   @Produces(MediaType.TEXT_HTML)
@@ -64,34 +80,28 @@ public class LogInLogOutResources {
 
     if (AuthDynamicFeature.isUserLoggedIn(sc)) {
       // if the user is already login, forward the request to homepage.
-      request.getRequestDispatcher("/").forward(request, response);
+      request.getRequestDispatcher(WebServerConstants.WEBSERVER_ROOT_PATH).forward(request, response);
       return null;
     }
 
-    if (!StringUtils.isEmpty(redirect)) {
-      // If the URL has redirect in it, set the redirect URI in session, so that after the login is successful, request
-      // is forwarded to the redirect page.
-      final HttpSession session = request.getSession(true);
-      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
-      session.setAttribute(FormAuthenticator.__J_URI, destURI.toString());
-    }
-
+    updateSessionRedirectInfo(redirect, request);
     return ViewableWithPermissions.createLoginPage(null);
   }
 
   @GET
   @Path(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getSpnegologin(@Context HttpServletRequest request, @Context HttpServletResponse response,
+  public Viewable getSpnegoLogin(@Context HttpServletRequest request, @Context HttpServletResponse response,
                                  @Context SecurityContext sc, @Context UriInfo uriInfo,
                                  @QueryParam(WebServerConstants.REDIRECT_QUERY_PARM) String redirect) throws Exception {
     if (AuthDynamicFeature.isUserLoggedIn(sc)) {
-      request.getRequestDispatcher("/").forward(request, response);
+      request.getRequestDispatcher(WebServerConstants.WEBSERVER_ROOT_PATH).forward(request, response);
       return null;
     }
 
     final String errorString = "Invalid SPNEGO credentials or SPNEGO is not configured";
-    MainLoginPageModel model = new MainLoginPageModel(errorString);
+    final DrillConfig drillConfig = workManager.getContext().getConfig();
+    MainLoginPageModel model = new MainLoginPageModel(errorString, drillConfig);
     return ViewableWithPermissions.createMainLoginPage(model);
   }
 
@@ -121,52 +131,37 @@ public class LogInLogOutResources {
   public Viewable getMainLoginPage(@Context HttpServletRequest request, @Context HttpServletResponse response,
                                    @Context SecurityContext sc, @Context UriInfo uriInfo,
                                    @QueryParam(WebServerConstants.REDIRECT_QUERY_PARM) String redirect) throws Exception {
-    if (!StringUtils.isEmpty(redirect)) {
-      // If the URL has redirect in it, set the redirect URI in session, so that after the login is successful, request
-      // is forwarded to the redirect page.
-      final HttpSession session = request.getSession(true);
-      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
-      session.setAttribute(FormAuthenticator.__J_URI, destURI.toString());
-    }
-
-    MainLoginPageModel model = new MainLoginPageModel(null);
+    updateSessionRedirectInfo(redirect, request);
+    final DrillConfig drillConfig = workManager.getContext().getConfig();
+    MainLoginPageModel model = new MainLoginPageModel(null, drillConfig);
     return ViewableWithPermissions.createMainLoginPage(model);
   }
 
-  public class MainLoginPageModel {
+  private class MainLoginPageModel {
 
-    public String error;
+    private final String error;
 
-    MainLoginPageModel(String error) {
+    private final boolean authEnabled;
+
+    private final Set<String> configuredMechs;
+
+    MainLoginPageModel(String error, DrillConfig drillConfig) {
       this.error = error;
+      authEnabled = drillConfig.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+      configuredMechs = AuthStringUtil.asSet(
+          drillConfig.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS));
     }
 
     public boolean isSpnegoEnabled() {
-      return LogInLogOutResources.isSpnegoEnabled(workManager.getContext().getConfig());
+      return authEnabled && configuredMechs.contains(Constraint.__SPNEGO_AUTH);
     }
 
     public boolean isFormEnabled() {
-      return LogInLogOutResources.isFormEnabled(workManager.getContext().getConfig());
+      return authEnabled && configuredMechs.contains(Constraint.__FORM_AUTH);
     }
 
     public String getError() {
       return error;
     }
-  }
-
-  private static boolean isSpnegoEnabled(DrillConfig config) {
-    Set<String> configuredMechs = AuthStringUtil.asSet(
-        config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS));
-
-    final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    return authEnabled && configuredMechs.contains(SPNEGOSecurityHandler.HANDLER_NAME);
-  }
-
-  private static boolean isFormEnabled(DrillConfig config) {
-    Set<String> configuredMechs = AuthStringUtil.asSet(
-        config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS));
-
-    final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    return authEnabled && configuredMechs.contains(FORMSecurityHanlder.HANDLER_NAME);
   }
 }

@@ -41,8 +41,6 @@ import javax.security.auth.Subject;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Custom implementation of DrillSpnegoLoginService to avoid the need of passing targetName in a config file,
@@ -55,7 +53,7 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
 
   private final DrillbitContext drillContext;
 
-  private final SpnegoUtil spnegoUtil;
+  private final SpnegoConfig spnegoConfig;
 
   private final UserGroupInformation loggedInUgi;
 
@@ -65,9 +63,9 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
     drillContext = drillBitContext;
 
     // Load and verify SPNEGO config. Then Login using creds to get an UGI instance
-    spnegoUtil = new SpnegoUtil(drillBitContext.getConfig());
-    spnegoUtil.validateSpnegoConfig();
-    loggedInUgi = spnegoUtil.getLoggedInUgi();
+    spnegoConfig = new SpnegoConfig(drillBitContext.getConfig());
+    spnegoConfig.validateSpnegoConfig();
+    loggedInUgi = spnegoConfig.getLoggedInUgi();
   }
 
   @Override
@@ -76,7 +74,7 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
     // without the need for a one-line file to do the same thing.
     final Field targetNameField = SpnegoLoginService.class.getDeclaredField(TARGET_NAME_FIELD_NAME);
     targetNameField.setAccessible(true);
-    targetNameField.set(this, spnegoUtil.getSpnegoPrincipal());
+    targetNameField.set(this, spnegoConfig.getSpnegoPrincipal());
   }
 
   @Override
@@ -87,17 +85,17 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
       identity = loggedInUgi.doAs(new PrivilegedExceptionAction<UserIdentity>() {
         @Override
         public UserIdentity run() {
-          return spnegoLogin(username, credentials);
+          return spnegoLogin(credentials);
         }
       });
     } catch (Exception e) {
-      logger.error("Failed to login using SPNEGO");
+      logger.error("Failed to login using SPNEGO", e);
     }
 
     return identity;
   }
 
-  private UserIdentity spnegoLogin(String username, Object credentials) {
+  private UserIdentity spnegoLogin(Object credentials) {
 
     String encodedAuthToken = (String) credentials;
     byte[] authToken = B64Code.decode(encodedAuthToken);
@@ -110,7 +108,7 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
       knownOids[0] = new Oid("1.3.6.1.5.5.2"); // spnego
       knownOids[1] = new Oid("1.2.840.113554.1.2.2"); // kerberos
 
-      GSSName gssName = manager.createName(spnegoUtil.getSpnegoPrincipal(), null);
+      GSSName gssName = manager.createName(spnegoConfig.getSpnegoPrincipal(), null);
       GSSCredential serverCreds = manager.createCredential(gssName, GSSCredential.INDEFINITE_LIFETIME,
           knownOids, GSSCredential.ACCEPT_ONLY);
       GSSContext gContext = manager.createContext(serverCreds);
