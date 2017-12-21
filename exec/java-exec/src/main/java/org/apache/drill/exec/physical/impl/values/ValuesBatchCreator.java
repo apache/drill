@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,8 @@ public class ValuesBatchCreator implements BatchCreator<Values> {
       throws ExecutionSetupException {
     assert children.isEmpty();
 
-    JSONRecordReader reader = new JSONRecordReader(context, config.getContent().asNode(), null, Collections.singletonList(SchemaPath.getSimplePath("*")));
+    JSONRecordReader reader = new JSONRecordReader(context, config.getContent().asNode(),
+        null, Collections.singletonList(SchemaPath.STAR_COLUMN));
     return new ScanBatch(config, context, Collections.singletonList((RecordReader) reader));
   }
 }

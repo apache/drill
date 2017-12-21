@@ -939,10 +939,10 @@ public class TestWindowFunctions extends BaseTestQuery {
   public void testWindowOnSubqueryWithStar() throws Exception {
     String query = "SELECT SUM(n_nationkey) OVER w as s\n" +
         "FROM (SELECT * FROM cp.`tpch/nation.parquet`) subQry\n" +
-        "WINDOW w AS (PARTITION BY REGION ORDER BY n_nationkey)\n" +
+        "WINDOW w AS (PARTITION BY region ORDER BY n_nationkey)\n" +
         "limit 1";
 
-    final String[] expectedPlan = {"Project.*\\$0=\\[ITEM\\(\\$1, 'n_nationkey'\\)\\].*"};
+    final String[] expectedPlan = {"Scan.*columns=\\[`n_nationkey`, `region`\\].*"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
 
     testBuilder()

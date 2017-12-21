@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -128,13 +127,13 @@ class RepeatedVarCharOutput extends TextOutput {
 
 
     { // setup fields
-      List<Integer> columnIds = new ArrayList<Integer>();
+      List<Integer> columnIds = new ArrayList<>();
       if (!isStarQuery) {
         String pathStr;
         for (SchemaPath path : columns) {
           assert path.getRootSegment().isNamed() : "root segment should be named";
           pathStr = path.getRootSegment().getPath();
-          Preconditions.checkArgument(pathStr.equals(COL_NAME) || (pathStr.equals("*") && path.getRootSegment().getChild() == null),
+          Preconditions.checkArgument(COL_NAME.equals(pathStr) || (SchemaPath.DYNAMIC_STAR.equals(pathStr) && path.getRootSegment().getChild() == null),
               String.format("Selected column '%s' must have name 'columns' or must be plain '*'", pathStr));
 
           if (path.getRootSegment().getChild() != null) {

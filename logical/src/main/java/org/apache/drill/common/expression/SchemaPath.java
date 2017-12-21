@@ -42,8 +42,8 @@ import com.google.common.base.Preconditions;
 
 public class SchemaPath extends LogicalExpressionBase {
 
-  public static final String WILDCARD = "*";
-  public static final SchemaPath STAR_COLUMN = getSimplePath(WILDCARD);
+  public static final String DYNAMIC_STAR = "**";
+  public static final SchemaPath STAR_COLUMN = getSimplePath(DYNAMIC_STAR);
 
   private final NameSegment rootSegment;
 
@@ -205,14 +205,14 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   /**
-   * Return if this column is the special wildcard ("*") column which means to
+   * Return if this column is the special wildcard ("**") column which means to
    * project all table columns.
    *
-   * @return true if the column is "*"
+   * @return true if the column is "**"
    */
 
-  public boolean isWildcard() {
-    return isLeaf() && nameEquals(WILDCARD);
+  public boolean isDynamicStar() {
+    return isLeaf() && nameEquals(DYNAMIC_STAR);
   }
 
   /**

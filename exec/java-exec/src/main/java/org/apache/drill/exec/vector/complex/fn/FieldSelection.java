@@ -1,5 +1,4 @@
-/*******************************************************************************
-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.vector.complex.fn;
 
 import java.util.HashMap;
@@ -50,10 +49,10 @@ public class FieldSelection {
 
   private FieldSelection(Map<String, FieldSelection> children, ValidityMode mode){
     this.children = children;
-    if(children != null){
-      childrenInsensitive = new TreeMap<String, FieldSelection>(String.CASE_INSENSITIVE_ORDER);
+    if (children != null) {
+      childrenInsensitive = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
       childrenInsensitive.putAll(children);
-    }else{
+    } else {
       childrenInsensitive = null;
     }
     this.mode = mode;
@@ -148,7 +147,7 @@ public class FieldSelection {
 
   private static boolean containsStar(List<SchemaPath> columns) {
     for (SchemaPath expr : columns) {
-      if (expr.getRootSegment().getPath().equals("*")) {
+      if (SchemaPath.DYNAMIC_STAR.equals(expr.getRootSegment().getPath())) {
         return true;
       }
     }

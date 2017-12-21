@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -117,15 +117,15 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
       // Match the name of the field in the schema definition to the name of the field in the query.
       String name = null;
-      SchemaPath col=null;
-      PathSegment colPath = null;
+      SchemaPath col;
+      PathSegment colPath;
       PathSegment colNextChild = null;
-      while(colIterator.hasNext()) {
+      while (colIterator.hasNext()) {
         col = colIterator.next();
         colPath = col.getRootSegment();
         colNextChild = colPath.getChild();
 
-        if (colPath != null && colPath.isNamed() && (!colPath.getNameSegment().getPath().equals("*"))) {
+        if (colPath != null && colPath.isNamed() && (!SchemaPath.DYNAMIC_STAR.equals(colPath.getNameSegment().getPath()))) {
           name = colPath.getNameSegment().getPath();
           // We may have a field that does not exist in the schema
           if (!name.equalsIgnoreCase(type.getName())) {
@@ -139,7 +139,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
       }
 
       if (!isPrimitive) {
-        Collection<SchemaPath> c = new ArrayList<SchemaPath>();
+        Collection<SchemaPath> c = new ArrayList<>();
 
         while(colNextChild!=null) {
           if(colNextChild.isNamed()) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,13 +26,12 @@ import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.Lists;
-import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.Util;
+import org.apache.drill.common.expression.SchemaPath;
 
 public class RelDataTypeHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RelDataTypeHolder.class);
 
-  List<RelDataTypeField> fields = Lists.newArrayList();
+  private final List<RelDataTypeField> fields = Lists.newArrayList();
 
   private RelDataTypeFactory typeFactory;
 
@@ -46,9 +45,9 @@ public class RelDataTypeHolder {
     return fields.size();
   }
 
-  private void addStarIfEmpty(RelDataTypeFactory typeFactory){
-    if (fields.isEmpty()){
-      getField(typeFactory, "*");
+  private void addStarIfEmpty(RelDataTypeFactory typeFactory) {
+    if (fields.isEmpty()) {
+      getField(typeFactory, SchemaPath.DYNAMIC_STAR);
     }
   }
 

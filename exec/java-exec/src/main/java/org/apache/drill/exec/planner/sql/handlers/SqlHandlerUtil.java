@@ -89,7 +89,7 @@ public class SqlHandlerUtil {
 
       // CTAS's query field list shouldn't have "**" when table's field list is specified.
       for (String field : validatedRowtype.getFieldNames()) {
-        if (field.equals("**")) {
+        if (SchemaPath.DYNAMIC_STAR.equals(field)) {
           final String tblType = isNewTableView ? "view" : "table";
           throw UserException.validationError()
               .message("%s's query field list has a '*', which is invalid when %s's field list is specified.",
@@ -157,7 +157,7 @@ public class SqlHandlerUtil {
             .message("Partition column %s is not in the SELECT list of CTAS!", col)
             .build(logger);
       } else {
-        if (field.getName().startsWith(SchemaPath.WILDCARD)) {
+        if (SchemaPath.DYNAMIC_STAR.equals(field.getName())) {
           colRefStarNames.add(col);
 
           final List<RexNode> operands = Lists.newArrayList();

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,12 +18,12 @@
 package org.apache.drill.exec.planner.common;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.drill.exec.util.Utilities;
 
 /**
  * Base class for logical scan rel implemented in Drill.
@@ -35,11 +35,7 @@ public abstract class DrillScanRelBase extends TableScan implements DrillRelNode
 
   public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
     super(cluster, traits, table);
-    DrillTable unwrap = table.unwrap(DrillTable.class);
-    if (unwrap == null) {
-      unwrap = table.unwrap(DrillTranslatableTable.class).getDrillTable();
-    }
-    this.drillTable = unwrap;
+    this.drillTable = Utilities.getDrillTable(table);
     assert drillTable != null;
   }
 

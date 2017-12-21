@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,9 +20,14 @@ package org.apache.drill.exec.util;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -89,5 +94,37 @@ public class Utilities {
         return Preconditions.checkNotNull(path).equals(SchemaPath.STAR_COLUMN);
       }
     }).isPresent();
+  }
+
+  /**
+   * Gets {@link DrillTable}, either wrapped in RelOptTable, or DrillTranslatableTable.
+   *
+   * @param table table instance
+   * @return Drill table
+   */
+  public static DrillTable getDrillTable(RelOptTable table) {
+    DrillTable drillTable = table.unwrap(DrillTable.class);
+    if (drillTable == null) {
+      drillTable = table.unwrap(DrillTranslatableTable.class).getDrillTable();
+    }
+    return drillTable;
+  }
+
+  /**
+   * Converts literal into path segment based on its type.
+   * For unsupported types, returns null.
+   *
+   * @param literal literal
+   * @return new path segment, null otherwise
+   */
+  public static PathSegment convertLiteral(RexLiteral literal) {
+    switch (literal.getType().getSqlTypeName()) {
+      case CHAR:
+        return new PathSegment.NameSegment(RexLiteral.stringValue(literal));
+      case INTEGER:
+        return new PathSegment.ArraySegment(RexLiteral.intValue(literal));
+      default:
+        return null;
+    }
   }
 }

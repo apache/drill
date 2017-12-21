@@ -42,7 +42,6 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -205,7 +204,7 @@ public class DrillOptiq {
           // Convert expr of item[*, 'abc'] into column expression 'abc'
           String rootSegName = left.getRootSegment().getPath();
           if (StarColumnHelper.isStarColumn(rootSegName)) {
-            rootSegName = rootSegName.substring(0, rootSegName.indexOf("*"));
+            rootSegName = rootSegName.substring(0, rootSegName.indexOf(SchemaPath.DYNAMIC_STAR));
             final RexLiteral literal = (RexLiteral) call.getOperands().get(1);
             return SchemaPath.getSimplePath(rootSegName + literal.getValue2().toString());
           }

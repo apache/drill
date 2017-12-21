@@ -23,6 +23,7 @@ import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
@@ -72,9 +73,9 @@ public class View {
         @JsonProperty("fractionalSecondPrecision")  Integer fractionalSecondPrecision,
         @JsonProperty("isNullable")                 Boolean isNullable) {
       // Fix for views which were created on Calcite 1.4.
-      // After Calcite upgrade star "*" was changed on dynamic star "**"
+      // After Calcite upgrade star "*" was changed on dynamic star "**" (SchemaPath.DYNAMIC_STAR)
       // and type of star was changed to SqlTypeName.DYNAMIC_STAR
-      this.name = "*".equals(name) ? "**" : name;
+      this.name = "*".equals(name) ? SchemaPath.DYNAMIC_STAR : name;
       this.type = "*".equals(name) && type == SqlTypeName.ANY ? SqlTypeName.DYNAMIC_STAR : type;
       this.precision = precision;
       this.scale = scale;
