@@ -300,7 +300,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       return false;
     }
     final NameSegment expr = ((SchemaPath)ex.getExpr()).getRootSegment();
-    return expr.getPath().contains(SchemaPath.WILDCARD);
+    return expr.getPath().contains(SchemaPath.DYNAMIC_STAR);
   }
 
   private void setupNewSchemaFromInput(RecordBatch incomingBatch) throws SchemaChangeException {
@@ -542,7 +542,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       final NameSegment expr = ((SchemaPath) ex.getExpr()).getRootSegment();
       final NameSegment ref = ex.getRef().getRootSegment();
       final boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
-      final boolean exprContainsStar = expr.getPath().contains(SchemaPath.WILDCARD);
+      final boolean exprContainsStar = expr.getPath().contains(SchemaPath.DYNAMIC_STAR);
 
       if (refHasPrefix || exprContainsStar) {
         needed = true;
@@ -596,10 +596,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     final NameSegment ref = ex.getRef().getRootSegment();
     final boolean exprHasPrefix = expr.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
     final boolean refHasPrefix = ref.getPath().contains(StarColumnHelper.PREFIX_DELIMITER);
-    final boolean exprIsStar = expr.getPath().equals(SchemaPath.WILDCARD);
-    final boolean refContainsStar = ref.getPath().contains(SchemaPath.WILDCARD);
-    final boolean exprContainsStar = expr.getPath().contains(SchemaPath.WILDCARD);
-    final boolean refEndsWithStar = ref.getPath().endsWith(SchemaPath.WILDCARD);
+    final boolean exprIsStar = expr.getPath().equals(SchemaPath.DYNAMIC_STAR);
+    final boolean refContainsStar = ref.getPath().contains(SchemaPath.DYNAMIC_STAR);
+    final boolean exprContainsStar = expr.getPath().contains(SchemaPath.DYNAMIC_STAR);
+    final boolean refEndsWithStar = ref.getPath().endsWith(SchemaPath.DYNAMIC_STAR);
 
     String exprPrefix = EMPTY_STRING;
     String exprSuffix = expr.getPath();

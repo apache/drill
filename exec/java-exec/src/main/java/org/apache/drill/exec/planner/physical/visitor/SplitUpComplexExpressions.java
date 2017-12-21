@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+*/
 package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.ArrayList;
@@ -107,7 +107,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
       RexBuilder builder = new RexBuilder(factory);
       allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
 
-      if(fieldNames.get(index).contains(SchemaPath.WILDCARD)) {
+      if (fieldNames.get(index).contains(SchemaPath.DYNAMIC_STAR)) {
         relDataTypes.add(new RelDataTypeFieldImpl(fieldNames.get(index), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
       } else {
         relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + exprIndex, allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));

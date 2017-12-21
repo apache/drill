@@ -33,7 +33,6 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
-import org.apache.drill.test.OperatorFixture;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
@@ -318,7 +317,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
   }
 
   public abstract class ScanPopBuider<T extends ScanPopBuider<?>> extends PopBuilder {
-    List<SchemaPath> columnsToRead = Collections.singletonList(SchemaPath.getSimplePath("*"));
+    List<SchemaPath> columnsToRead = Collections.singletonList(SchemaPath.STAR_COLUMN);
     DrillFileSystem fs = null;
 
     public ScanPopBuider() {

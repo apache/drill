@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner;
 
 import java.util.List;
@@ -29,7 +28,7 @@ public class StarColumnHelper {
 
   public final static String PREFIX_DELIMITER = "\u00a6\u00a6";
 
-  public final static String PREFIXED_STAR_COLUMN = PREFIX_DELIMITER + SchemaPath.WILDCARD;
+  public final static String PREFIXED_STAR_COLUMN = PREFIX_DELIMITER + SchemaPath.DYNAMIC_STAR;
 
   public static boolean containsStarColumn(RelDataType type) {
     if (! type.isStruct()) {
@@ -38,8 +37,8 @@ public class StarColumnHelper {
 
     List<String> fieldNames = type.getFieldNames();
 
-    for (String s : fieldNames) {
-      if (s.startsWith(SchemaPath.WILDCARD)) {
+    for (String fieldName : fieldNames) {
+      if (SchemaPath.DYNAMIC_STAR.equals(fieldName)) {
         return true;
       }
     }
@@ -48,7 +47,7 @@ public class StarColumnHelper {
   }
 
   public static boolean containsStarColumnInProject(RelDataType inputRowType, List<RexNode> projExprs) {
-    if (! inputRowType.isStruct()) {
+    if (!inputRowType.isStruct()) {
       return false;
     }
 
@@ -56,7 +55,7 @@ public class StarColumnHelper {
       if (expr instanceof RexInputRef) {
         String name = inputRowType.getFieldNames().get(((RexInputRef) expr).getIndex());
 
-        if (name.startsWith(SchemaPath.WILDCARD)) {
+        if (SchemaPath.DYNAMIC_STAR.equals(name)) {
           return true;
         }
       }
@@ -70,7 +69,7 @@ public class StarColumnHelper {
   }
 
   public static boolean isNonPrefixedStarColumn(String fieldName) {
-    return fieldName.startsWith(SchemaPath.WILDCARD);
+    return SchemaPath.DYNAMIC_STAR.equals(fieldName);
   }
 
   public static boolean isStarColumn(String fieldName) {
