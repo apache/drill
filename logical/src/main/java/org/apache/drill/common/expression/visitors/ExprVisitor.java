@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,6 +39,7 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.ParameterExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
@@ -69,4 +70,5 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
   public T visitCastExpression(CastExpression e, VAL value) throws EXCEP;
   public T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP;
+  public T visitParameter(ParameterExpression e, VAL value) throws EXCEP;
 }
