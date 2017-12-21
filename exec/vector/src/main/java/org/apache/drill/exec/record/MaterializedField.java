@@ -92,6 +92,10 @@ public class MaterializedField {
     return withPathAndType(name, getType());
   }
 
+  public MaterializedField cloneEmpty() {
+    return create(name, type);
+  }
+
   public MaterializedField withType(MajorType type) {
     return withPathAndType(name, type);
   }
@@ -170,7 +174,37 @@ public class MaterializedField {
             Objects.equals(this.type, other.type);
   }
 
+  /**
+   * Determine if one column is logically equivalent to another. This is
+   * a tricky issue. The rules here:
+   * <ul>
+   * <li>The other schema is assumed to be non-null (unlike
+   * <tt>equals()</tt>).</li>
+   * <li>Names must be identical, ignoring case. (Drill, like SQL, is
+   * case insensitive.)
+   * <li>Type, mode, precision and scale must be identical.</li>
+   * <li>Child columns are ignored unless the type is a map. That is, the
+   * hidden "$bits" and "$offsets" vector columns are not compared, as
+   * one schema may be an "original" (without these hidden columns) while
+   * the other may come from a vector (which has the hidden columns added.
+   * The standard <tt>equals()</tt> comparison does consider hidden
+   * columns.</li>
+   * <li>For maps, the child columns are compared recursively. This version
+   * requires that the two sets of columns appear in the same order. (It
+   * assumes it is being used in a context where column indexes make
+   * sense.) Operators that want to reconcile two maps that differ only in
+   * column order need a different comparison.</li>
+   * </ul>
+   *
+   * @param other another field
+   * @return <tt>true</tt> if the columns are identical according to the
+   * above rules, <tt>false</tt> if they differ
+   */
+
   public boolean isEquivalent(MaterializedField other) {
+    if (this == other) {
+      return true;
+    }
     if (! name.equalsIgnoreCase(other.name)) {
       return false;
     }
@@ -199,7 +233,7 @@ public class MaterializedField {
       return true;
     }
 
-    if (children == null  ||  other.children == null) {
+    if (children == null || other.children == null) {
       return children == other.children;
     }
     if (children.size() != other.children.size()) {
@@ -226,11 +260,12 @@ public class MaterializedField {
    * Includes field name, its type with precision and scale if any and data mode.
    * Nested fields if any are included. Number of nested fields to include is limited to 10.</p>
    *
-   * <b>FIELD_NAME(TYPE(PRECISION,SCALE):DATA_MODE)[NESTED_FIELD_1, NESTED_FIELD_2]</b>
+   * <b>FIELD_NAME(TYPE(PRECISION,SCALE):DATA_MODE)[NESTED_FIELD_1, NESTED_FIELD_2]</b><br>
    * <p>Example: ok(BIT:REQUIRED), col(VARCHAR(3):OPTIONAL), emp_id(DECIMAL28SPARSE(6,0):REQUIRED)</p>
    *
    * @return materialized field string representation
    */
+
   @Override
   public String toString() {
     final int maxLen = 10;
@@ -258,7 +293,7 @@ public class MaterializedField {
         .append(childString);
 
     return builder.toString();
-}
+  }
 
   /**
    * Return true if two fields have identical MinorType and Mode.

@@ -24,10 +24,16 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.record.DeadBuf;
 
 /**
- * A selection vector that fronts, at most, a
+ * A selection vector that fronts, at most, 64K values.
+ * The selection vector is used for two cases:
+ * <ol>
+ * <li>To create a list of values retained by a filter.</li>
+ * <li>To provide a redirection level for sorted
+ * batches.</li>
+ * </ol>
  */
+
 public class SelectionVector2 implements AutoCloseable {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
 
   private final BufferAllocator allocator;
   private int recordCount;
@@ -39,9 +45,19 @@ public class SelectionVector2 implements AutoCloseable {
     this.allocator = allocator;
   }
 
+  /**
+   * Create a selection vector with the given buffer. The selection vector
+   * increments the buffer's reference count, talking ownership of the buffer.
+   *
+   * @param allocator allocator used to allocate the buffer
+   * @param buf the buffer containing the selection vector's data
+   * @param count the number of values in the selection vector
+   */
+
   public SelectionVector2(BufferAllocator allocator, DrillBuf buf, int count) {
     this.allocator = allocator;
     buffer = buf;
+    buffer.retain(1);
     recordCount = count;
   }
 

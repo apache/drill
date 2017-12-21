@@ -20,6 +20,8 @@ package org.apache.drill.test.rowSet;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.spill.RecordBatchSizer;
+import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
+import org.apache.drill.exec.physical.rowSet.model.SchemaInference;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -33,14 +35,14 @@ public class IndirectRowSet extends AbstractSingleRowSet {
 
   /**
    * Reader index that points to each row indirectly through the
-   * selection vector. The {@link #index()} method points to the
+   * selection vector. The {@link #vectorIndex()} method points to the
    * actual data row, while the {@link #position()} method gives
    * the position relative to the indirection vector. That is,
    * the position increases monotonically, but the index jumps
    * around as specified by the indirection vector.
    */
 
-  private static class IndirectRowIndex extends BoundedRowIndex {
+  private static class IndirectRowIndex extends ReaderIndex {
 
     private final SelectionVector2 sv2;
 
@@ -50,21 +52,25 @@ public class IndirectRowSet extends AbstractSingleRowSet {
     }
 
     @Override
-    public int index() { return sv2.getIndex(rowIndex); }
+    public int vectorIndex() { return sv2.getIndex(rowIndex); }
 
     @Override
-    public int batch() { return 0; }
+    public int batchIndex() { return 0; }
   }
 
   private final SelectionVector2 sv2;
 
-  public IndirectRowSet(BufferAllocator allocator, VectorContainer container) {
-    this(allocator, container, makeSv2(allocator, container));
+  private IndirectRowSet(VectorContainer container, SelectionVector2 sv2) {
+    super(container, new SchemaInference().infer(container));
+    this.sv2 = sv2;
   }
 
-  public IndirectRowSet(BufferAllocator allocator, VectorContainer container, SelectionVector2 sv2) {
-    super(allocator, container);
-    this.sv2 = sv2;
+  public static IndirectRowSet fromContainer(VectorContainer container) {
+    return new IndirectRowSet(container, makeSv2(container.getAllocator(), container));
+  }
+
+  public static IndirectRowSet fromSv2(VectorContainer container, SelectionVector2 sv2) {
+    return new IndirectRowSet(container, sv2);
   }
 
   private static SelectionVector2 makeSv2(BufferAllocator allocator, VectorContainer container) {
@@ -83,7 +89,7 @@ public class IndirectRowSet extends AbstractSingleRowSet {
 
   public IndirectRowSet(DirectRowSet directRowSet) {
     super(directRowSet);
-    sv2 = makeSv2(allocator, container);
+    sv2 = makeSv2(allocator(), container());
   }
 
   @Override
@@ -93,11 +99,6 @@ public class IndirectRowSet extends AbstractSingleRowSet {
   public void clear() {
     super.clear();
     getSv2().clear();
-  }
-
-  @Override
-  public RowSetWriter writer() {
-    throw new UnsupportedOperationException("Cannot write to an existing row set");
   }
 
   @Override
@@ -119,12 +120,7 @@ public class IndirectRowSet extends AbstractSingleRowSet {
 
   @Override
   public long size() {
-    RecordBatchSizer sizer = new RecordBatchSizer(container, sv2);
+    RecordBatchSizer sizer = new RecordBatchSizer(container(), sv2);
     return sizer.actualSize();
-  }
-
-  @Override
-  public RowSet merge(RowSet other) {
-    return new IndirectRowSet(allocator, container().merge(other.container()), sv2);
   }
 }

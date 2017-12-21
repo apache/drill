@@ -95,8 +95,7 @@ public class ObjectVector extends BaseValueVector {
     }
 
     @Override
-    public void generateTestData(int values) {
-    }
+    public void generateTestData(int values) { }
 
     @Override
     public void exchange(ValueVector.Mutator other) { }
@@ -130,6 +129,9 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
+  public int getAllocatedSize() { return 0; }
+
+  @Override
   public int getBufferSizeFor(final int valueCount) {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
@@ -147,9 +149,7 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public MaterializedField getField() {
-    return field;
-  }
+  public MaterializedField getField() { return field; }
 
   @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
@@ -172,14 +172,10 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public int getValueCapacity() {
-    return maxCount;
-  }
+  public int getValueCapacity() { return maxCount; }
 
   @Override
-  public Accessor getAccessor() {
-    return accessor;
-  }
+  public Accessor getAccessor() { return accessor; }
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
@@ -197,9 +193,7 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public Mutator getMutator() {
-    return mutator;
-  }
+  public Mutator getMutator() { return mutator; }
 
   @Override
   public Iterator<ValueVector> iterator() {
@@ -222,9 +216,7 @@ public class ObjectVector extends BaseValueVector {
     }
 
     @Override
-    public int getValueCount() {
-      return count;
-    }
+    public int getValueCount() { return count; }
 
     public Object get(int index) {
       return getObject(index);

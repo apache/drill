@@ -80,16 +80,16 @@ public class TopNBatchTest extends PopUnitTestBase {
 
     try (RootAllocator allocator = new RootAllocator(100_000_000)) {
       expectedRowSet = new RowSetBuilder(allocator, batchSchema)
-        .add(110, 10)
-        .add(109, 9)
-        .add(108, 8)
-        .add(107, 7)
-        .add(106, 6)
-        .add(105, 5)
-        .add(104, 4)
-        .add(103, 3)
-        .add(102, 2)
-        .add(101, 1)
+        .addRow(110, 10)
+        .addRow(109, 9)
+        .addRow(108, 8)
+        .addRow(107, 7)
+        .addRow(106, 6)
+        .addRow(105, 5)
+        .addRow(104, 4)
+        .addRow(103, 3)
+        .addRow(102, 2)
+        .addRow(101, 1)
         .build();
 
       PriorityQueue queue;
@@ -121,10 +121,10 @@ public class TopNBatchTest extends PopUnitTestBase {
 
         for (int batchCounter = 0; batchCounter < numBatches; batchCounter++) {
           RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, batchSchema);
-          rowSetBuilder.add((batchCounter + bound), batchCounter);
+          rowSetBuilder.addRow((batchCounter + bound), batchCounter);
 
           for (int recordCounter = 0; recordCounter < numRecordsPerBatch; recordCounter++) {
-            rowSetBuilder.add(random.nextInt(bound), random.nextInt(bound));
+            rowSetBuilder.addRow(random.nextInt(bound), random.nextInt(bound));
           }
 
           VectorContainer vectorContainer = rowSetBuilder.build().container();
@@ -135,7 +135,7 @@ public class TopNBatchTest extends PopUnitTestBase {
         VectorContainer resultContainer = queue.getHyperBatch();
         resultContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
-        RowSet.HyperRowSet actualHyperSet = new HyperRowSetImpl(allocator, resultContainer, queue.getFinalSv4());
+        RowSet.HyperRowSet actualHyperSet = new HyperRowSetImpl(resultContainer, queue.getFinalSv4());
         new RowSetComparison(expectedRowSet).verify(actualHyperSet);
       } finally {
         if (expectedRowSet != null) {

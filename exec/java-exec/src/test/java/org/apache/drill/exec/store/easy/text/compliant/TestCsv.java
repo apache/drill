@@ -103,7 +103,7 @@ public class TestCsv extends ClusterTest {
         .add("c", MinorType.VARCHAR)
         .build();
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .add("10", "foo", "bar")
+        .addRow("10", "foo", "bar")
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);
@@ -129,7 +129,7 @@ public class TestCsv extends ClusterTest {
         .add("c_2_2", MinorType.VARCHAR)
         .build();
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .add("10", "foo", "bar", "fourth", "fifth", "sixth")
+        .addRow("10", "foo", "bar", "fourth", "fifth", "sixth")
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);
@@ -151,7 +151,7 @@ public class TestCsv extends ClusterTest {
     assertEquals(expectedSchema, actual.batchSchema());
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .add("10", "foo", "bar")
+        .addRow("10", "foo", "bar")
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);

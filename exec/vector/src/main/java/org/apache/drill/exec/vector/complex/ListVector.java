@@ -52,7 +52,6 @@ public class ListVector extends BaseRepeatedValueVector {
   private Accessor accessor = new Accessor();
   private UnionListWriter writer;
   private UnionListReader reader;
-  private CallBack callBack;
 
   public ListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field, allocator);
@@ -61,7 +60,6 @@ public class ListVector extends BaseRepeatedValueVector {
     this.field.addChild(getDataVector().getField());
     this.writer = new UnionListWriter(this);
     this.reader = new UnionListReader(this);
-    this.callBack = callBack;
   }
 
   public UnionListWriter getWriter() {
@@ -203,6 +201,8 @@ public class ListVector extends BaseRepeatedValueVector {
             .addChild(bits.getMetadata())
             .addChild(vector.getMetadata());
   }
+
+  @Override
   public <T extends ValueVector> AddOrGetResult<T> addOrGetVector(VectorDescriptor descriptor) {
     AddOrGetResult<T> result = super.addOrGetVector(descriptor);
     reader = new UnionListReader(this);

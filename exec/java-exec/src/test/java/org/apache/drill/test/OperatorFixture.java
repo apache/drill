@@ -42,8 +42,12 @@ import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.TupleSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
@@ -290,21 +294,29 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
   }
 
   public RowSetBuilder rowSetBuilder(BatchSchema schema) {
+    return rowSetBuilder(TupleSchema.fromFields(schema));
+  }
+
+  public RowSetBuilder rowSetBuilder(TupleMetadata schema) {
     return new RowSetBuilder(allocator, schema);
   }
 
   public ExtendableRowSet rowSet(BatchSchema schema) {
-    return new DirectRowSet(allocator, schema);
+    return DirectRowSet.fromSchema(allocator, schema);
+  }
+
+  public ExtendableRowSet rowSet(TupleMetadata schema) {
+    return DirectRowSet.fromSchema(allocator, schema);
   }
 
   public RowSet wrap(VectorContainer container) {
     switch (container.getSchema().getSelectionVectorMode()) {
     case FOUR_BYTE:
-      return new HyperRowSetImpl(allocator(), container, container.getSelectionVector4());
+      return new HyperRowSetImpl(container, container.getSelectionVector4());
     case NONE:
-      return new DirectRowSet(allocator(), container);
+      return DirectRowSet.fromContainer(container);
     case TWO_BYTE:
-      return new IndirectRowSet(allocator(), container);
+      return IndirectRowSet.fromSv2(container, container.getSelectionVector2());
     default:
       throw new IllegalStateException( "Unexpected selection mode" );
     }
@@ -341,5 +353,15 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
   public OperatorContext operatorContext(PhysicalOperator config) {
     return new TestOperatorContext(context, allocator(), config, stats);
+  }
+
+  public RowSet wrap(VectorContainer container, SelectionVector2 sv2) {
+    if (sv2 == null) {
+      assert container.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE;
+      return DirectRowSet.fromContainer(container);
+    } else {
+      assert container.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE;
+      return IndirectRowSet.fromSv2(container, sv2);
+    }
   }
 }
