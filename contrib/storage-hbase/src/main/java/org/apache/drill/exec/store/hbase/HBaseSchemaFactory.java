@@ -75,10 +75,10 @@ public class HBaseSchemaFactory implements SchemaFactory {
       try {
         return new DrillHBaseTable(schemaName, plugin, scanSpec);
       } catch (Exception e) {
-        // Calcite firstly is looking for a table in the default schema, if a table was not found,
-        // it is looking in root schema.
-        // If a table does not exist, a query will fail at validation stage,
-        // so the error should not be thrown there.
+        // Calcite firstly looks for a table in the default schema, if the table was not found,
+        // it looks in the root schema.
+        // If the table does not exist, a query will fail at validation stage,
+        // so the error should not be thrown here.
         logger.warn("Failure while loading table '{}' for database '{}'.", name, schemaName, e.getCause());
         return null;
       }

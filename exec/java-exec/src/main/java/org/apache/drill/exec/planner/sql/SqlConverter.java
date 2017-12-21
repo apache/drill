@@ -586,13 +586,7 @@ public class SqlConverter {
               .build(logger);
         }
       }
-      // Fix for select from hbase table with schema name in query (example: "SELECT col FROM hbase.t)
-      // from hbase schema (did "USE hbase" before).
-      if (names.size() == getSchemaPaths().size() && getSchemaPaths().size() > 1) {
-        if (names.get(0).equals(getSchemaPaths().get(0).get(0))) {
-          useRootSchemaAsDefault(true);
-        }
-      }
+
       return super.getTable(names);
     }
 

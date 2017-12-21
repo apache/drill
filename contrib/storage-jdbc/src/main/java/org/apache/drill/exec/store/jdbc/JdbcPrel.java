@@ -62,7 +62,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
         (JavaTypeFactory) getCluster().getTypeFactory());
     final JdbcImplementor.Result result =
         jdbcImplementor.visitChild(0, input.accept(new SubsetRemover()));
-    sql = result.asSelect().toSqlString(dialect).getSql();
+    sql = result.asStatement().toSqlString(dialect).getSql();
     rowType = input.getRowType();
   }
 
