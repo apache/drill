@@ -28,10 +28,11 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
+import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -114,7 +115,7 @@ public class WebServer implements AutoCloseable {
   /**
    * Create Jetty based web server.
    *
-   * @param context Bootstrap context.
+   * @param context     Bootstrap context.
    * @param workManager WorkManager instance.
    */
   public WebServer(final BootStrapContext context, final WorkManager workManager, final Drillbit drillbit) {
@@ -136,7 +137,8 @@ public class WebServer implements AutoCloseable {
    * @return true if impersonation without authentication is enabled, false otherwise
    */
   public static boolean isImpersonationOnlyEnabled(DrillConfig config) {
-    return !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+    return !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
+        && config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   /**
@@ -150,11 +152,6 @@ public class WebServer implements AutoCloseable {
     }
 
     final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
-      logger.warn("Not starting web server. Currently Drill supports web authentication only through " +
-          "username/password. But PLAIN mechanism is not configured.");
-      return;
-    }
 
     port = config.getInt(ExecConstants.HTTP_PORT);
     boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
@@ -187,9 +184,10 @@ public class WebServer implements AutoCloseable {
     }
   }
 
-  private ServletContextHandler createServletContextHandler(final boolean authEnabled) {
+  private ServletContextHandler createServletContextHandler(final boolean authEnabled) throws DrillbitStartupException {
     // Add resources
-    final ErrorHandler errorHandler = new ErrorHandler();
+    final ErrorHandler errorHandler = new DrillErrorHandler();
+
     errorHandler.setShowStacks(true);
     errorHandler.setShowMessageInTitle(true);
 
@@ -197,7 +195,8 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
 
-    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
+    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(
+        new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 
@@ -207,16 +206,16 @@ public class WebServer implements AutoCloseable {
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
     // Get resource URL for Drill static assets, based on where Drill icon is located
     String drillIconResourcePath =
-      Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
-    staticHolder.setInitParameter(
-      "resourceBase",
-      drillIconResourcePath.substring(0,  drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
+        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
+    staticHolder.setInitParameter("resourceBase",
+        drillIconResourcePath.substring(0, drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
     if (authEnabled) {
-      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      //DrillSecurityHandler is used to support SPNEGO and FORM authentication together
+      servletContextHandler.setSecurityHandler(new DrillHttpSecurityHandlerProvider(config, workManager.getContext()));
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
@@ -229,13 +228,13 @@ public class WebServer implements AutoCloseable {
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
       FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
       holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM,
-        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
+          StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM,
-        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
+          StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM,
-        StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
+          StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
       holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
-        String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
+          String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
 
       for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*"}) {
         servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
@@ -314,8 +313,7 @@ public class WebServer implements AutoCloseable {
     if (config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
       try {
         serverConnector = createHttpsConnector(port);
-      }
-      catch(DrillException e){
+      } catch (DrillException e) {
         throw new DrillbitStartupException(e.getMessage(), e);
       }
     } else {
@@ -366,11 +364,10 @@ public class WebServer implements AutoCloseable {
       final DateTime now = DateTime.now();
 
       // Create builder for certificate attributes
-      final X500NameBuilder nameBuilder =
-          new X500NameBuilder(BCStyle.INSTANCE)
-              .addRDN(BCStyle.OU, "Apache Drill (auth-generated)")
-              .addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)")
-              .addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
+      final X500NameBuilder nameBuilder = new X500NameBuilder(BCStyle.INSTANCE)
+          .addRDN(BCStyle.OU, "Apache Drill (auth-generated)")
+          .addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)")
+          .addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
 
       final Date notBefore = now.minusMinutes(1).toDate();
       final Date notAfter = now.plusYears(5).toDate();
@@ -422,6 +419,7 @@ public class WebServer implements AutoCloseable {
 
   /**
    * Create HTTP connector.
+   *
    * @return Initialized {@link ServerConnector} instance for HTTP connections.
    * @throws Exception
    */

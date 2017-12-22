@@ -60,7 +60,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
 
   @BeforeClass
   public static void setupTest() throws Exception {
-    krbHelper = new KerberosHelper(TestUserBitKerberosEncryption.class.getSimpleName());
+    krbHelper = new KerberosHelper(TestUserBitKerberosEncryption.class.getSimpleName(), null);
     krbHelper.setupKdc(dirTestWatcher.getTmpDir());
 
     // Create a new DrillConfig which has user authentication enabled and authenticator set to
