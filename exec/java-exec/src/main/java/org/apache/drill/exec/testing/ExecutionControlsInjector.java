@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.testing;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.exec.ops.FragmentContext;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -81,7 +83,12 @@ public class ExecutionControlsInjector implements ControlsInjector {
       executionControls.lookupPauseInjection(this, desc);
 
     if (pauseInjection != null) {
-      logger.debug("Pausing at {}", desc);
+      long pauseDuration = pauseInjection.getMsPause();
+      if ( pauseDuration > 0L) {
+        logger.debug("Pausing at {} for {} sec", desc, TimeUnit.MILLISECONDS.toSeconds(pauseDuration) );
+      } else {
+        logger.debug("Pausing at {}", desc);
+      }
       pauseInjection.pause();
       logger.debug("Resuming at {}", desc);
     }
