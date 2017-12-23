@@ -40,6 +40,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.collect.ImmutableList;
@@ -57,6 +58,7 @@ public class ShowTablesHandler extends DefaultSqlHandler {
     List<SqlNode> selectList = Lists.newArrayList();
     SqlNode fromClause;
     SqlNode where;
+    SqlNode and;
 
     // create select columns
     selectList.add(new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO));
@@ -102,7 +104,13 @@ public class ShowTablesHandler extends DefaultSqlHandler {
 
     where = DrillParserUtil.createCondition(where, SqlStdOperatorTable.AND, filter);
 
+    and = DrillParserUtil.createCondition(new SqlIdentifier(InfoSchemaConstants.TBLS_COL_TABLE_TYPE, SqlParserPos.ZERO),
+            SqlStdOperatorTable.EQUALS,
+            SqlLiteral.createCharString("TABLE", CHARSET, SqlParserPos.ZERO));
+
+    where = DrillParserUtil.createCondition(where, SqlStdOperatorTable.AND, and);
+
     return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO),
-        fromClause, where, null, null, null, null, null, null);
+            fromClause, where, null, null, null, null, null, null);
   }
 }
