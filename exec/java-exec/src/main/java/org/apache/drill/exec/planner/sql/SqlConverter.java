@@ -109,6 +109,7 @@ public class SqlConverter {
   private final String temporarySchema;
   private final UserSession session;
   private final DrillConfig drillConfig;
+  private RelOptCluster cluster;
 
   private String sql;
   private VolcanoPlanner planner;
@@ -139,6 +140,7 @@ public class SqlConverter {
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
     this.validator = new DrillValidator(opTab, catalog, typeFactory, SqlConformance.DEFAULT);
     validator.setIdentifierExpansion(true);
+    cluster = null;
   }
 
   private SqlConverter(SqlConverter parent, SchemaPlus defaultSchema, SchemaPlus rootSchema,
@@ -161,6 +163,7 @@ public class SqlConverter {
     this.session = parent.session;
     this.drillConfig = parent.drillConfig;
     validator.setIdentifierExpansion(true);
+    this.cluster = parent.cluster;
   }
 
 
@@ -320,7 +323,6 @@ public class SqlConverter {
   }
 
   public RelRoot toRel(final SqlNode validatedNode) {
-    final RexBuilder rexBuilder = new DrillRexBuilder(typeFactory);
     if (planner == null) {
       planner = new VolcanoPlanner(costFactory, settings);
       planner.setExecutor(new DrillConstExecutor(functions, util, settings));
@@ -330,7 +332,9 @@ public class SqlConverter {
       planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
     }
 
-    final RelOptCluster cluster = RelOptCluster.create(planner, rexBuilder);
+    if (cluster == null) {
+      initCluster();
+    }
     final SqlToRelConverter sqlToRelConverter =
         new SqlToRelConverter(new Expander(), validator, catalog, cluster, DrillConvertletTable.INSTANCE,
             sqlToRelConverterConfig);
@@ -486,6 +490,10 @@ public class SqlConverter {
       }
       schema = schema.getParentSchema();
     }
+  }
+
+  private void initCluster() {
+    cluster = RelOptCluster.create(planner, new DrillRexBuilder(typeFactory));
   }
 
   private static class DrillRexBuilder extends RexBuilder {
