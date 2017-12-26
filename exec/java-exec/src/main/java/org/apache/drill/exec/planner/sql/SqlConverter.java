@@ -65,6 +65,7 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Util;
 import org.apache.commons.collections.ListUtils;
 import org.apache.drill.common.config.DrillConfig;
@@ -76,6 +77,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -442,6 +444,11 @@ public class SqlConverter {
     @Override
     public int getInSubQueryThreshold() {
       return inSubqueryThreshold;
+    }
+
+    @Override
+    public RelBuilderFactory getRelBuilderFactory() {
+      return DrillRelFactories.LOGICAL_BUILDER;
     }
   }
 
