@@ -27,18 +27,21 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 public class DrillFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolderExpr.class);
-  private DrillFuncHolder holder;
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolderExpr.class);
+  private final DrillFuncHolder holder;
+  private final MajorType majorType;
   private DrillSimpleFunc interpreter;
 
   public DrillFuncHolderExpr(String nameUsed, DrillFuncHolder holder, List<LogicalExpression> args, ExpressionPosition pos) {
     super(nameUsed, pos, args);
     this.holder = holder;
+    // since function return type can not be changed, cache it for better performance
+    this.majorType = holder.getReturnType(args);
   }
 
   @Override
   public MajorType getMajorType() {
-    return holder.getReturnType(args);
+    return majorType;
   }
 
   @Override

@@ -280,14 +280,15 @@ public class QueryManager implements AutoCloseable {
   }
 
   void updateEphemeralState(final QueryState queryState) {
-      // If query is already in zk transient store, ignore the transient state update option.
-      // Else, they will not be removed from transient store upon completion.
-      if (!inTransientStore &&
-          !foreman.getQueryContext().getOptions().getOption(ExecConstants.QUERY_TRANSIENT_STATE_UPDATE)) {
-        return;
-      }
+    // If query is already in zk transient store, ignore the transient state update option.
+    // Else, they will not be removed from transient store upon completion.
+    if (!inTransientStore && !foreman.getQueryContext().getOptions().getOption(ExecConstants.QUERY_TRANSIENT_STATE_UPDATE)) {
+      return;
+    }
 
-      switch (queryState) {
+    switch (queryState) {
+      case PREPARING:
+      case PLANNING:
       case ENQUEUED:
       case STARTING:
       case RUNNING:
@@ -295,15 +296,14 @@ public class QueryManager implements AutoCloseable {
         runningProfileStore.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
         inTransientStore = true;
         break;
-
       case COMPLETED:
       case CANCELED:
       case FAILED:
         try {
           runningProfileStore.remove(stringQueryId);
           inTransientStore = false;
-        } catch(final Exception e) {
-          logger.warn("Failure while trying to delete the estore profile for this query.", e);
+        } catch (final Exception e) {
+          logger.warn("Failure while trying to delete the stored profile for the query [{}]", stringQueryId, e);
         }
         break;
 

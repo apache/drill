@@ -202,8 +202,10 @@ public class ProfileWrapper {
   }
 
   public String getExecutionDuration() {
-    //Check if State is STARTING or RUNNING
-    if (profile.getState() == QueryState.STARTING ||
+    //Check if State is PREPARING, PLANNING, STARTING, ENQUEUED or RUNNING
+    if (profile.getState() == QueryState.PREPARING ||
+        profile.getState() == QueryState.PLANNING ||
+        profile.getState() == QueryState.STARTING ||
         profile.getState() == QueryState.ENQUEUED ||
         profile.getState() == QueryState.RUNNING) {
       return NOT_AVAILABLE_LABEL;
