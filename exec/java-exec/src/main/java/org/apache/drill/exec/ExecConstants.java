@@ -165,6 +165,7 @@ public final class ExecConstants {
   public static final String USE_LOGIN_PRINCIPAL = "drill.exec.security.bit.auth.use_login_principal";
   public static final String USER_ENCRYPTION_SASL_ENABLED = "drill.exec.security.user.encryption.sasl.enabled";
   public static final String USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.user.encryption.sasl.max_wrapped_size";
+  public static final String WEB_SERVER_THREAD_POOL_MAX = "drill.exec.web_server.thread_pool_max";
 
   public static final String USER_SSL_ENABLED = "drill.exec.security.user.encryption.ssl.enabled";
   public static final String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
