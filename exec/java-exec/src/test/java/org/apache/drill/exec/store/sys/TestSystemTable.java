@@ -74,4 +74,9 @@ public class TestSystemTable extends BaseTestQuery {
   public void profilesTable() throws Exception {
     test("select * from sys.profiles");
   }
+
+  @Test
+  public void profilesJsonTable() throws Exception {
+    test("select * from sys.profiles_json");
+  }
 }

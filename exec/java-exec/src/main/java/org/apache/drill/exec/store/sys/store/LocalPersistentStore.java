@@ -123,6 +123,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
             return path.getName().endsWith(DRILL_SYS_FILE_SUFFIX);
           }
         };
+
         List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, sysFileSuffixFilter);
         if (fileStatuses.isEmpty()) {
           return Collections.emptyIterator();
@@ -135,6 +136,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
         }
 
         Collections.sort(files);
+
         return Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), new Function<String, Entry<String, V>>() {
           @Nullable
           @Override

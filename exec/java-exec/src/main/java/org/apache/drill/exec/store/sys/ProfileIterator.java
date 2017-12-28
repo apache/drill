@@ -21,9 +21,12 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.work.foreman.QueryManager;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.serialization.InstanceSerializer;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,23 +37,33 @@ import java.util.Map;
 public class ProfileIterator implements Iterator<Object> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileIterator.class);
 
-  private final Iterator<ProfileInfo> itr;
+  private final QueryProfileStoreContext profileStoreContext;
+  private final InstanceSerializer<QueryProfile> profileSerializer;
+  private final Iterator<?> itr;
+
+  private int count;
 
   public ProfileIterator(FragmentContext context) {
+    //Grab profile Store Context
+    profileStoreContext = context
+        .getDrillbitContext()
+        .getProfileStoreContext();
+
+    //Holding a serializer (for JSON extract)
+    profileSerializer = profileStoreContext.
+        getProfileStoreConfig().getSerializer();
+
     itr = iterateProfileInfo(context);
   }
 
   private Iterator<ProfileInfo> iterateProfileInfo(FragmentContext context) {
     try {
-      PersistentStore<UserBitShared.QueryProfile> profiles = context
-        .getDrillbitContext()
-        .getStoreProvider()
-        .getOrCreateStore(QueryManager.QUERY_PROFILE);
+      PersistentStore<UserBitShared.QueryProfile> profiles = profileStoreContext.getCompletedProfileStore();
 
       return transform(profiles.getAll());
 
     } catch (Exception e) {
-      logger.error(String.format("Unable to get persistence store: %s, ", QueryManager.QUERY_PROFILE.getName()), e);
+      logger.error(String.format("Unable to get persistence store: %s, ", profileStoreContext.getProfileStoreConfig().getName(), e));
       return Iterators.singletonIterator(ProfileInfo.getDefault());
     }
   }
@@ -67,27 +80,34 @@ public class ProfileIterator implements Iterator<Object> {
           return ProfileInfo.getDefault();
         }
 
+        //Constructing ProfileInfo
         final String queryID = input.getKey();
-
-        return new ProfileInfo(queryID,
-          mkHref(queryID),
-          new Timestamp(input.getValue().getStart()),
-          input.getValue().getEnd() - input.getValue().getStart(),
-          input.getValue().getUser(),
-          input.getValue().getQuery(),
-          input.getValue().getState().name()
-        );
-      }
-
-      /**
-       * Generate a link to detailed profile page using queryID. this makes user be able to jump to that page directly from query result.
-       * @param queryID query ID
-       * @return html href link of the input query ID
-       */
-      private String mkHref(String queryID) {
-        return String.format("<a href=\"/profiles/%s\">%s</a>", queryID, queryID);
+        final QueryProfile profile = input.getValue();
+        //For cases where query was never queued
+        final long assumedQueueEndTime = profile.getQueueWaitEnd()> 0 ? profile.getQueueWaitEnd() : profile.getPlanEnd();
+        return new ProfileInfo(
+            queryID,
+            new Timestamp(profile.getStart()),
+            profile.getForeman().getAddress(),
+            profile.getTotalFragments(),
+            profile.getUser(),
+            profile.getQueueName(),
+            computeDuration(profile.getStart(), profile.getPlanEnd()),
+            computeDuration(profile.getPlanEnd(), assumedQueueEndTime),
+            computeDuration(assumedQueueEndTime, profile.getEnd()),
+            profile.getState().name(),
+            profile.getQuery()
+         );
       }
     });
+  }
+
+  protected long computeDuration(long startTime, long endTime) {
+    if (endTime > startTime && startTime > 0) {
+      return (endTime - startTime);
+    } else {
+      return 0;
+    }
   }
 
   @Override
@@ -106,28 +126,42 @@ public class ProfileIterator implements Iterator<Object> {
   }
 
   public static class ProfileInfo {
+    private static final String UnknownValue = "UNKNOWN";
+
     private static final ProfileInfo DEFAULT = new ProfileInfo();
 
-    public final String query_id;
-    public final String link;
-    public final Timestamp time;
-    public final long latency;
+    public final String queryId;
+    public final Timestamp startTime;
+    public final String foreman;
+    public final long fragments;
     public final String user;
-    public final String query;
+    public final String queue;
+    public final long planTime;
+    public final long queueTime;
+    public final long executeTime;
+    public final long totalTime;
     public final String state;
+    public final String query;
 
-    public ProfileInfo(String query_id, String link, Timestamp time, long latency, String user, String query, String state) {
-      this.query_id = query_id;
-      this.link = link;
-      this.time = time;
-      this.latency = latency;
-      this.user = user;
+    public ProfileInfo(String query_id, Timestamp time, String foreman, long fragmentCount, String username,
+        String queueName, long planDuration, long queueWaitDuration, long executeDuration,
+        String state, String query) {
+      this.queryId = query_id;
+      this.startTime = time;
+      this.foreman = foreman;
+      this.fragments = fragmentCount;
+      this.user = username;
+      this.queue = queueName;
+      this.planTime = planDuration;
+      this.queueTime = queueWaitDuration;
+      this.executeTime = executeDuration;
+      this.totalTime = this.planTime + this.queueTime + this.executeTime;
       this.query = query;
       this.state = state;
     }
 
     private ProfileInfo() {
-      this("UNKNOWN", "UNKNOWN", new Timestamp(0L), 0L, "UNKNOWN", "UNKNOWN", "UNKNOWN");
+      this(UnknownValue, new Timestamp(0), UnknownValue, 0L, UnknownValue, UnknownValue, 0L, 0L, 0L, UnknownValue, UnknownValue);
     }
 
     /**
@@ -139,3 +173,5 @@ public class ProfileIterator implements Iterator<Object> {
     }
   }
 }
+
+
