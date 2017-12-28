@@ -87,17 +87,24 @@ public enum SystemTable {
     }
   },
 
+  PROFILES("profiles", false, ProfileInfoIterator.ProfileInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new ProfileInfoIterator(context);
+    }
+  },
+
+  PROFILES_JSON("profiles_json", false, ProfileJsonIterator.ProfileJson.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new ProfileJsonIterator(context);
+    }
+  },
+
   THREADS("threads", true, ThreadsIterator.ThreadsInfo.class) {
     @Override
   public Iterator<Object> getIterator(final FragmentContext context) {
       return new ThreadsIterator(context);
-    }
-  },
-
-  PROFILES("profiles", false, ProfileIterator.ProfileInfo.class) {
-    @Override
-    public Iterator<Object> getIterator(FragmentContext context) {
-      return new ProfileIterator(context);
     }
   };
 

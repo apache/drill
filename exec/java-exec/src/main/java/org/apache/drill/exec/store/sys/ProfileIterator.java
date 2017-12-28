@@ -17,125 +17,73 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.work.foreman.QueryManager;
-
-import javax.annotation.Nullable;
-import java.sql.Timestamp;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
+
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 /**
- * DRILL-5068: Add a new system table for completed profiles
+ * Base class for Profile Iterators
  */
-public class ProfileIterator implements Iterator<Object> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileIterator.class);
-
-  private final Iterator<ProfileInfo> itr;
+public abstract class ProfileIterator implements Iterator<Object> {
+  protected final QueryProfileStoreContext profileStoreContext;
+  protected final String queryingUsername;
+  protected final boolean isAdmin;
 
   public ProfileIterator(FragmentContext context) {
-    itr = iterateProfileInfo(context);
-  }
-
-  private Iterator<ProfileInfo> iterateProfileInfo(FragmentContext context) {
-    try {
-      PersistentStore<UserBitShared.QueryProfile> profiles = context
+    //Grab profile Store Context
+    profileStoreContext = context
         .getDrillbitContext()
-        .getStoreProvider()
-        .getOrCreateStore(QueryManager.QUERY_PROFILE);
+        .getProfileStoreContext();
 
-      return transform(profiles.getAll());
-
-    } catch (Exception e) {
-      logger.error(String.format("Unable to get persistence store: %s, ", QueryManager.QUERY_PROFILE.getName()), e);
-      return Iterators.singletonIterator(ProfileInfo.getDefault());
-    }
+    queryingUsername = context.getQueryUserName();
+    isAdmin = hasAdminPrivileges(context);
   }
 
-  /**
-   * Iterating persistentStore as a iterator of {@link org.apache.drill.exec.store.sys.ProfileIterator.ProfileInfo}.
-   */
-  private Iterator<ProfileInfo> transform(Iterator<Map.Entry<String, UserBitShared.QueryProfile>> all) {
-    return Iterators.transform(all, new Function<Map.Entry<String, UserBitShared.QueryProfile>, ProfileInfo>() {
-      @Nullable
-      @Override
-      public ProfileInfo apply(@Nullable Map.Entry<String, UserBitShared.QueryProfile> input) {
-        if (input == null || input.getValue() == null) {
-          return ProfileInfo.getDefault();
-        }
+  protected boolean hasAdminPrivileges(FragmentContext context) {
+    OptionManager options = context.getOptions();
+    if (context.isUserAuthenticationEnabled() &&
+        !ImpersonationUtil.hasAdminPrivileges(
+          context.getQueryUserName(),
+          ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+          ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
+      return false;
+    }
 
-        final String queryID = input.getKey();
+    //Passed checks
+    return true;
+  }
 
-        return new ProfileInfo(queryID,
-          mkHref(queryID),
-          new Timestamp(input.getValue().getStart()),
-          input.getValue().getEnd() - input.getValue().getStart(),
-          input.getValue().getUser(),
-          input.getValue().getQuery(),
-          input.getValue().getState().name()
-        );
+  //Returns an iterator for authorized profiles
+  protected Iterator<Entry<String, QueryProfile>> getAuthorizedProfiles (
+      Iterator<Entry<String, QueryProfile>> allProfiles, String username, boolean isAdministrator) {
+    if (isAdministrator) {
+      return allProfiles;
+    }
+
+    List<Entry<String, QueryProfile>> authorizedProfiles = new LinkedList<Entry<String, QueryProfile>>();
+    while (allProfiles.hasNext()) {
+      Entry<String, QueryProfile> profileKVPair = allProfiles.next();
+      //Check if user matches
+      if (profileKVPair.getValue().getUser().equals(username)) {
+        authorizedProfiles.add(profileKVPair);
       }
-
-      /**
-       * Generate a link to detailed profile page using queryID. this makes user be able to jump to that page directly from query result.
-       * @param queryID query ID
-       * @return html href link of the input query ID
-       */
-      private String mkHref(String queryID) {
-        return String.format("<a href=\"/profiles/%s\">%s</a>", queryID, queryID);
-      }
-    });
-  }
-
-  @Override
-  public boolean hasNext() {
-    return itr.hasNext();
-  }
-
-  @Override
-  public Object next() {
-    return itr.next();
-  }
-
-  @Override
-  public void remove() {
-    throw new UnsupportedOperationException();
-  }
-
-  public static class ProfileInfo {
-    private static final ProfileInfo DEFAULT = new ProfileInfo();
-
-    public final String query_id;
-    public final String link;
-    public final Timestamp time;
-    public final long latency;
-    public final String user;
-    public final String query;
-    public final String state;
-
-    public ProfileInfo(String query_id, String link, Timestamp time, long latency, String user, String query, String state) {
-      this.query_id = query_id;
-      this.link = link;
-      this.time = time;
-      this.latency = latency;
-      this.user = user;
-      this.query = query;
-      this.state = state;
     }
+    return authorizedProfiles.iterator();
+  }
 
-    private ProfileInfo() {
-      this("UNKNOWN", "UNKNOWN", new Timestamp(0L), 0L, "UNKNOWN", "UNKNOWN", "UNKNOWN");
-    }
-
-    /**
-     * If unable to get ProfileInfo, use this default instance instead.
-     * @return the default instance
-     */
-    public static final ProfileInfo getDefault() {
-      return DEFAULT;
+  protected long computeDuration(long startTime, long endTime) {
+    if (endTime > startTime && startTime > 0) {
+      return (endTime - startTime);
+    } else {
+      return 0;
     }
   }
 }
