@@ -230,6 +230,10 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     return context;
   }
 
+  public QueryContext getQueryContext() {
+    return queryContext;
+  }
+
   /**
    * This method is only used to construt InfoSchemaReader, it is for the reader to get full schema, so here we
    * are going to return a fully initialized schema tree.

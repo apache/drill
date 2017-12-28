@@ -19,17 +19,23 @@ package org.apache.drill.exec.store.sys;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
+
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
-import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
+import org.apache.drill.exec.server.options.QueryOptionManager;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * DRILL-5068: Add a new system table for completed profiles
@@ -38,10 +44,9 @@ public class ProfileIterator implements Iterator<Object> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileIterator.class);
 
   private final QueryProfileStoreContext profileStoreContext;
-  private final InstanceSerializer<QueryProfile> profileSerializer;
   private final Iterator<?> itr;
-
-  private int count;
+  private final String queryingUsername;
+  private final boolean isAdmin;
 
   public ProfileIterator(FragmentContext context) {
     //Grab profile Store Context
@@ -49,23 +54,57 @@ public class ProfileIterator implements Iterator<Object> {
         .getDrillbitContext()
         .getProfileStoreContext();
 
-    //Holding a serializer (for JSON extract)
-    profileSerializer = profileStoreContext.
-        getProfileStoreConfig().getSerializer();
+    queryingUsername = context.getQueryUserName();
+    isAdmin = hasAdminPrivileges(context.getQueryContext());
 
     itr = iterateProfileInfo(context);
+  }
+
+  private boolean hasAdminPrivileges(QueryContext queryContext) {
+    if (queryContext == null) {
+      return false;
+    }
+    QueryOptionManager options = queryContext.getOptions();
+    if (queryContext.isUserAuthenticationEnabled() &&
+        !ImpersonationUtil.hasAdminPrivileges(
+          queryContext.getQueryUserName(),
+          ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+          ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
+      return false;
+    }
+
+    //Passed checks
+    return true;
   }
 
   private Iterator<ProfileInfo> iterateProfileInfo(FragmentContext context) {
     try {
       PersistentStore<UserBitShared.QueryProfile> profiles = profileStoreContext.getCompletedProfileStore();
 
-      return transform(profiles.getAll());
+      return transform(getAuthorizedProfiles(profiles.getAll(), queryingUsername, isAdmin));
 
     } catch (Exception e) {
       logger.error(String.format("Unable to get persistence store: %s, ", profileStoreContext.getProfileStoreConfig().getName(), e));
       return Iterators.singletonIterator(ProfileInfo.getDefault());
     }
+  }
+
+  //Returns an iterator for authorized profiles
+  private Iterator<Entry<String, QueryProfile>> getAuthorizedProfiles (
+      Iterator<Entry<String, QueryProfile>> allProfiles, String username, boolean isAdministrator) {
+    if (isAdministrator) {
+      return allProfiles;
+    }
+
+    List<Entry<String, QueryProfile>> authorizedProfiles = new LinkedList<Entry<String, QueryProfile>>();
+    while (allProfiles.hasNext()) {
+      Entry<String, QueryProfile> profileKVPair = allProfiles.next();
+      //Check if user matches
+      if (profileKVPair.getValue().getUser().equals(username)) {
+        authorizedProfiles.add(profileKVPair);
+      }
+    }
+    return authorizedProfiles.iterator();
   }
 
   /**
