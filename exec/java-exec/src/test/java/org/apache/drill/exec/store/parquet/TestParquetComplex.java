@@ -211,10 +211,10 @@ public class TestParquetComplex extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns(columns)
-        .baselineValues( mapOf("a","a","b","b")  , 0L                   , 0           , 0        , 0       , 0L                    , 0            , 0       ,0       )
-        .baselineValues( mapOf("a","a","b","b")  , -1L                  , -1          , -1       , -1      , -1L                   , -1           , -1      , -1     )
-        .baselineValues( mapOf("a","a","b","b")  , 1L                   , 1           , 1        , 1       , -9223372036854775808L , 1            , 1       , 1      )
-        .baselineValues( mapOf("a","a","b","b")  , 9223372036854775807L , 2147483647  , 65535    , 255     , 9223372036854775807L  , -2147483648  , -32768  , -128   )
+        .baselineValues(mapOf("a","a","b","b")  , 0L                   , 0           , 0        , 0       , 0L                    , 0            , 0       ,0       )
+        .baselineValues(mapOf("a","a","b","b")  , -1L                  , -1          , -1       , -1      , -1L                   , -1           , -1      , -1     )
+        .baselineValues(mapOf("a","a","b","b")  , 1L                   , 1           , 1        , 1       , -9223372036854775808L , 1            , 1       , 1      )
+        .baselineValues(mapOf("a","a","b","b")  , 9223372036854775807L , 2147483647  , 65535    , 255     , 9223372036854775807L  , -2147483648  , -32768  , -128   )
         .build()
         .run();
   }
@@ -222,8 +222,9 @@ public class TestParquetComplex extends BaseTestQuery {
   @Test //DRILL-5971
   public void testComplexLogicalIntTypes2() throws Exception {
     byte[] bytes12 = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b' };
-    byte[] bytesOnes = new byte[12]; Arrays.fill(bytesOnes, (byte)1);
+    byte[] bytesOnes = new byte[12];
     byte[] bytesZeros = new byte[12];
+    Arrays.fill(bytesOnes, (byte) 1);
     String query = String.format(
         " select " +
         " t.rowKey as rowKey, " +
@@ -276,12 +277,14 @@ public class TestParquetComplex extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, new DateTime("5350-02-17"),
             new DateTime(1234567, DateTimeZone.UTC).withZoneRetainFields(DateTimeZone.getDefault()),
-            new DateTime("1973-11-29T21:33:09.012"), new Period("P875770417M943142453DT1650536.505S"),
+            new DateTime("1973-11-29T21:33:09.012"),
+            new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, new DateTime("1969-12-31"),
             new DateTime(0xFFFFFFFF, DateTimeZone.UTC).withZoneRetainFields(DateTimeZone.getDefault()),
-            new DateTime("2038-01-19T03:14:07.999"), new Period("P16843009M16843009DT16843.009S"),
+            new DateTime("2038-01-19T03:14:07.999"),
+            new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, new DateTime("1970-01-01"),
@@ -294,8 +297,9 @@ public class TestParquetComplex extends BaseTestQuery {
   @Test //DRILL-5971
   public void testComplexLogicalIntTypes3() throws Exception {
     byte[] bytes12 = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b' };
-    byte[] bytesOnes = new byte[12]; Arrays.fill(bytesOnes, (byte)1);
+    byte[] bytesOnes = new byte[12];
     byte[] bytesZeros = new byte[12];
+    Arrays.fill(bytesOnes, (byte) 1);
     String query = String.format(
         " select " +
             " t.rowKey as rowKey, " +
@@ -348,12 +352,14 @@ public class TestParquetComplex extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, new DateTime("5350-02-17"),
             new DateTime(1234567, DateTimeZone.UTC).withZoneRetainFields(DateTimeZone.getDefault()),
-            new DateTime("1973-11-29T21:33:09.012"), new Period("P875770417M943142453DT1650536.505S"),
+            new DateTime("1973-11-29T21:33:09.012"),
+            new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, new DateTime("1969-12-31"),
             new DateTime(0xFFFFFFFF, DateTimeZone.UTC).withZoneRetainFields(DateTimeZone.getDefault()),
-            new DateTime("2038-01-19T03:14:07.999"), new Period("P16843009M16843009DT16843.009S"),
+            new DateTime("2038-01-19T03:14:07.999"),
+            new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, new DateTime("1970-01-01"),

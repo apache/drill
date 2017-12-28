@@ -126,6 +126,7 @@ public class ColumnReaderFactory {
                   return new ParquetFixedWidthDictionaryReaders.DictionaryTimeReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (TimeVector) v, schemaElement);
                 case INT_8:
                 case INT_16:
+                case INT_32:
                   return new ParquetFixedWidthDictionaryReaders.DictionaryIntReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (IntVector) v, schemaElement);
                 case UINT_8:
                 case UINT_16:

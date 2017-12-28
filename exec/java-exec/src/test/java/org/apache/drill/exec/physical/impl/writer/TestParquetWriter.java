@@ -636,10 +636,8 @@ public class TestParquetWriter extends BaseTestQuery {
         "interval '-1000000000 20:12:23.999' day(10) to second col2 " +
         "from cp.`employee.json` limit 2", tableName);
 
-//    Period row1Col1 = new Period(0, 0, 0, 10, 0, 0, 0, 73840123);
-//    Period row1Col2 = new Period(0, 0, 0, -1000000000, 0, 0, 0, -72743999);
-        Period row1Col1 = new Period(0, 0, 0, 10, 0, 0, 73840, 123);
-        Period row1Col2 = new Period(0, 0, 0, -1000000000, 0, 0, -72743, -999);
+    Period row1Col1 = new Period(0, 0, 0, 10, 0, 0, 0, 73840123);
+    Period row1Col2 = new Period(0, 0, 0, -1000000000, 0, 0, 0, -72743999);
     testParquetReaderHelper(tableName, row1Col1, row1Col2, row1Col1, row1Col2);
 
     tableName = "drill_1980_2";
