@@ -437,7 +437,6 @@ public class Foreman implements Runnable {
     work.applyPlan(drillbitContext.getPlanReader());
     logWorkUnit(work);
     admit(work);
-    queryManager.setQueueName(queryRM.queueName());
 
     final List<PlanFragment> planFragments = work.getFragments();
     final PlanFragment rootPlanFragment = work.getRootFragment();
@@ -462,15 +461,18 @@ public class Foreman implements Runnable {
     try {
       queryRM.admit();
     } catch (QueueTimeoutException e) {
+      queryManager.setQueueName(e.queueName());
       throw UserException
           .resourceError()
           .message(e.getMessage())
           .build(logger);
     } catch (QueryQueueException e) {
+      queryManager.setQueueName("unknown");
       throw new ForemanSetupException(e.getMessage(), e);
     } finally {
       queryManager.markQueueWaitEndTime();
     }
+    queryManager.setQueueName(queryRM.queueName());
     moveToState(QueryState.STARTING, null);
   }
 
