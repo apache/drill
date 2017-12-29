@@ -1280,6 +1280,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       logger.trace("Reserved memory runs short, trying to {} a partition and retry Hash Table put() again.",
         is1stPhase ? "early return" : "spill");
 
+      checkForSpillPossibility(currentPartition);
+
       doSpill(currentPartition); // spill to free some memory
 
       retrySameIndex = true;
@@ -1302,6 +1304,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       // for debugging - in case there's a leak
       long memDiff = allocator.getAllocatedMemory() - allocatedBeforeHTput;
       if ( memDiff > 0 ) { logger.warn("Leak: HashTable put() OOM left behind {} bytes allocated",memDiff); }
+
+      checkForSpillPossibility(currentPartition);
 
       doSpill(currentPartition); // spill to free some memory
 
@@ -1376,6 +1380,17 @@ public abstract class HashAggTemplate implements HashAggregator {
     // ===================================================================================
     if ( needToCheckIfSpillIsNeeded && canSpill && useMemoryPrediction ) {
       spillIfNeeded(currentPartition);
+    }
+  }
+
+  /**
+   * Checks that spill is possible, otherwise throws {@link OutOfMemoryException}.
+   *
+   * @param currentPartition the partition that hit the memory limit
+   */
+  private void checkForSpillPossibility(int currentPartition) {
+    if (chooseAPartitionToFlush(currentPartition, true) < 0) {
+      throw new OutOfMemoryException(getOOMErrorMsg("AGGR"));
     }
   }
 
