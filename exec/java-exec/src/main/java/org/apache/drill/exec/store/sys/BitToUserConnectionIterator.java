@@ -25,11 +25,15 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.TimeZone;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.server.rest.profile.SimpleDurationFormat;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.joda.time.DateTime;
 
 /**
@@ -39,9 +43,30 @@ public class BitToUserConnectionIterator implements Iterator<Object> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitToUserConnectionIterator.class);
 
   Iterator<ConnectionInfo> itr;
+  private Object queryingUsername;
+  private boolean isAdmin;
 
   public BitToUserConnectionIterator(FragmentContext context) {
+    queryingUsername = context.getQueryUserName();
+    isAdmin = hasAdminPrivileges(context.getQueryContext());
     itr = iterateConnectionInfo(context);
+  }
+
+  private boolean hasAdminPrivileges(QueryContext queryContext) {
+    if (queryContext == null) {
+      return false;
+    }
+    QueryOptionManager options = queryContext.getOptions();
+    if (queryContext.isUserAuthenticationEnabled() &&
+        !ImpersonationUtil.hasAdminPrivileges(
+          queryContext.getQueryUserName(),
+          ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+          ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
+      return false;
+    }
+
+    //Passed checks
+    return true;
   }
 
   private Iterator<ConnectionInfo> iterateConnectionInfo(FragmentContext context) {
@@ -49,11 +74,16 @@ public class BitToUserConnectionIterator implements Iterator<Object> {
         context.getDrillbitContext().getUserConnections();
 
     String hostname = context.getIdentity().getAddress();
-    List<ConnectionInfo> connectionInfos = new LinkedList<>();
+    List<ConnectionInfo> connectionInfos = new LinkedList<ConnectionInfo>();
 
     for (Entry<BitToUserConnection, BitToUserConnectionConfig> connection : activeConnections) {
-      connectionInfos.add(new ConnectionInfo(connection, hostname));
+      if ( isAdmin ||
+          this.queryingUsername.equals(
+              connection.getKey().getSession().getTargetUserName()) ) {
+        connectionInfos.add(new ConnectionInfo(connection, hostname));
+      }
     }
+
     return connectionInfos.iterator();
   }
 
