@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Formatter;
 
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.convertInt;
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.convertShort;
@@ -43,7 +44,9 @@ public class Packet {
 
   private byte[] raw;
 
+  // index into the raw data where the current ethernet packet starts
   private int etherOffset;
+  // index into the raw data where the current IP packet starts. Should be just after etherOffset
   private int ipOffset;
 
   private int packetLength;
@@ -180,11 +183,102 @@ public class Packet {
 
   public int getSequenceNumber() {
     if (isTcpPacket()) {
-      int sequenceOffset = PacketConstants.ETHER_HEADER_LENGTH + getIPHeaderLength() + getTCPHeaderLength(raw) + 4;
-      return Math.abs(convertInt(raw, sequenceOffset));
+      return convertInt(raw, ipOffset + getIPHeaderLength() + PacketConstants.TCP_SEQUENCE_OFFSET);
     } else {
       return 0;
     }
+  }
+
+  public int getAckNumber() {
+    if (isTcpPacket()) {
+        return convertInt(raw, ipOffset + getIPHeaderLength() + PacketConstants.TCP_ACK_OFFSET);
+    } else {
+      return 0;
+    }
+  }
+
+  public int getFlags() {
+    if (isTcpPacket()) {
+      return convertShort(raw, ipOffset + getIPHeaderLength() + PacketConstants.TCP_FLAG_OFFSET) & 0xfff;
+    } else {
+      return 0;
+    }
+  }
+
+  public String getParsedFlags() {
+    return formatFlags(getFlags());
+  }
+
+  public static String formatFlags(int flags) {
+    int mask = 0x100;
+    StringBuilder r = new StringBuilder();
+    String separator = "";
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("NS");
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("CWR");
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("ECE");
+      if ((flags & 2) != 0) {
+        r.append(" (ECN capable)");
+      } else {
+        r.append(" (Congestion experienced)");
+      }
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("URG");
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("ACK");
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("PSH");
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("RST");
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("SYN");
+      separator = "|";
+    }
+    mask = mask >> 1;
+
+    if ((flags & mask) != 0) {
+      r.append(separator);
+      r.append("FIN");
+    }
+    return r.toString();
   }
 
   public int getSrc_port() {
@@ -361,9 +455,9 @@ public class Packet {
   private String getEthernetAddress(int offset) {
     byte[] r = new byte[6];
     System.arraycopy(raw, etherOffset + offset, r, 0, 6);
-    StringBuilder sb = new StringBuilder();
+    Formatter sb = new Formatter();
     for (int i = 0; i < r.length; i++) {
-      sb.append(String.format("%02X%s", r[i], (i < r.length - 1) ? ":" : ""));
+      sb.format("%02X%s", r[i], (i < r.length - 1) ? ":" : "");
     }
     return sb.toString();
   }
