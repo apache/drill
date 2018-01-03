@@ -344,7 +344,18 @@ public class UserClient
       mechanismName = factory.getSimpleName();
       logger.trace("Will try to authenticate to server using {} mechanism with encryption context {}",
           mechanismName, connection.getEncryptionCtxtString());
+
+      // Update the thread context class loader to current class loader
+      // See DRILL-6063 for detailed description
+      final ClassLoader oldThreadCtxtCL = Thread.currentThread().getContextClassLoader();
+      final ClassLoader newThreadCtxtCL = this.getClass().getClassLoader();
+      Thread.currentThread().setContextClassLoader(newThreadCtxtCL);
+
       ugi = factory.createAndLoginUser(propertiesMap);
+
+      // Reset the thread context class loader to original one
+      Thread.currentThread().setContextClassLoader(oldThreadCtxtCL);
+
       saslClient = factory.createSaslClient(ugi, propertiesMap);
       if (saslClient == null) {
         throw new SaslException(String.format(
