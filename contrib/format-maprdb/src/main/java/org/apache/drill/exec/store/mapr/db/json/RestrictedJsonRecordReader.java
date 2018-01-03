@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mapr.db.json;
 
+import com.mapr.db.Table;
 import static org.apache.drill.exec.store.mapr.PluginErrorHandler.dataReadError;
 
 import java.nio.ByteBuffer;
@@ -55,24 +56,6 @@ public class RestrictedJsonRecordReader extends MaprDBJsonRecordReader {
   private int batchSize; // batchSize for rowKey based document get
 
   private String [] projections = null; // multiGet projections
-  public RestrictedJsonRecordReader(MapRDBSubScanSpec subScanSpec,
-                                    MapRDBFormatPlugin formatPlugin,
-                                    List<SchemaPath> projectedColumns, FragmentContext context) {
-
-    super(subScanSpec, formatPlugin, projectedColumns, context);
-    batchSize = (int)context.getOptions().getOption(ExecConstants.QUERY_ROWKEYJOIN_BATCHSIZE);
-    int idx = 0;
-    FieldPath[] scannedFields = this.getScannedFields();
-
-    // only populate projections for non-star query (for star, null is interpreted as all fields)
-    if (!this.isStarQuery() && scannedFields != null && scannedFields.length > 0) {
-      projections = new String[scannedFields.length];
-      for (FieldPath path : scannedFields) {
-        projections[idx] = path.asPathString();
-        ++idx;
-      }
-    }
-  }
 
   public RestrictedJsonRecordReader(MapRDBSubScanSpec subScanSpec,
                                     MapRDBFormatPlugin formatPlugin,
@@ -155,6 +138,7 @@ public class RestrictedJsonRecordReader extends MaprDBJsonRecordReader {
       return 0;
     }
 
+    Table table = super.formatPlugin.getJsonTableCache().getTable(subScanSpec.getTableName(), subScanSpec.getUserName());
     final MultiGet multiGet = new MultiGet((BaseJsonTable) table, condition, false, projections);
     int recordCount = 0;
     DBDocumentReaderBase reader = null;

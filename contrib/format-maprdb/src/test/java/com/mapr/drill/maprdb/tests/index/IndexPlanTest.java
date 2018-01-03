@@ -48,6 +48,7 @@ public class IndexPlanTest extends BaseJsonTest {
   private static final String defaultHavingIndexPlan = "alter session reset `planner.enable_index_planning`";
   private static final String disableHashAgg = "alter session set `planner.enable_hashagg` = false";
   private static final String enableHashAgg =  "alter session set `planner.enable_hashagg` = true";
+  private static final String lowNonCoveringSelectivityThreshold = "alter session set `planner.index.noncovering_selectivity_threshold` = 0.00001";
   private static final String defaultnonCoveringSelectivityThreshold = "alter session set `planner.index.noncovering_selectivity_threshold` = 0.025";
   private static final String incrnonCoveringSelectivityThreshold = "alter session set `planner.index.noncovering_selectivity_threshold` = 0.25";
   private static final String disableFTS = "alter session set `planner.disable_full_table_scan` = true";
@@ -58,7 +59,10 @@ public class IndexPlanTest extends BaseJsonTest {
       = "alter session set `planner.index.rowkeyjoin_cost_factor` = 0.01";
   private static final String defaultRowKeyJoinBackIOFactor
       = "alter session reset `planner.index.rowkeyjoin_cost_factor`";
-
+  private static final String incrRowKeyJoinConvSelThreshold = "alter session set `planner.rowkeyjoin_conversion_selectivity_threshold` = 1.0";
+  private static final String defaultRowKeyConvSelThreshold = "alter session reset `planner.rowkeyjoin_conversion_selectivity_threshold`";
+  private static final String forceRowKeyJoinConversionUsingHashJoin = "alter session set `planner.rowkeyjoin_conversion_using_hashjoin` = true";
+  private static final String defaultRowKeyJoinConversionUsingHashJoin = "alter session reset `planner.rowkeyjoin_conversion_using_hashjoin`";
   /**
    *  A sample row of this 10K table:
    ------------------+-----------------------------+--------+
@@ -110,6 +114,7 @@ public class IndexPlanTest extends BaseJsonTest {
             "i_state_age_phone", "address.state,personal.age,contact.phone", "name.fname",
             "i_cast_age_income_phone", "$CAST(personal.age@INT),$CAST(personal.income@INT),contact.phone", "name.fname",
             "i_age_with_fname", "personal.age", "name.fname",
+            "i_rowid_cast_date_birthdate", "rowid", "$CAST(personal.birthdate@DATE)",
             "hash_i_reverseid", "reverseid", "",
             "hash_i_cast_timestamp_firstlogin", "$CAST(activity.irs.firstlogin@TIMESTAMP)", "id.ssn"
         };
@@ -1685,6 +1690,272 @@ public class IndexPlanTest extends BaseJsonTest {
               .run();
     } finally {
       test(sliceTargetDefault);
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_1() throws Exception {
+    // _id IN (select col ...)
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where _id in (select t2._id " +
+        " from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_2() throws Exception {
+    // _id = col
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
+        " where t1._id = t2._id and cast(t2.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_3() throws Exception {
+    // filters on both sides of the join
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
+        " where t1._id = t2._id and cast(t2.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S') and cast(t1.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S') ";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_4() throws Exception {
+    // _id = cast(col as int) works since the rowids are internally cast to string!
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
+        " where t1._id = cast(t2.rowid as int) and cast(t2.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_5() throws Exception {
+    // _id = cast(cast(col as int) as varchar(10)
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
+        " where t1._id = cast(cast(t2.rowid as int) as varchar(10)) " +
+        " and cast(t2.activity.irs.firstlogin as timestamp) = to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_6() throws Exception {
+    // _id IN (select cast(cast(col as int) as varchar(10) ... JOIN ...)
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where _id in " +
+        "(select cast(cast(t2.rowid as int) as varchar(10)) from hbase.`index_test_primary` t2, hbase.`index_test_primary` t3 " +
+        "where t2.address.city = t3.address.city and cast(t2.activity.irs.firstlogin as timestamp) =  " +
+        "to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_7() throws Exception {
+    // with non-covering index
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
+        "where t1._id = t2.rowid and cast(t2.activity.irs.firstlogin as timestamp) = " +
+        "to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + incrnonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query,
+          new String[] {"RowKeyJoin", "RestrictedJsonTableGroupScan", "RowKeyJoin", "indexName=hash_i_cast_timestamp_firstlogin"},
+          new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_8() throws Exception {
+    // with covering index
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
+        "where t1._id = t2.rowid and t2.rowid = '1012'";
+    try {
+      test(incrRowKeyJoinConvSelThreshold);
+      PlanTestBase.testPlanMatchingPatterns(query,
+          new String[] {"RowKeyJoin", "indexName=i_rowid_cast_date_birthdate"},
+          new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold);
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_9() throws Exception {
+    // Negative test - rowkey join should not be present
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where cast(_id as varchar(10)) in " +
+        "(select t2._id from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {}, new String[] {"RowKeyJoin"});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_10() throws Exception {
+    // Negative test - rowkey join should not be present
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t2 " +
+        " where cast(t1._id as varchar(10)) = cast(t2._id as varchar(10)) and cast(t2.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {}, new String[] {"RowKeyJoin"});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_11() throws Exception {
+    // Negative test - rowkey join should not be present
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where cast(_id as varchar(10)) in " +
+        "(select t2._id from hbase.`index_test_primary` t2, hbase.`index_test_primary` t3 where t2.address.city = t3.address.city " +
+        "and cast(t2.activity.irs.firstlogin as timestamp) =  to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {}, new String[] {"RowKeyJoin"});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_12() throws Exception {
+    // JOIN _id IN (select cast(cast(col as int) as varchar(10) ... JOIN ...) - rowkey join appears in intermediate join order
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1, hbase.`index_test_primary` t4 " +
+        "where t1.address.city = t4.address.city and t1._id in (select cast(cast(t2.rowid as int) as varchar(10)) " +
+        "from hbase.`index_test_primary` t2, hbase.`index_test_primary` t3 where t2.address.city = t3.address.city " +
+        "and cast(t2.activity.irs.firstlogin as timestamp) = to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S')) " +
+        "and t4.address.state = 'pc'";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query,
+          new String[] {"HashJoin(.*[\n\r])+.*Scan.*indexName=i_state_city_dl(.*[\n\r])+.*RowKeyJoin(.*[\n\r])+.*RestrictedJsonTableGroupScan(.*[\n\r])+.*HashAgg\\(group=\\[\\{0\\}\\]\\)(.*[\n\r])+.*HashJoin"},
+          new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";");
+    }
+  }
+
+  @Test
+  public void testRowkeyJoinPushdown_13() throws Exception {
+    // Check option planner.rowkeyjoin_conversion_using_hashjoin works as expected!
+    String query = "select t1.id.ssn as ssn from hbase.`index_test_primary` t1 where _id in (select t2._id " +
+        " from hbase.`index_test_primary` t2 where cast(t2.activity.irs.firstlogin as timestamp) = " +
+        " to_timestamp('2013-02-04 22:34:38.0', 'YYYY-MM-dd HH:mm:ss.S'))";
+    try {
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"RowKeyJoin"}, new String[] {});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+      test(incrRowKeyJoinConvSelThreshold + ";" + lowNonCoveringSelectivityThreshold + ";" +
+          forceRowKeyJoinConversionUsingHashJoin + ";");
+      PlanTestBase.testPlanMatchingPatterns(query, new String[] {"HashJoin"}, new String[] {"RowKeyJoin"});
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("ssn").baselineValues("100007423")
+          .go();
+    } finally {
+      test(defaultRowKeyConvSelThreshold + ";" + defaultnonCoveringSelectivityThreshold + ";" +
+          defaultRowKeyJoinConversionUsingHashJoin);
     }
   }
 }

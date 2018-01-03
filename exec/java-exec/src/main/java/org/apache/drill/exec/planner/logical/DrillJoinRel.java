@@ -37,6 +37,7 @@ import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
+import org.apache.drill.exec.planner.common.JoinControl;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 
 /**
@@ -49,11 +50,21 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
    * We do not throw InvalidRelException in Logical planning phase. It's up to the post-logical planning check or physical planning
    * to detect the unsupported join type, and throw exception.
    * */
+  private int joinControl = JoinControl.DEFAULT;
+
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType)  {
+      JoinRelType joinType) {
     super(cluster, traits, left, right, condition, joinType);
     assert traits.contains(DrillRel.DRILL_LOGICAL);
     RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys, filterNulls);
+  }
+
+  public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+      JoinRelType joinType, int joinControl)  {
+    super(cluster, traits, left, right, condition, joinType);
+    assert traits.contains(DrillRel.DRILL_LOGICAL);
+    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys, filterNulls);
+    this.joinControl = joinControl;
   }
 
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
@@ -65,7 +76,6 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     this.leftKeys = leftKeys;
     this.rightKeys = rightKeys;
   }
-
 
   @Override
   public DrillJoinRel copy(RelTraitSet traitSet, RexNode condition, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
@@ -144,28 +154,39 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     return builder.build();
   }
 
-  public static DrillJoinRel convert(Join join, ConversionContext context) throws InvalidRelException{
+  protected static Pair<RelNode, RelNode> getJoinInputs(Join join, ConversionContext context) throws InvalidRelException {
     RelNode left = context.toRel(join.getLeft());
     RelNode right = context.toRel(join.getRight());
-
-    List<RexNode> joinConditions = new ArrayList<RexNode>();
-    // right fields appear after the LHS fields.
-    final int rightInputOffset = left.getRowType().getFieldCount();
-    for (JoinCondition condition : join.getConditions()) {
-      RelDataTypeField leftField = left.getRowType().getField(ExprHelper.getFieldName(condition.getLeft()), true, false);
-      RelDataTypeField rightField = right.getRowType().getField(ExprHelper.getFieldName(condition.getRight()), true, false);
-        joinConditions.add(
-            context.getRexBuilder().makeCall(
-                SqlStdOperatorTable.EQUALS,
-                context.getRexBuilder().makeInputRef(leftField.getType(), leftField.getIndex()),
-                context.getRexBuilder().makeInputRef(rightField.getType(), rightInputOffset + rightField.getIndex())
-                )
-                );
-    }
-    RexNode rexCondition = RexUtil.composeConjunction(context.getRexBuilder(), joinConditions, false);
-    DrillJoinRel joinRel = new DrillJoinRel(context.getCluster(), context.getLogicalTraits(), left, right, rexCondition, join.getJoinType());
-
-    return joinRel;
+    return Pair.of(left, right);
   }
 
+  protected static RexNode getJoinCondition(Join join, ConversionContext context) throws InvalidRelException {
+    Pair<RelNode, RelNode> inputs = getJoinInputs(join, context);
+    List<RexNode> joinConditions = new ArrayList<RexNode>();
+    // right fields appear after the LHS fields.
+    final int rightInputOffset = inputs.left.getRowType().getFieldCount();
+    for (JoinCondition condition : join.getConditions()) {
+      RelDataTypeField leftField = inputs.left.getRowType().getField(ExprHelper.getFieldName(condition.getLeft()),
+          true, false);
+      RelDataTypeField rightField = inputs.right.getRowType().getField(ExprHelper.getFieldName(condition.getRight()),
+          true, false);
+      joinConditions.add(
+          context.getRexBuilder().makeCall(
+              SqlStdOperatorTable.EQUALS,
+              context.getRexBuilder().makeInputRef(leftField.getType(), leftField.getIndex()),
+              context.getRexBuilder().makeInputRef(rightField.getType(), rightInputOffset + rightField.getIndex())
+          )
+      );
+    }
+    RexNode rexCondition = RexUtil.composeConjunction(context.getRexBuilder(), joinConditions, false);
+    return rexCondition;
+  }
+
+  public static DrillJoinRel convert(Join join, ConversionContext context) throws InvalidRelException{
+    Pair<RelNode, RelNode> inputs = getJoinInputs(join, context);
+    RexNode rexCondition = getJoinCondition(join, context);
+    DrillJoinRel joinRel = new DrillJoinRel(context.getCluster(), context.getLogicalTraits(),
+        inputs.left, inputs.right, rexCondition, join.getJoinType());
+    return joinRel;
+  }
 }
