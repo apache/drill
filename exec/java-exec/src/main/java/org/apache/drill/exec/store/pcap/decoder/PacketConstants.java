@@ -65,4 +65,7 @@ public final class PacketConstants {
 
   public static final int PPPoV6_IP_OFFSET = 28;
 
+  public static final int TCP_SEQUENCE_OFFSET = 4;
+  public static final int TCP_ACK_OFFSET = 8;
+  public static final int TCP_FLAG_OFFSET = 12;
 }
