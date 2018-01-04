@@ -87,14 +87,14 @@ public enum SystemTable {
     }
   },
 
-  PROFILES("profiles", false, ProfileIterator.ProfileInfo.class) {
+  PROFILES("profiles", false, ProfileInfoIterator.ProfileInfo.class) {
     @Override
     public Iterator<Object> getIterator(final FragmentContext context) {
-      return new ProfileIterator(context);
+      return new ProfileInfoIterator(context);
     }
   },
 
-  PROFILES_JSON("profiles_json", false, ProfileJsonIterator.ProfileInfoJson.class) {
+  PROFILES_JSON("profiles_json", false, ProfileJsonIterator.ProfileJson.class) {
     @Override
     public Iterator<Object> getIterator(final FragmentContext context) {
       return new ProfileJsonIterator(context);

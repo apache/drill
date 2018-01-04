@@ -230,8 +230,8 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     return context;
   }
 
-  public QueryContext getQueryContext() {
-    return queryContext;
+  public boolean isUserAuthenticationEnabled() {
+    return queryContext.isUserAuthenticationEnabled();
   }
 
   /**

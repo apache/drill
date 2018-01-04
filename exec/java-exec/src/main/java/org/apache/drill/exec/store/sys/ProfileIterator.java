@@ -17,36 +17,25 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
-
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
-import org.apache.drill.exec.server.QueryProfileStoreContext;
-import org.apache.drill.exec.server.options.QueryOptionManager;
-import org.apache.drill.exec.util.ImpersonationUtil;
-
-import javax.annotation.Nullable;
-import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.util.ImpersonationUtil;
+
 /**
- * DRILL-5068: Add a new system table for completed profiles
+ * Base class for Profile Iterators
  */
 public class ProfileIterator implements Iterator<Object> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileIterator.class);
-
-  private final QueryProfileStoreContext profileStoreContext;
-  private final Iterator<?> itr;
-  private final String queryingUsername;
-  private final boolean isAdmin;
+  protected final QueryProfileStoreContext profileStoreContext;
+  protected final String queryingUsername;
+  protected final boolean isAdmin;
 
   public ProfileIterator(FragmentContext context) {
     //Grab profile Store Context
@@ -55,19 +44,14 @@ public class ProfileIterator implements Iterator<Object> {
         .getProfileStoreContext();
 
     queryingUsername = context.getQueryUserName();
-    isAdmin = hasAdminPrivileges(context.getQueryContext());
-
-    itr = iterateProfileInfo(context);
+    isAdmin = hasAdminPrivileges(context);
   }
 
-  private boolean hasAdminPrivileges(QueryContext queryContext) {
-    if (queryContext == null) {
-      return false;
-    }
-    QueryOptionManager options = queryContext.getOptions();
-    if (queryContext.isUserAuthenticationEnabled() &&
+  protected boolean hasAdminPrivileges(FragmentContext context) {
+    OptionManager options = context.getOptions();
+    if (context.isUserAuthenticationEnabled() &&
         !ImpersonationUtil.hasAdminPrivileges(
-          queryContext.getQueryUserName(),
+          context.getQueryUserName(),
           ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
           ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
       return false;
@@ -77,20 +61,8 @@ public class ProfileIterator implements Iterator<Object> {
     return true;
   }
 
-  private Iterator<ProfileInfo> iterateProfileInfo(FragmentContext context) {
-    try {
-      PersistentStore<UserBitShared.QueryProfile> profiles = profileStoreContext.getCompletedProfileStore();
-
-      return transform(getAuthorizedProfiles(profiles.getAll(), queryingUsername, isAdmin));
-
-    } catch (Exception e) {
-      logger.error(String.format("Unable to get persistence store: %s, ", profileStoreContext.getProfileStoreConfig().getName(), e));
-      return Iterators.singletonIterator(ProfileInfo.getDefault());
-    }
-  }
-
   //Returns an iterator for authorized profiles
-  private Iterator<Entry<String, QueryProfile>> getAuthorizedProfiles (
+  protected Iterator<Entry<String, QueryProfile>> getAuthorizedProfiles (
       Iterator<Entry<String, QueryProfile>> allProfiles, String username, boolean isAdministrator) {
     if (isAdministrator) {
       return allProfiles;
@@ -107,40 +79,6 @@ public class ProfileIterator implements Iterator<Object> {
     return authorizedProfiles.iterator();
   }
 
-  /**
-   * Iterating persistentStore as a iterator of {@link org.apache.drill.exec.store.sys.ProfileIterator.ProfileInfo}.
-   */
-  private Iterator<ProfileInfo> transform(Iterator<Map.Entry<String, UserBitShared.QueryProfile>> all) {
-    return Iterators.transform(all, new Function<Map.Entry<String, UserBitShared.QueryProfile>, ProfileInfo>() {
-      @Nullable
-      @Override
-      public ProfileInfo apply(@Nullable Map.Entry<String, UserBitShared.QueryProfile> input) {
-        if (input == null || input.getValue() == null) {
-          return ProfileInfo.getDefault();
-        }
-
-        //Constructing ProfileInfo
-        final String queryID = input.getKey();
-        final QueryProfile profile = input.getValue();
-        //For cases where query was never queued
-        final long assumedQueueEndTime = profile.getQueueWaitEnd()> 0 ? profile.getQueueWaitEnd() : profile.getPlanEnd();
-        return new ProfileInfo(
-            queryID,
-            new Timestamp(profile.getStart()),
-            profile.getForeman().getAddress(),
-            profile.getTotalFragments(),
-            profile.getUser(),
-            profile.getQueueName(),
-            computeDuration(profile.getStart(), profile.getPlanEnd()),
-            computeDuration(profile.getPlanEnd(), assumedQueueEndTime),
-            computeDuration(assumedQueueEndTime, profile.getEnd()),
-            profile.getState().name(),
-            profile.getQuery()
-         );
-      }
-    });
-  }
-
   protected long computeDuration(long startTime, long endTime) {
     if (endTime > startTime && startTime > 0) {
       return (endTime - startTime);
@@ -151,66 +89,16 @@ public class ProfileIterator implements Iterator<Object> {
 
   @Override
   public boolean hasNext() {
-    return itr.hasNext();
+    return false;
   }
 
   @Override
   public Object next() {
-    return itr.next();
+    return null;
   }
 
   @Override
   public void remove() {
     throw new UnsupportedOperationException();
   }
-
-  public static class ProfileInfo {
-    private static final String UnknownValue = "UNKNOWN";
-
-    private static final ProfileInfo DEFAULT = new ProfileInfo();
-
-    public final String queryId;
-    public final Timestamp startTime;
-    public final String foreman;
-    public final long fragments;
-    public final String user;
-    public final String queue;
-    public final long planTime;
-    public final long queueTime;
-    public final long executeTime;
-    public final long totalTime;
-    public final String state;
-    public final String query;
-
-    public ProfileInfo(String query_id, Timestamp time, String foreman, long fragmentCount, String username,
-        String queueName, long planDuration, long queueWaitDuration, long executeDuration,
-        String state, String query) {
-      this.queryId = query_id;
-      this.startTime = time;
-      this.foreman = foreman;
-      this.fragments = fragmentCount;
-      this.user = username;
-      this.queue = queueName;
-      this.planTime = planDuration;
-      this.queueTime = queueWaitDuration;
-      this.executeTime = executeDuration;
-      this.totalTime = this.planTime + this.queueTime + this.executeTime;
-      this.query = query;
-      this.state = state;
-    }
-
-    private ProfileInfo() {
-      this(UnknownValue, new Timestamp(0), UnknownValue, 0L, UnknownValue, UnknownValue, 0L, 0L, 0L, UnknownValue, UnknownValue);
-    }
-
-    /**
-     * If unable to get ProfileInfo, use this default instance instead.
-     * @return the default instance
-     */
-    public static final ProfileInfo getDefault() {
-      return DEFAULT;
-    }
-  }
 }
-
-
