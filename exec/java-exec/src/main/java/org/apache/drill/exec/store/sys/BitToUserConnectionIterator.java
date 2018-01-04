@@ -27,11 +27,10 @@ import java.util.TimeZone;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
 import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.exec.server.options.QueryOptionManager;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.rest.profile.SimpleDurationFormat;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.joda.time.DateTime;
@@ -43,23 +42,20 @@ public class BitToUserConnectionIterator implements Iterator<Object> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitToUserConnectionIterator.class);
 
   Iterator<ConnectionInfo> itr;
-  private Object queryingUsername;
+  private String queryingUsername;
   private boolean isAdmin;
 
   public BitToUserConnectionIterator(FragmentContext context) {
     queryingUsername = context.getQueryUserName();
-    isAdmin = hasAdminPrivileges(context.getQueryContext());
+    isAdmin = hasAdminPrivileges(context);
     itr = iterateConnectionInfo(context);
   }
 
-  private boolean hasAdminPrivileges(QueryContext queryContext) {
-    if (queryContext == null) {
-      return false;
-    }
-    QueryOptionManager options = queryContext.getOptions();
-    if (queryContext.isUserAuthenticationEnabled() &&
+  private boolean hasAdminPrivileges(FragmentContext context) {
+    OptionManager options = context.getOptions();
+    if (context.isUserAuthenticationEnabled() &&
         !ImpersonationUtil.hasAdminPrivileges(
-          queryContext.getQueryUserName(),
+          this.queryingUsername,
           ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
           ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
       return false;
@@ -104,7 +100,6 @@ public class BitToUserConnectionIterator implements Iterator<Object> {
 
   public static class ConnectionInfo {
     public String user;
-    public String targetUser;
     public String client;
     public String drillbit;
     public Timestamp established;
@@ -120,10 +115,6 @@ public class BitToUserConnectionIterator implements Iterator<Object> {
       BitToUserConnectionConfig config = connectionConfigPair.getValue();
       UserSession userSession = connection.getSession();
       this.user = userSession.getCredentials().getUserName();
-      this.targetUser = userSession.getTargetUserName();
-      if (targetUser == null) {
-        this.targetUser = this.user;
-      }
       DateTime dateTime = config.getEstablished();
       this.established = new Timestamp(
           dateTime
