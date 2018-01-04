@@ -230,10 +230,6 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     return context;
   }
 
-  public boolean isUserAuthenticationEnabled() {
-    return queryContext.isUserAuthenticationEnabled();
-  }
-
   /**
    * This method is only used to construt InfoSchemaReader, it is for the reader to get full schema, so here we
    * are going to return a fully initialized schema tree.
@@ -401,6 +397,16 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     }
 
     return getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+  }
+
+  public boolean isUserAuthenticationEnabled() {
+    // TODO(DRILL-2097): Until SimpleRootExec tests are removed, we need to consider impersonation disabled if there is
+    // no config
+    if (getConfig() == null) {
+      return false;
+    }
+
+    return getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
   }
 
   @Override

@@ -32,7 +32,7 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 /**
  * Base class for Profile Iterators
  */
-public class ProfileIterator implements Iterator<Object> {
+public abstract class ProfileIterator implements Iterator<Object> {
   protected final QueryProfileStoreContext profileStoreContext;
   protected final String queryingUsername;
   protected final boolean isAdmin;
@@ -85,20 +85,5 @@ public class ProfileIterator implements Iterator<Object> {
     } else {
       return 0;
     }
-  }
-
-  @Override
-  public boolean hasNext() {
-    return false;
-  }
-
-  @Override
-  public Object next() {
-    return null;
-  }
-
-  @Override
-  public void remove() {
-    throw new UnsupportedOperationException();
   }
 }

@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.sys;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
@@ -70,11 +69,11 @@ public class ProfileJsonIterator extends ProfileIterator {
   /**
    * Iterating persistentStore as a iterator of {@link org.apache.drill.exec.store.sys.ProfileJsonIterator.ProfileJson}.
    */
-  private Iterator<ProfileJson> transformJson(Iterator<Map.Entry<String, UserBitShared.QueryProfile>> all) {
-    return Iterators.transform(all, new Function<Map.Entry<String, UserBitShared.QueryProfile>, ProfileJson>() {
+  private Iterator<ProfileJson> transformJson(Iterator<Entry<String, UserBitShared.QueryProfile>> all) {
+    return Iterators.transform(all, new Function<Entry<String, UserBitShared.QueryProfile>, ProfileJson>() {
       @Nullable
       @Override
-      public ProfileJson apply(@Nullable Map.Entry<String, UserBitShared.QueryProfile> input) {
+      public ProfileJson apply(@Nullable Entry<String, UserBitShared.QueryProfile> input) {
         if (input == null || input.getValue() == null) {
           return ProfileJson.getDefault();
         }
