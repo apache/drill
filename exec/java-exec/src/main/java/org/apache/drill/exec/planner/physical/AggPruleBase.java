@@ -21,8 +21,8 @@ package org.apache.drill.exec.planner.physical;
 import java.util.List;
 
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.util.BitSets;
 
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.calcite.rel.core.AggregateCall;
@@ -42,7 +42,7 @@ public abstract class AggPruleBase extends Prule {
   protected List<DistributionField> getDistributionField(DrillAggregateRel rel, boolean allFields) {
     List<DistributionField> groupByFields = Lists.newArrayList();
 
-    for (int group : BitSets.toIter(rel.getGroupSet())) {
+    for (int group : remapGroupSet(rel.getGroupSet())) {
       DistributionField field = new DistributionField(group);
       groupByFields.add(field);
 
@@ -63,10 +63,11 @@ public abstract class AggPruleBase extends Prule {
   protected boolean create2PhasePlan(RelOptRuleCall call, DrillAggregateRel aggregate) {
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     RelNode child = call.rel(0).getInputs().get(0);
-    boolean smallInput = child.getRows() < settings.getSliceTarget();
-    if (! settings.isMultiPhaseAggEnabled() || settings.isSingleMode() ||
+    boolean smallInput =
+        child.estimateRowCount(child.getCluster().getMetadataQuery()) < settings.getSliceTarget();
+    if (!settings.isMultiPhaseAggEnabled() || settings.isSingleMode()
         // Can override a small child - e.g., for testing with a small table
-        ( smallInput && ! settings.isForce2phaseAggr() ) ) {
+        || (smallInput && !settings.isForce2phaseAggr())) {
       return false;
     }
 
@@ -81,5 +82,20 @@ public abstract class AggPruleBase extends Prule {
       }
     }
     return true;
+  }
+
+  /**
+   * Returns group-by keys with the remapped arguments for specified aggregate.
+   *
+   * @param groupSet ImmutableBitSet of aggregate rel node, whose group-by keys should be remapped.
+   * @return {@link ImmutableBitSet} instance with remapped keys.
+   */
+  public static ImmutableBitSet remapGroupSet(ImmutableBitSet groupSet) {
+    List<Integer> newGroupSet = Lists.newArrayList();
+    int groupSetToAdd = 0;
+    for (int ignored : groupSet) {
+      newGroupSet.add(groupSetToAdd++);
+    }
+    return ImmutableBitSet.of(newGroupSet);
   }
 }

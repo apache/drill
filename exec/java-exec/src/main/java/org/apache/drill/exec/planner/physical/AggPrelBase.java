@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,7 +31,6 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
@@ -44,14 +43,13 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel {
 
-  public static enum OperatorPhase {PHASE_1of1, PHASE_1of2, PHASE_2of2};
+  public enum OperatorPhase {PHASE_1of1, PHASE_1of2, PHASE_2of2}
 
   protected OperatorPhase operPhase = OperatorPhase.PHASE_1of1 ; // default phase
   protected List<NamedExpression> keys = Lists.newArrayList();
@@ -70,11 +68,14 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
 
     public SqlSumCountAggFunction(RelDataType type) {
       super("$SUM0",
+          null,
           SqlKind.OTHER_FUNCTION,
           ReturnTypes.BIGINT, // use the inferred return type of SqlCountAggFunction
           null,
           OperandTypes.NUMERIC,
-          SqlFunctionCategory.NUMERIC);
+          SqlFunctionCategory.NUMERIC,
+          false,
+          false);
 
       this.type = type;
     }
@@ -143,20 +144,24 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           // If we are doing a COUNT aggregate in Phase1of2, then in Phase2of2 we should SUM the COUNTs,
           SqlAggFunction sumAggFun = new SqlSumCountAggFunction(aggCall.e.getType());
           AggregateCall newAggCall =
-              new AggregateCall(
+              AggregateCall.create(
                   sumAggFun,
                   aggCall.e.isDistinct(),
+                  aggCall.e.isApproximate(),
                   Collections.singletonList(aggExprOrdinal),
+                  aggCall.e.filterArg,
                   aggCall.e.getType(),
                   aggCall.e.getName());
 
           phase2AggCallList.add(newAggCall);
         } else {
           AggregateCall newAggCall =
-              new AggregateCall(
+              AggregateCall.create(
                   aggCall.e.getAggregation(),
                   aggCall.e.isDistinct(),
+                  aggCall.e.isApproximate(),
                   Collections.singletonList(aggExprOrdinal),
+                  aggCall.e.filterArg,
                   aggCall.e.getType(),
                   aggCall.e.getName());
 
@@ -174,10 +179,9 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
 
     // for count(1).
     if (args.isEmpty()) {
-      args.add(new ValueExpressions.LongExpression(1l));
+      args.add(new ValueExpressions.LongExpression(1L));
     }
-    LogicalExpression expr = new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN );
-    return expr;
+    return new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN);
   }
 
   @Override
