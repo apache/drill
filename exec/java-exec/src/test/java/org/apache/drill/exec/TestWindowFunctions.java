@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,6 @@ package org.apache.drill.exec;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
@@ -934,5 +933,24 @@ public class TestWindowFunctions extends BaseTestQuery {
     } catch(UserException ex) {
       assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
     }
+  }
+
+  @Test // DRILL-4469
+  public void testWindowOnSubqueryWithStar() throws Exception {
+    String query = "SELECT SUM(n_nationkey) OVER w as s\n" +
+        "FROM (SELECT * FROM cp.`tpch/nation.parquet`) subQry\n" +
+        "WINDOW w AS (PARTITION BY REGION ORDER BY n_nationkey)\n" +
+        "limit 1";
+
+    final String[] expectedPlan = {"Project.*\\$0=\\[ITEM\\(\\$1, 'n_nationkey'\\)\\].*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("s")
+        .baselineValues(0L)
+        .build()
+        .run();
   }
 }
