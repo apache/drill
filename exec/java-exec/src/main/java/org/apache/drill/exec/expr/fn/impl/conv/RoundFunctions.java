@@ -171,8 +171,14 @@ public class RoundFunctions {
     }
 
     public void eval() {
-      java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
-      out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).floatValue();
+      if (Float.isNaN(in.value)) {
+        out.value = 0;
+      } else if(Float.isInfinite(in.value)) {
+        out.value = Math.signum(in.value) > 0 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+      } else {
+        java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
+        out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).floatValue();
+      }
     }
   }
 
@@ -186,8 +192,14 @@ public class RoundFunctions {
     }
 
     public void eval() {
-      java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
-      out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).doubleValue();
+      if (Double.isNaN(in.value)) {
+        out.value = 0;
+      } else if(Double.isInfinite(in.value)) {
+        out.value = Math.signum(in.value) > 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+      } else {
+        java.math.BigDecimal input = java.math.BigDecimal.valueOf(in.value);
+        out.value = input.setScale(0, java.math.RoundingMode.HALF_UP).doubleValue();
+      }
     }
   }
 }
