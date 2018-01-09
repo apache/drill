@@ -118,7 +118,6 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         closeClient();
         FileUtils.cleanDirectory(udfDir);
         dirTestWatcher.clear();
-        setupDefaultTestCluster();
         setup();
       } catch (Exception e) {
         throw new RuntimeException(e);
