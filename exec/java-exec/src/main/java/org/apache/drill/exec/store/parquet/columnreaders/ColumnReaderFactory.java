@@ -82,8 +82,9 @@ public class ColumnReaderFactory {
       if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
         return new BitReader(recordReader, allocateSize, descriptor, columnChunkMetaData,
             fixedLength, (BitVector) v, schemaElement);
-      } else if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY ||
-          columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.INT96) {
+      } else if (!columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY) && (
+          columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY
+              || columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.INT96)) {
         if (convertedType == ConvertedType.DECIMAL){
           int length = schemaElement.type_length;
           if (length <= 12) {
@@ -125,6 +126,7 @@ public class ColumnReaderFactory {
                   return new ParquetFixedWidthDictionaryReaders.DictionaryTimeReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (TimeVector) v, schemaElement);
                 case INT_8:
                 case INT_16:
+                case INT_32:
                   return new ParquetFixedWidthDictionaryReaders.DictionaryIntReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (IntVector) v, schemaElement);
                 case UINT_8:
                 case UINT_16:
@@ -138,6 +140,8 @@ public class ColumnReaderFactory {
                 return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
               }
               switch (convertedType) {
+                case INT_64:
+                  return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
                 case UINT_64:
                   return new ParquetFixedWidthDictionaryReaders.DictionaryUInt8Reader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (UInt8Vector) v, schemaElement);
                 case DECIMAL:
@@ -152,6 +156,7 @@ public class ColumnReaderFactory {
             case DOUBLE:
               return new ParquetFixedWidthDictionaryReaders.DictionaryFloat8Reader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (Float8Vector) v, schemaElement);
             case FIXED_LEN_BYTE_ARRAY:
+            case INT96:
               return new ParquetFixedWidthDictionaryReaders.DictionaryFixedBinaryReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (VarBinaryVector) v, schemaElement);
             default:
               throw new ExecutionSetupException("Unsupported dictionary column type " + descriptor.getType().name() );
@@ -213,6 +218,7 @@ public class ColumnReaderFactory {
         }
         switch (convertedType) {
           case UTF8:
+          case ENUM:
             return new VarLengthColumnReaders.VarCharColumn(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (VarCharVector) v, schemaElement);
           case DECIMAL:
             if (v instanceof Decimal28SparseVector) {
@@ -230,6 +236,7 @@ public class ColumnReaderFactory {
 
         switch (convertedType) {
           case UTF8:
+          case ENUM:
             return new VarLengthColumnReaders.NullableVarCharColumn(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableVarCharVector) v, schemaElement);
           case DECIMAL:
             if (v instanceof NullableDecimal28SparseVector) {
