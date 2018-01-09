@@ -105,7 +105,6 @@ public class TestBitRpc extends ExecTest {
 
 
     new NonStrictExpectations() {{
-      workBus.getFragmentManagerIfExists((FragmentHandle) any); result = fman;
       workBus.getFragmentManager( (FragmentHandle) any); result = fman;
     }};
 
