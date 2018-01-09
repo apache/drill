@@ -162,8 +162,8 @@ public class StorageResources {
       plugin.createOrUpdateInStorage(storage);
       return message("success");
     } catch (ExecutionSetupException e) {
-      logger.debug("Unable to create/ update plugin: " + plugin.getName());
-      return message("error (unable to create/ update storage)");
+      logger.error("Unable to create/ update plugin: " + plugin.getName(), e);
+      return message("Error while creating/ updating storage : " + (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
     }
   }
 
