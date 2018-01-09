@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -186,10 +186,10 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   <#assign capName = minor.class?cap_first />
   <#if !minor.class?starts_with("Decimal")>
   @Override
-  public ${capName}Writer ${lowerName}(String name) {
+  public ${capName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode) {
     data.getMutator().setType(idx(), MinorType.MAP);
     getMapWriter().setPosition(idx());
-    return getMapWriter().${lowerName}(name);
+    return getMapWriter().${lowerName}(name, dataMode);
   }
 
   @Override

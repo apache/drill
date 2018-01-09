@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,9 +14,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ **/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -206,6 +207,12 @@ public class ColumnReaderFactory {
                                           SchemaElement schemaElement
   ) throws ExecutionSetupException {
     ConvertedType convertedType = schemaElement.getConverted_type();
+    if (descriptor.getMaxRepetitionLevel() > 0) {
+      // TODO: Implement reading complex data types by default ParquetRecordReader.
+      // Shouldn't be reached until reading complex data types by regular parquet reader will be implemented.
+      throw new DrillRuntimeException("ParquetRecordReader doesn't support complex data types. Please set " +
+          "`store.parquet.use_new_reader` = true to use DrillParquetReader");
+    }
     switch (descriptor.getMaxDefinitionLevel()) {
       case 0:
         if (convertedType == null) {

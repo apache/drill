@@ -1,13 +1,13 @@
-package org.apache.drill.exec.expr.fn.impl;
-
 /*
- * Copyright 2001-2004 The Apache Software Foundation.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,10 @@ package org.apache.drill.exec.expr.fn.impl;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.expr.fn.impl;
+
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -70,7 +73,7 @@ public class ParseUrlFunction implements DrillSimpleFunc {
             rowHolder.end = rowStringBytes.length;
             rowHolder.buffer = outBuffer;
 
-            urlMapWriter.varChar("protocol").write(rowHolder);
+            urlMapWriter.varChar("protocol", TypeProtos.DataMode.OPTIONAL).write(rowHolder);
 
 
             byte[] authRowStringBytes = authority.getBytes();
@@ -82,7 +85,7 @@ public class ParseUrlFunction implements DrillSimpleFunc {
             rowHolder.end = authRowStringBytes.length;
             rowHolder.buffer = outBuffer;
 
-            urlMapWriter.varChar("authority").write(rowHolder);
+            urlMapWriter.varChar("authority", TypeProtos.DataMode.OPTIONAL).write(rowHolder);
 
 
             byte[] hostRowStringBytes = host.getBytes();
@@ -94,7 +97,7 @@ public class ParseUrlFunction implements DrillSimpleFunc {
             rowHolder.end = hostRowStringBytes.length;
             rowHolder.buffer = outBuffer;
 
-            urlMapWriter.varChar("host").write(rowHolder);
+            urlMapWriter.varChar("host", TypeProtos.DataMode.OPTIONAL).write(rowHolder);
 
 
             byte[] pathRowStringBytes = path.getBytes();
@@ -106,7 +109,7 @@ public class ParseUrlFunction implements DrillSimpleFunc {
             rowHolder.end = pathRowStringBytes.length;
             rowHolder.buffer = outBuffer;
 
-            urlMapWriter.varChar("path").write(rowHolder);
+            urlMapWriter.varChar("path", TypeProtos.DataMode.OPTIONAL).write(rowHolder);
 
 
             byte[] queryRowStringBytes = query.getBytes();
@@ -118,7 +121,7 @@ public class ParseUrlFunction implements DrillSimpleFunc {
             rowHolder.end = queryRowStringBytes.length;
             rowHolder.buffer = outBuffer;
 
-            urlMapWriter.varChar("query").write(rowHolder);
+            urlMapWriter.varChar("query", TypeProtos.DataMode.OPTIONAL).write(rowHolder);
 
 
             byte[] filenameRowStringBytes = filename.getBytes();
@@ -130,7 +133,7 @@ public class ParseUrlFunction implements DrillSimpleFunc {
             rowHolder.end = filenameRowStringBytes.length;
             rowHolder.buffer = outBuffer;
 
-            urlMapWriter.varChar("filename").write(rowHolder);
+            urlMapWriter.varChar("filename", TypeProtos.DataMode.OPTIONAL).write(rowHolder);
 
 
             byte[] refRowStringBytes = ref.getBytes();
@@ -142,11 +145,11 @@ public class ParseUrlFunction implements DrillSimpleFunc {
             rowHolder.end = refRowStringBytes.length;
             rowHolder.buffer = outBuffer;
 
-            urlMapWriter.varChar("ref").write(rowHolder);
+            urlMapWriter.varChar("ref", TypeProtos.DataMode.OPTIONAL).write(rowHolder);
 
             org.apache.drill.exec.expr.holders.IntHolder intHolder = new org.apache.drill.exec.expr.holders.IntHolder();
             intHolder.value = port;
-            urlMapWriter.integer("port").write(intHolder);
+            urlMapWriter.integer("port", TypeProtos.DataMode.OPTIONAL).write(intHolder);
         }
         catch (Exception e ) {}
     }

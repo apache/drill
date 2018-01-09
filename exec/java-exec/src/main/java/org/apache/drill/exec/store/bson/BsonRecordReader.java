@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
@@ -250,7 +251,7 @@ public class BsonRecordReader {
     DateTime dateTime = new DateTime(timestamp);
     TimeWriter t;
     if (isList == false) {
-      t = writer.map.time(fieldName);
+      t = writer.map.time(fieldName, TypeProtos.DataMode.OPTIONAL);
     } else {
       t = writer.list.time();
     }
@@ -273,7 +274,7 @@ public class BsonRecordReader {
     vh.start = 0;
     vh.end = length;
     if (isList == false) {
-      writer.varChar(fieldName).write(vh);
+      writer.varChar(fieldName, TypeProtos.DataMode.OPTIONAL).write(vh);
     } else {
       writer.list.varChar().write(vh);
     }
@@ -289,7 +290,7 @@ public class BsonRecordReader {
     final Float8Holder f8h = new Float8Holder();
     f8h.value = readDouble;
     if (isList == false) {
-      writer.float8(fieldName).write(f8h);
+      writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).write(f8h);
     } else {
       writer.list.float8().write(f8h);
     }
@@ -299,7 +300,7 @@ public class BsonRecordReader {
     DateTime date = new DateTime(readDateTime);
     DateWriter dt;
     if (isList == false) {
-      dt = writer.map.date(fieldName);
+      dt = writer.map.date(fieldName, TypeProtos.DataMode.OPTIONAL);
     } else {
       dt = writer.list.date();
     }
@@ -310,7 +311,7 @@ public class BsonRecordReader {
     final BitHolder bit = new BitHolder();
     bit.value = readBoolean ? 1 : 0;
     if (isList == false) {
-      writer.bit(fieldName).write(bit);
+      writer.bit(fieldName, TypeProtos.DataMode.OPTIONAL).write(bit);
     } else {
       writer.list.bit().write(bit);
     }
@@ -324,7 +325,7 @@ public class BsonRecordReader {
     vb.start = 0;
     vb.end = bytes.length;
     if (isList == false) {
-      writer.binary(fieldName).write(vb);
+      writer.binary(fieldName, TypeProtos.DataMode.OPTIONAL).write(vb);
     } else {
       writer.list.varBinary().write(vb);
     }
@@ -334,7 +335,7 @@ public class BsonRecordReader {
     final BigIntHolder bh = new BigIntHolder();
     bh.value = readInt64;
     if (isList == false) {
-      writer.bigInt(fieldName).write(bh);
+      writer.bigInt(fieldName, TypeProtos.DataMode.OPTIONAL).write(bh);
     } else {
       writer.list.bigInt().write(bh);
     }
@@ -344,7 +345,7 @@ public class BsonRecordReader {
     final IntHolder ih = new IntHolder();
     ih.value = readInt32;
     if (isList == false) {
-      writer.integer(fieldName).write(ih);
+      writer.integer(fieldName, TypeProtos.DataMode.OPTIONAL).write(ih);
     } else {
       writer.list.integer().write(ih);
     }
@@ -361,7 +362,7 @@ public class BsonRecordReader {
         fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
         root = root.getChild();
       }
-      fieldWriter.integer(root.getNameSegment().getPath());
+      fieldWriter.integer(root.getNameSegment().getPath(), TypeProtos.DataMode.OPTIONAL);
     }
   }
 

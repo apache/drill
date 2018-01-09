@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex.fn;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 import java.util.BitSet;
@@ -73,9 +74,9 @@ public class JsonReaderUtils {
       PathSegment fieldPath = fieldPathList.get(j);
       if (emptyStatus.get(j)) {
         if (allTextMode) {
-          fieldWriter.varChar(fieldPath.getNameSegment().getPath());
+          fieldWriter.varChar(fieldPath.getNameSegment().getPath(), TypeProtos.DataMode.OPTIONAL);
         } else {
-          fieldWriter.integer(fieldPath.getNameSegment().getPath());
+          fieldWriter.integer(fieldPath.getNameSegment().getPath(), TypeProtos.DataMode.OPTIONAL);
         }
       }
     }

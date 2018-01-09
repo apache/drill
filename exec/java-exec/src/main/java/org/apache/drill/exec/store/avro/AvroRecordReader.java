@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,8 +37,8 @@ import org.apache.avro.mapred.FsInput;
 import org.apache.avro.util.Utf8;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -270,29 +270,29 @@ public class AvroRecordReader extends AbstractRecordReader {
         }
         ensure(length);
         buffer.setBytes(0, binary);
-        writer.varChar(fieldName).writeVarChar(0, length, buffer);
+        writer.varChar(fieldName, TypeProtos.DataMode.OPTIONAL).writeVarChar(0, length, buffer);
         break;
       case INT:
-        writer.integer(fieldName).writeInt((Integer) value);
+        writer.integer(fieldName, TypeProtos.DataMode.OPTIONAL).writeInt((Integer) value);
         break;
       case LONG:
-        writer.bigInt(fieldName).writeBigInt((Long) value);
+        writer.bigInt(fieldName, TypeProtos.DataMode.OPTIONAL).writeBigInt((Long) value);
         break;
       case FLOAT:
-        writer.float4(fieldName).writeFloat4((Float) value);
+        writer.float4(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat4((Float) value);
         break;
       case DOUBLE:
-        writer.float8(fieldName).writeFloat8((Double) value);
+        writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8((Double) value);
         break;
       case BOOLEAN:
-        writer.bit(fieldName).writeBit((Boolean) value ? 1 : 0);
+        writer.bit(fieldName, TypeProtos.DataMode.OPTIONAL).writeBit((Boolean) value ? 1 : 0);
         break;
       case BYTES:
         final ByteBuffer buf = (ByteBuffer) value;
         length = buf.remaining();
         ensure(length);
         buffer.setBytes(0, buf);
-        writer.binary(fieldName).writeVarBinary(0, length, buffer);
+        writer.binary(fieldName, TypeProtos.DataMode.OPTIONAL).writeVarBinary(0, length, buffer);
         break;
       case NULL:
         // Nothing to do for null type
@@ -307,7 +307,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         }
         ensure(b.length);
         buffer.setBytes(0, b);
-        writer.varChar(fieldName).writeVarChar(0, b.length, buffer);
+        writer.varChar(fieldName, TypeProtos.DataMode.OPTIONAL).writeVarChar(0, b.length, buffer);
 
         break;
       default:

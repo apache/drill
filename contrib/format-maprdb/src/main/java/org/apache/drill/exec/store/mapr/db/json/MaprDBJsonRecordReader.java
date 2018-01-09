@@ -33,6 +33,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -205,7 +206,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         if (reader == null) {
           break; // no more documents for this scanner
         } else if (isSkipQuery()) {
-          vectorWriter.rootAsMap().bit("count").writeBit(1);
+          vectorWriter.rootAsMap().bit("count", TypeProtos.DataMode.OPTIONAL).writeBit(1);
         } else {
           MapOrListWriterImpl writer = new MapOrListWriterImpl(vectorWriter.rootAsMap());
           if (idOnly) {
@@ -337,7 +338,8 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, reader.getTimestamp().toUTCString());
     } else {
-      ((writer.map != null) ? writer.map.timeStamp(fieldName) : writer.list.timeStamp()).writeTimeStamp(reader.getTimestampLong());
+      ((writer.map != null) ? writer.map.timeStamp(fieldName, TypeProtos.DataMode.OPTIONAL) :
+          writer.list.timeStamp()).writeTimeStamp(reader.getTimestampLong());
     }
   }
 
@@ -345,7 +347,8 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, reader.getTime().toTimeStr());
     } else {
-      ((writer.map != null) ? writer.map.time(fieldName) : writer.list.time()).writeTime(reader.getTimeInt());
+      ((writer.map != null) ? writer.map.time(fieldName, TypeProtos.DataMode.OPTIONAL) :
+          writer.list.time()).writeTime(reader.getTimeInt());
     }
   }
 
@@ -354,7 +357,8 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       writeString(writer, fieldName, reader.getDate().toDateStr());
     } else {
       long milliSecondsSinceEpoch = reader.getDateInt() * MILLISECONDS_IN_A_DAY;
-      ((writer.map != null) ? writer.map.date(fieldName) : writer.list.date()).writeDate(milliSecondsSinceEpoch);
+      ((writer.map != null) ? writer.map.date(fieldName, TypeProtos.DataMode.OPTIONAL) :
+          writer.list.date()).writeDate(milliSecondsSinceEpoch);
     }
   }
 
@@ -362,7 +366,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, String.valueOf(reader.getDouble()));
     } else {
-      writer.float8(fieldName).writeFloat8(reader.getDouble());
+      writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(reader.getDouble());
     }
   }
 
@@ -370,9 +374,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, String.valueOf(reader.getFloat()));
     } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getFloat());
+      writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(reader.getFloat());
     } else {
-      writer.float4(fieldName).writeFloat4(reader.getFloat());
+      writer.float4(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat4(reader.getFloat());
     }
   }
 
@@ -380,9 +384,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, String.valueOf(reader.getLong()));
     } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getLong());
+      writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(reader.getLong());
     } else {
-      writer.bigInt(fieldName).writeBigInt(reader.getLong());
+      writer.bigInt(fieldName, TypeProtos.DataMode.OPTIONAL).writeBigInt(reader.getLong());
     }
   }
 
@@ -390,9 +394,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, String.valueOf(reader.getInt()));
     } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getInt());
+      writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(reader.getInt());
     } else {
-      writer.integer(fieldName).writeInt(reader.getInt());
+      writer.integer(fieldName, TypeProtos.DataMode.OPTIONAL).writeInt(reader.getInt());
     }
   }
 
@@ -400,9 +404,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, String.valueOf(reader.getShort()));
     } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getShort());
+      writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(reader.getShort());
     } else {
-      ((writer.map != null) ? writer.map.smallInt(fieldName) : writer.list.smallInt()).writeSmallInt(reader.getShort());
+      ((writer.map != null) ? writer.map.smallInt(fieldName, TypeProtos.DataMode.OPTIONAL) : writer.list.smallInt()).writeSmallInt(reader.getShort());
     }
   }
 
@@ -410,9 +414,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, String.valueOf(reader.getByte()));
     } else if (readNumbersAsDouble) {
-      writer.float8(fieldName).writeFloat8(reader.getByte());
+      writer.float8(fieldName, TypeProtos.DataMode.OPTIONAL).writeFloat8(reader.getByte());
     } else {
-      ((writer.map != null) ? writer.map.tinyInt(fieldName) : writer.list.tinyInt()).writeTinyInt(reader.getByte());
+      ((writer.map != null) ? writer.map.tinyInt(fieldName, TypeProtos.DataMode.OPTIONAL) : writer.list.tinyInt()).writeTinyInt(reader.getByte());
     }
   }
 
@@ -420,7 +424,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     if (allTextMode) {
       writeString(writer, fieldName, String.valueOf(reader.getBoolean()));
     } else {
-      writer.bit(fieldName).writeBit(reader.getBoolean() ? 1 : 0);
+      writer.bit(fieldName, TypeProtos.DataMode.OPTIONAL).writeBit(reader.getBoolean() ? 1 : 0);
     }
   }
 
@@ -430,7 +434,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     } else {
       buffer = buffer.reallocIfNeeded(buf.remaining());
       buffer.setBytes(0, buf, buf.position(), buf.remaining());
-      writer.binary(fieldName).writeVarBinary(0, buf.remaining(), buffer);
+      writer.binary(fieldName, TypeProtos.DataMode.OPTIONAL).writeVarBinary(0, buf.remaining(), buffer);
     }
   }
 
@@ -438,7 +442,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     final byte[] strBytes = Bytes.toBytes(value);
     buffer = buffer.reallocIfNeeded(strBytes.length);
     buffer.setBytes(0, strBytes);
-    writer.varChar(fieldName).writeVarChar(0, strBytes.length, buffer);
+    writer.varChar(fieldName, TypeProtos.DataMode.OPTIONAL).writeVarChar(0, strBytes.length, buffer);
   }
 
   private UserException unsupportedError(String format, Object... args) {

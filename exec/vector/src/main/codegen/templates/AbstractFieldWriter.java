@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -113,14 +113,14 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
   <#if minor.class?starts_with("Decimal") >
-  public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+  public ${capName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode, int scale, int precision) {
     fail("${capName}");
     return null;
   }
   </#if>
 
   @Override
-  public ${capName}Writer ${lowerName}(String name) {
+  public ${capName}Writer ${lowerName}(String name, TypeProtos.DataMode dataMode) {
     fail("${capName}");
     return null;
   }

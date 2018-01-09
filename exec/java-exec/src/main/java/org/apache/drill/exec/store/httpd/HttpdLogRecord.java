@@ -1,11 +1,13 @@
 /*
- * Copyright 2015 The Apache Software Foundation.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +24,7 @@ import java.util.EnumSet;
 import java.util.Map;
 import nl.basjes.parse.core.Casts;
 import nl.basjes.parse.core.Parser;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
 import org.apache.drill.exec.vector.complex.writer.Float8Writer;
@@ -148,7 +151,7 @@ public class HttpdLogRecord {
     if (value != null) {
       final MapWriter mapWriter = getWildcardWriter(field);
       LOG.trace("Parsed wildcard field: {}, as string: {}", field, value);
-      final VarCharWriter w = mapWriter.varChar(cleanExtensions.get(field));
+      final VarCharWriter w = mapWriter.varChar(cleanExtensions.get(field), TypeProtos.DataMode.OPTIONAL);
       writeString(w, value);
     }
   }
@@ -166,7 +169,7 @@ public class HttpdLogRecord {
     if (value != null) {
       final MapWriter mapWriter = getWildcardWriter(field);
       LOG.trace("Parsed wildcard field: {}, as long: {}", field, value);
-      final BigIntWriter w = mapWriter.bigInt(cleanExtensions.get(field));
+      final BigIntWriter w = mapWriter.bigInt(cleanExtensions.get(field), TypeProtos.DataMode.OPTIONAL);
       w.writeBigInt(value);
     }
   }
@@ -184,7 +187,7 @@ public class HttpdLogRecord {
     if (value != null) {
       final MapWriter mapWriter = getWildcardWriter(field);
       LOG.trace("Parsed wildcard field: {}, as double: {}", field, value);
-      final Float8Writer w = mapWriter.float8(cleanExtensions.get(field));
+      final Float8Writer w = mapWriter.float8(cleanExtensions.get(field), TypeProtos.DataMode.OPTIONAL);
       w.writeFloat8(value);
     }
   }
@@ -283,17 +286,17 @@ public class HttpdLogRecord {
     else if (type.contains(Casts.DOUBLE)) {
       LOG.debug("Adding DOUBLE parse target: {}, with field name: {}", parserFieldName, drillFieldName);
       parser.addParseTarget(this.getClass().getMethod("set", String.class, Double.class), parserFieldName);
-      doubles.put(parserFieldName, mapWriter.float8(drillFieldName));
+      doubles.put(parserFieldName, mapWriter.float8(drillFieldName, TypeProtos.DataMode.OPTIONAL));
     }
     else if (type.contains(Casts.LONG)) {
       LOG.debug("Adding LONG parse target: {}, with field name: {}", parserFieldName, drillFieldName);
       parser.addParseTarget(this.getClass().getMethod("set", String.class, Long.class), parserFieldName);
-      longs.put(parserFieldName, mapWriter.bigInt(drillFieldName));
+      longs.put(parserFieldName, mapWriter.bigInt(drillFieldName, TypeProtos.DataMode.OPTIONAL));
     }
     else {
       LOG.debug("Adding STRING parse target: {}, with field name: {}", parserFieldName, drillFieldName);
       parser.addParseTarget(this.getClass().getMethod("set", String.class, String.class), parserFieldName);
-      strings.put(parserFieldName, mapWriter.varChar(drillFieldName));
+      strings.put(parserFieldName, mapWriter.varChar(drillFieldName, TypeProtos.DataMode.OPTIONAL));
     }
   }
 }

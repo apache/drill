@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
@@ -47,6 +48,7 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+import org.apache.drill.exec.store.parquet.ParquetTypeHelper;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetColumnMetadata;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
@@ -70,7 +72,6 @@ import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.Converter;
 import org.apache.parquet.io.api.GroupConverter;
 import org.apache.parquet.io.api.PrimitiveConverter;
-import org.apache.parquet.schema.DecimalMetadata;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.OriginalType;
@@ -91,23 +92,26 @@ public class DrillParquetGroupConverter extends GroupConverter {
   private final OptionManager options;
   // See DRILL-4203
   private final ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates;
+  private boolean isParentNestedTypeOptional;
 
   public DrillParquetGroupConverter(OutputMutator mutator, ComplexWriterImpl complexWriter, MessageType schema,
                                     Collection<SchemaPath> columns, OptionManager options,
                                     ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
-    this(mutator, complexWriter.rootAsMap(), schema, columns, options, containsCorruptedDates);
+    this(mutator, complexWriter.rootAsMap(), schema, columns, options, containsCorruptedDates, false);
   }
 
   // This function assumes that the fields in the schema parameter are in the same order as the fields in the columns parameter. The
   // columns parameter may have fields that are not present in the schema, though.
   public DrillParquetGroupConverter(OutputMutator mutator, MapWriter mapWriter, GroupType schema,
                                     Collection<SchemaPath> columns, OptionManager options,
-                                    ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
+                                    ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates,
+                                    boolean isParentNestedTypeOptional) {
     this.mapWriter = mapWriter;
     this.mutator = mutator;
     this.containsCorruptedDates = containsCorruptedDates;
     converters = Lists.newArrayList();
     this.options = options;
+    this.isParentNestedTypeOptional = isParentNestedTypeOptional;
 
     Iterator<SchemaPath> colIterator=columns.iterator();
 
@@ -139,6 +143,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
       }
 
       if (!isPrimitive) {
+        if (rep == Repetition.OPTIONAL) {
+          isParentNestedTypeOptional = true;
+        }
         Collection<SchemaPath> c = new ArrayList<SchemaPath>();
 
         while(colNextChild!=null) {
@@ -153,12 +160,12 @@ public class DrillParquetGroupConverter extends GroupConverter {
           c.add(s);
         }
         if (rep != Repetition.REPEATED) {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(
-              mutator, mapWriter.map(name), type.asGroupType(), c, options, containsCorruptedDates);
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.map(name),
+              type.asGroupType(), c, options, containsCorruptedDates, isParentNestedTypeOptional);
           converters.add(converter);
         } else {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(
-              mutator, mapWriter.list(name).map(), type.asGroupType(), c, options, containsCorruptedDates);
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.list(name).map(),
+              type.asGroupType(), c, options, containsCorruptedDates, isParentNestedTypeOptional);
           converters.add(converter);
         }
       } else {
@@ -171,22 +178,33 @@ public class DrillParquetGroupConverter extends GroupConverter {
   @SuppressWarnings("resource")
   private PrimitiveConverter getConverterForType(String name, PrimitiveType type) {
 
+    TypeProtos.DataMode dataMode = ParquetTypeHelper.getDataModeForRepetition(type.getRepetition());
+    // replace the non-nullable vectors to nullable for the case of nullable parent nested type field
+    if (dataMode == TypeProtos.DataMode.REQUIRED && isParentNestedTypeOptional) {
+      dataMode = TypeProtos.DataMode.OPTIONAL;
+    }
     switch(type.getPrimitiveTypeName()) {
       case INT32: {
         if (type.getOriginalType() == null) {
-          IntWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).integer() : mapWriter.integer(name);
+          IntWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+              ? mapWriter.list(name).integer()
+              : mapWriter.integer(name, dataMode);
           return new DrillIntConverter(writer);
         }
         switch(type.getOriginalType()) {
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            Decimal9Writer writer = type.getRepetition() == Repetition.REPEATED
+            int scale = type.getDecimalMetadata().getScale();
+            int precision = type.getDecimalMetadata().getPrecision();
+            Decimal9Writer writer = dataMode == TypeProtos.DataMode.REPEATED
                 ? mapWriter.list(name).decimal9()
-                : mapWriter.decimal9(name, type.getDecimalMetadata().getScale(), type.getDecimalMetadata().getPrecision());
-            return new DrillDecimal9Converter(writer, type.getDecimalMetadata().getPrecision(), type.getDecimalMetadata().getScale());
+                : mapWriter.decimal9(name, dataMode, scale, precision);
+            return new DrillDecimal9Converter(writer, precision, scale);
           }
           case DATE: {
-            DateWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).date() : mapWriter.date(name);
+            DateWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+                ? mapWriter.list(name).date()
+                : mapWriter.date(name, dataMode);
             switch(containsCorruptedDates) {
               case META_SHOWS_CORRUPTION:
                 return new DrillCorruptedDateConverter(writer);
@@ -202,7 +220,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
             }
           }
           case TIME_MILLIS: {
-            TimeWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).time() : mapWriter.time(name);
+            TimeWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+                ? mapWriter.list(name).time()
+                : mapWriter.time(name, dataMode);
             return new DrillTimeConverter(writer);
           }
           default: {
@@ -212,19 +232,25 @@ public class DrillParquetGroupConverter extends GroupConverter {
       }
       case INT64: {
         if (type.getOriginalType() == null) {
-          BigIntWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).bigInt() : mapWriter.bigInt(name);
+          BigIntWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+              ? mapWriter.list(name).bigInt()
+              : mapWriter.bigInt(name, dataMode);
           return new DrillBigIntConverter(writer);
         }
         switch(type.getOriginalType()) {
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            Decimal18Writer writer = type.getRepetition() == Repetition.REPEATED
+            int scale = type.getDecimalMetadata().getScale();
+            int precision = type.getDecimalMetadata().getPrecision();
+            Decimal18Writer writer = dataMode == TypeProtos.DataMode.REPEATED
                 ? mapWriter.list(name).decimal18()
-                : mapWriter.decimal18(name, type.getDecimalMetadata().getScale(), type.getDecimalMetadata().getPrecision());
-            return new DrillDecimal18Converter(writer, type.getDecimalMetadata().getPrecision(), type.getDecimalMetadata().getScale());
+                : mapWriter.decimal18(name, dataMode, scale, precision);
+            return new DrillDecimal18Converter(writer, precision, scale);
           }
           case TIMESTAMP_MILLIS: {
-            TimeStampWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).timeStamp() : mapWriter.timeStamp(name);
+            TimeStampWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+                ? mapWriter.list(name).timeStamp()
+                : mapWriter.timeStamp(name, dataMode);
             return new DrillTimeStampConverter(writer);
           }
           default: {
@@ -233,54 +259,70 @@ public class DrillParquetGroupConverter extends GroupConverter {
         }
       }
       case INT96: {
-        // TODO: replace null with TIMESTAMP_NANOS once parquet support such type annotation.
+        // TODO: replace null with TIMESTAMP_NANOS once parquet will support such type annotation.
         if (type.getOriginalType() == null) {
           if (options.getOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP).bool_val) {
-            TimeStampWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).timeStamp() : mapWriter.timeStamp(name);
+            TimeStampWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+                ? mapWriter.list(name).timeStamp()
+                : mapWriter.timeStamp(name, dataMode);
             return new DrillFixedBinaryToTimeStampConverter(writer);
           } else {
-            VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
-            return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetColumnMetadata.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
+            VarBinaryWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+                ? mapWriter.list(name).varBinary()
+                : mapWriter.varBinary(name, dataMode);
+            return new DrillFixedBinaryToVarbinaryConverter(writer,
+                ParquetColumnMetadata.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
           }
         }
 
       }
       case FLOAT: {
-        Float4Writer writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).float4() : mapWriter.float4(name);
+        Float4Writer writer = dataMode == TypeProtos.DataMode.REPEATED
+            ? mapWriter.list(name).float4()
+            : mapWriter.float4(name, dataMode);
         return new DrillFloat4Converter(writer);
       }
       case DOUBLE: {
-        Float8Writer writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).float8() : mapWriter.float8(name);
+        Float8Writer writer = dataMode == TypeProtos.DataMode.REPEATED
+            ? mapWriter.list(name).float8()
+            : mapWriter.float8(name, dataMode);
         return new DrillFloat8Converter(writer);
       }
       case BOOLEAN: {
-        BitWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).bit() : mapWriter.bit(name);
+        BitWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+            ? mapWriter.list(name).bit()
+            : mapWriter.bit(name, dataMode);
         return new DrillBoolConverter(writer);
       }
       case BINARY: {
         if (type.getOriginalType() == null) {
-          VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
+          VarBinaryWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+              ? mapWriter.list(name).varBinary()
+              : mapWriter.varBinary(name, dataMode);
           return new DrillVarBinaryConverter(writer, mutator.getManagedBuffer());
         }
         switch(type.getOriginalType()) {
           case UTF8: {
-            VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
+            VarCharWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+                ? mapWriter.list(name).varChar()
+                : mapWriter.varChar(name, dataMode);
             return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
           }
           //TODO not sure if BINARY/DECIMAL is actually supported
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            DecimalMetadata metadata = type.getDecimalMetadata();
-            if (metadata.getPrecision() <= 28) {
-              Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+            int scale = type.getDecimalMetadata().getScale();
+            int precision = type.getDecimalMetadata().getPrecision();
+            if (precision <= 28) {
+              Decimal28SparseWriter writer = dataMode == TypeProtos.DataMode.REPEATED
                   ? mapWriter.list(name).decimal28Sparse()
-                  : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
-              return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
+                  : mapWriter.decimal28Sparse(name, dataMode, scale, precision);
+              return new DrillBinaryToDecimal28Converter(writer, precision, scale, mutator.getManagedBuffer());
             } else {
-              Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+              Decimal38SparseWriter writer = dataMode == TypeProtos.DataMode.REPEATED
                   ? mapWriter.list(name).decimal38Sparse()
-                  : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
-              return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
+                  : mapWriter.decimal38Sparse(name, dataMode, scale, precision);
+              return new DrillBinaryToDecimal38Converter(writer, precision, scale, mutator.getManagedBuffer());
             }
           }
           default: {
@@ -291,25 +333,29 @@ public class DrillParquetGroupConverter extends GroupConverter {
       case FIXED_LEN_BYTE_ARRAY:
         if (type.getOriginalType() == OriginalType.DECIMAL) {
           ParquetReaderUtility.checkDecimalTypeEnabled(options);
-          DecimalMetadata metadata = type.getDecimalMetadata();
-          if (metadata.getPrecision() <= 28) {
-            Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+          int scale = type.getDecimalMetadata().getScale();
+          int precision = type.getDecimalMetadata().getPrecision();
+          if (precision <= 28) {
+            Decimal28SparseWriter writer = dataMode == TypeProtos.DataMode.REPEATED
                 ? mapWriter.list(name).decimal28Sparse()
-                : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
-            return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
+                : mapWriter.decimal28Sparse(name, dataMode, scale, precision);
+            return new DrillBinaryToDecimal28Converter(writer, precision, scale, mutator.getManagedBuffer());
           } else {
-            Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+            Decimal38SparseWriter writer = dataMode == TypeProtos.DataMode.REPEATED
                 ? mapWriter.list(name).decimal38Sparse()
-                : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
-            return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
+                : mapWriter.decimal38Sparse(name, dataMode, scale, precision);
+            return new DrillBinaryToDecimal38Converter(writer, precision, scale, mutator.getManagedBuffer());
           }
         } else if (type.getOriginalType() == OriginalType.INTERVAL) {
-          IntervalWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).interval()
-              : mapWriter.interval(name);
+          IntervalWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+              ? mapWriter.list(name).interval()
+              : mapWriter.interval(name, dataMode);
           return new DrillFixedLengthByteArrayToInterval(writer);
 
         } else {
-          VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
+          VarBinaryWriter writer = dataMode == TypeProtos.DataMode.REPEATED
+              ? mapWriter.list(name).varBinary()
+              : mapWriter.varBinary(name, dataMode);
           return new DrillFixedBinaryToVarbinaryConverter(writer, type.getTypeLength(), mutator.getManagedBuffer());
         }
       default:

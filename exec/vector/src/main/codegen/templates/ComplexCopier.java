@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,7 +42,7 @@ public class ComplexCopier {
   }
 
   private static void writeValue(FieldReader reader, FieldWriter writer) {
-    final DataMode m = reader.getType().getMode();
+    final TypeProtos.DataMode m = reader.getType().getMode();
     final MinorType mt = reader.getType().getMinorType();
 
     switch(m){
@@ -100,7 +100,7 @@ public class ComplexCopier {
     <#assign uncappedName = name?uncap_first/>
     <#if !minor.class?starts_with("Decimal")>
     case ${name?upper_case}:
-      return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>(name);
+      return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>(name, reader.getType().getMode());
     </#if>
     </#list></#list>
     case MAP:
