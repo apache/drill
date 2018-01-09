@@ -70,7 +70,7 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
 
     //2, convert the candidateSet to targeted taitSets
     for (RelTraitSet traitSet: traitSets) {
-      RelNode newRel = RelOptRule.convert(candidateSet, traitSet);
+      RelNode newRel = RelOptRule.convert(candidateSet, traitSet.simplify());
       if(transformedRels.contains(newRel)) {
         continue;
       }
