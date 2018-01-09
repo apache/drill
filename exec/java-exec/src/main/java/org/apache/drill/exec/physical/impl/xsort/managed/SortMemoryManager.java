@@ -687,11 +687,11 @@ public class SortMemoryManager {
                                 spillBatchSize.maxBufferSize);
     memMergeLimit = Math.max(0, memMergeLimit);
 
-    // If batches are in memory, and we need more memory to merge
-    // them all than is actually available, then spill some in-memory
-    // batches.
+    // If batches are in memory, and final merge count will exceed
+    // merge limit or we need more memory to merge them all than is
+    // actually available, then spill some in-memory batches.
 
-    if (inMemCount > 0  &&  memMergeLimit < spilledRunsCount) {
+    if (inMemCount > 0  &&  ((inMemCount + spilledRunsCount) > config.mergeLimit() || memMergeLimit < spilledRunsCount)) {
       return new MergeTask(MergeAction.SPILL, 0);
     }
 

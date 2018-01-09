@@ -42,6 +42,7 @@ public class SortConfig {
   public static final int MIN_SPILL_BATCH_SIZE = 256 * 1024;
   public static final int MIN_MERGE_BATCH_SIZE = 256 * 1024;
 
+  public static final int DEFAULT_MERGE_LIMIT = 128;
   public static final int MIN_MERGE_LIMIT = 2;
 
   private final long maxMemory;
