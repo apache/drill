@@ -29,12 +29,14 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
     // Pattern matching is 1) a CPU intensive operation and 2) pattern and input dependent. The conclusion is
     // that there is no single implementation that can do it all well. So, we use multiple implementations
     // chosen based on the pattern length.
-    if (patternLength == 1) {
-      matcherFcn = new Matcher1();
+    if (patternLength == 0) {
+      matcherFcn = new MatcherZero();
+    } else if (patternLength == 1) {
+      matcherFcn = new MatcherOne();
     } else if (patternLength == 2) {
-      matcherFcn = new Matcher2();
+      matcherFcn = new MatcherTwo();
     } else if (patternLength == 3) {
-      matcherFcn = new Matcher3();
+      matcherFcn = new MatcherThree();
     } else if (patternLength < 10) {
       matcherFcn = new MatcherN();
     } else {
@@ -68,9 +70,22 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
   }
 
   /** Handles patterns with length one */
-  private final class Matcher1 extends MatcherFcn {
+  private final class MatcherZero extends MatcherFcn {
 
-    private Matcher1() {
+    private MatcherZero() {
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected final int match(int start, int end, DrillBuf drillBuf) {
+      return 1;
+    }
+  }
+
+  /** Handles patterns with length one */
+  private final class MatcherOne extends MatcherFcn {
+
+    private MatcherOne() {
       super();
     }
 
@@ -95,10 +110,9 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
   }
 
   /** Handles patterns with length two */
-  private final class Matcher2 extends MatcherFcn {
+  private final class MatcherTwo extends MatcherFcn {
 
-    private Matcher2() {
-      super();
+    private MatcherTwo() {
     }
 
     /** {@inheritDoc} */
@@ -128,10 +142,9 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
   }
 
   /** Handles patterns with length three */
-  private final class Matcher3 extends MatcherFcn {
+  private final class MatcherThree extends MatcherFcn {
 
-    private Matcher3() {
-      super();
+    private MatcherThree() {
     }
 
     /** {@inheritDoc} */
@@ -166,17 +179,11 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
   private final class MatcherN extends MatcherFcn {
 
     private MatcherN() {
-      super();
     }
 
     /** {@inheritDoc} */
     @Override
     protected final int match(int start, int end, DrillBuf drillBuf) {
-
-      if (patternLength == 0) {
-        return 1;
-      }
-
       final int lengthToProcess = end - start - patternLength + 1;
       int patternIndex          = 0;
       final byte firstPattByte  = patternArray[0];
@@ -197,11 +204,11 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
           }
 
           if (patternIndex == patternLength) {
-            break;
+            return 1;
           }
         }
       }
-      return patternIndex == patternLength ? 1 : 0;
+      return 0;
     }
   }
 
@@ -223,10 +230,6 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
     /** {@inheritDoc} */
     @Override
     protected int match(int start, int end, DrillBuf drillBuf)  {
-      if (patternLength == 0) {
-        return 1;
-      }
-
       final int inputLength = end - start;
 
       for (int idx1 = patternLength - 1, idx2; idx1 < inputLength;) {
@@ -235,7 +238,7 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
             return 1;
           }
         }
-        // i += pattern.length - j; // For naive method
+        // idx1 += pattern.length - idx2; // For naive method
         idx1 += Math.max(offsetTable[patternLength - 1 - idx2], characterTable[drillBuf.getByte(start + idx1) & 0xFF]);
       }
       return 0;
