@@ -28,6 +28,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.FlattenPOP;
+import org.apache.drill.exec.physical.impl.spill.RecordBatchSizer;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -68,6 +70,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
   private boolean hasRemainder = false;
   private int remainderIndex = 0;
   private int recordCount;
+  private long outputBatchSize;
 
   private final Flattener.Monitor monitor = new Flattener.Monitor() {
     @Override
@@ -94,8 +97,57 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     }
   }
 
+  private class FlattenMemoryManager {
+    private final int outputRowCount;
+    private static final int OFFSET_VECTOR_WIDTH = 4;
+    private static final int WORST_CASE_FRAGMENTATION_FACTOR = 2;
+    private static final int MAX_NUM_ROWS = ValueVector.MAX_ROW_COUNT;
+    private static final int MIN_NUM_ROWS = 1;
+
+    private FlattenMemoryManager(RecordBatch incoming, long outputBatchSize, SchemaPath flattenColumn) {
+      // Get sizing information for the batch.
+      RecordBatchSizer sizer = new RecordBatchSizer(incoming);
+
+      final TypedFieldId typedFieldId = incoming.getValueVectorId(flattenColumn);
+      final MaterializedField field = incoming.getSchema().getColumn(typedFieldId.getFieldIds()[0]);
+
+      // Get column size of flatten column.
+      RecordBatchSizer.ColumnSize columnSize = RecordBatchSizer.getColumn(incoming.getValueAccessorById(field.getValueClass(),
+          typedFieldId.getFieldIds()).getValueVector(), field.getName());
+
+      // Average rowWidth of flatten column
+      final int avgRowWidthFlattenColumn = RecordBatchSizer.safeDivide(columnSize.netSize, incoming.getRecordCount());
+
+      // Average rowWidth excluding the flatten column.
+      final int avgRowWidthWithOutFlattenColumn = sizer.netRowWidth() - avgRowWidthFlattenColumn;
+
+      // Average rowWidth of single element in the flatten list.
+      // subtract the offset vector size from column data size.
+      final int avgRowWidthSingleFlattenEntry =
+          RecordBatchSizer.safeDivide(columnSize.netSize - (OFFSET_VECTOR_WIDTH * columnSize.valueCount), columnSize.elementCount);
+
+      // Average rowWidth of outgoing batch.
+      final int avgOutgoingRowWidth = avgRowWidthWithOutFlattenColumn + avgRowWidthSingleFlattenEntry;
+
+      // Number of rows in outgoing batch
+      outputRowCount = Math.max(MIN_NUM_ROWS, Math.min(MAX_NUM_ROWS,
+          RecordBatchSizer.safeDivide((outputBatchSize/WORST_CASE_FRAGMENTATION_FACTOR), avgOutgoingRowWidth)));
+
+      logger.debug("flatten incoming batch sizer : {}, outputBatchSize : {}," +
+              "avgOutgoingRowWidth : {}, outputRowCount : {}", sizer, outputBatchSize, avgOutgoingRowWidth, outputRowCount);
+    }
+
+    public int getOutputRowCount() {
+      return outputRowCount;
+    }
+  }
+
+
   public FlattenRecordBatch(FlattenPOP pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context, incoming);
+
+    // get the output batch size from config.
+    outputBatchSize = context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
   }
 
   @Override
@@ -148,6 +200,9 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
   @Override
   protected IterOutcome doWork() {
+    FlattenMemoryManager flattenMemoryManager = new FlattenMemoryManager(incoming, outputBatchSize, popConfig.getColumn());
+    flattener.setOutputCount(flattenMemoryManager.getOutputRowCount());
+
     int incomingRecordCount = incoming.getRecordCount();
 
     if (!doAlloc()) {
