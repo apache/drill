@@ -31,6 +31,7 @@ import org.apache.drill.exec.record.TransferPair;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +39,7 @@ import org.slf4j.LoggerFactory;
 public abstract class FlattenTemplate implements Flattener {
   private static final Logger logger = LoggerFactory.getLogger(FlattenTemplate.class);
 
-  private static final int OUTPUT_BATCH_SIZE = 4*1024;
-  private static final int OUTPUT_MEMORY_LIMIT = 512 * 1024 * 1024;
+  private static final int OUTPUT_ROW_COUNT = ValueVector.MAX_ROW_COUNT;
 
   private ImmutableList<TransferPair> transfers;
   private BufferAllocator outputAllocator;
@@ -47,14 +47,12 @@ public abstract class FlattenTemplate implements Flattener {
   private RepeatedValueVector fieldToFlatten;
   private RepeatedValueVector.RepeatedAccessor accessor;
   private int valueIndex;
-  private boolean bigRecords = false;
-  private int bigRecordsBufferSize;
 
   /**
-   * The output batch limit starts at OUTPUT_BATCH_SIZE, but may be decreased
+   * The output batch limit starts at OUTPUT_ROW_COUNT, but may be decreased
    * if records are found to be large.
    */
-  private int outputLimit = OUTPUT_BATCH_SIZE;
+  private int outputLimit = OUTPUT_ROW_COUNT;
 
   // this allows for groups to be written between batches if we run out of space, for cases where we have finished
   // a batch on the boundary it will be set to 0
@@ -70,6 +68,11 @@ public abstract class FlattenTemplate implements Flattener {
   @Override
   public RepeatedValueVector getFlattenField() {
     return fieldToFlatten;
+  }
+
+  @Override
+  public void setOutputCount(int outputCount) {
+    outputLimit = outputCount;
   }
 
   @Override
@@ -101,73 +104,8 @@ public abstract class FlattenTemplate implements Flattener {
             for ( ; innerValueIndexLocal < innerValueCount; innerValueIndexLocal++) {
               // If we've hit the batch size limit, stop and flush what we've got so far.
               if (recordsThisCall == outputLimit) {
-                if (bigRecords) {
-                  /*
-                   * We got to the limit we used before, but did we go over
-                   * the bigRecordsBufferSize in the second half of the batch? If
-                   * so, we'll need to adjust the batch limits.
-                   */
-                  adjustBatchLimits(1, monitor, recordsThisCall);
-                }
-
                 // Flush this batch.
                 break outer;
-              }
-
-              /*
-               * At the moment, the output record includes the input record, so for very
-               * large records that we're flattening, we're carrying forward the original
-               * record as well as the flattened element. We've seen a case where flattening a 4MB
-               * record with a 20,000 element array causing memory usage to explode. To avoid
-               * that until we can push down the selected fields to operators like this, we
-               * also limit the amount of memory in use at one time.
-               *
-               * We have to have written at least one record to be able to get a buffer that will
-               * have a real allocator, so we have to do this lazily. We won't check the limit
-               * for the first two records, but that keeps this simple.
-               */
-              if (bigRecords) {
-                /*
-                 * If we're halfway through the outputLimit, check on our memory
-                 * usage so far.
-                 */
-                if (recordsThisCall == outputLimit / 2) {
-                  /*
-                   * If we've used more than half the space we've used for big records
-                   * in the past, we've seen even bigger records than before, so stop and
-                   * see if we need to flush here before we go over bigRecordsBufferSize
-                   * memory usage, and reduce the outputLimit further before we continue
-                   * with the next batch.
-                   */
-                  if (adjustBatchLimits(2, monitor, recordsThisCall)) {
-                    break outer;
-                  }
-                }
-              } else {
-                if (outputAllocator.getAllocatedMemory() > OUTPUT_MEMORY_LIMIT) {
-                  /*
-                   * We're dealing with big records. Reduce the outputLimit to
-                   * the current record count, and take note of how much space the
-                   * vectors report using for that. We'll use those numbers as limits
-                   * going forward in order to avoid allocating more memory.
-                   */
-                  bigRecords = true;
-                  outputLimit = Math.min(recordsThisCall, outputLimit);
-                  if (outputLimit < 1) {
-                    throw new IllegalStateException("flatten outputLimit (" + outputLimit
-                        + ") won't make progress");
-                  }
-
-                  /*
-                   * This will differ from what the allocator reports because of
-                   * overhead. But the allocator check is much cheaper to do, so we
-                   * only compute this at selected times.
-                   */
-                  bigRecordsBufferSize = monitor.getBufferSizeFor(recordsThisCall);
-
-                  // Stop and flush.
-                  break outer;
-                }
               }
 
               try {
@@ -209,68 +147,6 @@ public abstract class FlattenTemplate implements Flattener {
       default:
         throw new UnsupportedOperationException();
     }
-  }
-
-  /**
-   * Determine if the current batch record limit needs to be adjusted (when handling
-   * bigRecord mode). If so, adjust the limit, and return true, otherwise return false.
-   *
-   * <p>If the limit is adjusted, it will always be adjusted down, because we need to operate
-   * based on the largest sized record we've ever seen.</p>
-   *
-   * <p>If the limit is adjusted, then the current batch should be flushed, because
-   * continuing would lead to going over the large memory limit that has already been
-   * established.</p>
-   *
-   * @param multiplier Multiply currently used memory (according to the monitor) before
-   *   checking against past memory limits. This allows for checking the currently used
-   *   memory after processing a fraction of the expected batch limit, but using that as
-   *   a predictor of the full batch's size. For example, if this is checked after half
-   *   the batch size limit's records are processed, then using a multiplier of two will
-   *   do the check under the assumption that processing the full batch limit will use
-   *   twice as much memory.
-   * @param monitor the Flattener.Monitor instance to use for the current memory usage check
-   * @param recordsThisCall the number of records processed so far during this call to
-   *   flattenRecords().
-   * @return true if the batch size limit was adjusted, false otherwise
-   */
-  private boolean adjustBatchLimits(final int multiplier, final Flattener.Monitor monitor,
-      final int recordsThisCall) {
-    assert bigRecords : "adjusting batch limits when no big records";
-    final int bufferSize = multiplier * monitor.getBufferSizeFor(recordsThisCall);
-
-    /*
-     * If the amount of space we've used so far is below the amount that triggered
-     * the bigRecords mode, then no adjustment is needed.
-     */
-    if (bufferSize <= bigRecordsBufferSize) {
-      return false;
-    }
-
-    /*
-     * We've used more space than we've used for big records in the past, we've seen
-     * even bigger records, so we need to adjust our limits, and flush what we've got so far.
-     *
-     * We should reduce the outputLimit proportionately to get the predicted
-     * amount of memory used back down to bigRecordsBufferSize.
-     *
-     * The number of records to limit is therefore
-     * outputLimit *
-     *   (1 - (bufferSize - bigRecordsBufferSize) / bigRecordsBufferSize)
-     *
-     * Doing some algebra on the multiplier:
-     * (bigRecordsBufferSize - (bufferSize - bigRecordsBufferSize)) / bigRecordsBufferSize
-     * (bigRecordsBufferSize - bufferSize + bigRecordsBufferSize) / bigRecordsBufferSize
-     * (2 * bigRecordsBufferSize - bufferSize) / bigRecordsBufferSize
-     *
-     * If bufferSize has gotten so big that this would be negative, we'll
-     * just go down to one record per batch. We need to check for that on
-     * outputLimit anyway, in order to make sure that we make progress.
-     */
-    final int newLimit = (int)
-        (outputLimit * (2.0 * ((double) bigRecordsBufferSize) - bufferSize) / bigRecordsBufferSize);
-    outputLimit = Math.max(1, newLimit);
-    return true;
   }
 
   @Override
