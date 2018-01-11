@@ -29,7 +29,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -87,8 +86,7 @@ public class KuduRecordReader extends AbstractRecordReader {
 
   private ImmutableList<ProjectedColumnInfo> projectedCols;
 
-  public KuduRecordReader(KuduClient client, KuduSubScan.KuduSubScanSpec subScanSpec,
-      List<SchemaPath> projectedColumns, FragmentContext context) {
+  public KuduRecordReader(KuduClient client, KuduSubScan.KuduSubScanSpec subScanSpec, List<SchemaPath> projectedColumns) {
     setColumns(projectedColumns);
     this.client = client;
     scanSpec = subScanSpec;

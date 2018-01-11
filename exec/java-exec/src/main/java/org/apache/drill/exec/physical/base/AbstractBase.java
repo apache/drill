@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.base;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
@@ -83,12 +82,6 @@ public abstract class AbstractBase implements PhysicalOperator {
     return SelectionVectorMode.NONE;
   }
 
-  // Not available. Presumably because Drill does not currently use
-  // this value, though it does appear in some test physical plans.
-//  public void setInitialAllocation(long alloc) {
-//    initialAllocation = alloc;
-//  }
-
   @Override
   public long getInitialAllocation() {
     return initialAllocation;
@@ -116,7 +109,6 @@ public abstract class AbstractBase implements PhysicalOperator {
   @Override
   public void setMaxAllocation(long maxAllocation) {
     this.maxAllocation = maxAllocation;
-    /*throw new DrillRuntimeException("Unsupported method: setMaxAllocation()");*/
   }
 
   /**
@@ -125,9 +117,6 @@ public abstract class AbstractBase implements PhysicalOperator {
    */
   @Override @JsonIgnore
   public boolean isBufferedOperator() { return false; }
-
-  // @Override
-  // public void setBufferedOperator(boolean bo) {}
 
   @Override
   public String getUserName() {

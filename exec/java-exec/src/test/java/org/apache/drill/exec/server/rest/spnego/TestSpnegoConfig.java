@@ -89,8 +89,7 @@ public class TestSpnegoConfig {
           .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
               ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
           .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-              ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)),
-          false);
+              ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
       final SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
       spnegoConfig.validateSpnegoConfig();
@@ -107,7 +106,7 @@ public class TestSpnegoConfig {
   @Test
   public void testSpnegoConfigOnlyKeytab() throws Exception {
     try {
-      final DrillConfig newConfig = new DrillConfig(DrillConfig.create().withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true)).withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Lists.newArrayList("plain"))).withValue(ExecConstants.HTTP_SPNEGO_KEYTAB, ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())).withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)), false);
+      final DrillConfig newConfig = new DrillConfig(DrillConfig.create().withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true)).withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Lists.newArrayList("plain"))).withValue(ExecConstants.HTTP_SPNEGO_KEYTAB, ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())).withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
       final SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
       spnegoConfig.validateSpnegoConfig();
@@ -124,7 +123,7 @@ public class TestSpnegoConfig {
   @Test
   public void testSpnegoConfigOnlyPrincipal() throws Exception {
     try {
-      final DrillConfig newConfig = new DrillConfig(DrillConfig.create().withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true)).withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Lists.newArrayList("plain"))).withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL, ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL)).withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)), false);
+      final DrillConfig newConfig = new DrillConfig(DrillConfig.create().withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true)).withValue(ExecConstants.AUTHENTICATION_MECHANISMS, ConfigValueFactory.fromIterable(Lists.newArrayList("plain"))).withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL, ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL)).withValue(ExecConstants.USER_AUTHENTICATOR_IMPL, ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
       final SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
       spnegoConfig.validateSpnegoConfig();
@@ -152,8 +151,7 @@ public class TestSpnegoConfig {
           .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
               ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString()))
           .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-              ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)),
-          false);
+              ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
       final SpnegoConfig spnegoConfig = new SpnegoConfig(newConfig);
       spnegoConfig.validateSpnegoConfig();

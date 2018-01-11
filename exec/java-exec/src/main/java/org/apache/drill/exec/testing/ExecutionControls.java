@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -130,6 +131,11 @@ public final class ExecutionControls {
   private final Map<InjectionSite, Injection> controls = new HashMap<>();
 
   private final DrillbitEndpoint endpoint; // the current endpoint
+
+  @VisibleForTesting
+  public ExecutionControls(final OptionManager options) {
+    this(options, null);
+  }
 
   public ExecutionControls(final OptionManager options, final DrillbitEndpoint endpoint) {
     this.endpoint = endpoint;

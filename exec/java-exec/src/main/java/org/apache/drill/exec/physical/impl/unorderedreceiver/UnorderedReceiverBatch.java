@@ -25,6 +25,7 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -57,7 +58,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
 
   private final RecordBatchLoader batchLoader;
   private final RawFragmentBatchProvider fragProvider;
-  private final FragmentContext context;
+  private final ExchangeFragmentContext context;
   private BatchSchema schema;
   private final OperatorStats stats;
   private boolean first = true;
@@ -74,7 +75,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
     }
   }
 
-  public UnorderedReceiverBatch(final FragmentContext context, final RawFragmentBatchProvider fragProvider, final UnorderedReceiver config) throws OutOfMemoryException {
+  public UnorderedReceiverBatch(final ExchangeFragmentContext context, final RawFragmentBatchProvider fragProvider, final UnorderedReceiver config) throws OutOfMemoryException {
     this.fragProvider = fragProvider;
     this.context = context;
     // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
@@ -171,13 +172,13 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
 
       if (batch == null) {
         batchLoader.clear();
-        if (!context.shouldContinue()) {
+        if (!context.getExecutorState().shouldContinue()) {
           return IterOutcome.STOP;
         }
         return IterOutcome.NONE;
       }
 
-      if (context.isOverMemoryLimit()) {
+      if (context.getAllocator().isOverLimit()) {
         return IterOutcome.OUT_OF_MEMORY;
       }
 
@@ -197,7 +198,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
         return IterOutcome.OK;
       }
     } catch(SchemaChangeException | IOException ex) {
-      context.fail(ex);
+      context.getExecutorState().fail(ex);
       return IterOutcome.STOP;
     } finally {
       stats.stopProcessing();
@@ -233,7 +234,9 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
               .setReceiver(context.getHandle())
               .setSender(sender)
               .build();
-      context.getControlTunnel(providingEndpoint.getEndpoint()).informReceiverFinished(new OutcomeListener(), finishedReceiver);
+      context.getController()
+        .getTunnel(providingEndpoint.getEndpoint())
+        .informReceiverFinished(new OutcomeListener(), finishedReceiver);
     }
   }
 
@@ -252,12 +255,11 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
 
     @Override
     public void interrupted(final InterruptedException e) {
-      if (context.shouldContinue()) {
+      if (context.getExecutorState().shouldContinue()) {
         final String errMsg = "Received an interrupt RPC outcome while sending ReceiverFinished message";
         logger.error(errMsg, e);
-        context.fail(new RpcException(errMsg, e));
+        context.getExecutorState().fail(new RpcException(errMsg, e));
       }
     }
   }
-
 }

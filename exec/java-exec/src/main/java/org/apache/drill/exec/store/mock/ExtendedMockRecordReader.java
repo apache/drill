@@ -28,7 +28,6 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
@@ -58,7 +57,7 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
   private final MockScanEntry config;
   private final ColumnDef fields[];
 
-  public ExtendedMockRecordReader(FragmentContext context, MockScanEntry config) {
+  public ExtendedMockRecordReader(MockScanEntry config) {
     this.config = config;
 
     fields = buildColumnDefs();

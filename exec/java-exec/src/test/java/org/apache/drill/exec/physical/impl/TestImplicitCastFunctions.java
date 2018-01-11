@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -37,15 +37,13 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-import mockit.Injectable;
+import org.mockito.Mockito;
 
 public class TestImplicitCastFunctions extends ExecTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestImplicitCastFunctions.class);
-
   private final DrillConfig c = DrillConfig.create();
   private PhysicalPlanReader reader;
   private FunctionImplementationRegistry registry;
-  private FragmentContext context;
+  private FragmentContextImpl context;
 
   public Object[] getRunResult(SimpleRootExec exec) {
     int size = 0;
@@ -61,10 +59,9 @@ public class TestImplicitCastFunctions extends ExecTest {
     return res;
  }
 
-  public void runTest(@Injectable final DrillbitContext bitContext,
-                      @Injectable UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
-
-    mockDrillbitContext(bitContext);
+  public void runTest(Object[] expectedResults, String planPath) throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
     if (reader == null) {
@@ -74,7 +71,7 @@ public class TestImplicitCastFunctions extends ExecTest {
       registry = new FunctionImplementationRegistry(c);
     }
     if (context == null) {
-      context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+      context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     }
     final PhysicalPlan plan = reader.readPhysicalPlan(planString);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -90,16 +87,15 @@ public class TestImplicitCastFunctions extends ExecTest {
       }
     }
 
-    if (context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if (context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
 
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
-  public void testImplicitCastWithConstant(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserClientConnection connection) throws Throwable{
+  public void testImplicitCastWithConstant() throws Throwable{
     final Object [] expected = new Object[21];
     expected [0] = new Double (30.1);
     expected [1] = new Double (30.1);
@@ -126,12 +122,11 @@ public class TestImplicitCastFunctions extends ExecTest {
     expected [19] = Boolean.TRUE;
     expected [20] = Boolean.TRUE;
 
-    runTest(bitContext, connection, expected, "functions/cast/testICastConstant.json");
+    runTest(expected, "functions/cast/testICastConstant.json");
   }
 
   @Test
-  public void testImplicitCastWithMockColumn(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserClientConnection connection) throws Throwable{
+  public void testImplicitCastWithMockColumn() throws Throwable{
     final Object [] expected = new Object[5];
     expected [0] = new Integer (0);
     expected [1] = new Integer (0);
@@ -139,12 +134,11 @@ public class TestImplicitCastFunctions extends ExecTest {
     expected [3] = new Float (-2.14748365E9);
     expected [4] = new Double (-9.223372036854776E18);
 
-    runTest(bitContext, connection, expected, "functions/cast/testICastMockCol.json");
+    runTest(expected, "functions/cast/testICastMockCol.json");
   }
 
   @Test
-  public void testImplicitCastWithNullExpression(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserClientConnection connection) throws Throwable{
+  public void testImplicitCastWithNullExpression() throws Throwable{
     final Object [] expected = new Object[10];
 
     expected [0] = Boolean.TRUE;
@@ -159,6 +153,6 @@ public class TestImplicitCastFunctions extends ExecTest {
     expected [8] = null;
     expected [9] = null;
 
-    runTest(bitContext, connection, expected, "functions/cast/testICastNullExp.json");
+    runTest(expected, "functions/cast/testICastNullExp.json");
   }
 }

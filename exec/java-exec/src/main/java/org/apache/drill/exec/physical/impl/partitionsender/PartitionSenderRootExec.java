@@ -33,9 +33,10 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
@@ -63,7 +64,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private HashPartitionSender operator;
   private PartitionerDecorator partitioner;
 
-  private FragmentContext context;
+  private ExchangeFragmentContext context;
   private boolean ok = true;
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
@@ -98,13 +99,13 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
   }
 
-  public PartitionSenderRootExec(FragmentContext context,
+  public PartitionSenderRootExec(RootFragmentContext context,
                                  RecordBatch incoming,
                                  HashPartitionSender operator) throws OutOfMemoryException {
     this(context, incoming, operator, false);
   }
 
-  public PartitionSenderRootExec(FragmentContext context,
+  public PartitionSenderRootExec(RootFragmentContext context,
                                  RecordBatch incoming,
                                  HashPartitionSender operator,
                                  boolean closeIncoming) throws OutOfMemoryException {
@@ -173,7 +174,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
         } catch (IOException e) {
           incoming.kill(false);
           logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
-          context.fail(e);
+          context.getExecutorState().fail(e);
         }
         return false;
 
@@ -203,19 +204,19 @@ public class PartitionSenderRootExec extends BaseRootExec {
         } catch (IOException e) {
           incoming.kill(false);
           logger.error("Error while flushing outgoing batches", e);
-          context.fail(e);
+          context.getExecutorState().fail(e);
           return false;
         } catch (SchemaChangeException e) {
           incoming.kill(false);
           logger.error("Error while setting up partitioner", e);
-          context.fail(e);
+          context.getExecutorState().fail(e);
           return false;
         }
       case OK:
         try {
           partitioner.partitionBatch(incoming);
         } catch (IOException e) {
-          context.fail(e);
+          context.getExecutorState().fail(e);
           incoming.kill(false);
           return false;
         }

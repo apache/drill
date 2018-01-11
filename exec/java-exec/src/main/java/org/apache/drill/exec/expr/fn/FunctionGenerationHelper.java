@@ -98,7 +98,7 @@ public class FunctionGenerationHelper {
   public static LogicalExpression getOrderingComparatorNullsHigh(
       HoldingContainer left,
       HoldingContainer right,
-      FunctionImplementationRegistry registry) {
+      FunctionLookupContext registry) {
     return getOrderingComparator(true, left, right, registry);
   }
 

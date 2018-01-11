@@ -25,7 +25,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
 import org.apache.drill.exec.expr.stat.RangeExprEvaluator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -74,7 +74,7 @@ public class ParquetRGFilterEvaluator {
 
 
   public static boolean canDrop(LogicalExpression expr, Map<SchemaPath, ColumnStatistics> columnStatisticsMap,
-      long rowCount, UdfUtilities udfUtilities, FunctionImplementationRegistry functionImplementationRegistry) {
+      long rowCount, UdfUtilities udfUtilities, FunctionLookupContext functionImplementationRegistry) {
     ErrorCollector errorCollector = new ErrorCollectorImpl();
     LogicalExpression materializedFilter = ExpressionTreeMaterializer.materializeFilterExpr(
         expr, columnStatisticsMap, errorCollector, functionImplementationRegistry);

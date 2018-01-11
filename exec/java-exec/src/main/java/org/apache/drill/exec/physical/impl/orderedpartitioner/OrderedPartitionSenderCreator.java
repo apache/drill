@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.orderedpartitioner;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
 import org.apache.drill.exec.physical.impl.RootCreator;
@@ -61,7 +61,7 @@ public class OrderedPartitionSenderCreator implements RootCreator<OrderedPartiti
 
   @SuppressWarnings("resource")
   @Override
-  public RootExec getRoot(FragmentContext context, OrderedPartitionSender config,
+  public RootExec getRoot(ExecutorFragmentContext context, OrderedPartitionSender config,
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
 

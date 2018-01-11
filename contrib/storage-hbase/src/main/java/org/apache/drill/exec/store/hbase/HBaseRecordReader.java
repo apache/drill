@@ -33,7 +33,6 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -84,8 +83,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
 
   private final Connection connection;
 
-  public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec,
-      List<SchemaPath> projectedColumns, FragmentContext context) {
+  public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec, List<SchemaPath> projectedColumns) {
     this.connection = connection;
     hbaseTableName = TableName.valueOf(
         Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());

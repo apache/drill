@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.slf4j.Logger;
 
 public interface ControlsInjector {
@@ -41,19 +41,6 @@ public interface ControlsInjector {
    *                          throws the exception specified by the injection, if it is time
    */
   void injectUnchecked(ExecutionControls executionControls, String desc);
-
-  /**
-   * Inject (throw) an unchecked exception at this point, if the fragmentContext is not null,
-   * an injection is specified, and it is time for it to be thrown.
-   * <p/>
-   * <p>Implementors use this in their code at a site where they want to simulate an exception
-   * during testing.
-   *
-   * @param fragmentContext   fragmentContext used to retrieve the controls, can be null
-   * @param desc              the site description
-   *                          throws the exception specified by the injection, if it is time
-   */
-  void injectUnchecked(FragmentContext fragmentContext, String desc);
 
   /**
    * Inject (throw) a checked exception at this point, if an injection is specified, and it is time

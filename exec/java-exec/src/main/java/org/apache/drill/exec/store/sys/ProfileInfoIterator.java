@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.sys;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 
@@ -37,7 +37,7 @@ public class ProfileInfoIterator extends ProfileIterator {
 
   private final Iterator<ProfileInfo> itr;
 
-  public ProfileInfoIterator(FragmentContext context) {
+  public ProfileInfoIterator(ExecutorFragmentContext context) {
     super(context);
     itr = iterateProfileInfo();
   }

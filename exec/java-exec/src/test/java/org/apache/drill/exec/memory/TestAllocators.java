@@ -33,7 +33,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -198,8 +198,8 @@ public class TestAllocators extends DrillTest {
       pfBuilder2.setMemInitial(500000);
       BitControl.PlanFragment pf2 = pfBuilder1.build();
 
-      FragmentContext fragmentContext1 = new FragmentContext(bitContext, pf1, null, functionRegistry);
-      FragmentContext fragmentContext2 = new FragmentContext(bitContext, pf2, null, functionRegistry);
+      FragmentContextImpl fragmentContext1 = new FragmentContextImpl(bitContext, pf1, null, functionRegistry);
+      FragmentContextImpl fragmentContext2 = new FragmentContextImpl(bitContext, pf2, null, functionRegistry);
 
       // Get a few physical operators. Easiest way is to read a physical plan.
       PhysicalPlanReader planReader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(bitContext,
@@ -246,7 +246,7 @@ public class TestAllocators extends DrillTest {
       pfBuilder3.setMemInitial(1000000);
       BitControl.PlanFragment pf3 = pfBuilder3.build();
 
-      FragmentContext fragmentContext3 = new FragmentContext(bitContext, pf3, null, functionRegistry);
+      FragmentContextImpl fragmentContext3 = new FragmentContextImpl(bitContext, pf3, null, functionRegistry);
 
       // New fragment starts an operator that allocates an amount within the limit
       def = new OpProfileDef(physicalOperator5.getOperatorId(), UserBitShared.CoreOperatorType.UNION_VALUE,

@@ -45,13 +45,11 @@ public class DrillConfig extends NestedConfig {
 
   private final ImmutableList<String> startupArguments;
 
-  public static final boolean ON_OSX = System.getProperty("os.name").contains("OS X");
-
   @SuppressWarnings("restriction")
   private static final long MAX_DIRECT_MEMORY = sun.misc.VM.maxDirectMemory();
 
   @VisibleForTesting
-  public DrillConfig(Config config, boolean enableServerConfigs) {
+  public DrillConfig(Config config) {
     super(config);
     logger.debug("Setting up DrillConfig object.");
     logger.trace("Given Config object is:\n{}",
@@ -138,7 +136,7 @@ public class DrillConfig extends NestedConfig {
    * @param overrideFileResourcePathname
    *          the classpath resource pathname of the file to use for
    *          configuration override purposes; {@code null} specifies to use the
-   *          default pathname ({@link CommonConstants.CONFIG_OVERRIDE}) (does
+   *          default pathname ({@link CommonConstants#CONFIG_OVERRIDE_RESOURCE_PATHNAME}) (does
    *          <strong>not</strong> specify to suppress trying to load an
    *          overrides file)
    *  @return A merged Config object.
@@ -169,7 +167,7 @@ public class DrillConfig extends NestedConfig {
    * @return {@link DrillConfig} instance
    */
   public static DrillConfig create(Config config) {
-    return new DrillConfig(config.resolve(), true);
+    return new DrillConfig(config.resolve());
   }
 
   /**
@@ -252,7 +250,7 @@ public class DrillConfig extends NestedConfig {
     logger.info("Configuration and plugin file(s) identified in {}ms.\n{}",
         watch.elapsed(TimeUnit.MILLISECONDS),
         logString);
-    return new DrillConfig(effectiveConfig.resolve(), enableServerConfigs);
+    return new DrillConfig(effectiveConfig.resolve());
   }
 
   public <T> Class<T> getClassAt(String location, Class<T> clazz) throws DrillConfigurationException {

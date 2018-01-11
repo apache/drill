@@ -45,19 +45,15 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
   private int spilledBatches;
   private FragmentContext context;
   private BatchSchema schema;
-  private OperatorContext oContext;
   private SpillSet spillSet;
-  // Path spillStreamPath;
   private String spillFile;
   VectorAccessibleSerializable vas;
 
-  public SpilledRecordbatch(String spillFile,/* Path spillStreamPath,*/ int spilledBatches, FragmentContext context, BatchSchema schema, OperatorContext oContext, SpillSet spillSet) {
+  public SpilledRecordbatch(String spillFile, int spilledBatches, FragmentContext context, BatchSchema schema, OperatorContext oContext, SpillSet spillSet) {
     this.context = context;
     this.schema = schema;
     this.spilledBatches = spilledBatches;
-    this.oContext = oContext;
     this.spillSet = spillSet;
-    //this.spillStreamPath = spillStreamPath;
     this.spillFile = spillFile;
     vas = new VectorAccessibleSerializable(oContext.getAllocator());
     container = vas.get();
@@ -126,7 +122,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
   @Override
   public IterOutcome next() {
 
-    if ( ! context.shouldContinue() ) { return IterOutcome.STOP; }
+    if ( ! context.getExecutorState().shouldContinue() ) { return IterOutcome.STOP; }
 
     if ( spilledBatches <= 0 ) { // no more batches to read in this partition
       this.close();

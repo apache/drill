@@ -20,7 +20,7 @@ package org.apache.drill.exec.work.batch;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.proto.BitControl.CustomMessage;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -152,7 +152,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
     logger.debug("Received remote fragment start instruction", fragment);
 
     try {
-      final FragmentContext fragmentContext = new FragmentContext(drillbitContext, fragment,
+      final FragmentContextImpl fragmentContext = new FragmentContextImpl(drillbitContext, fragment,
           drillbitContext.getFunctionImplementationRegistry());
       final FragmentStatusReporter statusReporter = new FragmentStatusReporter(fragmentContext);
       final FragmentExecutor fragmentExecutor = new FragmentExecutor(fragmentContext, fragment, statusReporter);

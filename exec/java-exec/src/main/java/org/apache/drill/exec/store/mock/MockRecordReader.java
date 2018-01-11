@@ -35,8 +35,6 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 public class MockRecordReader extends AbstractRecordReader {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
-
   private final MockScanEntry config;
   private final FragmentContext context;
   private ValueVector[] valueVectors;
@@ -62,7 +60,7 @@ public class MockRecordReader extends AbstractRecordReader {
     return x;
   }
 
-  private MaterializedField getVector(String name, MajorType type, int length) {
+  private MaterializedField getVector(String name, MajorType type) {
     assert context != null : "Context shouldn't be null.";
     final MaterializedField f = MaterializedField.create(name, type);
     return f;
@@ -80,7 +78,7 @@ public class MockRecordReader extends AbstractRecordReader {
 
       for (int i = 0; i < config.getTypes().length; i++) {
         final MajorType type = config.getTypes()[i].getMajorType();
-        final MaterializedField field = getVector(config.getTypes()[i].getName(), type, batchRecordCount);
+        final MaterializedField field = getVector(config.getTypes()[i].getName(), type);
         final Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         valueVectors[i] = output.addField(field, vvClass);
       }

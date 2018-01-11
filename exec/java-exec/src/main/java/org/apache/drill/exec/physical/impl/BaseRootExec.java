@@ -21,11 +21,11 @@ import java.util.List;
 
 import org.apache.drill.common.DeferredException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.ops.OperatorUtilities;
+import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.CloseableRecordBatch;
@@ -39,10 +39,10 @@ public abstract class BaseRootExec implements RootExec {
 
   protected OperatorStats stats = null;
   protected OperatorContext oContext = null;
-  protected FragmentContext fragmentContext = null;
+  protected RootFragmentContext fragmentContext = null;
   private List<CloseableRecordBatch> operators;
 
-  public BaseRootExec(final FragmentContext fragmentContext, final PhysicalOperator config) throws OutOfMemoryException {
+  public BaseRootExec(final RootFragmentContext fragmentContext, final PhysicalOperator config) throws OutOfMemoryException {
     this.oContext = fragmentContext.newOperatorContext(config, stats);
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
         config.getOperatorType(), OperatorUtilities.getChildCount(config)),
@@ -51,8 +51,8 @@ public abstract class BaseRootExec implements RootExec {
     this.fragmentContext = fragmentContext;
   }
 
-  public BaseRootExec(final FragmentContext fragmentContext, final OperatorContext oContext,
-      final PhysicalOperator config) throws OutOfMemoryException {
+  public BaseRootExec(final RootFragmentContext fragmentContext, final OperatorContext oContext,
+                      final PhysicalOperator config) throws OutOfMemoryException {
     this.oContext = oContext;
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
         config.getOperatorType(), OperatorUtilities.getChildCount(config)),
@@ -87,7 +87,7 @@ public abstract class BaseRootExec implements RootExec {
   public final boolean next() {
     // Stats should have been initialized
     assert stats != null;
-    if (!fragmentContext.shouldContinue()) {
+    if (!fragmentContext.getExecutorState().shouldContinue()) {
       return false;
     }
     try {
@@ -156,7 +156,7 @@ public abstract class BaseRootExec implements RootExec {
       try {
         df.close();
       } catch (Exception e) {
-        fragmentContext.fail(e);
+        fragmentContext.getExecutorState().fail(e);
       }
     }
   }

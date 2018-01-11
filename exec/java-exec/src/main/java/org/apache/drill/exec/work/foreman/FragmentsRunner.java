@@ -24,7 +24,7 @@ import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -123,7 +123,7 @@ public class FragmentsRunner {
    */
   private void setupRootFragment(final PlanFragment rootFragment, final FragmentRoot rootOperator) throws ExecutionSetupException {
     QueryManager queryManager = foreman.getQueryManager();
-    final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, foreman.getQueryContext(),
+    final FragmentContextImpl rootContext = new FragmentContextImpl(drillbitContext, rootFragment, foreman.getQueryContext(),
         initiatingClient, drillbitContext.getFunctionImplementationRegistry());
     final FragmentStatusReporter statusReporter = new FragmentStatusReporter(rootContext);
     final FragmentExecutor rootRunner = new FragmentExecutor(rootContext, rootFragment, statusReporter, rootOperator);
@@ -322,7 +322,7 @@ public class FragmentsRunner {
   private void startLocalFragment(final PlanFragment fragment) throws ExecutionSetupException {
     logger.debug("Received local fragment start instruction", fragment);
 
-    final FragmentContext fragmentContext = new FragmentContext(drillbitContext, fragment, drillbitContext.getFunctionImplementationRegistry());
+    final FragmentContextImpl fragmentContext = new FragmentContextImpl(drillbitContext, fragment, drillbitContext.getFunctionImplementationRegistry());
     final FragmentStatusReporter statusReporter = new FragmentStatusReporter(fragmentContext);
     final FragmentExecutor fragmentExecutor = new FragmentExecutor(fragmentContext, fragment, statusReporter);
 

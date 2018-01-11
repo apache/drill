@@ -85,7 +85,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       } catch (SchemaChangeException ex) {
         kill(false);
         logger.error("Failure during query", ex);
-        context.fail(ex);
+        context.getExecutorState().fail(ex);
         return IterOutcome.STOP;
       } finally {
         stats.stopSetup();

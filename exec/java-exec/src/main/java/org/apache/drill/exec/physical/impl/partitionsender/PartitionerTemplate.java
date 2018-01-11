@@ -29,6 +29,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
+import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -81,7 +82,7 @@ public abstract class PartitionerTemplate implements Partitioner {
   }
 
   @Override
-  public final void setup(FragmentContext context,
+  public final void setup(ExchangeFragmentContext context,
                           RecordBatch incoming,
                           HashPartitionSender popConfig,
                           OperatorStats stats,

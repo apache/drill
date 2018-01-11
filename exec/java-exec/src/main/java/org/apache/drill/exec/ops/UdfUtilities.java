@@ -36,7 +36,7 @@ public interface UdfUtilities {
 
   // Map between injectable classes and their respective getter methods
   // used for code generation
-  public static final ImmutableMap<Class<?>, String> INJECTABLE_GETTER_METHODS =
+  ImmutableMap<Class<?>, String> INJECTABLE_GETTER_METHODS =
       new ImmutableMap.Builder<Class<?>, String>()
           .put(DrillBuf.class, "getManagedBuffer")
           .put(PartitionExplorer.class, "getPartitionExplorer")

@@ -21,7 +21,7 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.hadoop.conf.Configuration;
@@ -45,14 +45,14 @@ import static org.junit.Assert.assertEquals;
 
 public class TestParquetFilterPushDown extends PlanTestBase {
   private static final String CTAS_TABLE = "order_ctas";
-  private static FragmentContext fragContext;
+  private static FragmentContextImpl fragContext;
 
   private static FileSystem fs;
 
   @BeforeClass
   public static void initFSAndCreateFragContext() throws Exception {
     fs = getLocalFileSystem();
-    fragContext = new FragmentContext(bits[0].getContext(),
+    fragContext = new FragmentContextImpl(bits[0].getContext(),
         BitControl.PlanFragment.getDefaultInstance(), null, bits[0].getContext().getFunctionImplementationRegistry());
 
     dirTestWatcher.copyResourceToRoot(Paths.get("parquetFilterPush"));

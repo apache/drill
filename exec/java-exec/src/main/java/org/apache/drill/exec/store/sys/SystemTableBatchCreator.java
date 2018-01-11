@@ -23,7 +23,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -39,8 +39,8 @@ public class SystemTableBatchCreator implements BatchCreator<SystemTableScan> {
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public ScanBatch getBatch(final FragmentContext context, final SystemTableScan scan,
-                              final List<RecordBatch> children)
+  public ScanBatch getBatch(final ExecutorFragmentContext context, final SystemTableScan scan,
+                            final List<RecordBatch> children)
     throws ExecutionSetupException {
     final SystemTable table = scan.getTable();
     final Iterator<Object> iterator = table.getIterator(context);

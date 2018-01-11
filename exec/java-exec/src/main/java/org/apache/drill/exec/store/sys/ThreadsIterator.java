@@ -21,15 +21,15 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.Iterator;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 public class ThreadsIterator implements Iterator<Object> {
 
   private boolean beforeFirst = true;
-  private final FragmentContext context;
+  private final ExecutorFragmentContext context;
 
-  public ThreadsIterator(final FragmentContext context) {
+  public ThreadsIterator(final ExecutorFragmentContext context) {
     this.context = context;
   }
 
@@ -46,7 +46,7 @@ public class ThreadsIterator implements Iterator<Object> {
     beforeFirst = false;
     final ThreadsInfo threadsInfo = new ThreadsInfo();
 
-    final DrillbitEndpoint endpoint = context.getIdentity();
+    final DrillbitEndpoint endpoint = context.getEndpoint();
     threadsInfo.hostname = endpoint.getAddress();
     threadsInfo.user_port = endpoint.getUserPort();
 

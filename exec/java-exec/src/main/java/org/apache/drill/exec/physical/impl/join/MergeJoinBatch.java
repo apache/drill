@@ -199,7 +199,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           this.worker = generateNewWorker();
           first = true;
         } catch (ClassTransformationException | IOException | SchemaChangeException e) {
-          context.fail(new SchemaChangeException(e));
+          context.getExecutorState().fail(new SchemaChangeException(e));
           kill(false);
           return IterOutcome.STOP;
         } finally {
@@ -269,12 +269,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     right.kill(sendUpstream);
   }
 
-  private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException{
-
+  private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException {
     final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
-    // cg.getCodeGenerator().saveCodeForDebugging(true);
     final ErrorCollector collector = new ErrorCollectorImpl();
 
     // Generate members and initialization code

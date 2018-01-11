@@ -23,6 +23,7 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -51,7 +52,7 @@ public class TestUserBitSSLServer extends BaseTestQuery {
         .withValue(ExecConstants.SSL_KEYSTORE_PATH, ConfigValueFactory.fromAnyRef(ksPath))
         .withValue(ExecConstants.SSL_KEYSTORE_PASSWORD, ConfigValueFactory.fromAnyRef("drill123"))
         .withValue(ExecConstants.SSL_KEY_PASSWORD, ConfigValueFactory.fromAnyRef("drill123"))
-        .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")), false);
+        .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")));
     initProps = new Properties();
     initProps.setProperty(DrillProperties.ENABLE_TLS, "true");
     initProps.setProperty(DrillProperties.TRUSTSTORE_PATH, tsPath);
@@ -59,11 +60,17 @@ public class TestUserBitSSLServer extends BaseTestQuery {
     initProps.setProperty(DrillProperties.DISABLE_HOST_VERIFICATION, "true");
   }
 
+  @AfterClass
+  public static void cleanTest() throws Exception {
+    DrillConfig restoreConfig =
+        new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties()));
+    updateTestCluster(1, restoreConfig);
+  }
+
   @Test
   public void testInvalidKeystorePath() throws Exception {
     DrillConfig testConfig = new DrillConfig(DrillConfig.create(sslConfig)
-        .withValue(ExecConstants.SSL_KEYSTORE_PATH, ConfigValueFactory.fromAnyRef("/bad/path")),
-        false);
+        .withValue(ExecConstants.SSL_KEYSTORE_PATH, ConfigValueFactory.fromAnyRef("/bad/path")));
 
     // Start an SSL enabled cluster
     boolean failureCaught = false;
@@ -78,8 +85,7 @@ public class TestUserBitSSLServer extends BaseTestQuery {
   @Test
   public void testInvalidKeystorePassword() throws Exception {
     DrillConfig testConfig = new DrillConfig(DrillConfig.create(sslConfig)
-        .withValue(ExecConstants.SSL_KEYSTORE_PASSWORD, ConfigValueFactory.fromAnyRef("badpassword")),
-        false);
+        .withValue(ExecConstants.SSL_KEYSTORE_PASSWORD, ConfigValueFactory.fromAnyRef("badpassword")));
 
     // Start an SSL enabled cluster
     boolean failureCaught = false;
@@ -94,8 +100,7 @@ public class TestUserBitSSLServer extends BaseTestQuery {
   @Test
   public void testInvalidKeyPassword() throws Exception {
     DrillConfig testConfig = new DrillConfig(DrillConfig.create(sslConfig)
-        .withValue(ExecConstants.SSL_KEY_PASSWORD, ConfigValueFactory.fromAnyRef("badpassword")),
-        false);
+        .withValue(ExecConstants.SSL_KEY_PASSWORD, ConfigValueFactory.fromAnyRef("badpassword")));
 
     // Start an SSL enabled cluster
     boolean failureCaught = false;
@@ -111,8 +116,7 @@ public class TestUserBitSSLServer extends BaseTestQuery {
   // Should pass because the keystore password will be used.
   public void testNoKeyPassword() throws Exception {
     DrillConfig testConfig = new DrillConfig(DrillConfig.create(sslConfig)
-        .withValue(ExecConstants.SSL_KEY_PASSWORD, ConfigValueFactory.fromAnyRef("")),
-        false);
+        .withValue(ExecConstants.SSL_KEY_PASSWORD, ConfigValueFactory.fromAnyRef("")));
 
     // Start an SSL enabled cluster
     boolean failureCaught = false;

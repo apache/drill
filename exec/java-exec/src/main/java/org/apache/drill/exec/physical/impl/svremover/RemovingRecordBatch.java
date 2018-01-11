@@ -24,7 +24,6 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -235,10 +234,11 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   private Copier getGenerated4Copier() throws SchemaChangeException {
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
-    return getGenerated4Copier(incoming, context, oContext.getAllocator(), container, this, callBack);
+    return getGenerated4Copier(incoming, context, container, this, callBack);
   }
 
-  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing, SchemaChangeCallBack callBack) throws SchemaChangeException{
+  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, VectorContainer container, RecordBatch outgoing,
+                                           SchemaChangeCallBack callBack) throws SchemaChangeException{
 
     for(VectorWrapper<?> vv : batch){
       @SuppressWarnings("resource")

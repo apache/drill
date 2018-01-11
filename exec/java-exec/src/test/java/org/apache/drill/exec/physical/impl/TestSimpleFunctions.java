@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -40,7 +39,7 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -58,7 +57,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.sun.codemodel.JClassAlreadyExistsException;
 
-import mockit.Injectable;
+import org.mockito.Mockito;
 
 public class TestSimpleFunctions extends ExecTest {
 
@@ -67,69 +66,44 @@ public class TestSimpleFunctions extends ExecTest {
     @SuppressWarnings("resource")
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     // test required vs nullable Int input
-    resolveHash(c,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.INT)),
-        Types.optional(TypeProtos.MinorType.INT),
-        Types.required(TypeProtos.MinorType.INT),
+    resolveHash(new TypedNullConstant(Types.optional(TypeProtos.MinorType.INT)),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(c,
-        new ValueExpressions.IntExpression(1, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.INT),
-        Types.required(TypeProtos.MinorType.INT),
+    resolveHash(new ValueExpressions.IntExpression(1, ExpressionPosition.UNKNOWN),
         TypeProtos.DataMode.REQUIRED,
         registry);
 
     // test required vs nullable float input
-    resolveHash(c,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT4)),
-        Types.optional(TypeProtos.MinorType.FLOAT4),
-        Types.required(TypeProtos.MinorType.FLOAT4),
+    resolveHash(new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT4)),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(c,
-        new ValueExpressions.FloatExpression(5.0f, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.FLOAT4),
-        Types.required(TypeProtos.MinorType.FLOAT4),
+    resolveHash(new ValueExpressions.FloatExpression(5.0f, ExpressionPosition.UNKNOWN),
         TypeProtos.DataMode.REQUIRED,
         registry);
 
     // test required vs nullable long input
-    resolveHash(c,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.BIGINT)),
-        Types.optional(TypeProtos.MinorType.BIGINT),
-        Types.required(TypeProtos.MinorType.BIGINT),
+    resolveHash(new TypedNullConstant(Types.optional(TypeProtos.MinorType.BIGINT)),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(c,
-        new ValueExpressions.LongExpression(100L, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.BIGINT),
-        Types.required(TypeProtos.MinorType.BIGINT),
+    resolveHash(new ValueExpressions.LongExpression(100L, ExpressionPosition.UNKNOWN),
         TypeProtos.DataMode.REQUIRED,
         registry);
 
     // test required vs nullable double input
-    resolveHash(c,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Types.optional(TypeProtos.MinorType.FLOAT8),
-        Types.required(TypeProtos.MinorType.FLOAT8),
+    resolveHash(new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT8)),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(c,
-        new ValueExpressions.DoubleExpression(100.0, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.FLOAT8),
-        Types.required(TypeProtos.MinorType.FLOAT8),
+    resolveHash(new ValueExpressions.DoubleExpression(100.0, ExpressionPosition.UNKNOWN),
         TypeProtos.DataMode.REQUIRED,
         registry);
   }
 
-  public void resolveHash(DrillConfig config, LogicalExpression arg, TypeProtos.MajorType expectedArg,
-                                    TypeProtos.MajorType expectedOut, TypeProtos.DataMode expectedBestInputMode,
-                                    FunctionImplementationRegistry registry) throws JClassAlreadyExistsException, IOException {
+  public void resolveHash(LogicalExpression arg, TypeProtos.DataMode expectedBestInputMode,
+                          FunctionImplementationRegistry registry) throws JClassAlreadyExistsException, IOException {
     final List<LogicalExpression> args = new ArrayList<>();
     args.add(arg);
     FunctionCall call = new FunctionCall(
@@ -143,14 +117,14 @@ public class TestSimpleFunctions extends ExecTest {
   }
 
   @Test
-  public void testSubstring(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserClientConnection connection) throws Throwable {
-    mockDrillbitContext(bitContext);
+  public void testSubstring() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/functions/testSubstring.json"), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     while(exec.next()) {
@@ -169,21 +143,21 @@ public class TestSimpleFunctions extends ExecTest {
       assertEquals(50, count);
     }
 
-    if(context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if(context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
-  public void testSubstringNegative(@Injectable final DrillbitContext bitContext,
-                                    @Injectable UserClientConnection connection) throws Throwable {
-    mockDrillbitContext(bitContext);
+  public void testSubstringNegative() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/functions/testSubstringNegative.json"), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     while(exec.next()) {
@@ -203,21 +177,21 @@ public class TestSimpleFunctions extends ExecTest {
       assertEquals(50, count);
     }
 
-    if(context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if(context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
-  public void testByteSubstring(@Injectable final DrillbitContext bitContext,
-                                  @Injectable UserClientConnection connection) throws Throwable {
-    mockDrillbitContext(bitContext);
+  public void testByteSubstring() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/functions/testByteSubstring.json"), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     while(exec.next()) {
@@ -236,9 +210,9 @@ public class TestSimpleFunctions extends ExecTest {
       assertEquals(50, count);
     }
 
-    if(context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if(context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 }

@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import java.util.Iterator;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 public class DrillbitIterator implements Iterator<Object> {
@@ -28,9 +28,9 @@ public class DrillbitIterator implements Iterator<Object> {
   private Iterator<DrillbitEndpoint> endpoints;
   private DrillbitEndpoint current;
 
-  public DrillbitIterator(FragmentContext c) {
-    this.endpoints = c.getDrillbitContext().getAvailableBits().iterator();
-    this.current = c.getIdentity();
+  public DrillbitIterator(ExecutorFragmentContext c) {
+    this.endpoints = c.getBits().iterator();
+    this.current = c.getEndpoint();
   }
 
   public static class DrillbitInstance {

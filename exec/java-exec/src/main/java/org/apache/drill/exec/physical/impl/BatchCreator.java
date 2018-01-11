@@ -20,14 +20,12 @@ package org.apache.drill.exec.physical.impl;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
 public interface BatchCreator<T extends PhysicalOperator> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchCreator.class);
-
-  public CloseableRecordBatch getBatch(FragmentContext context, T config, List<RecordBatch> children)
+  CloseableRecordBatch getBatch(ExecutorFragmentContext context, T config, List<RecordBatch> children)
       throws ExecutionSetupException;
 }

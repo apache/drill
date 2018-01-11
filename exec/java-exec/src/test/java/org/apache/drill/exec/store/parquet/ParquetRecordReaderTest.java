@@ -21,6 +21,8 @@ import static org.apache.drill.exec.store.parquet.TestFileGenerator.populateFiel
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
 import io.netty.buffer.DrillBuf;
 
 import java.io.File;
@@ -30,8 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import mockit.Injectable;
-
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -42,7 +43,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -600,23 +600,18 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
 
   @Test
   @Ignore
-  public void testPerformance(@Injectable final DrillbitContext bitContext,
-                              @Injectable UserClientConnection connection) throws Exception {
+  public void testPerformance() throws Exception {
+    final DrillbitContext bitContext = mock(DrillbitContext.class);
+    final UserClientConnection connection = mock(UserClientConnection.class);
+
     final DrillConfig c = DrillConfig.create();
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
-
-//    new NonStrictExpectations() {
-//      {
-//        context.getAllocator(); result = BufferAllocator.getAllocator(DrillConfig.create());
-//      }
-//    };
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
 
     final String fileName = "/tmp/parquet_test_performance.parquet";
     final HashMap<String, FieldInfo> fields = new HashMap<>();
     final ParquetTestProperties props = new ParquetTestProperties(1, 20 * 1000 * 1000, DEFAULT_BYTES_PER_PAGE, fields);
     populateFieldInfoMap(props);
-    //generateParquetFile(fileName, props);
 
     final Configuration dfsConfig = new Configuration();
     final List<Footer> footers = ParquetFileReader.readFooters(dfsConfig, new Path(fileName));

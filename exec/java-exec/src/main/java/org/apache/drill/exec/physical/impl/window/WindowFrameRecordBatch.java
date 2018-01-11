@@ -145,7 +145,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     try {
       doWork();
     } catch (DrillException e) {
-      context.fail(e);
+      context.getExecutorState().fail(e);
       cleanup();
       return IterOutcome.STOP;
     }

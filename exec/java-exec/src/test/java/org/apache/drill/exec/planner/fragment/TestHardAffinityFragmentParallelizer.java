@@ -19,8 +19,6 @@ package org.apache.drill.exec.planner.fragment;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -37,6 +35,8 @@ import static org.apache.drill.exec.planner.fragment.HardAffinityFragmentParalle
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Category(PlannerTest.class)
 public class TestHardAffinityFragmentParallelizer {
@@ -49,9 +49,6 @@ public class TestHardAffinityFragmentParallelizer {
   private static final DrillbitEndpoint N3_EP1 = newDrillbitEndpoint("node3", 30010);
   private static final DrillbitEndpoint N3_EP2 = newDrillbitEndpoint("node3", 30011);
   private static final DrillbitEndpoint N4_EP2 = newDrillbitEndpoint("node4", 30011);
-
-  @Mocked private Fragment fragment;
-  @Mocked private PhysicalOperator root;
 
   private static final DrillbitEndpoint newDrillbitEndpoint(String address, int port) {
     return DrillbitEndpoint.newBuilder().setAddress(address).setControlPort(port).build();
@@ -87,11 +84,10 @@ public class TestHardAffinityFragmentParallelizer {
   }
 
   private final Wrapper newWrapper(double cost, int minWidth, int maxWidth, List<EndpointAffinity> epAffs) {
-    new NonStrictExpectations() {
-      {
-        fragment.getRoot(); result = root;
-      }
-    };
+    final Fragment fragment = mock(Fragment.class);
+    final PhysicalOperator root = mock(PhysicalOperator.class);
+
+    when(fragment.getRoot()).thenReturn(root);
 
     final Wrapper fragmentWrapper = new Wrapper(fragment, 1);
     final Stats stats = fragmentWrapper.getStats();

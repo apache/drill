@@ -19,11 +19,12 @@ package org.apache.drill.exec.server.options;
 
 import com.google.common.collect.Maps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 
 import java.util.Map;
 
 /**
- * {@link OptionManager} that holds options within {@link org.apache.drill.exec.ops.FragmentContext}.
+ * {@link OptionManager} that holds options within {@link FragmentContextImpl}.
  */
 public class FragmentOptionManager extends InMemoryOptionManager {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentOptionManager.class);

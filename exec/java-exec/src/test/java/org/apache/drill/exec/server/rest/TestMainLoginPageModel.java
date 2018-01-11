@@ -73,7 +73,7 @@ public class TestMainLoginPageModel {
   public void testAuthEnabledWithNoMech() {
     final DrillConfig config = new DrillConfig(DrillConfig.create()
       .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true)), false);
+        ConfigValueFactory.fromAnyRef(true)));
     when(context.getConfig()).thenReturn(config);
     final MainLoginPageModel model = logInLogOutResources.new MainLoginPageModel(null);
     assertTrue(model.isFormEnabled());
@@ -90,7 +90,7 @@ public class TestMainLoginPageModel {
       .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("form"))), false);
+        ConfigValueFactory.fromIterable(Lists.newArrayList("form"))));
     when(context.getConfig()).thenReturn(config);
     final MainLoginPageModel model = logInLogOutResources.new MainLoginPageModel(null);
     assertTrue(model.isFormEnabled());
@@ -107,7 +107,7 @@ public class TestMainLoginPageModel {
       .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("spnego"))), false);
+        ConfigValueFactory.fromIterable(Lists.newArrayList("spnego"))));
     when(context.getConfig()).thenReturn(config);
     final MainLoginPageModel model = logInLogOutResources.new MainLoginPageModel(null);
     assertTrue(!model.isFormEnabled());
@@ -124,7 +124,7 @@ public class TestMainLoginPageModel {
       .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("form", "spnego"))), false);
+        ConfigValueFactory.fromIterable(Lists.newArrayList("form", "spnego"))));
     when(context.getConfig()).thenReturn(config);
     final MainLoginPageModel model = logInLogOutResources.new MainLoginPageModel(null);
     assertTrue(model.isFormEnabled());

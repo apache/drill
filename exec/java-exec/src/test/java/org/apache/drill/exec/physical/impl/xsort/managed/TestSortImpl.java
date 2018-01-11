@@ -40,7 +40,6 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
-import org.apache.drill.test.OperatorFixture.OperatorFixtureBuilder;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.HyperRowSetImpl;
 import org.apache.drill.test.rowSet.IndirectRowSet;
@@ -190,7 +189,6 @@ public class TestSortImpl extends DrillTest {
    * row set format. For historical reasons, the sort dumps its output into a vector
    * container (normally attached to the external sort batch, here used stand-alone.)
    *
-   * @param fixture operator test fixture
    * @param results sort results iterator
    * @param dest container that holds the sort results
    * @return
@@ -582,7 +580,7 @@ public class TestSortImpl extends DrillTest {
 
   @Test
   public void testSpill() throws Exception {
-    OperatorFixtureBuilder builder = OperatorFixture.builder();
+    OperatorFixture.Builder builder = OperatorFixture.builder();
     builder.configBuilder()
       .put(ExecConstants.EXTERNAL_SORT_BATCH_LIMIT, 2);
     try (OperatorFixture fixture = builder.build()) {
