@@ -23,13 +23,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
@@ -38,6 +38,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.DirectRowSet;
@@ -45,16 +46,18 @@ import org.apache.drill.test.rowSet.HyperRowSetImpl;
 import org.apache.drill.test.rowSet.IndirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.Test;
-
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import org.junit.experimental.categories.Category;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * Tests the external sort implementation: the "guts" of the sort stripped of the
@@ -157,12 +160,6 @@ public class TestSortImpl extends DrillTest {
       for (RowSet expectedSet : expected) {
         assertTrue(results.next());
         RowSet rowSet = toRowSet(results, dest);
-        // Uncomment these for debugging. Leave them commented otherwise
-        // to avoid polluting the Maven build output unnecessarily.
-//        System.out.println("Expected:");
-//        expectedSet.print();
-//        System.out.println("Actual:");
-//        rowSet.print();
         new RowSetComparison(expectedSet)
               .verify(rowSet);
         expectedSet.clear();
@@ -325,7 +322,8 @@ public class TestSortImpl extends DrillTest {
     public DataGenerator(OperatorFixture fixture, int targetCount, int batchSize, int seed, int step) {
       this.fixture = fixture;
       this.targetCount = targetCount;
-      this.batchSize = Math.min(batchSize, Character.MAX_VALUE);
+      Preconditions.checkArgument(batchSize > 0 && batchSize <= ValueVector.MAX_ROW_COUNT);
+      this.batchSize = batchSize;
       this.step = step;
       schema = SortTestUtilities.nonNullSchema();
       currentValue = seed;
@@ -380,7 +378,8 @@ public class TestSortImpl extends DrillTest {
 
     public DataValidator(int targetCount, int batchSize) {
       this.targetCount = targetCount;
-      this.batchSize = Math.min(batchSize, Character.MAX_VALUE);
+      Preconditions.checkArgument(batchSize > 0 && batchSize <= ValueVector.MAX_ROW_COUNT);
+      this.batchSize = batchSize;
     }
 
     public void validate(RowSet output) {
@@ -399,8 +398,6 @@ public class TestSortImpl extends DrillTest {
       assertEquals("Wrong row count", targetCount, rowCount);
     }
   }
-
-  Stopwatch timer = Stopwatch.createUnstarted();
 
   /**
    * Run a full-blown sort test with multiple input batches. Because we want to
@@ -428,33 +425,25 @@ public class TestSortImpl extends DrillTest {
       if (batchCount == 1) {
         // Simulates a NEW_SCHEMA event
 
-        timer.start();
         sort.setSchema(input.container().getSchema());
-        timer.stop();
       }
 
       // Simulates an OK event
 
-      timer.start();
       sort.addBatch(input.vectorAccessible());
-      timer.stop();
     }
 
     // Simulate returning results
 
-    timer.start();
     SortResults results = sort.startMerge();
     if (results.getContainer() != dest) {
       dest.clear();
       dest = results.getContainer();
     }
     while (results.next()) {
-      timer.stop();
       RowSet output = toRowSet(results, dest);
       validator.validate(output);
-      timer.start();
     }
-    timer.stop();
     validator.validateDone();
     results.close();
     dest.clear();
@@ -469,11 +458,9 @@ public class TestSortImpl extends DrillTest {
    */
 
   public void runJumboBatchTest(OperatorFixture fixture, int rowCount) {
-    timer.reset();
-    DataGenerator dataGen = new DataGenerator(fixture, rowCount, Character.MAX_VALUE);
-    DataValidator validator = new DataValidator(rowCount, Character.MAX_VALUE);
+    DataGenerator dataGen = new DataGenerator(fixture, rowCount, ValueVector.MAX_ROW_COUNT);
+    DataValidator validator = new DataValidator(rowCount, ValueVector.MAX_ROW_COUNT);
     runLargeSortTest(fixture, dataGen, validator);
-    System.out.println(timer.elapsed(TimeUnit.MILLISECONDS));
   }
 
   /**
@@ -499,7 +486,30 @@ public class TestSortImpl extends DrillTest {
   @Test
   public void testLargeBatch() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture()) {
-      runJumboBatchTest(fixture, Character.MAX_VALUE);
+//      partyOnMemory(fixture.allocator());
+      runJumboBatchTest(fixture, ValueVector.MAX_ROW_COUNT);
+    }
+  }
+
+  /**
+   * Use this function to pre-load Netty's free list with a large
+   * number of "dirty" blocks. This will often catch error due to
+   * failure to initialize value vector memory.
+   *
+   * @param fixture the operator fixture that provides an allocator
+   */
+
+  @SuppressWarnings("unused")
+  private void partyOnMemory(BufferAllocator allocator) {
+    DrillBuf bufs[] = new DrillBuf[10];
+    for (int i = 0; i < bufs.length; i++) {
+      bufs[i] = allocator.buffer(ValueVector.MAX_BUFFER_SIZE);
+      for (int j = 0; j < ValueVector.MAX_BUFFER_SIZE; j += 4) {
+        bufs[i].setInt(j, 0xDEADBEEF);
+      }
+    }
+    for (int i = 0; i < bufs.length; i++) {
+      bufs[i].release();
     }
   }
 
@@ -533,8 +543,6 @@ public class TestSortImpl extends DrillTest {
 
     VectorContainer dest = new VectorContainer();
     SortImpl sort = makeSortImpl(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED, dest);
-    timer.reset();
-    timer.start();
     sort.setSchema(rowSet.container().getSchema());
     sort.addBatch(rowSet.vectorAccessible());
     SortResults results = sort.startMerge();
@@ -543,13 +551,11 @@ public class TestSortImpl extends DrillTest {
       dest = results.getContainer();
     }
     assertTrue(results.next());
-    timer.stop();
     assertFalse(results.next());
     results.close();
     dest.clear();
     sort.close();
     sort.opContext().close();
-    System.out.println(timer.elapsed(TimeUnit.MILLISECONDS));
   }
 
   /**
@@ -561,7 +567,7 @@ public class TestSortImpl extends DrillTest {
   @Test
   public void testWideRows() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture()) {
-      runWideRowsTest(fixture, 1000, Character.MAX_VALUE);
+      runWideRowsTest(fixture, 1000, ValueVector.MAX_ROW_COUNT);
     }
   }
 

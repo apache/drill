@@ -276,14 +276,14 @@ public class ColumnAccessors {
       <#assign putAddr = "writeIndex * VALUE_WIDTH">
       </#if>
       <#if varWidth>
-      drillBuf.unsafeCopyMemory(value, 0, offset, len);
+      drillBuf.setBytes(offset, value, 0, len);
       offsetsWriter.setNextOffset(offset + len);
       <#elseif drillType == "Decimal9">
-      drillBuf.unsafePutInt(${putAddr},
+      drillBuf.setInt(${putAddr},
           DecimalUtility.getDecimal9FromBigDecimal(value,
                 type.getScale(), type.getPrecision()));
       <#elseif drillType == "Decimal18">
-      drillBuf.unsafePutLong(${putAddr},
+      drillBuf.setLong(${putAddr},
           DecimalUtility.getDecimal18FromBigDecimal(value,
                 type.getScale(), type.getPrecision()));
       <#elseif drillType == "Decimal38Sparse">
@@ -295,23 +295,23 @@ public class ColumnAccessors {
       DecimalUtility.getSparseFromBigDecimal(value, vector.getBuffer(), writeIndex * VALUE_WIDTH,
                type.getScale(), type.getPrecision(), 5);
       <#elseif drillType == "IntervalYear">
-      drillBuf.unsafePutInt(${putAddr},
+      drillBuf.setInt(${putAddr},
                 value.getYears() * 12 + value.getMonths());
       <#elseif drillType == "IntervalDay">
       final int offset = ${putAddr};
-      drillBuf.unsafePutInt(offset,     value.getDays());
-      drillBuf.unsafePutInt(offset + 4, periodToMillis(value));
+      drillBuf.setInt(offset,     value.getDays());
+      drillBuf.setInt(offset + 4, periodToMillis(value));
       <#elseif drillType == "Interval">
       final int offset = ${putAddr};
-      drillBuf.unsafePutInt(offset,     value.getYears() * 12 + value.getMonths());
-      drillBuf.unsafePutInt(offset + 4, value.getDays());
-      drillBuf.unsafePutInt(offset + 8, periodToMillis(value));
+      drillBuf.setInt(offset,     value.getYears() * 12 + value.getMonths());
+      drillBuf.setInt(offset + 4, value.getDays());
+      drillBuf.setInt(offset + 8, periodToMillis(value));
       <#elseif drillType == "Float4">
-      drillBuf.unsafePutInt(${putAddr}, Float.floatToRawIntBits((float) value));
+      drillBuf.setInt(${putAddr}, Float.floatToRawIntBits((float) value));
       <#elseif drillType == "Float8">
-      drillBuf.unsafePutLong(${putAddr}, Double.doubleToRawLongBits(value));
+      drillBuf.setLong(${putAddr}, Double.doubleToRawLongBits(value));
       <#else>
-      drillBuf.unsafePut${putType?cap_first}(${putAddr}, <#if doCast>(${putType}) </#if>value);
+      drillBuf.set${putType?cap_first}(${putAddr}, <#if doCast>(${putType}) </#if>value);
       </#if>
       vectorIndex.nextElement();
     }
