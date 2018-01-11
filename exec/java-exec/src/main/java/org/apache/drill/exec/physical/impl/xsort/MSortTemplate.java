@@ -32,10 +32,10 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.util.IndexedSortable;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Queues;
 
 public abstract class MSortTemplate implements MSorter, IndexedSortable {
@@ -43,7 +43,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
   private SelectionVector4 vector4;
   private SelectionVector4 aux;
-  private long compares;
   private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
   private FragmentContext context;
 
@@ -74,13 +73,14 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
         throw new UnsupportedOperationException(String.format("Missing batch. batch: %d newBatch: %d", batch, newBatch));
       }
     }
+    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
 
     try {
       desiredRecordBatchCount = context.getConfig().getInt(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE);
     } catch(ConfigException.Missing e) {
       // value not found, use default value instead
-      desiredRecordBatchCount = Character.MAX_VALUE;
+      desiredRecordBatchCount = ValueVector.MAX_ROW_COUNT;
     }
     aux = new SelectionVector4(drillBuf, totalCount, desiredRecordBatchCount);
   }
@@ -126,7 +126,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
   @Override
   public void sort(final VectorContainer container) {
-    final Stopwatch watch = Stopwatch.createStarted();
     while (runStarts.size() > 1) {
 
       // check if we're cancelled/failed frequently
@@ -153,6 +152,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
       if (outIndex < vector4.getTotalCount()) {
         copyRun(outIndex, vector4.getTotalCount());
       }
+      @SuppressWarnings("resource")
       final SelectionVector4 tmp = aux.createNewWrapperCurrent(desiredRecordBatchCount);
       aux.clear();
       aux = vector4.createNewWrapperCurrent(desiredRecordBatchCount);
@@ -181,7 +181,6 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   public int compare(final int leftIndex, final int rightIndex) {
     final int sv1 = vector4.get(leftIndex);
     final int sv2 = vector4.get(rightIndex);
-    compares++;
     try {
       return doEval(sv1, sv2);
     } catch (SchemaChangeException e) {
