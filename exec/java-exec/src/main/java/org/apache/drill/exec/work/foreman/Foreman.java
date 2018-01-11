@@ -746,6 +746,9 @@ public class Foreman implements Runnable {
         });
       }
 
+      // set query end time before writing final profile
+      queryStateProcessor.close();
+
       /*
        * Construct the response based on the latest resultState. The builder shouldn't fail.
        */
@@ -812,8 +815,6 @@ public class Foreman implements Runnable {
       } catch (final Exception e) {
         logger.warn("unable to close query manager", e);
       }
-
-      queryStateProcessor.close();
 
       try {
         queryRM.exit();
