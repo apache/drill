@@ -112,8 +112,8 @@ public class SelectionVector4 implements AutoCloseable {
       return false;
     }
 
-    start = start+length;
-    int newEnd = Math.min(start+length, recordCount);
+    start = start + length;
+    int newEnd = Math.min(start + length, recordCount);
     length = newEnd - start;
 //    logger.debug("New start {}, new length {}", start, length);
     return true;

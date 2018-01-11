@@ -47,6 +47,16 @@ import com.google.common.base.Stopwatch;
  * <p>
  * Current results:
  * <ul>
+ * <li>Required and nullable writers are slightly faster than the
+ * corresponding vector mutator methods.</li>
+ * <li>Writer is 230% faster than a repeated mutator.</li>
+ * </ul>
+ *
+ * The key reason for the converged performance (now compared to earlier
+ * results below) is that both paths now use bounds-checking optimizations.
+ * <p>
+ * Prior results before the common bounds-check optimizations:
+ * <ul>
  * <li>Writer is 42% faster than a required mutator.</li>
  * <li>Writer is 73% faster than a nullable mutator.</li>
  * <li>Writer is 407% faster than a repeated mutator.</li>

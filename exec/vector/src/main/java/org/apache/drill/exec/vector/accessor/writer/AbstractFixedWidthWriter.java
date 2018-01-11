@@ -98,7 +98,7 @@ public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
       while (dest < writeIndex) {
         int length = writeIndex - dest;
         length = Math.min(length, stride);
-        drillBuf.unsafeCopyMemory(ZERO_BUF, 0, dest * width, length * width);
+        drillBuf.setBytes(dest * width, ZERO_BUF, 0, length * width);
         dest += length;
       }
     }
