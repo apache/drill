@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.pcap.decoder;
 
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +60,7 @@ public class PacketDecoder {
   private static final int PCAP_MAGIC_LITTLE_ENDIAN = 0xD4C3B2A1;
   private static final int PCAP_MAGIC_NUMBER = 0xA1B2C3D4;
 
+  private static final Logger logger = LoggerFactory.getLogger(PacketDecoder.class);
 
   private final int maxLength;
   private final int network;
@@ -89,8 +92,16 @@ public class PacketDecoder {
     network = getIntFileOrder(bigEndian, globalHeader, 20);
   }
 
-  public int decodePacket(final byte[] buffer, final int offset, Packet p) {
-    return p.decodePcap(buffer, offset, bigEndian, maxLength);
+  public final int getMaxLength() {
+    return maxLength;
+  }
+
+  public int decodePacket(final byte[] buffer, final int offset, Packet p, int maxPacket, int validBytes) {
+    int r = p.decodePcap(buffer, offset, bigEndian, Math.min(maxPacket, validBytes - offset));
+    if (r > validBytes) {
+      logger.error("Invalid packet at offset {}", offset);
+    }
+    return r;
   }
 
   public Packet packet() {
