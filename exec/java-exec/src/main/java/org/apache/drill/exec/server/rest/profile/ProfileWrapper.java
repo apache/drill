@@ -202,25 +202,33 @@ public class ProfileWrapper {
   }
 
   public String getExecutionDuration() {
-    //Check if State is PREPARING, PLANNING, STARTING, ENQUEUED or RUNNING
+    //Check if State is PREPARING, PLANNING, STARTING or ENQUEUED
     if (profile.getState() == QueryState.PREPARING ||
         profile.getState() == QueryState.PLANNING ||
         profile.getState() == QueryState.STARTING ||
-        profile.getState() == QueryState.ENQUEUED ||
-        profile.getState() == QueryState.RUNNING) {
+        profile.getState() == QueryState.ENQUEUED) {
       return NOT_AVAILABLE_LABEL;
+    }
+
+    long queryEndTime;
+
+    // Check if State is RUNNING, set end time to current time
+    if (profile.getState() == QueryState.RUNNING) {
+      queryEndTime = System.currentTimeMillis();
+    } else {
+       queryEndTime = profile.getEnd();
     }
 
     //Check if QueueEnd is known
     if (profile.getQueueWaitEnd() > 0L) {
       //Execution time [end(QueueWait) - endTime(Query)]
-      return (new SimpleDurationFormat(profile.getQueueWaitEnd(), profile.getEnd())).verbose();
+      return (new SimpleDurationFormat(profile.getQueueWaitEnd(), queryEndTime)).verbose();
     }
 
     //Check if Plan End is known
     if (profile.getPlanEnd() > 0L) {
       //Execution time [end(Planning) - endTime(Query)]
-      return (new SimpleDurationFormat(profile.getPlanEnd(), profile.getEnd())).verbose();
+      return (new SimpleDurationFormat(profile.getPlanEnd(), queryEndTime)).verbose();
     }
 
     //Check if any fragments have started
@@ -237,7 +245,7 @@ public class ProfileWrapper {
         }
       }
       //Execution time [start(rootFragment) - endTime(Query)]
-      return (new SimpleDurationFormat(estimatedPlanEnd, profile.getEnd())).verbose() + ESTIMATED_LABEL;
+      return (new SimpleDurationFormat(estimatedPlanEnd, queryEndTime)).verbose() + ESTIMATED_LABEL;
     }
 
     //Unable to  estimate/calculate Specific Execution Time
