@@ -347,6 +347,21 @@
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
+      <source>src/resources/auto-setup.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill-setup.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/distrib-setup.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drill-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>
