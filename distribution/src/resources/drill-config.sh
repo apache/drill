@@ -64,6 +64,77 @@ while [ -h "$this" ]; do
   fi
 done
 
+# JVM and Operating System Platform information
+# Test for cygwin
+is_cygwin=false
+case "`uname`" in
+CYGWIN*) is_cygwin=true;;
+esac
+
+if $is_cygwin; then
+  JAVA_BIN="java.exe"
+else
+  JAVA_BIN="java"
+fi
+
+# Test for or find JAVA_HOME
+
+if [ -z "$JAVA_HOME" ]; then
+  SOURCE=`which java`
+  if [ -e $SOURCE ]; then
+    while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+      DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+      SOURCE="$(readlink "$SOURCE")"
+      # if $SOURCE was a relative symlink, we need to resolve it relative
+      # to the path where the symlink file was located
+      [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    JAVA_HOME="$( cd -P "$( dirname "$SOURCE" )" && cd .. && pwd )"
+    JAVA=$SOURCE
+  fi
+  # if we didn't set it
+  if [ -z "$JAVA_HOME" ]; then
+    fatal_error "JAVA_HOME is not set and Java could not be found"
+  fi
+fi
+
+# Now, verify that 'java' binary exists and is suitable for Drill.
+# If we started with `which java` above, use that path (after replacing
+# symlinks.) If we started with JAVA_HOME, try in bin. Doing so handles
+# the case in which JAVA_HOME is a JDK that has a nested JRE; we prefer
+# the JDK bin. Finally, if nothing else works, just search for the
+# executable.
+
+if [ -z "$JAVA" ]; then
+  JAVA="$JAVA_HOME/bin/$JAVA_BIN"
+  if [[ ! -e $JAVA ]]; then
+    JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
+  fi
+fi
+if [ ! -e "$JAVA" ]; then
+  fatal_error "Java not found at JAVA_HOME=$JAVA_HOME."
+fi
+
+# Ensure that Java version is at least 1.7
+"$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6" > /dev/null
+if [ $? -eq 0 ]; then
+  fatal_error "Java 1.7 or later is required to run Apache Drill."
+fi
+
+# Check if a file exists and has relevant lines for execution
+# Help in deciding which of the auto scripts to execute: distrib/drill
+function checkExecutableLineCount() {
+  local lineCount=0
+  #Empty input
+  if [ -z "$1" ]; then echo $lineCount; return; fi
+  #Not valid file
+  if [ ! -f "$1" ]; then echo $lineCount; return; fi
+  # Filtering out commented and empty lines
+  let lineCount=`cat $1 | grep -v '#' | grep -v ^$ | wc -l`
+  echo $lineCount
+  return
+}
+
 # convert relative path to absolute path
 bin=`dirname "$this"`
 script=`basename "$this"`
@@ -180,18 +251,61 @@ else
   fi
 fi
 
-# Default memory settings if none provided by the environment or
+# Execute distrib-setup.sh for any distribution-specific setup (e.g. checks).
+# distrib-setup.sh is optional; it is created by some distribution installers
+# that need additional distribution-specific setup to be done.
+# Because installers will have site-specific steps, the file
+# should be moved into the site directory, if the user employs one.
+
+# Checking if being executed in context of Drillbit and not SQLLine
+if [ "$DRILLBIT_CONTEXT" == "1" ]; then
+  # Check whether to run exclusively distrib-setup.sh OR auto-setup.sh
+  distribSetup="$DRILL_CONF_DIR/distrib-setup.sh" ; #Site-based distrib-setup.sh
+  if [ $(checkExecutableLineCount $distribSetup) -eq 0 ]; then
+    distribSetup="$DRILL_HOME/conf/distrib-setup.sh" ; #Install-based distrib-setup.sh
+    if [ $(checkExecutableLineCount $distribSetup) -eq 0 ]; then
+      # Run Default Auto Setup
+      distribSetup="$DRILL_HOME/bin/auto-setup.sh"
+    fi
+  fi
+  # Check and run additional setup defined by user
+  drillSetup="$DRILL_CONF_DIR/drill-setup.sh" ; #Site-based drill-setup.sh
+  if [ $(checkExecutableLineCount $drillSetup) -eq 0 ]; then
+    drillSetup="$DRILL_HOME/conf/drill-setup.sh" ; #Install-based drill-setup.sh
+    if [ $(checkExecutableLineCount $drillSetup) -eq 0 ]; then drillSetup=""; fi
+  fi
+
+  # Enforcing checks in order (distrib-setup.sh , drill-setup.sh)
+  # (NOTE: A script is executed only if it has relevant executable lines)
+  # Both distribSetup & drillSetup are executed because the user might have introduced additional checks
+  if [ -n "$distribSetup" ]; then
+    . "$distribSetup"
+    if [ $? -gt 0 ]; then fatal_error "Aborting Drill Startup due failed setup by $distribSetup"; fi
+  fi
+  if [ -n "$drillSetup" ] && [ $(checkExecutableLineCount $drillSetup) -gt 0 ]; then
+    . "$drillSetup"
+    if [ $? -gt 0 ]; then fatal_error "Aborting Drill Startup due failed setup from $drillSetup"; fi
+  fi
+fi
+
+# DEFAULT memory settings if none provided by the environment or
 # above config files.
 # The Drillbit needs a large code cache.
-
 export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"8G"}
 export DRILL_HEAP=${DRILL_HEAP:-"4G"}
-export DRILLBIT_MAX_PERM=${DRILLBIT_MAX_PERM:-"512M"}
 export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
+export DRILLBIT_MAX_PERM=${DRILLBIT_MAX_PERM:-"512M"}
 
 export DRILLBIT_OPTS="-Xms$DRILL_HEAP -Xmx$DRILL_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
 export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CACHE_SIZE -Ddrill.exec.enable-epoll=false"
-export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:MaxPermSize=$DRILLBIT_MAX_PERM"
+
+# Remove MaxPermSize for JVM version >= 1.8.0
+jvmVersion=`"$JAVA" -version 2>&1 | grep "version" | tr '"_' '\n' | grep '[0-9].[0.9]'`
+if [[ $jvmVersion < "1.8.0" ]]; then
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:MaxPermSize=$DRILLBIT_MAX_PERM"
+else
+  unset DRILLBIT_MAX_PERM
+fi
 
 # Under YARN, the log directory is usually YARN-provided. Replace any
 # value that may have been set in drill-env.sh.
@@ -362,62 +476,6 @@ fi
 mkdir -p "$DRILL_TMP_DIR"
 if [[ ! -d "$DRILL_TMP_DIR" || ! -w "$DRILL_TMP_DIR" ]]; then
   fatal_error "Temporary directory does not exist or is not writable: $DRILL_TMP_DIR"
-fi
-
-# Test for cygwin
-is_cygwin=false
-case "`uname`" in
-CYGWIN*) is_cygwin=true;;
-esac
-
-if $is_cygwin; then
-  JAVA_BIN="java.exe"
-else
-  JAVA_BIN="java"
-fi
-
-# Test for or find JAVA_HOME
-
-if [ -z "$JAVA_HOME" ]; then
-  SOURCE=`which java`
-  if [ -e $SOURCE ]; then
-    while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-      DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-      SOURCE="$(readlink "$SOURCE")"
-      # if $SOURCE was a relative symlink, we need to resolve it relative
-      # to the path where the symlink file was located
-      [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-    done
-    JAVA_HOME="$( cd -P "$( dirname "$SOURCE" )" && cd .. && pwd )"
-    JAVA=$SOURCE
-  fi
-  # if we didn't set it
-  if [ -z "$JAVA_HOME" ]; then
-    fatal_error "JAVA_HOME is not set and Java could not be found"
-  fi
-fi
-
-# Now, verify that 'java' binary exists and is suitable for Drill.
-# If we started with `which java` above, use that path (after replacing
-# symlinks.) If we started with JAVA_HOME, try in bin. Doing so handles
-# the case in which JAVA_HOME is a JDK that has a nested JRE; we prefer
-# the JDK bin. Finally, if nothing else works, just search for the
-# executable.
-
-if [ -z "$JAVA" ]; then
-  JAVA="$JAVA_HOME/bin/$JAVA_BIN"
-  if [[ ! -e $JAVA ]]; then
-    JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
-  fi
-fi
-if [ ! -e "$JAVA" ]; then
-  fatal_error "Java not found at JAVA_HOME=$JAVA_HOME."
-fi
-
-# Ensure that Java version is at least 1.7
-"$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6" > /dev/null
-if [ $? -eq 0 ]; then
-  fatal_error "Java 1.7 or later is required to run Apache Drill."
 fi
 
 # Adjust paths for CYGWIN
