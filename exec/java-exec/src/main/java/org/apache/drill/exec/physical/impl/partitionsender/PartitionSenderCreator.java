@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.partitionsender;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.RootCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
@@ -29,7 +29,7 @@ import org.apache.drill.exec.record.RecordBatch;
 public class PartitionSenderCreator implements RootCreator<HashPartitionSender> {
 
   @Override
-  public RootExec getRoot(FragmentContext context,
+  public RootExec getRoot(ExecutorFragmentContext context,
                           HashPartitionSender config,
                           List<RecordBatch> children) throws ExecutionSetupException {
 

@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
@@ -52,7 +52,7 @@ public class RunRootExec {
     PhysicalPlanReader reader = bitContext.getPlanReader();
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(new File(path), Charsets.UTF_8));
     FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), null, registry);
+    FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), null, registry);
     SimpleRootExec exec;
     for (int i = 0; i < iterations; i ++) {
       Stopwatch w = Stopwatch.createStarted();

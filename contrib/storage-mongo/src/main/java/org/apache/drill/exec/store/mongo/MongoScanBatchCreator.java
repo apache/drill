@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
@@ -32,15 +32,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoCredential;
 
 public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
   static final Logger logger = LoggerFactory
       .getLogger(MongoScanBatchCreator.class);
 
   @Override
-  public ScanBatch getBatch(FragmentContext context, MongoSubScan subScan,
+  public ScanBatch getBatch(ExecutorFragmentContext context, MongoSubScan subScan,
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();

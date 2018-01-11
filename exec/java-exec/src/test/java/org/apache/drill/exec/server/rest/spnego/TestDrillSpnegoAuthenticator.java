@@ -100,8 +100,7 @@ public class TestDrillSpnegoAuthenticator {
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
         .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())),
-        false);
+            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
 
     // Create mock objects for optionManager and AuthConfiguration
     final SystemOptionManager optionManager = Mockito.mock(SystemOptionManager.class);

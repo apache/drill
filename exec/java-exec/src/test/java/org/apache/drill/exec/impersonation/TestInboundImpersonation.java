@@ -66,8 +66,7 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
         .withValue(ExecConstants.IMPERSONATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true)),
-        false);
+            ConfigValueFactory.fromAnyRef(true)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");

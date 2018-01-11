@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.hive;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -29,12 +29,12 @@ import org.apache.drill.exec.store.hive.readers.initilializers.ReadersInitialize
 
 @SuppressWarnings("unused")
 public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveScanBatchCreator.class);
 
   @Override
-  public ScanBatch getBatch(FragmentContext context, HiveSubScan config, List<RecordBatch> children)
+  public ScanBatch getBatch(ExecutorFragmentContext context, HiveSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
     AbstractReadersInitializer readersInitializer = ReadersInitializer.getInitializer(context, config);
     return new ScanBatch(config, context, readersInitializer.init());
   }
-
 }

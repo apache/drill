@@ -27,10 +27,10 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
@@ -55,24 +55,24 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import mockit.Injectable;
+import org.mockito.Mockito;
 
 @Category({SlowTest.class, OperatorTest.class})
 public class TestHashJoin extends PopUnitTestBase {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
-
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
 
   private final DrillConfig c = DrillConfig.create();
 
-  private void testHJMockScanCommon(final DrillbitContext bitContext, UserClientConnection connection, String physicalPlan, int expectedRows) throws Throwable {
+  private void testHJMockScanCommon(String physicalPlan, int expectedRows) throws Throwable {
 
-    mockDrillbitContext(bitContext);
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
@@ -82,31 +82,28 @@ public class TestHashJoin extends PopUnitTestBase {
     exec.close();
     assertEquals(expectedRows, totalRecordCount);
     System.out.println("Total Record Count: " + totalRecordCount);
-    if (context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if (context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
-  public void multiBatchEqualityJoin(@Injectable final DrillbitContext bitContext,
-                                 @Injectable UserClientConnection connection) throws Throwable {
+  public void multiBatchEqualityJoin() throws Throwable {
 
-    testHJMockScanCommon(bitContext, connection, "/join/hash_join_multi_batch.json", 200000);
+    testHJMockScanCommon("/join/hash_join_multi_batch.json", 200000);
   }
 
   @Test
-  public void multiBatchRightOuterJoin(@Injectable final DrillbitContext bitContext,
-                                       @Injectable UserClientConnection connection) throws Throwable {
+  public void multiBatchRightOuterJoin() throws Throwable {
 
-    testHJMockScanCommon(bitContext, connection, "/join/hj_right_outer_multi_batch.json", 100000);
+    testHJMockScanCommon("/join/hj_right_outer_multi_batch.json", 100000);
   }
 
   @Test
-  public void multiBatchLeftOuterJoin(@Injectable final DrillbitContext bitContext,
-                                      @Injectable UserClientConnection connection) throws Throwable {
+  public void multiBatchLeftOuterJoin() throws Throwable {
 
-    testHJMockScanCommon(bitContext, connection, "/join/hj_left_outer_multi_batch.json", 100000);
+    testHJMockScanCommon("/join/hj_left_outer_multi_batch.json", 100000);
   }
 
   @Test
@@ -151,9 +148,7 @@ public class TestHashJoin extends PopUnitTestBase {
   }
 
   @Test
-  public void hjWithExchange(@Injectable final DrillbitContext bitContext,
-                             @Injectable UserClientConnection connection) throws Throwable {
-
+  public void hjWithExchange() throws Throwable {
     // Function tests with hash join with exchanges
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
       final Drillbit bit = new Drillbit(CONFIG, serviceSet);
@@ -179,9 +174,7 @@ public class TestHashJoin extends PopUnitTestBase {
   }
 
   @Test
-  public void multipleConditionJoin(@Injectable final DrillbitContext bitContext,
-                                    @Injectable UserClientConnection connection) throws Throwable {
-
+  public void multipleConditionJoin() throws Throwable {
     // Function tests hash join with multiple join conditions
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
       final Drillbit bit = new Drillbit(CONFIG, serviceSet);
@@ -225,9 +218,7 @@ public class TestHashJoin extends PopUnitTestBase {
   }
 
   @Test
-  public void hjWithExchange1(@Injectable final DrillbitContext bitContext,
-                              @Injectable UserClientConnection connection) throws Throwable {
-
+  public void hjWithExchange1() throws Throwable {
     // Another test for hash join with exchanges
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
          final Drillbit bit = new Drillbit(CONFIG, serviceSet);

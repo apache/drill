@@ -35,8 +35,6 @@ import com.carrotsearch.hppc.procedures.IntLongProcedure;
 import com.google.common.annotations.VisibleForTesting;
 
 public class OperatorStats {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
-
   protected final int operatorId;
   protected final int operatorType;
   private final BufferAllocator allocator;
@@ -61,7 +59,6 @@ public class OperatorStats {
   private long setupMark;
   private long waitMark;
 
-//  private long schemas;
   private int inputCount;
 
   public OperatorStats(OpProfileDef def, BufferAllocator allocator){

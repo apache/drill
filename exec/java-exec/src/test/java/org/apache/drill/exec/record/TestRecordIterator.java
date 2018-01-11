@@ -22,13 +22,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import mockit.Injectable;
 
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.ops.OperatorUtilities;
@@ -50,18 +49,18 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 import java.util.List;
 
 @Category(VectorTest.class)
 public class TestRecordIterator extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRecordIterator.class);
   DrillConfig c = DrillConfig.create();
 
   @Test
-  public void testSimpleIterator(@Injectable final DrillbitContext bitContext,
-                                  @Injectable UserClientConnection connection) throws Throwable{
-    mockDrillbitContext(bitContext);
+  public void testSimpleIterator() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
 
@@ -69,7 +68,7 @@ public class TestRecordIterator extends PopUnitTestBase {
 
     final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
     final List<PhysicalOperator> operatorList = plan.getSortedOperators(false);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) operatorList.iterator().next()));
 
@@ -116,17 +115,16 @@ public class TestRecordIterator extends PopUnitTestBase {
   }
 
   @Test
-  public void testMarkResetIterator(@Injectable final DrillbitContext bitContext,
-                                 @Injectable UserClientConnection connection) throws Throwable{
-    mockDrillbitContext(bitContext);
+  public void testMarkResetIterator() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-
     final String planStr = Files.toString(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8);
 
     final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
     final List<PhysicalOperator> operatorList = plan.getSortedOperators(false);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) operatorList.iterator().next()));
 

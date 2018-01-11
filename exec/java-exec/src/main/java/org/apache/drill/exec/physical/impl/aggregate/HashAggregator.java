@@ -35,34 +35,35 @@ import org.apache.drill.exec.record.VectorContainer;
 
 public interface HashAggregator {
 
-  public static TemplateClassDefinition<HashAggregator> TEMPLATE_DEFINITION =
+  TemplateClassDefinition<HashAggregator> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<HashAggregator>(HashAggregator.class, HashAggTemplate.class);
 
-  public static enum AggOutcome {
+  enum AggOutcome {
     RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR, CALL_WORK_AGAIN
   }
 
   // For returning results from outputCurrentBatch
   // OK - batch returned, NONE - end of data, RESTART - call again
-  public enum AggIterOutcome { AGG_OK, AGG_NONE, AGG_RESTART }
+  enum AggIterOutcome { AGG_OK, AGG_NONE, AGG_RESTART }
 
-  public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing, LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException, ClassTransformationException;
+  void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing,
+             LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException, ClassTransformationException;
 
-  public abstract IterOutcome getOutcome();
+  IterOutcome getOutcome();
 
-  public abstract int getOutputCount();
+  int getOutputCount();
 
-  public abstract AggOutcome doWork();
+  AggOutcome doWork();
 
-  public abstract void cleanup();
+  void cleanup();
 
-  public abstract boolean allFlushed();
+  boolean allFlushed();
 
-  public abstract boolean buildComplete();
+  boolean buildComplete();
 
-  public abstract AggIterOutcome outputCurrentBatch();
+  AggIterOutcome outputCurrentBatch();
 
-  public abstract boolean earlyOutput();
+  boolean earlyOutput();
 
-  public abstract RecordBatch getNewIncoming();
+  RecordBatch getNewIncoming();
 }

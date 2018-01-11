@@ -256,12 +256,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
       // No more output records, clean up and return
       state = BatchState.DONE;
-      //            if (first) {
-      //              return IterOutcome.OK_NEW_SCHEMA;
-      //            }
       return IterOutcome.NONE;
     } catch (ClassTransformationException | SchemaChangeException | IOException e) {
-      context.fail(e);
+      context.getExecutorState().fail(e);
       killIncoming(false);
       return IterOutcome.STOP;
     }
@@ -405,8 +402,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
     final CodeGenerator<HashJoinProbe> cg = CodeGenerator.get(HashJoinProbe.TEMPLATE_DEFINITION, context.getOptions());
     cg.plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
-    // cg.saveCodeForDebugging(true);
     final ClassGenerator<HashJoinProbe> g = cg.getRoot();
 
     // Generate the code to project build side records

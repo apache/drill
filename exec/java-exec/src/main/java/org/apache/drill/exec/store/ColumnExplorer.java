@@ -26,7 +26,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContextInterface;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -46,15 +45,6 @@ public class ColumnExplorer {
   private final List<SchemaPath> tableColumns;
   private final Map<String, ImplicitFileColumns> allImplicitColumns;
   private final Map<String, ImplicitFileColumns> selectedImplicitColumns;
-
-  /**
-   * Helper class that encapsulates logic for sorting out columns
-   * between actual table columns, partition columns and implicit file columns.
-   * Also populates map with implicit columns names as keys and their values
-   */
-  public ColumnExplorer(FragmentContextInterface context, List<SchemaPath> columns) {
-    this(context.getOptions(), columns);
-  }
 
   /**
    * Helper class that encapsulates logic for sorting out columns

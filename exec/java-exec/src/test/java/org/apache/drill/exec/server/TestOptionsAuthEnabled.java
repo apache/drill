@@ -57,8 +57,7 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
     final DrillConfig config = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED, ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-            ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)),
-        false);
+            ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, PROCESS_USER);

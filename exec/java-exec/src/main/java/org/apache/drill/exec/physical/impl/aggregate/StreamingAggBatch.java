@@ -202,7 +202,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       }
       return outcome;
     case UPDATE_AGGREGATOR:
-      context.fail(UserException.unsupportedError()
+      context.getExecutorState().fail(UserException.unsupportedError()
         .message(SchemaChangeException.schemaChanged("Streaming aggregate does not support schema changes", incomingSchema, incoming.getSchema()).getMessage())
         .build(logger));
       close();
@@ -263,7 +263,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       this.aggregator = createAggregatorInternal();
       return true;
     } catch (SchemaChangeException | ClassTransformationException | IOException ex) {
-      context.fail(ex);
+      context.getExecutorState().fail(ex);
       container.clear();
       incoming.kill(false);
       return false;
@@ -275,8 +275,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
-    // cg.getCodeGenerator().saveCodeForDebugging(true);
     container.clear();
 
     LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().size()];

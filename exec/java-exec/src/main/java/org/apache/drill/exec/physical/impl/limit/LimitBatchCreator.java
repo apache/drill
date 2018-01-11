@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.limit;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
@@ -29,7 +29,7 @@ import com.google.common.collect.Iterables;
 
 public class LimitBatchCreator implements BatchCreator<Limit> {
   @Override
-  public LimitRecordBatch getBatch(FragmentContext context, Limit config, List<RecordBatch> children)
+  public LimitRecordBatch getBatch(ExecutorFragmentContext context, Limit config, List<RecordBatch> children)
       throws ExecutionSetupException {
     return new LimitRecordBatch(config, context, Iterables.getOnlyElement(children));
   }

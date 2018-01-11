@@ -29,7 +29,6 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
@@ -48,7 +47,6 @@ public abstract class HashTableTemplate implements HashTable {
   private static final boolean EXTRA_DEBUG = false;
 
   private static final int EMPTY_SLOT = -1;
-  // private final int MISSING_VALUE = 65544;
 
   // A hash 'bucket' consists of the start index to indicate start of a hash chain
 
@@ -77,8 +75,6 @@ public abstract class HashTableTemplate implements HashTable {
 
   // Placeholder for the current index while probing the hash table
   private IndexPointer currentIdxHolder;
-
-//  private FragmentContext context;
 
   private BufferAllocator allocator;
 
@@ -451,7 +447,7 @@ public abstract class HashTableTemplate implements HashTable {
 
 
   @Override
-  public void setup(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator, RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing, VectorContainer htContainerOrig) {
+  public void setup(HashTableConfig htConfig, BufferAllocator allocator, RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing, VectorContainer htContainerOrig) {
     float loadf = htConfig.getLoadFactor();
     int initialCap = htConfig.getInitialCapacity();
 
@@ -470,7 +466,6 @@ public abstract class HashTableTemplate implements HashTable {
     }
 
     this.htConfig = htConfig;
-//    this.context = context;
     this.allocator = allocator;
     this.incomingBuild = incomingBuild;
     this.incomingProbe = incomingProbe;

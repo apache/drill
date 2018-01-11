@@ -25,7 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
@@ -42,23 +42,26 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import mockit.Injectable;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 @Category(OperatorTest.class)
 public class TestSimpleLimit extends ExecTest {
   private final DrillConfig c = DrillConfig.create();
 
   @Test
-  public void testLimit(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
+  public void testLimit() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    mockDrillbitContext(bitContext);
     verifyLimitCount(bitContext, connection, "test1.json", 5);
   }
 
   @Test
-  public void testLimitNoEnd(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
-    mockDrillbitContext(bitContext);
+  public void testLimitNoEnd() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
+
     verifyLimitCount(bitContext, connection, "test3.json", 95);
   }
 
@@ -68,24 +71,23 @@ public class TestSimpleLimit extends ExecTest {
   // However, when evaluate the increasingBitInt(0), if the outgoing batch could not hold the new value, doEval() return false, and start the
   // next batch. But the value has already been increased by 1 in the prior failed try. Therefore, the sum of the generated number could be different,
   // depending on the size of each outgoing batch, and when the batch could not hold any more values.
-  public void testLimitAcrossBatches(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
+  public void testLimitAcrossBatches() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    mockDrillbitContext(bitContext);
     verifyLimitCount(bitContext, connection, "test2.json", 69999);
     final long start = 30000;
     final long end = 100000;
     final long expectedSum = (end - start) * (end + start - 1) / 2; //Formula for sum of series
 
     verifySum(bitContext, connection, "test4.json", 70000, expectedSum);
-
-
   }
 
   private void verifyLimitCount(DrillbitContext bitContext, UserClientConnection connection, String testPlan, int expectedCount) throws Throwable {
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/limit/" + testPlan), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     int recordCount = 0;
     while(exec.next()) {
@@ -94,18 +96,18 @@ public class TestSimpleLimit extends ExecTest {
 
     assertEquals(expectedCount, recordCount);
 
-    if(context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if(context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
 
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   private void verifySum(DrillbitContext bitContext, UserClientConnection connection, String testPlan, int expectedCount, long expectedSum) throws Throwable {
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/limit/" + testPlan), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     int recordCount = 0;
     long sum = 0;
@@ -120,9 +122,9 @@ public class TestSimpleLimit extends ExecTest {
     assertEquals(expectedCount, recordCount);
     assertEquals(expectedSum, sum);
 
-    if(context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if(context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 }

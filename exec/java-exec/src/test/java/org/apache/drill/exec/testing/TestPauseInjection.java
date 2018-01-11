@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
@@ -53,7 +54,7 @@ public class TestPauseInjection extends BaseTestQuery {
   /**
    * Class whose methods we want to simulate pauses at run-time for testing
    * purposes. The class must have access to {@link org.apache.drill.exec.ops.QueryContext} or
-   * {@link org.apache.drill.exec.ops.FragmentContext}.
+   * {@link FragmentContextImpl}.
    */
   private static class DummyClass {
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DummyClass.class);

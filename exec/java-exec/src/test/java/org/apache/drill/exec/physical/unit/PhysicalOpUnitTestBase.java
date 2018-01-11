@@ -21,15 +21,27 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import mockit.Delegate;
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.ops.AccountingDataTunnel;
+import org.apache.drill.exec.ops.AccountingUserConnection;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentStats;
+import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.rpc.control.Controller;
+import org.apache.drill.exec.rpc.control.WorkEventBus;
+import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
+import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -45,65 +57,68 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.compile.CodeCompiler;
-import org.apache.drill.exec.compile.TemplateClassDefinition;
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.ops.BufferManagerImpl;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.ScanBatch;
-import org.apache.drill.exec.physical.impl.project.Projector;
-import org.apache.drill.exec.physical.impl.project.ProjectorTemplate;
-import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.test.OperatorFixture;
+import org.junit.After;
 import org.junit.Before;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-/**
- * Look! Doesn't extend BaseTestQuery!!
- */
 public class PhysicalOpUnitTestBase extends ExecTest {
-  @Injectable FragmentContext fragContext;
-  @Injectable DrillbitContext drillbitContext;
-  @Injectable OperatorContext opContext;
-  @Injectable OperatorStats opStats;
-  @Injectable PhysicalOperator popConf;
-  @Injectable ExecutionControls executionControls;
+  protected MockExecutorFragmentContext fragContext;
+  protected DrillbitContext drillbitContext;
+  protected OperatorFixture.MockOperatorContext opContext;
+  protected OperatorFixture operatorFixture;
+  protected ExecutorService scanExecutor;
+  protected ExecutorService scanDecodeExecutor;
 
   private final DrillConfig drillConf = DrillConfig.create();
-  private final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConf);
-  private final BufferManagerImpl bufManager = new BufferManagerImpl(allocator);
   private final ScanResult classpathScan = ClassPathScanner.fromPrescan(drillConf);
-  private final FunctionImplementationRegistry funcReg = new FunctionImplementationRegistry(drillConf, classpathScan);
-  private final TemplateClassDefinition<Projector> templateClassDefinition = new TemplateClassDefinition<Projector>(Projector.class, ProjectorTemplate.class);
   private final OperatorCreatorRegistry opCreatorReg = new OperatorCreatorRegistry(classpathScan);
 
   @Before
   public void setup() throws Exception {
+    scanExecutor = Executors.newFixedThreadPool(2, new NamedThreadFactory("scan-"));
+    scanDecodeExecutor = Executors.newFixedThreadPool(2, new NamedThreadFactory("scanDecoder-"));
+
+    drillbitContext = Mockito.mock(DrillbitContext.class);
+    Mockito.when(drillbitContext.getScanExecutor()).thenReturn(scanExecutor);
+    Mockito.when(drillbitContext.getScanDecodeExecutor()).thenReturn(scanDecodeExecutor);
+
+    final OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    builder.configBuilder().configProps(drillConf);
+    operatorFixture = builder
+      .setScanExecutor(scanExecutor)
+      .setScanDecoderExecutor(scanDecodeExecutor)
+      .build();
     mockFragmentContext();
+  }
+
+  @After
+  public void teardown() {
+    scanExecutor.shutdownNow();
+    scanDecodeExecutor.shutdownNow();
   }
 
   @Override
@@ -207,7 +222,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         List<RecordBatch> incomingStreams = Lists.newArrayList();
         if (inputStreamsJSON != null) {
           for (List<String> batchesJson : inputStreamsJSON) {
-            incomingStreams.add(new ScanBatch(null, fragContext,
+            incomingStreams.add(new ScanBatch(popConfig, fragContext,
                 getReaderListForJsonBatches(batchesJson, fragContext)));
           }
         }
@@ -221,8 +236,6 @@ public class PhysicalOpUnitTestBase extends ExecTest {
       } catch (ExecutionSetupException e) {
         throw new RuntimeException(e);
       } catch (UnsupportedEncodingException e) {
-        throw new RuntimeException(e);
-      } catch (SchemaChangeException e) {
         throw new RuntimeException(e);
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -285,69 +298,146 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
   }
 
-  protected void mockFragmentContext() throws Exception{
-    final CodeCompiler compiler = new CodeCompiler(drillConf, optionManager);
-//    final BufferAllocator allocator = this.allocator.newChildAllocator("allocator_for_operator_test", initReservation, maxAllocation);
-    new NonStrictExpectations() {
-      {
-//        optManager.getOption(withAny(new TypeValidators.BooleanValidator("", false))); result = false;
-//        // TODO(DRILL-4450) - Probably want to just create a default option manager, this is a hack to prevent
-//        // the code compilation from failing when trying to decide of scalar replacement is turned on
-//        // this will cause other code paths to fail because this return value won't be valid for most
-//        // string options
-//        optManager.getOption(withAny(new TypeValidators.StringValidator("", "try"))); result = "try";
-//        optManager.getOption(withAny(new TypeValidators.PositiveLongValidator("", 1l, 1l))); result = 10;
-        drillbitContext.getCompiler(); result = new CodeCompiler(drillConf, optionManager);
-        fragContext.getOptions(); result = optionManager;
-        fragContext.getOptions(); result = optionManager;
-        fragContext.getManagedBuffer(); result = bufManager.getManagedBuffer();
-        fragContext.shouldContinue(); result = true;
-        fragContext.getExecutionControls(); result = executionControls;
-        fragContext.getFunctionRegistry(); result = funcReg;
-        fragContext.getConfig(); result = drillConf;
-        fragContext.getHandle(); result = ExecProtos.FragmentHandle.getDefaultInstance();
-        fragContext.getFunctionRegistry(); result = funcReg;
-        fragContext.getDrillbitContext(); result = drillbitContext;
-        try {
-          CodeGenerator<?> cg = CodeGenerator.get(templateClassDefinition);
-          cg.plainJavaCapable(true);
-          // cg.saveCodeForDebugging(true);
-          fragContext.getImplementationClass(withAny(cg));
-          result = new Delegate<Object>()
-          {
-            @SuppressWarnings("unused")
-            Object getImplementationClass(CodeGenerator<Object> gen) throws IOException, ClassTransformationException {
-              return compiler.createInstance(gen);
-            }
-          };
-          fragContext.getImplementationClass(withAny(CodeGenerator.get(templateClassDefinition).getRoot()));
-          result = new Delegate<Object>()
-          {
-            @SuppressWarnings("unused")
-            Object getImplementationClass(ClassGenerator<Object> gen) throws IOException, ClassTransformationException {
-              return compiler.createInstance(gen.getCodeGenerator());
-            }
-          };
-        } catch (ClassTransformationException e) {
-          throw new RuntimeException(e);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
+  /**
+   * <h2>Note</h2>
+   * <p>
+   *   The {@link MockExecutorFragmentContext} should only be used in {@link PhysicalOpUnitTestBase} because {@link PhysicalOpUnitTestBase}
+   *   needs a dummy {@link ExecutorFragmentContext} to be passed to batch creators. If you are unit testing operators and need a mock fragment context
+   *   please use {@link OperatorFixture.MockFragmentContext}.
+   * </p>
+   */
+  protected static class MockExecutorFragmentContext extends OperatorFixture.MockFragmentContext implements ExecutorFragmentContext {
+
+    public MockExecutorFragmentContext(final FragmentContext fragmentContext) {
+      super(fragmentContext.getConfig(), fragmentContext.getOptions(), fragmentContext.getAllocator(),
+        fragmentContext.getScanExecutor(), fragmentContext.getScanDecodeExecutor());
+    }
+
+    @Override
+    public PhysicalPlanReader getPlanReader() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ClusterCoordinator getClusterCoordinator() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CoordinationProtos.DrillbitEndpoint getForemanEndpoint() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CoordinationProtos.DrillbitEndpoint getEndpoint() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Collection<CoordinationProtos.DrillbitEndpoint> getBits() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public OperatorCreatorRegistry getOperatorCreatorRegistry() {
+      return null;
+    }
+
+    @Override
+    public void setBuffers(IncomingBuffers buffers) {
+    }
+
+    @Override
+    public QueryProfileStoreContext getProfileStoreContext() {
+      return null;
+    }
+
+    @Override
+    public WorkEventBus getWorkEventbus() {
+      return null;
+    }
+
+    @Override
+    public Set<Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig>> getUserConnections() {
+      return null;
+    }
+
+    @Override
+    public void waitForSendComplete() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AccountingDataTunnel getDataTunnel(CoordinationProtos.DrillbitEndpoint endpoint) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AccountingUserConnection getUserDataTunnel() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Controller getController() {
+      return null;
+    }
+
+    @Override
+    public IncomingBuffers getBuffers() {
+      return null;
+    }
+
+    @Override
+    public FragmentStats getStats() {
+      return null;
+    }
+
+    @Override
+    public void setExecutorState(ExecutorState executorState) {
+    }
+
+    @Override
+    public boolean isUserAuthenticationEnabled() {
+      return false;
+    }
   }
 
-  protected void mockOpContext(final PhysicalOperator popConfig, long initReservation, long maxAllocation) throws Exception{
-    final BufferAllocator allocator = this.allocator.newChildAllocator("allocator_for_operator_test", initReservation, maxAllocation);
-    new NonStrictExpectations() {
-      {
-        opContext.getStats();result = opStats;
-        opContext.getAllocator(); result = allocator;
-        opContext.getFragmentContext(); result = fragContext;
-        opContext.getOperatorDefn(); result = popConfig;
-        fragContext.newOperatorContext(withAny(popConf)); result = opContext;
-      }
-    };
+  /**
+   * <h2>Note</h2>
+   * <p>
+   *   The {@link MockPhysicalOperator} should only be used in {@link PhysicalOpUnitTestBase} because {@link PhysicalOpUnitTestBase}
+   *   needs a dummy {@link MockPhysicalOperator} to be passed to Scanners.
+   * </p>
+   */
+  protected static class MockPhysicalOperator extends AbstractBase
+  {
+    @Override
+    public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+      return null;
+    }
+
+    @Override
+    public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+      return null;
+    }
+
+    @Override
+    public int getOperatorType() {
+      return 0;
+    }
+
+    @Override
+    public Iterator<PhysicalOperator> iterator() {
+      return null;
+    }
+  }
+
+  protected void mockFragmentContext() throws Exception {
+    fragContext = new MockExecutorFragmentContext(operatorFixture.getFragmentContext());
+  }
+
+  protected void mockOpContext(final PhysicalOperator popConfig, long initReservation, long maxAllocation) throws Exception {
+    opContext = (OperatorFixture.MockOperatorContext)operatorFixture.operatorContext(popConfig);
   }
 
   protected OperatorCreatorRegistry getOpCreatorReg() {
@@ -366,7 +456,6 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
     return readerList;
   }
-
 
   /**
    * Create JSONRecordReader from input strings.

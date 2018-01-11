@@ -25,7 +25,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -68,7 +67,6 @@ public class MongoRecordReader extends AbstractRecordReader {
   private final Document fields;
 
   private final FragmentContext fragmentContext;
-  private OperatorContext operatorContext;
 
   private final MongoStoragePlugin plugin;
 
@@ -146,13 +144,12 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
     MongoClient client = plugin.getClient(addresses);
     MongoDatabase db = client.getDatabase(subScanSpec.getDbName());
-    this.unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    this.unionEnabled = fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
     collection = db.getCollection(subScanSpec.getCollectionName(), BsonDocument.class);
   }
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-    this.operatorContext = context;
     this.writer = new VectorContainerWriter(output, unionEnabled);
     // Default is BsonReader and all text mode will not be honored in
     // BsonRecordReader

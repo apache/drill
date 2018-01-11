@@ -101,8 +101,7 @@ public class TestSpnegoAuthentication {
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
         .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())),
-        false);
+            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
 
     final ScanResult scanResult = ClassPathScanner.fromPrescan(newConfig);
     final AuthenticatorProviderImpl authenticatorProvider = Mockito.mock(AuthenticatorProviderImpl.class);
@@ -133,8 +132,7 @@ public class TestSpnegoAuthentication {
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
         .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())),
-        false);
+            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
 
     final ScanResult scanResult = ClassPathScanner.fromPrescan(newConfig);
     final AuthenticatorProviderImpl authenticatorProvider = Mockito.mock(AuthenticatorProviderImpl.class);
@@ -166,8 +164,7 @@ public class TestSpnegoAuthentication {
           .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
               ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
           .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-              ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())),
-          false);
+              ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
 
       final ScanResult scanResult = ClassPathScanner.fromPrescan(newConfig);
       final AuthenticatorProviderImpl authenticatorProvider = Mockito.mock(AuthenticatorProviderImpl.class);
@@ -201,8 +198,7 @@ public class TestSpnegoAuthentication {
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
         .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())),
-        false);
+            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
 
     final ScanResult scanResult = ClassPathScanner.fromPrescan(newConfig);
     final AuthenticatorProviderImpl authenticatorProvider = Mockito.mock(AuthenticatorProviderImpl.class);
@@ -230,8 +226,7 @@ public class TestSpnegoAuthentication {
 
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create()
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true)),
-        false);
+            ConfigValueFactory.fromAnyRef(true)));
 
     final ScanResult scanResult = ClassPathScanner.fromPrescan(newConfig);
     final AuthenticatorProviderImpl authenticatorProvider = Mockito.mock(AuthenticatorProviderImpl.class);
@@ -294,8 +289,7 @@ public class TestSpnegoAuthentication {
         .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
         .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())),
-        false);
+            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
 
 
     final SystemOptionManager optionManager = Mockito.mock(SystemOptionManager.class);

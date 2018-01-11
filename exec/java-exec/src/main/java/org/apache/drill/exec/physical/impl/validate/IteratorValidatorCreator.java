@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.IteratorValidator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
@@ -32,8 +32,8 @@ public class IteratorValidatorCreator implements BatchCreator<IteratorValidator>
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorCreator.class);
 
   @Override
-  public IteratorValidatorBatchIterator getBatch(FragmentContext context, IteratorValidator config,
-      List<RecordBatch> children)
+  public IteratorValidatorBatchIterator getBatch(ExecutorFragmentContext context, IteratorValidator config,
+                                                 List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     RecordBatch child = children.iterator().next();

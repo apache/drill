@@ -103,7 +103,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   public final IterOutcome next(final RecordBatch b) {
-    if(!context.shouldContinue()) {
+    if(!context.getExecutorState().shouldContinue()) {
       return IterOutcome.STOP;
     }
     return next(0, b);
@@ -113,7 +113,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     IterOutcome next = null;
     stats.stopProcessing();
     try{
-      if (!context.shouldContinue()) {
+      if (!context.getExecutorState().shouldContinue()) {
         return IterOutcome.STOP;
       }
       next = b.next();
@@ -147,7 +147,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
               return IterOutcome.NONE;
             case OUT_OF_MEMORY:
               // because we don't support schema changes, it is safe to fail the query right away
-              context.fail(UserException.memoryError()
+              context.getExecutorState().fail(UserException.memoryError()
                 .build(logger));
               // FALL-THROUGH
             case STOP:

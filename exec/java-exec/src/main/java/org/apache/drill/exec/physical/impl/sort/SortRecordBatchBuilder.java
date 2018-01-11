@@ -27,7 +27,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.AllocationReservation;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -134,10 +133,6 @@ public class SortRecordBatchBuilder implements AutoCloseable {
 
   public boolean isEmpty() {
     return batches.isEmpty();
-  }
-
-  public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException {
-    build(outputContainer);
   }
 
   @SuppressWarnings("resource")

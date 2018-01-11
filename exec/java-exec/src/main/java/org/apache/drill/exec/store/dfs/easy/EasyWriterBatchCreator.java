@@ -20,16 +20,14 @@ package org.apache.drill.exec.store.dfs.easy;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class EasyWriterBatchCreator implements BatchCreator<EasyWriter>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyWriterBatchCreator.class);
-
   @Override
-  public CloseableRecordBatch getBatch(FragmentContext context, EasyWriter config, List<RecordBatch> children)
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, EasyWriter config, List<RecordBatch> children)
       throws ExecutionSetupException {
     assert children != null && children.size() == 1;
     return config.getFormatPlugin().getWriterBatch(context, children.iterator().next(), config);

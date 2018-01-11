@@ -77,8 +77,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true)),
-      false);
+            ConfigValueFactory.fromAnyRef(true)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
@@ -221,8 +220,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE,
-        ConfigValueFactory.fromAnyRef(100))
-      ,false);
+        ConfigValueFactory.fromAnyRef(100)));
 
     updateTestCluster(1, newConfig, connectionProps);
 
@@ -259,8 +257,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
         ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
       .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      ,false);
+        ConfigValueFactory.fromAnyRef(true)));
 
     updateTestCluster(1, newConfig, connectionProps);
 
@@ -315,8 +312,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE,
-        ConfigValueFactory.fromAnyRef(10000))
-      ,false);
+        ConfigValueFactory.fromAnyRef(10000)));
 
     updateTestCluster(1, newConfig, connectionProps);
 
@@ -369,8 +365,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      ,false);
+        ConfigValueFactory.fromAnyRef(true)));
 
     updateTestCluster(1, newConfig, connectionProps);
 
@@ -426,8 +421,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
         .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        ,false);
+            ConfigValueFactory.fromAnyRef(true)));
 
     updateTestCluster(1, newConfig, connectionProps);
 
@@ -469,8 +463,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
           ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-          ConfigValueFactory.fromAnyRef(true)),
-        false);
+          ConfigValueFactory.fromAnyRef(true)));
 
       updateTestCluster(1, newConfig, connectionProps);
       fail();
@@ -501,8 +494,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
           ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-          ConfigValueFactory.fromAnyRef(true)),
-        false);
+          ConfigValueFactory.fromAnyRef(true)));
       updateTestCluster(1, newConfig, connectionProps);
 
       fail();
@@ -538,8 +530,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
           ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-          ConfigValueFactory.fromAnyRef(true)),
-        false);
+          ConfigValueFactory.fromAnyRef(true)));
       updateTestCluster(1, newConfig, connectionProps);
 
       fail();
@@ -573,8 +564,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
         ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))),
-      false);
+        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));
 
     updateTestCluster(1, newConfig, connectionProps);
   }
@@ -602,8 +592,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
         .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
           ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-        , false);
+          ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));
 
       updateTestCluster(1, newConfig, connectionProps);
 
@@ -638,8 +627,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
           ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-              ConfigValueFactory.fromAnyRef(true))
-        , false);
+              ConfigValueFactory.fromAnyRef(true)));
 
       updateTestCluster(1, newConfig, connectionProps);
     } catch (Exception ex) {

@@ -196,7 +196,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         }
       }
       VectorContainer sortedSamples = new VectorContainer();
-      builder.build(context, sortedSamples);
+      builder.build(sortedSamples);
 
       // Sort the records according the orderings given in the configuration
 
@@ -262,7 +262,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         Thread.sleep(timeout);
         return true;
       } catch (final InterruptedException e) {
-        if (!context.shouldContinue()) {
+        if (!context.getExecutorState().shouldContinue()) {
           return false;
         }
       }
@@ -329,7 +329,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     } catch (final ClassTransformationException | IOException | SchemaChangeException ex) {
       kill(false);
-      context.fail(ex);
+      context.getExecutorState().fail(ex);
       return false;
       // TODO InterruptedException
     }
@@ -349,7 +349,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       for (CachedVectorContainer w : mmap.get(mapKey)) {
         containerBuilder.add(w.get());
       }
-      containerBuilder.build(context, allSamplesContainer);
+      containerBuilder.build(allSamplesContainer);
 
       List<Ordering> orderDefs = Lists.newArrayList();
       int i = 0;
@@ -390,7 +390,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       candidatePartitionTable.setRecordCount(copier.getOutputRecords());
       @SuppressWarnings("resource")
       WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
-      wrap = new CachedVectorContainer(batch, context.getDrillbitContext().getAllocator());
+      wrap = new CachedVectorContainer(batch, context.getAllocator());
       tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
     } finally {
       candidatePartitionTable.clear();
@@ -486,7 +486,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       } catch (SchemaChangeException ex) {
         kill(false);
         logger.error("Failure during query", ex);
-        context.fail(ex);
+        context.getExecutorState().fail(ex);
         return IterOutcome.STOP;
       }
       doWork(vc);
@@ -519,7 +519,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       } catch (SchemaChangeException ex) {
         kill(false);
         logger.error("Failure during query", ex);
-        context.fail(ex);
+        context.getExecutorState().fail(ex);
         return IterOutcome.STOP;
       }
       doWork(vc);
@@ -550,7 +550,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       } catch (SchemaChangeException ex) {
         kill(false);
         logger.error("Failure during query", ex);
-        context.fail(ex);
+        context.getExecutorState().fail(ex);
         return IterOutcome.STOP;
       }
       // fall through.

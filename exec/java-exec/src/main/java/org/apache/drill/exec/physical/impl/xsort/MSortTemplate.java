@@ -130,7 +130,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     while (runStarts.size() > 1) {
 
       // check if we're cancelled/failed frequently
-      if (!context.shouldContinue()) {
+      if (!context.getExecutorState().shouldContinue()) {
         return;
       }
 

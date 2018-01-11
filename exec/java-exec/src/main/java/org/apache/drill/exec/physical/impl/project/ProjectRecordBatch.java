@@ -804,7 +804,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     } catch (SchemaChangeException e) {
       kill(false);
       logger.error("Failure during query", e);
-      context.fail(e);
+      context.getExecutorState().fail(e);
       return IterOutcome.STOP;
     }
 

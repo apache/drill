@@ -38,8 +38,7 @@ public class ParquetToDrillTypeConverter {
   }
 
   private static TypeProtos.MinorType getMinorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
-                                                   ConvertedType convertedType, int precision, int scale,
-      OptionManager options) {
+                                                   ConvertedType convertedType, int precision, OptionManager options) {
 
 
     switch (primitiveTypeName) {
@@ -139,7 +138,7 @@ public class ParquetToDrillTypeConverter {
   public static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
       TypeProtos.DataMode mode, ConvertedType convertedType, int precision, int scale,
       OptionManager options) {
-    MinorType minorType = getMinorType(primitiveTypeName, length, convertedType, precision, scale, options);
+    MinorType minorType = getMinorType(primitiveTypeName, length, convertedType, precision, options);
     TypeProtos.MajorType.Builder typeBuilder = TypeProtos.MajorType.newBuilder().setMinorType(minorType).setMode(mode);
 
     if (CoreDecimalUtility.isDecimalType(minorType)) {

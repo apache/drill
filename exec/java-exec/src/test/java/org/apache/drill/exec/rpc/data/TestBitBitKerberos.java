@@ -17,15 +17,13 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import io.netty.buffer.ByteBuf;
-import mockit.Injectable;
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.NonStrictExpectations;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -60,6 +58,7 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
+import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
@@ -68,6 +67,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -78,12 +78,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestBitBitKerberos extends BaseTestQuery {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitBitKerberos.class);
-
   private static KerberosHelper krbHelper;
   private static DrillConfig newConfig;
 
@@ -111,8 +111,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
         .withValue(BootStrapContext.SERVICE_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
         .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
-            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())),
-        false);
+            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
     // Ignore the compile time warning caused by the code below.
 
@@ -134,40 +133,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
   }
 
   private static void setupFragmentContextAndManager() {
-    final FragmentContext fcontext = new MockUp<FragmentContext>(){
-      @SuppressWarnings("unused")
-      BufferAllocator getAllocator(){
-        return c1.getAllocator();
-      }
-    }.getMockInstance();
-
-    manager = new MockUp<FragmentManager>(){
-      int v = 0;
-
-      @Mock
-      boolean handle(IncomingDataBatch batch) throws FragmentSetupException, IOException {
-        try {
-          v++;
-          if (v % 10 == 0) {
-            System.out.println("sleeping.");
-            Thread.sleep(3000);
-          }
-        } catch (InterruptedException e) {
-
-        }
-        RawFragmentBatch rfb = batch.newRawFragmentBatch(c1.getAllocator());
-        rfb.sendOk();
-        rfb.release();
-
-        return true;
-      }
-
-      @SuppressWarnings("unused")
-      public FragmentContext getFragmentContext(){
-        return fcontext;
-      }
-
-    }.getMockInstance();
+    final FragmentContextImpl fcontext = mock(FragmentContextImpl.class);
+    when(fcontext.getAllocator()).thenReturn(c1.getAllocator());
+    manager = new MockFragmentManager(fcontext);
   }
 
   private static WritableBatch getRandomBatch(BufferAllocator allocator, int records) {
@@ -222,11 +190,11 @@ public class TestBitBitKerberos extends BaseTestQuery {
   }
 
   @Test
-  public void success(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus) throws Exception {
+  public void success() throws Exception {
+    final WorkerBee bee = mock(WorkerBee.class);
+    final WorkEventBus workBus = mock(WorkEventBus.class);
 
-    new NonStrictExpectations() {{
-      workBus.getFragmentManager( (FragmentHandle) any); result = manager;
-    }};
+    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
 
     DataConnectionConfig config = new DataConnectionConfig(c1.getAllocator(), c1,
         new DataServerRequestHandler(workBus, bee));
@@ -242,7 +210,6 @@ public class TestBitBitKerberos extends BaseTestQuery {
       tunnel.sendRecordBatch(new TimingOutcome(max), new FragmentWritableBatch(false, QueryId.getDefaultInstance(), 1,
           1, 1, 1, getRandomBatch(c1.getAllocator(), 5000)));
       System.out.println(System.currentTimeMillis() - t1);
-      // System.out.println("sent.");
     }
     System.out.println(String.format("Max time: %d", max.get()));
     assertTrue(max.get() > 2700);
@@ -250,7 +217,11 @@ public class TestBitBitKerberos extends BaseTestQuery {
   }
 
   @Test
-  public void successEncryption(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus) throws Exception {
+  public void successEncryption() throws Exception {
+    final WorkerBee bee = mock(WorkerBee.class);
+    final WorkEventBus workBus = mock(WorkEventBus.class);
+
+    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
 
     newConfig = new DrillConfig(
       config.withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
@@ -266,14 +237,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
         .withValue(BootStrapContext.SERVICE_PRINCIPAL,
           ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
         .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())),
-      false);
+          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
     updateTestCluster(1, newConfig);
-
-    new NonStrictExpectations() {{
-      workBus.getFragmentManager( (FragmentHandle) any); result = manager;
-    }};
 
     DataConnectionConfig config = new DataConnectionConfig(c1.getAllocator(), c1,
       new DataServerRequestHandler(workBus, bee));
@@ -296,8 +262,14 @@ public class TestBitBitKerberos extends BaseTestQuery {
   }
 
   @Test
-  public void successEncryptionChunkMode(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus)
+  public void successEncryptionChunkMode()
     throws Exception {
+
+    final WorkerBee bee = mock(WorkerBee.class);
+    final WorkEventBus workBus = mock(WorkEventBus.class);
+
+    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
+
     newConfig = new DrillConfig(
       config.withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
         ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
@@ -314,14 +286,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
         .withValue(BootStrapContext.SERVICE_PRINCIPAL,
           ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
         .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())),
-      false);
+          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
     updateTestCluster(1, newConfig);
-
-    new NonStrictExpectations() {{
-      workBus.getFragmentManager( (FragmentHandle) any); result = manager;
-    }};
 
     DataConnectionConfig config = new DataConnectionConfig(c1.getAllocator(), c1,
       new DataServerRequestHandler(workBus, bee));
@@ -360,8 +327,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
           .withValue(BootStrapContext.SERVICE_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
           .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
-            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())),
-        false);
+            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
       updateTestCluster(1, newConfig);
       fail();
@@ -403,8 +369,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
         .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
             ConfigValueFactory.fromAnyRef("kerberos"))
         .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(false))
-        ,false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     updateTestCluster(1, newConfig, connectionProps);
 
@@ -447,8 +412,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
           .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
               ConfigValueFactory.fromAnyRef("kerberos"))
           .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-              ConfigValueFactory.fromAnyRef(false))
-          ,false);
+              ConfigValueFactory.fromAnyRef(false)));
 
       updateTestCluster(2, newConfig, connectionProps);
 
@@ -465,5 +429,73 @@ public class TestBitBitKerberos extends BaseTestQuery {
   @AfterClass
   public static void cleanTest() throws Exception {
     krbHelper.stopKdc();
+  }
+
+  public static class MockFragmentManager implements FragmentManager
+  {
+    private int v = 0;
+    private final FragmentContextImpl fragmentContext;
+
+    public MockFragmentManager(final FragmentContextImpl fragmentContext)
+    {
+      this.fragmentContext = Preconditions.checkNotNull(fragmentContext);
+    }
+
+    @Override
+    public boolean handle(IncomingDataBatch batch) throws FragmentSetupException, IOException {
+      try {
+        v++;
+        if (v % 10 == 0) {
+          System.out.println("sleeping.");
+          Thread.sleep(3000);
+        }
+      } catch (InterruptedException e) {
+
+      }
+      RawFragmentBatch rfb = batch.newRawFragmentBatch(c1.getAllocator());
+      rfb.sendOk();
+      rfb.release();
+
+      return true;
+    }
+
+    @Override
+    public FragmentExecutor getRunnable() {
+      return null;
+    }
+
+    @Override
+    public void cancel() {
+
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return false;
+    }
+
+    @Override
+    public void unpause() {
+
+    }
+
+    @Override
+    public boolean isWaiting() {
+      return false;
+    }
+
+    @Override
+    public FragmentHandle getHandle() {
+      return null;
+    }
+
+    @Override
+    public FragmentContext getFragmentContext() {
+      return fragmentContext;
+    }
+
+    @Override
+    public void receivingFragmentFinished(FragmentHandle handle) {
+    }
   }
 }

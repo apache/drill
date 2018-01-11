@@ -127,7 +127,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   @SuppressWarnings("resource")
   CloseableRecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
-    final ColumnExplorer columnExplorer = new ColumnExplorer(context, scan.getColumns());
+    final ColumnExplorer columnExplorer = new ColumnExplorer(context.getOptions(), scan.getColumns());
 
     if (!columnExplorer.isStarQuery()) {
       scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
@@ -162,7 +162,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
       }
 
-    return new ScanBatch(scan, context, oContext, readers, implicitColumns);
+    return new ScanBatch(context, oContext, readers, implicitColumns);
   }
 
   public abstract RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException;

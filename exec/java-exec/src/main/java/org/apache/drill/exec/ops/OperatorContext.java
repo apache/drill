@@ -60,7 +60,7 @@ public interface OperatorContext {
 
   BufferAllocator getAllocator();
 
-  FragmentContextInterface getFragmentContext();
+  FragmentContext getFragmentContext();
 
   DrillBuf replace(DrillBuf old, int newSize);
 

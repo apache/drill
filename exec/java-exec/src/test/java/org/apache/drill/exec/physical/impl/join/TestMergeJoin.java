@@ -28,7 +28,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
@@ -52,25 +52,23 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-import mockit.Injectable;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 @Category({SlowTest.class, OperatorTest.class})
 public class TestMergeJoin extends PopUnitTestBase {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
   private final DrillConfig c = DrillConfig.create();
 
   @Test
   @Ignore // this doesn't have a sort.  it also causes an infinite loop.  these may or may not be related.
-  public void simpleEqualityJoin(@Injectable final DrillbitContext bitContext,
-                                 @Injectable UserClientConnection connection) throws Throwable {
-
-    mockDrillbitContext(bitContext);
+  public void simpleEqualityJoin() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join.json"), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
@@ -102,17 +100,17 @@ public class TestMergeJoin extends PopUnitTestBase {
     }
     assertEquals(100, totalRecordCount);
     System.out.println("Total Record Count: " + totalRecordCount);
-    if (context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if (context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
   @Ignore
-  public void orderedEqualityLeftJoin(@Injectable final DrillbitContext bitContext,
-                                      @Injectable UserClientConnection connection) throws Throwable {
-    mockDrillbitContext(bitContext);
+  public void orderedEqualityLeftJoin() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
         new StoragePluginRegistryImpl(bitContext));
@@ -122,7 +120,7 @@ public class TestMergeJoin extends PopUnitTestBase {
             .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
             .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString()));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
@@ -153,17 +151,17 @@ public class TestMergeJoin extends PopUnitTestBase {
     System.out.println("Total Record Count: " + totalRecordCount);
     assertEquals(25, totalRecordCount);
 
-    if (context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if (context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
   @Ignore
-  public void orderedEqualityInnerJoin(@Injectable final DrillbitContext bitContext,
-                                       @Injectable UserClientConnection connection) throws Throwable {
-    mockDrillbitContext(bitContext);
+  public void orderedEqualityInnerJoin() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
         new StoragePluginRegistryImpl(bitContext));
@@ -173,7 +171,7 @@ public class TestMergeJoin extends PopUnitTestBase {
             .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
             .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString()));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
@@ -204,17 +202,17 @@ public class TestMergeJoin extends PopUnitTestBase {
     System.out.println("Total Record Count: " + totalRecordCount);
     assertEquals(23, totalRecordCount);
 
-    if (context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if (context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
   @Ignore
-  public void orderedEqualityMultiBatchJoin(@Injectable final DrillbitContext bitContext,
-                                            @Injectable UserClientConnection connection) throws Throwable {
-    mockDrillbitContext(bitContext);
+  public void orderedEqualityMultiBatchJoin() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
         new StoragePluginRegistryImpl(bitContext));
@@ -224,7 +222,7 @@ public class TestMergeJoin extends PopUnitTestBase {
             .replace("#{LEFT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_multi_batch.left.json").toURI().toString())
             .replace("#{RIGHT_FILE}", DrillFileUtils.getResourceAsFile("/join/merge_multi_batch.right.json").toURI().toString()));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     int totalRecordCount = 0;
@@ -254,30 +252,31 @@ public class TestMergeJoin extends PopUnitTestBase {
     System.out.println("Total Record Count: " + totalRecordCount);
     assertEquals(25, totalRecordCount);
 
-    if (context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if (context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test
-  public void testJoinBatchSize(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
-    mockDrillbitContext(bitContext);
+  public void testJoinBatchSize() throws Throwable {
+    final DrillbitContext bitContext = mockDrillbitContext();
+    final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/join/join_batchsize.json"), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     exec.next(); // skip schema batch
     while (exec.next()) {
       assertEquals(100, exec.getRecordCount());
     }
 
-    if (context.getFailureCause() != null) {
-      throw context.getFailureCause();
+    if (context.getExecutorState().getFailureCause() != null) {
+      throw context.getExecutorState().getFailureCause();
     }
-    assertTrue(!context.isFailed());
+    assertTrue(!context.getExecutorState().isFailed());
   }
 
   @Test

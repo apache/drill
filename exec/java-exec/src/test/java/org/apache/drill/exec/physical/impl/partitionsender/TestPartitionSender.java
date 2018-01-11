@@ -33,7 +33,7 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -218,9 +218,9 @@ public class TestPartitionSender extends PlanTestBase {
         continue;
       }
       MockPartitionSenderRootExec partionSenderRootExec = null;
-      FragmentContext context = null;
+      FragmentContextImpl context = null;
       try {
-        context = new FragmentContext(drillbitContext, planFragment, null, registry);
+        context = new FragmentContextImpl(drillbitContext, planFragment, null, registry);
         final int majorFragmentId = planFragment.getHandle().getMajorFragmentId();
         final HashPartitionSender partSender = new HashPartitionSender(majorFragmentId, hashToRandomExchange, hashToRandomExchange.getExpression(), mfEndPoints);
         partionSenderRootExec = new MockPartitionSenderRootExec(context, incoming, partSender);
@@ -347,7 +347,7 @@ public class TestPartitionSender extends PlanTestBase {
    */
   private static class MockPartitionSenderRootExec extends PartitionSenderRootExec {
 
-    public MockPartitionSenderRootExec(FragmentContext context,
+    public MockPartitionSenderRootExec(FragmentContextImpl context,
         RecordBatch incoming, HashPartitionSender operator)
         throws OutOfMemoryException {
       super(context, incoming, operator);
