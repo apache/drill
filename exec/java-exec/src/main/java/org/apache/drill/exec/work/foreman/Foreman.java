@@ -802,11 +802,16 @@ public class Foreman implements Runnable {
       fragmentsRunner.getBee().retireForeman(Foreman.this);
 
       try {
+        queryContext.close();
+      } catch (Exception e) {
+        logger.error("Unable to close query context for query {}", QueryIdHelper.getQueryId(queryId), e);
+      }
+
+      try {
         queryManager.close();
       } catch (final Exception e) {
         logger.warn("unable to close query manager", e);
       }
-
 
       queryStateProcessor.close();
 

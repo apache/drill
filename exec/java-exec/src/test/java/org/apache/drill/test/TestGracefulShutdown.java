@@ -21,10 +21,13 @@ import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.work.WorkManager;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.TestRule;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -33,24 +36,25 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Properties;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
 import java.nio.file.Path;
 import java.io.BufferedWriter;
 
-
+import static org.junit.Assert.fail;
 
 @Category({SlowTest.class})
-public class TestGracefulShutdown extends BaseTestQuery{
+public class TestGracefulShutdown extends BaseTestQuery {
+
+  @Rule
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule(180_000);
+
+  public static final int WAIT_TIMEOUT_MS = WorkManager.EXIT_TIMEOUT_MS + 30_000;
 
   @BeforeClass
   public static void setUpTestData() throws Exception {
-
     for( int i = 0; i < 300; i++) {
       setupFile(i);
     }
   }
-
 
   public static final Properties WEBSERVER_CONFIGURATION = new Properties() {
     {
@@ -83,8 +87,6 @@ public class TestGracefulShutdown extends BaseTestQuery{
     return builder;
   }
 
-
-
   /*
   Start multiple drillbits and then shutdown a drillbit. Query the online
   endpoints and check if the drillbit still exists.
@@ -96,12 +98,12 @@ public class TestGracefulShutdown extends BaseTestQuery{
     ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withBits(drillbits).withLocalZk();
     enableDrillPortHunting(builder);
 
-    try ( ClusterFixture cluster = builder.build();
-          ClientFixture client = cluster.clientFixture()) {
+    try ( ClusterFixture cluster = builder.build()) {
 
       Drillbit drillbit = cluster.drillbit("db2");
       DrillbitEndpoint drillbitEndpoint =  drillbit.getRegistrationHandle().getEndPoint();
       int grace_period = drillbit.getContext().getConfig().getInt(ExecConstants.GRACE_PERIOD);
+
       new Thread(new Runnable() {
         public void run() {
           try {
@@ -111,12 +113,28 @@ public class TestGracefulShutdown extends BaseTestQuery{
           }
         }
       }).start();
-      //wait for graceperiod
+
       Thread.sleep(grace_period);
-      Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit().getContext()
-              .getClusterCoordinator()
-              .getOnlineEndPoints();
-      Assert.assertFalse(drillbitEndpoints.contains(drillbitEndpoint));
+
+      long currentTime = System.currentTimeMillis();
+      long stopTime = currentTime + WAIT_TIMEOUT_MS;
+
+      while (currentTime < stopTime) {
+        Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
+          .getContext()
+          .getClusterCoordinator()
+          .getOnlineEndPoints();
+
+        if (!drillbitEndpoints.contains(drillbitEndpoint)) {
+          // Success
+          return;
+        }
+
+        Thread.sleep(100L);
+        currentTime = System.currentTimeMillis();
+      }
+
+      Assert.fail("Timed out");
     }
   }
   /*
@@ -130,8 +148,7 @@ public class TestGracefulShutdown extends BaseTestQuery{
     ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withBits(drillbits).withLocalZk();
     enableDrillPortHunting(builder);
 
-    try ( ClusterFixture cluster = builder.build();
-          ClientFixture client = cluster.clientFixture()) {
+    try (ClusterFixture cluster = builder.build()) {
       Drillbit drillbit = cluster.drillbit("db2");
       int grace_period = drillbit.getContext().getConfig().getInt(ExecConstants.GRACE_PERIOD);
       DrillbitEndpoint drillbitEndpoint =  drillbit.getRegistrationHandle().getEndPoint();
@@ -144,15 +161,31 @@ public class TestGracefulShutdown extends BaseTestQuery{
           }
         }
       }).start();
+
       Thread.sleep(grace_period);
-      Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit().getContext()
-              .getClusterCoordinator()
-              .getAvailableEndpoints();
-      for (DrillbitEndpoint dbEndpoint : drillbitEndpoints) {
-        if(drillbitEndpoint.getAddress().equals(dbEndpoint.getAddress()) && drillbitEndpoint.getUserPort() == dbEndpoint.getUserPort()) {
-          assertNotEquals(dbEndpoint.getState(),DrillbitEndpoint.State.ONLINE);
+
+      long currentTime = System.currentTimeMillis();
+      long stopTime = currentTime + WAIT_TIMEOUT_MS;
+
+      while (currentTime < stopTime) {
+        Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
+          .getContext()
+          .getClusterCoordinator()
+          .getAvailableEndpoints();
+        for (DrillbitEndpoint dbEndpoint : drillbitEndpoints) {
+          if (drillbitEndpoint.getAddress().equals(dbEndpoint.getAddress()) && drillbitEndpoint.getUserPort() == dbEndpoint.getUserPort()) {
+            if (!dbEndpoint.getState().equals(DrillbitEndpoint.State.ONLINE)) {
+              // Success
+              return;
+            }
+          }
         }
+
+        Thread.sleep(100L);
+        currentTime = System.currentTimeMillis();
       }
+
+      Assert.fail("Timed out");
     }
   }
 
@@ -185,12 +218,23 @@ public class TestGracefulShutdown extends BaseTestQuery{
         port++;
       }
       Thread.sleep(grace_period);
-      Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit().getContext()
+      Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
+              .getContext()
               .getClusterCoordinator()
               .getOnlineEndPoints();
-      while(!listener.isDone()) {
-        Thread.sleep(10);
+
+      long currentTime = System.currentTimeMillis();
+      long stopTime = currentTime + WAIT_TIMEOUT_MS;
+
+      while (currentTime < stopTime) {
+        if (listener.isDone()) {
+          break;
+        }
+
+        Thread.sleep(100L);
+        currentTime = System.currentTimeMillis();
       }
+
       Assert.assertTrue(listener.isDone());
       Assert.assertEquals(1,drillbitEndpoints.size());
     }
@@ -214,6 +258,7 @@ public class TestGracefulShutdown extends BaseTestQuery{
       int grace_period = drillbit.getContext().getConfig().getInt(ExecConstants.GRACE_PERIOD);
       listener =  client.queryBuilder().sql(sql).futureSummary();
       Thread.sleep(10000);
+
       while( port < 8048) {
         URL url = new URL("http://localhost:"+port+"/shutdown");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -224,15 +269,27 @@ public class TestGracefulShutdown extends BaseTestQuery{
         }
         port++;
       }
+
       Thread.sleep(grace_period);
-      Thread.sleep(5000);
-      Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit().getContext()
-              .getClusterCoordinator().getAvailableEndpoints();
-      while(!listener.isDone()) {
-        Thread.sleep(10);
+
+      Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
+              .getContext()
+              .getClusterCoordinator()
+              .getAvailableEndpoints();
+
+      long currentTime = System.currentTimeMillis();
+      long stopTime = currentTime + WAIT_TIMEOUT_MS;
+
+      while (currentTime < stopTime) {
+        if (listener.isDone() && drillbitEndpoints.size() == 2) {
+          return;
+        }
+
+        Thread.sleep(100L);
+        currentTime = System.currentTimeMillis();
       }
-      Assert.assertTrue(listener.isDone());
-      Assert.assertEquals(2,drillbitEndpoints.size());
+
+      Assert.fail("Timed out");
     }
   }
 
