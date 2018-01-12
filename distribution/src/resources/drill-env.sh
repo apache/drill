@@ -37,6 +37,16 @@
 #
 # or a more specialized form.
 
+# Amount of total memory for the Drillbit process. This value is defined as the limit
+# that the startup script will try to enforce on the Drill JVM. The values can be
+# defined in terms of percentage of the available system memory, or in terms of actual
+# values, similar to how we define the actual JVM memory parameters like Heap Size.
+# There is no default and depends on how much can be allotted on a machine.
+# This enables Drill's memory auto-configuration logic to kick in, and should be unset
+# if the intent is to not use the auto-configuration.
+
+#export DRILLBIT_MAX_PROC_MEM=${DRILLBIT_MAX_PROC_MEM:-"13G"}
+
 # Amount of heap memory for the Drillbit process. Values are those supported by
 # the Java -Xms option. The default is 4G.
 
