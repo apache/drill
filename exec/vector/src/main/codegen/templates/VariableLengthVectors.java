@@ -217,7 +217,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     target.getMutator().setValueCount(length);
 }
 
-  protected void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
+  public void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
     final UInt4Vector.Accessor fromOffsetVectorAccessor = from.offsetVector.getAccessor();
     final int start = fromOffsetVectorAccessor.get(fromIndex);
     final int end = fromOffsetVectorAccessor.get(fromIndex + 1);
