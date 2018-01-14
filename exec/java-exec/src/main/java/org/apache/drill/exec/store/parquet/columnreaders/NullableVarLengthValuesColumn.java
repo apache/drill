@@ -90,33 +90,9 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = pageReader.pageData.getInt((int) pageReader.readyToReadPosInBytes);
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
     // I think this also needs to happen if it is null for the random access
     return ! setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageData,
         (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-=======
-
-    if (variableWidthVector == null) {
-      addDecimalLength(dataTypeLengthInBits); // store decimal length variable length decimal field
-    }
-    else {
-      // I think this also needs to happen if it is null for the random access
-      boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageData,
-               (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-      if ( ! success ) {
-        return true;
-      }
-=======
-    // I think this also needs to happen if it is null for the random access
-    boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageData,
-        (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-    if ( ! success ) {
-      return true;
->>>>>>> reverse earlier DRILL-4184 experimental changes
-    }
-    return false;
->>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
   }
 
   @Override
@@ -142,21 +118,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   protected void readField(long recordsToRead) {
     // TODO - unlike most implementations of this method, the recordsReadInThisIteration field is not set here
     // should verify that this is not breaking anything
-<<<<<<< HEAD
-<<<<<<< HEAD
     currentValNull = variableWidthVector.getAccessor().isNull(valuesReadInCurrentPass);
-=======
-    if (variableWidthVector == null) {
-      currentValNull = getDecimalLength(valuesReadInCurrentPass) == null;
-    }
-    else {
-      currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
-    }
-
->>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
-=======
-    currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
->>>>>>> reverse earlier DRILL-4184 experimental changes
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
     if (! currentValNull) {
       if (usingDictionary) {

@@ -130,6 +130,13 @@ public class MapUtility {
             fieldReader.copyAsValue(mapWriter.decimal38Sparse(MappifyUtility.fieldValue));
           }
           break;
+        case VARDECIMAL:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).varDecimal());
+          } else {
+            fieldReader.copyAsValue(mapWriter.varDecimal(MappifyUtility.fieldValue));
+          }
+          break;
         case DATE:
           if (repeated) {
             fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).date());

@@ -63,6 +63,7 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -239,6 +240,17 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
                 new BigDecimal(BigInteger.valueOf(value), scale),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
                 false);
+            }
+            case VARDECIMAL: {
+              VarDecimalHolder varDecimalOut = (VarDecimalHolder)output;
+              return rexBuilder.makeLiteral(
+                      org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(
+                              varDecimalOut.buffer,
+                              varDecimalOut.start,
+                              varDecimalOut.end - varDecimalOut.start,
+                              varDecimalOut.scale),
+                      TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                      false);
             }
             case DECIMAL28SPARSE: {
               DrillBuf buffer;

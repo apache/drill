@@ -96,10 +96,6 @@ public final class ${className} implements ValueHolder{
         return currentValue;
     }
     </#if></#if>
-<<<<<<< HEAD
-
-    public MajorType getType() {return TYPE;}
-=======
     
     <#if minor.class.startsWith("VarDecimal")>
     public java.math.BigDecimal getBigDecimal() {
@@ -108,7 +104,6 @@ public final class ${className} implements ValueHolder{
         return currentValue;
     }
     </#if>
->>>>>>> additional files related to VarDecimal
 
     @Deprecated
     public int hashCode(){

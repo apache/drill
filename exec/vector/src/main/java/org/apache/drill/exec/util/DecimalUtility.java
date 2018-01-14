@@ -152,50 +152,18 @@ public class DecimalUtility extends CoreDecimalUtility{
     return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, false);
   }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
-=======
-    public static BigDecimal getBigDecimalFromSparse(ByteBuf data, int startIndex, int nDecimalDigits, int scale) {
+    public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
 
         // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
         return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
     }
 
-=======
->>>>>>> reverse earlier DRILL-4184 experimental changes
-    public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
->>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
-
-    // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
-    return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
-  }
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-  public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
-    byte[] value = new byte[length];
-    bytebuf.getBytes(start, value, 0, length);
-    BigInteger unscaledValue = new BigInteger(value);
-    return new BigDecimal(unscaledValue, scale);
-  }
-=======
-    public static BigDecimal getBigDecimalFromDrillBuf(ByteBuf bytebuf, int start, int length, int scale) {
-      byte[] value = new byte[length];
-      bytebuf.getBytes(start, value, 0, length);
-      BigInteger unscaledValue = new BigInteger(value);
-      return new BigDecimal(unscaledValue, scale);
-    }
-
-=======
->>>>>>> reverse earlier DRILL-4184 experimental changes
     public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
       byte[] value = new byte[length];
       bytebuf.getBytes(start, value, 0, length);
       BigInteger unscaledValue = new BigInteger(value);
       return new BigDecimal(unscaledValue, scale);
     }
->>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
 
   public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int start, int length, int scale) {
     byte[] value = new byte[length];
@@ -320,7 +288,7 @@ public class DecimalUtility extends CoreDecimalUtility{
       intermediate.release();
     }
 
-    }
+  }
 
   /**
    * Function converts the BigDecimal and stores it in out internal sparse representation
@@ -387,11 +355,29 @@ public class DecimalUtility extends CoreDecimalUtility{
         scale -= MAX_DIGITS;
     }
 
-    // Set the negative sign
-    if (sign == true) {
-        data.setInt(startIndex, data.getInt(startIndex) | 0x80000000);
+        // Set the negative sign
+        if (sign == true) {
+            data.setInt(startIndex, data.getInt(startIndex) | 0x80000000);
+        }
+
     }
-  }
+
+    /**
+     * Converts from an input BigDecimal into varying width "VarDecimal" representation.
+     * The object that manages the "data" is assumed to already have the proper scale set,
+     * matching that of input.scale().
+     * @param input input decimal number to be stored
+     * @param data destination buffer to store the byte array representation of input
+     * @param startIndex starting index in data to hold the bytes
+     * @return startIndex + length of bytes stored (i.e., the next startIndex in the data buffer)
+     */
+    public static int getVarDecimalFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex) {
+        byte[] bytes = input.unscaledValue().toByteArray();
+        int len = bytes.length;
+        data.setBytes(startIndex, bytes);
+        //System.out.println("getVarDecimal start " + startIndex + " len " + len + " value " + input);
+        return startIndex + len;
+    }
 
   public static long getDecimal18FromBigDecimal(BigDecimal input, int scale, int precision) {
     // Truncate or pad to set the input to the correct scale
@@ -465,7 +451,31 @@ public class DecimalUtility extends CoreDecimalUtility{
     buffer.setInt(start + (index * 4), value);
   }
 
-  public static int compareSparseBytes(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
+    /**
+     * Compares two VarDecimal values, still stored in their respective Drill buffers
+     * @param left left value Drill buffer
+     * @param leftStart start offset of left value
+     * @param leftEnd end offset of left value
+     * @param leftScale scale of left value
+     * @param right right value Drill buffer
+     * @param rightStart start offset of right value
+     * @param rightEnd end offset of right value
+     * @param rightScale scale of right value
+     * @param absCompare comparison of absolute values is done iff this is true
+     * @return 1 if left > right, 0 if left = right, -1 if left < right.  two values that are numerically equal, but with different
+     * scales (e.g., 2.00 and 2), are considered equal.
+     */
+    public static int compareVarLenBytes(DrillBuf left, int leftStart, int leftEnd, int leftScale, DrillBuf right, int rightStart, int rightEnd, int rightScale, boolean absCompare) {
+        java.math.BigDecimal bdLeft = getBigDecimalFromDrillBuf(left, leftStart, leftEnd - leftStart, leftScale);
+        java.math.BigDecimal bdRight = getBigDecimalFromDrillBuf(right, rightStart, rightEnd - rightStart, rightScale);
+        if (absCompare) {
+            bdLeft = bdLeft.abs();
+            bdRight = bdRight.abs();
+        }
+        return bdLeft.compareTo(bdRight);
+    }
+
+    public static int compareSparseBytes(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
 
     int invert = 1;
 

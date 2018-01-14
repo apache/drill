@@ -24,7 +24,9 @@
       {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
-      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"}
+      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
+      {inputType: "VarDecimal", outputType: "VarDecimal", runningType: "VarDecimal"},
+      {inputType: "NullableVarDecimal", outputType: "VarDecimal", runningType: "VarDecimal"}
      ]
    },
    {className: "Min", funcName: "min", types: [
@@ -35,7 +37,9 @@
       {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
       {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
-      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"}
+      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
+      {inputType: "VarDecimal", outputType: "VarDecimal", runningType: "VarDecimal"},
+      {inputType: "NullableVarDecimal", outputType: "VarDecimal", runningType: "VarDecimal"}
      ]
    }
       {className: "Sum", funcName: "sum", types: [
@@ -46,7 +50,9 @@
         {inputType: "Decimal28Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
         {inputType: "NullableDecimal28Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
         {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
-        {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", major: "Numeric"}
+        {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "VarDecimal", outputType: "VarDecimal", major: "Numeric"},
+        {inputType: "NullableVarDecimal", outputType: "VarDecimal", major: "Numeric"}
         ]
       }
    ]

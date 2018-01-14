@@ -54,7 +54,7 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
-    <#if type.to.startsWith("Decimal28") || type.to.startsWith("Decimal38")>
+    <#if type.to.startsWith("Decimal28") || type.to.startsWith("Decimal38") || type.to.endsWith("VarDecimal")>
     @Inject DrillBuf buffer;
     </#if>
     @Param BigIntHolder precision;
@@ -71,15 +71,31 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void eval() {
         out.scale = (int) scale.value;
-        out.precision = (int) precision.value;
 
-        <#if type.to == "Decimal9" || type.to == "Decimal18">
+        <#if !type.to.endsWith("VarDecimal")>
+        out.precision = (int) precision.value;
+        </#if>
+
+        <#if type.to.endsWith("VarDecimal")>
+        out.start = 0;
+        out.buffer = buffer;
+        StringBuilder sb = new StringBuilder();
+        sb.append(Long.toString((long)in.value));
+        for (int i = 0; i < out.scale; ++i) {  // add 0's to get unscaled integer
+            sb.append("0");
+        }
+        java.math.BigInteger bi = new java.math.BigInteger(sb.toString());
+        java.math.BigDecimal bd = new java.math.BigDecimal(bi, out.scale);
+        int len = org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
+        out.end = out.start + len;
+        <#elseif type.to == "Decimal9" || type.to == "Decimal18">
         out.value = (${type.javatype}) in.value;
 
         // converting from integer to decimal, pad zeroes if scale is non zero
         out.value = (${type.javatype}) org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(out.value, (int) scale.value);
 
         <#else>
+
         out.start = 0;
         out.buffer = buffer;
 

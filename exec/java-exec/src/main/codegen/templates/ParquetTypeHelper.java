@@ -142,6 +142,7 @@ public class ParquetTypeHelper {
       case DECIMAL28DENSE:
       case DECIMAL38SPARSE:
       case DECIMAL38DENSE:
+      case VARDECIMAL:
         return new DecimalMetadata(field.getPrecision(), field.getScale());
       default:
         return null;

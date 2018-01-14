@@ -91,6 +91,25 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
 
         // Assign the scale and precision
         out.scale = (int) scale.value;
+
+        <#if type.to.endsWith("VarDecimal")>
+
+        // VarDecimal gets its own cast logic
+        byte[] buf = new byte[in.end - in.start];
+        buffer.getBytes(in.start, buf, 0, in.end - in.start);
+        String s = new String(buf, Charsets.UTF_8);
+        Double d = Double.valueOf(s);
+        for (int i = 0; i < out.scale; ++i) {  // loop to compute unscaled value
+            d *= 10.0;
+        }
+        long lval = (long)(d >= 0.0 ? d + 0.5 : d - 0.5);  // round off unscaled integer, and hope it's close enough
+        java.math.BigInteger bi = new java.math.BigInteger(Long.toString(lval));
+        java.math.BigDecimal bd = new java.math.BigDecimal(bi, out.scale);
+        int len = org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
+        out.end = out.start + len;
+
+        <#else>   // !VarDecimal
+
         out.precision = (int) precision.value;
 
         int readIndex = in.start;
@@ -200,6 +219,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
         if (negative == true) {
             out.value *= -1;
         }
+        </#if>
     }
 }
 
@@ -279,6 +299,25 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
         out.start  = 0;
 
         out.scale = (int) scale.value;
+
+        <#if type.to.endsWith("VarDecimal")>
+
+        // VarDecimal gets its own cast logic
+        byte[] buf = new byte[in.end - in.start];
+        buffer.getBytes(in.start, buf, 0, in.end - in.start);
+        String s = new String(buf, Charsets.UTF_8);
+        Double d = Double.valueOf(s);
+        for (int i = 0; i < out.scale; ++i) {  // loop to compute unscaled value
+            d *= 10.0;
+        }
+        long lval = (long)(d >= 0.0 ? d + 0.5 : d - 0.5);  // round off unscaled integer, and hope it's close enough
+        java.math.BigInteger bi = new java.math.BigInteger(Long.toString(lval));
+        java.math.BigDecimal bd = new java.math.BigDecimal(bi, out.scale);
+        int len = org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
+        out.end = out.start + len;
+
+        <#else>
+
         out.precision = (int) precision.value;
         boolean sign = false;
 
@@ -487,6 +526,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
             } while (carry > 0 && decimalBufferIndex >= 0);
         }
         out.setSign(sign, out.start, out.buffer);
+        </#if>
     }
 }
 </#if> <#-- type.major -->

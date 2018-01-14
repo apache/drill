@@ -119,6 +119,7 @@ numType returns [MajorType type]
 	| DECIMAL28SPARSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL28SPARSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
 	| DECIMAL38DENSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL38DENSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
 	| DECIMAL38SPARSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL38SPARSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
+	| VARDECIMAL OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARDECIMAL).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
 	;
 
 charType returns [MajorType type]

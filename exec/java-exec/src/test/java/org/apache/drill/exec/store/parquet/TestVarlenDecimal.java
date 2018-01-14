@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.BeforeClass;

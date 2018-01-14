@@ -169,7 +169,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
    <#if type.inputType.endsWith("Decimal9") || type.inputType.endsWith("Decimal18")>
     java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
     <#else>
-    java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+    java.math.BigDecimal currentValue = in.getBigDecimal();
     </#if>
     value.obj = ((java.math.BigDecimal)(value.obj)).add(currentValue);
     if (outputScale.value == Integer.MIN_VALUE) {
@@ -189,9 +189,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     out.buffer = buffer;
     out.start  = 0;
     out.scale = outputScale.value;
-    out.precision = 38;
     value.obj = ((java.math.BigDecimal) (value.obj)).setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
+<#if type.inputType.contains("VarDecimal")>
+    int len = org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start);
+    out.end = out.start + len;
+<#else>
+    out.precision = 38;
     org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+</#if>
    <#else>
     <#if type.outputType.endsWith("Sparse")>
     org.apache.drill.exec.util.Text tmp = (org.apache.drill.exec.util.Text) value.obj;

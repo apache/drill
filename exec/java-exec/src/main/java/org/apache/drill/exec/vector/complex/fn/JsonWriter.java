@@ -37,7 +37,7 @@ public class JsonWriter {
   private final JsonOutput gen;
 
   public JsonWriter(OutputStream out, boolean pretty, boolean useExtendedOutput) throws IOException{
-    JsonGenerator writer = factory.configure(JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS, false).createJsonGenerator(out);
+    JsonGenerator writer = factory.createJsonGenerator(out);
     if(pretty){
       writer = writer.useDefaultPrettyPrinter();
     }
@@ -110,6 +110,7 @@ public class JsonWriter {
       case DECIMAL38SPARSE:
       case DECIMAL9:
       case DECIMAL18:
+      case VARDECIMAL:
         gen.writeDecimal(reader);
         break;
 
@@ -220,6 +221,7 @@ public class JsonWriter {
       case DECIMAL38SPARSE:
       case DECIMAL9:
       case DECIMAL18:
+      case VARDECIMAL:
         for(int i = 0; i < reader.size(); i++){
           gen.writeDecimal(i, reader);
         }

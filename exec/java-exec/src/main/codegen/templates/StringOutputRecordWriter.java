@@ -141,12 +141,12 @@ public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
         minor.class == "Decimal28Dense" ||
         minor.class == "Decimal38Dense" ||
         minor.class == "Decimal28Sparse" ||
-        minor.class == "Decimal38Sparse">
-
+        minor.class == "Decimal38Sparse" ||
+        minor.class == "VarChar" ||
+        minor.class == "Var16Char" ||
+        minor.class == "VarBinary" ||
+        minor.class == "VarDecimal">
     // TODO: error check
-    addField(fieldId, reader.readObject().toString());
-
-  <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
     addField(fieldId, reader.readObject().toString());
   <#else>
     throw new UnsupportedOperationException(String.format("Unsupported field type: %s"),

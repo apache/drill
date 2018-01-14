@@ -115,6 +115,7 @@ public class UnionFunctions {
     case DECIMAL18:
     case DECIMAL28SPARSE:
     case DECIMAL38SPARSE:
+    case VARDECIMAL:
     case FLOAT4:
     case FLOAT8:
       return 0;

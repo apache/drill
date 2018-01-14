@@ -86,6 +86,15 @@ import org.apache.drill.exec.expr.annotations.Workspace;
           } // outside
 </#macro>
 
+<#macro varCompareBlock leftType rightType absCompare output nullCompare nullComparesHigh>
+        outside:
+        {
+          <@compareNullsSubblock leftType=leftType rightType=rightType output=output breakTarget="outside" nullCompare=nullCompare nullComparesHigh=nullComparesHigh />
+
+          ${output} = org.apache.drill.exec.util.DecimalUtility.compareVarLenBytes(left.buffer, left.start, left.end, left.scale, right.buffer, right.start, right.end, right.scale, ${absCompare});
+        } // outside
+</#macro>
+
 <#macro adjustScale javaType leftType rightType>
 
             // Adjust the scale of the two inputs to be the same
@@ -102,7 +111,625 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 <#-- For each DECIMAL... type (in DecimalTypes.tdd) ... -->
 <#list comparisonTypesDecimal.decimalTypes as type>
 
-<#if type.name.endsWith("Sparse")>
+<#if type.name.endsWith("VarDecimal")>
+
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${type.name}Functions.java" />
+
+<#include "/@includes/license.ftl" />
+
+package org.apache.drill.exec.expr.fn.impl;
+
+<#include "/@includes/vv_imports.ftl" />
+
+import org.apache.drill.exec.expr.DrillSimpleFunc;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.record.RecordBatch;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import java.nio.ByteBuffer;
+
+@SuppressWarnings("unused")
+public class ${type.name}Functions {
+    private static void initBuffer(DrillBuf buffer) {
+        // for VarDecimal, this method of setting initial size is actually only a very rough heuristic.
+        int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
+        buffer = buffer.reallocIfNeeded(size);
+     }
+
+    @FunctionTemplate(name = "subtract",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ADD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
+    public static class ${type.name}SubtractFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Inject DrillBuf buffer;
+        @Workspace int outputScale;
+        @Output ${type.name}Holder result;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval(){
+            outputScale=Math.max(left.scale,right.scale);   // output scale is the maximum of the two scales, to represent result exactly
+            result.scale=outputScale;
+            result.buffer=buffer;
+            result.start = 0;
+
+            java.math.BigDecimal leftInput=org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer,left.start,left.end-left.start,left.scale);
+            java.math.BigDecimal rightInput=org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(right.buffer,right.start,right.end-right.start,right.scale);
+            java.math.BigDecimal addResult=leftInput.subtract(rightInput);
+
+            // Set the scale
+            addResult.setScale(result.scale,java.math.BigDecimal.ROUND_HALF_UP);
+
+            byte[]bytes=addResult.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            result.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "add",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ADD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
+    public static class ${type.name}AddFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Workspace int outputScale;
+        @Inject DrillBuf buffer;
+        @Output ${type.name}Holder result;
+
+        public void setup() {
+            initBuffer(buffer);
+       }
+
+        public void eval() {
+            outputScale=Math.max(left.scale,right.scale);   // output scale is the maximum of the two scales, to represent result exactly
+            result.scale=outputScale;
+            result.buffer=buffer;
+            result.start = 0;
+
+            java.math.BigDecimal leftInput=org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer,left.start,left.end-left.start,left.scale);
+            java.math.BigDecimal rightInput=org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(right.buffer,right.start,right.end-right.start,right.scale);
+            java.math.BigDecimal addResult=leftInput.add(rightInput);
+
+            // Set the scale
+            addResult.setScale(result.scale,java.math.BigDecimal.ROUND_HALF_UP);
+
+            byte[]bytes=addResult.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            result.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "multiply",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SUM_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
+    public static class ${type.name}MultiplyFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Inject DrillBuf buffer;
+        @Workspace int outputScale;
+        @Output ${type.name}Holder result;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            outputScale=left.scale + right.scale;   // sum of scales is guaranteed to represent multiplication result exactly
+            result.scale=outputScale;
+            result.buffer=buffer;
+            result.start = 0;
+
+            java.math.BigDecimal leftInput=org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer,left.start,left.end-left.start,left.scale);
+            java.math.BigDecimal rightInput=org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(right.buffer,right.start,right.end-right.start,right.scale);
+            java.math.BigDecimal output=leftInput.multiply(rightInput);
+
+            // Set the scale
+            output.setScale(result.scale,java.math.BigDecimal.ROUND_HALF_UP);
+
+            byte[]bytes=output.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            result.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "exact_divide",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_DIV_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
+    public static class ${type.name}DivideFunction implements DrillSimpleFunc {
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output ${type.name}Holder result;
+        @Inject DrillBuf buffer;
+        @Workspace int outputScale;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            outputScale = left.scale + right.scale;   // preferred scale is heuristically set to sum of scales, even though rounding may be required
+            result.scale = outputScale;
+            result.buffer = buffer;
+            result.start = 0;
+
+            java.math.BigDecimal numerator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.end - left.start, left.scale);
+            java.math.BigDecimal denominator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(right.buffer, right.start, right.end - right.start, right.scale);
+
+            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_HALF_UP);
+
+            byte[]bytes=output.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            result.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "mod",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MOD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
+    public static class ${type.name}ModFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output ${type.name}Holder result;
+        @Inject DrillBuf buffer;
+        @Workspace int outputScale;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            outputScale = Math.max(left.scale,right.scale);   // for mod, as for add & subtract, use larger of the two input scales
+            result.scale = outputScale;
+            result.buffer = buffer;
+            result.start = 0;
+
+            java.math.BigDecimal numerator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.end - left.start, left.scale);
+            java.math.BigDecimal denominator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(right.buffer, right.start, right.end - right.start, right.scale);
+
+            java.math.BigDecimal output = numerator.remainder(denominator);
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
+
+            byte[]bytes=output.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            result.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "abs",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}AbsFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder result;
+        @Inject DrillBuf buffer;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            result.scale = in.scale;
+            result.buffer = buffer;
+            result.start = 0;
+
+            java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+            java.math.BigDecimal output = bd.abs();
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
+
+            byte[]bytes=output.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            result.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "sign", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}SignFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output IntHolder out;
+
+        public void setup() {}
+
+        public void eval() {
+            java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+            out.value = bd.signum();
+        }
+    }
+
+    @FunctionTemplate(names = {"ceil", "ceiling"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}CeilFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        @Inject DrillBuf buffer;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+          out.scale = 0;
+          out.buffer = buffer;
+          out.start = 0;
+          java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+          bd.setScale(0, java.math.BigDecimal.ROUND_CEILING);
+          byte[] bytes=bd.unscaledValue().toByteArray();
+          int len=bytes.length;
+          buffer=buffer.reallocIfNeeded(len);
+          buffer.setBytes(0,bytes);
+          out.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "floor",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}FloorFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        @Inject DrillBuf buffer;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            out.scale = 0;
+            out.buffer = buffer;
+            out.start = 0;
+            java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+            bd.setScale(0, java.math.BigDecimal.ROUND_FLOOR);
+            byte[] bytes=bd.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            out.end=len;
+        }
+    }
+
+    @FunctionTemplate(names = {"trunc", "truncate"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}TruncateFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        @Inject DrillBuf buffer;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            out.scale = 0;
+            out.buffer = buffer;
+            out.start = 0;
+            java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+            bd.setScale(0, java.math.BigDecimal.ROUND_DOWN);
+            byte[] bytes=bd.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            out.end=len;
+        }
+    }
+
+    @FunctionTemplate(names = {"trunc", "truncate"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SET_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}TruncateScaleFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder left;
+        @Param  IntHolder right;
+        @Output ${type.name}Holder result;
+        @Inject DrillBuf buffer;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            result.scale = left.scale;
+            result.buffer = left.buffer;
+            result.start = left.start;
+            result.end = left.end;
+
+            // compute truncated value iff the indicated scale is less than the input's scale.
+            // otherwise, we just copy the input (left) to the result, with the same scale.
+            if (right.value < left.scale) {
+                result.buffer = buffer;
+                result.start = 0;
+                result.scale = right.value;
+                java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.end - left.start, left.scale);
+                bd.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
+                byte[] bytes=bd.unscaledValue().toByteArray();
+                int len=bytes.length;
+                buffer=buffer.reallocIfNeeded(len);
+                buffer.setBytes(0,bytes);
+                result.end=len;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "round",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}RoundFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        @Inject DrillBuf buffer;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            out.scale = 0;
+            out.buffer = buffer;
+            out.start = 0;
+            java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+            bd.setScale(0, java.math.BigDecimal.ROUND_HALF_UP);
+            byte[] bytes=bd.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            out.end=len;
+        }
+    }
+
+    @FunctionTemplate(name = "round",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SET_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}RoundScaleFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder left;
+        @Param  IntHolder right;
+        @Output ${type.name}Holder result;
+        @Inject DrillBuf buffer;
+
+        public void setup() {
+            initBuffer(buffer);
+        }
+
+        public void eval() {
+            result.scale = right.value;
+            result.buffer = buffer;
+            result.start = 0;
+            java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.end - left.start, left.scale);
+            bd.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
+            byte[] bytes=bd.unscaledValue().toByteArray();
+            int len=bytes.length;
+            buffer=buffer.reallocIfNeeded(len);
+            buffer.setBytes(0,bytes);
+            result.end=len;
+        }
+    }
+
+ <#-- Handle 2 x 2 combinations of nullable and non-nullable arguments. -->
+ <#list ["Nullable${type.name}", "${type.name}"] as leftType >
+ <#list ["Nullable${type.name}", "${type.name}"] as rightType >
+
+  <#-- Comparison function for sorting and grouping relational operators
+       (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_HIGH,
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+      nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullHigh implements DrillSimpleFunc {
+
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@varCompareBlock leftType=leftType rightType=rightType absCompare="false" output="out.value" nullCompare=true nullComparesHigh=true />
+    }
+  }
+
+
+
+  <#-- Comparison function for sorting and grouping relational operators
+        (not for comparison expression operators (=, <, etc.)). -->
+  @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_LOW,
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+      nulls = NullHandling.INTERNAL)
+  public static class GCompare${leftType}Vs${rightType}NullLow implements DrillSimpleFunc {
+
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output IntHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@varCompareBlock leftType=leftType rightType=rightType absCompare="false" output="out.value" nullCompare=true nullComparesHigh=false />
+    }
+  }
+
+ </#list>
+ </#list>
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}LessThan implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output BitHolder out;
+        public void setup() {}
+
+        public void eval() {
+            int cmp;
+            <@varCompareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
+            out.value = cmp == -1 ? 1 : 0;
+        }
+    }
+
+
+    // TODO:  RESOLVE:  Here there are spaces in function template names, but
+    // elsewhere there are underlines.  Are things being looked up correctly?
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "less than or equal to",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}LessThanEq implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output BitHolder out;
+        public void setup() {}
+
+        public void eval() {
+            int cmp;
+            <@varCompareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
+            out.value = cmp < 1 ? 1 : 0;
+        }
+    }
+
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}GreaterThan implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output BitHolder out;
+        public void setup() {}
+
+        public void eval() {
+            int cmp;
+            <@varCompareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
+            out.value = cmp == 1 ? 1 : 0;
+        }
+    }
+
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "greater than or equal to",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}GreaterThanEq implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output BitHolder out;
+        public void setup() {}
+
+        public void eval() {
+            int cmp;
+            <@varCompareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
+            out.value = cmp > -1 ? 1 : 0;
+        }
+    }
+
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "Equal",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}Equal implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output BitHolder out;
+        public void setup() {}
+
+        public void eval() {
+            int cmp;
+            <@varCompareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
+            out.value = cmp == 0 ? 1 : 0;
+        }
+    }
+
+
+    <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
+         not for sorting and grouping relational operators.) -->
+    @FunctionTemplate(name = "not equal",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}NotEqual implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output BitHolder out;
+        public void setup() {}
+
+        public void eval() {
+            int cmp;
+            <@varCompareBlock leftType="leftType" rightType="rightType" absCompare="false" output="cmp" nullCompare=false nullComparesHigh=false />
+            out.value = cmp != 0 ? 1 : 0;
+        }
+    }
+}
+
+<#elseif type.name.endsWith("Sparse")>
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${type.name}Functions.java" />
 

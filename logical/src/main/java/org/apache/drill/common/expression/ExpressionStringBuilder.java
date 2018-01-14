@@ -292,7 +292,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     case DECIMAL28SPARSE:
     case DECIMAL38DENSE:
     case DECIMAL38SPARSE:
-
+    case VARDECIMAL:  // TODO: precision might not be appropriate for VARDECIMAL, as it is "one-size-fits-all"
       // add scale and precision
       sb.append("(");
       sb.append(mt.getPrecision());

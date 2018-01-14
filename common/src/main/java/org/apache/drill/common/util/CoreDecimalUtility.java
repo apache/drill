@@ -82,9 +82,11 @@ public class CoreDecimalUtility {
   }
 
   public static boolean isDecimalType(TypeProtos.MinorType minorType) {
-    return minorType == TypeProtos.MinorType.DECIMAL9 ||
-           minorType == TypeProtos.MinorType.DECIMAL18 ||
-           minorType == TypeProtos.MinorType.DECIMAL28SPARSE ||
-           minorType == TypeProtos.MinorType.DECIMAL38SPARSE;
+    if (minorType == TypeProtos.MinorType.VARDECIMAL || minorType == TypeProtos.MinorType.DECIMAL9 ||
+        minorType == TypeProtos.MinorType.DECIMAL18 || minorType == TypeProtos.MinorType.DECIMAL28SPARSE ||
+        minorType == TypeProtos.MinorType.DECIMAL38SPARSE) {
+      return true;
+    }
+    return false;
   }
 }
