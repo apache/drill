@@ -21,6 +21,7 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.BeforeClass;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 public class TestVarlenDecimal extends BaseTestQuery {
@@ -28,6 +29,12 @@ public class TestVarlenDecimal extends BaseTestQuery {
   @BeforeClass
   public static void enableDecimalDataType() throws Exception {
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
+
+  // disable decimal data type
+  @AfterClass
+  public static void disableDecimalDataType() throws Exception {
+    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 
   private static final String DATAFILE = "cp.`parquet/varlenDecimal.parquet`";
