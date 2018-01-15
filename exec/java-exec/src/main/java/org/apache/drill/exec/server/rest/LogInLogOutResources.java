@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.rpc.security.AuthStringUtil;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
+import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.util.security.Constraint;
@@ -57,8 +58,9 @@ public class LogInLogOutResources {
   /**
    * Update the destination URI to be redirect URI if specified in the request URL so that after the login is
    * successful, request is forwarded to redirect page.
+   *
    * @param redirect - Redirect parameter in the request URI
-   * @param request - Http Servlet Request
+   * @param request  - Http Servlet Request
    * @throws Exception
    */
   private void updateSessionRedirectInfo(String redirect, HttpServletRequest request) throws Exception {
@@ -100,8 +102,7 @@ public class LogInLogOutResources {
     }
 
     final String errorString = "Invalid SPNEGO credentials or SPNEGO is not configured";
-    final DrillConfig drillConfig = workManager.getContext().getConfig();
-    MainLoginPageModel model = new MainLoginPageModel(errorString, drillConfig);
+    final MainLoginPageModel model = new MainLoginPageModel(errorString);
     return ViewableWithPermissions.createMainLoginPage(model);
   }
 
@@ -132,24 +133,26 @@ public class LogInLogOutResources {
                                    @Context SecurityContext sc, @Context UriInfo uriInfo,
                                    @QueryParam(WebServerConstants.REDIRECT_QUERY_PARM) String redirect) throws Exception {
     updateSessionRedirectInfo(redirect, request);
-    final DrillConfig drillConfig = workManager.getContext().getConfig();
-    MainLoginPageModel model = new MainLoginPageModel(null, drillConfig);
+    final MainLoginPageModel model = new MainLoginPageModel(null);
     return ViewableWithPermissions.createMainLoginPage(model);
   }
 
-  private class MainLoginPageModel {
+  @VisibleForTesting
+  class MainLoginPageModel {
 
     private final String error;
 
     private final boolean authEnabled;
 
+    private final DrillConfig config;
+
     private final Set<String> configuredMechs;
 
-    MainLoginPageModel(String error, DrillConfig drillConfig) {
+    MainLoginPageModel(String error) {
       this.error = error;
-      authEnabled = drillConfig.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-      configuredMechs = AuthStringUtil.asSet(
-          drillConfig.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS));
+      this.config = workManager.getContext().getConfig();
+      authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+      configuredMechs = DrillHttpSecurityHandlerProvider.getHttpAuthMechanisms(config);
     }
 
     public boolean isSpnegoEnabled() {
