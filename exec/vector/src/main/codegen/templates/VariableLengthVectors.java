@@ -218,6 +218,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 }
 
   public void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
+<#if minor.class == "VarDecimal">
+    // VarDecimal safe copyFrom must be used in place of the unsafe version
+    copyFromSafe(fromIndex, thisIndex, from);
+<#else>
     final UInt4Vector.Accessor fromOffsetVectorAccessor = from.offsetVector.getAccessor();
     final int start = fromOffsetVectorAccessor.get(fromIndex);
     final int end = fromOffsetVectorAccessor.get(fromIndex + 1);
@@ -226,6 +230,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
     from.data.getBytes(start, data, outputStart, len);
     offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, outputStart + len);
+</#if>
   }
 
   public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
