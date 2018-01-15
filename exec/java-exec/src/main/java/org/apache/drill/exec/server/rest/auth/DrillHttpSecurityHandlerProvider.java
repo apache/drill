@@ -58,51 +58,46 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
       throws DrillbitStartupException {
 
     Preconditions.checkState(config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED));
-    final Set<String> configuredMechanisms = new HashSet<>();
+    final Set<String> configuredMechanisms = getHttpAuthMechanisms(config);
 
-    if (config.hasPath(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)) {
-      configuredMechanisms.addAll(AuthStringUtil.asSet(config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)));
-    } else { // for backward compatibility
-      configuredMechanisms.add(Constraint.__FORM_AUTH);
-    }
+    final ScanResult scan = drillContext.getClasspathScan();
+    final Collection<Class<? extends DrillHttpConstraintSecurityHandler>> factoryImpls =
+        scan.getImplementations(DrillHttpConstraintSecurityHandler.class);
+    logger.debug("Found DrillHttpConstraintSecurityHandler implementations: {}", factoryImpls);
 
-      final ScanResult scan = drillContext.getClasspathScan();
-      final Collection<Class<? extends DrillHttpConstraintSecurityHandler>> factoryImpls =
-          scan.getImplementations(DrillHttpConstraintSecurityHandler.class);
-      logger.debug("Found DrillHttpConstraintSecurityHandler implementations: {}", factoryImpls);
-      for (final Class<? extends DrillHttpConstraintSecurityHandler> clazz : factoryImpls) {
+    for (final Class<? extends DrillHttpConstraintSecurityHandler> clazz : factoryImpls) {
 
-        // If all the configured mechanisms handler is added then break out of this loop
-        if (configuredMechanisms.isEmpty()) {
+      // If all the configured mechanisms handler is added then break out of this loop
+      if (configuredMechanisms.isEmpty()) {
+        break;
+      }
+
+      Constructor<? extends DrillHttpConstraintSecurityHandler> validConstructor = null;
+      for (final Constructor<?> c : clazz.getConstructors()) {
+        final Class<?>[] params = c.getParameterTypes();
+        if (params.length == 0) {
+          validConstructor = (Constructor<? extends DrillHttpConstraintSecurityHandler>) c; // unchecked
           break;
         }
-
-        Constructor<? extends DrillHttpConstraintSecurityHandler> validConstructor = null;
-        for (final Constructor<?> c : clazz.getConstructors()) {
-          final Class<?>[] params = c.getParameterTypes();
-          if (params.length == 0) {
-            validConstructor = (Constructor<? extends DrillHttpConstraintSecurityHandler>) c; // unchecked
-            break;
-          }
-        }
-
-        if (validConstructor == null) {
-          logger.warn("Skipping DrillHttpConstraintSecurityHandler class {}. It must implement at least one" +
-              " constructor with signature [{}()]", clazz.getCanonicalName(), clazz.getName());
-          continue;
-        }
-
-        try {
-          final DrillHttpConstraintSecurityHandler instance = validConstructor.newInstance();
-          if (configuredMechanisms.remove(instance.getImplName())) {
-            instance.doSetup(drillContext);
-            securityHandlers.put(instance.getImplName(), instance);
-          }
-        } catch (IllegalArgumentException | ReflectiveOperationException | DrillException e) {
-          logger.warn(String.format("Failed to create DrillHttpConstraintSecurityHandler of type '%s'",
-              clazz.getCanonicalName()), e);
-        }
       }
+
+      if (validConstructor == null) {
+        logger.warn("Skipping DrillHttpConstraintSecurityHandler class {}. It must implement at least one" +
+            " constructor with signature [{}()]", clazz.getCanonicalName(), clazz.getName());
+        continue;
+      }
+
+      try {
+        final DrillHttpConstraintSecurityHandler instance = validConstructor.newInstance();
+        if (configuredMechanisms.remove(instance.getImplName())) {
+          instance.doSetup(drillContext);
+          securityHandlers.put(instance.getImplName(), instance);
+        }
+      } catch (IllegalArgumentException | ReflectiveOperationException | DrillException e) {
+        logger.warn(String.format("Failed to create DrillHttpConstraintSecurityHandler of type '%s'",
+            clazz.getCanonicalName()), e);
+      }
+    }
 
     if (securityHandlers.size() == 0) {
       throw new DrillbitStartupException("Authentication is enabled for WebServer but none of the security mechanism " +
@@ -180,5 +175,27 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
 
   public boolean isFormEnabled() {
     return securityHandlers.containsKey(Constraint.__FORM_AUTH);
+  }
+
+  /**
+   * Return's list of configured mechanisms for HTTP authentication. For backward
+   * compatibility if authentication is enabled it will include FORM mechanism by default.
+   * @param config - {@link DrillConfig}
+   * @return
+   */
+  public static Set<String> getHttpAuthMechanisms(DrillConfig config) {
+    final Set<String> configuredMechs = new HashSet<>();
+    final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+
+    if (authEnabled) {
+      if (config.hasPath(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)) {
+        configuredMechs.addAll(
+            AuthStringUtil.asSet(config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)));
+      } else {
+        // For backward compatibility
+        configuredMechs.add(Constraint.__FORM_AUTH);
+      }
+    }
+    return configuredMechs;
   }
 }
