@@ -398,6 +398,7 @@ public class Types {
     case VAR16CHAR:
     case VARCHAR:
     case UNION:
+    case VARDECIMAL:
       return false;
     default:
       return true;
