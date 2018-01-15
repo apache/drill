@@ -102,6 +102,9 @@
     {from: "Decimal28Sparse", to: "Decimal38Dense", major: "DecimalSparseDecimalDense", arraySize: "4"},
     {from: "Decimal38Sparse", to: "Decimal38Dense", major: "DecimalSparseDecimalDense", arraySize: "4"},
 
+    {from: "Decimal28Sparse", to: "VarDecimal", major: "DecimalSparseVarDecimal", arraySize: "6"},
+    {from: "Decimal38Sparse", to: "VarDecimal", major: "DecimalSparseVarDecimal", arraySize: "6"},
+
     {from: "Decimal28Dense", to: "Decimal38Dense", major: "DecimalSimilar", arraySize: "4"},
     {from: "Decimal28Sparse", to: "Decimal38Sparse", major: "DecimalSimilar", arraySize: "6"},
 
