@@ -475,7 +475,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     @Override
     public ${friendlyType} getObject(int index) {
       byte[] b = get(index);
-      BigInteger bi = new BigInteger(b);
+      BigInteger bi = b.length == 0 ? new BigInteger("0") : new BigInteger(b);
       BigDecimal bd = new BigDecimal(bi, getField().getScale());
       return bd;
     }
