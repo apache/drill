@@ -68,9 +68,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         out.scale = (int) scale.value;
         int len = bd.unscaledValue().toByteArray().length;
         buffer = buffer.reallocIfNeeded(len);
+        out.start = 0;
         out.buffer = buffer;
         org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
-        out.start = 0;
         out.end = out.start + len;
     }
 }
