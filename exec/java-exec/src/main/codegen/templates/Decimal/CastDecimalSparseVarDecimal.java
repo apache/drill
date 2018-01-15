@@ -60,15 +60,16 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     @Output ${type.to}Holder out;
 
     public void setup() {
-        // VarDecimal buffer size is not calculated until we have the input value
+        // VarDecimal size in bytes is determined once the input BigDecimal is known
     }
 
     public void eval() {
         java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.nDecimalDigits, in.scale, true);
         out.scale = (int) scale.value;
-        int len = org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
+        int len = bd.unscaledValue().toByteArray().length;
         buffer = buffer.reallocIfNeeded(len);
         out.buffer = buffer;
+        org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
         out.start = 0;
         out.end = out.start + len;
     }
