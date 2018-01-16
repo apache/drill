@@ -287,6 +287,17 @@ public class TestProjectPushDown extends PlanTestBase {
     }
   }
 
+  @Test
+  public void testProjectPushdownPastJoinWithJoinPushExpressions() throws Exception {
+    final String query = "SELECT L.L_QUANTITY FROM cp.`tpch/lineitem.parquet` L, cp.`tpch/orders.parquet` O" +
+        " WHERE cast(L.L_ORDERKEY as int) = cast(O.O_ORDERKEY as int)";
+    final String[] expectedPatterns = {
+        ".*HashJoin.*", "Project.*\\(L_QUANTITY.*CAST\\(\\$0\\)\\:INTEGER.*", "Project.*CAST\\(\\$0\\)\\:INTEGER.*"};
+    // L_ORDERKEY, O_ORDERKEY should not be present in the projects below the join
+    final String[] excludedPatterns = {".*Project\\(L_ORDERKEY=.*", ".*Project\\(O_ORDERKEY=.*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPatterns, excludedPatterns);
+  }
+
   protected void testPushDown(PushDownTestInstance test) throws Exception {
     testPhysicalPlan(test.getSql(), test.getExpected());
   }

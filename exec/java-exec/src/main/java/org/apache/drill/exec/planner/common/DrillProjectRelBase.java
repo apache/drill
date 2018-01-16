@@ -74,10 +74,12 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
     if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
-
-    // cost is proportional to the number of rows and number of columns being projected
-    double rowCount = nonSimpleFieldCount > 0 ? mq.getRowCount(this) : 0;
-    double cpuCost = DrillCostBase.PROJECT_CPU_COST * rowCount * nonSimpleFieldCount;
+    double rowCount = mq.getRowCount(this);
+    // Attribute small cost for projecting simple fields. In reality projecting simple columns in not free and
+    // this allows projection pushdown/project-merge rules to kick-in thereby eliminating unneeded columns from
+    // the projection.
+    double cpuCost = DrillCostBase.PROJECT_CPU_COST * rowCount * nonSimpleFieldCount
+        + (this.getRowType().getFieldCount() - nonSimpleFieldCount) * rowCount * DrillCostBase.BASE_CPU_COST;
 
     DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
     return costFactory.makeCost(rowCount, cpuCost, 0, 0);
