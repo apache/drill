@@ -60,6 +60,7 @@ public class TestJsonNanInf extends BaseTestQuery {
   }
 
   @Test
+  @Ignore // see DRILL-6018
   public void testExcludePositiveInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
@@ -81,6 +82,7 @@ public class TestJsonNanInf extends BaseTestQuery {
   }
 
   @Test
+  @Ignore // see DRILL-6018
   public void testExcludeNegativeInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
@@ -102,6 +104,7 @@ public class TestJsonNanInf extends BaseTestQuery {
   }
 
   @Test
+  @Ignore // see DRILL-6018
   public void testIncludePositiveInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);

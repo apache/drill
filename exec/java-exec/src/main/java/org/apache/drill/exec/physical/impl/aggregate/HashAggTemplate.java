@@ -1280,8 +1280,6 @@ public abstract class HashAggTemplate implements HashAggregator {
       logger.trace("Reserved memory runs short, trying to {} a partition and retry Hash Table put() again.",
         is1stPhase ? "early return" : "spill");
 
-      checkForSpillPossibility(currentPartition);
-
       doSpill(currentPartition); // spill to free some memory
 
       retrySameIndex = true;
@@ -1304,8 +1302,6 @@ public abstract class HashAggTemplate implements HashAggregator {
       // for debugging - in case there's a leak
       long memDiff = allocator.getAllocatedMemory() - allocatedBeforeHTput;
       if ( memDiff > 0 ) { logger.warn("Leak: HashTable put() OOM left behind {} bytes allocated",memDiff); }
-
-      checkForSpillPossibility(currentPartition);
 
       doSpill(currentPartition); // spill to free some memory
 
@@ -1383,17 +1379,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
   }
 
-  /**
-   * Checks that spill is possible, otherwise throws {@link OutOfMemoryException}.
-   *
-   * @param currentPartition the partition that hit the memory limit
-   */
-  private void checkForSpillPossibility(int currentPartition) {
-    if (chooseAPartitionToFlush(currentPartition, true) < 0) {
-      throw new OutOfMemoryException(getOOMErrorMsg("AGGR"));
-    }
-  }
-
   private void spillIfNeeded(int currentPartition) { spillIfNeeded(currentPartition, false);}
   private void doSpill(int currentPartition) { spillIfNeeded(currentPartition, true);}
   /**
@@ -1426,9 +1411,17 @@ public abstract class HashAggTemplate implements HashAggregator {
       // Pick a "victim" partition to spill or return
       int victimPartition = chooseAPartitionToFlush(currentPartition, forceSpill);
 
-      // In case no partition has more than one batch -- try and "push the limits"; maybe next
-      // time the spill could work.
-      if ( victimPartition < 0 ) { return; }
+      // In case no partition has more than one batch and
+      // non-forced spill -- try and "push the limits";
+      // maybe next time the spill could work.
+      if (victimPartition < 0) {
+        // In the case of the forced spill, there is not enough memory to continue.
+        // Throws OOM to avoid the infinite loop.
+        if (forceSpill) {
+          throw new OutOfMemoryException(getOOMErrorMsg("AGGR"));
+        }
+        return;
+      }
 
       if ( is2ndPhase ) {
         long before = allocator.getAllocatedMemory();
@@ -1443,14 +1436,21 @@ public abstract class HashAggTemplate implements HashAggregator {
         boolean spillAgain = reserveOutgoingMemory == 0 || reserveValueBatchMemory == 0;
         // in some "edge" cases (e.g. testing), spilling one partition may not be enough
         if ( spillAgain || allocator.getAllocatedMemory() + maxMemoryNeeded > allocator.getLimit() ) {
-            int victimPartition2 = chooseAPartitionToFlush(victimPartition, true);
-            if ( victimPartition2 < 0 ) { return; }
-            long after = allocator.getAllocatedMemory();
-            spillAPartition(victimPartition2);
-            reinitPartition(victimPartition2);
-            logger.warn("A Second Spill was Needed: allocated before {}, after first spill {}, after second {}, memory needed {}",
-                before, after, allocator.getAllocatedMemory(), maxMemoryNeeded);
-            logger.trace("Second Partition Spilled: {}",victimPartition2);
+          int victimPartition2 = chooseAPartitionToFlush(victimPartition, true);
+          if (victimPartition2 < 0) {
+            // In the case of the forced spill, there is not enough memory to continue.
+            // Throws OOM to avoid the infinite loop.
+            if (forceSpill) {
+              throw new OutOfMemoryException(getOOMErrorMsg("AGGR"));
+            }
+            return;
+          }
+          long after = allocator.getAllocatedMemory();
+          spillAPartition(victimPartition2);
+          reinitPartition(victimPartition2);
+          logger.warn("A Second Spill was Needed: allocated before {}, after first spill {}, after second {}, memory needed {}",
+              before, after, allocator.getAllocatedMemory(), maxMemoryNeeded);
+          logger.trace("Second Partition Spilled: {}",victimPartition2);
         }
       }
       else {

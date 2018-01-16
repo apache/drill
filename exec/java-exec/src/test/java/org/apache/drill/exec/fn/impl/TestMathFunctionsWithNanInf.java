@@ -20,6 +20,7 @@ package org.apache.drill.exec.fn.impl;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -90,6 +91,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
 
 
     @Test
+    @Ignore // see DRILL-6018
     public void tesGreaterThanOrEqualToFunction() throws Exception {
       String table_name = "nan_test.json";
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
@@ -101,6 +103,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
     }
 
     @Test
+    @Ignore // see DRILL-6018
     public void testLessThanOrEqualToFunction() throws Exception {
       String table_name = "nan_test.json";
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
