@@ -132,10 +132,12 @@ class DrillConnectionImpl extends AvaticaConnection
             bit = new Drillbit(dConfig, serviceSet);
             bit.run();
           } catch (final UserException e) {
+        	cleanup();
             throw new SQLException(
                 "Failure in starting embedded Drillbit: " + e.getMessage(),
                 e);
           } catch (Exception e) {
+        	cleanup();
             // (Include cause exception's text in wrapping exception's text so
             // it's more likely to get to user (e.g., via SQLLine), and use
             // toString() since getMessage() text doesn't always mention error:)
@@ -167,15 +169,25 @@ class DrillConnectionImpl extends AvaticaConnection
       this.client.setClientName("Apache Drill JDBC Driver");
       this.client.connect(connect, info);
     } catch (OutOfMemoryException e) {
+      cleanup();
       throw new SQLNonTransientConnectionException("Failure creating root allocator", e);
     } catch (InvalidConnectionInfoException e) {
+      cleanup();
       throw new SQLNonTransientConnectionException("Invalid parameter in connection string: " + e.getMessage(), e);
     } catch (RpcException e) {
+      cleanup();
       // (Include cause exception's text in wrapping exception's text so
       // it's more likely to get to user (e.g., via SQLLine), and use
       // toString() since getMessage() text doesn't always mention error:)
       throw new SQLNonTransientConnectionException("Failure in connecting to Drill: " + e, e);
-    }
+    } catch(SQLException e) {
+    	cleanup();
+    	throw e;
+    } catch (Exception e) {
+    	cleanup();
+    	throw new SQLException("Failure in creating DrillConnectionImpl: " + e, e);
+	}
+    
   }
 
 
