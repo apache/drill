@@ -38,7 +38,7 @@ public class DrillRelBuilder extends RelBuilder {
 
   /**
    * Original method {@link RelBuilder#empty} returns empty values rel.
-   * In the order to preserve dara row types, filter with false predicate is created.
+   * In the order to preserve data row types, filter with false predicate is created.
    */
   @Override
   public RelBuilder empty() {
