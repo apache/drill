@@ -110,73 +110,81 @@ class DrillConnectionImpl extends AvaticaConnection
     super.setReadOnly(false);
 
     this.config = new DrillConnectionConfig(info);
+    try{
+      try {
+        String connect = null;
 
-    try {
-      String connect = null;
-
-      if (config.isLocal()) {
-        try {
-          Class.forName("org.eclipse.jetty.server.Handler");
-        } catch (final ClassNotFoundException e) {
-          throw new SQLNonTransientConnectionException(
-              "Running Drill in embedded mode using Drill's jdbc-all JDBC"
-              + " driver Jar file alone is not supported.",  e);
-        }
-
-        final DrillConfig dConfig = DrillConfig.create(info);
-        this.allocator = RootAllocatorFactory.newRoot(dConfig);
-        RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
-        if (set == null) {
-          // We're embedded; start a local drill bit.
-          serviceSet = RemoteServiceSet.getLocalServiceSet();
-          set = serviceSet;
+        if (config.isLocal()) {
           try {
-            bit = new Drillbit(dConfig, serviceSet);
-            bit.run();
-          } catch (final UserException e) {
-            throw new SQLException(
-                "Failure in starting embedded Drillbit: " + e.getMessage(),
-                e);
-          } catch (Exception e) {
-            // (Include cause exception's text in wrapping exception's text so
-            // it's more likely to get to user (e.g., via SQLLine), and use
-            // toString() since getMessage() text doesn't always mention error:)
-            throw new SQLException("Failure in starting embedded Drillbit: " + e, e);
+            Class.forName("org.eclipse.jetty.server.Handler");
+          } catch (final ClassNotFoundException e) {
+            throw new SQLNonTransientConnectionException(
+                "Running Drill in embedded mode using Drill's jdbc-all JDBC"
+                + " driver Jar file alone is not supported.",  e);
           }
+
+          final DrillConfig dConfig = DrillConfig.create(info);
+          this.allocator = RootAllocatorFactory.newRoot(dConfig);
+          RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
+          if (set == null) {
+            // We're embedded; start a local drill bit.
+            serviceSet = RemoteServiceSet.getLocalServiceSet();
+            set = serviceSet;
+            try {
+              bit = new Drillbit(dConfig, serviceSet);
+              bit.run();
+            } catch (final UserException e) {
+              throw new SQLException(
+                  "Failure in starting embedded Drillbit: " + e.getMessage(),
+                  e);
+            } catch (Exception e) {
+              // (Include cause exception's text in wrapping exception's text so
+              // it's more likely to get to user (e.g., via SQLLine), and use
+              // toString() since getMessage() text doesn't always mention error:)
+              throw new SQLException("Failure in starting embedded Drillbit: " + e, e);
+            }
+          } else {
+            serviceSet = null;
+            bit = null;
+          }
+
+          makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
+
+          this.client = new DrillClient(dConfig, set.getCoordinator());
+        } else if(config.isDirect()) {
+          final DrillConfig dConfig = DrillConfig.forClient();
+          this.allocator = RootAllocatorFactory.newRoot(dConfig);
+          this.client = new DrillClient(dConfig, true); // Get a direct connection
+          connect = config.getZookeeperConnectionString();
         } else {
-          serviceSet = null;
-          bit = null;
+          final DrillConfig dConfig = DrillConfig.forClient();
+          this.allocator = RootAllocatorFactory.newRoot(dConfig);
+          // TODO:  Check:  Why does new DrillClient() create another DrillConfig,
+          // with enableServerConfigs true, and cause scanning for function
+          // implementations (needed by a server, but not by a client-only
+          // process, right?)?  Probably pass dConfig to construction.
+          this.client = new DrillClient();
+          connect = config.getZookeeperConnectionString();
         }
-
-        makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
-
-        this.client = new DrillClient(dConfig, set.getCoordinator());
-      } else if(config.isDirect()) {
-        final DrillConfig dConfig = DrillConfig.forClient();
-        this.allocator = RootAllocatorFactory.newRoot(dConfig);
-        this.client = new DrillClient(dConfig, true); // Get a direct connection
-        connect = config.getZookeeperConnectionString();
-      } else {
-        final DrillConfig dConfig = DrillConfig.forClient();
-        this.allocator = RootAllocatorFactory.newRoot(dConfig);
-        // TODO:  Check:  Why does new DrillClient() create another DrillConfig,
-        // with enableServerConfigs true, and cause scanning for function
-        // implementations (needed by a server, but not by a client-only
-        // process, right?)?  Probably pass dConfig to construction.
-        this.client = new DrillClient();
-        connect = config.getZookeeperConnectionString();
+        this.client.setClientName("Apache Drill JDBC Driver");
+        this.client.connect(connect, info);
+      } catch (OutOfMemoryException e) {
+        throw new SQLNonTransientConnectionException("Failure creating root allocator", e);
+      } catch (InvalidConnectionInfoException e) {
+        throw new SQLNonTransientConnectionException("Invalid parameter in connection string: " + e.getMessage(), e);
+      } catch (RpcException e) {
+        // (Include cause exception's text in wrapping exception's text so
+        // it's more likely to get to user (e.g., via SQLLine), and use
+        // toString() since getMessage() text doesn't always mention error:)
+        throw new SQLNonTransientConnectionException("Failure in connecting to Drill: " + e, e);
+      } catch(SQLException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new SQLException("Failure in creating DrillConnectionImpl: " + e, e);
       }
-      this.client.setClientName("Apache Drill JDBC Driver");
-      this.client.connect(connect, info);
-    } catch (OutOfMemoryException e) {
-      throw new SQLNonTransientConnectionException("Failure creating root allocator", e);
-    } catch (InvalidConnectionInfoException e) {
-      throw new SQLNonTransientConnectionException("Invalid parameter in connection string: " + e.getMessage(), e);
-    } catch (RpcException e) {
-      // (Include cause exception's text in wrapping exception's text so
-      // it's more likely to get to user (e.g., via SQLLine), and use
-      // toString() since getMessage() text doesn't always mention error:)
-      throw new SQLNonTransientConnectionException("Failure in connecting to Drill: " + e, e);
+    } catch (Throwable t) {
+      cleanup();
+      throw t;
     }
   }
 
