@@ -69,7 +69,7 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
     protected abstract int match(int start, int end, DrillBuf drillBuf);
   }
 
-  /** Handles patterns with length one */
+  /** Handles patterns with length zero */
   private final class MatcherZero extends MatcherFcn {
 
     private MatcherZero() {
@@ -84,23 +84,23 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
 
   /** Handles patterns with length one */
   private final class MatcherOne extends MatcherFcn {
+    final byte firstPatternByte;
 
     private MatcherOne() {
-      super();
+      firstPatternByte  = patternArray[0];
     }
 
     /** {@inheritDoc} */
     @Override
     protected final int match(int start, int end, DrillBuf drillBuf) {
       final int lengthToProcess = end - start;
-      final byte firstPattByte  = patternArray[0];
 
       // simplePattern string has meta characters i.e % and _ and escape characters removed.
       // so, we can just directly compare.
       for (int idx = 0; idx < lengthToProcess; idx++) {
         byte inputByte = drillBuf.getByte(start + idx);
 
-        if (firstPattByte != inputByte) {
+        if (firstPatternByte != inputByte) {
           continue;
         }
         return 1;
@@ -111,28 +111,30 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
 
   /** Handles patterns with length two */
   private final class MatcherTwo extends MatcherFcn {
+    final byte firstPatternByte;
+    final byte secondPatternByte;
 
     private MatcherTwo() {
+      firstPatternByte  = patternArray[0];
+      secondPatternByte = patternArray[1];
     }
 
     /** {@inheritDoc} */
     @Override
     protected final int match(int start, int end, DrillBuf drillBuf) {
       final int lengthToProcess = end - start - 1;
-      final byte firstPattByte  = patternArray[0];
-      final byte secondPattByte = patternArray[1];
 
       // simplePattern string has meta characters i.e % and _ and escape characters removed.
       // so, we can just directly compare.
       for (int idx = 0; idx < lengthToProcess; idx++) {
         final byte firstInByte = drillBuf.getByte(start + idx);
 
-        if (firstPattByte != firstInByte) {
+        if (firstPatternByte != firstInByte) {
           continue;
         } else {
-          final byte secondInByte = drillBuf.getByte(start + idx +1);
+          final byte secondInByte = drillBuf.getByte(start + idx + 1);
 
-          if (secondInByte == secondPattByte) {
+          if (secondInByte == secondPatternByte) {
             return 1;
           }
         }
@@ -143,30 +145,33 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
 
   /** Handles patterns with length three */
   private final class MatcherThree extends MatcherFcn {
+    final byte firstPatternByte;
+    final byte secondPatternByte;
+    final byte thirdPatternByte;
 
     private MatcherThree() {
+      firstPatternByte   = patternArray[0];
+      secondPatternByte  = patternArray[1];
+      thirdPatternByte   = patternArray[2];
     }
 
     /** {@inheritDoc} */
     @Override
     protected final int match(int start, int end, DrillBuf drillBuf) {
-      final int lengthToProcess  = end - start -2;
-      final byte firstPattByte   = patternArray[0];
-      final byte secondPattByte  = patternArray[1];
-      final byte thirdPattByte   = patternArray[2];
+      final int lengthToProcess = end - start - 2;
 
       // simplePattern string has meta characters i.e % and _ and escape characters removed.
       // so, we can just directly compare.
       for (int idx = 0; idx < lengthToProcess; idx++) {
         final byte inputByte = drillBuf.getByte(start + idx);
 
-        if (firstPattByte != inputByte) {
+        if (firstPatternByte != inputByte) {
           continue;
         } else {
-          final byte secondInByte = drillBuf.getByte(start + idx +1);
-          final byte thirdInByte  = drillBuf.getByte(start + idx +2);
+          final byte secondInByte = drillBuf.getByte(start + idx + 1);
+          final byte thirdInByte  = drillBuf.getByte(start + idx + 2);
 
-          if (secondInByte == secondPattByte && thirdInByte == thirdPattByte) {
+          if (secondInByte == secondPatternByte && thirdInByte == thirdPatternByte) {
             return 1;
           }
         }
@@ -177,8 +182,10 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
 
   /** Handles patterns with arbitrary length */
   private final class MatcherN extends MatcherFcn {
+    final byte firstPatternByte;
 
     private MatcherN() {
+      firstPatternByte = patternArray[0];
     }
 
     /** {@inheritDoc} */
@@ -186,14 +193,13 @@ public final class SqlPatternContainsMatcher extends AbstractSqlPatternMatcher {
     protected final int match(int start, int end, DrillBuf drillBuf) {
       final int lengthToProcess = end - start - patternLength + 1;
       int patternIndex          = 0;
-      final byte firstPattByte  = patternArray[0];
 
       // simplePattern string has meta characters i.e % and _ and escape characters removed.
       // so, we can just directly compare.
       for (int idx = 0; idx < lengthToProcess; idx++) {
         final byte inputByte = drillBuf.getByte(start + idx);
 
-        if (firstPattByte == inputByte) {
+        if (firstPatternByte == inputByte) {
           for (patternIndex = 1; patternIndex < patternLength; ++patternIndex) {
             final byte currInByte   = drillBuf.getByte(start + idx + patternIndex);
             final byte currPattByte = patternArray[patternIndex];
