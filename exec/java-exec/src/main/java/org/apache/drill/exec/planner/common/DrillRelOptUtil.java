@@ -30,9 +30,11 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Pair;
@@ -224,4 +226,65 @@ public abstract class DrillRelOptUtil {
     }
   }
 
+  public static boolean isLimit0(RexNode fetch) {
+    if (fetch != null && fetch.isA(SqlKind.LITERAL)) {
+      RexLiteral l = (RexLiteral) fetch;
+      switch (l.getTypeName()) {
+        case BIGINT:
+        case INTEGER:
+        case DECIMAL:
+          if (((long) l.getValue2()) == 0) {
+            return true;
+          }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Find whether the given project rel can produce non-scalar output (hence unknown rowcount). This
+   * would happen if the project has a flatten
+   * @param project : The project rel
+   * @return : Return true if the rowcount is unknown. Otherwise, false.
+   */
+  public static boolean isProjectOutputRowcountUnknown(RelNode project) {
+    assert project instanceof Project : "Rel is NOT an instance of project!";
+    for (RexNode rex : project.getChildExps()) {
+      if (rex instanceof RexCall) {
+        if ("flatten".equals(((RexCall) rex).getOperator().getName().toLowerCase())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Find whether the given project rel has unknown output schema. This would happen if the
+   * project has CONVERT_FROMJSON which can only derive the schema after evaluation is performed
+   * @param project : The project rel
+   * @return : Return true if the project output schema is unknown. Otherwise, false.
+   */
+  public static boolean isProjectOutputSchemaUnknown(RelNode project) {
+    assert project instanceof Project : "Rel is NOT an instance of project!";
+    try {
+      RexVisitor<Void> visitor =
+          new RexVisitorImpl<Void>(true) {
+            public Void visitCall(RexCall call) {
+              if ("convert_fromjson".equals(call.getOperator().getName().toLowerCase())) {
+                throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
+                                              other utility methods in RexUtil.java */
+              }
+              return super.visitCall(call);
+            }
+          };
+      for (RexNode rex : ((Project) project).getProjects()) {
+        rex.accept(visitor);
+      }
+    } catch (Util.FoundOne e) {
+      Util.swallow(e, null);
+      return true;
+    }
+    return false;
+  }
 }

@@ -88,7 +88,7 @@ import java.util.List;
 public enum PlannerPhase {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
-  LOGICAL_PRUNE_AND_JOIN("Loigcal Planning (with join and partition pruning)") {
+  LOGICAL_PRUNE_AND_JOIN("Logical Planning (with join and partition pruning)") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           getDrillBasicRules(context),
@@ -274,6 +274,7 @@ public enum PlannerPhase {
        */
       DrillPushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastJoinRule.INSTANCE,
+
       // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
       //DrillProjectSetOpTransposeRule.INSTANCE,
       RuleInstance.PROJECT_WINDOW_TRANSPOSE_RULE,
@@ -342,8 +343,9 @@ public enum PlannerPhase {
             PruneScanRule.getDirFilterOnScan(optimizerRulesContext),
             ParquetPruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
             ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext),
-            DrillPushLimitToScanRule.LIMIT_ON_SCAN,
-            DrillPushLimitToScanRule.LIMIT_ON_PROJECT
+            // Include LIMIT_ON_PROJECT since LIMIT_ON_SCAN may not work without it
+            DrillPushLimitToScanRule.LIMIT_ON_PROJECT,
+            DrillPushLimitToScanRule.LIMIT_ON_SCAN
         )
         .build();
 
