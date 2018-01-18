@@ -55,7 +55,6 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
     @Inject DrillBuf buffer;
-    @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
