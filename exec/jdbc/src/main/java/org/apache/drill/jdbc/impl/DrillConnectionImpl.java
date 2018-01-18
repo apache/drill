@@ -132,12 +132,12 @@ class DrillConnectionImpl extends AvaticaConnection
             bit = new Drillbit(dConfig, serviceSet);
             bit.run();
           } catch (final UserException e) {
-        	cleanup();
+            cleanup();
             throw new SQLException(
                 "Failure in starting embedded Drillbit: " + e.getMessage(),
                 e);
           } catch (Exception e) {
-        	cleanup();
+            cleanup();
             // (Include cause exception's text in wrapping exception's text so
             // it's more likely to get to user (e.g., via SQLLine), and use
             // toString() since getMessage() text doesn't always mention error:)
@@ -181,13 +181,12 @@ class DrillConnectionImpl extends AvaticaConnection
       // toString() since getMessage() text doesn't always mention error:)
       throw new SQLNonTransientConnectionException("Failure in connecting to Drill: " + e, e);
     } catch(SQLException e) {
-    	cleanup();
-    	throw e;
+      cleanup();
+      throw e;
     } catch (Exception e) {
-    	cleanup();
-    	throw new SQLException("Failure in creating DrillConnectionImpl: " + e, e);
-	}
-    
+      cleanup();
+      throw new SQLException("Failure in creating DrillConnectionImpl: " + e, e);
+    }
   }
 
 
