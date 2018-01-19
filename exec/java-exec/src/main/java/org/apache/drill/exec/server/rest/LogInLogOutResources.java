@@ -137,20 +137,21 @@ public class LogInLogOutResources {
     return ViewableWithPermissions.createMainLoginPage(model);
   }
 
+  /**
+   * This class should be public for it's method's to be accessible by mainLogin.ftl file
+   */
   @VisibleForTesting
-  class MainLoginPageModel {
+  public class MainLoginPageModel {
 
     private final String error;
 
     private final boolean authEnabled;
 
-    private final DrillConfig config;
-
     private final Set<String> configuredMechs;
 
     MainLoginPageModel(String error) {
       this.error = error;
-      this.config = workManager.getContext().getConfig();
+      final DrillConfig config = workManager.getContext().getConfig();
       authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
       configuredMechs = DrillHttpSecurityHandlerProvider.getHttpAuthMechanisms(config);
     }
