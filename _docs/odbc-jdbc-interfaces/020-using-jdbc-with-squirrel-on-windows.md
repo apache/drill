@@ -1,9 +1,12 @@
 ---
 title: "Using JDBC with SQuirreL on Windows"
-date: 2017-05-09 01:40:53 UTC
+date: 2018-01-19 01:36:03 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
-To use the JDBC Driver to access Drill through SQuirreL, ensure that you meet the prerequisites and follow the steps in this section.
+You can use the JDBC driver to connect to Drill from SQuirrel and run SQL queries. Verify that your system meets the prerequisites and then follow the steps listed.  
+
+**Note:** Drill interprets a wildcard in a SQL query as a multiline comment (/.../), which SQuirreL supports. As a result, SQuirreL tries to remove what it interprets as comments and submits an abruptly truncated query. To resolve this issue in SQuirreL, go to the menu and select **File > New Session Properties > Tab SQL** and uncheck the *“Remove multi-line comment (/.../) from SQL before sending to database"* option located in the lower portion of the window. See [https://sourceforge.net/p/squirrel-sql/bugs/1300](https://sourceforge.net/p/squirrel-sql/bugs/1300/)/ for more information. 
+
 ## Prerequisites
 
   * SQuirreL requires JRE 7
