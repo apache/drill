@@ -86,7 +86,7 @@ public class ${datetype}${intervaltype}Functions {
     @Param ${datetype}Holder left;
     @Param ${intervaltype}Holder right;
     @Workspace org.joda.time.MutableDateTime temp;
-    <#if datetype == "Date" && (intervaltype.startsWith("Interval"))>
+    <#if datetype == "Date" && (intervaltype.startsWith("IntervalTime"))>
     @Output TimeStampHolder out;
     <#else>
     @Output ${datetype}Holder out;
@@ -108,7 +108,7 @@ public class ${datetype}${intervaltype}Functions {
     @Param ${intervaltype}Holder right;
     @Param ${datetype}Holder left;
     @Workspace org.joda.time.MutableDateTime temp;
-    <#if datetype == "Date" && (intervaltype.startsWith("Interval"))>
+    <#if datetype == "Date" && (intervaltype.startsWith("IntervalTime"))>
     @Output TimeStampHolder out;
     <#else>
     @Output ${datetype}Holder out;
