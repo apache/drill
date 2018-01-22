@@ -15,6 +15,13 @@
       <script src="/static/js/jquery.form.js"></script>
       <script src="/static/js/querySubmission.js"></script>
     </#if>
+  <!-- Ace Libraries for Syntax Formatting -->
+  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/mode-snippets.js" type="text/javascript" charset="utf-8"></script>
 </#macro>
 
 <#macro page_body>
@@ -57,13 +64,47 @@
     </div>
     <div class="form-group">
       <label for="query">Query</label>
-      <textarea class="form-control" id="query" rows="5" name="query" style="font-family: Courier;"></textarea>
+      <div id="query-editor-format"></div>
+      <input class="form-control" type="hidden" id="query" name="query"/>
     </div>
 
     <button class="btn btn-default" type=<#if model?? && model>"button" onclick="doSubmitQueryWithUserName()"<#else>"submit"</#if>>
       Submit
     </button>
   </form>
+
+  <script>
+    ace.require("ace/ext/language_tools");
+    var editor = ace.edit("query-editor-format");
+    var queryText = $('input[name="query"]');
+    //Hidden text input for form-submission
+    editor.getSession().on("change", function () {
+      queryText.val(editor.getSession().getValue());
+    });
+    editor.setAutoScrollEditorIntoView(true);
+    editor.setOption("maxLines", 25);
+    editor.setOption("minLines", 12);
+    editor.renderer.setShowGutter(true);
+    editor.renderer.setOption('showLineNumbers', true);
+    editor.renderer.setOption('showPrintMargin', false);
+    editor.getSession().setMode("ace/mode/sql");
+    editor.getSession().setTabSize(4);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setTheme("ace/theme/sqlserver");
+    editor.$blockScrolling = "Infinity";
+    //CSS Formatting
+    document.getElementById('query-editor-format').style.fontSize='13px';
+    document.getElementById('query-editor-format').style.fontFamily='courier';
+    document.getElementById('query-editor-format').style.lineHeight='1.5';
+    document.getElementById('query-editor-format').style.width='98%';
+    document.getElementById('query-editor-format').style.margin='auto';
+    editor.setOptions({
+      enableSnippets: true,
+      enableBasicAutocompletion: true,
+      enableLiveAutocompletion: false
+    });
+  </script>
+
 </#macro>
 
 <@page_html/>
