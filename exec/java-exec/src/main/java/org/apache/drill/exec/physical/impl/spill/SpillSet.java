@@ -18,13 +18,15 @@
 package org.apache.drill.exec.physical.impl.spill;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +34,7 @@ import java.util.Set;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.VectorSerializer;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashAggregate;
@@ -65,7 +68,7 @@ public class SpillSet {
 
     void deleteOnExit(String fragmentSpillDir) throws IOException;
 
-    OutputStream createForWrite(String fileName) throws IOException;
+    WritableByteChannel createForWrite(String fileName) throws IOException;
 
     InputStream openForInput(String fileName) throws IOException;
 
@@ -77,10 +80,10 @@ public class SpillSet {
      * Given a manager-specific output stream, return the current write position.
      * Used to report total write bytes.
      *
-     * @param outputStream output stream created by the file manager
+     * @param channel created by the file manager
      * @return
      */
-    long getWriteBytes(OutputStream outputStream);
+    long getWriteBytes(WritableByteChannel channel);
 
     /**
      * Given a manager-specific input stream, return the current read position.
@@ -104,9 +107,17 @@ public class SpillSet {
      * nodes provide insufficient local disk space)
      */
 
+    // The buffer size is calculated as LCM of the Hadoop internal checksum buffer (9 * checksum length), where
+    // checksum length is 512 by default, and MapRFS page size that equals to 8 * 1024. The length of the transfer
+    // buffer does not affect performance of the write to hdfs or maprfs significantly once buffer length is more
+    // than 32 bytes.
+    private static final int TRANSFER_SIZE = 9 * 8 * 1024;
+
+    private final byte buffer[];
     private FileSystem fs;
 
     protected HadoopFileManager(String fsName) {
+      buffer = new byte[TRANSFER_SIZE];
       Configuration conf = new Configuration();
       conf.set(FileSystem.FS_DEFAULT_NAME_KEY, fsName);
       try {
@@ -124,8 +135,8 @@ public class SpillSet {
     }
 
     @Override
-    public OutputStream createForWrite(String fileName) throws IOException {
-      return fs.create(new Path(fileName));
+    public WritableByteChannel createForWrite(String fileName) throws IOException {
+      return new WritableByteChannelImpl(buffer, fs.create(new Path(fileName)));
     }
 
     @Override
@@ -152,10 +163,10 @@ public class SpillSet {
     }
 
     @Override
-    public long getWriteBytes(OutputStream outputStream) {
+    public long getWriteBytes(WritableByteChannel channel) {
       try {
-        return ((FSDataOutputStream) outputStream).getPos();
-      } catch (IOException e) {
+        return ((FSDataOutputStream)((WritableByteChannelImpl)channel).out).getPos();
+      } catch (Exception e) {
         // Just used for logging, not worth dealing with the exception.
         return 0;
       }
@@ -295,10 +306,8 @@ public class SpillSet {
 
     @SuppressWarnings("resource")
     @Override
-    public OutputStream createForWrite(String fileName) throws IOException {
-      return new CountingOutputStream(
-                new BufferedOutputStream(
-                    new FileOutputStream(new File(baseDir, fileName))));
+    public WritableByteChannel createForWrite(String fileName) throws IOException {
+      return FileChannel.open(new File(baseDir, fileName).toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
 
     @SuppressWarnings("resource")
@@ -321,13 +330,56 @@ public class SpillSet {
     }
 
     @Override
-    public long getWriteBytes(OutputStream outputStream) {
-      return ((CountingOutputStream) outputStream).getCount();
+    public long getWriteBytes(WritableByteChannel channel)
+    {
+      try {
+        return ((FileChannel)channel).position();
+      } catch (Exception e) {
+        return 0;
+      }
     }
 
     @Override
     public long getReadBytes(InputStream inputStream) {
       return ((CountingInputStream) inputStream).getCount();
+    }
+  }
+
+  private static class WritableByteChannelImpl implements WritableByteChannel
+  {
+    private final byte buffer[];
+    private OutputStream out;
+
+    WritableByteChannelImpl(byte[] buffer, OutputStream out) {
+      this.buffer = buffer;
+      this.out = out;
+    }
+
+    @Override
+    public int write(ByteBuffer src) throws IOException {
+      int remaining = src.remaining();
+      int totalWritten = 0;
+      synchronized (buffer) {
+        for (int posn = 0; posn < remaining; posn += buffer.length) {
+          int len = Math.min(buffer.length, remaining - posn);
+          src.get(buffer, 0, len);
+          out.write(buffer, 0, len);
+          totalWritten += len;
+        }
+      }
+      return totalWritten;
+    }
+
+    @Override
+    public boolean isOpen()
+    {
+      return out != null;
+    }
+
+    @Override
+    public void close() throws IOException {
+      out.close();
+      out = null;
     }
   }
 
@@ -457,7 +509,7 @@ public class SpillSet {
     return fileManager.openForInput(fileName);
   }
 
-  public OutputStream openForOutput(String fileName) throws IOException {
+  public WritableByteChannel openForOutput(String fileName) throws IOException {
     return fileManager.createForWrite(fileName);
   }
 
@@ -484,8 +536,8 @@ public class SpillSet {
     return fileManager.getReadBytes(inputStream);
   }
 
-  public long getPosition(OutputStream outputStream) {
-    return fileManager.getWriteBytes(outputStream);
+  public long getPosition(WritableByteChannel channel) {
+    return fileManager.getWriteBytes(channel);
   }
 
   public void tallyReadBytes(long readLength) {
@@ -494,5 +546,14 @@ public class SpillSet {
 
   public void tallyWriteBytes(long writeLength) {
     writeBytes += writeLength;
+  }
+
+  public VectorSerializer.Writer writer(String fileName) throws IOException {
+    return VectorSerializer.writer(openForOutput(fileName));
+  }
+
+  public void close(VectorSerializer.Writer writer) throws IOException {
+    tallyWriteBytes(writer.getBytesWritten());
+    writer.close();
   }
 }
