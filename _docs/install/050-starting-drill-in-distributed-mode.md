@@ -1,6 +1,6 @@
 ---
 title: Starting Drill in Distributed Mode
-date: 2015-12-30 21:59:31 UTC
+date: 2018-01-22 19:42:55 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 
@@ -32,7 +32,9 @@ Using the Drill shell, you can interactively query data in connected data source
 * `drill-conf`  
   Opens the Drill shell using the connection string to ZooKeeper nodes specified in `drill-override.conf` in `<installation directory>/conf`.  
 * `drill-localhost`  
-  Opens the Drill shell using a connection to the ZooKeeper running on the local host.
+  Opens the Drill shell using a connection to the ZooKeeper running on the local host.  
+
+**Note:** As of Drill 1.12, users must enter a username to issue queries through curl commands if user impersonation is enabled and authentication is disabled. See [REST API]({{site.baseurl}}/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/) for more information.
 
 The [Drill prompt]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/#about-the-drill-prompt) appears when you start the Drill shell.
 

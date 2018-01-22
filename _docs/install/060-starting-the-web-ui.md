@@ -1,6 +1,6 @@
 ---
 title: Starting the Web Console
-date: 2017-08-08 21:29:43 UTC
+date: 2018-01-22 19:42:56 UTC
 parent: Install Drill
 ---
 
@@ -15,11 +15,13 @@ To open the Drill Web Console, launch a web browser, and go to one of the follow
 * `http://localhost:8047`   
 Use  this URL when running ./drill-embedded.
 
-<!-- ## Drill 1.2 and Later
+## Drill 1.2 and Later
 
 If [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) is not enabled, all the Web Console controls appear to users as well as administrators:  
 
-![Web Console]({{ site.baseurl }}/docs/img/web-ui.png)
+![Web Console]({{ site.baseurl }}/docs/img/web-ui.png)  
+
+**Note:** As of Drill 1.12, users must enter a username to issue queries through the Query page in the Drill Web Console if user impersonation is enabled and authentication is disabled. To re-run a query from the Profiles page, users must also submit a username. See [REST API]({{site.baseurl}}/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/) for more information.
 
 If [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) is enabled, Drill prompts you for a user name/password:
 
@@ -31,6 +33,6 @@ If an [administrator]({{ site.baseurl }}/docs/configuring-user-authentication/#a
 
 If a user, who is not an administrator, logs in, the Web Console controls are limited to Query, Metrics, and Profiles. The Profiles tab for a non-administrator user contains the profiles of all queries the user issued either through ODBC, JDBC, or the Web Console. 
 
-![Web Console User View]({{ site.baseurl }}/docs/img/web-ui-user-view.png) -->
+![Web Console User View]({{ site.baseurl }}/docs/img/web-ui-user-view.png)
 
 
