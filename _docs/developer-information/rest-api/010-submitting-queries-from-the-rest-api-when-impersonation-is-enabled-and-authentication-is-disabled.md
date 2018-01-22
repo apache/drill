@@ -1,6 +1,6 @@
 ---
 title: "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled"
-date: 2018-01-22 20:06:23 UTC
+date: 2018-01-22 20:21:32 UTC
 parent: "REST API"
 ---  
 
@@ -57,7 +57,7 @@ When using an application to submit a query, you must include the User-Name head
               }
          
 
-**Note:** You can also use {{Apache HttpClient}}.
+**Note:** You can also use `{{Apache HttpClient}}`.
 
   
 
