@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.parquet.column.statistics.Statistics;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
@@ -416,8 +418,21 @@ public class Metadata {
    * Get the metadata for a single file
    */
   private ParquetFileMetadata_v3 getParquetFileMetadata_v3(ParquetTableMetadata_v3 parquetTableMetadata,
-      FileStatus file) throws IOException {
-    ParquetMetadata metadata = ParquetFileReader.readFooter(fs.getConf(), file);
+      final FileStatus file) throws IOException, InterruptedException {
+    final ParquetMetadata metadata;
+    final UserGroupInformation processUserUgi = ImpersonationUtil.getProcessUserUGI();
+    try {
+      metadata = processUserUgi.doAs(new PrivilegedExceptionAction<ParquetMetadata>() {
+        public ParquetMetadata run() throws Exception {
+          return ParquetFileReader.readFooter(fs.getConf(), file);
+        }
+      });
+    } catch(Exception e) {
+      logger.error("Exception while reading footer of parquet file [Details - path: {}, owner: {}] as process user {}",
+        file.getPath(), file.getOwner(), processUserUgi.getShortUserName(), e);
+      throw e;
+    }
+
     MessageType schema = metadata.getFileMetaData().getSchema();
 
 //    Map<SchemaPath, OriginalType> originalTypeMap = Maps.newHashMap();
