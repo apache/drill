@@ -742,21 +742,23 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         .append('\n');
 
     if (DEBUG) {
-      indent(sb, level + 1).append(String.format("child allocators: %d\n", childAllocators.size()));
-      for (BaseAllocator child : childAllocators.keySet()) {
-        child.print(sb, level + 2, verbosity);
-      }
+      synchronized (DEBUG_LOCK) {
+        indent(sb, level + 1).append(String.format("child allocators: %d\n", childAllocators.size()));
+        for (BaseAllocator child : childAllocators.keySet()) {
+          child.print(sb, level + 2, verbosity);
+        }
 
-      indent(sb, level + 1).append(String.format("ledgers: %d\n", childLedgers.size()));
-      for (BufferLedger ledger : childLedgers.keySet()) {
-        ledger.print(sb, level + 2, verbosity);
-      }
+        indent(sb, level + 1).append(String.format("ledgers: %d\n", childLedgers.size()));
+        for (BufferLedger ledger : childLedgers.keySet()) {
+          ledger.print(sb, level + 2, verbosity);
+        }
 
-      final Set<Reservation> reservations = this.reservations.keySet();
-      indent(sb, level + 1).append(String.format("reservations: %d\n", reservations.size()));
-      for (final Reservation reservation : reservations) {
-        if (verbosity.includeHistoricalLog) {
-          reservation.historicalLog.buildHistory(sb, level + 3, true);
+        final Set<Reservation> reservations = this.reservations.keySet();
+        indent(sb, level + 1).append(String.format("reservations: %d\n", reservations.size()));
+        for (final Reservation reservation : reservations) {
+          if (verbosity.includeHistoricalLog) {
+            reservation.historicalLog.buildHistory(sb, level + 3, true);
+          }
         }
       }
     }
