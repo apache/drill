@@ -19,6 +19,13 @@
     <script src="/static/js/jquery.form.js"></script>
     <script src="/static/js/querySubmission.js"></script>
 </#if>
+  <!-- Ace Libraries for Syntax Formatting -->
+  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/mode-sql.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/mode-snippets.js" type="text/javascript" charset="utf-8"></script>
 
 <script>
     var globalconfig = {
@@ -65,7 +72,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   </ul>
   <div id="query-content" class="tab-content">
     <div id="query-query" class="tab-pane">
-      <p><pre>${model.getProfile().query}</pre></p>
+      <p><pre id="query-text" name="query-text"  style="background-color: #f5f5f5;">${model.getProfile().query}</pre></p>
     </div>
     <div id="query-physical" class="tab-pane">
       <p><pre>${model.profile.plan}</pre></p>
@@ -84,9 +91,8 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
         </#if>
 
         <form role="form" id="queryForm" action="/query" method="POST">
-          <div class="form-group">
-            <textarea class="form-control" id="query" name="query" style="font-family: Courier;">${model.getProfile().query}</textarea>
-          </div>
+          <div id="query-editor" class="form-group">${model.getProfile().query}</div>
+          <input class="form-control" id="query" name="query" type="hidden" value="${model.getProfile().query}"/>
           <div class="form-group">
             <div class="radio-inline">
               <label>
@@ -364,6 +370,75 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   </div>
   <div class="page-header">
   </div> <br>
+
+    <script>
+    //Configuration for Query Viewer in Profile
+    ace.require("ace/ext/language_tools");
+    var viewer = ace.edit("query-text");
+    viewer.setAutoScrollEditorIntoView(true);
+    viewer.setOption("minLines", 3);
+    viewer.setOption("maxLines", 20);
+    viewer.renderer.setShowGutter(false);
+    viewer.renderer.setOption('showLineNumbers', false);
+    viewer.renderer.setOption('showPrintMargin', false);
+    viewer.renderer.setOption("vScrollBarAlwaysVisible", true);
+    viewer.renderer.setOption("hScrollBarAlwaysVisible", true);
+    viewer.renderer.setScrollMargin(10, 10, 10, 10);
+    viewer.getSession().setMode("ace/mode/sql");
+    viewer.setTheme("ace/theme/sqlserver");
+    //CSS Formatting
+    document.getElementById('query-query').style.fontSize='13px';
+    document.getElementById('query-query').style.fontFamily='courier';
+    document.getElementById('query-query').style.lineHeight='1.5';
+    document.getElementById('query-query').style.width='98%';
+    document.getElementById('query-query').style.margin='auto';
+    document.getElementById('query-query').style.backgroundColor='#f5f5f5';
+    viewer.resize();
+    viewer.setReadOnly(true);
+    viewer.setOptions({
+      enableBasicAutocompletion: false,
+      enableSnippets: false,
+      enableLiveAutocompletion: false
+    });
+  </script>
+
+  <script>
+    //Configuration for Query Editor in Profile
+    ace.require("ace/ext/language_tools");
+    var editor = ace.edit("query-editor");
+    //Hidden text input for form-submission
+    var queryText = $('input[name="query"]');
+    editor.getSession().on("change", function () {
+      queryText.val(editor.getSession().getValue());
+    });
+    editor.setAutoScrollEditorIntoView(true);
+    editor.setOption("maxLines", 16);
+    editor.setOption("minLines", 10);
+    editor.renderer.setShowGutter(true);
+    editor.renderer.setOption('showLineNumbers', true);
+    editor.renderer.setOption('showPrintMargin', false);
+    editor.renderer.setOption("vScrollBarAlwaysVisible", true);
+    editor.renderer.setOption("hScrollBarAlwaysVisible", true);;
+    editor.renderer.setScrollMargin(10, 10, 10, 10);
+    editor.getSession().setMode("ace/mode/sql");
+    editor.getSession().setTabSize(4);
+    editor.getSession().setUseSoftTabs(true);
+    editor.setTheme("ace/theme/sqlserver");
+    editor.$blockScrolling = "Infinity";
+    //CSS Formatting
+    document.getElementById('query-editor').style.fontSize='13px';
+    document.getElementById('query-editor').style.fontFamily='courier';
+    document.getElementById('query-editor').style.lineHeight='1.5';
+    document.getElementById('query-editor').style.width='98%';
+    document.getElementById('query-editor').style.margin='auto';
+    document.getElementById('query-editor').style.backgroundColor='#ffffff';
+    editor.setOptions({
+      enableSnippets: true,
+      enableBasicAutocompletion: true,
+      enableLiveAutocompletion: false
+    });
+  </script>
+
 </#macro>
 
 <@page_html/>

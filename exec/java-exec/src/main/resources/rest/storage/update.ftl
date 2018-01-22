@@ -12,6 +12,10 @@
 <#include "*/generic.ftl">
 <#macro page_head>
   <script src="/static/js/jquery.form.js"></script>
+
+  <!-- Ace Libraries for Syntax Formatting -->
+  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
 </#macro>
 
 <#macro page_body>
@@ -42,8 +46,6 @@
   <br>
   <div id="message" class="hidden alert alert-info">
   </div>
-  <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
   <script>
     var editor = ace.edit("editor");
     var textarea = $('textarea[name="config"]');
