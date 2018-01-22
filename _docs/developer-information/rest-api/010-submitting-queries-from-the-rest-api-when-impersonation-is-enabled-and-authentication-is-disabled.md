@@ -1,7 +1,7 @@
 ---
 title: "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled"
-date: 2017-03-15 19:34:58 UTC
-parent: "Developer Information"
+date: 2018-01-22 20:06:23 UTC
+parent: "REST API"
 ---  
 
 

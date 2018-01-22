@@ -3158,8 +3158,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Release Notes", 
-                    "next_url": "/docs/release-notes/", 
+                    "next_title": "REST API Introduction", 
+                    "next_url": "/docs/rest-api-introduction/", 
                     "parent": "Design Docs", 
                     "previous_title": "Useful Research", 
                     "previous_url": "/docs/useful-research/", 
@@ -3673,8 +3673,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Release Notes", 
-                            "next_url": "/docs/release-notes/", 
+                            "next_title": "REST API Introduction", 
+                            "next_url": "/docs/rest-api-introduction/", 
                             "parent": "Design Docs", 
                             "previous_title": "Useful Research", 
                             "previous_url": "/docs/useful-research/", 
@@ -3691,6 +3691,40 @@
                     "relative_path": "_docs/developer-information/030-design-docs.md", 
                     "title": "Design Docs", 
                     "url": "/docs/design-docs/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Developer Information", 
+                            "url": "/docs/developer-information/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+                    "next_url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/", 
+                    "parent": "Developer Information", 
+                    "previous_title": "Value Vectors", 
+                    "previous_url": "/docs/value-vectors/", 
+                    "relative_path": "_docs/developer-information/rest-api/010-rest-api-introduction.md", 
+                    "title": "REST API Introduction", 
+                    "url": "/docs/rest-api-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Developer Information", 
+                            "url": "/docs/developer-information/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Release Notes", 
+                    "next_url": "/docs/release-notes/", 
+                    "parent": "Developer Information", 
+                    "previous_title": "REST API Introduction", 
+                    "previous_url": "/docs/rest-api-introduction/", 
+                    "relative_path": "_docs/developer-information/rest-api/010-submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled.md", 
+                    "title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+                    "url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/"
                 }
             ], 
             "next_title": "REST API", 
@@ -8890,6 +8924,23 @@
             "title": "REST API", 
             "url": "/docs/rest-api/"
         }, 
+        "REST API Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Developer Information", 
+                    "url": "/docs/developer-information/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+            "next_url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/", 
+            "parent": "Developer Information", 
+            "previous_title": "Value Vectors", 
+            "previous_url": "/docs/value-vectors/", 
+            "relative_path": "_docs/developer-information/rest-api/010-rest-api-introduction.md", 
+            "title": "REST API Introduction", 
+            "url": "/docs/rest-api-introduction/"
+        }, 
         "RPC Overview": {
             "breadcrumbs": [
                 {
@@ -9296,8 +9347,8 @@
             "next_title": "Apache Drill 1.12.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
             "parent": "", 
-            "previous_title": "Value Vectors", 
-            "previous_url": "/docs/value-vectors/", 
+            "previous_title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+            "previous_url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/", 
             "relative_path": "_docs/130-rn.md", 
             "title": "Release Notes", 
             "url": "/docs/release-notes/"
@@ -12521,6 +12572,23 @@
             "title": "String Manipulation", 
             "url": "/docs/string-manipulation/"
         }, 
+        "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled": {
+            "breadcrumbs": [
+                {
+                    "title": "Developer Information", 
+                    "url": "/docs/developer-information/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Release Notes", 
+            "next_url": "/docs/release-notes/", 
+            "parent": "Developer Information", 
+            "previous_title": "REST API Introduction", 
+            "previous_url": "/docs/rest-api-introduction/", 
+            "relative_path": "_docs/developer-information/rest-api/010-submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled.md", 
+            "title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+            "url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/"
+        }, 
         "Summary": {
             "breadcrumbs": [
                 {
@@ -13677,8 +13745,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Release Notes", 
-            "next_url": "/docs/release-notes/", 
+            "next_title": "REST API Introduction", 
+            "next_url": "/docs/rest-api-introduction/", 
             "parent": "Design Docs", 
             "previous_title": "Useful Research", 
             "previous_url": "/docs/useful-research/", 
@@ -18793,8 +18861,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Release Notes", 
-                            "next_url": "/docs/release-notes/", 
+                            "next_title": "REST API Introduction", 
+                            "next_url": "/docs/rest-api-introduction/", 
                             "parent": "Design Docs", 
                             "previous_title": "Useful Research", 
                             "previous_url": "/docs/useful-research/", 
@@ -18811,6 +18879,40 @@
                     "relative_path": "_docs/developer-information/030-design-docs.md", 
                     "title": "Design Docs", 
                     "url": "/docs/design-docs/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Developer Information", 
+                            "url": "/docs/developer-information/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+                    "next_url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/", 
+                    "parent": "Developer Information", 
+                    "previous_title": "Value Vectors", 
+                    "previous_url": "/docs/value-vectors/", 
+                    "relative_path": "_docs/developer-information/rest-api/010-rest-api-introduction.md", 
+                    "title": "REST API Introduction", 
+                    "url": "/docs/rest-api-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Developer Information", 
+                            "url": "/docs/developer-information/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Release Notes", 
+                    "next_url": "/docs/release-notes/", 
+                    "parent": "Developer Information", 
+                    "previous_title": "REST API Introduction", 
+                    "previous_url": "/docs/rest-api-introduction/", 
+                    "relative_path": "_docs/developer-information/rest-api/010-submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled.md", 
+                    "title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+                    "url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/"
                 }
             ], 
             "next_title": "REST API", 
@@ -19186,8 +19288,8 @@
             "next_title": "Apache Drill 1.12.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
             "parent": "", 
-            "previous_title": "Value Vectors", 
-            "previous_url": "/docs/value-vectors/", 
+            "previous_title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled", 
+            "previous_url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/", 
             "relative_path": "_docs/130-rn.md", 
             "title": "Release Notes", 
             "url": "/docs/release-notes/"
