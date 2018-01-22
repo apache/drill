@@ -78,6 +78,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
   protected void buildSchema() throws SchemaChangeException {
     if (! prefetchFirstBatchFromBothSides()) {
+      state = BatchState.DONE;
       return;
     }
 

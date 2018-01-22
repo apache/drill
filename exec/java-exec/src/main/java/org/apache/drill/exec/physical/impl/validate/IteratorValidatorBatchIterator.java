@@ -137,6 +137,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
     switch (batchState) {
     case OK:
     case OK_NEW_SCHEMA:
+    case NONE:
       return;
     default:
       throw new IllegalStateException(
