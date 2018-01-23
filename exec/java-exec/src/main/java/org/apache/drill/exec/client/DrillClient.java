@@ -170,6 +170,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     this.reconnectTimes = config.getInt(ExecConstants.BIT_RETRY_TIMES);
     this.reconnectDelay = config.getInt(ExecConstants.BIT_RETRY_DELAY);
     this.supportComplexTypes = config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES);
+
+    logger.debug("picasso: DrillClient(): ownsZkConnection:" + this.ownsZkConnection);
   }
 
   public DrillConfig getConfig() {
@@ -329,7 +331,9 @@ public class DrillClient implements Closeable, ConnectionThrottle {
           throw new RpcException("Failure setting up ZK for client.", e);
         }
       }
+      // 这里是local模式，设置了一个endpoint， 在drillbit中获取并注册
       endpoints.addAll(clusterCoordinator.getAvailableEndpoints());
+      logger.debug("picasso: connect: endpoints.size(): " + endpoints.size());
       // Make sure we have at least one endpoint in the list
       checkState(!endpoints.isEmpty(), "No active Drillbit endpoint found from ZooKeeper. Check connection parameters?");
     }
@@ -554,6 +558,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     checkArgument(type == QueryType.LOGICAL || type == QueryType.PHYSICAL || type == QueryType.SQL,
         String.format("Only query types %s, %s and %s are supported in this API",
             QueryType.LOGICAL, QueryType.PHYSICAL, QueryType.SQL));
+    //bingxing.wang.log
+    logger.debug("bingxing.wang: plan-> " + plan);
     final UserProtos.RunQuery query = newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build();
     final ListHoldingResultsListener listener = new ListHoldingResultsListener(query);
     client.submitQuery(listener, query);
@@ -795,6 +801,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @param  plan  the plan to execute
    */
   public void runQuery(QueryType type, String plan, UserResultsListener resultsListener) {
+
     client.submitQuery(resultsListener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
   }
 

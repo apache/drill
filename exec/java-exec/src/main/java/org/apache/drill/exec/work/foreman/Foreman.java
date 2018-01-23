@@ -275,6 +275,7 @@ public class Foreman implements Runnable {
         final String sql = queryRequest.getPlan();
         // log query id and query text before starting any real work. Also, put
         // them together such that it is easy to search based on query id
+        // 这里的sql就是sql字符串
         logger.info("Query text for query id {}: {}", this.queryIdString, sql);
         runSQL(sql);
         break;
@@ -419,9 +420,13 @@ public class Foreman implements Runnable {
   private void runPhysicalPlan(final PhysicalPlan plan) throws ExecutionSetupException {
     validatePlan(plan);
 
+    //负责内存分配....
     queryRM.visitAbstractPlan(plan);
+    //将物理计划树拆分成可分布执行的查询片段树
     final QueryWorkUnit work = getQueryWorkUnit(plan);
+    //空
     queryRM.visitPhysicalPlan(work);
+    //空
     queryRM.setCost(plan.totalCost());
     queryManager.setTotalCost(plan.totalCost());
     work.applyPlan(drillbitContext.getPlanReader());
@@ -1041,9 +1046,11 @@ public class Foreman implements Runnable {
     // FragmentManager is setting buffer for FragmentContext
     if (rootContext.isBuffersDone()) {
       // if we don't have to wait for any incoming data, start the fragment runner.
+      logger.debug("picasso: setupRootFragment: isBuffersDone");
       bee.addFragmentRunner(rootRunner);
     } else {
       // if we do, record the fragment manager in the workBus.
+      logger.debug("picasso: setupRootFragment: isBuffersDone: false");
       drillbitContext.getWorkBus().addFragmentManager(fragmentManager);
     }
   }

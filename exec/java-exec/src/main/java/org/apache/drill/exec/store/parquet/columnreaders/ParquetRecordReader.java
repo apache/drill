@@ -297,9 +297,9 @@ public class ParquetRecordReader extends AbstractRecordReader {
       return batchReader.readBatch();
     } catch (Exception e) {
       throw handleException("\nHadoop path: " + hadoopPath.toUri().getPath() +
-        "\nTotal records read: " + readState.recordsRead() +
-        "\nRow group index: " + rowGroupIndex +
-        "\nRecords in row group: " + footer.getBlocks().get(rowGroupIndex).getRowCount(), e);
+              "\nTotal records read: " + readState.recordsRead() +
+              "\nRow group index: " + rowGroupIndex +
+              "\nRecords in row group: " + footer.getBlocks().get(rowGroupIndex).getRowCount(), e);
     } finally {
       parquetReaderStats.timeProcess.addAndGet(timer.elapsed(TimeUnit.NANOSECONDS));
     }

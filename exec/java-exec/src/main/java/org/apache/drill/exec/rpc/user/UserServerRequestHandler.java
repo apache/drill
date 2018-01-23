@@ -63,6 +63,7 @@ class UserServerRequestHandler implements RequestHandler<BitToUserConnection> {
       logger.debug("Received query to run.  Returning query handle.");
       try {
         final RunQuery query = RunQuery.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        logger.debug("bingxing.wang: UserServerRequestHandler.handle.RUN_QUERY query" + query);
         final QueryId queryId = worker.submitWork(connection, query);
         responseSender.send(new Response(RpcType.QUERY_HANDLE, queryId));
         break;

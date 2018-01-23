@@ -182,6 +182,8 @@ public class FragmentExecutor implements Runnable {
   @SuppressWarnings("resource")
   @Override
   public void run() {
+
+    logger.debug("picasso: run()");
     // if a cancel thread has already entered this executor, we have not reason to continue.
     if (!hasCloseoutThread.compareAndSet(false, true)) {
       return;
@@ -204,6 +206,7 @@ public class FragmentExecutor implements Runnable {
       final FragmentRoot rootOperator = this.rootOperator != null ? this.rootOperator :
           drillbitContext.getPlanReader().readFragmentRoot(fragment.getFragmentJson());
 
+          // 这里创建了各种executor并且初始化了allocator
           root = ImplCreator.getExec(fragmentContext, rootOperator);
           if (root == null) {
             return;

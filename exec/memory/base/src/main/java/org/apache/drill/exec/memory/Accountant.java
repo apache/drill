@@ -88,6 +88,7 @@ public class Accountant implements AutoCloseable {
    * The parent allocator
    */
   protected final Accountant parent;
+  protected String name = "";
 
   /**
    * The amount of memory reserved for this allocator. Releases below this amount of memory will not be returned to the
@@ -170,6 +171,7 @@ public class Accountant implements AutoCloseable {
     if (!outcome.isOk()) {
       releaseBytes(size);
     }
+
     return outcome;
   }
 
@@ -222,6 +224,15 @@ public class Accountant implements AutoCloseable {
    * @return The outcome of the allocation.
    */
   private AllocationOutcome allocate(final long size, final boolean incomingUpdatePeak, final boolean forceAllocation) {
+
+    //Exception e = new Exception("Accountant allocate");
+    //e.printStackTrace();
+
+    if(!name.equals("") && name.contains("ParquetRowGroupScan")){
+      String log = getStackTrace("allocate");
+      logger.info("parquet_scan_allocate: local: " + locallyHeldMemory.get() + " size: " + size + "\n statckTrace: \n" + log);
+    }
+
     final long newLocal = locallyHeldMemory.addAndGet(size);
     final long beyondReservation = newLocal - reservation;
     boolean beyondLimit = newLocal > allocationLimit.get();
@@ -257,9 +268,28 @@ public class Accountant implements AutoCloseable {
     return finalOutcome;
   }
 
+  private static String getStackTrace(String methodName) {
+    StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
+    StringBuilder log = new StringBuilder(methodName);
+    if(stackTraceElements != null){
+      for(int i = 0; i < stackTraceElements.length; i ++){
+        log.append("\n" + stackTraceElements[i]);
+      }
+    }
+    return log.toString();
+  }
+
   public void releaseBytes(long size) {
+    //logger.debug("picasso_memory releaseBytes size: " + size);
     // reduce local memory. all memory released above reservation should be released up the tree.
+
+    if(!name.equals("") && name.contains("ParquetRowGroupScan")){
+            String log = getStackTrace("release");
+            logger.info("parquet_scan_release: local: " + locallyHeldMemory.get() + " size: " + size + "\n statckTrace: \n" + log);
+          }
     final long newSize = locallyHeldMemory.addAndGet(-size);
+    //Exception e = new Exception("Accountant release");
+    //e.printStackTrace();
 
     Preconditions.checkArgument(newSize >= 0, "Accounted size went negative.");
 
@@ -271,6 +301,7 @@ public class Accountant implements AutoCloseable {
       parent.releaseBytes(actualToReleaseToParent);
     }
 
+    //logger.debug("parquet_scan: release: local: " + locallyHeldMemory.get() + " size: " + size);
   }
 
   /**

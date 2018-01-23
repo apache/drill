@@ -76,6 +76,7 @@ public class MemoryAllocationUtilities {
     // if there are any sorts, compute the maximum allocation, and set it on them
     plan.getProperties().hasResourcePlan = true;
     if (bufferedOpList.isEmpty()) {
+      logger.debug("picasso: setupBufferedOps... bufferedOpList.size: " + bufferedOpList.size());
       return;
     }
 

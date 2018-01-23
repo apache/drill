@@ -164,9 +164,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     final ConvertedRelNode convertedRelNode = validateAndConvert(sqlNode);
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
     final RelNode queryRelNode = convertedRelNode.getConvertedNode();
+    logger.debug("picasso: Optiq Logical");
 
     final DrillRel drel = convertToDrel(queryRelNode);
+    logger.debug("picasso: Drill Logical");
+
     final Prel prel = convertToPrel(drel, validatedRowType);
+    logger.debug("picasso: Drill physical");
+
     logAndSetTextPlan("Drill Physical", prel, logger);
     final PhysicalOperator pop = convertToPop(prel);
     final PhysicalPlan plan = convertToPlan(pop);
@@ -420,6 +425,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * @throws SqlUnsupportedException
    */
   protected Prel convertToPrel(RelNode drel, RelDataType validatedRowType) throws RelConversionException, SqlUnsupportedException {
+
+    logger.debug("picasso: convertToPrel: start...");
     Preconditions.checkArgument(drel.getConvention() == DrillRel.DRILL_LOGICAL);
 
     final RelTraitSet traits = drel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);

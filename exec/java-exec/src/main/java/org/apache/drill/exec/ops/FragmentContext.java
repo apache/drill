@@ -302,6 +302,7 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
       final int operatorId,
       final long initialReservation,
       final long maximumReservation) throws OutOfMemoryException {
+    logger.debug("picasso: getNewChildAllocator: opid: "+operatorId + "opName: " + operatorName);
     return allocator.newChildAllocator(
         "op:" + QueryIdHelper.getFragmentId(fragment.getHandle()) + ":" + operatorId + ":" + operatorName,
         initialReservation,
@@ -342,6 +343,10 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
 
   public OperatorContext newOperatorContext(PhysicalOperator popConfig, OperatorStats stats)
       throws OutOfMemoryException {
+
+//    Exception e = new Exception("fragmentContext, newOperatorContext");
+//    e.printStackTrace();
+
     OperatorContextImpl context = new OperatorContextImpl(popConfig, this, stats);
     contexts.add(context);
     return context;
@@ -349,6 +354,8 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
 
   public OperatorContext newOperatorContext(PhysicalOperator popConfig)
       throws OutOfMemoryException {
+//    Exception e = new Exception("fragmentContext, newOperatorContext");
+//    e.printStackTrace();
     OperatorContextImpl context = new OperatorContextImpl(popConfig, this);
     contexts.add(context);
     return context;

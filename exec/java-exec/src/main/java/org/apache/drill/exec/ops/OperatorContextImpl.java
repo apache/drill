@@ -61,6 +61,7 @@ class OperatorContextImpl extends BaseOperatorContext implements AutoCloseable {
                            OperatorUtilities.getChildCount(popConfig));
       this.stats = context.getStats().newOperatorStats(def, allocator);
     }
+    logger.debug("picasso: construct: opId: " + popConfig.getOperatorId() + " initAllocation: " + popConfig.getInitialAllocation());
   }
 
   public boolean isClosed() {

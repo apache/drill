@@ -79,6 +79,7 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
           @Override
           protected void initChannel(SocketChannel ch) throws Exception {
 //            logger.debug("Starting initialization of server connection.");
+              // 这里的initRemoteConnection返回是null, 子类UserServer返回的才是创建的connection
             SC connection = initRemoteConnection(ch);
             ch.closeFuture().addListener(getCloseHandler(ch, connection));
 

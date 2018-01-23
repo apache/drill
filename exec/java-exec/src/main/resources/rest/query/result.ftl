@@ -13,6 +13,7 @@
 <#macro page_head>
     <script type="text/javascript" language="javascript"  src="../static/js/jquery.dataTables-1.10.0.min.js"> </script>
     <script type="text/javascript" language="javascript" src="../static/js/dataTables.colVis-1.1.0.min.js"></script>
+    <script type="text/javascript" language="javascript" src="../static/js/jquery.table2excel.js"></script>
     <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
     <link href="/static/css/dataTables.jqueryui.css" rel="stylesheet">
     <link href="/static/css/jquery-ui-1.10.3.min.css" rel="stylesheet">
@@ -21,6 +22,7 @@
 <#macro page_body>
   <a href="/queries">back</a><br/>
   <div class="page-header">
+    <button class="btn btn-default" id="result2excel">save as xls(excel)</button>
   </div>
   <#if model.isEmpty()>
     <div class="jumbotron">
@@ -45,6 +47,24 @@
       </#list>
       </tbody>
     </table>
+    <table id="result2" class="table table-striped table-bordered table-condensed" style="display: none; table-layout: auto; width=100%;">
+          <thead>
+            <tr>
+              <#list model.getColumns() as value>
+              <th>${value}</th>
+              </#list>
+            </tr>
+          </thead>
+          <tbody>
+          <#list model.getRows() as record>
+            <tr>
+              <#list record as value>
+              <td>${value!"null"}</td>
+              </#list>
+            </tr>
+          </#list>
+          </tbody>
+        </table>
   </#if>
   <script charset="utf-8">
     $(document).ready(function() {
@@ -55,6 +75,19 @@
         "jQueryUI" : true
       } );
     } );
+
+    $("#result2excel").click(function() {
+        $("#result2").table2excel({
+          exclude: ".noExl",
+          name: "drill查询结果",
+          filename: "drill_query_result.xls",
+          exclude_img: true,
+          exclude_links: true,
+          exclude_inputs: true
+
+        } );
+    } );
+
   </script>
 </#macro>
 

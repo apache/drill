@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("limit")
 public class Limit extends AbstractSingle {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Limit.class);
   private final Integer first;
   private final Integer last;
 
@@ -37,6 +38,7 @@ public class Limit extends AbstractSingle {
     super(child);
     this.first = first;
     this.last = last;
+    logger.debug("picasso: Limit: construct");
   }
 
   public Integer getFirst() {

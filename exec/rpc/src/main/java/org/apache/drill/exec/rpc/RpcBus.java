@@ -190,6 +190,8 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       sendOnce();
       OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, coordinationId,
           r.pBody, r.dBodies);
+      logger.debug("Adding message to outbound buffer. {}", outMessage);
+      logger.debug("Sending response with Sender {}", System.identityHashCode(this));
       if (RpcConstants.EXTRA_DEBUGGING) {
         logger.debug("Adding message to outbound buffer. {}", outMessage);
         logger.debug("Sending response with Sender {}", System.identityHashCode(this));
@@ -267,6 +269,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
         switch (msg.mode) {
         case REQUEST: {
+          logger.debug("bingxing.wang: RpcBus.inboundHandler.dcode.request msg:" + msg);
           final ResponseSenderImpl sender = new ResponseSenderImpl(connection, msg.coordinationId);
           retainByteBuf(msg.pBody);
           retainByteBuf(msg.dBody);
@@ -285,6 +288,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
           retainByteBuf(msg.pBody);
           retainByteBuf(msg.dBody);
           try {
+            logger.debug("bingxing.wang: RpcBus.inboundHandler.decode.response");
             final MessageLite defaultResponse = getResponseDefaultInstance(msg.rpcType);
             assert rpcConfig.checkReceive(msg.rpcType, defaultResponse.getClass());
             final RpcOutcome<?> rpcFuture = connection.getAndRemoveRpcOutcome(msg.rpcType, msg.coordinationId,

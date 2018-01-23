@@ -48,8 +48,11 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private static final int CHUNK_SIZE = AllocationManager.INNER_ALLOCATOR.getChunkSize();
 
   public static final int DEBUG_LOG_LENGTH = 6;
+
+  //TODO 修改false -> true
   public static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
       || Boolean.parseBoolean(System.getProperty(DEBUG_ALLOCATOR, "false"));
+
 
   /**
    * Size of the I/O buffer used when writing to files. Set here
@@ -67,7 +70,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private volatile boolean isClosed = false; // the allocator has been closed
 
   // Package exposed for sharing between AllocatorManger and BaseAllocator objects
-  final String name;
+
+  //TODO 这里name修改为从父类继承,需要修改回来
+  //final String name;
   final RootAllocator root;
 
   // members used purely for debugging
@@ -120,6 +125,8 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       historicalLog = null;
       childLedgers = null;
     }
+
+    logger.debug("picasso: construct: root: " + (this instanceof RootAllocator) + " name: " + name + " initReservation: " + initReservation + " maxAllocation " + maxAllocation);
   }
 
   @Override
@@ -217,9 +224,23 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     return new DrillBuf(new AtomicInteger(), null, AllocationManager.INNER_ALLOCATOR.empty, null, null, 0, 0, true);
   }
 
+  private static String getStackTrace(String methodName) {
+    StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
+    StringBuilder log = new StringBuilder(methodName);
+    if(stackTraceElements != null){
+      for(int i = 0; i < stackTraceElements.length; i ++){
+        log.append("\n" + stackTraceElements[i]);
+      }
+    }
+    return log.toString();
+  }
+
   @Override
   public DrillBuf buffer(final int initialRequestSize, BufferManager manager) {
+
     assertOpen();
+
+    //logger.debug("parquet_scan: allocate: local: " + locallyHeldMemory.get() + " size: " + size);
 
     Preconditions.checkArgument(initialRequestSize >= 0, "the requested size must be non-negative");
 
@@ -231,6 +252,10 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     final int actualRequestSize = initialRequestSize < CHUNK_SIZE ?
         nextPowerOfTwo(initialRequestSize)
         : initialRequestSize;
+//    if(name.contains("ParquetRowGroupScan")){
+//      String log = getStackTrace("buffer");
+//      logger.debug("parquet_scan: allocate: local: " + getAllocatedMemory() + " size: " + actualRequestSize + "\n statckTrace: \n" + log);
+//    }
     AllocationOutcome outcome = allocateBytes(actualRequestSize);
     if (!outcome.isOk()) {
       throw new OutOfMemoryException(createErrorMsg(this, actualRequestSize, initialRequestSize));
@@ -277,6 +302,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       final long initReservation,
       final long maxAllocation) {
     assertOpen();
+    logger.debug("picasso: newChildAllocator: name: " + name);
 
     final ChildAllocator childAllocator = new ChildAllocator(this, name, initReservation, maxAllocation);
 
@@ -450,6 +476,10 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     private void releaseReservation(int nBytes) {
       assertOpen();
 
+      if(name.contains("ParquetRowGroupScan")){
+        String log = getStackTrace("releaseReservation");
+        logger.debug("parquet_scan: release: local: " + getAllocatedMemory() + " size: " + nBytes + "\n statckTrace: \n" + log);
+      }
       releaseBytes(nBytes);
 
       if (DEBUG) {
@@ -508,6 +538,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
           throw new IllegalStateException(
               String.format("Allocator[%s] closed with outstanding reservations (%d).\n%s", name, reservations.size(),
                   toString()));
+
         }
 
       }
@@ -515,9 +546,15 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
     // Is there unaccounted-for outstanding allocation?
     final long allocated = getAllocatedMemory();
+//    Exception e = new Exception("close: allocated memory " + allocated);
+//    e.printStackTrace();
+
     if (allocated > 0) {
+//      Exception e2 = new Exception(String.format("Memory was leaked by query. Memory leaked: (%d)\n%s", allocated, toString()));
+//      e2.printStackTrace();
       throw new IllegalStateException(
-          String.format("Memory was leaked by query. Memory leaked: (%d)\n%s", allocated, toString()));
+          String.format("Memory was leaked by query. Memory leaked: (%d)\n%s", allocated,
+                  toString()));
     }
 
     // we need to release our memory to our parent before we tell it we've closed.

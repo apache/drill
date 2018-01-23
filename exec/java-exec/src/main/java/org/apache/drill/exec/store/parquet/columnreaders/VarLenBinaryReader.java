@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 public class VarLenBinaryReader {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLenBinaryReader.class);
+
   ParquetRecordReader parentReader;
   final List<VarLengthColumn<? extends ValueVector>> columns;
   final boolean useAsyncTasks;
@@ -91,6 +93,8 @@ public class VarLenBinaryReader {
     int recordsReadInCurrentPass = 0;
     top: do {
       for (VarLengthColumn<?> columnReader : columns) {
+
+        logger.debug("picasso: determineSizesSerial: columnReader.determineSize");
         // Return status is "done reading", meaning stop if true.
         if (columnReader.determineSize(recordsReadInCurrentPass)) {
           break top;

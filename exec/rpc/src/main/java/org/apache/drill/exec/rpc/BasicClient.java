@@ -95,6 +95,7 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
           protected void initChannel(SocketChannel ch) throws Exception {
             // logger.debug("initializing client connection.");
             connection = initRemoteConnection(ch);
+            logger.debug("bingxing.wang: BaseClient: after initRemoteConnection : connection " + connection);
 
             ch.closeFuture().addListener(getCloseHandler(ch, connection));
 

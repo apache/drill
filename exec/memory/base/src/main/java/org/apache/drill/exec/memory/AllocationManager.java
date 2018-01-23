@@ -55,6 +55,7 @@ import com.google.common.base.Preconditions;
  */
 public class AllocationManager {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocationManager.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocationManager.class);
 
   private static final AtomicLong MANAGER_ID_GENERATOR = new AtomicLong(0);
   private static final AtomicLong LEDGER_ID_GENERATOR = new AtomicLong(0);
@@ -151,6 +152,16 @@ public class AllocationManager {
       this.allocator = allocator;
     }
 
+    private  String getStackTrace(String methodName) {
+      StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
+      StringBuilder log = new StringBuilder(methodName);
+      if(stackTraceElements != null){
+        for(int i = 0; i < stackTraceElements.length; i ++){
+          log.append("\n" + stackTraceElements[i]);
+        }
+      }
+      return log.toString();
+    }
     /**
      * Can only be called when you already hold the writeLock.
      */
@@ -163,6 +174,10 @@ public class AllocationManager {
       if (oldLedger == owningLedger) {
         if (map.isEmpty()) {
           // no one else owns, lets release.
+//          if(oldLedger.allocator.name.contains("ParquetRowGroupScan")){
+//            String log = getStackTrace("releaseReservation");
+//            logger.debug("parquet_scan_release: local: " + oldLedger.allocator.getAllocatedMemory() + " size: " + size + "\n statckTrace: \n" + log);
+//          }
           oldLedger.allocator.releaseBytes(size);
           underlying.release();
           amDestructionTime = System.nanoTime();
