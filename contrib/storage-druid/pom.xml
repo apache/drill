@@ -18,31 +18,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>drill-root</artifactId>
-    <groupId>org.apache.drill</groupId>
+    <artifactId>drill-contrib-parent</artifactId>
+    <groupId>org.apache.drill.contrib</groupId>
     <version>1.13.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.apache.drill.contrib</groupId>
-  <artifactId>drill-contrib-parent</artifactId>
-  <name>contrib/Parent Pom</name>
-  <packaging>pom</packaging>
+  <artifactId>drill-storage-druid</artifactId>
 
-  <dependencies>
-  </dependencies>
-
-  <modules>
-    <module>storage-hbase</module>
-    <module>format-maprdb</module>
-    <module>storage-hive</module>
-    <module>storage-mongo</module>
-    <module>storage-jdbc</module>
-    <module>storage-kafka</module>
-    <module>storage-kudu</module>
-    <module>storage-opentsdb</module>
-    <module>storage-druid</module>
-    <module>sqlline</module>
-    <module>data</module>
-    <module>gis</module>
-  </modules>
+  <name>contrib/druid-storage-plugin</name>
 </project>
