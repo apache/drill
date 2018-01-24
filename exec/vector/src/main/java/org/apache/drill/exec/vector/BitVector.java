@@ -382,7 +382,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     @Override
     public final Boolean getObject(int index) {
-      return new Boolean(get(index) != 0);
+      return Boolean.valueOf(get(index) != 0);
     }
 
     @Override

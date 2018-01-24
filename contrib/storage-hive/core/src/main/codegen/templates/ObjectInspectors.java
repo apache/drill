@@ -169,9 +169,9 @@ public class Drill${entry.drillType}${entry.hiveOI} {
       if (o == null) {
         return null;
       }
-      return new Boolean(((NullableBitHolder)o).value == 0 ? false : true);
+      return Boolean.valueOf(((NullableBitHolder)o).value != 0);
     <#else>
-      return new Boolean(((BitHolder)o).value == 0 ? false : true);
+      return Boolean.valueOf(((BitHolder)o).value != 0);
     </#if>
     }
 <#elseif entry.drillType == "Decimal38Sparse">
@@ -286,7 +286,7 @@ public class Drill${entry.drillType}${entry.hiveOI} {
         return null;
       }
     </#if>
-      return new Integer(get(o));
+      return Integer.valueOf(get(o));
     }
 <#else>
     @Override
