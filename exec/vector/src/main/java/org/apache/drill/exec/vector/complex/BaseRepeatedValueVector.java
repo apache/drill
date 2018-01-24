@@ -85,7 +85,6 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     return success;
   }
 
-
   @Override
   public UInt4Vector getOffsetVector() { return offsets; }
 

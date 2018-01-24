@@ -26,8 +26,8 @@ import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
-import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
 import org.apache.drill.exec.util.ApproximateStringMatcher;
@@ -203,7 +203,7 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
   public RelNode visit(LogicalUnion union) {
     for(RelNode child : union.getInputs()) {
       for(RelDataTypeField dataField : child.getRowType().getFieldList()) {
-        if(dataField.getName().contains(StarColumnHelper.STAR_COLUMN)) {
+        if(dataField.getName().contains(SchemaPath.WILDCARD)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
               "Union-All over schema-less tables must specify the columns explicitly\n" +
               "See Apache Drill JIRA: DRILL-2414");

@@ -271,7 +271,6 @@ public class TestWindowFrame extends BaseTestQuery {
       .run();
   }
 
-
   @Test
   public void testLag() throws Exception {
     testBuilder()

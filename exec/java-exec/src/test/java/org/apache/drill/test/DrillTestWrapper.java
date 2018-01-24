@@ -767,7 +767,7 @@ public class DrillTestWrapper {
           if (!expectedRecord.containsKey(s)) {
             throw new Exception("Unexpected column '" + s + "' returned by query.");
           }
-          if (!compareValues(expectedRecord.get(s), actualRecord.get(s), counter, s)) {
+          if (! compareValues(expectedRecord.get(s), actualRecord.get(s), counter, s)) {
             i++;
             continue findMatch;
           }

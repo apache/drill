@@ -75,7 +75,7 @@ public class ImplCreator {
     // to true.
 
     if (AssertionUtil.isAssertionsEnabled() ||
-        context.getOptionSet().getOption(ExecConstants.ENABLE_ITERATOR_VALIDATOR) ||
+        context.getOptions().getOption(ExecConstants.ENABLE_ITERATOR_VALIDATOR) ||
         context.getConfig().getBoolean(ExecConstants.ENABLE_ITERATOR_VALIDATION)) {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }

@@ -50,17 +50,14 @@ package org.apache.drill.exec.vector;
  * variable, this width is used as a guess for certain calculations.</li>
  * <li>The equivalent Java primitive is '${minor.javaType!type.javaType}'<li>
  * </ul>
- * NB: this class is automatically generated from ${.template_name} and ValueVectorTypes.tdd using FreeMarker.
+ * NB: this class is automatically generated from <tt>${.template_name}</tt>
+ * and <tt>ValueVectorTypes.tdd</tt> using FreeMarker.
  */
 
 public final class ${minor.class}Vector extends BaseDataValueVector implements VariableWidthVector {
 
-  private static final int DEFAULT_RECORD_BYTE_COUNT = 8;
   private static final int INITIAL_BYTE_COUNT = Math.min(INITIAL_VALUE_ALLOCATION * DEFAULT_RECORD_BYTE_COUNT, MAX_BUFFER_SIZE);
-  private static final int MIN_BYTE_COUNT = 4096;
-  public final static String OFFSETS_VECTOR_NAME = "$offsets$";
-
-  private final MaterializedField offsetsField = MaterializedField.create(OFFSETS_VECTOR_NAME, Types.required(MinorType.UINT4));
+  
   private final UInt${type.width}Vector offsetVector = new UInt${type.width}Vector(offsetsField, allocator);
   private final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
 
@@ -175,6 +172,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return offsetVector.getBuffer().memoryAddress();
   }
 
+  @Override
   public UInt${type.width}Vector getOffsetVector() {
     return offsetVector;
   }

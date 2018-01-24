@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,8 @@ package org.apache.drill.exec.vector.accessor.sql;
 
 import java.sql.Time;
 
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
+@SuppressWarnings("serial")
 public class TimePrintMillis extends Time {
   private static final String[] leadingZeroes = {"", "0", "00"};
 
@@ -33,7 +33,7 @@ public class TimePrintMillis extends Time {
 
   @Override
   public String toString () {
-    int millis = (int) (getTime() % DateUtility.secondsToMillis);
+    int millis = (int) (getTime() % org.apache.drill.exec.vector.DateUtilities.secondsToMillis);
     StringBuilder time = new StringBuilder().append(super.toString());
 
     if (millis > 0) {

@@ -88,11 +88,6 @@ class OperatorContextImpl extends BaseOperatorContext implements AutoCloseable {
   }
 
   @Override
-  public OperatorStatReceiver getStatsWriter() {
-    return stats;
-  }
-
-  @Override
   public <RESULT> ListenableFuture<RESULT> runCallableAs(final UserGroupInformation proxyUgi,
                                                          final Callable<RESULT> callable) {
     synchronized (this) {

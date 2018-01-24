@@ -61,6 +61,10 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
     this.sv4 = sv4;
   }
 
+  public static HyperRowSet fromContainer(VectorContainer container, SelectionVector4 sv4) {
+    return new HyperRowSetImpl(container, sv4);
+  }
+
   @Override
   public boolean isExtendable() { return false; }
 
@@ -80,4 +84,10 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
 
   @Override
   public int rowCount() { return sv4.getCount(); }
+
+  @Override
+  public void clear() {
+    super.clear();
+    sv4.clear();
+  }
 }

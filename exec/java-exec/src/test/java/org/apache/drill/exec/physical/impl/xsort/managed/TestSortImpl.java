@@ -82,7 +82,7 @@ public class TestSortImpl extends DrillTest {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
     Ordering ordering = new Ordering(sortOrder, expr, nullOrder);
     Sort popConfig = new Sort(null, Lists.newArrayList(ordering), false);
-    OperatorContext opContext = fixture.operatorContext(popConfig);
+    OperatorContext opContext = fixture.newOperatorContext(popConfig);
     QueryId queryId = QueryId.newBuilder()
         .setPart1(1234)
         .setPart2(5678)
@@ -157,7 +157,7 @@ public class TestSortImpl extends DrillTest {
       }
       for (RowSet expectedSet : expected) {
         assertTrue(results.next());
-        RowSet rowSet = toRowSet(fixture, results, dest);
+        RowSet rowSet = toRowSet(results, dest);
         // Uncomment these for debugging. Leave them commented otherwise
         // to avoid polluting the Maven build output unnecessarily.
 //        System.out.println("Expected:");
@@ -173,6 +173,11 @@ public class TestSortImpl extends DrillTest {
       results.close();
       dest.clear();
       sort.close();
+
+      // Note: context closed separately because this is normally done by
+      // the external sort itself after closing the output container.
+
+      sort.opContext().close();
       validateFinalStats(sort);
     }
 
@@ -191,9 +196,9 @@ public class TestSortImpl extends DrillTest {
    * @return
    */
 
-  private static RowSet toRowSet(OperatorFixture fixture, SortResults results, VectorContainer dest) {
+  private static RowSet toRowSet(SortResults results, VectorContainer dest) {
     if (results.getSv4() != null) {
-      return new HyperRowSetImpl(dest, results.getSv4());
+      return HyperRowSetImpl.fromContainer(dest, results.getSv4());
     } else if (results.getSv2() != null) {
       return IndirectRowSet.fromSv2(dest, results.getSv2());
     } else {
@@ -447,7 +452,7 @@ public class TestSortImpl extends DrillTest {
     }
     while (results.next()) {
       timer.stop();
-      RowSet output = toRowSet(fixture, results, dest);
+      RowSet output = toRowSet(results, dest);
       validator.validate(output);
       timer.start();
     }
@@ -456,6 +461,7 @@ public class TestSortImpl extends DrillTest {
     results.close();
     dest.clear();
     sort.close();
+    sort.opContext().close();
   }
 
   /**
@@ -544,6 +550,7 @@ public class TestSortImpl extends DrillTest {
     results.close();
     dest.clear();
     sort.close();
+    sort.opContext().close();
     System.out.println(timer.elapsed(TimeUnit.MILLISECONDS));
   }
 

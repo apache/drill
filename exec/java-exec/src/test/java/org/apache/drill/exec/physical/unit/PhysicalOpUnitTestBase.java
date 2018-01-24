@@ -299,7 +299,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 //        optManager.getOption(withAny(new TypeValidators.PositiveLongValidator("", 1l, 1l))); result = 10;
         drillbitContext.getCompiler(); result = new CodeCompiler(drillConf, optionManager);
         fragContext.getOptions(); result = optionManager;
-        fragContext.getOptionSet(); result = optionManager;
+        fragContext.getOptions(); result = optionManager;
         fragContext.getManagedBuffer(); result = bufManager.getManagedBuffer();
         fragContext.shouldContinue(); result = true;
         fragContext.getExecutionControls(); result = executionControls;
@@ -342,7 +342,6 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     new NonStrictExpectations() {
       {
         opContext.getStats();result = opStats;
-        opContext.getStatsWriter(); result = opStats;
         opContext.getAllocator(); result = allocator;
         opContext.getFragmentContext(); result = fragContext;
         opContext.getOperatorDefn(); result = popConfig;

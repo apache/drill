@@ -34,7 +34,6 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
@@ -226,7 +225,7 @@ public class ParquetSchema {
     for (int i = 0; i < columnsFound.length; i++) {
       SchemaPath col = projectedColumns.get(i);
       assert col != null;
-      if ( ! columnsFound[i] && ! col.equals(Utilities.STAR_COLUMN)) {
+      if ( ! columnsFound[i] && ! col.equals(SchemaPath.STAR_COLUMN)) {
         nullFilledVectors.add(createMissingColumn(col, output));
       }
     }

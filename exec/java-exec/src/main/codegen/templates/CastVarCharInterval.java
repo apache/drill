@@ -39,7 +39,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
 
@@ -66,24 +65,24 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       org.joda.time.Period period = org.joda.time.Period.parse(input);
 
       <#if type.to == "Interval">
-      out.months       = (period.getYears() * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) + period.getMonths();
+      out.months       = (period.getYears() * org.apache.drill.exec.vector.DateUtilities.yearsToMonths) + period.getMonths();
 
       out.days         = period.getDays();
 
-      out.milliseconds = (period.getHours() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                         (period.getMinutes() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                         (period.getSeconds() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
+      out.milliseconds = (period.getHours() * org.apache.drill.exec.vector.DateUtilities.hoursToMillis) +
+                         (period.getMinutes() * org.apache.drill.exec.vector.DateUtilities.minutesToMillis) +
+                         (period.getSeconds() * org.apache.drill.exec.vector.DateUtilities.secondsToMillis) +
                          (period.getMillis());
 
       <#elseif type.to == "IntervalDay">
       out.days         = period.getDays();
 
-      out.milliseconds = (period.getHours() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                         (period.getMinutes() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                         (period.getSeconds() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
+      out.milliseconds = (period.getHours() * org.apache.drill.exec.vector.DateUtilities.hoursToMillis) +
+                         (period.getMinutes() * org.apache.drill.exec.vector.DateUtilities.minutesToMillis) +
+                         (period.getSeconds() * org.apache.drill.exec.vector.DateUtilities.secondsToMillis) +
                          (period.getMillis());
       <#elseif type.to == "IntervalYear">
-      out.value = (period.getYears() * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) + period.getMonths();
+      out.value = (period.getYears() * org.apache.drill.exec.vector.DateUtilities.yearsToMonths) + period.getMonths();
       </#if>
   }
 }

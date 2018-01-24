@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -39,13 +38,14 @@ import java.util.EnumSet;
 public class DrillFSDataInputStream extends FSDataInputStream {
   private final FSDataInputStream underlyingIs;
   private final OpenFileTracker openFileTracker;
-  private final OperatorStatReceiver operatorStats;
+  private final OperatorStats operatorStats;
 
-  public DrillFSDataInputStream(FSDataInputStream in, OperatorStatReceiver operatorStats) throws IOException {
+  public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats) throws IOException {
     this(in, operatorStats, null);
   }
 
-  public DrillFSDataInputStream(FSDataInputStream in, OperatorStatReceiver operatorStats,
+  @SuppressWarnings("resource")
+  public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats,
       OpenFileTracker openFileTracker) throws IOException {
     super(new WrappedInputStream(in, operatorStats));
     underlyingIs = in;
@@ -194,9 +194,9 @@ public class DrillFSDataInputStream extends FSDataInputStream {
    */
   private static class WrappedInputStream extends InputStream implements Seekable, PositionedReadable {
     final FSDataInputStream is;
-    final OperatorStatReceiver operatorStats;
+    final OperatorStats operatorStats;
 
-    WrappedInputStream(FSDataInputStream is, OperatorStatReceiver operatorStats) {
+    WrappedInputStream(FSDataInputStream is, OperatorStats operatorStats) {
       this.is = is;
       this.operatorStats = operatorStats;
     }

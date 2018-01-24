@@ -48,7 +48,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.testing.ExecutionControls;
@@ -190,12 +189,8 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     this(dbContext, fragment, null, connection, funcRegistry);
   }
 
-  public OptionManager getOptions() {
-    return fragmentOptions;
-  }
-
   @Override
-  public OptionSet getOptionSet() {
+  public OptionManager getOptions() {
     return fragmentOptions;
   }
 
@@ -345,6 +340,7 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     return buffers;
   }
 
+  @Override
   public OperatorContext newOperatorContext(PhysicalOperator popConfig, OperatorStats stats)
       throws OutOfMemoryException {
     OperatorContextImpl context = new OperatorContextImpl(popConfig, this, stats);
@@ -352,6 +348,7 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     return context;
   }
 
+  @Override
   public OperatorContext newOperatorContext(PhysicalOperator popConfig)
       throws OutOfMemoryException {
     OperatorContextImpl context = new OperatorContextImpl(popConfig, this);
@@ -385,6 +382,7 @@ public class FragmentContext extends BaseFragmentContext implements AutoCloseabl
     return executionControls;
   }
 
+  @Override
   public String getQueryUserName() {
     return fragment.getCredentials().getUserName();
   }

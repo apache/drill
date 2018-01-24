@@ -82,14 +82,18 @@ public class TestSorter extends DrillTest {
   }
 
   public void runSorterTest(Sort popConfig, SingleRowSet rowSet, SingleRowSet expected) throws Exception {
-    OperatorContext opContext = fixture.operatorContext(popConfig);
+    OperatorContext opContext = fixture.newOperatorContext(popConfig);
     SorterWrapper sorter = new SorterWrapper(opContext);
 
-    sorter.sortBatch(rowSet.container(), rowSet.getSv2());
+    try {
+      sorter.sortBatch(rowSet.container(), rowSet.getSv2());
 
-    new RowSetComparison(expected)
-        .verifyAndClearAll(rowSet);
-    sorter.close();
+      new RowSetComparison(expected)
+          .verifyAndClearAll(rowSet);
+      sorter.close();
+    } finally {
+      opContext.close();
+    }
   }
 
   // Test degenerate case: no rows
@@ -143,14 +147,19 @@ public class TestSorter extends DrillTest {
     protected final OperatorFixture fixture;
     protected final SorterWrapper sorter;
     protected final boolean nullable;
+    protected final OperatorContext opContext;
 
     public BaseSortTester(OperatorFixture fixture, String sortOrder, String nullOrder, boolean nullable) {
       this.fixture = fixture;
       Sort popConfig = makeSortConfig("key", sortOrder, nullOrder);
       this.nullable = nullable;
 
-      OperatorContext opContext = fixture.operatorContext(popConfig);
+      opContext = fixture.newOperatorContext(popConfig);
       sorter = new SorterWrapper(opContext);
+    }
+
+    public void close() {
+      opContext.close();
     }
   }
 
@@ -474,33 +483,41 @@ public class TestSorter extends DrillTest {
 
   @Test
   public void testNumericTypes() throws Exception {
-    TestSorterNumeric tester1 = new TestSorterNumeric(fixture, true);
+    TestSorterNumeric tester = new TestSorterNumeric(fixture, true);
+    try {
 //      tester1.test(MinorType.TINYINT); // DRILL-5329
 //      tester1.test(MinorType.UINT1); DRILL-5329
 //      tester1.test(MinorType.SMALLINT); DRILL-5329
 //      tester1.test(MinorType.UINT2); DRILL-5329
-    tester1.test(MinorType.INT);
+      tester.test(MinorType.INT);
 //      tester1.test(MinorType.UINT4); DRILL-5329
-    tester1.test(MinorType.BIGINT);
+      tester.test(MinorType.BIGINT);
 //      tester1.test(MinorType.UINT8); DRILL-5329
-    tester1.test(MinorType.FLOAT4);
-    tester1.test(MinorType.FLOAT8);
-    tester1.test(MinorType.DECIMAL9);
-    tester1.test(MinorType.DECIMAL18);
+      tester.test(MinorType.FLOAT4);
+      tester.test(MinorType.FLOAT8);
+      tester.test(MinorType.DECIMAL9);
+      tester.test(MinorType.DECIMAL18);
 //      tester1.test(MinorType.DECIMAL28SPARSE); DRILL-5329
 //      tester1.test(MinorType.DECIMAL38SPARSE); DRILL-5329
 //    tester1.test(MinorType.DECIMAL28DENSE); No writer
 //    tester1.test(MinorType.DECIMAL38DENSE); No writer
-    tester1.test(MinorType.DATE);
-    tester1.test(MinorType.TIME);
-    tester1.test(MinorType.TIMESTAMP);
+      tester.test(MinorType.DATE);
+      tester.test(MinorType.TIME);
+      tester.test(MinorType.TIMESTAMP);
+    } finally {
+      tester.close();
+    }
   }
 
   @Test
   public void testVarCharTypes() throws Exception {
     TestSorterStringAsc tester = new TestSorterStringAsc(fixture);
-    tester.test(MinorType.VARCHAR);
+    try {
+      tester.test(MinorType.VARCHAR);
 //      tester.test(MinorType.VAR16CHAR); DRILL-5329
+    } finally {
+      tester.close();
+    }
   }
 
   /**
@@ -512,7 +529,11 @@ public class TestSorter extends DrillTest {
   @Test
   public void testVarBinary() throws Exception {
     TestSorterBinaryAsc tester = new TestSorterBinaryAsc(fixture);
-    tester.test(MinorType.VARBINARY);
+    try {
+      tester.test(MinorType.VARBINARY);
+    } finally {
+      tester.close();
+    }
   }
 
   /**
@@ -524,7 +545,11 @@ public class TestSorter extends DrillTest {
   @Test
   public void testInterval() throws Exception {
     TestSorterIntervalAsc tester = new TestSorterIntervalAsc(fixture);
-    tester.test();
+    try {
+      tester.test();
+    } finally {
+      tester.close();
+    }
   }
 
   /**
@@ -536,7 +561,11 @@ public class TestSorter extends DrillTest {
   @Test
   public void testIntervalYear() throws Exception {
     TestSorterIntervalYearAsc tester = new TestSorterIntervalYearAsc(fixture);
-    tester.test();
+    try {
+      tester.test();
+    } finally {
+      tester.close();
+    }
   }
 
   /**
@@ -548,13 +577,21 @@ public class TestSorter extends DrillTest {
   @Test
   public void testIntervalDay() throws Exception {
     TestSorterIntervalDayAsc tester = new TestSorterIntervalDayAsc(fixture);
-    tester.test();
+    try {
+      tester.test();
+    } finally {
+      tester.close();
+    }
   }
 
   @Test
   public void testDesc() throws Exception {
     TestSorterNumeric tester = new TestSorterNumeric(fixture, false);
-    tester.test(MinorType.INT);
+    try {
+      tester.test(MinorType.INT);
+    } finally {
+      tester.close();
+    }
   }
 
   /**
@@ -566,13 +603,29 @@ public class TestSorter extends DrillTest {
   @Test
   public void testNullable() throws Exception {
     TestSorterNullableNumeric tester = new TestSorterNullableNumeric(fixture, true, true);
-    tester.test(MinorType.INT);
+    try {
+      tester.test(MinorType.INT);
+    } finally {
+      tester.close();
+    }
     tester = new TestSorterNullableNumeric(fixture, true, false);
-    tester.test(MinorType.INT);
+    try {
+      tester.test(MinorType.INT);
+    } finally {
+      tester.close();
+    }
     tester = new TestSorterNullableNumeric(fixture, false, true);
-    tester.test(MinorType.INT);
+    try {
+      tester.test(MinorType.INT);
+    } finally {
+      tester.close();
+    }
     tester = new TestSorterNullableNumeric(fixture, false, false);
-    tester.test(MinorType.INT);
+    try {
+      tester.test(MinorType.INT);
+    } finally {
+      tester.close();
+    }
   }
 
   @Test
