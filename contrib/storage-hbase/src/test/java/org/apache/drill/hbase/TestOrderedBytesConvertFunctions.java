@@ -54,7 +54,7 @@ public class TestOrderedBytesConvertFunctions extends BaseTestQuery {
 
   @Test
   public void testOrderedBytesDoubleConvertFrom() throws Throwable {
-    verifyPhysicalPlan("convert_from(binary_string('\\x31\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x01'), 'DOUBLE_OB')", new Double(4.9e-324));
+    verifyPhysicalPlan("convert_from(binary_string('\\x31\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x01'), 'DOUBLE_OB')", Double.valueOf(4.9e-324));
   }
 
   protected <T> void verifyPhysicalPlan(String expression, T expectedResults) throws Throwable {

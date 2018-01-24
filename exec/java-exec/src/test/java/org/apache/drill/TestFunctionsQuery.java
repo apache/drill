@@ -329,7 +329,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
                + "FROM cp.`employee.json` LIMIT 1" )
     .unOrdered()
     .baselineColumns("ShouldBeFLOAT")
-    .baselineValues(new Float(1.5f))
+    .baselineValues(Float.valueOf(1.5f))
     .go();
   }
 
@@ -340,7 +340,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
                + "FROM cp.`employee.json` LIMIT 1" )
     .unOrdered()
     .baselineColumns("ShouldBeDOUBLE")
-    .baselineValues(new Double(1.25))
+    .baselineValues(Double.valueOf(1.25))
     .go();
   }
 
@@ -351,7 +351,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
                + "FROM cp.`employee.json` LIMIT 1" )
     .unOrdered()
     .baselineColumns("ShouldBeBIGINT")
-    .baselineValues(new Long(64))
+    .baselineValues(Long.valueOf(64))
     .go();
   }
 
@@ -362,7 +362,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
                + "FROM cp.`employee.json` LIMIT 1" )
     .unOrdered()
     .baselineColumns("ShouldBeINTEGER")
-    .baselineValues(new Integer(32))
+    .baselineValues(Integer.valueOf(32))
     .go();
   }
 
@@ -374,7 +374,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
                + "FROM cp.`employee.json` LIMIT 1" )
     .unOrdered()
     .baselineColumns("ShouldBeSMALLINT")
-    .baselineValues(new Short((short) 16))
+    .baselineValues(Short.valueOf((short) 16))
     .go();
   }
 
@@ -386,7 +386,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
                + "FROM cp.`employee.json` LIMIT 1" )
     .unOrdered()
     .baselineColumns("ShouldBeTINYINT")
-    .baselineValues(new Byte((byte) 8))
+    .baselineValues(Byte.valueOf((byte) 8))
     .go();
   }
 
@@ -462,8 +462,8 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("T_1", "T_2", "T_3", "T_4", "T_5", "T_6", "T_7", "T_8", "T_9", "T_10")
-        .baselineValues(new Double("1234.45"), new Double("-1234.45"), new Double("1200.0"), new Double("-1200.0"), new Double("1234.0"),
-            new Double("-1234.0"), new Double("0.0"), new Double("0.0"), new Double("8.1246744073695232E18"), new Double("8.12467440736953E13"))
+        .baselineValues(Double.valueOf("1234.45"), Double.valueOf("-1234.45"), Double.valueOf("1200.0"), Double.valueOf("-1200.0"), Double.valueOf("1234.0"),
+            Double.valueOf("-1234.0"), Double.valueOf("0.0"), Double.valueOf("0.0"), Double.valueOf("8.1246744073695232E18"), Double.valueOf("8.12467440736953E13"))
         .go();
   }
 
@@ -486,8 +486,8 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("T_1", "T_2", "T_3", "T_4", "T_5", "T_6", "T_7", "T_8", "T_9", "T_10")
-        .baselineValues(new Double("1234.46"), new Double("-1234.46"), new Double("1200.0"), new Double("-1200.0"), new Double("1234.0"),
-            new Double("-1234.0"), new Double("0.0"), new Double("0.0"), new Double("8.1246744073695201E18"), new Double("8.12467440736954E13"))
+        .baselineValues(Double.valueOf("1234.46"), Double.valueOf("-1234.46"), Double.valueOf("1200.0"), Double.valueOf("-1200.0"), Double.valueOf("1234.0"),
+            Double.valueOf("-1234.0"), Double.valueOf("0.0"), Double.valueOf("0.0"), Double.valueOf("8.1246744073695201E18"), Double.valueOf("8.12467440736954E13"))
         .go();
 
   }

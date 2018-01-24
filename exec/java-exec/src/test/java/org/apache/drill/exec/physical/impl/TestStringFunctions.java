@@ -102,9 +102,9 @@ public class TestStringFunctions extends ExecTest {
 
   @Test
   public void testCharLength() throws Throwable {
-    Object [] expected = new Object[] {new Long(8), new Long(0), new Long(5), new Long(5),
-                                       new Long(8), new Long(0), new Long(5), new Long(5),
-                                       new Long(8), new Long(0), new Long(5), new Long(5),};
+    Object [] expected = new Object[] {Long.valueOf(8), Long.valueOf(0), Long.valueOf(5), Long.valueOf(5),
+                                       Long.valueOf(8), Long.valueOf(0), Long.valueOf(5), Long.valueOf(5),
+                                       Long.valueOf(8), Long.valueOf(0), Long.valueOf(5), Long.valueOf(5),};
     runTest(expected, "functions/string/testCharLength.json");
   }
 
@@ -158,8 +158,8 @@ public class TestStringFunctions extends ExecTest {
 
   @Test
   public void testPosition() throws Throwable {
-    final Object [] expected = new Object[] {new Long(2), new Long(0), new Long(0), new Long(0),
-                                       new Long(2), new Long(0), new Long(0), new Long(0)};
+    final Object [] expected = new Object[] {Long.valueOf(2), Long.valueOf(0), Long.valueOf(0), Long.valueOf(0),
+                                       Long.valueOf(2), Long.valueOf(0), Long.valueOf(0), Long.valueOf(0)};
     runTest(expected, "functions/string/testPosition.json");
   }
 

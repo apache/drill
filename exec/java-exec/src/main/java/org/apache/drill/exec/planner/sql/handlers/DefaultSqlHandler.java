@@ -500,7 +500,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * We want to have smaller dataset on the right side, since hash table builds on right side.
      */
     if (context.getPlannerSettings().isHashJoinSwapEnabled()) {
-      phyRelNode = SwapHashJoinVisitor.swapHashJoin(phyRelNode, new Double(context.getPlannerSettings()
+      phyRelNode = SwapHashJoinVisitor.swapHashJoin(phyRelNode, Double.valueOf(context.getPlannerSettings()
           .getHashJoinSwapMarginFactor()));
     }
 
