@@ -217,7 +217,7 @@ public class ColumnAccessors {
     <@get drillType accessorType label true />
   }
 
-      <#assign varWidth = drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary" />
+      <#assign varWidth = drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary" || drillType == "VarDecimal" />
       <#if varWidth>
   public static class ${drillType}ColumnWriter extends BaseVarWidthWriter {
       <#else>
@@ -265,7 +265,17 @@ public class ColumnAccessors {
 
     </#if>
     @Override
+    <#if drillType = "VarDecimal">
+    public final void setDecimal(final BigDecimal bd) {
+      byte[] barr = bd.unscaledValue().toByteArray();
+      int len = barr.length;
+      setBytes(barr, len);
+    }
+
+    public final void setBytes(final byte[] value, int len) {
+    <#else>
     public final void set${label}(final ${accessorType} value${args}) {
+    </#if>
       <#-- Must compute the write offset first; can't be inline because the
            writeOffset() function has a side effect of possibly changing the buffer
            address (bufAddr). -->

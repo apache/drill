@@ -73,6 +73,7 @@ public class Types {
 
     switch(type.getMinorType()) {
     case BIGINT:
+    case VARDECIMAL:
     case DECIMAL38SPARSE:
     case DECIMAL38DENSE:
     case DECIMAL28SPARSE:
@@ -120,6 +121,7 @@ public class Types {
       case FLOAT4:          return "FLOAT";
       case FLOAT8:          return "DOUBLE";
 
+      case VARDECIMAL:
       case DECIMAL9:
       case DECIMAL18:
       case DECIMAL28DENSE:
@@ -238,6 +240,7 @@ public class Types {
           case INTERVALYEAR:    // SQL INTERVAL w/YEAR and/or MONTH
           case INTERVALDAY:     // SQL INTERVAL w/DAY, HOUR, MINUTE and/or SECOND
           // Not-yet seen/verified signed types:
+          case VARDECIMAL:      // SQL DECIMAL (if used)
           case DECIMAL9:        // SQL DECIMAL (if used)
           case DECIMAL18:       // SQL DECIMAL (if used)
           case DECIMAL28SPARSE: // SQL DECIMAL (if used)
@@ -398,6 +401,7 @@ public class Types {
     case VAR16CHAR:
     case VARCHAR:
     case UNION:
+    case VARDECIMAL:
       return false;
     default:
       return true;
@@ -633,6 +637,8 @@ public class Types {
         return "float";
       case FLOAT8:
         return "double";
+      case VARDECIMAL:
+        return "decimal";
       case DECIMAL9:
         return "decimal";
       case DECIMAL18:

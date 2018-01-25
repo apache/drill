@@ -109,22 +109,37 @@ public class DecimalReturnTypeInference {
     public TypeProtos.MajorType getType(List<LogicalExpression> logicalExpressions, FunctionAttributes attributes) {
       TypeProtos.DataMode mode = FunctionUtils.getReturnTypeDataMode(logicalExpressions, attributes);
 
-      if (logicalExpressions.size() != 3) {
+      // VARDECIMAL cast takes input and scale, for a size of only 2, since precision isn't needed (one-size-fits-all).
+      // All other decimal cast functions take that list, plus precision, for size of 3.
+      boolean varDecimalFlag = attributes.getReturnValue().getType().getMinorType() == TypeProtos.MinorType.VARDECIMAL;
+      int expectedSize = varDecimalFlag ? 2 : 3;
+
+      if (logicalExpressions.size() != expectedSize) {
         StringBuilder err = new StringBuilder();
         for (int i = 0; i < logicalExpressions.size(); i++) {
-          err.append("arg").append(i).append(": ").append(logicalExpressions.get(i).getMajorType().getMinorType());
+          err.append(" arg").append(i).append(": ").append(logicalExpressions.get(i).getMajorType().getMinorType());
         }
         throw new DrillRuntimeException("Decimal cast function invoked with incorrect arguments" + err);
       }
 
       int scale = (int) ((ValueExpressions.LongExpression)(logicalExpressions.get(logicalExpressions.size() - 1))).getLong();
-      int precision = (int) ((ValueExpressions.LongExpression)(logicalExpressions.get(logicalExpressions.size() - 2))).getLong();
-      return TypeProtos.MajorType.newBuilder()
+      if (varDecimalFlag) {
+        // VARDECIMAL is one-size-fits-all, and does not take precision as input
+        return TypeProtos.MajorType.newBuilder()
+          .setMinorType(attributes.getReturnValue().getType().getMinorType())
+          .setScale(scale)
+          .setMode(mode)
+          .build();
+      }
+      else {
+        int precision = (int) ((ValueExpressions.LongExpression)(logicalExpressions.get(logicalExpressions.size() - 2))).getLong();
+        return TypeProtos.MajorType.newBuilder()
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
           .setScale(scale)
           .setPrecision(precision)
           .setMode(mode)
           .build();
+      }
     }
   }
 

@@ -69,6 +69,12 @@ public class ResolverTypePrecedence {
     precedenceMap.put(MinorType.DECIMAL38DENSE, i += 2);
     precedenceMap.put(MinorType.DECIMAL38SPARSE, i += 2);
     precedenceMap.put(MinorType.FLOAT8, i += 2);
+
+    // NOTE: placing VARDECIMAL before FLOAT8 results in some attempts to cast to VARDECIMAL that
+    // fail during TestParquetMetadataCache.testDecimalPartitionPruning.
+    // TODO: determine proper precedence for VARDECIMAL, and add complete casting logic for it.
+    precedenceMap.put(MinorType.VARDECIMAL, i += 2);
+
     precedenceMap.put(MinorType.DATE, i += 2);
     precedenceMap.put(MinorType.TIMESTAMP, i += 2);
     precedenceMap.put(MinorType.TIMETZ, i += 2);
@@ -113,6 +119,7 @@ public class ResolverTypePrecedence {
     rule.add(MinorType.DECIMAL28DENSE);
     rule.add(MinorType.DECIMAL38SPARSE);
     rule.add(MinorType.DECIMAL38DENSE);
+    rule.add(MinorType.VARDECIMAL);
     rule.add(MinorType.MONEY);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);

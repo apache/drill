@@ -81,6 +81,14 @@ public class GetSetVectorHelper {
         eval.assign(out.getHolder().ref("start"), JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
         eval.assign(out.getHolder().ref("buffer"), vector.invoke("getBuffer"));
         return;
+      case VARDECIMAL: {
+        eval.assign(out.getHolder().ref("buffer"), vector.invoke("getBuffer"));
+        JVar se = eval.decl(model.LONG, "startEnd", getValueAccessor.invoke("getStartEnd").arg(indexVariable));
+        eval.assign(out.getHolder().ref("start"), JExpr.cast(model._ref(int.class), se));
+        eval.assign(out.getHolder().ref("end"), JExpr.cast(model._ref(int.class), se.shr(JExpr.lit(32))));
+        eval.assign(out.getHolder().ref("scale"), vector.invoke("getField").invoke("getScale"));
+        return;
+      }
       case INTERVAL:{
         JVar start = eval.decl(model.INT, "start", JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
         JVar data = eval.decl(model.ref(DrillBuf.class), "data", vector.invoke("getBuffer"));
@@ -88,22 +96,22 @@ public class GetSetVectorHelper {
         eval.assign(out.getHolder().ref("days"), data.invoke("getInt").arg(start.plus(JExpr.lit(4))));
         eval.assign(out.getHolder().ref("milliseconds"), data.invoke("getInt").arg(start.plus(JExpr.lit(8))));
         return;
-      }
+        }
       case INTERVALDAY: {
         JVar start = eval.decl(model.INT, "start", JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
         eval.assign(out.getHolder().ref("days"), vector.invoke("getBuffer").invoke("getInt").arg(start));
         eval.assign(out.getHolder().ref("milliseconds"), vector.invoke("getBuffer").invoke("getInt").arg(start.plus(JExpr.lit(4))));
         return;
-      }
+        }
       case VAR16CHAR:
       case VARBINARY:
-      case VARCHAR:
+      case VARCHAR: {
          eval.assign(out.getHolder().ref("buffer"), vector.invoke("getBuffer"));
          JVar se = eval.decl(model.LONG, "startEnd", getValueAccessor.invoke("getStartEnd").arg(indexVariable));
          eval.assign(out.getHolder().ref("start"), JExpr.cast(model._ref(int.class), se));
          eval.assign(out.getHolder().ref("end"), JExpr.cast(model._ref(int.class), se.shr(JExpr.lit(32))));
         return;
-
+        }
       }
     }
 
@@ -164,6 +172,7 @@ public class GetSetVectorHelper {
       case VAR16CHAR:
       case VARBINARY:
       case VARCHAR:
+      case VARDECIMAL:
         return setMethod //
             .arg(in.f("start")) //
             .arg(in.f("end")) //

@@ -366,6 +366,8 @@ public class ValueExpressions {
 
   }
 
+  // TODO: is a class also needed for VARDECIMAL?
+
   public static class Decimal38Expression extends LogicalExpressionBase {
 
     private BigDecimal bigDecimal;

@@ -27,6 +27,8 @@ import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
+import org.apache.drill.exec.expr.holders.NullableVarDecimalHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
@@ -475,6 +477,42 @@ public class Hash32FunctionsWithSeed {
         out.value = seed.value;
       } else {
         out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, seed.value);
+      }
+    }
+  }
+
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class VarDecimalHash implements DrillSimpleFunc {
+    @Param  VarDecimalHolder in;
+    @Param IntHolder seed;
+    @Output IntHolder out;
+
+    public void setup() {
+    }
+
+    public void eval() {
+      java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer,
+              in.start, in.end - in.start, in.scale);
+      out.value = Hash32Functions.hashBigDecimal(bd, seed.value);
+    }
+  }
+
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableVarDecimalHash implements DrillSimpleFunc {
+    @Param  NullableVarDecimalHolder in;
+    @Param IntHolder seed;
+    @Output IntHolder out;
+
+    public void setup() {
+    }
+
+    public void eval() {
+      if (in.isSet == 0) {
+        out.value = seed.value;
+      } else {
+        java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer,
+                in.start, in.end - in.start, in.scale);
+        out.value = Hash32Functions.hashBigDecimal(bd, seed.value);
       }
     }
   }

@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.vector.VarDecimalVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.DateVector;
@@ -221,7 +223,9 @@ public class ColumnReaderFactory {
           case ENUM:
             return new VarLengthColumnReaders.VarCharColumn(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (VarCharVector) v, schemaElement);
           case DECIMAL:
-            if (v instanceof Decimal28SparseVector) {
+            if (v instanceof VarDecimalVector) {
+              return new VarLengthColumnReaders.VarDecimalColumn(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
+            } else if (v instanceof Decimal28SparseVector) {
               return new VarLengthColumnReaders.Decimal28Column(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (Decimal28SparseVector) v, schemaElement);
             } else if (v instanceof Decimal38SparseVector) {
               return new VarLengthColumnReaders.Decimal38Column(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (Decimal38SparseVector) v, schemaElement);
@@ -239,7 +243,9 @@ public class ColumnReaderFactory {
           case ENUM:
             return new VarLengthColumnReaders.NullableVarCharColumn(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableVarCharVector) v, schemaElement);
           case DECIMAL:
-            if (v instanceof NullableDecimal28SparseVector) {
+            if (v instanceof NullableVarDecimalVector) {
+              return new VarLengthColumnReaders.NullableVarDecimalColumn(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableVarDecimalVector) v, schemaElement);
+            } else if (v instanceof NullableDecimal28SparseVector) {
               return new VarLengthColumnReaders.NullableDecimal28Column(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableDecimal28SparseVector) v, schemaElement);
             } else if (v instanceof NullableDecimal38SparseVector) {
               return new VarLengthColumnReaders.NullableDecimal38Column(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableDecimal38SparseVector) v, schemaElement);

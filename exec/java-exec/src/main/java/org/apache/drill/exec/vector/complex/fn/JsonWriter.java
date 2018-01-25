@@ -110,6 +110,7 @@ public class JsonWriter {
       case DECIMAL38SPARSE:
       case DECIMAL9:
       case DECIMAL18:
+      case VARDECIMAL:
         gen.writeDecimal(reader);
         break;
 
@@ -220,6 +221,7 @@ public class JsonWriter {
       case DECIMAL38SPARSE:
       case DECIMAL9:
       case DECIMAL18:
+      case VARDECIMAL:
         for(int i = 0; i < reader.size(); i++){
           gen.writeDecimal(i, reader);
         }

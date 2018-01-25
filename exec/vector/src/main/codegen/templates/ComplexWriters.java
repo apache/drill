@@ -99,7 +99,11 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
 
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
+    <#if minor.class == "VarDecimal">
+    mutator.addSafe(idx(), <#list fields as field><#if field.name == "scale"><#break></#if>${field.name}<#if field_has_next && fields[field_index+1].name != "scale" >, </#if></#list>);
+    <#else>
     mutator.addSafe(idx(), <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+    </#if>
     vector.getMutator().setValueCount(idx()+1);
   }
   </#if>
@@ -124,7 +128,11 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
 
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
+    <#if minor.class == "VarDecimal">
+    mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field><#if field.name == "scale"><#break></#if>${field.name}<#if field_has_next && fields[field_index+1].name != "scale" >, </#if></#list>);
+    <#else>
     mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+    </#if>
     vector.getMutator().setValueCount(idx()+1);
   }
 

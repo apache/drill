@@ -433,6 +433,7 @@ public class TestBuilder {
   private String getDecimalPrecisionScaleInfo(TypeProtos.MajorType type) {
     String precision = "";
     switch(type.getMinorType()) {
+      case VARDECIMAL:
       case DECIMAL18:
       case DECIMAL28SPARSE:
       case DECIMAL38SPARSE:

@@ -161,6 +161,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#if minor.class == "VarBinary">
       return value;
+<#elseif minor.class == "VarDecimal">
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(holder.buffer, holder.start, holder.end-holder.start, holder.scale);
 <#elseif minor.class == "Var16Char">
       return new String(value);
 <#elseif minor.class == "VarChar">
@@ -234,6 +236,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#if minor.class == "VarBinary">
       return value;
+<#elseif minor.class == "VarDecimal">
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(holder.buffer, holder.start, holder.end-holder.start, holder.scale);
 <#elseif minor.class == "Var16Char">
       return new String(value);
 <#elseif minor.class == "VarChar">

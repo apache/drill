@@ -94,6 +94,7 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
   <#case "Decimal28Dense">
   <#case "Decimal38Dense">
   <#case "Decimal38Sparse">
+  <#case "VarDecimal">
     <#assign typeName = "Decimal">
     <#break>
   <#case "Float4">
