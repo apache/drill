@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.broadcastsender;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.impl.RootCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
@@ -30,7 +30,7 @@ import com.google.common.collect.Iterators;
 
 public class BroadcastSenderCreator implements RootCreator<BroadcastSender> {
   @Override
-  public RootExec getRoot(FragmentContext context, BroadcastSender config, List<RecordBatch> children) throws ExecutionSetupException {
+  public RootExec getRoot(ExecutorFragmentContext context, BroadcastSender config, List<RecordBatch> children) throws ExecutionSetupException {
     assert children != null && children.size() == 1;
     return new BroadcastSenderRootExec(context, Iterators.getOnlyElement(children.iterator()), config);
   }

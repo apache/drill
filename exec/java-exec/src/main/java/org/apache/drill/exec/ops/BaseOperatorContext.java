@@ -39,18 +39,17 @@ import io.netty.buffer.DrillBuf;
  * version of the operator context and the full production-time context
  * that includes network services.
  */
-
 public abstract class BaseOperatorContext implements OperatorContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseOperatorContext.class);
 
-  protected final FragmentContextInterface context;
+  protected final FragmentContext context;
   protected final BufferAllocator allocator;
   protected final PhysicalOperator popConfig;
   protected final BufferManager manager;
   private DrillFileSystem fs;
   private ControlsInjector injector;
 
-  public BaseOperatorContext(FragmentContextInterface context, BufferAllocator allocator,
+  public BaseOperatorContext(FragmentContext context, BufferAllocator allocator,
                PhysicalOperator popConfig) {
     this.context = context;
     this.allocator = allocator;
@@ -59,7 +58,7 @@ public abstract class BaseOperatorContext implements OperatorContext {
   }
 
   @Override
-  public FragmentContextInterface getFragmentContext() {
+  public FragmentContext getFragmentContext() {
     return context;
   }
 
@@ -104,17 +103,17 @@ public abstract class BaseOperatorContext implements OperatorContext {
   // Allow an operator to use the thread pool
   @Override
   public ExecutorService getExecutor() {
-    return context.getDrillbitContext().getExecutor();
+    return context.getExecutor();
   }
 
   @Override
   public ExecutorService getScanExecutor() {
-    return context.getDrillbitContext().getScanExecutor();
+    return context.getScanExecutor();
   }
 
   @Override
   public ExecutorService getScanDecodeExecutor() {
-    return context.getDrillbitContext().getScanDecodeExecutor();
+    return context.getScanDecodeExecutor();
   }
 
   @Override
@@ -165,12 +164,9 @@ public abstract class BaseOperatorContext implements OperatorContext {
         fs = null;
       }
     } catch (IOException e) {
-      if (ex == null) {
-        ex = UserException
-            .resourceError(e)
-            .addContext("Failed to close the Drill file system for " + getName())
-            .build(logger);
-      }
+      throw UserException.resourceError(e)
+        .addContext("Failed to close the Drill file system for " + getName())
+        .build(logger);
     }
     if (ex != null) {
       throw ex;

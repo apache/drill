@@ -223,7 +223,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
 
   @Override
   protected void upkeep(RawFragmentBatch batch) {
-    if (context.isOverMemoryLimit()) {
+    if (context.getAllocator().isOverLimit()) {
       outOfMemory.set(true);
     }
 
@@ -300,11 +300,11 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
           try {
             batch.writeToStream(outputStream);
           } catch (IOException e) {
-            context.fail(e);
+            context.getExecutorState().fail(e);
           }
         }
       } catch (Throwable e) {
-        context.fail(e);
+        context.getExecutorState().fail(e);
       } finally {
         logger.info("Spooler thread exiting");
       }

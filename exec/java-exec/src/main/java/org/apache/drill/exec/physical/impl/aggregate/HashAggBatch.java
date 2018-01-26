@@ -186,7 +186,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       return aggregator.getOutcome();
 
     case UPDATE_AGGREGATOR:
-      context.fail(UserException.unsupportedError()
+      context.getExecutorState().fail(UserException.unsupportedError()
           .message(SchemaChangeException.schemaChanged(
               "Hash aggregate does not support schema change",
               incomingSchema,
@@ -212,7 +212,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       this.aggregator = createAggregatorInternal();
       return true;
     } catch (SchemaChangeException | ClassTransformationException | IOException ex) {
-      context.fail(ex);
+      context.getExecutorState().fail(ex);
       container.clear();
       incoming.kill(false);
       return false;
@@ -227,9 +227,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     ClassGenerator<HashAggregator> cg = top.getRoot();
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
     top.plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
-    // top.saveCodeForDebugging(true);
-
     container.clear();
 
     int numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().size() : 0;

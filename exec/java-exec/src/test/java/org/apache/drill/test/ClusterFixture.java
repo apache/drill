@@ -72,7 +72,6 @@ import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
  * creates the requested Drillbit and client.
  */
 public class ClusterFixture extends BaseFixture implements AutoCloseable {
-  public static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
   public static final int MAX_WIDTH_PER_NODE = 2;
 
   @SuppressWarnings("serial")

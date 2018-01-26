@@ -23,7 +23,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.serialization.InstanceSerializer;
@@ -40,7 +40,7 @@ public class ProfileJsonIterator extends ProfileIterator {
   private final InstanceSerializer<QueryProfile> profileSerializer;
   private final Iterator<ProfileJson> itr;
 
-  public ProfileJsonIterator(FragmentContext context) {
+  public ProfileJsonIterator(ExecutorFragmentContext context) {
     super(context);
     //Holding a serializer (for JSON extract)
     profileSerializer = profileStoreContext.

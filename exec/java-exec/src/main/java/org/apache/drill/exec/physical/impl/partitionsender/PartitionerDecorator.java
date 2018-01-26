@@ -57,7 +57,7 @@ public class PartitionerDecorator {
     this.partitioners = partitioners;
     this.stats = stats;
     this.context = context;
-    this.executor = context.getDrillbitContext().getExecutor();
+    this.executor = context.getExecutor();
     this.tName = Thread.currentThread().getName();
     this.childThreadPrefix = "Partitioner-" + tName + "-";
   }
@@ -177,7 +177,7 @@ public class PartitionerDecorator {
           break;
         } catch (final InterruptedException e) {
           // If the fragment state says we shouldn't continue, cancel or interrupt partitioner threads
-          if (!context.shouldContinue()) {
+          if (!context.getExecutorState().shouldContinue()) {
             logger.debug("Interrupting partioner threads. Fragment thread {}", tName);
             for(Future<?> f : taskFutures) {
               f.cancel(true);

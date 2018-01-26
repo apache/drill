@@ -24,15 +24,12 @@ import org.apache.drill.exec.record.VectorContainer;
 
 
 public interface JoinWorker {
+  TemplateClassDefinition<JoinWorker> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(JoinWorker.class, JoinTemplate.class);
 
-  public static enum JoinOutcome {
+  enum JoinOutcome {
     NO_MORE_DATA, BATCH_RETURNED, SCHEMA_CHANGED, WAITING, FAILURE;
   }
 
-  public void setupJoin(FragmentContext context, JoinStatus status, VectorContainer outgoing) throws SchemaChangeException;
-  public boolean doJoin(JoinStatus status);
-
-  public static TemplateClassDefinition<JoinWorker> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(
-    JoinWorker.class, JoinTemplate.class);
-
+  void setupJoin(FragmentContext context, JoinStatus status, VectorContainer outgoing) throws SchemaChangeException;
+  boolean doJoin(JoinStatus status);
 }

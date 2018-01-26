@@ -19,12 +19,13 @@
 package org.apache.drill.exec.work.fragment;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.ops.FragmentStats;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -47,20 +48,16 @@ import static org.apache.drill.exec.proto.UserBitShared.FragmentState.RUNNING;
 
 public class FragmentStatusReporterTest {
 
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStatusReporterTest.class);
-
   private FragmentStatusReporter statusReporter;
 
   private ControlTunnel foremanTunnel;
 
-  private FragmentContext context;
+  private FragmentContextImpl context;
 
   @Before
   public void setUp() throws Exception {
-    context = mock(FragmentContext.class);
-    when(context.getStats()).thenReturn(mock(FragmentStats.class));
-    when(context.getHandle()).thenReturn(FragmentHandle.getDefaultInstance());
-    when(context.getAllocator()).thenReturn(mock(BufferAllocator.class));
+    context = mock(FragmentContextImpl.class);
+    Controller controller = mock(Controller.class);
 
     // Create 2 different endpoint such that foremanEndpoint is different than
     // localEndpoint
@@ -68,9 +65,14 @@ public class FragmentStatusReporterTest {
     DrillbitEndpoint foremanEndpoint = DrillbitEndpoint.newBuilder().setAddress("10.0.0.2").build();
     foremanTunnel = mock(ControlTunnel.class);
 
+    when(context.getEndpoint()).thenReturn(localEndpoint);
+    when(context.getController()).thenReturn(controller);
+    when(controller.getTunnel(foremanEndpoint)).thenReturn(foremanTunnel);
+
+    when(context.getStats()).thenReturn(mock(FragmentStats.class));
+    when(context.getHandle()).thenReturn(FragmentHandle.getDefaultInstance());
+    when(context.getAllocator()).thenReturn(mock(BufferAllocator.class));
     when(context.getForemanEndpoint()).thenReturn(foremanEndpoint);
-    when(context.getIdentity()).thenReturn(localEndpoint);
-    when(context.getControlTunnel(foremanEndpoint)).thenReturn(foremanTunnel);
     statusReporter = new FragmentStatusReporter(context);
   }
 
@@ -132,7 +134,7 @@ public class FragmentStatusReporterTest {
 
     DrillbitEndpoint localEndpoint = DrillbitEndpoint.newBuilder().setAddress("10.0.0.1").build();
 
-    when(context.getIdentity()).thenReturn(localEndpoint);
+    when(context.getEndpoint()).thenReturn(localEndpoint);
     when(context.getForemanEndpoint()).thenReturn(localEndpoint);
     when(context.getWorkEventbus()).thenReturn(mock(WorkEventBus.class));
 
@@ -153,7 +155,7 @@ public class FragmentStatusReporterTest {
   public void testCloseLocalForeman() throws Exception {
     DrillbitEndpoint localEndpoint = DrillbitEndpoint.newBuilder().setAddress("10.0.0.1").build();
 
-    when(context.getIdentity()).thenReturn(localEndpoint);
+    when(context.getEndpoint()).thenReturn(localEndpoint);
     when(context.getForemanEndpoint()).thenReturn(localEndpoint);
     when(context.getWorkEventbus()).thenReturn(mock(WorkEventBus.class));
     statusReporter = new FragmentStatusReporter(context);

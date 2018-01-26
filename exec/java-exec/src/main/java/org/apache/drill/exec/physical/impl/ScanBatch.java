@@ -82,14 +82,13 @@ public class ScanBatch implements CloseableRecordBatch {
   private String currentReaderClassName;
   /**
    *
-   * @param subScanConfig
    * @param context
    * @param oContext
    * @param readerList
    * @param implicitColumnList : either an emptylist when all the readers do not have implicit
    *                        columns, or there is a one-to-one mapping between reader and implicitColumns.
    */
-  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
+  public ScanBatch(FragmentContext context,
                    OperatorContext oContext, List<RecordReader> readerList,
                    List<Map<String, String>> implicitColumnList) {
     this.context = context;
@@ -126,8 +125,7 @@ public class ScanBatch implements CloseableRecordBatch {
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
                    List<RecordReader> readers)
       throws ExecutionSetupException {
-    this(subScanConfig, context,
-        context.newOperatorContext(subScanConfig),
+    this(context, context.newOperatorContext(subScanConfig),
         readers, Collections.<Map<String, String>> emptyList());
   }
 

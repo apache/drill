@@ -86,7 +86,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     if (context.getOptions().getOption(ExecConstants.ENABLE_NEW_TEXT_READER_KEY).bool_val == true) {
       TextParsingSettings settings = new TextParsingSettings();
       settings.set((TextFormatConfig)formatConfig);
-      return new CompliantTextRecordReader(split, dfs, context, settings, columns);
+      return new CompliantTextRecordReader(split, dfs, settings, columns);
     } else {
       char delim = ((TextFormatConfig)formatConfig).getFieldDelimiter();
       return new DrillTextRecordReader(split, dfs.getConf(), context, delim, columns);

@@ -26,7 +26,7 @@ import java.util.Map.Entry;
 import java.util.TimeZone;
 
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -45,13 +45,13 @@ public class BitToUserConnectionIterator implements Iterator<Object> {
   private String queryingUsername;
   private boolean isAdmin;
 
-  public BitToUserConnectionIterator(FragmentContext context) {
+  public BitToUserConnectionIterator(ExecutorFragmentContext context) {
     queryingUsername = context.getQueryUserName();
     isAdmin = hasAdminPrivileges(context);
     itr = iterateConnectionInfo(context);
   }
 
-  private boolean hasAdminPrivileges(FragmentContext context) {
+  private boolean hasAdminPrivileges(ExecutorFragmentContext context) {
     OptionManager options = context.getOptions();
     if (context.isUserAuthenticationEnabled() &&
         !ImpersonationUtil.hasAdminPrivileges(
@@ -65,11 +65,10 @@ public class BitToUserConnectionIterator implements Iterator<Object> {
     return true;
   }
 
-  private Iterator<ConnectionInfo> iterateConnectionInfo(FragmentContext context) {
-    Set<Entry<BitToUserConnection, BitToUserConnectionConfig>> activeConnections =
-        context.getDrillbitContext().getUserConnections();
+  private Iterator<ConnectionInfo> iterateConnectionInfo(ExecutorFragmentContext context) {
+    Set<Entry<BitToUserConnection, BitToUserConnectionConfig>> activeConnections = context.getUserConnections();
 
-    String hostname = context.getIdentity().getAddress();
+    String hostname = context.getEndpoint().getAddress();
     List<ConnectionInfo> connectionInfos = new LinkedList<ConnectionInfo>();
 
     for (Entry<BitToUserConnection, BitToUserConnectionConfig> connection : activeConnections) {

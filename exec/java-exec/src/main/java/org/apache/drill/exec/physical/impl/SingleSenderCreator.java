@@ -22,8 +22,9 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
+import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
@@ -36,7 +37,7 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 public class SingleSenderCreator implements RootCreator<SingleSender>{
 
   @Override
-  public RootExec getRoot(FragmentContext context, SingleSender config, List<RecordBatch> children)
+  public RootExec getRoot(ExecutorFragmentContext context, SingleSender config, List<RecordBatch> children)
       throws ExecutionSetupException {
     assert children != null && children.size() == 1;
     return new SingleSenderRootExec(context, children.iterator().next(), config);
@@ -64,7 +65,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       }
     }
 
-    public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config) throws OutOfMemoryException {
+    public SingleSenderRootExec(RootFragmentContext context, RecordBatch batch, SingleSender config) throws OutOfMemoryException {
       super(context, context.newOperatorContext(config, null), config);
       this.incoming = batch;
       assert incoming != null;

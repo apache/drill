@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -37,17 +37,15 @@ public abstract class ProfileIterator implements Iterator<Object> {
   protected final String queryingUsername;
   protected final boolean isAdmin;
 
-  public ProfileIterator(FragmentContext context) {
+  public ProfileIterator(ExecutorFragmentContext context) {
     //Grab profile Store Context
-    profileStoreContext = context
-        .getDrillbitContext()
-        .getProfileStoreContext();
+    profileStoreContext = context.getProfileStoreContext();
 
     queryingUsername = context.getQueryUserName();
     isAdmin = hasAdminPrivileges(context);
   }
 
-  protected boolean hasAdminPrivileges(FragmentContext context) {
+  protected boolean hasAdminPrivileges(ExecutorFragmentContext context) {
     OptionManager options = context.getOptions();
     if (context.isUserAuthenticationEnabled() &&
         !ImpersonationUtil.hasAdminPrivileges(

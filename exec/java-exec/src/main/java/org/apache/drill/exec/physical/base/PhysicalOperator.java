@@ -47,7 +47,7 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    * @return
    */
   @JsonIgnore
-  public boolean isExecutable();
+  boolean isExecutable();
 
   /**
    * Describes the SelectionVector Mode for the output steam from this physical op.
@@ -55,7 +55,7 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    * @return
    */
   @JsonIgnore
-  public SelectionVectorMode getSVMode();
+  SelectionVectorMode getSVMode();
 
   /**
    * Provides capability to build a set of output based on traversing a query graph tree.
@@ -63,7 +63,7 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    * @param physicalVisitor
    * @return
    */
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E;
+  <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E;
 
   /**
    * Regenerate with this node with a new set of children.  This is used in the case of materialization or optimization.
@@ -71,44 +71,44 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    * @return
    */
   @JsonIgnore
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException;
+  PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException;
 
   /**
    * @return The memory to preallocate for this operator
    */
-  public long getInitialAllocation();
+  long getInitialAllocation();
 
   /**
    * @return The maximum memory this operator can allocate
    */
-  public long getMaxAllocation();
+  long getMaxAllocation();
 
   /**
    *
    * @param maxAllocation The max memory allocation to be set
    */
-  public void setMaxAllocation(long maxAllocation);
+  void setMaxAllocation(long maxAllocation);
 
   /**
    *
    * @return True iff this operator manages its memory (including disk spilling)
    */
   @JsonIgnore
-  public boolean isBufferedOperator();
+  boolean isBufferedOperator();
 
   // public void setBufferedOperator(boolean bo);
 
   @JsonProperty("@id")
-  public int getOperatorId();
+  int getOperatorId();
 
   @JsonProperty("@id")
-  public void setOperatorId(int id);
+  void setOperatorId(int id);
 
   @JsonProperty("cost")
-  public void setCost(double cost);
+  void setCost(double cost);
 
   @JsonProperty("cost")
-  public double getCost();
+  double getCost();
 
   /**
    * Name of the user whom to impersonate while setting up the implementation (RecordBatch) of this
@@ -116,8 +116,8 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    * @return
    */
   @JsonProperty("userName")
-  public String getUserName();
+  String getUserName();
 
   @JsonIgnore
-  public int getOperatorType();
+  int getOperatorType();
 }

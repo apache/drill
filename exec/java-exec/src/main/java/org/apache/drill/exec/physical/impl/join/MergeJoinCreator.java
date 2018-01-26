@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.join;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
@@ -29,10 +29,8 @@ import org.apache.calcite.rel.core.JoinRelType;
 import com.google.common.base.Preconditions;
 
 public class MergeJoinCreator implements BatchCreator<MergeJoinPOP> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinCreator.class);
-
   @Override
-  public MergeJoinBatch getBatch(FragmentContext context, MergeJoinPOP config, List<RecordBatch> children)
+  public MergeJoinBatch getBatch(ExecutorFragmentContext context, MergeJoinPOP config, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 2);
     if(config.getJoinType() == JoinRelType.RIGHT){
@@ -40,6 +38,5 @@ public class MergeJoinCreator implements BatchCreator<MergeJoinPOP> {
     }else{
       return new MergeJoinBatch(config, context, children.get(0), children.get(1));
     }
-
   }
 }

@@ -29,8 +29,9 @@ import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.FragmentContext.ExecutorState;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
@@ -41,7 +42,6 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -58,7 +58,7 @@ public class FragmentExecutor implements Runnable {
 
   private final AtomicBoolean hasCloseoutThread = new AtomicBoolean(false);
   private final String fragmentName;
-  private final FragmentContext fragmentContext;
+  private final ExecutorFragmentContext fragmentContext;
   private final FragmentStatusReporter statusReporter;
   private final DeferredException deferredException = new DeferredException();
   private final PlanFragment fragment;
@@ -78,8 +78,8 @@ public class FragmentExecutor implements Runnable {
    * @param fragment
    * @param statusReporter
    */
-  public FragmentExecutor(final FragmentContext context, final PlanFragment fragment,
-      final FragmentStatusReporter statusReporter) {
+  public FragmentExecutor(final ExecutorFragmentContext context, final PlanFragment fragment,
+                          final FragmentStatusReporter statusReporter) {
     this(context, fragment, statusReporter, null);
   }
 
@@ -91,7 +91,7 @@ public class FragmentExecutor implements Runnable {
    * @param statusReporter
    * @param rootOperator
    */
-  public FragmentExecutor(final FragmentContext context, final PlanFragment fragment,
+  public FragmentExecutor(final ExecutorFragmentContext context, final PlanFragment fragment,
                           final FragmentStatusReporter statusReporter, final FragmentRoot rootOperator) {
     this.fragmentContext = context;
     this.statusReporter = statusReporter;
@@ -191,8 +191,7 @@ public class FragmentExecutor implements Runnable {
     myThreadRef.set(myThread);
     final String originalThreadName = myThread.getName();
     final FragmentHandle fragmentHandle = fragmentContext.getHandle();
-    final DrillbitContext drillbitContext = fragmentContext.getDrillbitContext();
-    final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
+    final ClusterCoordinator clusterCoordinator = fragmentContext.getClusterCoordinator();
     final DrillbitStatusListener drillbitStatusListener = new FragmentDrillbitStatusListener();
     final String newThreadName = QueryIdHelper.getExecutorThreadName(fragmentHandle);
 
@@ -202,7 +201,7 @@ public class FragmentExecutor implements Runnable {
 
       // if we didn't get the root operator when the executor was created, create it now.
       final FragmentRoot rootOperator = this.rootOperator != null ? this.rootOperator :
-          drillbitContext.getPlanReader().readFragmentRoot(fragment.getFragmentJson());
+          fragmentContext.getPlanReader().readFragmentRoot(fragment.getFragmentJson());
 
           root = ImplCreator.getExec(fragmentContext, rootOperator);
           if (root == null) {
@@ -215,7 +214,7 @@ public class FragmentExecutor implements Runnable {
       eventProcessor.start();
       injector.injectPause(fragmentContext.getExecutionControls(), "fragment-running", logger);
 
-      final DrillbitEndpoint endpoint = drillbitContext.getEndpoint();
+      final DrillbitEndpoint endpoint = fragmentContext.getEndpoint();
       logger.debug("Starting fragment {}:{} on {}:{}",
           fragmentHandle.getMajorFragmentId(), fragmentHandle.getMinorFragmentId(),
           endpoint.getAddress(), endpoint.getUserPort());
@@ -296,7 +295,7 @@ public class FragmentExecutor implements Runnable {
     if (outcome == FragmentState.FAILED) {
       final FragmentHandle handle = getContext().getHandle();
       final UserException uex = UserException.systemError(deferredException.getAndClear())
-          .addIdentity(getContext().getIdentity())
+          .addIdentity(getContext().getEndpoint())
           .addContext("Fragment", handle.getMajorFragmentId() + ":" + handle.getMinorFragmentId())
           .build(logger);
       statusReporter.fail(uex);
@@ -414,11 +413,11 @@ public class FragmentExecutor implements Runnable {
     updateState(FragmentState.FAILED);
   }
 
-  public FragmentContext getContext() {
+  public ExecutorFragmentContext getContext() {
     return fragmentContext;
   }
 
-  private class ExecutorStateImpl implements ExecutorState {
+  private class ExecutorStateImpl implements FragmentContext.ExecutorState {
     public boolean shouldContinue() {
       return FragmentExecutor.this.shouldContinue();
     }

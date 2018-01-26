@@ -52,8 +52,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -72,8 +71,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
 
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -96,8 +94,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
 
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.AUTH_MECHANISM, "kerberos");
@@ -120,8 +117,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
   public void testDisableDrillbitAuth_EnableClientEncryption() throws Exception {
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -152,8 +148,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -184,8 +179,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
 
@@ -213,8 +207,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true)),
-        false);
+            ConfigValueFactory.fromAnyRef(true)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -244,8 +237,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -274,8 +266,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
         .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true)),
-        false);
+            ConfigValueFactory.fromAnyRef(true)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -300,8 +291,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
   public void testDisableDrillbitClientAuth() throws Exception {
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(false)),
-        false);
+            ConfigValueFactory.fromAnyRef(false)));
 
     final Properties connectionProps = new Properties();
 
@@ -325,8 +315,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
         .withValue(ExecConstants.IMPERSONATION_ENABLED,
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.IMPERSONATION_MAX_CHAINED_USER_HOPS,
-            ConfigValueFactory.fromAnyRef(3)),
-        false);
+            ConfigValueFactory.fromAnyRef(3)));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -337,6 +326,5 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
       fail();
     }
   }
-
 }
 

@@ -22,8 +22,9 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingUserConnection;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
+import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
@@ -38,11 +39,10 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import com.google.common.base.Preconditions;
 
 public class ScreenCreator implements RootCreator<Screen> {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScreenCreator.class);
 
   @Override
-  public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children)
+  public RootExec getRoot(ExecutorFragmentContext context, Screen config, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkNotNull(children);
     Preconditions.checkArgument(children.size() == 1);
@@ -52,7 +52,7 @@ public class ScreenCreator implements RootCreator<Screen> {
   public static class ScreenRoot extends BaseRootExec {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     private final RecordBatch incoming;
-    private final FragmentContext context;
+    private final RootFragmentContext context;
     private final AccountingUserConnection userConnection;
     private RecordMaterializer materializer;
 
@@ -67,11 +67,15 @@ public class ScreenCreator implements RootCreator<Screen> {
       }
     }
 
-    public ScreenRoot(FragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
+    public ScreenRoot(RootFragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
       super(context, config);
       this.context = context;
       this.incoming = incoming;
       userConnection = context.getUserDataTunnel();
+    }
+
+    public RootFragmentContext getContext() {
+      return context;
     }
 
     @Override

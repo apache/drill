@@ -30,8 +30,6 @@ import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 abstract class NestedConfig implements Config {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedConfig.class);
-
   private final Config c;
 
   NestedConfig(Config c) {

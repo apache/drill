@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import java.util.Iterator;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
 
 /**
@@ -33,89 +33,87 @@ import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
 public enum SystemTable {
   OPTION("options", false, OptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_PUBLIC);
     }
   },
 
   OPTION_VAL("options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new ExtendedOptionIterator(context, false);
     }
   },
 
   INTERNAL_OPTIONS("internal_options", false, OptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_INTERNAL);
     }
   },
 
   INTERNAL_OPTIONS_VAL("internal_options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new ExtendedOptionIterator(context, true);
     }
   },
 
   BOOT("boot", false, OptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new OptionIterator(context, OptionIterator.Mode.BOOT);
     }
   },
 
   DRILLBITS("drillbits", false,DrillbitIterator.DrillbitInstance.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new DrillbitIterator(context);
     }
   },
 
   VERSION("version", false, VersionIterator.VersionInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new VersionIterator();
     }
   },
 
   MEMORY("memory", true, MemoryIterator.MemoryInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new MemoryIterator(context);
     }
   },
 
   CONNECTIONS("connections", true, BitToUserConnectionIterator.ConnectionInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new BitToUserConnectionIterator(context);
     }
   },
 
   PROFILES("profiles", false, ProfileInfoIterator.ProfileInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new ProfileInfoIterator(context);
     }
   },
 
   PROFILES_JSON("profiles_json", false, ProfileJsonIterator.ProfileJson.class) {
     @Override
-    public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new ProfileJsonIterator(context);
     }
   },
 
   THREADS("threads", true, ThreadsIterator.ThreadsInfo.class) {
     @Override
-  public Iterator<Object> getIterator(final FragmentContext context) {
+  public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
       return new ThreadsIterator(context);
     }
   };
-
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTable.class);
 
   private final String tableName;
   private final boolean distributed;
@@ -127,7 +125,7 @@ public enum SystemTable {
     this.pojoClass = pojoClass;
   }
 
-  public Iterator<Object> getIterator(final FragmentContext context) {
+  public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
     throw new UnsupportedOperationException(tableName + " must override this method.");
   }
 

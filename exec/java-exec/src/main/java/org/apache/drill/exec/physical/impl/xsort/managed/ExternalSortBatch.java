@@ -135,8 +135,7 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
  * into new batches of a size determined by that operator.</li>
  * <li>A series of batches, without a selection vector, if the sort spills to
  * disk. In this case, the downstream operator will still be a selection vector
- * remover, but there is nothing for that operator to remove. Each batch is
- * of the size set by {@link #MAX_MERGED_BATCH_SIZE}.</li>
+ * remover, but there is nothing for that operator to remove.
  * </ul>
  * Note that, even in the in-memory sort case, this operator could do the copying
  * to eliminate the extra selection vector remover. That is left as an exercise
@@ -375,7 +374,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     // sort may have prematurely exited due to shouldContinue() returning false.
 
-    if (! context.shouldContinue()) {
+    if (!context.getExecutorState().shouldContinue()) {
       sortState = SortState.DONE;
       return IterOutcome.STOP;
     }
@@ -440,8 +439,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   /**
    * Handle a new schema from upstream. The ESB is quite limited in its ability
    * to handle schema changes.
-   *
-   * @param upstream the status code from upstream: either OK or OK_NEW_SCHEMA
    */
 
   private void setupSchema()  {
@@ -482,6 +479,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
    * <p>
    * Some Drill code ends up calling close() two or more times. The code
    * here protects itself from these undesirable semantics.
+   * </p>
    */
 
   @Override

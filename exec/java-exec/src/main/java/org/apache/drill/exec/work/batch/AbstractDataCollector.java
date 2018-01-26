@@ -29,9 +29,7 @@ import org.apache.drill.exec.util.ArrayWrappedIntIntMap;
 
 import com.google.common.base.Preconditions;
 
-public abstract class AbstractDataCollector implements DataCollector{
-
-  // private final List<MinorFragmentEndpoint> incoming;
+public abstract class AbstractDataCollector implements DataCollector {
   private final int oppositeMajorFragmentId;
   private final AtomicIntegerArray remainders;
   private final AtomicInteger remainingRequired;
@@ -42,7 +40,6 @@ public abstract class AbstractDataCollector implements DataCollector{
 
   /**
    * @param parentAccounter
-   * @param receiver
    * @param numBuffers Number of RawBatchBuffer inputs required to store the incoming data
    * @param bufferCapacity Capacity of each RawBatchBuffer.
    * @param context
@@ -74,7 +71,7 @@ public abstract class AbstractDataCollector implements DataCollector{
       if (spooling) {
         buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId(), i);
       } else {
-        buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId());
+        buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity);
       }
     }
   }

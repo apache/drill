@@ -71,8 +71,7 @@ public class TestUserBitKerberos extends BaseTestQuery {
       .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
         ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))),
-      false);
+        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");

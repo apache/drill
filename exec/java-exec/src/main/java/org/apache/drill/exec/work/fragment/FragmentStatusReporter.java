@@ -19,7 +19,7 @@ package org.apache.drill.exec.work.fragment;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
@@ -36,21 +36,21 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FragmentStatusReporter implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStatusReporter.class);
 
-  protected final FragmentContext context;
+  protected final ExecutorFragmentContext context;
 
   protected final AtomicReference<DrillbitEndpoint> foremanDrillbit;
 
   protected final DrillbitEndpoint localDrillbit;
 
-  public FragmentStatusReporter(final FragmentContext context) {
+  public FragmentStatusReporter(final ExecutorFragmentContext context) {
     this.context = context;
     this.foremanDrillbit = new AtomicReference<>(context.getForemanEndpoint());
-    this.localDrillbit = context.getIdentity();
+    this.localDrillbit = context.getEndpoint();
   }
 
   /**
    * Returns a {@link FragmentStatus} with the given state. {@link FragmentStatus} has additional information like
-   * metrics, etc. that is gathered from the {@link FragmentContext}.
+   * metrics, etc. that is gathered from the {@link ExecutorFragmentContext}.
    *
    * @param state the state to include in the status
    * @return the status
@@ -77,7 +77,7 @@ public class FragmentStatusReporter implements AutoCloseable {
 
   /**
    * Reports the state change to the Foreman. The state is wrapped in a {@link FragmentStatus} that has additional
-   * information like metrics, etc. This additional information is gathered from the {@link FragmentContext}.
+   * information like metrics, etc. This additional information is gathered from the {@link ExecutorFragmentContext}.
    * NOTE: Use {@link #fail} to report state change to {@link FragmentState#FAILED}.
    *
    * @param newState the new state
@@ -124,7 +124,7 @@ public class FragmentStatusReporter implements AutoCloseable {
       context.getWorkEventbus().statusUpdate(status);
     } else {
       // Send the status via Control Tunnel to remote foreman node
-      final ControlTunnel tunnel = context.getControlTunnel(foremanNode);
+      final ControlTunnel tunnel = context.getController().getTunnel(foremanNode);
       tunnel.sendFragmentStatus(status);
     }
   }
@@ -132,7 +132,7 @@ public class FragmentStatusReporter implements AutoCloseable {
   /**
    * {@link FragmentStatus} with the {@link FragmentState#FAILED} state is reported to the Foreman. The
    * {@link FragmentStatus} has additional information like metrics, etc. that is gathered from the
-   * {@link FragmentContext}.
+   * {@link ExecutorFragmentContext}.
    *
    * @param ex the exception related to the failure
    */

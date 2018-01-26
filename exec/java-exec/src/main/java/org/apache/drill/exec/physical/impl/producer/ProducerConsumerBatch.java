@@ -68,8 +68,8 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
       wrapper = queue.take();
       logger.debug("Got batch from queue");
     } catch (final InterruptedException e) {
-      if (context.shouldContinue()) {
-        context.fail(e);
+      if (context.getExecutorState().shouldContinue()) {
+        context.getExecutorState().fail(e);
       }
       return IterOutcome.STOP;
       // TODO InterruptedException

@@ -66,13 +66,12 @@ public class KafkaRecordReader extends AbstractRecordReader {
   public KafkaRecordReader(KafkaSubScan.KafkaSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
       FragmentContext context, KafkaStoragePlugin plugin) {
     setColumns(projectedColumns);
-    this.enableAllTextMode = context.getOptions().getOption(ExecConstants.KAFKA_ALL_TEXT_MODE).bool_val;
-    this.readNumbersAsDouble = context.getOptions()
-        .getOption(ExecConstants.KAFKA_READER_READ_NUMBERS_AS_DOUBLE).bool_val;
-    OptionManager options = context.getOptions();
-    this.unionEnabled = options.getOption(ExecConstants.ENABLE_UNION_TYPE);
-    this.kafkaMsgReader = options.getOption(ExecConstants.KAFKA_RECORD_READER).string_val;
-    this.kafkaPollTimeOut = options.getOption(ExecConstants.KAFKA_POLL_TIMEOUT).num_val;
+    final OptionManager optionManager = context.getOptions();
+    this.enableAllTextMode = optionManager.getBoolean(ExecConstants.KAFKA_ALL_TEXT_MODE);
+    this.readNumbersAsDouble = optionManager.getBoolean(ExecConstants.KAFKA_READER_READ_NUMBERS_AS_DOUBLE);
+    this.unionEnabled = optionManager.getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
+    this.kafkaMsgReader = optionManager.getString(ExecConstants.KAFKA_RECORD_READER);
+    this.kafkaPollTimeOut = optionManager.getLong(ExecConstants.KAFKA_POLL_TIMEOUT);
     this.plugin = plugin;
     this.subScanSpec = subScanSpec;
   }
