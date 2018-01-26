@@ -116,7 +116,6 @@ public abstract class JoinPruleBase extends Prule {
     }
   }
 
-
   // Create join plan with both left and right children hash distributed. If the physical join type
   // is MergeJoin, a collation must be provided for both left and right child and the plan will contain
   // sort converter if necessary to provide the collation.
@@ -126,8 +125,6 @@ public abstract class JoinPruleBase extends Prule {
       RelCollation collationLeft, RelCollation collationRight,
       DrillDistributionTrait hashLeftPartition, DrillDistributionTrait hashRightPartition) throws InvalidRelException {
 
-    //DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
-    //DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
     RelTraitSet traitsLeft = null;
     RelTraitSet traitsRight = null;
 
@@ -146,7 +143,8 @@ public abstract class JoinPruleBase extends Prule {
     DrillJoinRelBase newJoin = null;
 
     if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
-      newJoin = new HashJoinPrel(join.getCluster(), traitsLeft,
+      final RelTraitSet traitSet = PrelUtil.removeCollation(traitsLeft, call);
+      newJoin = new HashJoinPrel(join.getCluster(), traitSet,
                                  convertedLeft, convertedRight, join.getCondition(),
                                  join.getJoinType());
 
@@ -236,7 +234,8 @@ public abstract class JoinPruleBase extends Prule {
         call.transformTo(new MergeJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft,
             convertedRight, joinCondition, join.getJoinType()));
       } else if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
-        call.transformTo(new HashJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft,
+        final RelTraitSet traitSet = PrelUtil.removeCollation(convertedLeft.getTraitSet(), call);
+        call.transformTo(new HashJoinPrel(join.getCluster(), traitSet, convertedLeft,
             convertedRight, joinCondition, join.getJoinType()));
       } else if (physicalJoinType == PhysicalJoinType.NESTEDLOOP_JOIN) {
         call.transformTo(new NestedLoopJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft,
@@ -245,5 +244,4 @@ public abstract class JoinPruleBase extends Prule {
     }
 
   }
-
 }
