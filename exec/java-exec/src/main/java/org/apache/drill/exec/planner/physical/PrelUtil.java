@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -325,6 +326,20 @@ public class PrelUtil {
     } else {
       return set;
     }
+  }
+
+  // DRILL-6089 make sure no collations are added to HashJoin
+  public static RelTraitSet removeCollation(RelTraitSet traitSet, RelOptRuleCall call)
+  {
+    RelTraitSet newTraitSet = call.getPlanner().emptyTraitSet();
+
+    for (RelTrait trait: traitSet) {
+      if (!trait.getTraitDef().getTraitClass().equals(RelCollation.class)) {
+        newTraitSet = newTraitSet.plus(trait);
+      }
+    }
+
+    return newTraitSet;
   }
 
   public static class InputRefRemap {
