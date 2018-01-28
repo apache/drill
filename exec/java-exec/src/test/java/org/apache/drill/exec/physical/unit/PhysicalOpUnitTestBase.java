@@ -74,6 +74,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -84,6 +85,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.TreeMap;
 
 public class PhysicalOpUnitTestBase extends ExecTest {
   protected MockExecutorFragmentContext fragContext;
@@ -209,16 +211,19 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     private List<List<String>> inputStreamsJSON;
     private long initReservation = AbstractBase.INIT_ALLOCATION;
     private long maxAllocation = AbstractBase.MAX_ALLOCATION;
+    private boolean checkBatchMemory;
+    private boolean expectNoRows;
+    private Long expectedBatchSize;
+    private Integer expectedNumBatches;
 
-    @SuppressWarnings({ "unchecked", "resource" })
+    @SuppressWarnings({"unchecked", "resource"})
     public void go() {
       BatchCreator<PhysicalOperator> opCreator;
       RecordBatch testOperator;
       try {
         mockOpContext(popConfig, initReservation, maxAllocation);
 
-        opCreator = (BatchCreator<PhysicalOperator>)
-            opCreatorReg.getOperatorCreator(popConfig.getClass());
+        opCreator = (BatchCreator<PhysicalOperator>) opCreatorReg.getOperatorCreator(popConfig.getClass());
         List<RecordBatch> incomingStreams = Lists.newArrayList();
         if (inputStreamsJSON != null) {
           for (List<String> batchesJson : inputStreamsJSON) {
@@ -229,8 +234,19 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 
         testOperator = opCreator.getBatch(fragContext, popConfig, incomingStreams);
 
-        Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(new BatchIterator(testOperator));
-        Map<String, List<Object>> expectedSuperVectors = DrillTestWrapper.translateRecordListToHeapVectors(baselineRecords);
+        Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(new BatchIterator(testOperator), expectedBatchSize, expectedNumBatches);
+
+        Map<String, List<Object>> expectedSuperVectors;
+
+        if (expectNoRows) {
+          expectedSuperVectors = new TreeMap<>();
+          for (String column : baselineColumns) {
+            expectedSuperVectors.put(column, new ArrayList<>());
+          }
+        } else {
+          expectedSuperVectors = DrillTestWrapper.translateRecordListToHeapVectors(baselineRecords);
+        }
+
         DrillTestWrapper.compareMergedVectors(expectedSuperVectors, actualSuperVectors);
 
       } catch (ExecutionSetupException e) {
@@ -281,7 +297,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
       return this;
     }
 
-    public OperatorTestBuilder baselineValues(Object ... baselineValues) {
+    public OperatorTestBuilder baselineValues(Object... baselineValues) {
       if (baselineRecords == null) {
         baselineRecords = new ArrayList<>();
       }
@@ -294,6 +310,21 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         i++;
       }
       this.baselineRecords.add(ret);
+      return this;
+    }
+
+    public OperatorTestBuilder expectZeroRows() {
+      this.expectNoRows = true;
+      return this;
+    }
+
+    public OperatorTestBuilder expectedNumBatches(Integer expectedNumBatches) {
+      this.expectedNumBatches = expectedNumBatches;
+      return this;
+    }
+
+    public OperatorTestBuilder expectedBatchSize(Long batchSize) {
+      this.expectedBatchSize = batchSize;
       return this;
     }
   }
@@ -448,7 +479,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     return getJsonReadersFromBatchString(jsonBatches, fragContext, Collections.singletonList(SchemaPath.getSimplePath("*")));
   }
 
-  private List<RecordReader> getReaderListForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
+  public List<RecordReader> getReaderListForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
     Iterator<RecordReader> readers = getRecordReadersForJsonBatches(jsonBatches, fragContext);
     List<RecordReader> readerList = new ArrayList<>();
     while(readers.hasNext()) {

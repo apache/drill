@@ -45,6 +45,7 @@ public interface Flattener {
   int flattenRecords(int recordCount, int firstOutputIndex, Monitor monitor);
 
   void setFlattenField(RepeatedValueVector repeatedColumn);
+  void setOutputCount(int outputCount);
 
   RepeatedValueVector getFlattenField();
 

@@ -93,7 +93,17 @@ public class RecordBatchSizer {
 
     public final int elementCount;
 
+    /**
+     * Size of the top level value vector. For map and repeated list,
+     * this is just size of offset vector.
+     */
     public int dataSize;
+
+    /**
+     * Total size of the column includes the sum total of memory for all
+     * value vectors representing the column.
+     */
+    public int netSize;
 
     /**
      * The estimated, average number of elements per parent value.
@@ -131,9 +141,15 @@ public class RecordBatchSizer {
         break;
       default:
         dataSize = v.getPayloadByteCount(valueCount);
-        stdSize = TypeHelper.getSize(metadata.getType()) * elementCount;
+        try {
+          stdSize = TypeHelper.getSize(metadata.getType()) * elementCount;
+        } catch (Exception e) {
+          // For unsupported types, just set stdSize to 0.
+          stdSize = 0;
+        }
       }
       estSize = safeDivide(dataSize, valueCount);
+      netSize = v.getPayloadByteCount(valueCount);
     }
 
     @SuppressWarnings("resource")
@@ -154,8 +170,14 @@ public class RecordBatchSizer {
       return childCount;
     }
 
+    @SuppressWarnings("resource")
     private void buildList(ValueVector v) {
-      @SuppressWarnings("resource")
+      // complex ListVector cannot be casted to RepeatedListVector.
+      // check the mode.
+      if (v.getField().getDataMode() != DataMode.REPEATED) {
+        dataSize = v.getPayloadByteCount(valueCount);
+        return;
+      }
       UInt4Vector offsetVector = ((RepeatedListVector) v).getOffsetVector();
       dataSize = offsetVector.getPayloadByteCount(valueCount);
     }
@@ -230,6 +252,10 @@ public class RecordBatchSizer {
         initializer.variableWidth(name, width);
       }
     }
+  }
+
+  public static ColumnSize getColumn(ValueVector v, String prefix) {
+    return new ColumnSize(v, prefix);
   }
 
   public static final int MAX_VECTOR_SIZE = ValueVector.MAX_BUFFER_SIZE; // 16 MiB
@@ -380,14 +406,18 @@ public class RecordBatchSizer {
     // vectors do consume space, so visit columns recursively.
 
     switch (v.getField().getType().getMinorType()) {
-    case MAP:
-      expandMap((AbstractMapVector) v, prefix + v.getField().getName() + ".");
-      break;
-    case LIST:
-      expandList((RepeatedListVector) v, prefix + v.getField().getName() + ".");
-      break;
-    default:
-      v.collectLedgers(ledgers);
+      case MAP:
+        expandMap((AbstractMapVector) v, prefix + v.getField().getName() + ".");
+        break;
+      case LIST:
+        // complex ListVector cannot be casted to RepeatedListVector.
+        // do not expand the list if it is not repeated mode.
+        if (v.getField().getDataMode() == DataMode.REPEATED) {
+          expandList((RepeatedListVector) v, prefix + v.getField().getName() + ".");
+        }
+        break;
+      default:
+        v.collectLedgers(ledgers);
     }
 
     netRowWidth += colSize.estSize;

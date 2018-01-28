@@ -76,6 +76,9 @@ public final class ExecConstants {
   public static final String SPILL_FILESYSTEM = "drill.exec.spill.fs";
   public static final String SPILL_DIRS = "drill.exec.spill.directories";
 
+  public static final String OUTPUT_BATCH_SIZE = "drill.exec.memory.operator.output_batch_size";
+  public static final LongValidator OUTPUT_BATCH_SIZE_VALIDATOR = new RangeLongValidator(OUTPUT_BATCH_SIZE, 1024, 512 * 1024 * 1024);
+
   // External Sort Boot configuration
 
   public static final String EXTERNAL_SORT_TARGET_SPILL_BATCH_SIZE = "drill.exec.sort.external.spill.batch.size";

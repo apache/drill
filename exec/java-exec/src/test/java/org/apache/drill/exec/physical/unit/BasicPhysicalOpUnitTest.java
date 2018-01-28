@@ -23,7 +23,9 @@ import java.util.List;
 
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ComplexToJson;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.config.Filter;
@@ -34,6 +36,7 @@ import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.TopN;
+import org.apache.drill.exec.physical.config.FlattenPOP;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -186,6 +189,32 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
         .baselineValues(5l, 1l)
         .baselineValues(5l, 5l)
         .go();
+  }
+
+  @Test
+  public void testFlatten() {
+    final PhysicalOperator flatten = new FlattenPOP(null, SchemaPath.getSimplePath("b"));
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+
+    for (int j = 0; j < 1; j++) {
+      batchString.append("[");
+      for (int i = 0; i < 1; i++) {
+        batchString.append("{\"a\": 5, \"b\" : [5, 6, 7]}");
+      }
+      batchString.append("]");
+      inputJsonBatches.add(batchString.toString());
+    }
+
+    OperatorTestBuilder opTestBuilder = opTestBuilder()
+            .physicalOperator(flatten)
+            .inputDataStreamJson(inputJsonBatches)
+            .baselineColumns("a", "b")
+            .baselineValues(5l, 5l)
+            .baselineValues(5l, 6l)
+            .baselineValues(5l, 7l);
+
+    opTestBuilder.go();
   }
 
   @Test
