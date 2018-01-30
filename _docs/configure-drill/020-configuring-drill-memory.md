@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2018-01-30 05:08:15 UTC
+date: 2018-01-30 05:41:06 UTC
 parent: "Configure Drill"
 ---
 
@@ -51,13 +51,13 @@ If performance is an issue, add -Dbounds=false, as shown in the following exampl
 
 As of Drill 1.13, bounds checking for direct memory is disabled by default. To enable bounds checking for direct memory, use the DRILLBIT_JAVA_OPTS variable to pass the `drill.exec.memory.enable_unsafe_bounds_check` parameter in $DRILL_HOME/conf/drill-env.sh, as shown:  
 
-    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Ddrill.exec.memory.enable_unsafe_bounds_check=true  
+    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Ddrill.exec.memory.enable_unsafe_bounds_check=true"  
 
 
-For earlier versions of Drill (prior to 1.13), bounds checking is enabled by default. To disable bounds checking, set the `drill.enable_unsafe_memory_access property` to true, as shown:  
+For earlier versions of Drill (prior to 1.13), bounds checking is enabled by default. To disable bounds checking, set the `drill.enable_unsafe_memory_access` parameter to true, as shown:  
 
 
-    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Ddrill.enable_unsafe_memory_access =true
+    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Ddrill.enable_unsafe_memory_access=true"
   
   
 
