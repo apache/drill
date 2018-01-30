@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2017-08-18 17:47:31 UTC
+date: 2018-01-30 05:08:15 UTC
 parent: "Configure Drill"
 ---
 
@@ -30,7 +30,7 @@ You can modify memory for each drillbit node in your cluster. To modify the memo
 
 After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart the drillbit]({{ site.baseurl }}/docs/starting-drill-in-distributed-mode) on the node.
 
-## About the Drillbit Startup Script
+### About the Drillbit Startup Script
 
 The `drill-env.sh` file contains the following options:
 
@@ -47,4 +47,18 @@ DRILL_MAX_DIRECT_MEMORY is the Java direct memory limit per node.
 
 If performance is an issue, add -Dbounds=false, as shown in the following example:
 
-    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dbounds=false"
+    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dbounds=false"  
+
+As of Drill 1.13, bounds checking for direct memory is disabled by default. To enable bounds checking for direct memory, use the DRILLBIT_JAVA_OPTS variable to pass the `drill.exec.memory.enable_unsafe_bounds_check` parameter in $DRILL_HOME/conf/drill-env.sh, as shown:  
+
+    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Ddrill.exec.memory.enable_unsafe_bounds_check=true  
+
+
+For earlier versions of Drill (prior to 1.13), bounds checking is enabled by default. To disable bounds checking, set the `drill.enable_unsafe_memory_access property` to true, as shown:  
+
+
+    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Ddrill.enable_unsafe_memory_access =true
+  
+  
+
+
