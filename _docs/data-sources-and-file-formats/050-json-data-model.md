@@ -1,6 +1,6 @@
 ---
 title: "JSON Data Model"
-date: 2018-01-30 05:41:07 UTC
+date: 2018-01-30 18:38:55 UTC
 parent: "Data Sources and File Formats"
 ---
 Drill supports [JSON (JavaScript Object Notation)](http://www.json.org/), a self-describing data format. The data itself implies its schema and has the following characteristics:
@@ -29,12 +29,12 @@ JSON data consists of the following types:
 * Whitespace: used between tokens 
 * Number: double-precision floating point number, including exponential numbers, NaN, and Infinity. Octal and hexadecimal are not supported.  
 
-Drill 1.13 and later supports NaN (Not-a-Number) and Infinity as numeric values. This support introduces the following session options, which are set to “true” by default:  
+Drill 1.13 and later supports NaN (Not-a-Number) and Infinity (both POSITIVE and NEGATIVE) as numeric values. This support introduces the following session options, which are set to true by default:  
 
        store.json.writer.allow_nan_inf
        store.json.reader.allow_nan_inf  
 
-Drill writes NaN and Infinity values as literals to a JSON file when `store.json.writer.allow_nan_inf` is set to true. When set to false, Drill writes NaN and Infinity values as string values to a JSON file. If a query selects NaN or Infinity values in a JSON file, and `store.json.reader.allow_nan_inf` is set to false, Drill returns an error message. You can use the [SET]({{site.baseurl}}/docs/set/) command to change the options.
+Drill writes NaN and Infinity values as literals to a JSON file when `store.json.writer.allow_nan_inf` is set to true. When set to false, Drill writes NaN and Infinity values as string values to a JSON file. If a query selects NaN or Infinity values in a JSON file, and `store.json.reader.allow_nan_inf` is set to false, Drill returns an error message. You can use the [SET]({{site.baseurl}}/docs/set/) command to change the option settings.
   
 
 The following table shows SQL-JSON data type mapping:
