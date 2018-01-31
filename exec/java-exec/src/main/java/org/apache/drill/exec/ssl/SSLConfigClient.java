@@ -93,8 +93,11 @@ public class SSLConfigClient extends SSLConfig {
 
   private int getIntProperty(String name, int defaultValue) {
     int value = defaultValue;
-    if ( (properties != null) && (properties.containsKey(name))) {
-      value = new Integer(properties.getProperty(name)).intValue();
+    if (properties != null) {
+      String property = properties.getProperty(name);
+      if (property != null && property.length() > 0) {
+        value = Integer.decode(property);
+      }
     }
     return value;
   }
