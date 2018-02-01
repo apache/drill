@@ -521,6 +521,10 @@ public final class UserBitShared {
      * <code>KAFKA_SUB_SCAN = 38;</code>
      */
     KAFKA_SUB_SCAN(38, 38),
+    /**
+     * <code>KUDU_SUB_SCAN = 39;</code>
+     */
+    KUDU_SUB_SCAN(39, 39),
     ;
 
     /**
@@ -679,6 +683,10 @@ public final class UserBitShared {
      * <code>KAFKA_SUB_SCAN = 38;</code>
      */
     public static final int KAFKA_SUB_SCAN_VALUE = 38;
+    /**
+     * <code>KUDU_SUB_SCAN = 39;</code>
+     */
+    public static final int KUDU_SUB_SCAN_VALUE = 39;
 
 
     public final int getNumber() { return value; }
@@ -724,6 +732,7 @@ public final class UserBitShared {
         case 36: return AVRO_SUB_SCAN;
         case 37: return PCAP_SUB_SCAN;
         case 38: return KAFKA_SUB_SCAN;
+        case 39: return KUDU_SUB_SCAN;
         default: return null;
       }
     }
@@ -24104,7 +24113,7 @@ public final class UserBitShared {
       "agmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALL" +
       "OCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\t" +
       "CANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_" +
-      "REQUESTED\020\006*\204\006\n\020CoreOperatorType\022\021\n\rSING" +
+      "REQUESTED\020\006*\227\006\n\020CoreOperatorType\022\021\n\rSING" +
       "LE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FIL" +
       "TER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004" +
       "\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDE" +
@@ -24123,11 +24132,11 @@ public final class UserBitShared {
       "X_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016HB",
       "ASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOO" +
       "P_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_" +
-      "SCAN\020%\022\022\n\016KAFKA_SUB_SCAN\020&*g\n\nSaslStatus" +
-      "\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SA" +
-      "SL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SA" +
-      "SL_FAILED\020\004B.\n\033org.apache.drill.exec.pro" +
-      "toB\rUserBitSharedH\001"
+      "SCAN\020%\022\022\n\016KAFKA_SUB_SCAN\020&\022\021\n\rKUDU_SUB_S" +
+      "CAN\020\'*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n" +
+      "\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014S" +
+      "ASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.ap" +
+      "ache.drill.exec.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

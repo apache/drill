@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -64,7 +64,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     this.scanRel = scanRel;
     this.managedBuffer = managedBuffer.reallocIfNeeded(256);
     this.defaultPartitionValue = defaultPartitionValue;
-    for (HiveTableWrapper.FieldSchemaWrapper wrapper : ((HiveScan) scanRel.getGroupScan()).hiveReadEntry.table.partitionKeys) {
+    for (HiveTableWrapper.FieldSchemaWrapper wrapper : ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry().table.partitionKeys) {
       partitionMap.put(wrapper.name, i);
       i++;
     }
@@ -88,7 +88,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public String getBaseTableLocation() {
-    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
+    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry();
     return origEntry.table.getTable().getSd().getLocation();
   }
 
@@ -97,7 +97,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
                                        BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
     int record = 0;
     final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
-    final Map<String, String> partitionNameTypeMap = hiveScan.hiveReadEntry.table.getPartitionNameTypeMap();
+    final Map<String, String> partitionNameTypeMap = hiveScan.getHiveReadEntry().table.getPartitionNameTypeMap();
     for(PartitionLocation partitionLocation: partitions) {
       for(int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)){
         final String hiveType = partitionNameTypeMap.get(fieldNameMap.get(partitionColumnIndex));
@@ -126,7 +126,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   public TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings) {
     HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
     String partitionName = column.getAsNamePart().getName();
-    Map<String, String> partitionNameTypeMap = hiveScan.hiveReadEntry.table.getPartitionNameTypeMap();
+    Map<String, String> partitionNameTypeMap = hiveScan.getHiveReadEntry().table.getPartitionNameTypeMap();
     String hiveType = partitionNameTypeMap.get(partitionName);
     PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) TypeInfoUtils.getTypeInfoFromTypeString(hiveType);
 
@@ -143,7 +143,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   @Override
   protected void createPartitionSublists() {
     List<PartitionLocation> locations = new LinkedList<>();
-    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
+    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).getHiveReadEntry();
     for (Partition partition: origEntry.getPartitions()) {
       locations.add(new HivePartitionLocation(partition.getValues(), partition.getSd().getLocation()));
     }
@@ -165,7 +165,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
 
   private GroupScan createNewGroupScan(List<PartitionLocation> newPartitionLocations) throws ExecutionSetupException {
     HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
-    HiveReadEntry origReadEntry = hiveScan.hiveReadEntry;
+    HiveReadEntry origReadEntry = hiveScan.getHiveReadEntry();
     List<HiveTableWrapper.HivePartitionWrapper> oldPartitions = origReadEntry.partitions;
     List<HiveTableWrapper.HivePartitionWrapper> newPartitions = Lists.newLinkedList();
 

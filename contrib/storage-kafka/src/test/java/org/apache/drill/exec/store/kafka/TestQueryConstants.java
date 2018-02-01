@@ -17,24 +17,24 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-public interface QueryConstants {
+public interface TestQueryConstants {
 
   // Kafka Server Prop Constants
-  public static final String BROKER_DELIM = ",";
-  public final String LOCAL_HOST = "127.0.0.1";
+  String BROKER_DELIM = ",";
+  String LOCAL_HOST = "127.0.0.1";
 
   // ZK
-  public final static String ZK_TMP = "zk_tmp";
-  public final static int TICK_TIME = 500;
-  public final static int MAX_CLIENT_CONNECTIONS = 100;
+  String ZK_TMP = "zk_tmp";
+  int TICK_TIME = 500;
+  int MAX_CLIENT_CONNECTIONS = 100;
 
-  public static final String JSON_TOPIC = "drill-json-topic";
-  public static final String AVRO_TOPIC = "drill-avro-topic";
-  public static final String INVALID_TOPIC = "invalid-topic";
+  String JSON_TOPIC = "drill-json-topic";
+  String AVRO_TOPIC = "drill-avro-topic";
+  String INVALID_TOPIC = "invalid-topic";
 
   // Queries
-  public static final String MSG_COUNT_QUERY = "select count(*) from kafka.`%s`";
-  public static final String MSG_SELECT_QUERY = "select * from kafka.`%s`";
-  public static final String MIN_OFFSET_QUERY = "select MIN(kafkaMsgOffset) as minOffset from kafka.`%s`";
-  public static final String MAX_OFFSET_QUERY = "select MAX(kafkaMsgOffset) as maxOffset from kafka.`%s`";
+  String MSG_COUNT_QUERY = "select count(*) from kafka.`%s`";
+  String MSG_SELECT_QUERY = "select * from kafka.`%s`";
+  String MIN_OFFSET_QUERY = "select MIN(kafkaMsgOffset) as minOffset from kafka.`%s`";
+  String MAX_OFFSET_QUERY = "select MAX(kafkaMsgOffset) as maxOffset from kafka.`%s`";
 }

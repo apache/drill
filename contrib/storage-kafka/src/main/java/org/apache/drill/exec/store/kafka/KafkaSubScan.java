@@ -41,34 +41,31 @@ import com.google.common.base.Preconditions;
 @JsonTypeName("kafka-partition-scan")
 public class KafkaSubScan extends AbstractBase implements SubScan {
 
-  @JsonProperty
-  private final KafkaStoragePluginConfig KafkaStoragePluginConfig;
-
-  @JsonIgnore
   private final KafkaStoragePlugin kafkaStoragePlugin;
   private final List<SchemaPath> columns;
-  private final List<KafkaSubScanSpec> partitions;
+  private final List<KafkaSubScanSpec> partitionSubScanSpecList;
 
   @JsonCreator
-  public KafkaSubScan(@JacksonInject StoragePluginRegistry registry, @JsonProperty("userName") String userName,
-      @JsonProperty("kafkaStoragePluginConfig") KafkaStoragePluginConfig kafkaStoragePluginConfig,
-      @JsonProperty("columns") List<SchemaPath> columns,
-      @JsonProperty("partitionSubScanSpecList") LinkedList<KafkaSubScanSpec> partitions)
+  public KafkaSubScan(@JacksonInject StoragePluginRegistry registry,
+                      @JsonProperty("userName") String userName,
+                      @JsonProperty("kafkaStoragePluginConfig") KafkaStoragePluginConfig kafkaStoragePluginConfig,
+                      @JsonProperty("columns") List<SchemaPath> columns,
+                      @JsonProperty("partitionSubScanSpecList") LinkedList<KafkaSubScanSpec> partitionSubScanSpecList)
       throws ExecutionSetupException {
-    super(userName);
-    this.KafkaStoragePluginConfig = kafkaStoragePluginConfig;
-    this.columns = columns;
-    this.partitions = partitions;
-    this.kafkaStoragePlugin = (KafkaStoragePlugin) registry.getPlugin(kafkaStoragePluginConfig);
+    this(userName,
+        (KafkaStoragePlugin) registry.getPlugin(kafkaStoragePluginConfig),
+        columns,
+        partitionSubScanSpecList);
   }
 
-  public KafkaSubScan(String userName, KafkaStoragePlugin plugin, KafkaStoragePluginConfig kafkStoragePluginConfig,
-      List<SchemaPath> columns, List<KafkaSubScanSpec> partitionSubScanSpecList) {
+  public KafkaSubScan(String userName,
+                      KafkaStoragePlugin kafkaStoragePlugin,
+                      List<SchemaPath> columns,
+                      List<KafkaSubScanSpec> partitionSubScanSpecList) {
     super(userName);
+    this.kafkaStoragePlugin = kafkaStoragePlugin;
     this.columns = columns;
-    this.KafkaStoragePluginConfig = kafkStoragePluginConfig;
-    this.kafkaStoragePlugin = plugin;
-    this.partitions = partitionSubScanSpecList;
+    this.partitionSubScanSpecList = partitionSubScanSpecList;
   }
 
   @Override
@@ -79,8 +76,7 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, KafkaStoragePluginConfig, columns,
-        partitions);
+    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, partitionSubScanSpecList);
   }
 
   @Override
@@ -88,22 +84,24 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
     return Collections.emptyIterator();
   }
 
-  @JsonIgnore
+  @JsonProperty
   public KafkaStoragePluginConfig getKafkaStoragePluginConfig() {
-    return KafkaStoragePluginConfig;
+    return kafkaStoragePlugin.getConfig();
+  }
+
+  @JsonProperty
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }
+
+  @JsonProperty
+  public List<KafkaSubScanSpec> getPartitionSubScanSpecList() {
+    return partitionSubScanSpecList;
   }
 
   @JsonIgnore
   public KafkaStoragePlugin getKafkaStoragePlugin() {
     return kafkaStoragePlugin;
-  }
-
-  public List<SchemaPath> getColumns() {
-    return columns;
-  }
-
-  public List<KafkaSubScanSpec> getPartitionSubScanSpecList() {
-    return partitions;
   }
 
   @Override
