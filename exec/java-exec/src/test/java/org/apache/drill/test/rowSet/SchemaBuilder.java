@@ -141,13 +141,14 @@ public class SchemaBuilder {
   protected TupleSchema schema = new TupleSchema();
   private SelectionVectorMode svMode = SelectionVectorMode.NONE;
 
-  public SchemaBuilder() { }
+  /**
+   * Create a new empty schema. Allows appending columns to it.
+   */
+  public SchemaBuilder() {}
 
   /**
-   * Create a new schema starting with the base schema. Allows appending
-   * additional columns to an additional schema.
+   * Create a new schema starting with the base schema. Allows appending additional columns to the actual schema.
    */
-
   public SchemaBuilder(BatchSchema baseSchema) {
     for (MaterializedField field : baseSchema) {
       add(field);

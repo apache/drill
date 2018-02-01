@@ -33,18 +33,15 @@ import java.io.FileWriter;
 @Category(OperatorTest.class)
 public class TestHashJoinAdvanced extends JoinTestBase {
 
-  private static final String HJ_PATTERN = "HashJoin";
-
-
   // Have to disable merge join, if this testcase is to test "HASH-JOIN".
   @BeforeClass
   public static void disableMergeJoin() throws Exception {
-    test("alter session set `planner.enable_mergejoin` = false");
+    test(DISABLE_MJ);
   }
 
   @AfterClass
   public static void enableMergeJoin() throws Exception {
-    test("alter session set `planner.enable_mergejoin` = true");
+    test(ENABLE_MJ);
   }
 
   @Test //DRILL-2197 Left Self Join with complex type in projection
@@ -108,7 +105,7 @@ public class TestHashJoinAdvanced extends JoinTestBase {
 
     testBuilder()
         .sqlQuery(query)
-        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
+        .optionSettingQueriesForTestQuery(ENABLE_HJ)
         .unOrdered()
         .baselineColumns("full_name")
         .baselineValues("Sheri Nowmer")
@@ -122,7 +119,7 @@ public class TestHashJoinAdvanced extends JoinTestBase {
 
     testBuilder()
         .sqlQuery(query)
-        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
+        .optionSettingQueriesForTestQuery(ENABLE_HJ)
         .unOrdered()
         .baselineColumns("bigint_col")
         .baselineValues(1L)
@@ -165,16 +162,16 @@ public class TestHashJoinAdvanced extends JoinTestBase {
 
   @Test
   public void testHashLeftJoinWithEmptyTable() throws Exception {
-    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "left outer", HJ_PATTERN, 1155L);
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "left outer", new String[] {HJ_PATTERN, LEFT_JOIN_TYPE}, 1155L);
   }
 
   @Test
   public void testHashInnerJoinWithEmptyTable() throws Exception {
-    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", HJ_PATTERN, 0L);
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", new String[] {HJ_PATTERN, INNER_JOIN_TYPE}, 0L);
   }
 
   @Test
   public void testHashRightJoinWithEmptyTable() throws Exception {
-    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", HJ_PATTERN, 0L);
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", new String[] {HJ_PATTERN, RIGHT_JOIN_TYPE}, 0L);
   }
 }

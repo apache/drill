@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,6 @@ import java.util.Random;
 public class TestMergeJoinAdvanced extends JoinTestBase {
   private static final String LEFT = "merge-join-left.json";
   private static final String RIGHT = "merge-join-right.json";
-  private static final String MJ_PATTERN = "MergeJoin";
 
 
   private static File leftFile;
@@ -52,8 +51,8 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
 
   // Have to disable hash join to test merge join in this class
   @BeforeClass
-  public static void disableMergeJoin() throws Exception {
-    test("alter session set `planner.enable_hashjoin` = false");
+  public static void enableMergeJoin() throws Exception {
+    test(DISABLE_HJ);
 
     leftFile = new File(dirTestWatcher.getRootDir(), LEFT);
     rightFile = new File(dirTestWatcher.getRootDir(), RIGHT);
@@ -62,8 +61,8 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
   }
 
   @AfterClass
-  public static void enableMergeJoin() throws Exception {
-    test("alter session set `planner.enable_hashjoin` = true");
+  public static void disableMergeJoin() throws Exception {
+    test(ENABLE_HJ);
   }
 
   @Test
@@ -73,7 +72,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
 
     testBuilder()
         .sqlQuery(query)
-        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
+        .optionSettingQueriesForTestQuery(ENABLE_HJ)
         .unOrdered()
         .baselineColumns("full_name")
         .baselineValues("Sheri Nowmer")
@@ -87,7 +86,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
 
     testBuilder()
         .sqlQuery(query)
-        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
+        .optionSettingQueriesForTestQuery(ENABLE_HJ)
         .unOrdered()
         .baselineColumns("bigint_col")
         .baselineValues(1l)
@@ -148,7 +147,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
       LEFT, joinType, RIGHT);
     testBuilder()
       .sqlQuery(query1)
-      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+      .optionSettingQueriesForTestQuery(DISABLE_HJ)
       .unOrdered()
       .baselineColumns("c1")
       .baselineValues(expected)
@@ -249,7 +248,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
       LEFT, "inner", RIGHT);
     testBuilder()
       .sqlQuery(query1)
-      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+      .optionSettingQueriesForTestQuery(DISABLE_HJ)
       .unOrdered()
       .baselineColumns("c1")
       .baselineValues(6000*800L)
@@ -258,16 +257,16 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
 
   @Test
   public void testMergeLeftJoinWithEmptyTable() throws Exception {
-    testJoinWithEmptyFile(dirTestWatcher.getRootDir(),"left outer", MJ_PATTERN, 1155L);
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(),"left outer", new String[] {MJ_PATTERN, LEFT_JOIN_TYPE}, 1155L);
   }
 
   @Test
   public void testMergeInnerJoinWithEmptyTable() throws Exception {
-    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", MJ_PATTERN, 0L);
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", new String[] {MJ_PATTERN, INNER_JOIN_TYPE}, 0L);
   }
 
   @Test
   public void testMergeRightJoinWithEmptyTable() throws Exception {
-    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", MJ_PATTERN, 0L);
+    testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", new String[] {MJ_PATTERN, RIGHT_JOIN_TYPE}, 0L);
   }
 }
