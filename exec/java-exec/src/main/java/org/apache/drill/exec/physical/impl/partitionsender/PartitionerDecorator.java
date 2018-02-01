@@ -158,7 +158,11 @@ public class PartitionerDecorator {
       // CountDownInject patch. Partitioner threads await on the latch and main fragment thread counts down or
       // interrupts waiting threads. This makes sures that we are actually interrupting the blocked partitioner threads.
       testCountDownLatch = injector.getLatch(context.getExecutionControls(), "partitioner-sender-latch");
-      testCountDownLatch.initialize(1);
+
+      if (testCountDownLatch != null) {
+        testCountDownLatch.initialize(1);
+      }
+
       for (final Partitioner part : partitioners) {
         final CustomRunnable runnable = new CustomRunnable(childThreadPrefix, latch, iface, part, testCountDownLatch);
         runnables.add(runnable);
@@ -171,7 +175,9 @@ public class PartitionerDecorator {
           injector.injectInterruptiblePause(context.getExecutionControls(), "wait-for-fragment-interrupt", logger);
 
           // If there is no pause inserted at site "wait-for-fragment-interrupt", release the latch.
-          injector.getLatch(context.getExecutionControls(), "partitioner-sender-latch").countDown();
+          if (testCountDownLatch != null) {
+            testCountDownLatch.countDown();
+          }
 
           latch.await();
           break;
@@ -295,7 +301,9 @@ public class PartitionerDecorator {
     public void run() {
       // Test only - Pause until interrupted by fragment thread
       try {
-        testCountDownLatch.await();
+        if (testCountDownLatch != null) {
+          testCountDownLatch.await();
+        }
       } catch (final InterruptedException e) {
         logger.debug("Test only: partitioner thread is interrupted in test countdown latch await()", e);
       }
