@@ -204,6 +204,17 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       if (! currentChild.getType().equals(newChild.getMajorType())) {
         return false;
       }
+
+      // Perform schema diff for child column(s)
+      if (currentChild.getChildren().size() != newChild.getChildCount()) {
+        return false;
+      }
+
+      if (!currentChild.getChildren().isEmpty()) {
+        if (!isSameSchema(currentChild.getChildren(), newChild.getChildList())) {
+          return false;
+        }
+      }
     }
 
     // Everything matches.
