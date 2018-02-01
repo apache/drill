@@ -42,9 +42,9 @@ public class HiveDrillNativeParquetSubScan extends HiveSubScan {
                                        @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
                                        @JsonProperty("splitClasses") List<String> splitClasses,
                                        @JsonProperty("columns") List<SchemaPath> columns,
-                                       @JsonProperty("storagePluginName") String pluginName)
+                                       @JsonProperty("hiveStoragePluginConfig") HiveStoragePluginConfig hiveStoragePluginConfig)
       throws IOException, ExecutionSetupException, ReflectiveOperationException {
-    super(registry, userName, splits, hiveReadEntry, splitClasses, columns, pluginName);
+    super(registry, userName, splits, hiveReadEntry, splitClasses, columns, hiveStoragePluginConfig);
   }
 
   public HiveDrillNativeParquetSubScan(final HiveSubScan subScan)

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,16 +41,16 @@ public class HiveDrillNativeParquetScan extends HiveScan {
 
   @JsonCreator
   public HiveDrillNativeParquetScan(@JsonProperty("userName") String userName,
-                                    @JsonProperty("hive-table") HiveReadEntry hiveReadEntry,
-                                    @JsonProperty("storage-plugin") String storagePluginName,
+                                    @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
+                                    @JsonProperty("hiveStoragePluginConfig") HiveStoragePluginConfig hiveStoragePluginConfig,
                                     @JsonProperty("columns") List<SchemaPath> columns,
                                     @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
-    super(userName, hiveReadEntry, storagePluginName, columns, pluginRegistry);
+    super(userName, hiveReadEntry, hiveStoragePluginConfig, columns, pluginRegistry);
   }
 
-  public HiveDrillNativeParquetScan(String userName, HiveReadEntry hiveReadEntry, HiveStoragePlugin storagePlugin,
+  public HiveDrillNativeParquetScan(String userName, HiveReadEntry hiveReadEntry, HiveStoragePlugin hiveStoragePlugin,
       List<SchemaPath> columns, HiveMetadataProvider metadataProvider) throws ExecutionSetupException {
-    super(userName, hiveReadEntry, storagePlugin, columns, metadataProvider);
+    super(userName, hiveReadEntry, hiveStoragePlugin, columns, metadataProvider);
   }
 
   public HiveDrillNativeParquetScan(final HiveScan hiveScan) {
@@ -91,7 +91,7 @@ public class HiveDrillNativeParquetScan extends HiveScan {
 
   @Override
   public HiveScan clone(HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
-    return new HiveDrillNativeParquetScan(getUserName(), hiveReadEntry, storagePlugin, columns, metadataProvider);
+    return new HiveDrillNativeParquetScan(getUserName(), hiveReadEntry, getStoragePlugin(), getColumns(), getMetadataProvider());
   }
 
   @Override
@@ -103,12 +103,12 @@ public class HiveDrillNativeParquetScan extends HiveScan {
 
   @Override
   public String toString() {
-    final List<HivePartitionWrapper> partitions = hiveReadEntry.getHivePartitionWrappers();
+    final List<HivePartitionWrapper> partitions = getHiveReadEntry().getHivePartitionWrappers();
     int numPartitions = partitions == null ? 0 : partitions.size();
-    return "HiveDrillNativeParquetScan [table=" + hiveReadEntry.getHiveTableWrapper()
-        + ", columns=" + columns
+    return "HiveDrillNativeParquetScan [table=" + getHiveReadEntry().getHiveTableWrapper()
+        + ", columns=" + getColumns()
         + ", numPartitions=" + numPartitions
         + ", partitions= " + partitions
-        + ", inputDirectories=" + metadataProvider.getInputDirectories(hiveReadEntry) + "]";
+        + ", inputDirectories=" + getMetadataProvider().getInputDirectories(getHiveReadEntry()) + "]";
   }
 }

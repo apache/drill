@@ -174,10 +174,9 @@ public class TestOpenTSDBPlugin extends PlanTestBase {
   }
 
   @Test
-  public void testPhysicalPlanExecutionBasedOnQuery() throws Exception {
-    String query = "EXPLAIN PLAN for select * from openTSDB.`(metric=warp.speed.test, start=47y-ago, aggregator=sum)`";
-    String plan = getPlanInString(query, JSON_FORMAT);
-    Assert.assertEquals(18, testPhysical(plan));
+  public void testPhysicalPlanSubmission() throws Exception {
+    String query = "select * from openTSDB.`(metric=warp.speed.test, start=47y-ago, aggregator=sum)`";
+    testPhysicalPlanExecutionBasedOnQuery(query);
   }
 
   @Test

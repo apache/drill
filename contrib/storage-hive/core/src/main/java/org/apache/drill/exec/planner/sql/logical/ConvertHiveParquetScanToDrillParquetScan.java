@@ -97,16 +97,16 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
 
     final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
     final HiveConf hiveConf = hiveScan.getHiveConf();
-    final HiveTableWithColumnCache hiveTable = hiveScan.hiveReadEntry.getTable();
+    final HiveTableWithColumnCache hiveTable = hiveScan.getHiveReadEntry().getTable();
 
     final Class<? extends InputFormat<?,?>> tableInputFormat =
-        getInputFormatFromSD(HiveUtilities.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd(),
+        getInputFormatFromSD(HiveUtilities.getTableMetadata(hiveTable), hiveScan.getHiveReadEntry(), hiveTable.getSd(),
             hiveConf);
     if (tableInputFormat == null || !tableInputFormat.equals(MapredParquetInputFormat.class)) {
       return false;
     }
 
-    final List<HivePartitionWrapper> partitions = hiveScan.hiveReadEntry.getHivePartitionWrappers();
+    final List<HivePartitionWrapper> partitions = hiveScan.getHiveReadEntry().getHivePartitionWrappers();
     if (partitions == null) {
       return true;
     }
@@ -116,7 +116,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     for (HivePartitionWrapper partition : partitions) {
       final StorageDescriptor partitionSD = partition.getPartition().getSd();
       Class<? extends InputFormat<?, ?>> inputFormat = getInputFormatFromSD(
-          HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.hiveReadEntry, partitionSD,
+          HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.getHiveReadEntry(), partitionSD,
           hiveConf);
       if (inputFormat == null || !inputFormat.equals(tableInputFormat)) {
         return false;
@@ -172,7 +172,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
       final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
       final String partitionColumnLabel = settings.getFsPartitionColumnLabel();
 
-      final Table hiveTable = hiveScan.hiveReadEntry.getTable();
+      final Table hiveTable = hiveScan.getHiveReadEntry().getTable();
       checkForUnsupportedDataTypes(hiveTable);
 
       final Map<String, String> partitionColMapping =
@@ -245,8 +245,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     final HiveDrillNativeParquetScan nativeHiveScan =
         new HiveDrillNativeParquetScan(
             hiveScan.getUserName(),
-            hiveScan.hiveReadEntry,
-            hiveScan.storagePlugin,
+            hiveScan.getHiveReadEntry(),
+            hiveScan.getStoragePlugin(),
             nativeScanCols,
             null);
 
