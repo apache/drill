@@ -64,7 +64,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   private HashAggregator aggregator;
   private RecordBatch incoming;
-  private LogicalExpression[] aggrExprs;
+  private ValueVectorWriteExpression[] aggrExprs;
   private TypedFieldId[] groupByOutFieldIds;
   private TypedFieldId[] aggrOutFieldIds;      // field ids for the outgoing batch
   private final List<Comparator> comparators;
@@ -230,7 +230,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     int numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().size() : 0;
     int numAggrExprs = (popConfig.getAggrExprs() != null) ? popConfig.getAggrExprs().size() : 0;
-    aggrExprs = new LogicalExpression[numAggrExprs];
+    aggrExprs = new ValueVectorWriteExpression[numAggrExprs];
     groupByOutFieldIds = new TypedFieldId[numGroupByExprs];
     aggrOutFieldIds = new TypedFieldId[numAggrExprs];
 

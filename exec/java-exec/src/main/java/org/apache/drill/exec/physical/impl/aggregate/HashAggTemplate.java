@@ -17,21 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Named;
-
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorSerializer.Writer;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -39,7 +33,7 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-
+import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -53,32 +47,29 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
-
 import org.apache.drill.exec.record.RecordBatchSizer;
-
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
-
-import org.apache.drill.exec.record.MaterializedField;
-
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
-
-import org.apache.drill.exec.record.VectorContainer;
-
-import org.apache.drill.exec.record.TypedFieldId;
-
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-
 import org.apache.drill.exec.vector.AllocationHelper;
-
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ObjectVector;
 import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.drill.exec.vector.VariableWidthVector;
+
+import javax.inject.Named;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_SIZE;
 
@@ -156,6 +147,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private TypedFieldId[] groupByOutFieldIds;
 
   private MaterializedField[] materializedValueFields;
+  private ValueVectorWriteExpression[] valueExprs;
   private boolean allFlushed = false;
   private boolean buildComplete = false;
   private boolean handlingSpills = false; // True once starting to process spill files
@@ -293,15 +285,12 @@ public abstract class HashAggTemplate implements HashAggregator {
   public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig,
                     FragmentContext context, OperatorContext oContext,
                     RecordBatch incoming, HashAggBatch outgoing,
-                    LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds,
+                    ValueVectorWriteExpression[] valueExprs, List<TypedFieldId> valueFieldIds,
                     TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer) throws SchemaChangeException, IOException {
 
-    if (valueExprs == null || valueFieldIds == null) {
-      throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
-    }
-    if (valueFieldIds.size() < valueExprs.length) {
-      throw new IllegalArgumentException("Wrong number of workspace variables.");
-    }
+    Preconditions.checkNotNull(valueFieldIds);
+    Preconditions.checkNotNull(valueExprs);
+    Preconditions.checkArgument(valueFieldIds.size() >= valueExprs.length, "Wrong number of workspace variables.");
 
     this.context = context;
     this.stats = oContext.getStats();
@@ -311,6 +300,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.outgoing = outgoing;
     this.outContainer = outContainer;
     this.useMemoryPrediction = context.getOptions().getOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_VALIDATOR);
+    this.valueExprs = valueExprs;
 
     is2ndPhase = hashAggrConfig.getAggPhase() == AggPrelBase.OperatorPhase.PHASE_2of2;
     isTwoPhase = hashAggrConfig.getAggPhase() != AggPrelBase.OperatorPhase.PHASE_1of1;
@@ -529,11 +519,33 @@ public abstract class HashAggTemplate implements HashAggregator {
       estValuesRowWidth += columnSize.estSize;
     }
 
+    // TODO DRILL-5728 - This code is necessary because the generated BatchHolders add extra BigInt columns
+    // to store a flag indicating if a row is null or not. Ideally we should not generate these
+    // extra BigInt columns, but fixing this is a big task. Once DRILL-5728 is fixed this code block
+    // should be deleted
+    {
+      final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .build();
+      final int bigIntSize = TypeHelper.getSize(majorType);
+
+      for (ValueVectorWriteExpression valueExpr : valueExprs) {
+        final LogicalExpression childExpression = valueExpr.getChild();
+
+        if (childExpression instanceof FunctionHolderExpression) {
+          String funcName = ((FunctionHolderExpression) childExpression).getName();
+          if (funcName.equals("sum") || funcName.equals("max") || funcName.equals("min")) {
+            estValuesRowWidth += bigIntSize;
+          }
+        }
+      }
+    }
+
     // multiply by the max number of rows in a batch to get the final estimated max size
     estMaxBatchSize = Math.max(estOutputRowWidth, 1) * MAX_BATCH_SIZE;
-    // (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
-    // Note: estValuesBatchSize cannot be 0 because a zero value for estValuesBatchSize will cause reserveValueBatchMemory to have a value of 0. And the meaning
-    // of a reserveValueBatchMemory value of 0 has multiple meanings in different contexts. So estValuesBatchSize has an enforced minimum value of 1, without this
+    // WARNING! (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
+    // Note: estValuesBatchSize cannot be 0 because a zero value for estValuesBatchSize will cause reserveValueBatchMemory to have a value of 0. And
+    // a reserveValueBatchMemory value of 0 has multiple meanings in different contexts. So estValuesBatchSize has an enforced minimum value of 1, without this
     // estValuesBatchsize could have a value of 0 in the case were there are no value columns and all the columns are key columns.
     estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_SIZE;
     estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
