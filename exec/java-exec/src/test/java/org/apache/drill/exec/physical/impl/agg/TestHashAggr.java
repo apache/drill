@@ -59,4 +59,9 @@ public class TestHashAggr extends BaseTestQuery{
     testPhysicalFromFile("agg/hashagg/q8.json");
   }
 
+  // Test aggregating varchars
+  @Test
+  public void testQ9() throws Exception {
+    testPhysicalFromFile("agg/hashagg/q9.json");
+  }
 }
