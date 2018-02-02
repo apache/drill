@@ -517,8 +517,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     for (int columnIndex = numGroupByOutFields; columnIndex < outContainer.getNumberOfColumns(); columnIndex++) {
       VectorWrapper vectorWrapper = outContainer.getValueVector(columnIndex);
       RecordBatchSizer.ColumnSize columnSize = new RecordBatchSizer.ColumnSize(vectorWrapper.getValueVector());
-      estOutputRowWidth += columnSize.getKnownSize();
-      estBatchHolderValuesRowWidth += columnSize.getKnownSize();
+
+      if (columnSize.hasKnownSize()) {
+        // If the column is fixed width we know the size, otherwise the column is a varchar which is currently
+        // stored on heap so we can assume that the amount of direct memory it consumes is 0.
+        estOutputRowWidth += columnSize.getKnownSize();
+        estBatchHolderValuesRowWidth += columnSize.getKnownSize();
+      }
     }
 
     // estValuesRowWidth does not include extra phantom columns
