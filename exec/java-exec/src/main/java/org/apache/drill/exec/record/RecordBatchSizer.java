@@ -48,6 +48,8 @@ import com.google.common.collect.Sets;
 
 public class RecordBatchSizer {
 
+  public static final double FRAGMENTATION_FACTOR = 1.33;
+
   /**
    * Column size information.
    */
@@ -62,6 +64,14 @@ public class RecordBatchSizer {
      */
 
     public int stdSize;
+
+    /**
+     * If the we can determine the exact width of the row of a vector upfront,
+     * the row widths is saved here. If we cannot determine the exact width
+     * (for example for VarChar or Repeated vectors), then
+     */
+
+    private int knownSize = -1;
 
     /**
      * Actual average column width as determined from actual memory use. This
@@ -117,6 +127,10 @@ public class RecordBatchSizer {
     }
 
     public ColumnSize(ValueVector v, String prefix) {
+      if (v instanceof FixedWidthVector) {
+        knownSize = ((FixedWidthVector)v).getValueWidth();
+      }
+
       this.prefix = prefix;
       valueCount = v.getAccessor().getValueCount();
       metadata = v.getField();
@@ -132,12 +146,6 @@ public class RecordBatchSizer {
         elementCount = 1;
         estElementCountPerArray = 1;
       }
-
-      if (v instanceof FixedWidthVector) {
-        estSize = ((FixedWidthVector)v).getValueWidth();
-        return;
-      }
-
       switch (metadata.getType().getMinorType()) {
       case LIST:
         buildList(v);
@@ -148,7 +156,9 @@ public class RecordBatchSizer {
         dataSize = v.getPayloadByteCount(valueCount);
         break;
       case GENERIC_OBJECT:
-        // We cannot provide a size for Generic Objects
+        // Object vectors do not consume direct memory so their known size and
+        // estSize are 0.
+        knownSize = 0;
         break;
       default:
         dataSize = v.getPayloadByteCount(valueCount);
@@ -159,10 +169,36 @@ public class RecordBatchSizer {
           stdSize = 0;
         }
       }
-
-      // A column should atleast have 1 byte per record
-      estSize = Math.max(safeDivide(dataSize, valueCount), 1);
+      estSize = safeDivide(dataSize, valueCount);
       netSize = v.getPayloadByteCount(valueCount);
+    }
+
+    /**
+     * If we can determine the knownSize, return that. Otherwise return the estSize.
+     * @return The knownSize or estSize.
+     */
+    public int getKnownOrEstSize()
+    {
+      if (hasKnownSize()) {
+        // We know the exact size of the column, return it.
+        return knownSize;
+      }
+
+      return estSize;
+    }
+
+    public boolean hasKnownSize()
+    {
+      return knownSize != -1;
+    }
+
+    public int getKnownSize()
+    {
+      if (!hasKnownSize()) {
+        throw new IllegalStateException("Unknown size for column: " + metadata);
+      }
+
+      return knownSize;
     }
 
     @SuppressWarnings("resource")
@@ -459,6 +495,11 @@ public class RecordBatchSizer {
   public int avgDensity() { return avgDensity; }
   public long netSize() { return netBatchSize; }
   public int maxAvgColumnSize() { return maxSize / rowCount; }
+
+  public static long multiplyByFragFactor(long size)
+  {
+    return (long) (((double) size) * FRAGMENTATION_FACTOR);
+  }
 
   @Override
   public String toString() {

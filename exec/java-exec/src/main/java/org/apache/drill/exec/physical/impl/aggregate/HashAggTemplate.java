@@ -505,7 +505,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     for (int columnIndex = 0; columnIndex < numGroupByOutFields; columnIndex++) {
       final VectorWrapper vectorWrapper = outContainer.getValueVector(columnIndex);
       final String columnName = vectorWrapper.getField().getName();
-      final int columnSize = columnSizeMap.get(columnName).estSize;
+      final int columnSize = columnSizeMap.get(columnName).getKnownOrEstSize();
       keySizes.put(columnName, columnSize);
       estOutputRowWidth += columnSize;
     }
@@ -515,8 +515,8 @@ public abstract class HashAggTemplate implements HashAggregator {
     for (int columnIndex = numGroupByOutFields; columnIndex < outContainer.getNumberOfColumns(); columnIndex++) {
       VectorWrapper vectorWrapper = outContainer.getValueVector(columnIndex);
       RecordBatchSizer.ColumnSize columnSize = new RecordBatchSizer.ColumnSize(vectorWrapper.getValueVector());
-      estOutputRowWidth += columnSize.estSize;
-      estValuesRowWidth += columnSize.estSize;
+      estOutputRowWidth += columnSize.getKnownSize();
+      estValuesRowWidth += columnSize.getKnownSize();
     }
 
     // TODO DRILL-5728 - This code is necessary because the generated BatchHolders add extra BigInt columns
@@ -542,13 +542,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     // multiply by the max number of rows in a batch to get the final estimated max size
-    estMaxBatchSize = Math.max(estOutputRowWidth, 1) * MAX_BATCH_SIZE;
+    estMaxBatchSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estOutputRowWidth * MAX_BATCH_SIZE), 1);
     // WARNING! (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
     // Note: estValuesBatchSize cannot be 0 because a zero value for estValuesBatchSize will cause reserveValueBatchMemory to have a value of 0. And
     // a reserveValueBatchMemory value of 0 has multiple meanings in different contexts. So estValuesBatchSize has an enforced minimum value of 1, without this
     // estValuesBatchsize could have a value of 0 in the case were there are no value columns and all the columns are key columns.
-    estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_SIZE;
-    estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
+    estValuesBatchSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estValuesRowWidth * MAX_BATCH_SIZE), 1);
+    estOutgoingAllocSize = estMaxBatchSize;
 
     if (logger.isTraceEnabled()) {
       logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}",
@@ -731,14 +731,13 @@ public abstract class HashAggTemplate implements HashAggregator {
       @SuppressWarnings("resource")
       final ValueVector vv = wrapper.getValueVector();
 
-      int columnSize = new RecordBatchSizer.ColumnSize(wrapper.getValueVector()).estSize;
+      int columnSize = new RecordBatchSizer.ColumnSize(wrapper.getValueVector()).getKnownSize();
       AllocationHelper.allocatePrecomputedChildCount(vv, records, columnSize, 0);
     }
 
     long memAdded = allocator.getAllocatedMemory() - allocatedBefore;
     if ( memAdded > estOutgoingAllocSize ) {
-      logger.trace("Output values allocated {} but the estimate was only {}. Adjusting ...",memAdded,estOutgoingAllocSize);
-      estOutgoingAllocSize = memAdded;
+      logger.trace("Output values allocated {} but the estimate was only {}.", memAdded, estOutgoingAllocSize);
     }
     // try to restore the reserve
     restoreReservedMemory();
@@ -1271,13 +1270,11 @@ public abstract class HashAggTemplate implements HashAggregator {
             aggValuesAddedMem, totalAddedMem);
         // resize the batch estimates if needed (e.g., varchars may take more memory than estimated)
         if (totalAddedMem > estMaxBatchSize) {
-          logger.trace("Adjusting Batch size estimate from {} to {}", estMaxBatchSize, totalAddedMem);
-          estMaxBatchSize = totalAddedMem;
+          logger.trace("Estimated memory needed {}, actual memory used {}", estMaxBatchSize, totalAddedMem);
           needToCheckIfSpillIsNeeded = true;
         }
         if (aggValuesAddedMem > estValuesBatchSize) {
-          logger.trace("Adjusting Values Batch size from {} to {}",estValuesBatchSize, aggValuesAddedMem);
-          estValuesBatchSize = aggValuesAddedMem;
+          logger.trace("Estimate memory needed {}, actual memory used {}", estValuesBatchSize, aggValuesAddedMem);
           needToCheckIfSpillIsNeeded = true;
         }
       } catch (OutOfMemoryException exc) {
