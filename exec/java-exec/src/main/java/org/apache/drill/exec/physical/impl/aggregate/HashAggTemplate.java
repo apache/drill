@@ -63,6 +63,8 @@ import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ObjectVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import javax.inject.Named;
 import java.io.IOException;
@@ -74,6 +76,10 @@ import java.util.concurrent.TimeUnit;
 import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_SIZE;
 
 public abstract class HashAggTemplate implements HashAggregator {
+  protected static final Marker hashAggDebug1 = MarkerFactory.getMarker("HASH_AGG_DEBUG_1");
+  protected static final Marker hashAggDebug2 = MarkerFactory.getMarker("HASH_AGG_DEBUG_2");
+  protected static final Marker hashAggDebugSpill = MarkerFactory.getMarker("HASH_AGG_DEBUG_SPILL");
+
   protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
 
   // Fields needed for partitioning (the groups into partitions)
@@ -247,7 +253,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       for (int i = batchOutputCount; i <= maxOccupiedIdx; i++) {
         try { outputRecordValues(i, batchOutputCount); }
         catch (SchemaChangeException sc) { throw new UnsupportedOperationException(sc);}
-        logger.debug("Outputting values to output index: {}", batchOutputCount);
+        logger.debug(hashAggDebug2, "Outputting values to output index: {}", batchOutputCount);
         batchOutputCount++;
         outNumRecordsHolder.value++;
       }
@@ -582,10 +588,10 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
 
       // loop through existing records in this batch, aggregating the values as necessary.
-      logger.debug("Starting outer loop of doWork()...");
+      logger.debug(hashAggDebug1, "Starting outer loop of doWork()...");
 
       while (underlyingIndex < currentBatchRecordCount) {
-        logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
+        logger.debug(hashAggDebug2, "Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
         checkGroupAndAggrValues(currentIndex);
 
         if ( retrySameIndex ) { retrySameIndex = false; }  // need to retry this row (e.g. we had an OOM)
@@ -599,7 +605,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         }
       }
 
-      logger.debug("Processed {} records", underlyingIndex);
+      logger.debug(hashAggDebug1, "Processed {} records", underlyingIndex);
 
       // Cleanup the previous batch since we are done processing it.
       for (VectorWrapper<?> v : incoming) {
@@ -627,7 +633,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         estMaxBatchSize = incomingBatchSize;
       }
 
-      logger.debug("Received IterOutcome of {}", outcome);
+      logger.debug(hashAggDebug1, "Received IterOutcome of {}", outcome);
 
       // Handle various results from getting the next batch
       switch (outcome) {
@@ -636,7 +642,7 @@ public abstract class HashAggTemplate implements HashAggregator {
           return AggOutcome.RETURN_OUTCOME;
 
         case OK_NEW_SCHEMA:
-          logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
+          logger.debug(hashAggDebug1, "Received new schema.  Batch has {} records.", incoming.getRecordCount());
           this.cleanup();
           // TODO: new schema case needs to be handled appropriately
           return AggOutcome.UPDATE_AGGREGATOR;
@@ -646,7 +652,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
           resetIndex(); // initialize index (a new batch needs to be processed)
 
-          logger.debug("Continue to start processing the next batch");
+          logger.debug(hashAggDebug1, "Continue to start processing the next batch");
           break;
 
         case NONE:
@@ -902,7 +908,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     ArrayList<BatchHolder> currPartition = batchHolders[part];
     rowsInPartition = 0;
-    logger.debug("HashAggregate: Spilling partition {} current cycle {} part size {}", part, cycleNum, currPartition.size());
+    logger.debug(hashAggDebugSpill, "HashAggregate: Spilling partition {} current cycle {} part size {}", part, cycleNum, currPartition.size());
 
     if ( currPartition.size() == 0 ) { return; } // in case empty - nothing to spill
 
@@ -965,7 +971,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     BatchHolder bh = newBatchHolder();
     batchHolders[part].add(bh);
     if (logger.isDebugEnabled()) {
-      logger.debug("HashAggregate: Added new batch; num batches = {}.", batchHolders[part].size());
+      logger.debug(hashAggDebug1, "HashAggregate: Added new batch; num batches = {}.", batchHolders[part].size());
     }
 
     bh.setup();
@@ -1070,7 +1076,7 @@ public abstract class HashAggTemplate implements HashAggregator {
           if ( cycleNum == 4 ) { logger.warn("QUATERNARY SPILLING "); }
           if ( cycleNum == 5 ) { logger.warn("QUINARY SPILLING "); }
         }
-        logger.debug("Start reading spilled partition {} (prev {}) from cycle {} (with {} batches). More {} spilled partitions left.",
+        logger.debug(hashAggDebugSpill, "Start reading spilled partition {} (prev {}) from cycle {} (with {} batches). More {} spilled partitions left.",
               sp.origPartn, sp.prevOrigPartn, sp.cycleNum, sp.spilledBatches, spilledPartitionsList.size());
         return AggIterOutcome.AGG_RESTART;
       }
@@ -1093,7 +1099,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     currPartition.get(currOutBatchIndex).outputValues(outStartIdxHolder, outNumRecordsHolder);
     int numOutputRecords = outNumRecordsHolder.value;
 
-    logger.debug("After output values: outStartIdx = {}, outNumRecords = {}", outStartIdxHolder.value, outNumRecordsHolder.value);
+    logger.debug(hashAggDebug1, "After output values: outStartIdx = {}, outNumRecords = {}", outStartIdxHolder.value, outNumRecordsHolder.value);
 
     this.htables[partitionToReturn].outputKeys(currOutBatchIndex, outContainer, outStartIdxHolder.value, outNumRecordsHolder.value, numPendingOutput);
 
@@ -1106,29 +1112,26 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     this.outcome = IterOutcome.OK;
 
-    logger.debug("So far returned {} + SpilledReturned {}  total {} (spilled {})",
-      rowsNotSpilled, rowsSpilledReturned, rowsNotSpilled + rowsSpilledReturned, rowsSpilled);
+    if (is2ndPhase) {
+      logger.debug(hashAggDebugSpill, "So far returned {} + SpilledReturned {}  total {} (spilled {})",
+        rowsNotSpilled, rowsSpilledReturned, rowsNotSpilled + rowsSpilledReturned, rowsSpilled);
+    }
 
     lastBatchOutputCount = numOutputRecords;
     outBatchIndex[partitionToReturn]++;
     // if just flushed the last batch in the partition
     if (outBatchIndex[partitionToReturn] == currPartition.size()) {
+      logger.debug(hashAggDebugSpill, "HashAggregate: {} Flushed partition {} with {} batches total {} rows",
+        earlyOutput ? "(Early)" : "", partitionToReturn, outBatchIndex[partitionToReturn], rowsInPartition);
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("HashAggregate: {} Flushed partition {} with {} batches total {} rows",
-            earlyOutput ? "(Early)" : "",
-            partitionToReturn, outBatchIndex[partitionToReturn], rowsInPartition);
-      }
       rowsInPartition = 0; // reset to count for the next partition
 
       // deallocate memory used by this partition, and re-initialize
       reinitPartition(partitionToReturn);
 
       if ( earlyOutput ) {
+        logger.debug(hashAggDebugSpill, "HASH AGG: Finished (early) re-init partition {}, mem allocated: {}", earlyPartition, allocator.getAllocatedMemory());
 
-        if ( logger.isDebugEnabled() ) {
-          logger.debug("HASH AGG: Finished (early) re-init partition {}, mem allocated: {}", earlyPartition, allocator.getAllocatedMemory());
-        }
         outBatchIndex[earlyPartition] = 0; // reset, for next time
         earlyOutput = false ; // done with early output
       }
@@ -1387,7 +1390,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         // 1st phase need to return a partition early in order to free some memory
         earlyOutput = true;
         earlyPartition = victimPartition;
-        logger.debug("picked partition {} for early output", victimPartition);
+        logger.debug(hashAggDebugSpill, "picked partition {} for early output", victimPartition);
       }
     }
   }
