@@ -504,10 +504,6 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     logger.trace("Incoming sizer: {}",incomingColumnSizes);
 
-    // Calculate the estimated max (internal) batch (i.e. Keys batch + Values batch) size
-    // (which is used to decide when to spill)
-    // Also calculate the values batch size (used as a reserve to overcome an OOM)
-
     for (int columnIndex = 0; columnIndex < numGroupByOutFields; columnIndex++) {
       final VectorWrapper vectorWrapper = outContainer.getValueVector(columnIndex);
       final String columnName = vectorWrapper.getField().getName();
@@ -516,14 +512,17 @@ public abstract class HashAggTemplate implements HashAggregator {
       estOutputRowWidth += columnSize;
     }
 
-    long estValuesRowWidth = 0;
+    long estBatchHolderValuesRowWidth = 0;
 
     for (int columnIndex = numGroupByOutFields; columnIndex < outContainer.getNumberOfColumns(); columnIndex++) {
       VectorWrapper vectorWrapper = outContainer.getValueVector(columnIndex);
       RecordBatchSizer.ColumnSize columnSize = new RecordBatchSizer.ColumnSize(vectorWrapper.getValueVector());
       estOutputRowWidth += columnSize.getKnownSize();
-      estValuesRowWidth += columnSize.getKnownSize();
+      estBatchHolderValuesRowWidth += columnSize.getKnownSize();
     }
+
+    // estValuesRowWidth does not include extra phantom columns
+    final long estValuesRowWidth = estBatchHolderValuesRowWidth;
 
     // TODO DRILL-5728 - This code is necessary because the generated BatchHolders add extra BigInt columns
     // to store a flag indicating if a row is null or not. Ideally we should not generate these
@@ -541,25 +540,30 @@ public abstract class HashAggTemplate implements HashAggregator {
         if (childExpression instanceof FunctionHolderExpression) {
           String funcName = ((FunctionHolderExpression) childExpression).getName();
           if (funcName.equals("sum") || funcName.equals("max") || funcName.equals("min")) {
-            estValuesRowWidth += bigIntSize;
+            estBatchHolderValuesRowWidth += bigIntSize;
+            estOutputRowWidth += bigIntSize;
           }
         }
       }
     }
 
-    // multiply by the max number of rows in a batch to get the final estimated max size
+    // This includes the keys stored in the hashtable and the values stored in the BatchHolder
     estMaxBatchSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estOutputRowWidth * MAX_BATCH_SIZE), 1);
     // WARNING! (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
     // Note: estValuesBatchSize cannot be 0 because a zero value for estValuesBatchSize will cause reserveValueBatchMemory to have a value of 0. And
     // a reserveValueBatchMemory value of 0 has multiple meanings in different contexts. So estValuesBatchSize has an enforced minimum value of 1, without this
     // estValuesBatchsize could have a value of 0 in the case were there are no value columns and all the columns are key columns.
-    estValuesBatchSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estValuesRowWidth * MAX_BATCH_SIZE), 1);
-    estOutgoingAllocSize = estMaxBatchSize;
+
+    // This includes the values stored in the BatchHolder
+    estValuesBatchSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estBatchHolderValuesRowWidth * MAX_BATCH_SIZE), 1);
+    // This includes the values stored in the outContainer. Note the phantom columns are not included in this size
+    // because the out container does not have phantom columns, only the BatchHolder does.
+    estOutgoingAllocSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estValuesRowWidth * MAX_BATCH_SIZE), 1);;
 
     if (logger.isTraceEnabled()) {
       logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}",
         isTwoPhase ? (is2ndPhase ? "2nd" : "1st") : "Single",
-        estOutputRowWidth, estValuesRowWidth, estMaxBatchSize, allocator.getLimit());
+        estOutputRowWidth, estBatchHolderValuesRowWidth, estMaxBatchSize, allocator.getLimit());
     }
 
     if ( estMaxBatchSize > allocator.getLimit() ) {
