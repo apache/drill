@@ -146,7 +146,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
         return IterOutcome.NONE;
       }
 
-      boolean drainRight = rightUpstream != IterOutcome.NONE ? true : false;
+      boolean drainRight = rightUpstream != IterOutcome.NONE;
       while (drainRight) {
         rightUpstream = next(RIGHT_INPUT, right);
         switch (rightUpstream) {
