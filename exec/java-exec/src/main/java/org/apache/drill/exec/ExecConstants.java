@@ -186,6 +186,11 @@ public final class ExecConstants {
   public static final String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
   public static final String BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.bit.encryption.sasl.max_wrapped_size";
 
+  /**
+   * Setting to control enabling/disabling writing of generated code dump for Lateral
+   */
+  public static final String ENABLE_CODE_DUMP_DEBUG_LATERAL = "drill.exec.compile.codegen.debug.lateral";
+
   /** Size of JDBC batch queue (in batches) above which throttling begins. */
   public static final String JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD =
       "drill.jdbc.batch_queue_throttling_threshold";
