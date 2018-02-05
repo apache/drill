@@ -46,7 +46,7 @@ public interface HashJoinProbe {
 
   void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
                           int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable, HashJoinHelper hjHelper,
-                          JoinRelType joinRelType);
+                          JoinRelType joinRelType, RecordBatch.IterOutcome leftStartState);
   void doSetup(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch, RecordBatch outgoing);
   int  probeAndProject() throws SchemaChangeException, ClassTransformationException, IOException;
   void projectBuildRecord(int buildIndex, int outIndex);
