@@ -21,6 +21,8 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,6 +30,8 @@ import org.junit.experimental.categories.Category;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
 
 
 @Category(OperatorTest.class)
@@ -36,6 +40,7 @@ public class TestHashJoinAdvanced extends JoinTestBase {
   // Have to disable merge join, if this testcase is to test "HASH-JOIN".
   @BeforeClass
   public static void disableMergeJoin() throws Exception {
+    dirTestWatcher.copyResourceToRoot(Paths.get("join", "empty_part"));
     test(DISABLE_MJ);
   }
 
@@ -173,5 +178,23 @@ public class TestHashJoinAdvanced extends JoinTestBase {
   @Test
   public void testHashRightJoinWithEmptyTable() throws Exception {
     testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", new String[] {HJ_PATTERN, RIGHT_JOIN_TYPE}, 0L);
+  }
+
+  @Test // Test for DRILL-6137 fix
+  public void emptyPartTest() throws Exception {
+    BaseTestQuery.setSessionOption(ExecConstants.SLICE_TARGET, 1L);
+
+    try {
+      testBuilder().sqlQuery("select t.p_partkey, t1.ps_suppkey from " +
+        "dfs.`join/empty_part/part` as t RIGHT JOIN dfs.`join/empty_part/partsupp` as t1 ON t.p_partkey = t1.ps_partkey where t1.ps_partkey > 1").unOrdered()
+        .baselineColumns("ps_suppkey", "p_partkey")
+        .baselineValues(3L, 2L)
+        .baselineValues(2503L, 2L)
+        .baselineValues(5003L, 2L)
+        .baselineValues(7503L, 2L)
+        .go();
+    } finally {
+      BaseTestQuery.resetSessionOption(ExecConstants.SLICE_TARGET);
+    }
   }
 }

@@ -205,10 +205,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       if (state == BatchState.FIRST) {
         // Build the hash table, using the build side record batches.
         executeBuildPhase();
-        //                IterOutcome next = next(HashJoinHelper.LEFT_INPUT, left);
         hashJoinProbe.setupHashJoinProbe(context, hyperContainer, left, left.getRecordCount(), this, hashTable,
-            hjHelper, joinType);
-
+            hjHelper, joinType, leftUpstream);
         // Update the hash table related stats for the operator
         updateStats(this.hashTable);
       }
