@@ -126,6 +126,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
       stats.batchReceived(inputIndex, b.getRecordCount(), true);
       break;
     case OK:
+    case EMIT:
       stats.batchReceived(inputIndex, b.getRecordCount(), false);
       break;
     default:

@@ -51,7 +51,11 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
    *         false if caller should stop and exit from processing.
    */
   protected boolean prefetchFirstBatchFromBothSides() {
+    // Left can get batch with zero or more records with OK_NEW_SCHEMA outcome as first batch
     leftUpstream = next(0, left);
+
+    // Right will always get zero records with OK_NEW_SCHEMA outcome as first batch, since right
+    // now Lateral will always be tied up with UNNEST
     rightUpstream = next(1, right);
 
     if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
@@ -67,6 +71,13 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
     if (checkForEarlyFinish()) {
       state = BatchState.DONE;
       return false;
+    }
+
+    // EMIT outcome is not expected as part of first batch from either side
+    if (leftUpstream == IterOutcome.EMIT || rightUpstream == IterOutcome.EMIT) {
+      state = BatchState.STOP;
+      throw new IllegalStateException("Unexpected IterOutcome.EMIT received either from left or right side in " +
+        "buildSchema phase");
     }
 
     return true;
