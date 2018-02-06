@@ -20,10 +20,10 @@ package org.apache.drill.exec.physical.rowSet.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.exec.record.ColumnMetadata;
-import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.record.TupleSchema;
-import org.apache.drill.exec.record.TupleSchema.AbstractColumnMetadata;
+import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.VectorContainer;
 
 /**

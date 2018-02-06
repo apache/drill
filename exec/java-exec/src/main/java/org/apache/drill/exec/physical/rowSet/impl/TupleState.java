@@ -23,11 +23,12 @@ import java.util.List;
 import org.apache.drill.exec.physical.rowSet.impl.ColumnState.BaseMapColumnState;
 import org.apache.drill.exec.physical.rowSet.impl.ColumnState.MapArrayColumnState;
 import org.apache.drill.exec.physical.rowSet.impl.ColumnState.MapColumnState;
-import org.apache.drill.exec.record.ColumnMetadata;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.record.TupleSchema;
-import org.apache.drill.exec.record.TupleSchema.AbstractColumnMetadata;
+import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
@@ -182,7 +183,7 @@ public abstract class TupleState implements TupleWriterListener {
 
   @Override
   public ObjectWriter addColumn(TupleWriter tupleWriter, MaterializedField column) {
-    return addColumn(tupleWriter, TupleSchema.fromField(column));
+    return addColumn(tupleWriter, MetadataUtils.fromField(column));
   }
 
   @Override

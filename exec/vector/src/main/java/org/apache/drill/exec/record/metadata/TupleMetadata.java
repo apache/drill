@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.record;
+package org.apache.drill.exec.record.metadata;
 
 import java.util.List;
+
+import org.apache.drill.exec.record.MaterializedField;
 
 /**
  * Metadata description of the schema of a row or a map.

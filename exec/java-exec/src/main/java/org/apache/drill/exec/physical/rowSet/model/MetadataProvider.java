@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.rowSet.model;
 
-import org.apache.drill.exec.record.ColumnMetadata;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.record.TupleSchema;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 
 /**
  * Interface for retrieving and/or creating metadata given

@@ -22,11 +22,12 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.ColumnMetadata;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.record.TupleSchema;
-import org.apache.drill.exec.record.TupleSchema.MapColumnMetadata;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MapColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 
 /**
  * Builder of a row set schema expressed as a list of materialized
@@ -128,7 +129,7 @@ public class SchemaBuilder {
       for (ColumnMetadata md : schema) {
         col.addChild(md.schema());
       }
-      parent.finishMap(TupleSchema.newMap(col, schema));
+      parent.finishMap(MetadataUtils.newMap(col, schema));
       return parent;
     }
 

@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.record;
+package org.apache.drill.exec.record.metadata;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.MaterializedField;
 
 /**
  * Metadata description of a column including names, types and structure
@@ -27,24 +28,102 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
  */
 
 public interface ColumnMetadata {
+
+  /**
+   * Rough characterization of Drill types into metadata categories.
+   * Various aspects of Drill's type system are very, very messy.
+   * However, Drill is defined by its code, not some abstract design,
+   * so the metadata system here does the best job it can to simplify
+   * the messy type system while staying close to the underlying
+   * implementation.
+   */
+
   enum StructureType {
-    PRIMITIVE, LIST, TUPLE
+
+    /**
+     * Primitive column (all types except List, Map and Union.)
+     * Includes (one-dimensional) arrays of those types.
+     */
+
+    PRIMITIVE,
+
+    /**
+     * Map or repeated map. Also describes the row as a whole.
+     */
+
+    TUPLE,
+
+    /**
+     * Union or (non-repeated) list. (A non-repeated list is,
+     * essentially, a repeated union.)
+     */
+
+    VARIANT,
+
+    /**
+     * A repeated list. A repeated list is not simply the repeated
+     * form of a list, it is something else entirely. It acts as
+     * a dimensional wrapper around any other type (except list)
+     * and adds a non-nullable extra dimension. Hence, this type is
+     * for 2D+ arrays.
+     * <p>
+     * In theory, a 2D list of, say, INT would be an INT column, but
+     * repeated in to dimensions. Alas, that is not how it is. Also,
+     * if we have a separate category for 2D lists, we should have
+     * a separate category for 1D lists. But, again, that is not how
+     * the code has evolved.
+     */
+
+    MULTI_ARRAY
   }
 
-  public static final int DEFAULT_ARRAY_SIZE = 10;
+  int DEFAULT_ARRAY_SIZE = 10;
 
-  ColumnMetadata.StructureType structureType();
+  StructureType structureType();
+
+  /**
+   * Schema for <tt>TUPLE</tt> columns.
+   *
+   * @return the tuple schema
+   */
+
   TupleMetadata mapSchema();
+
+  /**
+   * Schema for <tt>VARIANT</tt> columns.
+   *
+   * @return the variant schema
+   */
+
+  VariantMetadata variantSchema();
+
+  /**
+   * Schema of inner dimension for <tt>MULTI_ARRAY<tt> columns.
+   * If an array is 3D, the outer column represents all 3 dimensions.
+   * <tt>outer.childSchema()</tt> gives another <tt>MULTI_ARRAY</tt>
+   * for the inner 2D array.
+   * <tt>outer.childSchema().childSchema()</tt> gives a column
+   * of some other type (but repeated) for the 1D array.
+   * <p>
+   * Sorry for the mess, but it is how the code works and we are not
+   * in a position to revisit data type fundamentals.
+   *
+   * @return the description of the (n-1) st dimension.
+   */
+
+  ColumnMetadata childSchema();
   MaterializedField schema();
+  MaterializedField emptySchema();
   String name();
-  MajorType majorType();
   MinorType type();
+  MajorType majorType();
   DataMode mode();
+  int dimensions();
   boolean isNullable();
   boolean isArray();
   boolean isVariableWidth();
   boolean isMap();
-  boolean isList();
+  boolean isVariant();
 
   /**
    * Report whether one column is equivalent to another. Columns are equivalent
@@ -111,4 +190,7 @@ public interface ColumnMetadata {
 
   boolean isProjected();
   void setProjected(boolean projected);
+
+  int precision();
+  int scale();
 }

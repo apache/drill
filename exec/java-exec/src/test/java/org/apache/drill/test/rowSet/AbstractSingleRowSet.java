@@ -21,8 +21,8 @@ import org.apache.drill.exec.physical.impl.spill.RecordBatchSizer;
 import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataRetrieval;
 import org.apache.drill.exec.physical.rowSet.model.single.BaseReaderBuilder;
-import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
 /**
