@@ -412,8 +412,11 @@ public class RecordBatchSizer {
   private void measureColumn(ValueVector v, String prefix) {
 
     ColumnSize colSize = new ColumnSize(v, prefix);
-    columnSizes.put(v.getField().getName(), colSize);
-    stdRowWidth += colSize.stdSize;
+
+    if (colSize.hasStdSize()) {
+      stdRowWidth += colSize.stdSize;
+    }
+
     netBatchSize += colSize.dataSize;
     maxSize = Math.max(maxSize, colSize.dataSize);
     if (colSize.metadata.isNullable()) {
