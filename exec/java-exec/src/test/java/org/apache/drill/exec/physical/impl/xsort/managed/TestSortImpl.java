@@ -66,7 +66,6 @@ import io.netty.buffer.DrillBuf;
  */
 
 @Category(OperatorTest.class)
-@Ignore
 public class TestSortImpl extends DrillTest {
 
   /**
