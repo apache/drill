@@ -17,14 +17,17 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import java.io.File;
+import java.nio.file.Paths;
+
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
-import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.SchemaBuilder;
@@ -32,9 +35,6 @@ import org.apache.drill.test.rowSet.file.JsonFileBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.File;
-import java.nio.file.Paths;
 
 @Category({SlowTest.class, OperatorTest.class})
 public class TestExternalSort extends BaseTestQuery {
@@ -206,8 +206,8 @@ public class TestExternalSort extends BaseTestQuery {
 
     {
       final BatchSchema schema = new SchemaBuilder()
-        .add("a", Types.required(TypeProtos.MinorType.INT))
-        .add("b", Types.required(TypeProtos.MinorType.INT))
+        .add("a", TypeProtos.MinorType.INT)
+        .add("b", TypeProtos.MinorType.INT)
         .build();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
@@ -223,8 +223,8 @@ public class TestExternalSort extends BaseTestQuery {
 
     {
       final BatchSchema schema = new SchemaBuilder()
-        .add("a", Types.required(TypeProtos.MinorType.INT))
-        .add("c", Types.required(TypeProtos.MinorType.INT))
+        .add("a", TypeProtos.MinorType.INT)
+        .add("c", TypeProtos.MinorType.INT)
         .build();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
