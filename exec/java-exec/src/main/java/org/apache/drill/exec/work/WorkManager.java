@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.SelfCleaningRunnable;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -257,6 +259,43 @@ public class WorkManager implements AutoCloseable {
      */
     public void addNewWork(final Runnable runnable) {
       executor.execute(runnable);
+    }
+
+    public boolean cancelForeman(final QueryId queryId, DrillUserPrincipal principal) {
+      Preconditions.checkNotNull(queryId);
+
+      final Foreman foreman = queries.get(queryId);
+      if (foreman == null) {
+        return false;
+      }
+
+      final String queryIdString = QueryIdHelper.getQueryId(queryId);
+
+      if (principal != null && !principal.canManageQueryOf(foreman.getQueryContext().getQueryUserName())) {
+        throw UserException.permissionError()
+            .message("Not authorized to cancel the query '%s'", queryIdString)
+            .build(logger);
+      }
+
+      executor.execute(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          final Thread currentThread = Thread.currentThread();
+          final String originalName = currentThread.getName();
+          try {
+            currentThread.setName(queryIdString + ":foreman:cancel");
+            logger.debug("Canceling foreman");
+            foreman.cancel();
+          } catch (Throwable t) {
+            logger.warn("Exception while canceling foreman", t);
+          } finally {
+            currentThread.setName(originalName);
+          }
+        }
+      });
+      return true;
     }
 
     /**

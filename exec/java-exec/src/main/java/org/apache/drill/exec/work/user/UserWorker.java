@@ -81,10 +81,7 @@ public class UserWorker{
   }
 
   public Ack cancelQuery(QueryId query) {
-    Foreman foreman = bee.getForemanForQueryId(query);
-    if(foreman != null) {
-      foreman.cancel();
-    }
+    bee.cancelForeman(query, null);
     return Acks.OK;
   }
 

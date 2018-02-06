@@ -98,9 +98,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
 
     case RpcType.REQ_QUERY_CANCEL_VALUE: {
       final QueryId queryId = get(pBody, QueryId.PARSER);
-      final Foreman foreman = bee.getForemanForQueryId(queryId);
-      if (foreman != null) {
-        foreman.cancel();
+      if (bee.cancelForeman(queryId, null)) {
         sender.send(ControlRpcConfig.OK);
       } else {
         sender.send(ControlRpcConfig.FAIL);
