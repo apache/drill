@@ -801,6 +801,8 @@ public abstract class HashAggTemplate implements HashAggregator {
         columnSize = varcharValueSizes.get(columnIndex);
       }
 
+      // TODO currently the childValCount is set to 0 since HashAgg does not support aggregating repeated types. If we add support
+      // for repeated types we should use the elementCount estimated from the input batch as the value count.
       AllocationHelper.allocatePrecomputedChildCount(vv, records, columnSize, 0);
     }
 
