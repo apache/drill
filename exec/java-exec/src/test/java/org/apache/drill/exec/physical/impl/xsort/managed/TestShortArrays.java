@@ -23,8 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.spill.RecordBatchSizer;
-import org.apache.drill.exec.physical.impl.spill.RecordBatchSizer.ColumnSize;
+import org.apache.drill.exec.record.RecordBatchSizer;
+import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorInitializer;
 import org.apache.drill.exec.record.VectorInitializer.AllocationHint;
@@ -71,7 +71,7 @@ public class TestShortArrays extends SubOperatorTest {
 
     RecordBatchSizer sizer = new RecordBatchSizer(rows.container());
     assertEquals(2, sizer.columns().size());
-    ColumnSize bCol = sizer.columns().get(1);
+    ColumnSize bCol = sizer.columns().get("b");
     assertEquals(0.1, bCol.estElementCountPerArray, 0.01);
     assertEquals(1, bCol.elementCount);
 

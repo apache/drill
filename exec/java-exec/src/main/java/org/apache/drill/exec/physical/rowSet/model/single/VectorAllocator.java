@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.rowSet.model.single;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.spill.RecordBatchSizer;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataCreator;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataRetrieval;
@@ -38,8 +37,8 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
  * row count and the size information provided in column metadata.
  * <p>
  * @see {@link AllocationHelper} - the class which this one replaces
- * @see {@link VectorInitializer} - an earlier cut at implementation
- * based on data from the {@link RecordBatchSizer}
+ * @see {@link org.apache.drill.exec.record.VectorInitializer} - an earlier cut at implementation
+ * based on data from the {@link org.apache.drill.exec.record.RecordBatchSizer}
  */
 
 // TODO: Does not yet handle lists; lists are a simple extension

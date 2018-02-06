@@ -15,23 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.spill;
+package org.apache.drill.exec.record;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BaseAllocator;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorInitializer;
-import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -260,7 +254,7 @@ public class RecordBatchSizer {
 
   public static final int MAX_VECTOR_SIZE = ValueVector.MAX_BUFFER_SIZE; // 16 MiB
 
-  private List<ColumnSize> columnSizes = new ArrayList<>();
+  private Map<String, ColumnSize> columnSizes = CaseInsensitiveMap.newHashMap();
 
   /**
    * Number of records (rows) in the batch.
@@ -394,7 +388,7 @@ public class RecordBatchSizer {
   private void measureColumn(ValueVector v, String prefix) {
 
     ColumnSize colSize = new ColumnSize(v, prefix);
-    columnSizes.add(colSize);
+    columnSizes.put(v.getField().getName(), colSize);
     stdRowWidth += colSize.stdSize;
     netBatchSize += colSize.dataSize;
     maxSize = Math.max(maxSize, colSize.dataSize);
@@ -458,7 +452,7 @@ public class RecordBatchSizer {
   public int stdRowWidth() { return stdRowWidth; }
   public int grossRowWidth() { return grossRowWidth; }
   public int netRowWidth() { return netRowWidth; }
-  public List<ColumnSize> columns() { return columnSizes; }
+  public Map<String, ColumnSize> columns() { return columnSizes; }
 
   /**
    * Compute the "real" width of the row, taking into account each varchar column size
@@ -477,7 +471,7 @@ public class RecordBatchSizer {
   public String toString() {
     StringBuilder buf = new StringBuilder();
     buf.append("Actual batch schema & sizes {\n");
-    for (ColumnSize colSize : columnSizes) {
+    for (ColumnSize colSize : columnSizes.values()) {
       buf.append("  ");
       buf.append(colSize.toString());
       buf.append("\n");
@@ -508,7 +502,7 @@ public class RecordBatchSizer {
 
   public VectorInitializer buildVectorInitializer() {
     VectorInitializer initializer = new VectorInitializer();
-    for (ColumnSize colSize : columnSizes) {
+    for (ColumnSize colSize : columnSizes.values()) {
       colSize.buildVectorInitializer(initializer);
     }
     return initializer;
