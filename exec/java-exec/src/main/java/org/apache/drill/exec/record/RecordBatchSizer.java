@@ -63,15 +63,7 @@ public class RecordBatchSizer {
      * columns.
      */
 
-    public int stdSize;
-
-    /**
-     * If the we can determine the exact width of the row of a vector upfront,
-     * the row widths is saved here. If we cannot determine the exact width
-     * (for example for VarChar or Repeated vectors), then
-     */
-
-    private int knownSize = -1;
+    public int stdSize = -1;
 
     /**
      * Actual average column width as determined from actual memory use. This
@@ -128,7 +120,7 @@ public class RecordBatchSizer {
 
     public ColumnSize(ValueVector v, String prefix) {
       if (v instanceof FixedWidthVector) {
-        knownSize = ((FixedWidthVector)v).getValueWidth();
+        stdSize = ((FixedWidthVector)v).getValueWidth();
       }
 
       this.prefix = prefix;
@@ -158,16 +150,10 @@ public class RecordBatchSizer {
       case GENERIC_OBJECT:
         // Object vectors do not consume direct memory so their known size and
         // estSize are 0.
-        knownSize = 0;
+        stdSize = 0;
         break;
       default:
         dataSize = v.getPayloadByteCount(valueCount);
-        try {
-          stdSize = TypeHelper.getSize(metadata.getType()) * elementCount;
-        } catch (Exception e) {
-          // For unsupported types, just set stdSize to 0.
-          stdSize = 0;
-        }
       }
       estSize = safeDivide(dataSize, valueCount);
       netSize = v.getPayloadByteCount(valueCount);
@@ -177,28 +163,28 @@ public class RecordBatchSizer {
      * If we can determine the knownSize, return that. Otherwise return the estSize.
      * @return The knownSize or estSize.
      */
-    public int getKnownOrEstSize()
+    public int getStdOrEstSize()
     {
-      if (hasKnownSize()) {
+      if (hasStdSize()) {
         // We know the exact size of the column, return it.
-        return knownSize;
+        return stdSize;
       }
 
       return estSize;
     }
 
-    public boolean hasKnownSize()
+    public boolean hasStdSize()
     {
-      return knownSize != -1;
+      return stdSize != -1;
     }
 
-    public int getKnownSize()
+    public int getStdSize()
     {
-      if (!hasKnownSize()) {
+      if (!hasStdSize()) {
         throw new IllegalStateException("Unknown size for column: " + metadata);
       }
 
-      return knownSize;
+      return stdSize;
     }
 
     @SuppressWarnings("resource")
