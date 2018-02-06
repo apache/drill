@@ -25,7 +25,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
   // TODO are these <?> releated in any way? Should they be the same one?
   // TODO javadoc
-  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds);
+  VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds);
 
   /**
    * Get the value vector type and id for the given schema path. The TypedFieldId
@@ -36,7 +36,7 @@ public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
    * @return the local field id associated with this vector. If no field matches this
    *   path, this will return a null TypedFieldId
    */
-  public TypedFieldId getValueVectorId(SchemaPath path);
+  TypedFieldId getValueVectorId(SchemaPath path);
 
   /**
    * Get the schema of the current RecordBatch. This changes if and only if a *_NEW_SCHEMA
@@ -44,18 +44,16 @@ public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
    *
    * @return schema of the current batch
    */
-  public BatchSchema getSchema();
+  BatchSchema getSchema();
 
   /**
    * Get the number of records.
    *
    * @return number of records
    */
-  public int getRecordCount();
+  int getRecordCount();
 
-  public abstract SelectionVector2 getSelectionVector2();
+  SelectionVector2 getSelectionVector2();
 
-  public abstract SelectionVector4 getSelectionVector4();
-
-
+  SelectionVector4 getSelectionVector4();
 }

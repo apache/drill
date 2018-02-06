@@ -18,12 +18,12 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
 
-public interface Copier {
-  void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException;
-  int copyRecords(int index, int recordCount) throws SchemaChangeException;
-  int appendRecord(int index) throws SchemaChangeException;
-  int appendRecords(int index, int recordCount) throws SchemaChangeException;
+public class GenericSV2Copier extends AbstractSV2Copier {
+  @Override
+  public void copyEntry(int inIndex, int outIndex) throws SchemaChangeException {
+    for ( int i = 0;  i < vvIn.length;  i++ ) {
+      vvOut[i].copyEntry(outIndex, vvIn[i], inIndex);
+    }
+  }
 }

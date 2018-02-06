@@ -20,10 +20,34 @@ package org.apache.drill.exec.physical.impl.svremover;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.ValueVector;
 
-public interface Copier {
-  void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException;
-  int copyRecords(int index, int recordCount) throws SchemaChangeException;
-  int appendRecord(int index) throws SchemaChangeException;
-  int appendRecords(int index, int recordCount) throws SchemaChangeException;
+public abstract class AbstractSV2Copier extends AbstractCopier {
+  protected ValueVector[] vvIn;
+  private SelectionVector2 sv2;
+
+  @Override
+  public void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException {
+    super.setup(incoming, outgoing);
+    this.sv2 = incoming.getSelectionVector2();
+
+    final int count = outgoing.getNumberOfColumns();
+
+    vvIn = new ValueVector[count];
+
+    {
+      int index = 0;
+
+      for (VectorWrapper vectorWrapper: incoming) {
+        vvIn[index] = vectorWrapper.getValueVector();
+        index++;
+      }
+    }
+  }
+
+  public void copyEntryIndirect(int inIndex, int outIndex) throws SchemaChangeException {
+    copyEntry(sv2.getIndex(inIndex), outIndex);
+  }
 }

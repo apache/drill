@@ -17,13 +17,25 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 
-public interface Copier {
-  void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException;
-  int copyRecords(int index, int recordCount) throws SchemaChangeException;
-  int appendRecord(int index) throws SchemaChangeException;
-  int appendRecords(int index, int recordCount) throws SchemaChangeException;
+public class GenericCopierTest extends AbstractGenericCopierTest {
+  @Override
+  public RowSet createSrcRowSet(RootAllocator allocator) {
+    return new RowSetBuilder(allocator, createTestSchema(BatchSchema.SelectionVectorMode.NONE))
+      .addRow(row1())
+      .addRow(row2())
+      .addRow(row3())
+      .addRow(row4())
+      .addRow(row5())
+      .build();
+  }
+
+  @Override
+  public Copier createCopier() {
+    return new GenericCopier();
+  }
 }

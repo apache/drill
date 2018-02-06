@@ -148,6 +148,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
    */
   protected IterOutcome handleNullInput() {
     container.buildSchema(SelectionVectorMode.NONE);
+    container.setRecordCount(0);
     return IterOutcome.NONE;
   }
 

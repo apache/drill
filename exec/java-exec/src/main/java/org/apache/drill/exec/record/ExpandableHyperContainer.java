@@ -42,6 +42,8 @@ public class ExpandableHyperContainer extends VectorContainer {
         this.add(hyperVector, true);
       }
     }
+
+    buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
   }
 
   public void addBatch(VectorAccessible batch) {
@@ -62,5 +64,7 @@ public class ExpandableHyperContainer extends VectorContainer {
         hyperVectorWrapper.addVector(w.getValueVector());
       }
     }
+
+    buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
   }
 }

@@ -20,10 +20,34 @@ package org.apache.drill.exec.physical.impl.svremover;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.ValueVector;
 
-public interface Copier {
-  void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException;
-  int copyRecords(int index, int recordCount) throws SchemaChangeException;
-  int appendRecord(int index) throws SchemaChangeException;
-  int appendRecords(int index, int recordCount) throws SchemaChangeException;
+public abstract class AbstractSV4Copier extends AbstractCopier {
+  protected ValueVector[][] vvIn;
+  private SelectionVector4 sv4;
+
+  @Override
+  public void setup(RecordBatch incoming, VectorContainer outgoing) throws SchemaChangeException{
+    super.setup(incoming, outgoing);
+    this.sv4 = incoming.getSelectionVector4();
+
+    final int count = outgoing.getNumberOfColumns();
+
+    vvIn = new ValueVector[count][];
+
+    {
+      int index = 0;
+
+      for (VectorWrapper vectorWrapper: incoming) {
+        vvIn[index] = vectorWrapper.getValueVectors();
+        index++;
+      }
+    }
+  }
+
+  public void copyEntryIndirect(int inIndex, int outIndex) throws SchemaChangeException {
+    copyEntry(sv4.get(inIndex), outIndex);
+  }
 }

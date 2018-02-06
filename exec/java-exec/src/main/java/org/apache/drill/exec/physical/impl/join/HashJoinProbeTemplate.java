@@ -83,7 +83,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   @Override
   public void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
                                  int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable,
-                                 HashJoinHelper hjHelper, JoinRelType joinRelType) {
+                                 HashJoinHelper hjHelper, JoinRelType joinRelType, IterOutcome leftStartState) {
 
     this.probeBatch = probeBatch;
     this.probeSchema = probeBatch.getSchema();
@@ -93,6 +93,14 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     this.hashTable = hashTable;
     this.hjHelper = hjHelper;
     this.outgoingJoinBatch = outgoing;
+
+    if (leftStartState == IterOutcome.NONE) {
+      if (joinRelType == JoinRelType.RIGHT) {
+        probeState = ProbeState.PROJECT_RIGHT;
+      } else {
+        probeState = ProbeState.DONE;
+      }
+    }
 
     doSetup(context, buildBatch, probeBatch, outgoing);
   }
