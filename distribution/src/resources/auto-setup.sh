@@ -161,7 +161,7 @@ elif [ -z "$AutoMemConfigStatus" ]; then
     export DRILLBIT_CODE_CACHE_SIZE=$DbitMaxCodeCacheMem'm'
   fi
   if [ -n "$DbitMaxHeapMem" ] && [ -n "$DbitMaxDirectMem" ]; then
-    ## [SCENARIO 2]: Heap &Direct ARE Defined
+    ## [SCENARIO 2]: Heap & Direct ARE Defined
     let calcTotalInMB=$DbitMaxDirectMem+$DbitMaxHeapMem+$DbitMaxCodeCacheMem
     # Fail if exceeding process limit
     if [ $calcTotalInMB -gt $DbitMaxProcMem ]; then
@@ -180,12 +180,15 @@ elif [ -z "$AutoMemConfigStatus" ]; then
     fi
   elif [ -n "$DbitMaxHeapMem" ] && [ -z "$DbitMaxDirectMem" ]; then
     ## [SCENARIO 3]: Total and only Heap is defined
+    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Only \$DRILL_HEAP is defined. Auto-configuring for Direct memory"
     let DbitMaxDirectMem=$DbitMaxProcMem-$DbitMaxHeapMem-$DbitMaxCodeCacheMem
   elif [ -z "$DbitMaxHeapMem" ] && [ -n "$DbitMaxDirectMem" ]; then
     ## [SCENARIO 4]: Total and only Direct is defined
+    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Only \$DRILL_MAX_DIRECT_MEMORY is defined. Auto-configuring for Heap"
     let DbitMaxHeapMem=$DbitMaxProcMem-$DbitMaxDirectMem-$DbitMaxCodeCacheMem
   elif [ -z "$DbitMaxDirectMem" ] && [ -z "$DbitMaxHeapMem" ]; then
     ## [SCENARIO 5]: Only Total is defined
+    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Only \$DRILLBIT_MAX_PROC_MEM is defined. Auto-configuring for Heap & Direct memory"
     ## Compute Direct & Heap
     let DbitMaxProcMemInGB=$(valueInGB $DbitMaxProcMem'm')
     let DbitMaxHeapMemInGB=`echo $DbitMaxProcMemInGB | awk '{heap=-13.2+6.12*log($1); if (heap<1) {heap=1}; printf "%0.0f\n", heap }'`
