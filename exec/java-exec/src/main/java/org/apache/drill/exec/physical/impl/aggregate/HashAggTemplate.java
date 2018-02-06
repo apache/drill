@@ -209,7 +209,8 @@ public abstract class HashAggTemplate implements HashAggregator {
           MaterializedField outputField = materializedValueFields[i];
           // Create a type-specific ValueVector for this value
           vector = TypeHelper.getNewVector(outputField, allocator);
-          int columnSize = new RecordBatchSizer.ColumnSize(vector).estSize;
+          // TODO once varchars are no longer stored on heap while aggregating we will also have to account for their sizes here
+          int columnSize = new RecordBatchSizer.ColumnSize(vector).getKnownSize();
 
           // Try to allocate space to store BATCH_SIZE records. Key stored at index i in HashTable has its workspace
           // variables (such as count, sum etc) stored at index i in HashAgg. HashTable and HashAgg both have
