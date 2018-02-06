@@ -115,8 +115,9 @@ public class QueryStateProcessor implements AutoCloseable {
   }
 
   /**
-   * Cancel the query. Asynchronous -- it may take some time for all remote fragments to be terminated.
-   * For preparing, planning and enqueued states we cancel immediately since these states are done locally.
+   * Transition query to {@link QueryState#CANCELLATION_REQUESTED CANCELLATION_REQUESTED} state if it is
+   * not already in the terminal states {@link QueryState#CANCELED, CANCELED}, {@link QueryState#COMPLETED, COMPLETED} or
+   * {@link QueryState#FAILED, FAILED}. See the implementation of {@link #moveToState(QueryState, Exception)} for details.
    *
    * Note this can be called from outside of run() on another thread, or after run() completes
    */
@@ -125,20 +126,17 @@ public class QueryStateProcessor implements AutoCloseable {
       case PREPARING:
       case PLANNING:
       case ENQUEUED:
-        moveToState(QueryState.CANCELLATION_REQUESTED, null);
-        return;
-
       case STARTING:
       case RUNNING:
-        addToEventQueue(QueryState.CANCELLATION_REQUESTED, null);
-        return;
+        moveToState(QueryState.CANCELLATION_REQUESTED, null);
+        break;
 
       case CANCELLATION_REQUESTED:
       case CANCELED:
       case COMPLETED:
       case FAILED:
         // nothing to do
-        return;
+        break;
 
       default:
         throw new IllegalStateException("Unable to cancel the query. Unexpected query state -> " + state);
