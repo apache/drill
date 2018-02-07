@@ -218,7 +218,8 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         RelOptUtil.createProject(
             newAggRel,
             projList,
-            oldAggRel.getRowType().getFieldNames());
+            oldAggRel.getRowType().getFieldNames(),
+            DrillRelFactories.LOGICAL_BUILDER);
 
     ruleCall.transformTo(projectRel);
   }

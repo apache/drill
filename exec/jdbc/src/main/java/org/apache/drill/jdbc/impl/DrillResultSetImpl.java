@@ -1142,16 +1142,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public AvaticaStatement getStatement() {
-    try {
-      throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
-      // Can't throw any SQLException because AvaticaConnection's
-      // getStatement() is missing "throws SQLException".
-      throw new RuntimeException(e.getMessage(), e);
-    } catch (SQLException e) {
-      throw new RuntimeException(e.getMessage(), e);
-    }
+  public AvaticaStatement getStatement() throws SQLException {
+    throwIfClosed();
     return super.getStatement();
   }
 

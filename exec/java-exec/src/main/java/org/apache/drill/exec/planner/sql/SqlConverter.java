@@ -26,7 +26,6 @@ import java.util.Set;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
@@ -377,9 +376,10 @@ public class SqlConverter {
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);
     final RelRoot rel2 = rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
-    final RelRoot rel3 = rel2.withRel(RelDecorrelator.decorrelateQuery(rel2.rel));
+    final RelRoot rel3 = rel2.withRel(
+        RelDecorrelator.decorrelateQuery(rel2.rel,
+            sqlToRelConverterConfig.getRelBuilderFactory().create(cluster, null)));
     return rel3;
-
   }
 
   private class Expander implements RelOptTable.ViewExpander {
