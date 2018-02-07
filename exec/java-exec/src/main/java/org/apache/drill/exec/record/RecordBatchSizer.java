@@ -17,18 +17,15 @@
  */
 package org.apache.drill.exec.record;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BaseAllocator;
+import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
@@ -48,7 +45,10 @@ import com.google.common.collect.Sets;
 
 public class RecordBatchSizer {
 
-  public static final double FRAGMENTATION_FACTOR = 1.33;
+  // TODO consolidate common memory estimation helpers
+  public static final double PAYLOAD_FROM_BUFFER = SortMemoryManager.PAYLOAD_FROM_BUFFER;
+  public static final double FRAGMENTATION_FACTOR = 1.0 / PAYLOAD_FROM_BUFFER;
+  public static final double BUFFER_FROM_PAYLOAD = SortMemoryManager.BUFFER_FROM_PAYLOAD;
 
   /**
    * Column size information.
@@ -485,9 +485,9 @@ public class RecordBatchSizer {
   public long netSize() { return netBatchSize; }
   public int maxAvgColumnSize() { return maxSize / rowCount; }
 
-  public static long multiplyByFragFactor(long size)
+  public static long multiplyByFactors(long size)
   {
-    return (long) (((double) size) * FRAGMENTATION_FACTOR);
+    return (long) (((double) size) * FRAGMENTATION_FACTOR * BUFFER_FROM_PAYLOAD);
   }
 
   @Override

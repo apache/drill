@@ -24,8 +24,8 @@ import java.util.Map;
 import javax.inject.Named;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -49,6 +49,10 @@ public abstract class HashTableTemplate implements HashTable {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashTable.class);
   private static final boolean EXTRA_DEBUG = false;
+
+  // startIndices, hashValues, and links overhead
+  public static final int ENTRY_OVERHEAD_BYTES =
+    TypeHelper.getSize(TypeProtos.MajorType.newBuilder().setMinorType(MinorType.INT).build()) * 3;
 
   // TODO remove these defaults. We should require key sizes to be specified.
   private static final int DEFAULT_VAR_CHAR_SIZE = 8;
@@ -816,5 +820,4 @@ public abstract class HashTableTemplate implements HashTable {
   protected abstract int getHashBuild(@Named("incomingRowIdx") int incomingRowIdx, @Named("seedValue") int seedValue) throws SchemaChangeException;
 
   protected abstract int getHashProbe(@Named("incomingRowIdx") int incomingRowIdx, @Named("seedValue") int seedValue) throws SchemaChangeException;
-
 }

@@ -31,8 +31,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
-
 
 @Category(OperatorTest.class)
 public class TestHashJoinAdvanced extends JoinTestBase {

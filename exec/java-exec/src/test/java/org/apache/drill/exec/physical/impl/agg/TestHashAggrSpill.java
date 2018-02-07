@@ -135,7 +135,7 @@ public class TestHashAggrSpill extends DrillTest {
   @Test
   public void testHashAggrSecondaryTertiarySpill() throws Exception {
 
-    testSpill(58_000_000, 16, 3, 1, false, true, "SELECT empid_s44, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1100K` GROUP BY empid_s44, dept_i, branch_i",
+    testSpill(58_000_000, 16, 2, 1, false, true, "SELECT empid_s44, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1100K` GROUP BY empid_s44, dept_i, branch_i",
       1_100_000, 3, 4, 2, 2);
   }
 

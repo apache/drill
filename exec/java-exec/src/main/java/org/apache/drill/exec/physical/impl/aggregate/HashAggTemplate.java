@@ -25,7 +25,6 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
@@ -49,6 +48,7 @@ import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
+import org.apache.drill.exec.physical.impl.common.HashTableTemplate;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
@@ -106,7 +106,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private int earlyPartition = 0; // which partition to return early
   private boolean retrySameIndex = false; // in case put failed during 1st phase - need to output early, then retry
   private boolean useMemoryPrediction = false; // whether to use memory prediction to decide when to spill
-  private long esAccumulationBatchSize = 0; // used for adjusting #partitions and deciding when to spill
+  private long estAccumulationBatchSize = 0; // used for adjusting #partitions and deciding when to spill
   private long estAccumulationBatchRowWidth = 0; // the size of the output "row" (no extra columns)
   private long estBatchHolderValuesBatchSize = 0; // used for "reserving" memory for the Values batch to overcome an OOM
   private long estOutgoingBatchValuesSize = 0; // used for "reserving" memory for the Outgoing Output Values to overcome an OOM
@@ -210,19 +210,19 @@ public abstract class HashAggTemplate implements HashAggregator {
           // Create a type-specific ValueVector for this value
           vector = TypeHelper.getNewVector(outputField, allocator);
 
-          // Try to allocate space to store BATCH_SIZE records. Key stored at index i in HashTable has its workspace
+          // Try to allocate space to store MAX_BATCH_SIZE records. Key stored at index i in HashTable has its workspace
           // variables (such as count, sum etc) stored at index i in HashAgg. HashTable and HashAgg both have
           // BatchHolders. Whenever a BatchHolder in HashAgg reaches its capacity, a new BatchHolder is added to
-          // HashTable. If HashAgg can't store BATCH_SIZE records in a BatchHolder, it leaves empty slots in current
+          // HashTable. If HashAgg can't store MAX_BATCH_SIZE records in a BatchHolder, it leaves empty slots in current
           // BatchHolder in HashTable, causing the HashTable to be space inefficient. So it is better to allocate space
-          // to fit as close to as BATCH_SIZE records.
+          // to fit as close to as MAX_BATCH_SIZE records.
           if (vector instanceof FixedWidthVector) {
-            ((FixedWidthVector) vector).allocateNew(HashTable.BATCH_SIZE);
+            ((FixedWidthVector) vector).allocateNew(MAX_BATCH_SIZE);
           } else if (vector instanceof VariableWidthVector) {
             // TODO once varchars are no longer stored on heap while aggregating we will also have to account for their sizes here
             throw new IllegalStateException();
           } else if (vector instanceof ObjectVector) {
-            ((ObjectVector) vector).allocateNew(HashTable.BATCH_SIZE);
+            ((ObjectVector) vector).allocateNew(MAX_BATCH_SIZE);
           } else {
             vector.allocateNew();
           }
@@ -388,18 +388,20 @@ public abstract class HashAggTemplate implements HashAggregator {
     updateEstMaxBatchSize(incoming);
 
     // create "reserved memory" and adjust the memory limit down
-    reserveValueBatchMemory = reserveOutgoingMemory = estBatchHolderValuesBatchSize;
-    long newMemoryLimit = allocator.getLimit() - reserveValueBatchMemory - reserveOutgoingMemory ;
-    long memAvail = newMemoryLimit - allocator.getAllocatedMemory();
-    if ( memAvail <= 0 ) { throw new OutOfMemoryException("Too little memory available"); }
-    allocator.setLimit(newMemoryLimit);
+    if (!restoreReservedMemory()) {
+      throw new OutOfMemoryException("Too little memory available");
+    }
+
+    long memAvail = allocator.getLimit() - allocator.getAllocatedMemory();
+
+    logger.info("Available memory {}", memAvail);
 
     if ( !canSpill ) { // single phase, or spill disabled by configuation
       numPartitions = 1; // single phase should use only a single partition (to save memory)
     } else { // two phase
       // Adjust down the number of partitions if needed - when the memory available can not hold as
       // many batches (configurable option), plus overhead (e.g. hash table, links, hash values))
-      while ( numPartitions * ( esAccumulationBatchSize * minBatchesPerPartition + 2 * 1024 * 1024) > memAvail ) {
+      while (numPartitions * (estAccumulationBatchSize * minBatchesPerPartition) > memAvail) {
         numPartitions /= 2;
         if ( numPartitions < 2) {
           if (is2ndPhase) {
@@ -593,28 +595,36 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
     }
 
-    // This is the size of an accumulation batch. An accumulation batch includes the keys stored in the hashtable and the values stored in the BatchHolder
-    esAccumulationBatchSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estAccumulationBatchRowWidth * MAX_BATCH_SIZE), 1);
+    // Hash table overhead may double what is actually required.
+    long hashTableOverhead = RecordBatchSizer.multiplyByFactors(HashTableTemplate.ENTRY_OVERHEAD_BYTES * MAX_BATCH_SIZE);
+
+    // This is the size of an accumulation batch. An accumulation batch includes the keys stored in the hashtable and the values stored in the BatchHolder.
+    // It also includes the overhead of the links, indices, and hash values stored in the hashtable
+    estAccumulationBatchSize = RecordBatchSizer.multiplyByFactors(estAccumulationBatchRowWidth * MAX_BATCH_SIZE);
+    estAccumulationBatchSize += hashTableOverhead;
+    estAccumulationBatchSize = Math.max(estAccumulationBatchSize, 1);
     // WARNING! (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
     // Note: estBatchHolderValuesBatchSize cannot be 0 because a zero value for estBatchHolderValuesBatchSize will cause reserveValueBatchMemory to have a value of 0. And
     // a reserveValueBatchMemory value of 0 has multiple meanings in different contexts. So estBatchHolderValuesBatchSize has an enforced minimum value of 1, without this
-    // estValuesBatchsize could have a value of 0 in the case were there are no value columns and all the columns are key columns.
+    // estBatchHolderValuesBatchSize could have a value of 0 in the case were there are no value columns and all the columns are key columns.
 
-    // This includes the values stored in the BatchHolder
-    estBatchHolderValuesBatchSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estBatchHolderValuesRowWidth * MAX_BATCH_SIZE), 1);
+    // This includes the values stored in the BatchHolder and the has table overhead
+    estBatchHolderValuesBatchSize = RecordBatchSizer.multiplyByFactors(estBatchHolderValuesRowWidth * MAX_BATCH_SIZE);
+    estBatchHolderValuesBatchSize += hashTableOverhead;
+    estBatchHolderValuesBatchSize = Math.max(estBatchHolderValuesBatchSize, 1);
     // This includes the values stored in the outContainer. Note the phantom columns are not included in this size
     // because the out container does not have phantom columns, only the BatchHolder does. Also note that we are not
     // including the size of the key columns in this estimate because the key columns stored in the hash table are transferred
-    // to the out container, and the size of the key columns are already accounted for in esAccumulationBatchSize
-    estOutgoingBatchValuesSize = Math.max(RecordBatchSizer.multiplyByFragFactor(estOutputValuesRowWidth * MAX_BATCH_SIZE), 1);;
+    // to the out container, and the size of the key columns are already accounted for in estAccumulationBatchSize
+    estOutgoingBatchValuesSize = Math.max(RecordBatchSizer.multiplyByFactors(estOutputValuesRowWidth * MAX_BATCH_SIZE), 1);;
 
     if (logger.isTraceEnabled()) {
       logger.trace("{} phase. Estimated internal row width: {} Values row width: {} batch size: {}  memory limit: {}",
-        isTwoPhase ? (is2ndPhase ? "2nd" : "1st") : "Single", estAccumulationBatchRowWidth, estBatchHolderValuesRowWidth, esAccumulationBatchSize, allocator.getLimit());
+        isTwoPhase ? (is2ndPhase ? "2nd" : "1st") : "Single", estAccumulationBatchRowWidth, estBatchHolderValuesRowWidth, estAccumulationBatchSize, allocator.getLimit());
     }
 
-    if ( esAccumulationBatchSize > allocator.getLimit() ) {
-      logger.warn("HashAggregate: Estimated max batch size {} is larger than the memory limit {}", esAccumulationBatchSize,allocator.getLimit());
+    if ( estAccumulationBatchSize > allocator.getLimit() ) {
+      logger.warn("HashAggregate: Estimated max batch size {} is larger than the memory limit {}", estAccumulationBatchSize,allocator.getLimit());
     }
   }
 
@@ -667,21 +677,11 @@ public abstract class HashAggTemplate implements HashAggregator {
       // from one of the spill files (The spill case is handled differently here to avoid
       // collecting stats on the spilled records)
       //
-      long memAllocBeforeNext = allocator.getAllocatedMemory();
       if ( handlingSpills ) {
         outcome = incoming.next(); // get it from the SpilledRecordBatch
       } else {
         // Get the next RecordBatch from the incoming (i.e. upstream operator)
         outcome = outgoing.next(0, incoming);
-      }
-      long memAllocAfterNext = allocator.getAllocatedMemory();
-      long incomingBatchSize = memAllocAfterNext - memAllocBeforeNext;
-
-      // If incoming batch is bigger than our estimate - adjust the estimate to match
-      if ( esAccumulationBatchSize < incomingBatchSize) {
-        logger.debug("Found a bigger next {} batch: {} , prior estimate was: {}, mem allocated {}", handlingSpills ? "spill" : "incoming",
-            incomingBatchSize, esAccumulationBatchSize, memAllocAfterNext);
-        esAccumulationBatchSize = incomingBatchSize;
       }
 
       logger.debug(hashAggDebug1, "Received IterOutcome of {}", outcome);
@@ -757,12 +757,16 @@ public abstract class HashAggTemplate implements HashAggregator {
    *  Restore the reserve memory (both)
    *
    */
-  private void restoreReservedMemory() {
+  private boolean restoreReservedMemory() {
+    boolean success = true;
+
     if ( 0 == reserveOutgoingMemory ) { // always restore OutputValues first (needed for spilling)
       long memAvail = allocator.getLimit() - allocator.getAllocatedMemory();
       if ( memAvail > estOutgoingBatchValuesSize) {
         allocator.setLimit(allocator.getLimit() - estOutgoingBatchValuesSize);
         reserveOutgoingMemory = estOutgoingBatchValuesSize;
+      } else {
+        success = false;
       }
     }
     if ( 0 == reserveValueBatchMemory ) {
@@ -770,8 +774,12 @@ public abstract class HashAggTemplate implements HashAggregator {
       if ( memAvail > estBatchHolderValuesBatchSize) {
         allocator.setLimit(allocator.getLimit() - estBatchHolderValuesBatchSize);
         reserveValueBatchMemory = estBatchHolderValuesBatchSize;
+      } else {
+        success = false;
       }
     }
+
+    return success;
   }
   /**
    *   Allocate space for the returned aggregate columns
@@ -1033,10 +1041,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     BatchHolder bh = newBatchHolder();
     batchHolders[part].add(bh);
-    if (logger.isDebugEnabled()) {
-      logger.debug(hashAggDebug1, "HashAggregate: Added new batch; num batches = {}.", batchHolders[part].size());
-    }
-
+    logger.debug(hashAggDebug1, "HashAggregate: Added new batch; num batches = {}.", batchHolders[part].size());
     bh.setup();
   }
 
@@ -1194,16 +1199,12 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       if ( earlyOutput ) {
         logger.debug(hashAggDebugSpill, "HASH AGG: Finished (early) re-init partition {}, mem allocated: {}", earlyPartition, allocator.getAllocatedMemory());
-
         outBatchIndex[earlyPartition] = 0; // reset, for next time
         earlyOutput = false ; // done with early output
       }
       else if ( (partitionToReturn + 1 == numPartitions) && spilledPartitionsList.isEmpty() ) { // last partition ?
-
         allFlushed = true; // next next() call will return NONE
-
         logger.trace("HashAggregate: All batches flushed.");
-
         // cleanup my internal state since there is nothing more to return
         this.cleanup();
       }
@@ -1241,11 +1242,25 @@ public abstract class HashAggTemplate implements HashAggregator {
       errmsg = "Too little memory available to operator to facilitate spilling.";
     } else { // a bug ?
       errmsg = prefix + " OOM at " + (is2ndPhase ? "Second Phase" : "First Phase") + ". Partitions: " + numPartitions +
-      ". Estimated batch size: " + esAccumulationBatchSize + ". values size: " + estBatchHolderValuesBatchSize + ". Output alloc size: " + estOutgoingBatchValuesSize;
+      ". Estimated batch size: " + estAccumulationBatchSize + ". values size: " + estBatchHolderValuesBatchSize + ". Output alloc size: " + estOutgoingBatchValuesSize;
       if ( plannedBatches > 0 ) { errmsg += ". Planned batches: " + plannedBatches; }
       if ( rowsSpilled > 0 ) { errmsg += ". Rows spilled so far: " + rowsSpilled; }
     }
     errmsg += " Memory limit: " + allocator.getLimit() + " so far allocated: " + allocator.getAllocatedMemory() + ". ";
+    errmsg += "\nBatch holders in memory:\n";
+
+    // Print the number of batches we are holding in memory for each partition
+    for (int partition = 0; partition < batchHolders.length; partition++) {
+      List<BatchHolder> partitionHolders = batchHolders[partition];
+
+      int num = 0;
+
+      if (partitionHolders != null) {
+        num = partitionHolders.size();
+      }
+
+      errmsg += "Partition " + partition + " num batches: " + num + "\n";
+    }
 
     return errmsg;
   }
@@ -1335,8 +1350,8 @@ public abstract class HashAggTemplate implements HashAggregator {
         logger.trace("MEMORY CHECK AGG: allocated now {}, added {}, total (with HT) added {}", allocator.getAllocatedMemory(),
             aggValuesAddedMem, totalAddedMem);
         // resize the batch estimates if needed (e.g., varchars may take more memory than estimated)
-        if (totalAddedMem > esAccumulationBatchSize) {
-          logger.trace("Estimated memory needed {}, actual memory used {}", esAccumulationBatchSize, totalAddedMem);
+        if (totalAddedMem > estAccumulationBatchSize) {
+          logger.trace("Estimated memory needed {}, actual memory used {}", estAccumulationBatchSize, totalAddedMem);
           needToCheckIfSpillIsNeeded = true;
         }
         if (aggValuesAddedMem > estBatchHolderValuesBatchSize) {
@@ -1386,17 +1401,16 @@ public abstract class HashAggTemplate implements HashAggregator {
     long maxMemoryNeeded = 0;
     if ( !forceSpill ) { // need to check the memory in order to decide
       // calculate the (max) new memory needed now; plan ahead for at least MIN batches
-      maxMemoryNeeded = minBatchesPerPartition * Math.max(1, plannedBatches) * (esAccumulationBatchSize + MAX_BATCH_SIZE * (4 + 4 /* links + hash-values */));
+      maxMemoryNeeded = minBatchesPerPartition * Math.max(1, plannedBatches) * estAccumulationBatchSize;
       // Add the (max) size of the current hash table, in case it will double
       int maxSize = 1;
       for (int insp = 0; insp < numPartitions; insp++) {
         maxSize = Math.max(maxSize, batchHolders[insp].size());
       }
-      maxMemoryNeeded += MAX_BATCH_SIZE * 2 * 2 * 4 * maxSize; // 2 - double, 2 - max when %50 full, 4 - Uint4
 
       // log a detailed debug message explaining why a spill may be needed
       logger.trace("MEMORY CHECK: Allocated mem: {}, agg phase: {}, trying to add to partition {} with {} batches. " + "Max memory needed {}, Est batch size {}, mem limit {}",
-          allocator.getAllocatedMemory(), isTwoPhase ? (is2ndPhase ? "2ND" : "1ST") : "Single", currentPartition, batchHolders[currentPartition].size(), maxMemoryNeeded, esAccumulationBatchSize, allocator.getLimit());
+          allocator.getAllocatedMemory(), isTwoPhase ? (is2ndPhase ? "2ND" : "1ST") : "Single", currentPartition, batchHolders[currentPartition].size(), maxMemoryNeeded, estAccumulationBatchSize, allocator.getLimit());
     }
     //
     //   Spill if (forced, or) the allocated memory plus the memory needed exceed the memory limit.
