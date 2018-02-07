@@ -209,8 +209,6 @@ public abstract class HashAggTemplate implements HashAggregator {
           MaterializedField outputField = materializedValueFields[i];
           // Create a type-specific ValueVector for this value
           vector = TypeHelper.getNewVector(outputField, allocator);
-          // TODO once varchars are no longer stored on heap while aggregating we will also have to account for their sizes here
-          int columnSize = new RecordBatchSizer.ColumnSize(vector).getStdSize();
 
           // Try to allocate space to store BATCH_SIZE records. Key stored at index i in HashTable has its workspace
           // variables (such as count, sum etc) stored at index i in HashAgg. HashTable and HashAgg both have
@@ -221,8 +219,8 @@ public abstract class HashAggTemplate implements HashAggregator {
           if (vector instanceof FixedWidthVector) {
             ((FixedWidthVector) vector).allocateNew(HashTable.BATCH_SIZE);
           } else if (vector instanceof VariableWidthVector) {
-            // This case is never used .... a varchar falls under ObjectVector which is allocated on the heap !
-            ((VariableWidthVector) vector).allocateNew(columnSize, HashTable.BATCH_SIZE);
+            // TODO once varchars are no longer stored on heap while aggregating we will also have to account for their sizes here
+            throw new IllegalStateException();
           } else if (vector instanceof ObjectVector) {
             ((ObjectVector) vector).allocateNew(HashTable.BATCH_SIZE);
           } else {
