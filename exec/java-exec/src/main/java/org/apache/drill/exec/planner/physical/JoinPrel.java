@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,7 +27,6 @@ import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
@@ -47,13 +46,13 @@ import com.google.common.collect.Lists;
  * Base class for MergeJoinPrel and HashJoinPrel
  *
  */
-public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
+public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinPrel.class);
 
   protected JoinUtils.JoinCategory joincategory;
 
   public JoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType) throws InvalidRelException{
+      JoinRelType joinType) {
     super(cluster, traits, left, right, condition, joinType);
   }
 
@@ -68,12 +67,8 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
   }
 
   /**
-   * Check to make sure that the fields of the inputs are the same as the output field names.  If not, insert a project renaming them.
-   * @param implementor
-   * @param i
-   * @param offset
-   * @param input
-   * @return
+   * Check to make sure that the fields of the inputs are the same as the output field names.
+   * If not, insert a project renaming them.
    */
   public RelNode getJoinInput(int offset, RelNode input) {
     assert uniqueFieldNames(input.getRowType());
@@ -99,7 +94,8 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
       exprs.add(expr);
     }
 
-    RelDataType rowType = RexUtil.createStructType(input.getCluster().getTypeFactory(), exprs, outputFieldNames);
+    RelDataType rowType = RexUtil.createStructType(input.getCluster().getTypeFactory(),
+        exprs, outputFieldNames, null);
 
     ProjectPrel proj = new ProjectPrel(input.getCluster(), input.getTraitSet(), input, exprs, rowType);
 
@@ -116,7 +112,7 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
    * A join condition is built only for equality and IS NOT DISTINCT FROM comparisons. The difference is:
    * null == null is FALSE whereas null IS NOT DISTINCT FROM null is TRUE
    * For a use case of the IS NOT DISTINCT FROM comparison, see
-   * {@link org.apache.calcite.rel.rules.RemoveDistinctAggregateRule}
+   * {@link org.apache.calcite.rel.rules.AggregateRemoveRule}
    * @param conditions populated list of join conditions
    * @param leftFields join fields from the left input
    * @param rightFields join fields from the right input

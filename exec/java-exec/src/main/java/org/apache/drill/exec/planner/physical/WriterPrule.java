@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,11 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelFieldCollation;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.common.DrillWriterRelBase;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -73,7 +71,7 @@ public class WriterPrule extends Prule{
     for (int key : keys) {
       fields.add(new RelFieldCollation(key));
     }
-    return RelCollationImpl.of(fields);
+    return RelCollations.of(fields);
   }
 
   private DrillDistributionTrait getDistribution(List<Integer> keys) {

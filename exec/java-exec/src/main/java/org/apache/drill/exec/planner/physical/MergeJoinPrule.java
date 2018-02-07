@@ -19,11 +19,11 @@ package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
 
+import org.apache.calcite.rel.RelCollations;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -40,7 +40,8 @@ public class MergeJoinPrule extends JoinPruleBase {
 
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
-  final boolean isDist;
+  private final boolean isDist;
+
   private MergeJoinPrule(String name, RelOptRuleOperand operand, boolean isDist) {
     super(operand, name);
     this.isDist = isDist;
@@ -54,7 +55,7 @@ public class MergeJoinPrule extends JoinPruleBase {
   @Override
   public void onMatch(RelOptRuleCall call) {
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
-    final DrillJoinRel join = (DrillJoinRel) call.rel(0);
+    final DrillJoinRel join = call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
 
@@ -82,12 +83,12 @@ public class MergeJoinPrule extends JoinPruleBase {
     }
   }
 
-  private RelCollation getCollation(List<Integer> keys){
+  private RelCollation getCollation(List<Integer> keys) {
     List<RelFieldCollation> fields = Lists.newArrayList();
     for (int key : keys) {
       fields.add(new RelFieldCollation(key));
     }
-    return RelCollationImpl.of(fields);
+    return RelCollations.of(fields);
   }
 
 }

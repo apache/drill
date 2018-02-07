@@ -92,18 +92,14 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
    * @throws  AlreadyClosedSqlException  if ResultSet is closed
    * @throws  SQLException  if error in calling {@link #isClosed()}
    */
-  private void throwIfClosed() throws AlreadyClosedSqlException,
-                                      ExecutionCanceledSqlException,
-                                      SQLTimeoutException,
-                                      SQLException {
-    if ( isClosed() ) {
+  private void throwIfClosed() throws SQLException {
+    if (isClosed()) {
       if (cursor instanceof DrillCursor && hasPendingCancelationNotification) {
         hasPendingCancelationNotification = false;
         throw new ExecutionCanceledSqlException(
-            "SQL statement execution canceled; ResultSet now closed." );
-      }
-      else {
-        throw new AlreadyClosedSqlException( "ResultSet is already closed." );
+            "SQL statement execution canceled; ResultSet now closed.");
+      } else {
+        throw new AlreadyClosedSqlException("ResultSet is already closed.");
       }
     }
 
@@ -1142,16 +1138,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public AvaticaStatement getStatement() {
-    try {
-      throwIfClosed();
-    } catch (AlreadyClosedSqlException e) {
-      // Can't throw any SQLException because AvaticaConnection's
-      // getStatement() is missing "throws SQLException".
-      throw new RuntimeException(e.getMessage(), e);
-    } catch (SQLException e) {
-      throw new RuntimeException(e.getMessage(), e);
-    }
+  public AvaticaStatement getStatement() throws SQLException {
+    throwIfClosed();
     return super.getStatement();
   }
 

@@ -157,7 +157,7 @@ public class DrillConstExecutor implements RexExecutor {
             .message(message)
             .build(logger);
         }
-        reducedValues.add(rexBuilder.makeNullLiteral(sqlTypeName));
+        reducedValues.add(rexBuilder.makeNullLiteral(typeFactory.createSqlType(sqlTypeName)));
         continue;
       }
 
