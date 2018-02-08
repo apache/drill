@@ -61,7 +61,7 @@ public class FragmentsRunner {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentsRunner.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(FragmentsRunner.class);
 
-  private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
+  private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 30000;
 
   private final WorkerBee bee;
   private final UserClientConnection initiatingClient;
