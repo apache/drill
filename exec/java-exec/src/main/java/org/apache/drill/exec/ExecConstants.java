@@ -59,6 +59,8 @@ public final class ExecConstants {
   public static final String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
   public static final String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
+  public static final String FRAG_RUNNER_RPC_TIMEOUT = "drill.exec.rpc.fragrunner.timeout";
+  public static final PositiveLongValidator FRAG_RUNNER_RPC_TIMEOUT_VALIDATOR = new PositiveLongValidator(FRAG_RUNNER_RPC_TIMEOUT, Long.MAX_VALUE);
   public static final String TRACE_DUMP_DIRECTORY = "drill.exec.trace.directory";
   public static final String TRACE_DUMP_FILESYSTEM = "drill.exec.trace.filesystem";
   public static final String TEMP_DIRECTORIES = "drill.exec.tmp.directories";
