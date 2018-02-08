@@ -37,7 +37,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordBatch.class);
 
   // These resources are owned by this RecordBatch
-  private VectorContainer container;
+  protected VectorContainer container;
   private int currentContainerIndex;
   private int currentOutcomeIndex;
   private boolean isDone;
@@ -46,8 +46,8 @@ public class MockRecordBatch implements CloseableRecordBatch {
   private final List<VectorContainer> allTestContainers;
   private final List<IterOutcome> allOutcomes;
   private final FragmentContext context;
-  private final OperatorContext oContext;
-  private final BufferAllocator allocator;
+  protected final OperatorContext oContext;
+  protected final BufferAllocator allocator;
 
   public MockRecordBatch(FragmentContext context, OperatorContext oContext,
                          List<VectorContainer> testContainers, List<IterOutcome> iterOutcomes,
