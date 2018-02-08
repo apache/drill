@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Community Resources
+title: "Community Resources"
 ---
 
 ## User Resources

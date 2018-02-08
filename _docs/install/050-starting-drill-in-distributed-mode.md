@@ -1,6 +1,6 @@
 ---
-title: Starting Drill in Distributed Mode
-date: 2018-01-22 19:42:55 UTC
+title: "Starting Drill in Distributed Mode"
+date: 2018-02-08 00:38:56 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 

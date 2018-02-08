@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Mailing Lists
+title: "Mailing Lists"
 ---
 All communication related to the Apache Drill project happens on the mailing lists:
 

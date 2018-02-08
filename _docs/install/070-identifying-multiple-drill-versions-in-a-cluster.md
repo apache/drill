@@ -1,6 +1,6 @@
 ---
-title: Identifying Multiple Drill Versions in a Cluster
-date:  
+title: "Identifying Multiple Drill Versions in a Cluster"
+date: 2018-02-08 00:38:57 UTC
 parent: Install Drill
 ---
 
