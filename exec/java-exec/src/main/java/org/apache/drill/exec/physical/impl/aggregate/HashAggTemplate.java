@@ -394,8 +394,6 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     long memAvail = allocator.getLimit() - allocator.getAllocatedMemory();
 
-    logger.info("Available memory {}", memAvail);
-
     if ( !canSpill ) { // single phase, or spill disabled by configuation
       numPartitions = 1; // single phase should use only a single partition (to save memory)
     } else { // two phase
@@ -1309,6 +1307,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     } catch (RetryAfterSpillException re) {
       if ( ! canSpill ) { throw new OutOfMemoryException(getOOMErrorMsg("Can not spill")); }
+
       logger.trace("HT put failed with an OOM, trying to {} a partition and retry Hash Table put() again.",
             is1stPhase ? "early return" : "spill");
 
