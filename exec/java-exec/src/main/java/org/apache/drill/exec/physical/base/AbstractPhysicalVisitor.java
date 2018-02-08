@@ -34,6 +34,7 @@ import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.config.UnionAll;
+import org.apache.drill.exec.physical.config.UnnestPOP;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
 import org.apache.drill.exec.physical.config.Values;
 import org.apache.drill.exec.physical.config.WindowPOP;
@@ -172,6 +173,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   @Override
   public T visitProducerConsumer(ProducerConsumer op, X value) throws E {
     return visitOp(op, value);
+  }
+
+  @Override
+  public T visitUnnest(UnnestPOP unnest, X value) throws E {
+    return visitOp(unnest, value);
   }
 
   @Override
