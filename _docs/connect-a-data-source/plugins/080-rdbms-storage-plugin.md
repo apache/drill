@@ -1,13 +1,13 @@
 ---
 title: "RDBMS Storage Plugin"
-date: 2017-07-25 01:09:40 UTC
+date: 2018-02-08 02:32:56 UTC
 parent: "Connect a Data Source"
 ---
 Apache Drill supports querying a number of RDBMS instances. This allows you to connect your traditional databases to your Drill cluster so you can have a single view of both your relational and NoSQL datasources in a single system. 
 
 As with any source, Drill supports joins within and between all systems. Drill additionally has powerful pushdown capabilities with RDBMS sources. This includes support to push down join, where, group by, intersect and other SQL operations into a particular RDBMS source (as appropriate).
 
-### Using the RDBMS Storage Plugin
+## Using the RDBMS Storage Plugin
 
 Drill is designed to work with any relational datastore that provides a JDBC driver. Drill is actively tested with Postgres, MySQL, Oracle, MSSQL and Apache Derby. For each system, you will follow three basic steps for setup:
 
@@ -16,7 +16,7 @@ Drill is designed to work with any relational datastore that provides a JDBC dri
   3. Restart Drill. See [Starting Drill in Distributed Mode]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
   4. Add a new storage configuration to Drill through the Web Console. Example configurations for [Oracle](#Example-Oracle-Configuration), [SQL Server](#Example-SQL-Server-Configuration), [MySQL](#Example-MySQL-Configuration) and [Postgres](#Example-Postgres-Configuration) are provided below.
   
-## Example: Working with MySQL
+**Example: Working with MySQL**
 
 Drill communicates with MySQL through the JDBC driver using the configuration that you specify in the Web Console or through the [REST API]({{site.baseurl}}/docs/plugin-configuration-basics/#storage-plugin-rest-api).  
 
@@ -62,7 +62,7 @@ You can use the performance_schema database, which is installed with MySQL to qu
 ## Example Configurations
 
   
-### Example Oracle Configuration
+**Example Oracle Configuration**
 
 Download and install Oracle's Thin [ojdbc7.12.1.0.2.jar](http://www.oracle.com/technetwork/database/features/jdbc/default-2280470.html) driver and copy it to all nodes in your cluster.
 
@@ -73,7 +73,7 @@ Download and install Oracle's Thin [ojdbc7.12.1.0.2.jar](http://www.oracle.com/t
       url:"jdbc:oracle:thin:user/password@1.2.3.4:1521/ORCL"
     }
 
-### Example SQL Server Configuration
+**Example SQL Server Configuration**
 
 For SQL Server, Drill has been tested with Microsoft's  [sqljdbc41.4.2.6420.100.jar](https://www.microsoft.com/en-US/download/details.aspx?id=11774) driver. Copy this jar file to all Drillbits. 
 
@@ -88,7 +88,7 @@ For SQL Server, Drill has been tested with Microsoft's  [sqljdbc41.4.2.6420.100.
       password:"password"
     }
 
-### Example MySQL Configuration
+**Example MySQL Configuration**
 
 For MySQL, Drill has been tested with MySQL's [mysql-connector-java-5.1.37-bin.jar](http://dev.mysql.com/downloads/connector/j/) driver. Copy this to all nodes.
 
@@ -99,9 +99,9 @@ For MySQL, Drill has been tested with MySQL's [mysql-connector-java-5.1.37-bin.j
       url:"jdbc:mysql://1.2.3.4",
       username:"user",
       password:"password"
-    }
+    }  
 
-### Example Postgres Configuration
+**Example Postgres Configuration**
 
 For Postgres, Drill has been tested with Postgres's [9.1-901-1.jdbc4](http://central.maven.org/maven2/org/postgresql/postgresql/) driver (any recent driver should work). Copy this driver file to all nodes.
 

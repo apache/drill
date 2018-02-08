@@ -1,6 +1,6 @@
 ---
 title: "OpenTSDB Storage Plugin"
-date: 2018-02-06 21:49:40 UTC
+date: 2018-02-08 02:32:57 UTC
 parent: "Connect a Data Source"
 ---
 
@@ -12,8 +12,9 @@ The following sections describe how to enable the OpenTSDB storage plugin in Dri
 
 ##Enabling the OpenTSDB Storage Plugin  
 
-To enable the OpenTSDB storage plugin, enter the following URL in the address bar of your browser to access the Storage page in the Drill Web Console:
-http://<drill-node-ip-address>:8047/storage/
+To enable the OpenTSDB storage plugin, enter the following URL in the address bar of your browser to access the Storage page in the Drill Web Console:  
+
+       http://<drill-node-ip-address>:8047/storage/
 
 In the Disabled Storage Plugins section, click **Enable** next to OpenTSDB. OpenTSDB moves to the Enabled Storage Plugins section. Click **Update** to see the default configuration:
 
@@ -48,6 +49,7 @@ The following table lists the required request parameters:
 ###Optional Request Parameters  
 
 The following table lists optional request parameters:  
+  
 | **Name**       | **Data Type**       | **Description**                                                                                                                                                                                                                                                          |
 |------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | downsample | string          | An optional downsampling function to reduce the   amount of data returned.                                                                                                                                                                                           |

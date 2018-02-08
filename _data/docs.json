@@ -2467,14 +2467,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "OpenTSDB Storage Plugin", 
+                    "next_url": "/docs/opentsdb-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "S3 Storage Plugin", 
                     "previous_url": "/docs/s3-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
                     "title": "HTTPD Storage Plugin", 
                     "url": "/docs/httpd-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "HTTPD Storage Plugin", 
+                    "previous_url": "/docs/httpd-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
+                    "title": "OpenTSDB Storage Plugin", 
+                    "url": "/docs/opentsdb-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -4268,8 +4285,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ODBC/JDBC Interfaces", 
-            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "next_title": "OpenTSDB Storage Plugin", 
+            "next_url": "/docs/opentsdb-storage-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "S3 Storage Plugin", 
             "previous_url": "/docs/s3-storage-plugin/", 
@@ -6602,8 +6619,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "HTTPD Storage Plugin", 
-            "previous_url": "/docs/httpd-storage-plugin/", 
+            "previous_title": "OpenTSDB Storage Plugin", 
+            "previous_url": "/docs/opentsdb-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -6649,6 +6666,23 @@
             "relative_path": "_docs/sql-reference/sql-commands/086-order-by-clause.md", 
             "title": "ORDER BY Clause", 
             "url": "/docs/order-by-clause/"
+        }, 
+        "OpenTSDB Storage Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ODBC/JDBC Interfaces", 
+            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "HTTPD Storage Plugin", 
+            "previous_url": "/docs/httpd-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
+            "title": "OpenTSDB Storage Plugin", 
+            "url": "/docs/opentsdb-storage-plugin/"
         }, 
         "Operators": {
             "breadcrumbs": [
@@ -15406,14 +15440,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "OpenTSDB Storage Plugin", 
+                    "next_url": "/docs/opentsdb-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "S3 Storage Plugin", 
                     "previous_url": "/docs/s3-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
                     "title": "HTTPD Storage Plugin", 
                     "url": "/docs/httpd-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "HTTPD Storage Plugin", 
+                    "previous_url": "/docs/httpd-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
+                    "title": "OpenTSDB Storage Plugin", 
+                    "url": "/docs/opentsdb-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -16038,8 +16089,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "HTTPD Storage Plugin", 
-            "previous_url": "/docs/httpd-storage-plugin/", 
+            "previous_title": "OpenTSDB Storage Plugin", 
+            "previous_url": "/docs/opentsdb-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
