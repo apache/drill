@@ -116,10 +116,12 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
       // for every batch on the right
       for (; nextRightBatchToProcess < rightCounts.size(); nextRightBatchToProcess++) {
         int rightRecordCount = rightCounts.get(nextRightBatchToProcess);
+        // Since right container is a hyper container, in doEval generated code it expects the
+        // batch index in the 2 MSBytes of the index variable. See DRILL-6128 for details
+        final int currentRightBatchIndex = nextRightBatchToProcess << 16;
         // for every record in right batch
         for (; nextRightRecordToProcess < rightRecordCount; nextRightRecordToProcess++) {
-
-          if (doEval(nextLeftRecordToProcess, nextRightBatchToProcess, nextRightRecordToProcess)) {
+          if (doEval(nextLeftRecordToProcess, currentRightBatchIndex, nextRightRecordToProcess)) {
             // project records from the left and right batches
             emitLeft(nextLeftRecordToProcess, outputIndex);
             emitRight(nextRightBatchToProcess, nextRightRecordToProcess, outputIndex);

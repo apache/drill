@@ -20,11 +20,21 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -69,6 +79,7 @@ public class TestNestedLoopJoin extends JoinTestBase {
   @BeforeClass
   public static void setupTestFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "parquet"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("join", "multiple"));
   }
 
   @Test
@@ -270,6 +281,7 @@ public class TestNestedLoopJoin extends JoinTestBase {
           .baselineValues(24, 7, 31)
           .build();
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
     }
   }
@@ -291,6 +303,7 @@ public class TestNestedLoopJoin extends JoinTestBase {
           .baselineValues(24, 7, 31)
           .build();
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
     }
   }
@@ -305,6 +318,7 @@ public class TestNestedLoopJoin extends JoinTestBase {
           "possibly due to either a cartesian join or an inequality join"));
       throw e;
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
     }
   }
@@ -316,6 +330,7 @@ public class TestNestedLoopJoin extends JoinTestBase {
       test(DISABLE_JOIN_OPTIMIZATION);
       testPlanMatchingPatterns(testNlJoinWithLargeRightInput, new String[]{NLJ_PATTERN}, new String[]{});
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
       test(RESET_JOIN_OPTIMIZATION);
     }
@@ -353,6 +368,46 @@ public class TestNestedLoopJoin extends JoinTestBase {
       throw e;
     } finally {
       resetJoinOptions();
+    }
+  }
+
+  /**
+   * Validates correctness of NestedLoopJoin when right side has multiple batches.
+   * See DRILL-6128 for details
+   * @throws Exception
+   */
+  @Test
+  public void testNLJoinCorrectnessRightMultipleBatches() throws Exception {
+    try {
+      test(DISABLE_NLJ_SCALAR);
+      test(DISABLE_JOIN_OPTIMIZATION);
+      setSessionOption(ExecConstants.SLICE_TARGET, 1);
+      test(DISABLE_HJ);
+      test(DISABLE_MJ);
+
+      final String query = "SELECT l.id_left AS id_left, r.id_right AS id_right FROM dfs.`join/multiple/left` l left " +
+        "join dfs.`join/multiple/right` r on l.id_left = r.id_right";
+
+      Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
+      typeMap.put(TestBuilder.parsePath("id_left"), Types.optional(TypeProtos.MinorType.BIGINT));
+      typeMap.put(TestBuilder.parsePath("id_right"), Types.optional(TypeProtos.MinorType.BIGINT));
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .csvBaselineFile("join/expected/nestedLoopJoinBaseline.csv")
+        .baselineColumns("id_left", "id_right")
+        .baselineTypes(typeMap)
+        .go();
+
+    } catch (Exception e) {
+      fail();
+    } finally {
+      test(ENABLE_NLJ_SCALAR);
+      test(RESET_JOIN_OPTIMIZATION);
+      test(ENABLE_HJ);
+      test(ENABLE_MJ);
+      setSessionOption(ExecConstants.SLICE_TARGET, 100000);
     }
   }
 }
