@@ -442,6 +442,9 @@ public class RepeatedListVector extends AbstractContainerVector
 
   @Override
   public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
     return delegate.getPayloadByteCount(valueCount);
   }
 

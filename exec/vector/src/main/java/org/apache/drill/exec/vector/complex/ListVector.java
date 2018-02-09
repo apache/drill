@@ -333,6 +333,10 @@ public class ListVector extends BaseRepeatedValueVector {
 
   @Override
   public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
     return offsets.getPayloadByteCount(valueCount) + bits.getPayloadByteCount(valueCount) +
            super.getPayloadByteCount(valueCount);
   }

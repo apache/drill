@@ -79,7 +79,9 @@ public final class ExecConstants {
   public static final String SPILL_DIRS = "drill.exec.spill.directories";
 
   public static final String OUTPUT_BATCH_SIZE = "drill.exec.memory.operator.output_batch_size";
-  public static final LongValidator OUTPUT_BATCH_SIZE_VALIDATOR = new RangeLongValidator(OUTPUT_BATCH_SIZE, 1024, 512 * 1024 * 1024);
+  // Output Batch Size in Bytes. We have a small lower bound so we can test with unit tests without the
+  // need to produce very large batches that take up lot of memory.
+  public static final LongValidator OUTPUT_BATCH_SIZE_VALIDATOR = new RangeLongValidator(OUTPUT_BATCH_SIZE, 128, 512 * 1024 * 1024);
 
   // External Sort Boot configuration
 
