@@ -1,6 +1,6 @@
 ---
 title: "Configuring Tibco Spotfire Server with Drill"
-date:  
+date: 2018-02-09 00:16:01 UTC
 parent: "Using Drill with BI Tools"
 ---
 
@@ -13,9 +13,8 @@ Complete the following steps to configure and use Apache Drill with TSS:
 3. Configure Drill data sources with Tibco Spotfire Desktop and Information Designer.
 4. Query and analyze various data formats with Tibco Spotfire and Drill.
 
-----------
 
-### Step 1: Install and Configure the Drill JDBC Driver 
+## Step 1: Install and Configure the Drill JDBC Driver 
 
 Drill provides standard JDBC connectivity, making it easy to integrate data exploration capabilities on complex, schema-less data sets. Tibco Spotfire Server (TSS) requires Drill 1.0 or later, which incudes the JDBC driver. The JDBC driver is bundled with the Drill configuration files, and it is recommended that you use the JDBC driver that is shipped with the specific Drill version.
 
@@ -41,9 +40,8 @@ Complete the following steps to install and configure the JDBC driver for TSS:
    For Windows systems, the hosts file is located here: 
    `%WINDIR%\system32\drivers\etc\hosts`
 
-----------
 
-### Step 2: Configure the Drill Data Source Template in TSS
+## Step 2: Configure the Drill Data Source Template in TSS
 
 The Drill Data Source template can now be configured with the TSS Configuration Tool. The Windows-based TSS Configuration Tool is recommended. If TSS is installed on a Linux system, you also need to install TSS on a small Windows-based system so you can utilize the Configuration Tool. In this case, it is also recommended that you install the Drill JDBC driver on the TSS Windows system.
 
@@ -58,7 +56,7 @@ The Drill Data Source template can now be configured with the TSS Configuration 
 9. A response window is displayed to state that the configuration was successfully uploaded to TSS. Click **OK**. ![drill query flow]({{ site.baseurl }}/docs/img/spotfire-server-importconfig.png)
 10. Restart TSS to enable it to use the Drill data source template.
    
-#### XML Template
+**XML Template**
 
 Make sure that you enter the correct ZooKeeper node name instead of `<zk-node>`, as well as the correct Drill cluster name instead of `<drill-cluster-name>` in the example below. This is just a template that will appear whenever a data source is configured. The hostnames of ZooKeeper nodes and the Drill cluster name can be found in the `$DRILL_HOME/conf/drill-override.conf` file on any of the Drill nodes in the cluster.
      
@@ -96,9 +94,8 @@ Make sure that you enter the correct ZooKeeper node name instead of `<zk-node>`,
       </jdbc-type-settings>
 
 
-----------
 
-### Step 3: Configure Drill Data Sources with Tibco Spotfire Desktop 
+## Step 3: Configure Drill Data Sources with Tibco Spotfire Desktop 
 
 To configure Drill data sources in TSS, you need to use the Tibco Spotfire Desktop client.
 
@@ -111,9 +108,8 @@ To configure Drill data sources in TSS, you need to use the Tibco Spotfire Deskt
 7. In the Save As window, verify the name and the folder where you want to save the new data source in TSS. Click **Save** when done. TSS will now validate the information and save the new data source in TSS.
 8. When the data source is saved, it will appear in the **Data Sources** tab, and you will be able to navigate the schema. ![drill query flow]({{ site.baseurl }}/docs/img/spotfire-server-datasources-tab.png)
 
-----------
 
-### Step 4: Query and Analyze the Data
+## Step 4: Query and Analyze the Data
 
 After the Drill data source has been configured in the Information Designer, the information elements can be defined. 
 

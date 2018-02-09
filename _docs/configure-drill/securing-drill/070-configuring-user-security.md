@@ -1,13 +1,14 @@
 ---
 title: "Configuring User Security"
-date: 2018-02-08 02:32:55 UTC
+date: 2018-02-09 00:15:58 UTC
 parent: "Securing Drill"
 ---
 ## Authentication
 
 Authentication is the process of establishing confidence of authenticity. A Drill client user is authenticated when a drillbit process running in a Drill cluster confirms the identity it is presented with.  Drill supports several authentication mechanisms through which users can prove their identity before accessing cluster data: 
 
-* **Kerberos** - See [Configuring Kerberos Security]({{site.baseurl}}/docs/configuring-kerberos-security/).
+* **Kerberos** - 
+* See [Configuring Kerberos Security]({{site.baseurl}}/docs/configuring-kerberos-security/).
 * **Plain** [also known as basic authentication (auth), which is username and password-based authentication, through the Linux Pluggable Authentication Module (PAM)] - See [Configuring Plain Security]({{site.baseurl}}/docs/configuring-plain-security/).
 * **Custom authenticators** - See [Creating Custom Authenticators]({{site.baseurl}}/docs/creating-custom-authenticators).
 
@@ -35,7 +36,7 @@ The following table shows Drill client version compatibility with secure Drill c
 
 ![compatEncrypt]({{site.baseurl}}/docs/img/client-encrypt-compatibility.png)
 
-See *Client Encryption* in [Configuring Kerberos Security]({{site.baseurl}}/docs/server-communication-paths/#configuring-kerberos-security#client-encryption) for the client connection string parameter, `sasl_encrypt` usage information.
+See *Client Encryption* in [Configuring Kerberos Security]({{site.baseurl}}/docs/configuring-kerberos-authentication/#client-encryption) for the client connection string parameter, `sasl_encrypt` usage information.
 
 ## Impersonation
 

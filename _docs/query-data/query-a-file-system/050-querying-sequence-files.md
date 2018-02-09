@@ -1,32 +1,27 @@
 ---
 title: "Querying Sequence Files"
-date: 2016-11-21 22:14:46 UTC
+date: 2018-02-09 00:16:04 UTC
 parent: "Querying a File System"
 ---
 
-Sequence files are flat files storing binary key value pairs.
-Drill projects sequence files as table with two columns 'binary_key', 'binary_value'.
+Sequence files are flat files that store binary key value pairs.
+Drill projects sequence files as a table with two columns 'binary_key', 'binary_value'.
 
 
-### Querying sequence file.
+## Querying a Sequence File
 
-Start drill shell
+Start the Drill shell and enter your query.
 
-        SELECT *
-        FROM dfs.tmp.`simple.seq`
-        LIMIT 1;
+        SELECT * FROM dfs.tmp.`simple.seq` LIMIT 1;
         +--------------+---------------+
         |  binary_key  | binary_value  |
         +--------------+---------------+
         | [B@70828f46  | [B@b8c765f    |
         +--------------+---------------+
 
-Since simple.seq contains byte serialized strings as keys and values, we can convert them to strings.
+Since simple.seq contains byte serialized strings as keys and values, you can convert them to strings.
 
-        SELECT CONVERT_FROM(binary_key, 'UTF8'), CONVERT_FROM(binary_value, 'UTF8')
-        FROM dfs.tmp.`simple.seq`
-        LIMIT 1
-        ;
+        SELECT CONVERT_FROM(binary_key, 'UTF8'), CONVERT_FROM(binary_value, 'UTF8') FROM dfs.tmp.`simple.seq` LIMIT 1;
         +-----------+-------------+
         |  EXPR$0   |   EXPR$1    |
         +-----------+-------------+

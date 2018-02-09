@@ -1,6 +1,6 @@
 ---
 title: "Using Qlik Sense with Drill"
-date:  
+date: 2018-02-09 00:16:01 UTC
 parent: "Using Drill with BI Tools"
 ---
 You can use the Qlik Sense BI tool with Apache Drill, the SQL query engine for Big Data exploration, to access and analyze structured and semi-structured data in multiple data stores.  
@@ -15,16 +15,14 @@ To use Qlik Sense with Apache Drill, complete the following steps:
 4.	Select tables and load the data model.
 5.	Analyze data with Qlik Sense and Drill.  
 
-**Prerequisites**  
+##Prerequisites  
  
 *  Apache Drill installed. See [Install Drill]({{site.baseurl}}/docs/install-drill/).  
 *  Qlik Sense installed. See [Qlik Sense](http://www.qlik.com/us/explore/products/sense).
 
 
-----------
 
-
-### Step 1: Install and Configure the Drill ODBC Driver 
+## Step 1: Install and Configure the Drill ODBC Driver 
 
 Drill uses standard ODBC connectivity to provide easy data exploration capabilities on complex, schema-less data sets. Verify that the ODBC driver version that you download correlates with the Apache Drill version that you use. Ideally, you should upgrade to the latest version of Apache Drill and the MapR Drill ODBC Driver. 
 
@@ -34,10 +32,9 @@ Complete the following steps to install and configure the driver:
 2. [Install the driver]({{site.baseurl}}/docs/installing-the-driver-on-windows). 
 3. [Configure ODBC]({{site.baseurl}}/docs/configuring-odbc-on-windows).
 
-----------
 
 
-### Step 2: Configure a Connection in Qlik Sense  
+## Step 2: Configure a Connection in Qlik Sense  
 Once you create an ODBC DSN, it shows up as another option when you create a connection from a new and/or existing Qlik Sense application. The steps for creating a connection from an application are the same in Qlik Sense Desktop and Qlik Sense Server. 
  
 Complete the following steps to configure a Drill data connection: 
@@ -47,9 +44,8 @@ Complete the following steps to configure a Drill data connection:
 3. Click either the **User** or **System DSN** button, depending on whether the DSN was created as a User or System DSN.
 4. Select the appropriate DSN and provide the credentials, and name the connection accordingly.  
 ![]({{ site.baseurl }}/docs/img/step3_img1.png)
-
-----------  
-### Step 3: Authenticate  
+ 
+## Step 3: Authenticate  
 After providing the credentials and saving the connection, click **Select** in the new connection to trigger the authentication against Drill.  
 
 ![]({{ site.baseurl }}/docs/img/step4_img1.png)  
@@ -61,10 +57,9 @@ Based on the user’s credentials, security and filtration are applied according
 While an Executive may have access to more tables and more fields per table.  
 
 ![]({{ site.baseurl }}/docs/img/step4_img3.png)
+ 
 
-----------  
-
-### Step 4: Select Tables and Load the Data Model  
+## Step 4: Select Tables and Load the Data Model  
 
 Explore the various tables available in Drill, and select the tables of interest. For each table selected, Qlik Sense shows a preview of the logic used for the table.  
 
@@ -92,10 +87,9 @@ When the data model is complete, click **Load Data**. Verify that the load is co
 If a Direct Discovery is used, the syntax of the script, as well as the messages that Qlik Sense displays while loading the data model vary slightly.  
 
 ![]({{ site.baseurl }}/docs/img/step5_img5.png)  
+ 
 
-----------  
-
-### Step 5: Analyze Data with Qlik Sense and Drill  
+## Step 5: Analyze Data with Qlik Sense and Drill  
 
 After the data model is loaded into the application, use Qlik Sense to build a wide range of visualizations on top of the data that Drill delivers via ODBC. Qlik Sense specializes in self-service data visualization at the point of decision.  
 
@@ -105,9 +99,9 @@ If you use Direct Discovery to build the application, the application becomes a 
 
 ![]({{ site.baseurl }}/docs/img/step6_img2.png)
   
-----------
 
-### Summary 
+
+## Summary 
 Together, Drill and Qlik Sense can provide a wide range of solutions that enable organizations to analyze all of their data and efficiently find solutions to various business problems.
  
 To continue exploring Qlik Sense and download Qlik Sense Desktop, visit   

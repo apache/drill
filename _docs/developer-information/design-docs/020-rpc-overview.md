@@ -1,6 +1,6 @@
 ---
 title: "RPC Overview"
-date: 2017-08-07 19:02:50 UTC
+date: 2018-02-09 00:16:00 UTC
 parent: "Design Docs"
 ---
 Drill leverages the Netty 4 project as an RPC underlayment. From there, we
@@ -34,7 +34,6 @@ The following diagram shows the existing handlers as well as the new handlers ad
 
 ![drillpipeline]({{site.baseurl}}/docs/img/drill-channel-pipeline-with-handlers.png)  
 
-######Drill Channel Pipeline with Handlers
 
 
 

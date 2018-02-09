@@ -1,6 +1,6 @@
 ---
 title: "Supported SQL Commands"
-date: 2018-02-08 00:38:57 UTC
+date: 2018-02-09 00:16:05 UTC
 parent: "SQL Commands"
 ---
 The following table provides a list of the SQL commands that Drill supports,
@@ -26,4 +26,4 @@ with their descriptions and example syntax:
 | [SHOW FILES]({{site.baseurl}}/docs/show-files)                           | Returns a list of files in a file system schema.                                                                                                                                                                                                     | SHOW FILES IN&#124;FROM filesystem.\`schema_name`;                                                                 |
 | [SHOW SCHEMAS]({{site.baseurl}}/docs/show-databases-and-show-schemas)    | Returns a list of available schemas. Equivalent to SHOW DATABASES.                                                                                                                                                                                   | SHOW SCHEMAS;                                                                                                      |
 | [SHOW TABLES]({{site.baseurl}}/docs/show-tables)                         | Returns a list of tables and views.                                                                                                                                                                                                                  | SHOW TABLES;                                                                                                       |
-| [USE]({{site.baseurl}}/docs/use)                                         | Change to a particular schema. When you opt to use a particular schema, Drill issues queries on that schema only.                                                                                                                                    | USE schema_name;                                                                                                   |                                                                                                 |
+| [USE]({{site.baseurl}}/docs/use)                                         | Change to a particular schema. When you opt to use a particular schema, Drill issues queries on that schema only.                                                                                                                                    | USE schema_name;                                                                                                   |                                                                                                

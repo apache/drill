@@ -1,9 +1,9 @@
 ---
 title: "Drill Plan Syntax"
-date:  
+date: 2018-02-09 00:15:59 UTC
 parent: "Design Docs"
 ---
-### Whats the plan?
+## Whats the plan?
 
 This section is about the end-to-end plan flow for Drill. The incoming query
 to Drill can be a SQL 2003 query/DrQL or MongoQL. The query is converted to a

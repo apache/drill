@@ -1,6 +1,6 @@
 ---
 title: "SHOW TABLES"
-date:  
+date: 2018-02-09 00:16:06 UTC
 parent: "SQL Commands"
 ---
 The SHOW TABLES command returns a list of views created within a schema. It
@@ -27,7 +27,7 @@ In this example, “`myviews`” is a workspace created within the
 When you use a particular schema and then issue the SHOW TABLES command, Drill
 returns the tables and views within that schema.
 
-#### Limitations
+## Limitations
 
   * You can create and query tables within the file system, however Drill does not return these tables when you issue the SHOW TABLES command. You can issue the [SHOW FILES ]({{ site.baseurl }}/docs/show-files-command)command to see a list of all files, tables, and views, including those created in Drill. 
 

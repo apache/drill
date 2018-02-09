@@ -1,6 +1,6 @@
 ---
 title: "Text Files: CSV, TSV, PSV"
-date: 2016-03-21 19:27:17 UTC
+date: 2018-02-09 00:15:59 UTC
 parent: "Data Sources and File Formats"
 ---
 
@@ -10,7 +10,7 @@ Best practices for reading text files are:
 * Cast data
 * Use a distributed file system  
 
-### Select Data from Particular Columns
+## Select Data from Particular Columns
 
 Converting text files to another format, such as Parquet, using the CTAS command and a SELECT * statement is not recommended. Instead, you should select data from particular columns. If your text files have no headers, use the [COLUMN[n] syntax]({{site.baseurl}}/docs/querying-plain-text-files), and then assign meaningful column names using aliases. For example:
 
@@ -26,7 +26,7 @@ If your text files have headers, you can enable extractHeader and select particu
     username, CAST(registration_date AS TIMESTAMP) AS registration_date
     FROM `users.csv1`;
 
-### Cast data
+## Cast Data
 
 You can also improve performance by casting the VARCHAR data in a text file to INT, FLOAT, DATETIME, and so on when you read the data from a text file. Drill performs better reading fixed-width than reading VARCHAR data. 
 
@@ -44,10 +44,11 @@ Text files that include empty strings might produce unacceptable results. Common
           FROM `test.csv`; 
 
 
-### Use a Distributed File System
+## Use a Distributed File System
 Using a distributed file system, such as HDFS, instead of a local file system to query files improves performance because Drill attempts to split files on block boundaries.
 
-## Configuring Drill to Read Text Files
+**Configuring Drill to Read Text Files** 
+
 In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/docs/plugin-configuration-basics/#list-of-attributes-and-definitions) that affect how Drill reads CSV, TSV, PSV (comma-, tab-, pipe-separated) files:  
 
 * comment  
@@ -59,7 +60,8 @@ In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/d
 
 Set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default) before attempting to use these attributes. 
 
-### Using Quotation Marks
+**Using Quotation Marks** 
+
 CSV files typically enclose text fields in double quotation marks, and Drill treats the double quotation mark in CSV files as a special character accordingly. By default, Drill treats double quotation marks as a special character in TSV files also. If you want Drill *not* to treat double quotation marks as a special character, configure the storage plugin to set the `quote` attribute to the unicode null `"\u0000"`. For example:
 
        . . .
@@ -75,10 +77,11 @@ CSV files typically enclose text fields in double quotation marks, and Drill tre
 
 As mentioned previously, set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default).
 
-## Examples of Querying Text Files
+**Examples of Querying Text Files **
+
 The examples in this section show the results of querying CSV files that use and do not use a header, include comments, and use an escape character:
 
-### Not Using a Header in a File
+**Not Using a Header in a File**
 
     "csv": {
       "type": "text",
@@ -105,7 +108,7 @@ The examples in this section show the results of querying CSV files that use and
     +------------------------+
     7 rows selected (0.112 seconds)
     
-### Using a Header in a File
+**Using a Header in a File**
 
     "csv": {
       "type": "text",
@@ -133,7 +136,7 @@ The examples in this section show the results of querying CSV files that use and
     +-------+------+------+------+
     7 rows selected (0.12 seconds)
 
-### File with no Header
+**File with no Header**
 
     "csv": {
       "type": "text",
@@ -161,7 +164,7 @@ The examples in this section show the results of querying CSV files that use and
     +------------------------+
     7 rows selected (0.112 seconds)
 
-### Escaping a Character in a File
+**Escaping a Character in a File**
 
 ![CSV with escape]({{ site.baseurl }}/docs/img/csv_with_escape.png)
 
@@ -179,7 +182,7 @@ The examples in this section show the results of querying CSV files that use and
     +------------------------------------------------------------------------+
     7 rows selected (0.104 seconds)
 
-### Adding Comments to a File
+**Adding Comments to a File**
 
 ![CSV with comments]({{ site.baseurl }}/docs/img/csv_with_comments.png)
 
@@ -198,11 +201,13 @@ The examples in this section show the results of querying CSV files that use and
     7 rows selected (0.111 seconds)
 
 ## Strategies for Using Attributes
+
 The attributes, such as skipFirstLine, apply to all workspaces defined in a storage plugin. A typical use case defines separate storage plugins for different root directories to query the files stored below the directory. An alternative use case defines multiple formats within the same storage plugin and names target files using different extensions to match the formats.
 
 You can deal with a mix of text files with and without headers either by creating two separate format plugins or by creating two format plugins within the same storage plugin. The former approach is typically easier than the latter.
 
-### Creating Two Separate Storage Plugin Configurations
+**Creating Two Separate Storage Plugin Configurations**
+
 A storage plugin configuration defines a root directory that Drill targets. You can use a different configuration for each root directory that sets attributes to match the files stored below that directory. All files can use the same extension, such as .csv, as shown in the following example:
 
 Storage Plugin A
@@ -230,7 +235,8 @@ Storage Plugin B
       "delimiter": ","
     },
 
-### Creating One Storage Plugin Configuration to Handle Multiple Formats
+**Creating One Storage Plugin Configuration to Handle Multiple Formats**  
+
 You can use a different extension for files with and without a header, and use a storage plugin that looks something like the following example. This method requires renaming some files to use the csv2 extension.
 
     "csv": {
@@ -255,7 +261,7 @@ You can use a different extension for files with and without a header, and use a
 
 A common use case when working with Hadoop is to store and query text files, such as CSV and TSV. To get better performance and efficient storage, you convert these files into Parquet. You can use code to achieve this, as you can see in the [ConvertUtils](https://github.com/Parquet/parquet-compatibility/blob/master/parquet-compat/src/test/java/parquet/compat/test/ConvertUtils.java) sample/test class. A simpler way to convert these text files to Parquet is to query the text files using Drill, and save the result to Parquet files.
 
-### How to Convert CSV to Parquet
+**How to Convert CSV to Parquet**
 
 This example uses the [Passenger Dataset](http://media.flysfo.com/media/sfo/media/air-traffic/Passenger_4.zip) from SFO Air Traffic Statistics.
 

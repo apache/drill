@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: 2017-11-14 15:31:15 UTC
+date: 2018-02-09 00:16:05 UTC
 parent: "SQL Reference"
 ---
 
@@ -72,7 +72,7 @@ Format dates using dashes (-) to separate year, month, and day. Format time usin
 
 * Timestamp: 2008-12-15 22:55:55.12345
 
-If you have dates and times in other formats, use a [data type conversion function](/data-type-conversion/#other-data-type-conversions) in your queries.
+If you have dates and times in other formats, use a [data type conversion function]({{site.baseurl}}/docs/data-type-conversion/) in your queries.
 
 ### Identifiers
 An identifier is a letter followed by any sequence of letters, digits, or the underscore. For example, names of tables, columns, and aliases are identifiers. Maximum length is 1024 characters. Enclose the following identifiers with identifier quotes:

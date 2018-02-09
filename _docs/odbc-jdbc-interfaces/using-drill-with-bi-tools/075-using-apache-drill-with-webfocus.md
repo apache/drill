@@ -1,6 +1,6 @@
 ---
 title: "Using Information Builders’ WebFOCUS with Apache Drill"
-date:  
+date: 2018-02-09 00:16:03 UTC
 parent: "Using Drill with BI Tools"
 ---
 
@@ -12,13 +12,13 @@ Complete the following steps to configure WebFOCUS with Apache Drill:
 2. Configure the WebFOCUS adapter and connections to Drill.  
 3. (Optional) Create additional Drill connections.  
 
-###Prerequisite  
+##Prerequisite  
 
 Drill 1.2 or later
 
-----------
 
-### Step 1: Install the Apache Drill JDBC driver.  
+
+## Step 1: Install the Apache Drill JDBC driver.  
 
 Drill provides JDBC connectivity that easily integrates with WebFOCUS. See [{{site.baseurl}}/docs/using-the-jdbc-driver/](https://drill.apache.org/docs/using-the-jdbc-driver/) for general installation steps.  
 
@@ -33,9 +33,8 @@ The following example shows the driver JAR file copied to a directory on a Linux
 `/usr/lib/drill-1.4.0/jdbc-driver/drill-jdbc-all-1.4.0.jar`
 
 
-----------
 
-### Step 2: Configure the WebFOCUS adapter and connections to Drill.  
+## Step 2: Configure the WebFOCUS adapter and connections to Drill.  
 
 1. From a web browser, access the WebFOCUS Management Console. The WebFOCUS administrator provides you with the URL information: `http://hostname:port/`  
 The default port is 8121.
@@ -53,9 +52,9 @@ The Apache Drill adapter appears in the list.
 ![](http://i.imgur.com/072YTag.png)  
 Now you can use the WebFOCUS adapter and connection or create additional connections.
 
-----------
 
-### (Optional) Step 3: Create additional Drill connections. 
+
+## (Optional) Step 3: Create additional Drill connections. 
 
 Complete the following steps to create additional connections:  
 

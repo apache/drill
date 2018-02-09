@@ -1,6 +1,6 @@
 ---
 title: "Using Apache Drill with Tableau 10.2"
-date: 2017-03-31 00:05:13 UTC
+date: 2018-02-09 00:16:02 UTC
 parent: "Using Drill with BI Tools"
 ---  
 
@@ -17,30 +17,26 @@ Drill 1.10 fully supports Tableau Level of Detail (LoD) calculations and Tableau
   
 This document describes how to connect Tableau 10.2 to Apache Drill and instantly explore multiple data formats from various data sources.  
 
-----------  
 
-###Prerequisites  
+##Prerequisites  
 
 Your system must meet the following prerequisites before you can complete the steps required to connect Tableau 10.2 to Apache Drill:  
 
 - Tableau 10.2 or later  
 - Apache Drill 1.10 or later  
 - MapR Drill ODBC Driver v1.3.0 or later  
+ 
 
-----------  
-
-###Required Steps  
+##Required Steps  
  
 Complete the following steps to use Apache Drill with Tableau 10.2:  
 1.	[Install and Configure the MapR Drill ODBC Driver.]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10-2/#step-1:-install-and-configure-the-mapr-drill-odbc-driver)  
 2.	[Connect Tableau to Drill (using the Apache Drill Data Connector).]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10-2/#step-2:-connect-tableau-to-drill)  
 3.	[Query and Analyze the Data (various data formats with Tableau and Drill).]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10-2/#step-3:-query-and-analyze-the-data)  
-
----------- 
-
+ 
  
 
-### Step 1: Install and Configure the MapR Drill ODBC Driver  
+## Step 1: Install and Configure the MapR Drill ODBC Driver  
   
 Drill uses standard ODBC connectivity to provide you with easy data exploration capabilities on complex, schema-less data sets. 
 
@@ -53,10 +49,9 @@ To install and configure the ODBC driver, complete the following steps:
 
 **Important:** Verify that the Tableau client system can resolve the hostnames for the Drill and Zookeeper nodes correctly. See the *System Requirements* section of the ODBC [Mac](http://drill.apache.org/docs/installing-the-driver-on-mac-os-x/) or [Windows](http://drill.apache.org/docs/installing-the-driver-on-windows/) installation page for instructions.  
 
-----------  
 
 
-### Step 2: Connect Tableau to Drill  
+## Step 2: Connect Tableau to Drill  
 
 To connect Tableau to Drill, complete the following steps:
  
@@ -71,11 +66,10 @@ To connect Tableau to Drill, complete the following steps:
 7.	Click on the **Schema** drop-down list to display all available Drill schemas. When you select a schema, Tableau displays available tables or views.  You can select the tables and views to build a Tableau Visualization. Additionally, you can use custom SQL by clicking on the **New Custom SQL** option. ![dfs views]({{ site.baseurl }}/docs/img/T10.2_IMG_3.png)  
 
 **Note:** Tableau can natively work with Hive tables and Drill views. You can use custom SQL or create a view in Drill to represent the complex data in Drill data sources, such as data in files or HBase/MapR-DB tables, to Tableau. For more information, see [Tableau Examples](http://drill.apache.org/docs/tableau-examples/).  
+ 
 
-----------  
 
-
-###Step 3: Query and Analyze the Data  
+##Step 3: Query and Analyze the Data  
 
 Tableau can now use Drill to query various data sources and visualize the information, as shown in the following example.  
 

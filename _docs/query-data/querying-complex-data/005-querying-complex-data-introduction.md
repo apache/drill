@@ -1,14 +1,15 @@
 ---
 title: "Querying Complex Data Introduction"
-date:  
+date: 2018-02-09 00:16:04 UTC
 parent: "Querying Complex Data"
 ---
 Apache Drill queries do not require prior knowledge of the actual data you are
 trying to access, regardless of its source system or its schema and data
 types. The sweet spot for Apache Drill is a SQL query workload against
 *complex data*: data made up of various types of records and fields, rather
-than data in a recognizable relational form (discrete rows and columns). Drill
-is capable of discovering the form of the data when you submit the query.
+than data in a recognizable relational form (discrete rows and columns). 
+
+Drill is capable of discovering the form of the data when you submit the query.
 Nested data formats such as JSON (JavaScript Object Notation) files and
 Parquet files are not only _accessible_: Drill provides special operators and
 functions that you can use to _drill down_ into these files and ask
@@ -38,7 +39,7 @@ examples show how to use the Drill extensions in the context of standard SQL
 SELECT statements. For the most part, the extensions use standard JavaScript
 notation for referencing data elements in a hierarchy.
 
-### Before You Begin
+## Before You Begin
 
 The examples in this section operate on JSON data files. In order to write
 your own queries, you need to be aware of the basic data types in these files:

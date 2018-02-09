@@ -1,10 +1,10 @@
 ---
 title: "REST API Introduction"
-date: 2018-01-22 20:06:22 UTC
+date: 2018-02-09 00:16:00 UTC
 parent: "REST API"
 ---
 
-The Drill REST API provides programmatic access to Drill through the [Web Console](/starting-the-web-console/). Using HTTP requests, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
+The Drill REST API provides programmatic access to Drill through the [Web Console]({{site.baseurl}}/docs/starting-the-web-console/). Using HTTP requests, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
 
 AN HTTP request uses the familiar Web Console URI:
 

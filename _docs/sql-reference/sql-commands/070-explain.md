@@ -1,6 +1,6 @@
 ---
 title: "EXPLAIN"
-date:  
+date: 2018-02-09 00:16:06 UTC
 parent: "SQL Commands"
 ---
 EXPLAIN is a useful tool for examining the steps that a query goes through
@@ -35,17 +35,17 @@ The EXPLAIN command supports the following syntax:
 
 where `query` is any valid SELECT statement supported by Drill.
 
-##### INCLUDING ALL ATTRIBUTES
+**INCLUDING ALL ATTRIBUTES**
 
 This option returns costing information. You can use this option for both
-physical and logical plans.
+physical and logical plans.  
 
-#### WITH IMPLEMENTATION | WITHOUT IMPLEMENTATION
+**WITH IMPLEMENTATION | WITHOUT IMPLEMENTATION**
 
 These options return the physical and logical plan information, respectively.
 The default is physical (WITH IMPLEMENTATION).
 
-## EXPLAIN for Physical Plans
+### EXPLAIN for Physical Plans
 
 The EXPLAIN PLAN FOR <query> command returns the chosen physical execution
 plan for a query statement without running the query. You can use this command
@@ -106,7 +106,7 @@ for submitting the query via Drill APIs.
 	  },
 	....
 
-## Costing Information
+**Costing Information**
 
 Add the INCLUDING ALL ATTRIBUTES option to the EXPLAIN command to see cost
 estimates for the query plan. For example:
@@ -124,7 +124,7 @@ estimates for the query plan. For example:
 	00-05           Project(T1¦¦*=[$0], type=[$1]): rowcount = 1.0, cumulative cost = {1.0 rows, 8.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 884
 	00-06               Scan(groupscan=[EasyGroupScan [selectionRoot=/home/donuts/donuts.json, numFiles=1, columns=[`*`], files=[file:/home/donuts/donuts.json]]]): rowcount = 1.0, cumulative cost = {0.0 rows, 0.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 883
 
-## EXPLAIN for Logical Plans
+### EXPLAIN for Logical Plans
 
 To return the logical plan for a query (again, without actually running the
 query), use the EXPLAIN PLAN WITHOUT IMPLEMENTATION syntax:

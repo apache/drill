@@ -3,7 +3,7 @@ layout: post
 title: "Running SQL Queries on Amazon S3"
 code: running-sql-queries-on-amazon-s3
 excerpt: Drill enables you to run SQL queries directly on data in S3. There's no need to ingest the data into a managed cluster or transform the data. This is a step-by-step tutorial on how to use Drill with S3.
-date: 2014-12-9 18:50:01
+date: 2018-02-09 00:16:07 UTC
 authors: ["namato"]
 ---
 The functionality and sheer usefulness of Drill is growing fast.  If you're a user of some of the popular BI tools out there like Tableau or SAP Lumira, now is a good time to take a look at how Drill can make your life easier, especially if  you're faced with the task of quickly getting a handle on large sets of unstructured data.  With schema generated on the fly, you can save a lot of time and headaches by running SQL queries on the data where it rests without knowing much about columns or formats.  There's even more good news:  Drill also works with data stored in the cloud.  With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries.  In this post we'll look at how to configure Drill to access data stored in an S3 bucket.
@@ -19,11 +19,11 @@ At a high level, configuring Drill to access S3 bucket data is accomplished with
 
 Consult the [Architectural Overview](https://cwiki.apache.org/confluence/display/DRILL/Architectural+Overview) for a refresher on the architecture of Drill.
 
-### Prerequisites
+## Prerequisites
 
 These steps assume you have a [typical Drill cluster and ZooKeeper quorum](https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+in+10+Minutes) configured and running.  To access data in S3, you will need an S3 bucket configured and have the required Amazon security credentials in your possession.  An [Amazon blog post](http://blogs.aws.amazon.com/security/post/Tx1R9KDN9ISZ0HF/Where-s-my-secret-access-key) has more information on how to get these from your account.
 
-### Configuration Steps
+## Configuration Steps
 
 To connect Drill to S3, all of the drillbit nodes will need to access code in the JetS3t library developed by Amazon.  As of this writing, 0.9.2 is the latest version but you might want to check [the main page](https://jets3t.s3.amazonaws.com/toolkit/toolkit.html) to see if anything has been updated.  Be sure to get version 0.9.2 or later as earlier versions have a bug relating to reading Parquet data.
 

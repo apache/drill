@@ -2,7 +2,7 @@
 title: "Apache Drill M1 Release Notes (Apache Drill Alpha)"
 parent: "Release Notes"
 ---
-### Milestone 1 Goals
+## Milestone 1 Goals
 
 The first release of Apache Drill is designed as a technology preview for
 people to better understand the architecture and vision. It is a functional
@@ -21,7 +21,7 @@ architectural analysis and performance optimization.
   * Provided an extensible query-language agnostic JSON-base logical data flow syntax.
   * Support complex data type manipulation via logical plan operations
 
-### Known Issues
+## Known Issues
 
 SQL Parsing  
 Because Apache Drill is built to support late-bound changing schemas while SQL
