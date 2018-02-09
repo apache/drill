@@ -59,6 +59,11 @@ public class TestSortSpillWithException extends ClusterTest {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, 1) // Unmanaged
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, 1) // Unmanaged
+        // Using EXTERNAL_SORT_MAX_MEMORY to set low values of memory for SORT instead
+        // of lowering MAX_QUERY_MEMORY_PER_NODE_KEY because computation of operator memory
+        // cannot go lower than MIN_MEMORY_PER_BUFFERED_OP (the default value of this parameter
+        // is 40MB). The 40MB memory is sufficient for this testcase to run sort without spilling.
+        .configProperty(ExecConstants.EXTERNAL_SORT_MAX_MEMORY, 10 * 1024 * 1024)
         .sessionOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 60 * 1024 * 1024) // Spill early
         // Prevent the percent-based memory rule from second-guessing the above.
         .sessionOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.0)
