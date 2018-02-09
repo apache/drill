@@ -220,6 +220,9 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
 
   @Override
   public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
     int entryCount = offsets.getAccessor().get(valueCount);
     return offsets.getPayloadByteCount(valueCount) + vector.getPayloadByteCount(entryCount);
   }

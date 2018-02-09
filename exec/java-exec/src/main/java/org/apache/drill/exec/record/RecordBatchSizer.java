@@ -153,7 +153,7 @@ public class RecordBatchSizer {
       // that changes the value count of the contained vectors.
 
       UInt4Vector offsetVector = ((RepeatedValueVector) v).getOffsetVector();
-      int childCount = offsetVector.getAccessor().get(valueCount);
+      int childCount = valueCount == 0 ? 0 : offsetVector.getAccessor().get(valueCount);
       if (metadata.getType().getMinorType() == MinorType.MAP) {
 
         // For map, the only data associated with the map vector
@@ -305,8 +305,8 @@ public class RecordBatchSizer {
 
   public RecordBatchSizer(RecordBatch batch) {
     this(batch,
-         (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) ?
-         batch.getSelectionVector2() : null);
+      (batch.getSchema() == null ? null : (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE ?
+        batch.getSelectionVector2() : null)));
   }
   /**
    * Create empirical metadata for a record batch given a vector accessible
