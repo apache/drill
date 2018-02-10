@@ -2484,14 +2484,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Kafka Storage Plugin", 
+                    "next_url": "/docs/kafka-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "HTTPD Storage Plugin", 
                     "previous_url": "/docs/httpd-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
                     "title": "OpenTSDB Storage Plugin", 
                     "url": "/docs/opentsdb-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "OpenTSDB Storage Plugin", 
+                    "previous_url": "/docs/opentsdb-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/113-kafka-storage-plugin.md", 
+                    "title": "Kafka Storage Plugin", 
+                    "url": "/docs/kafka-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -5274,6 +5291,23 @@
             "title": "KVGEN", 
             "url": "/docs/kvgen/"
         }, 
+        "Kafka Storage Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ODBC/JDBC Interfaces", 
+            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "OpenTSDB Storage Plugin", 
+            "previous_url": "/docs/opentsdb-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/113-kafka-storage-plugin.md", 
+            "title": "Kafka Storage Plugin", 
+            "url": "/docs/kafka-storage-plugin/"
+        }, 
         "LIMIT Clause": {
             "breadcrumbs": [
                 {
@@ -6619,8 +6653,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "OpenTSDB Storage Plugin", 
-            "previous_url": "/docs/opentsdb-storage-plugin/", 
+            "previous_title": "Kafka Storage Plugin", 
+            "previous_url": "/docs/kafka-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -6675,8 +6709,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ODBC/JDBC Interfaces", 
-            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "next_title": "Kafka Storage Plugin", 
+            "next_url": "/docs/kafka-storage-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "HTTPD Storage Plugin", 
             "previous_url": "/docs/httpd-storage-plugin/", 
@@ -15457,14 +15491,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Kafka Storage Plugin", 
+                    "next_url": "/docs/kafka-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "HTTPD Storage Plugin", 
                     "previous_url": "/docs/httpd-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/112-opentsdb-storage-plugin.md", 
                     "title": "OpenTSDB Storage Plugin", 
                     "url": "/docs/opentsdb-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "OpenTSDB Storage Plugin", 
+                    "previous_url": "/docs/opentsdb-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/113-kafka-storage-plugin.md", 
+                    "title": "Kafka Storage Plugin", 
+                    "url": "/docs/kafka-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -16089,8 +16140,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "OpenTSDB Storage Plugin", 
-            "previous_url": "/docs/opentsdb-storage-plugin/", 
+            "previous_title": "Kafka Storage Plugin", 
+            "previous_url": "/docs/kafka-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
