@@ -300,7 +300,7 @@ enum CoreOperatorType {
   ORDERED_PARTITION_SENDER = 9;
   PROJECT = 10;
   UNORDERED_RECEIVER = 11;
-  RANGE_SENDER = 12;
+  RANGE_PARTITION_SENDER = 12;
   SCREEN = 13;
   SELECTION_VECTOR_REMOVER = 14;
   STREAMING_AGGREGATE = 15;
@@ -345,6 +345,7 @@ enum CoreOperatorType {
   PARTITION_LIMIT = 54;
   PCAPNG_SUB_SCAN = 55;
   RUNTIME_FILTER = 56;
+  ROWKEY_JOIN = 57;
 }
 
 /* Registry that contains list of jars, each jar contains its name and list of function signatures.
