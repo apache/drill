@@ -28,6 +28,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
+
 import org.apache.drill.exec.store.mapr.TableFormatMatcher;
 import org.apache.drill.exec.store.mapr.TableFormatPlugin;
 
@@ -44,8 +45,7 @@ public class MapRDBFormatMatcher extends TableFormatMatcher {
   protected boolean isSupportedTable(MapRFileStatus status) throws IOException {
     return !getFormatPlugin()
         .getMaprFS()
-        .getTableProperties(status.getPath())
-        .getAttr()
+        .getTableBasicAttrs(status.getPath())
         .getIsMarlinTable();
   }
 
