@@ -83,6 +83,9 @@ public class ScanBatch implements CloseableRecordBatch {
   private final List<Map<String, String>> implicitColumnList;
   private String currentReaderClassName;
   private final RecordBatchStatsContext batchStatsContext;
+  private List<RecordReader> readerList = null; // needed for repeatable scanners
+  private boolean isRepeatableScan = false;     // needed for repeatable scanners
+
   /**
    *
    * @param context
@@ -131,6 +134,15 @@ public class ScanBatch implements CloseableRecordBatch {
       throws ExecutionSetupException {
     this(context, context.newOperatorContext(subScanConfig),
         readers, Collections.<Map<String, String>> emptyList());
+  }
+
+  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
+                   List<RecordReader> readerList, boolean isRepeatableScan)
+      throws ExecutionSetupException {
+    this(context, context.newOperatorContext(subScanConfig),
+        readerList, Collections.<Map<String, String>> emptyList());
+    this.readerList = readerList;
+    this.isRepeatableScan = isRepeatableScan;
   }
 
   @Override
@@ -243,7 +255,7 @@ public class ScanBatch implements CloseableRecordBatch {
       return false;
     }
     currentReader = readers.next();
-    if (readers.hasNext()) {
+    if (!isRepeatableScan && readers.hasNext()) {
       readers.remove();
     }
     implicitValues = implicitColumns.hasNext() ? implicitColumns.next() : null;

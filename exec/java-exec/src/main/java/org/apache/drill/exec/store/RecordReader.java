@@ -43,6 +43,14 @@ public interface RecordReader extends AutoCloseable {
   void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException;
 
   /**
+   * Check if the reader may have potentially more data to be read in subsequent iterations. Certain types of readers
+   * such as repeatable readers can be invoked multiple times, so this method will allow ScanBatch to check with
+   * the reader before closing it.
+   * @return return true if there could potentially be more reads, false otherwise
+   */
+  boolean hasNext();
+
+  /**
    * Increments this record reader forward, writing via the provided output
    * mutator into the output batch.
    *

@@ -76,7 +76,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     }
   }
 
-  protected static enum BatchState {
+  public static enum BatchState {
     /** Need to build schema and return. */
     BUILD_SCHEMA,
     /** This is still the first data batch. */
