@@ -333,7 +333,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       }
       // 这里是local模式，设置了一个endpoint， 在drillbit中获取并注册
       endpoints.addAll(clusterCoordinator.getAvailableEndpoints());
-      logger.debug("picasso: connect: endpoints.size(): " + endpoints.size());
+//      logger.debug("picasso: connect: endpoints.size(): " + endpoints.size());
       // Make sure we have at least one endpoint in the list
       checkState(!endpoints.isEmpty(), "No active Drillbit endpoint found from ZooKeeper. Check connection parameters?");
     }

@@ -17,6 +17,18 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import com.google.gson.Gson;
+
+import com.google.gson.JsonObject;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.coord.store.TransientStore;
+import org.apache.drill.exec.proto.GeneralRPCProtos;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
+import org.apache.drill.exec.work.foreman.Foreman;
+import org.apache.hadoop.util.hash.Hash;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -42,17 +54,24 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class QueryResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResources.class);
+  final String ZKPATH = "/drill/infomation/";
 
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
@@ -87,137 +106,200 @@ public class QueryResources {
     }
   }
 
-  // 限制网页query最大返回1000条
-  public static String limit_query(String query){
-    //去除首尾空格，替换多空格为一个空格，转化小写
-    String sql = query.trim().replaceAll(" +", " ").toLowerCase();
-    //以空格切分字符串获取sql语句各组成部分
-    String word[] = sql.split(" ");
+  @GET
+  @Path("/cancelQuery")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String cancelCurrentQuery() {
+    Gson gson = new Gson();
+    Map<String, String> res = new HashMap<>();
+    String msg;
+    String type;
 
-    /*
-      非select语句
-        返回原语句
-      select语句
-        结尾有limit
-          limit后数字大于1000
-            替换为1000
-          小于1000
-            返回原语句
-        无limit
-          语句后 + " limit 1000"
-     */
-    try{
-      if (!sql.startsWith("select")) {
-        return query;
-      } else if (word[word.length - 2].equals("limit")) {
-        if (Integer.parseInt(word[word.length - 1]) > 1000){
-          return sql.replace("limit " + word[word.length - 1], "limit 1000");
-        } else {
-          return query;
-        }
-      } else {
-        return query + " limit 1000";
-      }
-    } catch (IndexOutOfBoundsException e) {
-      // 可能传入的query不完整
-      return query;
-    } catch (NumberFormatException e) {
-      // 可能limit后错误输入了数字
-      return query;
-    } catch (Exception e) {
-      //e.printStackTrace();
-      logger.error("limit_query " + e);
-      return query;
-    }
 
-  }
+    final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
+    final TransientStore<QueryInfo> running = profileStoreContext.getRunningProfileStore();
+    final Iterator<Map.Entry<String, QueryInfo>> runningEntries = running.entries();
 
-  public String getZKData(String path) throws IOException {
-    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION);
-    logger.info("zk ip " + zk_ip);
-    ZooKeeper zk = new ZooKeeper(zk_ip, 5000, new ZookeeperSimple());
+    // check running
+    if(runningEntries.hasNext()) {
+    String queryId = runningEntries.next().getKey();
+    final QueryInfo info = running.get(queryId);
+    UserBitShared.QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
 
     try {
-      logger.info("Zookeeper session established");
-      if(zk.exists(path, true) == null) {
-        zk.close();
-        return "write and save.";
-      } else {
-        String data = new String(zk.getData("/zk_test/infomation", true, null));
-        zk.close();
-        return data;
+      // try to cancel
+      GeneralRPCProtos.Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);
+      if(a.getOk()){
+        type = "success";
+        msg = String.format("Query %s canceled on node %s.", queryId, info.getForeman().getAddress());
+      }else{
+        type = "fail";
+        msg = String.format("Attempted to cancel query %s on %s but the query is no longer active on that node.", queryId, info.getForeman().getAddress());
       }
-    } catch (InterruptedException e){
-      e.printStackTrace();
-    } catch (KeeperException e) {
-      e.printStackTrace();
-    } finally {
-      return "something error... please contact manager";
+
+    }catch(Exception e){
+      logger.debug("Failure to cancel the running query.", e);
+      type = "fail";
+      msg = String.format
+              ("Failure attempting to cancel the query .  Unable to find information about where query is actively running.");
     }
-  }
-
-  public String setZKData(String path, String data) throws IOException {
-    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION);
-    logger.info("zk ip " + zk_ip);
-    ZooKeeper zk = new ZooKeeper(zk_ip, 5000, new ZookeeperSimple());
-
-    try{
-        if(zk.exists(path, true) == null) {
-          zk.create(path, data.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-          zk.close();
-          return "success";
-        } else {
-          zk.setData(path, data.getBytes(), -1);
-          zk.close();
-          return "success";
-        }
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (KeeperException e) {
-      e.printStackTrace();
+    } else {
+      type = "fail";
+      msg = String.format
+            ("Failure attempting to cancel the query .  Unable to find information about where query is actively running.");
     }
 
-    return "fail";
+    res.put("type", type);
+    res.put("msg", msg);
+    return gson.toJson(res);
   }
+
 
   @GET
   @Path("/data")
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  @Produces(MediaType.TEXT_HTML)
-  public String getData(@FormParam("username") String username) throws Exception {
-    logger.info("picasso: username: " + username);
-    String data = getZKData("/zk_test/" + username);
-    return data;
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getData(@QueryParam("username") String UserName) throws Exception {
+    String username = webUserConnection.getSession().getCredentials().getUserName();
+    logger.info("picasso: getData: username: " + username);
+
+    if(username.equals("")) {
+      username = "bingxing.wang";
+    }
+    String nodePath = ZKPATH + username;
+    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION);
+    ZooKeeper zk = new ZooKeeper(zk_ip, 5000, new ZookeeperSimple());
+    Gson gson = new Gson();
+    Map<String, String> res = new HashMap<>();
+    String msg;
+    String type;
+
+    try {
+      if(zk.exists(nodePath, true) == null) {
+        zk.close();
+        // 没有数据视为成功
+        msg = "";
+        type = "success";
+      } else {
+        String data = new String(zk.getData(nodePath, true, null));
+        zk.close();
+        // json格式的字符串
+        msg = data;
+        type = "success";
+      }
+    } catch (InterruptedException e) {
+        msg = e.getMessage();
+        type = "fail";
+    } catch (KeeperException e) {
+        msg = e.getMessage();
+        type = "fail";
+    } catch (Exception e) {
+      msg = e.getMessage();
+      type = "fail";
+    }
+
+    res.put("type", type);
+    res.put("msg", msg);
+
+    return gson.toJson(res);
   }
 
   @POST
   @Path("/data")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  @Produces(MediaType.TEXT_HTML)
-  public String setData(@FormParam("username") String username, @FormParam("data") String data) throws Exception {
-    logger.info("picasso: username: " + username + " data: " + data);
-    String res = setZKData("/zk_test/" + username, data);
-    return res;
+  @Produces(MediaType.TEXT_PLAIN)
+  public String setData(@FormParam("username") String UserName, @FormParam("data") String data) throws Exception {
+    String username = webUserConnection.getSession().getCredentials().getUserName();
+    logger.info("picasso: setData: username: " + username);
+
+    if(username.equals("")) {
+      username = "bingxing.wang";
+    }
+
+    logger.info("picasso: setData: data:" + data);
+    //logger.info("picasso: setData: sql:" + sql);
+
+    Gson gson = new Gson();
+    Map<String, String> res = new HashMap<>();
+    String msg = "";
+    String sqls = data;
+    String type;
+
+    String nodePath = ZKPATH + username;
+    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION);
+    ZooKeeper zk = new ZooKeeper(zk_ip, 5000, new ZookeeperSimple());
+
+    try{
+      if(zk.exists(nodePath, true) == null) {
+        zk.create(nodePath, sqls.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        zk.close();
+        type = "success";
+      } else {
+        zk.setData(nodePath, sqls.getBytes(), -1);
+        zk.close();
+        type = "success";
+      }
+    } catch (Exception e) {
+      type = "fail";
+      msg = e.getMessage();
+
+    }
+
+    res.put("type", type);
+    res.put("msg", msg);
+    return gson.toJson(res);
   }
 
   @POST
   @Path("/query")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable submitQuery(@FormParam("query") String query,
-                              @FormParam("queryType") String queryType) throws Exception {
+  @Produces(MediaType.TEXT_PLAIN)
+  public String submitQuery(@FormParam("query") String query) throws Exception {
+
+    // 这里需要设置为constant
+    String queryType = "SQL";
+    Gson gson = new Gson();
+    Map<String, Object> res = new HashMap<>();
+    Map<String, Object> data = new HashMap<>();
+
     logger.info("picasso: submitQuery: query:" + query);
 
-    //query = limit_query(query);
-    //logger.info("picasso: submitQuery: after limit, query:" + query);
+
     try {
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
       final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType));
 
-      return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result));
+      List<Map<String, String>> rows = result.rows;
+      List<String> columns = ImmutableList.copyOf(result.columns);
+      if(columns.isEmpty()) {
+        res.put("type", "empty");
+        data.put("msg", "");
+        res.put("data", data);
+        return gson.toJson(res);
+      }
+      data.put("thead", columns);
+      // 只返回1000条
+      if(rows.size() > 1000) {
+        data.put("tbody", rows.subList(0, 1000));
+      } else {
+        data.put("tbody", rows);
+      }
+      res.put("data", data);
+      res.put("type", "success");
+
+      return gson.toJson(res);
+
+      // 原始的返回
+      //return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result));
     } catch (Exception | Error e) {
       logger.error("Query from Web UI Failed", e);
-      return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/errorMessage.ftl", sc, e);
+      data.put("msg", e.toString());
+      res.put("type", "fail");
+      res.put("data", data);
+
+      return gson.toJson(res);
+      // 原始的返回
+      //return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/errorMessage.ftl", sc, e);
     }
   }
 

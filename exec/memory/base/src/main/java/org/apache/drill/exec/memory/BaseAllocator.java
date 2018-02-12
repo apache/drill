@@ -126,7 +126,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       childLedgers = null;
     }
 
-    logger.debug("picasso: construct: root: " + (this instanceof RootAllocator) + " name: " + name + " initReservation: " + initReservation + " maxAllocation " + maxAllocation);
+//    logger.debug("picasso: construct: root: " + (this instanceof RootAllocator) + " name: " + name + " initReservation: " + initReservation + " maxAllocation " + maxAllocation);
   }
 
   @Override
@@ -302,7 +302,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       final long initReservation,
       final long maxAllocation) {
     assertOpen();
-    logger.debug("picasso: newChildAllocator: name: " + name);
+//    logger.debug("picasso: newChildAllocator: name: " + name);
 
     final ChildAllocator childAllocator = new ChildAllocator(this, name, initReservation, maxAllocation);
 
@@ -476,10 +476,10 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     private void releaseReservation(int nBytes) {
       assertOpen();
 
-      if(name.contains("ParquetRowGroupScan")){
-        String log = getStackTrace("releaseReservation");
-        logger.debug("parquet_scan: release: local: " + getAllocatedMemory() + " size: " + nBytes + "\n statckTrace: \n" + log);
-      }
+//      if(name.contains("ParquetRowGroupScan")){
+//        String log = getStackTrace("releaseReservation");
+//        logger.debug("parquet_scan: release: local: " + getAllocatedMemory() + " size: " + nBytes + "\n statckTrace: \n" + log);
+//      }
       releaseBytes(nBytes);
 
       if (DEBUG) {

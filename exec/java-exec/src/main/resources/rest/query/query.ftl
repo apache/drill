@@ -14,117 +14,19 @@
     <#if model?? && model>
       <script src="/static/js/jquery.form.js"></script>
     </#if>
-    <script type="text/javascript">
-        window.onload = function()
-        {
-              $.ajax({
-                    type : "get",
-                    url : "/data",
-                    data : "username=" + "bingxing.wang",
-                    async : false,
-                    success : function(data) {
-                        $("$msg").value = data
-                    }
-              });
-
-              $("#setData").click(function(){
-                $.post("/data",
-                {
-                    username: "bingxing.wang",
-                    data: msg
-                },
-                function(data, status) {
-                    if(status == "success" && data == "success")
-                        alert("save successed!")
-                    else
-                        alert("save failed!")
-                });
-               });
-        }
-    </script>
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <script src="/static/js/jquery-3.2.1.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js"></script>
+    <link href="/static/css/main.3e173177.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>
   <a href="/queries">back</a><br/>
-  <div class="page-header">
-  </div>
-  <div id="message" class="alert alert-info alert-dismissable" style="font-family: Courier;">
-    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-    Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
-  </div>
-
-  <#if model?? && model>
-     <div class="form-group">
-       <label for="userName">User Name</label>
-       <input type="text" size="30" name="userName" id="userName" placeholder="User Name">
-     </div>
-  </#if>
-
-  <form role="form" id="queryForm" action="/query" method="POST">
-      <div class="form-group">
-      <label for="queryType">Query Type</label>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="sql" value="SQL" checked>
-          SQL
-        </label>
-      </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-          PHYSICAL
-        </label>
-      </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="logical" value="LOGICAL">
-          LOGICAL
-        </label>
-      </div>
-    </div>
-    <div class="form-group">
-        <label for="msg">Common Infomation</label>
-        <textarea id="msg" name="msg" class="form-control" rows="8">Here to save your common infomation.\n Remember to click the [Save Infomation] button after you input data.</textarea>
-        <input id="setData" type="button" value="Save Infomation"/>
-    </div>
-    <div class="form-group">
-      <label for="query">Query</label>
-      <textarea class="form-control" id="query" rows="5" name="query" style="font-family: Courier;"></textarea>
-    </div>
-
-    <button class="btn btn-default" type=<#if model?? && model>"button" onclick="doSubmit()"<#else>"submit"</#if>>
-      Submit
-    </button>
-  </form>
-
-
-    <#if model?? && model>
-      <script>
-        function doSubmit() {
-          var userName = document.getElementById("userName").value;
-          if (!userName.trim()) {
-              alert("Please fill in User Name field");
-              return;
-          }
-          $.ajax({
-            type: "POST",
-            beforeSend: function (request) {
-              request.setRequestHeader("User-Name", userName);
-            },
-            url: "/query",
-            data: $("#queryForm").serializeArray(),
-            success: function (response) {
-              var newDoc = document.open("text/html", "replace");
-              newDoc.write(response);
-              newDoc.close();
-            },
-            error: function (request, textStatus, errorThrown) {
-              alert(errorThrown);
-            }
-          });
-        }
-      </script>
-    </#if>
+   <noscript>You need to enable JavaScript to run this app.</noscript>
+   <div id="root"></div>
+   <script type="text/javascript" src="/static/js/main.3ecf97ba.js"></script>
 </#macro>
 
 <@page_html/>

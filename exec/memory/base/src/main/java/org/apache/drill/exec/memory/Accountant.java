@@ -228,10 +228,10 @@ public class Accountant implements AutoCloseable {
     //Exception e = new Exception("Accountant allocate");
     //e.printStackTrace();
 
-    if(!name.equals("") && name.contains("ParquetRowGroupScan")){
-      String log = getStackTrace("allocate");
-      logger.info("parquet_scan_allocate: local: " + locallyHeldMemory.get() + " size: " + size + "\n statckTrace: \n" + log);
-    }
+//    if(!name.equals("") && name.contains("ParquetRowGroupScan")){
+//      String log = getStackTrace("allocate");
+//      logger.info("parquet_scan_allocate: local: " + locallyHeldMemory.get() + " size: " + size + "\n statckTrace: \n" + log);
+//    }
 
     final long newLocal = locallyHeldMemory.addAndGet(size);
     final long beyondReservation = newLocal - reservation;
@@ -283,10 +283,10 @@ public class Accountant implements AutoCloseable {
     //logger.debug("picasso_memory releaseBytes size: " + size);
     // reduce local memory. all memory released above reservation should be released up the tree.
 
-    if(!name.equals("") && name.contains("ParquetRowGroupScan")){
-            String log = getStackTrace("release");
-            logger.info("parquet_scan_release: local: " + locallyHeldMemory.get() + " size: " + size + "\n statckTrace: \n" + log);
-          }
+//    if(!name.equals("") && name.contains("ParquetRowGroupScan")){
+//            String log = getStackTrace("release");
+//            logger.info("parquet_scan_release: local: " + locallyHeldMemory.get() + " size: " + size + "\n statckTrace: \n" + log);
+//          }
     final long newSize = locallyHeldMemory.addAndGet(-size);
     //Exception e = new Exception("Accountant release");
     //e.printStackTrace();

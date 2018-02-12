@@ -80,7 +80,7 @@
               <li><a href="/login">Log In</a>
               </#if>
               <#if showLogout == true >
-              <li><a href="/logout">Log Out (${loggedInUserName})</a>
+              <li><a id="logout" href="/logout">Log Out (${loggedInUserName})</a>
               </#if>
             </ul>
           </div>

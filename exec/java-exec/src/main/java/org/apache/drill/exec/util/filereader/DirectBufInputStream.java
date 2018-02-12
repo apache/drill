@@ -83,14 +83,20 @@ public class DirectBufInputStream extends FilterInputStream {
   }
 
   public synchronized int read(DrillBuf buf, int off, int len) throws IOException {
+    //off = 0
+    //len = bytes
+    //设置buf读写指针从0开始
     buf.clear();
+    //设置buf非IO阻塞
     ByteBuffer directBuffer = buf.nioBuffer(0, len);
     int lengthLeftToRead = len;
+    //循环读取直到为0
     while (lengthLeftToRead > 0) {
       if(logger.isTraceEnabled()) {
         logger.trace("PERF: Disk read start. {}, StartOffset: {}, TotalByteSize: {}", this.streamId, this.startOffset, this.totalByteSize);
       }
       Stopwatch timer = Stopwatch.createStarted();
+      //从输入流读取数据
       int bytesRead = CompatibilityUtil.getBuf(getInputStream(), directBuffer, lengthLeftToRead);
       lengthLeftToRead -= bytesRead;
       if(logger.isTraceEnabled()) {
@@ -99,6 +105,9 @@ public class DirectBufInputStream extends FilterInputStream {
             this.streamId, this.startOffset, this.totalByteSize, bytesRead,
             ((double) timer.elapsed(TimeUnit.MICROSECONDS)) / 1000);
       }
+//      logger.info("parquet_scan_pageData: Disk read complete. {}, StartOffset: {}, TotalByteSize: {}, BytesRead: {}, Time: {} ms",
+//                this.streamId, this.startOffset, this.totalByteSize, bytesRead,
+//                ((double) timer.elapsed(TimeUnit.MICROSECONDS)) / 1000);
     }
     buf.writerIndex(len);
     return len;
@@ -106,10 +115,13 @@ public class DirectBufInputStream extends FilterInputStream {
 
   public synchronized DrillBuf getNext(int bytes) throws IOException {
     DrillBuf b = allocator.buffer(bytes);
+//    logger.info("parquet_scan_pageData: getNext: bytes:" + bytes );
     int bytesRead = -1;
     try {
     bytesRead = read(b, 0, bytes);
+//    logger.info("parquet_scan_pageData: bytesRead=read=" + bytesRead);
     } catch (IOException e){
+//      logger.info("parquet_scan_pageData: getNext: IOException");
       b.release();
       throw e;
     }

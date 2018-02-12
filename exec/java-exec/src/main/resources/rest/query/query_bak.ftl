@@ -14,6 +14,28 @@
     <#if model?? && model>
       <script src="/static/js/jquery.form.js"></script>
     </#if>
+    <script type="text/javascript">
+        window.onload = function()
+        {
+              $.get("/data", {username: "bingxing.wang"},function(data, status){
+                    $("#msg").val(data)
+              });
+
+              $("#setData").click(function(){
+                $.post("/data",
+                {
+                    username: "bingxing.wang",
+                    data: $("#msg").val()
+                },
+                function(data, status) {
+                    if(status == "success" && data == "success")
+                        alert("save successed!")
+                    else
+                        alert("save failed!")
+                });
+               });
+        }
+    </script>
 </#macro>
 
 <#macro page_body>
@@ -56,7 +78,7 @@
     </div>
     <div class="form-group">
         <label for="msg">Common Infomation</label>
-        <textarea id="msg" name="msg" class="form-control" rows="10">Here to save your common infomation.\n Remember to click the [Save Infomation] button after you input data.</textarea>
+        <textarea id="msg" name="msg" class="form-control" rows="8">Here to save your common infomation.\n Remember to click the [Save Infomation] button after you input data.</textarea>
         <input id="setData" type="button" value="Save Infomation"/>
     </div>
     <div class="form-group">
@@ -69,33 +91,6 @@
     </button>
   </form>
 
-  <script type="text/javascript">
-      window.onload = function()
-      {
-            var msg = document.getElementById("msg");
-            var setData = document.getElementById("setData");
-
-            var data = localStorage.getItem("data")
-            if(!data || data == "")
-                msg.value = "Here to save your common infomation.\n Remember to click the [Save Infomation] button after you input data."
-            else
-                msg.value = data
-
-            setData.onClick = function()
-            {
-                if(msg.value)
-                {
-                    localStorage.setItem("data", msg.value);
-                    alert("Information has been saved!");
-                }
-                else
-                {
-                    localStorage.setItem("data", "");
-                }
-            }
-
-      }
-  </script>
 
     <#if model?? && model>
       <script>

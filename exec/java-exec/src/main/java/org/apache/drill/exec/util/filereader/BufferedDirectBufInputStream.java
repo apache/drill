@@ -142,6 +142,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     Preconditions.checkState(this.curPosInBuffer >= this.count,
         "Internal error: Buffered stream has not been consumed and trying to read more from underlying stream");
     checkInputStreamState();
+    //internalBuffer
     DrillBuf buffer = getBuf();
     buffer.clear();
     this.count = this.curPosInBuffer = 0;
@@ -164,6 +165,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     } else {
       if (buffer.capacity() >= (totalByteSize + startOffset - curPosInStream)) {
         if (buffer.capacity() > SMALL_BUFFER_SIZE) {
+          // 释放并重新复制internalBuffer
           buffer = this.reallocBuffer(SMALL_BUFFER_SIZE);
         }
       }
@@ -185,6 +187,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
         throw new IOException((e));
       }
       if (nBytes > 0) {
+        //写..?
         buffer.writerIndex(nBytes);
         this.count = nBytes + this.curPosInBuffer;
         this.curPosInStream = getInputStream().getPos();
@@ -268,13 +271,21 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
    * Except with DrillBuf
    */
   public synchronized int read(DrillBuf buf, int off, int len) throws IOException {
+    /*
+    buf 已经申请了内存
+    off 0
+    len bytes
+     */
     checkInputStreamState();
     Preconditions.checkArgument((off >= 0) && (len >= 0) && (buf.capacity()) >= (off + len));
+    //已经读的字节长度
     int bytesRead = 0;
     do {
       int readStart = off + bytesRead;
       int lenToRead = len - bytesRead;
+//      logger.info("parquet_scan_pageData: read: before readInternal: lenToRead:" + lenToRead);
       int nRead = readInternal(buf, readStart, lenToRead);
+//      logger.info("parquet_scan_pageData: read: nRead=" + nRead);
       if (nRead <= 0) {// if End of stream
         if (bytesRead == 0) { // no bytes read at all
           return -1;

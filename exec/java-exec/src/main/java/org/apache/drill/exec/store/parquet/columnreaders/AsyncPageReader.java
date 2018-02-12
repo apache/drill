@@ -87,6 +87,8 @@ class AsyncPageReader extends PageReader {
   private LinkedBlockingQueue<ReadStatus> pageQueue;
   private ConcurrentLinkedQueue<Future<Void>> asyncPageRead;
   private long totalPageValuesRead = 0;
+  private boolean isClear = false;
+  private int counter = 0;
   private Object pageQueueSyncronize = new Object(); // Object to use to synchronize access to the page Queue.
                                                      // FindBugs complains if we synchronize on a Concurrent Queue
 
@@ -196,6 +198,7 @@ class AsyncPageReader extends PageReader {
     int compressedSize = pageHeader.getCompressed_page_size();
     int uncompressedSize = pageHeader.getUncompressed_page_size();
     pageDataBuf = allocateTemporaryBuffer(uncompressedSize);
+//    logger.info("parquet_scan_pageData: decompress: allocateTempbuffer");
     try {
       timer.start();
       CompressionCodecName codecName = parentColumnReader.columnChunkMetaData.getCodec();
@@ -224,7 +227,7 @@ class AsyncPageReader extends PageReader {
         synchronized (pageQueueSyncronize) {
           boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
           readStatus = pageQueue.take(); // get the data if no exception has been thrown
-          logger.info("parquet_scan_pageData: nextInternal: readStatus = pagequeue.take()1");
+//          logger.info("parquet_scan_pageData: nextInternal: readStatus = pagequeue.take()1");
           if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
             throw new DrillRuntimeException("Unexpected end of data");
           }
@@ -254,13 +257,13 @@ class AsyncPageReader extends PageReader {
 
       do {
         if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-          logger.info("parquet_scan_pageData: nextInternal: readStatus.pageData release");
+//          logger.info("parquet_scan_pageData: nextInternal: readStatus.pageData release");
           readDictionaryPageData(readStatus, parentColumnReader);
           asyncPageRead.poll().get(); // get the result of execution
           synchronized (pageQueueSyncronize) {
             boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
             readStatus = pageQueue.take(); // get the data if no exception has been thrown
-            logger.info("parquet_scan_pageData: nextInternal: readStatus = pagequeue.take()2");
+//            logger.info("parquet_scan_pageData: nextInternal: readStatus = pagequeue.take()2");
             if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
               break;
             }
@@ -275,7 +278,7 @@ class AsyncPageReader extends PageReader {
       } while (pageHeader.getType() == PageType.DICTIONARY_PAGE);
 
       pageHeader = readStatus.getPageHeader();
-      logger.info("parquet_scan_pageData: nextInternal: 更新全局pageData, 并释放readStatus.pageData");
+//      logger.info("parquet_scan_pageData: nextInternal: 更新全局pageData, 并释放readStatus.pageData");
       pageData = getDecompressedPageData(readStatus);
       assert (pageData != null);
     } catch (InterruptedException e) {
@@ -289,9 +292,9 @@ class AsyncPageReader extends PageReader {
   }
 
   @Override public void clear() {
+    isClear = true;
     //Cancelling all existing AsyncPageReaderTasks
     while (asyncPageRead != null && !asyncPageRead.isEmpty()) {
-      logger.info("parquet_scan_pageData: clear: 处理future, 如果未执行结束则中断");
       logger.info("parquet_scan_pageData: clear: debugName:" + debugName + " asyncPageRead.size():" + asyncPageRead.size());
 
       try {
@@ -310,9 +313,23 @@ class AsyncPageReader extends PageReader {
       }
     }
 
+
+    int time = 0;
+    while(counter > 0 && time < 1000){
+      try {
+        Thread.sleep(200);
+      }catch (InterruptedException e){
+
+      } finally {
+        time += 200;
+        logger.info("parquet_scan_pageData: counter: " + counter + " time: " + time);
+      }
+    }
+
     //Empty the page queue
     ReadStatus r;
     while (!pageQueue.isEmpty()) {
+      logger.info("parquet_scan_pageData: empty page queue");
       r = null;
       try {
         r = pageQueue.poll();
@@ -323,10 +340,10 @@ class AsyncPageReader extends PageReader {
         //Reporting because we shouldn't get this
         logger.error(e.getMessage());
       } finally {
-          logger.info("parquet_scan_pageData: clear: handle readStatus r == null?: " + (r == null));
-          if(r != null){
-            logger.info("parquet_scan_pageData: clear: handle readStatus r.pageData == null?: " + (r.pageData == null));
-          }
+//          logger.info("parquet_scan_pageData: clear: handle readStatus r == null?: " + (r == null));
+//          if(r != null){
+//            logger.info("parquet_scan_pageData: clear: handle readStatus r.pageData == null?: " + (r.pageData == null));
+//          }
         if (r != null && r.pageData != null) {
           r.pageData.release();
         }
@@ -435,8 +452,14 @@ class AsyncPageReader extends PageReader {
         PageHeader pageHeader = Util.readPageHeader(parent.dataReader);
         int compressedSize = pageHeader.getCompressed_page_size();
         if ( parent.parentColumnReader.isShuttingDown ) { return null; } //Opportunity to skip expensive Parquet processing
+        logger.info("parquet_scan_pageData: call: before getNext debugName: " + debugName + " compressedSize " +  compressedSize);
+        counter += 1;
         pageData = parent.dataReader.getNext(compressedSize);
-        logger.info("parquet_scan_pageData: call: pageData = getNext");
+        if(isClear) {
+          logger.info("parquet_scan_pageData: drill is in clear");
+          throw new InterruptedException("drill is in Clear");
+        }
+        logger.info("parquet_scan_pageData: call: pageData = getNext debugName: " + debugName);
         bytesRead = compressedSize;
 
         synchronized (parent) {
@@ -469,9 +492,12 @@ class AsyncPageReader extends PageReader {
         }
         // Do nothing.
       } catch (InterruptedException e) {
-        logger.info("parquet_scan_pageData: call: InterruptedException: debugName: " + debugName
-                + " pageData is null: " + (pageData == null));
+//        logger.info("parquet_scan_pageData: call: InterruptedException: " + e.getMessage()
+//                + " debugName: " + debugName
+//                + " pageData is null: " + (pageData == null));
+        logger.info("parquet_scan_pageData: interruptedException");
         if (pageData != null) {
+          logger.info("parquet_scan_pageData: interrupted-pageData release");
           pageData.release();
         }
         Thread.currentThread().interrupt();
@@ -479,8 +505,12 @@ class AsyncPageReader extends PageReader {
         if (pageData != null) {
           pageData.release();
         }
+//        logger.info("parquet_scan_pageData: call: Exception: debugName: " + debugName
+//                + " pageData is null: " + (pageData == null));
         parent.handleAndThrowException(e, "Exception occurred while reading from disk.");
       } finally {
+        logger.info("parquet_scan_pageData: call: finally");
+        counter -= 1;
         //Nothing to do if isShuttingDown.
     }
       return null;
