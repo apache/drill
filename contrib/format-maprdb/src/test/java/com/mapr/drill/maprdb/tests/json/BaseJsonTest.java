@@ -29,6 +29,19 @@ import org.junit.BeforeClass;
 import com.mapr.drill.maprdb.tests.MaprDBTestsSuite;
 
 public class BaseJsonTest extends BaseTestQuery {
+  protected static final String SCHEMA = "hbase.root";
+  
+  protected String format(final String sql) {
+    return String.format(sql, SCHEMA, getTablePath());
+  }
+
+  protected String getTablePath() {
+    throw new RuntimeException("unimplemented");
+  }
+
+  public static String format(final String sql, final String tablePath) {
+    return String.format(sql, SCHEMA, tablePath);
+  }
 
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
