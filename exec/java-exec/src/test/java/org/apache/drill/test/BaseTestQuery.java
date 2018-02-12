@@ -480,6 +480,7 @@ public class BaseTestQuery extends ExecTest {
 
   public static class SilentListener implements UserResultsListener {
     private final AtomicInteger count = new AtomicInteger();
+    private QueryId queryId;
 
     @Override
     public void submissionFailed(UserException ex) {
@@ -501,8 +502,17 @@ public class BaseTestQuery extends ExecTest {
     }
 
     @Override
-    public void queryIdArrived(QueryId queryId) {}
+    public void queryIdArrived(QueryId queryId) {
+      this.queryId = queryId;
+    }
 
+    public QueryId getQueryId() {
+      return queryId;
+    }
+
+    public int getRowCount() {
+      return count.get();
+    }
   }
 
   protected void setColumnWidth(int columnWidth) {

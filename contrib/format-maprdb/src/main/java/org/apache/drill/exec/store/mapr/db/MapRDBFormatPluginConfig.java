@@ -38,6 +38,7 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
    * is not regressing performance of reading maprdb table.
    */
   public boolean nonExistentFieldSupport = true;
+  public String index = "";
 
   @Override
   public int hashCode() {
@@ -65,6 +66,8 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
       return false;
     } else if (nonExistentFieldSupport != other.nonExistentFieldSupport) {
       return false;
+    } else if (!index.equals(other.index)) {
+      return false;
     }
     return true;
   }
@@ -91,4 +94,5 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
     return ignoreSchemaChange;
   }
 
+  public String getIndex() { return this.index; }
 }

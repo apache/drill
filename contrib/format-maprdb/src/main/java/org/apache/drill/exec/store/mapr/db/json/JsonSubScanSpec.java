@@ -18,75 +18,38 @@
 package org.apache.drill.exec.store.mapr.db.json;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
-import org.apache.hadoop.hbase.HConstants;
-import org.ojai.DocumentConstants;
-import org.ojai.Value;
 import org.ojai.store.QueryCondition;
-import org.ojai.store.QueryCondition.Op;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mapr.db.MapRDB;
 import com.mapr.db.impl.ConditionImpl;
-import com.mapr.db.impl.IdCodec;
+import com.mapr.db.impl.MapRDBImpl;
+import com.mapr.db.index.IndexDesc;
 
+/**
+ * This class is a helper extension of {@link MapRDBSubScanSpec} class and does not
+ * get serialized or deserialized.
+ */
 public class JsonSubScanSpec extends MapRDBSubScanSpec {
 
   protected QueryCondition condition;
 
-  @JsonCreator
-  public JsonSubScanSpec(@JsonProperty("tableName") String tableName,
-                         @JsonProperty("regionServer") String regionServer,
-                         @JsonProperty("startRow") byte[] startRow,
-                         @JsonProperty("stopRow") byte[] stopRow,
-                         @JsonProperty("cond") QueryCondition cond) {
-    super(tableName, regionServer, null, null, null, null);
+  public JsonSubScanSpec(String tableName, IndexDesc indexDesc, String regionServer,
+                         QueryCondition scanRangeCondition, QueryCondition userCondition,
+                         byte[] startRow, byte[] stopRow, String userName) {
+    super(tableName, indexDesc, regionServer, startRow, stopRow, null, null, userName);
 
-    this.condition = MapRDB.newCondition().and();
+    condition = MapRDBImpl.newCondition().and();
 
-    if (cond != null) {
-      this.condition.condition(cond);
+    if (userCondition != null && !userCondition.isEmpty()) {
+      condition.condition(userCondition);
+    }
+    if (scanRangeCondition != null && !scanRangeCondition.isEmpty()) {
+      condition.condition(scanRangeCondition);
     }
 
-    if (startRow != null &&
-        Arrays.equals(startRow, HConstants.EMPTY_START_ROW) == false) {
-      Value startVal = IdCodec.decode(startRow);
-
-      switch(startVal.getType()) {
-      case BINARY:
-        this.condition.is(DocumentConstants.ID_FIELD, Op.GREATER_OR_EQUAL, startVal.getBinary());
-        break;
-      case STRING:
-        this.condition.is(DocumentConstants.ID_FIELD, Op.GREATER_OR_EQUAL, startVal.getString());
-        break;
-      default:
-        throw new IllegalStateException("Encountered an unsupported type " + startVal.getType()
-                                        + " for _id");
-      }
-    }
-
-    if (stopRow != null &&
-        Arrays.equals(stopRow, HConstants.EMPTY_END_ROW) == false) {
-      Value stopVal = IdCodec.decode(stopRow);
-
-      switch(stopVal.getType()) {
-      case BINARY:
-        this.condition.is(DocumentConstants.ID_FIELD, Op.LESS, stopVal.getBinary());
-        break;
-      case STRING:
-        this.condition.is(DocumentConstants.ID_FIELD, Op.LESS, stopVal.getString());
-        break;
-      default:
-        throw new IllegalStateException("Encountered an unsupported type " + stopVal.getType()
-                                        + " for _id");
-      }
-    }
-
-    this.condition.close().build();
+    condition.close().build();
   }
 
   public void setCondition(QueryCondition cond) {
