@@ -758,6 +758,8 @@ public final class ExecConstants {
    */
   public static final String ENABLE_ITERATOR_VALIDATION = "drill.exec.debug.validate_iterators";
 
+  public static final String QUERY_ROWKEYJOIN_BATCHSIZE_KEY = "exec.query.rowkeyjoin_batchsize";
+  public static final PositiveLongValidator QUERY_ROWKEYJOIN_BATCHSIZE = new PositiveLongValidator(QUERY_ROWKEYJOIN_BATCHSIZE_KEY, Long.MAX_VALUE, null);
   /**
    * When iterator validation is enabled, additionally validates the vectors in
    * each batch passed to each iterator.
