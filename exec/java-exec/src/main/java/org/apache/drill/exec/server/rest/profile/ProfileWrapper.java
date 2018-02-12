@@ -151,10 +151,6 @@ public class ProfileWrapper {
     return profile;
   }
 
-  public Map<String, String> getPhysicalOperatorMap() {
-    return this.physicalOperatorMap;
-  }
-
   public String getProfileDuration() {
     return (new SimpleDurationFormat(profile.getStart(), profile.getEnd())).verbose();
   }
@@ -334,10 +330,13 @@ public class ProfileWrapper {
   //Generates operator names inferred from physical plan
   private void generateOpMap(String plan) {
     this.physicalOperatorMap = new HashMap<String,String>();
+    //[e.g ] operatorLine = "01-03 Flatten(flattenField=[$1]) : rowType = RecordType(ANY rfsSpecCode, ..."
     String[] operatorLine = plan.split("\\n");
     for (String line : operatorLine) {
       String[] lineToken = line.split("\\s+", 3);
+      //[e.g ] operatorPath = "01-xx-03"
       String operatorPath = lineToken[0].trim().replaceFirst("-", "-xx-"); //Required format for lookup
+      //[e.g ] extractedOperatorName = "FLATTEN"
       String extractedOperatorName = CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, lineToken[1].split("\\(", 2)[0].trim());
       physicalOperatorMap.put(operatorPath, extractedOperatorName);
     }

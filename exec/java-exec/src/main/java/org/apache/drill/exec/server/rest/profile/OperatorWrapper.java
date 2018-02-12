@@ -56,10 +56,10 @@ public class OperatorWrapper {
     String extractedOpName = phyOperMap.get(path);
     String inferredOpName = operatorType == null ? UNKNOWN_OPERATOR : operatorType.toString();
     //Revert to inferred names for exceptional cases
-    if (extractedOpName == null || inferredOpName.contains(extractedOpName)
-        || inferredOpName.endsWith("_RECEIVER") || inferredOpName.endsWith("_RECEIVER")) {
-      //e.g. Inf:PARQUET_ROW_GROUP_SCAN ; Ext:SCAN
-      //e.g. UNORDERED_RECEIVER instead of UNION_EXCHANGE
+    // 1. Extracted 'FLATTEN' operator is NULL
+    // 2. Extracted 'SCAN' could be a PARQUET_ROW_GROUP_SCAN, or KAFKA_SUB_SCAN, or etc.
+    // 3. Extracted 'UNION_EXCHANGE' could be a SINGLE_SENDER or UNORDERED_RECEIVER
+    if (extractedOpName == null || inferredOpName.contains(extractedOpName) || extractedOpName.endsWith("_EXCHANGE")) {
       operatorName =  inferredOpName;
     } else {
       operatorName =  extractedOpName;
