@@ -455,6 +455,9 @@ public final class ExecConstants {
   public static final String AVERAGE_FIELD_WIDTH_KEY = "planner.memory.average_field_width";
   public static final OptionValidator AVERAGE_FIELD_WIDTH = new PositiveLongValidator(AVERAGE_FIELD_WIDTH_KEY, Long.MAX_VALUE);
 
+  // Mux Exchange options.
+  public static final String ORDERED_MUX_EXCHANGE = "planner.enable_ordered_mux_exchange";
+
   // Resource management boot-time options.
 
   public static final String MAX_MEMORY_PER_NODE = "drill.exec.rm.memory_per_node";

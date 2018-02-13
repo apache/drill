@@ -91,6 +91,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(PlannerSettings.NLJOIN_FOR_SCALAR),
       new OptionDefinition(PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR),
       new OptionDefinition(PlannerSettings.MUX_EXCHANGE),
+      new OptionDefinition(PlannerSettings.ORDERED_MUX_EXCHANGE),
       new OptionDefinition(PlannerSettings.DEMUX_EXCHANGE),
       new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER),
       new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE),
