@@ -31,7 +31,8 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
 
   private static boolean isMuxEnabled(OptionManager options) {
     return (options.getOption(PlannerSettings.MUX_EXCHANGE.getOptionName()).bool_val ||
-            options.getOption(PlannerSettings.DEMUX_EXCHANGE.getOptionName()).bool_val);
+            options.getOption(PlannerSettings.DEMUX_EXCHANGE.getOptionName()).bool_val ||
+            options.getOption(PlannerSettings.ORDERED_MUX_EXCHANGE.getOptionName()).bool_val);
   }
 
   public static Prel insertLocalExchanges(Prel prel, OptionManager options) {
