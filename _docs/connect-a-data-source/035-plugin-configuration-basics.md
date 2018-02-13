@@ -1,6 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
-date: 2017-08-08 02:22:58 UTC
+date: 2018-02-13 00:00:44 UTC
 parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin configurations on one Drill node in a 
@@ -15,7 +15,7 @@ You can use the Drill Web Console to update or add a new storage plugin configur
 To create a name and new configuration:
 
 1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
-2. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/).  
+2. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/). The Storage tab appears in the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins. 
 3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
 name. Names are case-sensitive.  
@@ -27,11 +27,11 @@ name. Names are case-sensitive.
    Using a copy of an existing configuration reduces the risk of JSON coding errors. Use the Storage Plugin Attributes table in the next section as a guide for making typical modifications.  
 6. Click **Create**.
 
-<!-- Add to step 3 when the feature goes into 1.5: The Storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.   -->
 
 ## Storage Plugin Attributes
 The following graphic shows key attributes of a typical `dfs`-based storage plugin configuration:  
-![dfs plugin]({{ site.baseurl }}/docs/img/connect-plugin.png)
+![dfs plugin]({{ site.baseurl }}/docs/img/connect-plugin.png)  
+
 ## List of Attributes and Definitions
 The following table describes the attributes you configure for storage plugins installed with Drill. 
 <table>
@@ -82,6 +82,12 @@ The following table describes the attributes you configure for storage plugins i
     <td>null<br>"parquet"<br>"csv"<br>"json"</td>
     <td>no</td>
     <td>Format for reading data, regardless of extension. Default = "parquet"</td>
+  </tr>
+  <tr>
+    <td>"workspaces". . . "allowAccessOutsideWorkspace"</td>
+    <td>false<br>true<br></td>
+    <td>yes</td>
+    <td>Introduced in Drill 1.12. Prevents users from accessing paths outside the root of a workspace. Set to false by default to disallow access outside the root of a workspace. To allow access to paths outside the root of a workspace, change the value to true. Dfs storage plugins configured prior to Drill 1.12 (that do not have the parameter specified) cannot access paths outside of the workspace unless this parameter is included in the workspace configuration and set to true.</td>
   </tr>
   <tr>
     <td>"formats"</td>
