@@ -38,5 +38,7 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Arina Ielchiieva | arina |  
 | Paul Rogers | progers |
 | Laurent Goujon | laurent |  
-| Charles Givre | cgivre |    
+| Charles Givre | cgivre |   
+| Boaz Ben-Zvi | boaz |  
+| Anil Kumar Batchu | akumarb2010 |   
 
