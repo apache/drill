@@ -33,8 +33,6 @@ import java.util.List;
 
 @Category({SlowTest.class, OperatorTest.class})
 public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
-
-
   @SuppressWarnings("unchecked")
   @Test
   // Should spill, including recursive spill

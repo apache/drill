@@ -43,6 +43,7 @@ import org.apache.drill.exec.planner.torel.ConversionContext;
  * Logical Join implemented in Drill.
  */
 public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
+  public static final String EQUALITY_CONDITION = "==";
 
   /** Creates a DrillJoinRel.
    * We do not throw InvalidRelException in Logical planning phase. It's up to the post-logical planning check or physical planning
@@ -88,7 +89,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     builder.right(rightOp);
 
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
-      builder.addCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right)));
+      builder.addCondition(EQUALITY_CONDITION, new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right)));
     }
 
     return builder.build();

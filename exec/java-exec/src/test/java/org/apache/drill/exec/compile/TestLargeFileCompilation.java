@@ -174,6 +174,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   public void testHashJoin() throws Exception {
     String tableName = "wide_table_hash_join";
     try {
+      setSessionOption("drill.exec.hashjoin.fallback.enabled", true);
       testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
       testNoResult("alter session set `planner.enable_mergejoin` = false");
       testNoResult("alter session set `planner.enable_nestedloopjoin` = false");

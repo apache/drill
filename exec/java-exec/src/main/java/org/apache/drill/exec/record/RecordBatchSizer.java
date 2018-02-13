@@ -26,6 +26,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BaseAllocator;
+import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVector;
@@ -49,8 +50,29 @@ import static org.apache.drill.exec.vector.AllocationHelper.STD_REPETITION_FACTO
  */
 
 public class RecordBatchSizer {
+  // TODO consolidate common memory estimation helpers
+  public static final double PAYLOAD_FROM_BUFFER = SortMemoryManager.PAYLOAD_FROM_BUFFER;
+  public static final double FRAGMENTATION_FACTOR = 1.0 / PAYLOAD_FROM_BUFFER;
+  public static final double BUFFER_FROM_PAYLOAD = SortMemoryManager.BUFFER_FROM_PAYLOAD;
+
   private static final int OFFSET_VECTOR_WIDTH = UInt4Vector.VALUE_WIDTH;
   private static final int BIT_VECTOR_WIDTH = UInt1Vector.VALUE_WIDTH;
+
+  public static long multiplyByFactors(long size, double... factors)
+  {
+    double doubleSize = (double) size;
+
+    for (double factor: factors) {
+      doubleSize *= factor;
+    }
+
+    return (long) doubleSize;
+  }
+
+  public static long multiplyByFactor(long size, double factor)
+  {
+    return (long) (((double) size) * factor);
+  }
 
   /**
    * Column size information.
@@ -125,6 +147,14 @@ public class RecordBatchSizer {
      * Child columns if this is a map column.
      */
     private Map<String, ColumnSize> children = CaseInsensitiveMap.newHashMap();
+
+    /**
+     * Returns true if there is an accurate std size. Otherwise it returns false.
+     * @return True if there is an accurate std size. Otherwise it returns false.
+     */
+    public boolean hasStdDataSize() {
+      return !isVariableWidth && !isRepeated;
+    }
 
     /**
      * std pure data size per entry from Drill metadata, based on type.
@@ -227,6 +257,18 @@ public class RecordBatchSizer {
      */
     public int getAllocSizePerEntry() {
       return rowCount() == 0 ? getStdNetSizePerEntry() : getNetSizePerEntry();
+    }
+
+    /**
+     * If there is an accurate std net size, that is returned. Otherwise the net size is returned.
+     * @return If there is an accurate std net size, that is returned. Otherwise the net size is returned.
+     */
+    public int getStdNetOrNetSizePerEntry() {
+      if (hasStdDataSize()) {
+        return getStdNetSizePerEntry();
+      } else {
+        return getNetSizePerEntry();
+      }
     }
 
     /**

@@ -53,7 +53,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
-
+/**
+ * This is a master class used to generate code for {@link HashTable}s.
+ */
 public class ChainedHashTable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ChainedHashTable.class);
 
@@ -282,9 +284,7 @@ public class ChainedHashTable {
 
     int i = 0;
     for (LogicalExpression expr : keyExprs) {
-      boolean useSetSafe = !Types.isFixedWidthType(expr.getMajorType()) || Types.isRepeated(expr.getMajorType());
-      ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(htKeyFieldIds[i++], expr, useSetSafe);
-
+      ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(htKeyFieldIds[i++], expr, true);
       cg.addExpr(vvwExpr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
     }
   }

@@ -29,25 +29,56 @@ import java.util.List;
 public class HashTableConfig  {
 
   private final int initialCapacity;
+  private final boolean initialSizeIsFinal;
   private final float loadFactor;
   private final List<NamedExpression> keyExprsBuild;
   private final List<NamedExpression> keyExprsProbe;
   private final List<Comparator> comparators;
 
   @JsonCreator
-  public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity, @JsonProperty("loadFactor") float loadFactor,
+  public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity,
+                         @JsonProperty("loadFactor") float loadFactor,
                          @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
                          @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
                          @JsonProperty("comparators") List<Comparator> comparators) {
     this.initialCapacity = initialCapacity;
+    this.initialSizeIsFinal = false;
     this.loadFactor = loadFactor;
     this.keyExprsBuild = keyExprsBuild;
     this.keyExprsProbe = keyExprsProbe;
     this.comparators = comparators;
   }
 
+  @JsonCreator
+  public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity,
+                         @JsonProperty("initialCapacity") boolean initialSizeIsFinal,
+                         @JsonProperty("loadFactor") float loadFactor,
+                         @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
+                         @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
+                         @JsonProperty("comparators") List<Comparator> comparators) {
+    this.initialCapacity = initialCapacity;
+    this.initialSizeIsFinal = initialSizeIsFinal;
+    this.loadFactor = loadFactor;
+    this.keyExprsBuild = keyExprsBuild;
+    this.keyExprsProbe = keyExprsProbe;
+    this.comparators = comparators;
+  }
+
+  public HashTableConfig withInitialCapacity(int initialCapacity) {
+    return new HashTableConfig(initialCapacity,
+      initialSizeIsFinal,
+      loadFactor,
+      keyExprsBuild,
+      keyExprsProbe,
+      comparators);
+  }
+
   public int getInitialCapacity() {
     return initialCapacity;
+  }
+
+  public boolean getInitialSizeIsFinal() {
+    return initialSizeIsFinal;
   }
 
   public float getLoadFactor() {

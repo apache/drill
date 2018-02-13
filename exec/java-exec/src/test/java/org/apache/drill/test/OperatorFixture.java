@@ -21,6 +21,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
@@ -28,6 +36,7 @@ import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -113,8 +122,17 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     protected ExecutorService scanExecutor;
     protected ExecutorService scanDecoderExecutor;
 
-    public Builder()
+    public Builder(BaseDirTestWatcher dirTestWatcher)
     {
+      // Set defaults for tmp dirs correctly
+
+      if (dirTestWatcher != null) {
+        configBuilder.put(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getCodegenDir().getAbsolutePath());
+        configBuilder.put(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
+        configBuilder.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
+        configBuilder.put(ExecConstants.SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
+        configBuilder.put(ExecConstants.HASHJOIN_SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
+      }
     }
 
     public ConfigBuilder configBuilder() {
@@ -364,8 +382,8 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     options.close();
   }
 
-  public static Builder builder() {
-    Builder builder = new Builder();
+  public static Builder builder(BaseDirTestWatcher dirTestWatcher) {
+    Builder builder = new Builder(dirTestWatcher);
     builder.configBuilder()
       // Required to avoid Dynamic UDF calls for missing or
       // ambiguous functions.
@@ -373,8 +391,8 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     return builder;
   }
 
-  public static OperatorFixture standardFixture() {
-    return builder().build();
+  public static OperatorFixture standardFixture(BaseDirTestWatcher dirTestWatcher) {
+    return builder(dirTestWatcher).build();
   }
 
   public RowSetBuilder rowSetBuilder(BatchSchema schema) {

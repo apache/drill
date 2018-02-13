@@ -19,19 +19,29 @@ package org.apache.drill.exec.record;
 
 import static org.junit.Assert.fail;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.categories.VectorTest;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.List;
 
 @Category(VectorTest.class)
 public class TestVectorContainer extends DrillTest {
@@ -40,9 +50,12 @@ public class TestVectorContainer extends DrillTest {
   // once that is available.
   protected static OperatorFixture fixture;
 
+  @ClassRule
+  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
-    fixture = OperatorFixture.standardFixture();
+    fixture = OperatorFixture.standardFixture(dirTestWatcher);
   }
 
   @AfterClass
@@ -123,5 +136,31 @@ public class TestVectorContainer extends DrillTest {
     }
     leftIndirect.clear();
     right.clear();
+  }
+
+  @Test
+  public void testPrettyPrintRecord() {
+    final MaterializedField colA = MaterializedField.create("colA", Types.required(TypeProtos.MinorType.INT));
+    final MaterializedField colB = MaterializedField.create("colB", Types.required(TypeProtos.MinorType.VARCHAR));
+    final MaterializedField colC = MaterializedField.create("colC", Types.repeated(TypeProtos.MinorType.FLOAT4));
+    final MaterializedField colD = MaterializedField.create("colD", Types.repeated(TypeProtos.MinorType.VARCHAR));
+    final List<MaterializedField> cols = Lists.newArrayList(colA, colB, colC, colD);
+    final BatchSchema batchSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, cols);
+
+    try (RootAllocator allocator = new RootAllocator(10_000_000)) {
+      final RowSet rowSet = new RowSetBuilder(allocator, batchSchema)
+        .addRow(110, "green", new float[]{5.5f, 2.3f}, new String[]{"1a", "1b"})
+        .addRow(1440, "yellow", new float[]{1.0f}, new String[]{"dog"})
+        .build();
+
+      final String expected = "[\"colA\" = 110, \"colB\" = green, \"colC\" = [5.5,2.3], \"colD\" = [\"1a\",\"1b\"]]";
+      final String actual = rowSet.container().prettyPrintRecord(0);
+
+      try {
+        Assert.assertEquals(expected, actual);
+      } finally {
+        rowSet.clear();
+      }
+    }
   }
 }

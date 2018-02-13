@@ -213,6 +213,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     return bits.getPayloadByteCount(valueCount) + values.getPayloadByteCount(valueCount);
   }
 
+  <#if type.major != "VarLen">
+  @Override
+  public int getValueWidth(){
+    return bits.getValueWidth() + ${type.width};
+  }
+  </#if>
+
   <#if type.major == "VarLen">
   @Override
   public void allocateNew(int totalBytes, int valueCount) {
