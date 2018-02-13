@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,26 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.test;
+package org.apache.drill.exec.physical.impl.join;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import javax.annotation.Nullable;
 
-public class SubOperatorTest extends DrillTest {
+/**
+ * A {@link HashJoinStateCalculator} is a piece of code that compute the memory requirements for one of the states
+ * in the {@link HashJoinState} enum.
+ */
+public interface HashJoinStateCalculator<T extends HashJoinStateCalculator> {
+  /**
+   * Signifies that the current state is complete and returns the next {@link HashJoinStateCalculator}.
+   * Returns null in the case where there is no next state.
+   * @return The next {@link HashJoinStateCalculator} or null if this was the last state.
+   */
+  @Nullable
+  T next();
 
-  protected static OperatorFixture fixture;
-
-  @ClassRule
-  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
-
-  @BeforeClass
-  public static void classSetup() throws Exception {
-    fixture = OperatorFixture.standardFixture(dirTestWatcher);
-  }
-
-  @AfterClass
-  public static void classTeardown() throws Exception {
-    fixture.close();
-  }
+  /**
+   * The current {@link HashJoinState} corresponding to this calculator.
+   * @return
+   */
+  HashJoinState getState();
 }

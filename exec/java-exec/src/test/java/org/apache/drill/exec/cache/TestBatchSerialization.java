@@ -34,6 +34,7 @@ import org.apache.drill.exec.cache.VectorSerializer.Reader;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DirTestWatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
@@ -52,12 +53,12 @@ import org.junit.Test;
 public class TestBatchSerialization extends DrillTest {
 
   @ClassRule
-  public static final DirTestWatcher dirTestWatcher = new DirTestWatcher();
+  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
   public static OperatorFixture fixture;
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
-    fixture = OperatorFixture.builder().build();
+    fixture = OperatorFixture.builder(dirTestWatcher).build();
   }
 
   @AfterClass

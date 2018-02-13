@@ -271,7 +271,7 @@ public class PerformanceTool {
   }
 
   public static void main(String args[]) {
-    try (OperatorFixture fixture = OperatorFixture.standardFixture();) {
+    try (OperatorFixture fixture = OperatorFixture.standardFixture(null);) {
       for (int i = 0; i < 2; i++) {
         System.out.println((i==0) ? "Warmup" : "Test run");
         new RequiredVectorTester(fixture).runTest();

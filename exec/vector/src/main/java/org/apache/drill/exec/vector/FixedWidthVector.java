@@ -30,4 +30,10 @@ public interface FixedWidthVector extends ValueVector {
    * Zero out the underlying buffer backing this vector.
    */
   void zeroVector();
+
+  /**
+   * The width of a record in bytes.
+   * @return The width of a record in bytes.
+   */
+  int getValueWidth();
 }

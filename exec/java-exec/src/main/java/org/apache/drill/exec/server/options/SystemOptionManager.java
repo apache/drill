@@ -118,10 +118,9 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(PlannerSettings.ENABLE_UNNEST_LATERAL),
       new OptionDefinition(PlannerSettings.FORCE_2PHASE_AGGR), // for testing
       new OptionDefinition(ExecConstants.HASHJOIN_NUM_PARTITIONS_VALIDATOR),
-      new OptionDefinition(ExecConstants.HASHJOIN_MAX_MEMORY_VALIDATOR),
+      new OptionDefinition(ExecConstants.HASHJOIN_MAX_MEMORY_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, true)),
       new OptionDefinition(ExecConstants.HASHJOIN_NUM_ROWS_IN_BATCH_VALIDATOR),
-      new OptionDefinition(ExecConstants.HASHJOIN_MAX_BATCHES_IN_MEMORY_VALIDATOR),
-      new OptionDefinition(ExecConstants.HASHJOIN_MAX_BATCHES_PER_PARTITION_VALIDATOR),
+      new OptionDefinition(ExecConstants.HASHJOIN_MAX_BATCHES_IN_MEMORY_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, true)),
       new OptionDefinition(ExecConstants.HASHAGG_NUM_PARTITIONS_VALIDATOR),
       new OptionDefinition(ExecConstants.HASHAGG_MAX_MEMORY_VALIDATOR),
       new OptionDefinition(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR), // for tuning
@@ -188,6 +187,10 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP),
       new OptionDefinition(ExecConstants.NON_BLOCKING_OPERATORS_MEMORY),
       new OptionDefinition(ExecConstants.HASH_JOIN_TABLE_FACTOR),
+      new OptionDefinition(ExecConstants.HASHJOIN_HASHTABLE_CALC_TYPE, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM_AND_SESSION, true, true)),
+      new OptionDefinition(ExecConstants.HASHJOIN_SAFETY_FACTOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM_AND_SESSION, true, true)),
+      new OptionDefinition(ExecConstants.HASHJOIN_HASH_DOUBLE_FACTOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM_AND_SESSION, true, true)),
+      new OptionDefinition(ExecConstants.HASHJOIN_FRAGMENTATION_FACTOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM_AND_SESSION, true, true)),
       new OptionDefinition(ExecConstants.HASH_AGG_TABLE_FACTOR),
       new OptionDefinition(ExecConstants.AVERAGE_FIELD_WIDTH),
       new OptionDefinition(ExecConstants.NEW_VIEW_DEFAULT_PERMS_VALIDATOR),

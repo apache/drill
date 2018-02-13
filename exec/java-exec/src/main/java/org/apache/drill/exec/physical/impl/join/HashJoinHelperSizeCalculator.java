@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,26 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.test;
+package org.apache.drill.exec.physical.impl.join;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-
-public class SubOperatorTest extends DrillTest {
-
-  protected static OperatorFixture fixture;
-
-  @ClassRule
-  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
-
-  @BeforeClass
-  public static void classSetup() throws Exception {
-    fixture = OperatorFixture.standardFixture(dirTestWatcher);
-  }
-
-  @AfterClass
-  public static void classTeardown() throws Exception {
-    fixture.close();
-  }
+public interface HashJoinHelperSizeCalculator {
+  long calculateSize(HashJoinMemoryCalculator.PartitionStat partitionStat, double fragmentationFactor);
 }

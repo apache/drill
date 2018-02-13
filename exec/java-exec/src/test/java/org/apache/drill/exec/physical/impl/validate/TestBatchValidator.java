@@ -32,12 +32,14 @@ import org.apache.drill.exec.vector.RepeatedVarCharVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import ch.qos.logback.classic.Level;
@@ -47,13 +49,16 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
   protected static OperatorFixture fixture;
   protected static LogFixture logFixture;
 
+  @ClassRule
+  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     logFixture = LogFixture.builder()
         .toConsole()
         .logger(BatchValidator.class, Level.TRACE)
         .build();
-    fixture = OperatorFixture.standardFixture();
+    fixture = OperatorFixture.standardFixture(dirTestWatcher);
   }
 
   @AfterClass

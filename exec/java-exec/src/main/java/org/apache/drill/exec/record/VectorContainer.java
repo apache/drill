@@ -560,4 +560,28 @@ public class VectorContainer implements VectorAccessible {
     schemaChanged = other.schemaChanged;
     other.schemaChanged = temp2;
   }
+
+  /**
+   * This method create a pretty string for a record in the {@link VectorContainer}.
+   * @param index The index of the record of interest.
+   * @return The string representation of a record.
+   */
+  public String prettyPrintRecord(int index) {
+    final StringBuilder sb = new StringBuilder();
+    String separator = "";
+    sb.append("[");
+
+    for (VectorWrapper vectorWrapper: wrappers) {
+      sb.append(separator);
+      separator = ", ";
+      final String columnName = vectorWrapper.getField().getName();
+      final Object value = vectorWrapper.getValueVector().getAccessor().getObject(index);
+
+      // "columnName" = 11
+      sb.append("\"").append(columnName).append("\" = ").append(value);
+    }
+
+    sb.append("]");
+    return sb.toString();
+  }
 }

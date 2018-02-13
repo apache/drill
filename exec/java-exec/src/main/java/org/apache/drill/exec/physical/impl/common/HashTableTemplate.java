@@ -19,18 +19,23 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 
 import javax.inject.Named;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.AllocationManager;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.impl.join.HashJoinMemoryCalculator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -38,10 +43,12 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
+import org.apache.drill.exec.vector.VariableWidthVector;
 
 public abstract class HashTableTemplate implements HashTable {
+
+  public static final int MAX_VARCHAR_SIZE = 8; // This is a bad heuristic which will be eliminated when the keys are removed from the HashTable.
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashTable.class);
   private static final boolean EXTRA_DEBUG = false;
@@ -90,6 +97,9 @@ public abstract class HashTableTemplate implements HashTable {
   // Hash table configuration parameters
   private HashTableConfig htConfig;
 
+  // Allocation tracker
+  private HashTableAllocationTracker allocationTracker;
+
   // The original container from which others may be cloned
   private VectorContainer htContainerOrig;
 
@@ -98,8 +108,6 @@ public abstract class HashTableTemplate implements HashTable {
   private int numResizing = 0;
 
   private int resizingTime = 0;
-
-  private int maxVarcharSize = 8; // for varchar allocation
 
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
@@ -121,7 +129,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     private int batchIndex = 0;
 
-    public BatchHolder(int idx) {
+    public BatchHolder(int idx, int newBatchHolderSize) {
 
       this.batchIndex = idx;
 
@@ -132,24 +140,24 @@ public abstract class HashTableTemplate implements HashTable {
           ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
           htContainer.add(vv); // add to container before actual allocation (to allow clearing in case of an OOM)
 
-          // Capacity for "hashValues" and "links" vectors is BATCH_SIZE records. It is better to allocate space for
-          // "key" vectors to store as close to as BATCH_SIZE records. A new BatchHolder is created when either BATCH_SIZE
+          // Capacity for "hashValues" and "links" vectors is newBatchHolderSize records. It is better to allocate space for
+          // "key" vectors to store as close to as newBatchHolderSize records. A new BatchHolder is created when either newBatchHolderSize
           // records are inserted or "key" vectors ran out of space. Allocating too less space for "key" vectors will
           // result in unused space in "hashValues" and "links" vectors in the BatchHolder. Also for each new
-          // BatchHolder we create a SV4 vector of BATCH_SIZE in HashJoinHelper.
+          // BatchHolder we create a SV4 vector of newBatchHolderSize in HashJoinHelper.
           if (vv instanceof FixedWidthVector) {
-            ((FixedWidthVector) vv).allocateNew(BATCH_SIZE);
+            ((FixedWidthVector) vv).allocateNew(newBatchHolderSize);
           } else if (vv instanceof VariableWidthVector) {
             long beforeMem = allocator.getAllocatedMemory();
-            ((VariableWidthVector) vv).allocateNew(maxVarcharSize * BATCH_SIZE, BATCH_SIZE);
-            logger.trace("HT allocated {} for varchar of max width {}",allocator.getAllocatedMemory() - beforeMem, maxVarcharSize);
+            ((VariableWidthVector) vv).allocateNew(MAX_VARCHAR_SIZE * newBatchHolderSize, newBatchHolderSize);
+            logger.trace("HT allocated {} for varchar of max width {}",allocator.getAllocatedMemory() - beforeMem, MAX_VARCHAR_SIZE);
           } else {
             vv.allocateNew();
           }
         }
 
-        links = allocMetadataVector(HashTable.BATCH_SIZE, EMPTY_SLOT);
-        hashValues = allocMetadataVector(HashTable.BATCH_SIZE, 0);
+        links = allocMetadataVector(newBatchHolderSize, EMPTY_SLOT);
+        hashValues = allocMetadataVector(newBatchHolderSize, 0);
         success = true;
       } finally {
         if (!success) {
@@ -182,7 +190,7 @@ public abstract class HashTableTemplate implements HashTable {
         boolean isProbe) throws SchemaChangeException {
 
       int currentIdxWithinBatch = currentIdxHolder.value & BATCH_MASK;
-      boolean match = false;
+      boolean match;
 
       if (currentIdxWithinBatch >= HashTable.BATCH_SIZE) {
         logger.debug("Batch size = {}, incomingRowIdx = {}, currentIdxWithinBatch = {}.", HashTable.BATCH_SIZE,
@@ -323,12 +331,6 @@ public abstract class HashTableTemplate implements HashTable {
     }
 
     private boolean outputKeys(VectorContainer outContainer, int outStartIndex, int numRecords, int numExpectedRecords) {
-
-      /** for debugging
-      BigIntVector vv0 = getValueVector(0);
-      BigIntHolder holder = new BigIntHolder();
-      */
-
       // set the value count for htContainer's value vectors before the transfer ..
       setValueCount();
 
@@ -352,26 +354,6 @@ public abstract class HashTableTemplate implements HashTable {
         }
       }
 
-/*
-      logger.debug("Attempting to output keys for batch index: {} from index {} to maxOccupiedIndex {}.",
-      this.batchIndex, 0, maxOccupiedIdx);
-      for (int i = batchOutputCount; i <= maxOccupiedIdx; i++) {
-        if (outputRecordKeys(i, batchOutputCount) ) {
-          if (EXTRA_DEBUG) logger.debug("Outputting keys to output index: {}", batchOutputCount) ;
-
-          // debugging
-          // holder.value = vv0.getAccessor().get(i);
-          // if (holder.value == 100018 || holder.value == 100021) {
-          //  logger.debug("Outputting key = {} at index - {} to outgoing index = {}.", holder.value, i,
-          //      batchOutputCount);
-          // }
-
-          batchOutputCount++;
-        } else {
-          return false;
-        }
-      }
- */
       return true;
     }
 
@@ -443,8 +425,21 @@ public abstract class HashTableTemplate implements HashTable {
     protected void outputRecordKeys(@Named("htRowIdx") int htRowIdx, @Named("outRowIdx") int outRowIdx) throws SchemaChangeException {
     }
 
-  } // class BatchHolder
+    public long getActualSize() {
+      Set<AllocationManager.BufferLedger> ledgers = Sets.newHashSet();
+      links.collectLedgers(ledgers);
+      hashValues.collectLedgers(ledgers);
 
+      long size = 0L;
+
+      for (AllocationManager.BufferLedger ledger: ledgers) {
+        size += ledger.getAccountedSize();
+      }
+
+      size += new RecordBatchSizer(htContainer).actualSize();
+      return size;
+    }
+  }
 
   @Override
   public void setup(HashTableConfig htConfig, BufferAllocator allocator, VectorContainer incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing, VectorContainer htContainerOrig) {
@@ -471,6 +466,7 @@ public abstract class HashTableTemplate implements HashTable {
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
     this.htContainerOrig = htContainerOrig;
+    this.allocationTracker = new HashTableAllocationTracker(htConfig, BATCH_SIZE);
 
     // round up the initial capacity to nearest highest power of 2
     tableSize = roundUpToPowerOf2(initialCap);
@@ -496,6 +492,12 @@ public abstract class HashTableTemplate implements HashTable {
     }
 
     currentIdxHolder = new IndexPointer();
+  }
+
+  @Override
+  public void updateInitialCapacity(int initialCapacity) {
+    htConfig = htConfig.withInitialCapacity(initialCapacity);
+    allocationTracker = new HashTableAllocationTracker(htConfig, BATCH_SIZE);
   }
 
   @Override
@@ -711,19 +713,21 @@ public abstract class HashTableTemplate implements HashTable {
     int totalBatchSize = batchHolders.size() * BATCH_SIZE;
 
     if (currentIdx >= totalBatchSize) {
-      BatchHolder bh = newBatchHolder(batchHolders.size());
+      BatchHolder bh = newBatchHolder(batchHolders.size(), allocationTracker.getNextBatchHolderSize());
       batchHolders.add(bh);
       bh.setup();
       if (EXTRA_DEBUG) {
         logger.debug("HashTable: Added new batch. Num batches = {}.", batchHolders.size());
       }
+
+      allocationTracker.commit();
       return true;
     }
     return false;
   }
 
-  protected BatchHolder newBatchHolder(int index) { // special method to allow debugging of gen code
-    return new BatchHolder(index);
+  protected BatchHolder newBatchHolder(int index, int newBatchHolderSize) { // special method to allow debugging of gen code
+    return new BatchHolder(index, newBatchHolderSize);
   }
 
   // Resize the hash table if needed by creating a new one with double the number of buckets.
@@ -831,9 +835,6 @@ public abstract class HashTableTemplate implements HashTable {
     return vector;
   }
 
-  @Override
-  public void setMaxVarcharSize(int size) { maxVarcharSize = size; }
-
   // These methods will be code-generated in the context of the outer class
   protected abstract void doSetup(@Named("incomingBuild") VectorContainer incomingBuild, @Named("incomingProbe") RecordBatch incomingProbe) throws SchemaChangeException;
 
@@ -841,4 +842,27 @@ public abstract class HashTableTemplate implements HashTable {
 
   protected abstract int getHashProbe(@Named("incomingRowIdx") int incomingRowIdx, @Named("seedValue") int seedValue) throws SchemaChangeException;
 
+  @Override
+  public long getActualSize() {
+    Set<AllocationManager.BufferLedger> ledgers = Sets.newHashSet();
+    startIndices.collectLedgers(ledgers);
+
+    long size = 0L;
+
+    for (AllocationManager.BufferLedger ledger: ledgers) {
+      size += ledger.getAccountedSize();
+    }
+
+    for (BatchHolder batchHolder: batchHolders) {
+      size += batchHolder.getActualSize();
+    }
+
+    return size;
+  }
+
+  @Override
+  public String makeDebugString() {
+    return String.format("[numBuckets = %d, numEntries = %d, numBatchHolders = %d, actualSize = %s]",
+      numBuckets(), numEntries, batchHolders.size(), HashJoinMemoryCalculator.PartitionStatSet.prettyPrintBytes(getActualSize()));
+  }
 }
