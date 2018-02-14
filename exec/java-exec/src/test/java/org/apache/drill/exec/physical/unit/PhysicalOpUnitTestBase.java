@@ -216,6 +216,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     private boolean expectNoRows;
     private Long expectedBatchSize;
     private Integer expectedNumBatches;
+    private Integer expectedTotalRows;
 
     @SuppressWarnings({"unchecked", "resource"})
     public void go() {
@@ -235,7 +236,8 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 
         testOperator = opCreator.getBatch(fragContext, popConfig, incomingStreams);
 
-        Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(new BatchIterator(testOperator), expectedBatchSize, expectedNumBatches);
+        Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(new BatchIterator(testOperator), expectedBatchSize, expectedNumBatches, expectedTotalRows);
+        if ( expectedTotalRows != null ) { return; } // when checking total rows, don't compare actual results
 
         Map<String, List<Object>> expectedSuperVectors;
 
@@ -326,6 +328,11 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 
     public OperatorTestBuilder expectedBatchSize(Long batchSize) {
       this.expectedBatchSize = batchSize;
+      return this;
+    }
+
+    public OperatorTestBuilder expectedTotalRows(Integer expectedTotalRows) {
+      this.expectedTotalRows = expectedTotalRows;
       return this;
     }
   }

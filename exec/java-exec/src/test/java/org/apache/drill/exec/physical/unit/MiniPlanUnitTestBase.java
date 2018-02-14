@@ -151,7 +151,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       }
       Map<String, List<Object>> actualSuperVectors = new TreeMap<String, List<Object>>();
 
-      int actualBatchNum = DrillTestWrapper.addToCombinedVectorResults(batchIterator, expectSchema, null, null, actualSuperVectors);
+      int actualBatchNum = DrillTestWrapper.addToCombinedVectorResults(batchIterator, expectSchema, null, null, actualSuperVectors, null);
       if (expectBatchNum != null) {
         if (expectBatchNum != actualBatchNum) {
           throw new AssertionError(String.format("Expected %s batches from operator tree. But operators return %s batch!", expectBatchNum, actualBatchNum));

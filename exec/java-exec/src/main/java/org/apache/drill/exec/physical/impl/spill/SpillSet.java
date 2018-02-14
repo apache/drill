@@ -38,6 +38,7 @@ import org.apache.drill.exec.cache.VectorSerializer;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -432,6 +433,10 @@ public class SpillSet {
         operName = "HashAgg";
         spillFs = config.getString(ExecConstants.HASHAGG_SPILL_FILESYSTEM);
         dirList = config.getStringList(ExecConstants.HASHAGG_SPILL_DIRS);
+    } else if (popConfig instanceof HashJoinPOP) {
+      operName = "HashJoin";
+      spillFs = config.getString(ExecConstants.HASHJOIN_SPILL_FILESYSTEM);
+      dirList = config.getStringList(ExecConstants.HASHJOIN_SPILL_DIRS);
     } else {
         // just use the common ones
         operName = "Unknown";
