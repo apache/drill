@@ -104,4 +104,7 @@ public class SchemalessBatch implements CloseableRecordBatch {
   public void close() throws Exception {
     // This is present to match BatchCreator#getBatch() returning type.
   }
+
+  @Override
+  public VectorContainer getContainer() { return null; }
 }

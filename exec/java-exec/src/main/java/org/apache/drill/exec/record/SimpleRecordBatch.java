@@ -94,4 +94,9 @@ public class SimpleRecordBatch implements RecordBatch {
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }
+
+  @Override
+  public VectorContainer getContainer() {
+     return container;
+  }
 }

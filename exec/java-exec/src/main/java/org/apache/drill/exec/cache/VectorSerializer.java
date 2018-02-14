@@ -91,7 +91,7 @@ public class VectorSerializer {
 
       final DrillBuf[] incomingBuffers = batch.getBuffers();
       final UserBitShared.RecordBatchDef batchDef = batch.getDef();
-      bytesWritten = batchDef.getSerializedSize();
+      int bytesWritten = batchDef.getSerializedSize();
 
       /* Write the metadata to the file */
       batchDef.writeDelimitedTo(output);
@@ -115,6 +115,7 @@ public class VectorSerializer {
       }
 
       timeNs += timerContext.stop();
+      this.bytesWritten += bytesWritten;
       return bytesWritten;
     }
 

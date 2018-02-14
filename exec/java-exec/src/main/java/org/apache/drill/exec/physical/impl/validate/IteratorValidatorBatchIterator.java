@@ -359,6 +359,11 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
                       this.getClass().getCanonicalName()));
   }
 
+  @Override
+  public VectorContainer getContainer() {
+    return incoming.getContainer();
+  }
+
   public RecordBatch getIncoming() { return incoming; }
 
 }

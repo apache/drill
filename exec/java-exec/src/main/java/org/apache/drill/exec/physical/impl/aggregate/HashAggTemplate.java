@@ -179,15 +179,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     NUM_RESIZING,
     RESIZING_TIME_MS,
     NUM_PARTITIONS,
-    SPILLED_PARTITIONS, // number of partitions spilled to disk
+    SPILLED_PARTITIONS, // number of original partitions spilled to disk
     SPILL_MB,         // Number of MB of data spilled to disk. This amount is first written,
                       // then later re-read. So, disk I/O is twice this amount.
                       // For first phase aggr -- this is an estimate of the amount of data
                       // returned early (analogous to a spill in the 2nd phase).
     SPILL_CYCLE       // 0 - no spill, 1 - spill, 2 - SECONDARY, 3 - TERTIARY
     ;
-
-    // duplicate for hash ag
 
     @Override
     public int metricId() {
@@ -200,8 +198,6 @@ public abstract class HashAggTemplate implements HashAggregator {
     private VectorContainer aggrValuesContainer; // container for aggr values (workspace variables)
     private int maxOccupiedIdx = -1;
     private int batchOutputCount = 0;
-
-    private int capacity = Integer.MAX_VALUE;
 
     @SuppressWarnings("resource")
     public BatchHolder() {
@@ -232,8 +228,6 @@ public abstract class HashAggTemplate implements HashAggregator {
           } else {
             vector.allocateNew();
           }
-
-          capacity = Math.min(capacity, vector.getValueCapacity());
 
           aggrValuesContainer.add(vector);
         }
@@ -464,7 +458,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     // initialize every (per partition) entry in the arrays
     for (int i = 0; i < numPartitions; i++ ) {
       try {
-        this.htables[i] = baseHashTable.createAndSetupHashTable(groupByOutFieldIds, numPartitions);
+        this.htables[i] = baseHashTable.createAndSetupHashTable(groupByOutFieldIds);
         this.htables[i].setMaxVarcharSize(maxColumnWidth);
       } catch (ClassTransformationException e) {
         throw UserException.unsupportedError(e)
@@ -490,12 +484,13 @@ public abstract class HashAggTemplate implements HashAggregator {
   public RecordBatch getNewIncoming() { return newIncoming; }
 
   private void initializeSetup(RecordBatch newIncoming) throws SchemaChangeException, IOException {
-    baseHashTable.updateIncoming(newIncoming); // after a spill - a new incoming
+    baseHashTable.updateIncoming(newIncoming, null); // after a spill - a new incoming
     this.incoming = newIncoming;
     currentBatchRecordCount = newIncoming.getRecordCount(); // first batch in this spill file
     nextPartitionToReturn = 0;
     for (int i = 0; i < numPartitions; i++ ) {
-      htables[i].reinit(newIncoming);
+      htables[i].updateIncoming(newIncoming.getContainer(), null);
+      htables[i].reset();
       if ( batchHolders[i] != null) {
         for (BatchHolder bh : batchHolders[i]) {
           bh.clear();
@@ -547,7 +542,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
     // multiply by the max number of rows in a batch to get the final estimated max size
     estMaxBatchSize = Math.max(estRowWidth, estInputRowWidth) * MAX_BATCH_SIZE;
-    // (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
+    // (When there are no aggr functions, use '1' as later code relies on this siisDebze being non-zero)
     estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_SIZE;
     estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
 
@@ -1260,7 +1255,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     int hashCode;
     try {
       // htables[0].updateBatches();
-      hashCode = htables[0].getHashCode(incomingRowIdx);
+      hashCode = htables[0].getBuildHashCode(incomingRowIdx);
     } catch (SchemaChangeException e) {
       throw new UnsupportedOperationException("Unexpected schema change", e);
     }

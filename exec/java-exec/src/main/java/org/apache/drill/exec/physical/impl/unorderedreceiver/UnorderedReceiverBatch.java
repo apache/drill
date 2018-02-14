@@ -220,6 +220,11 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }
 
+  @Override
+  public VectorContainer getContainer() {
+    return batchLoader.getContainer();
+  }
+
   private void informSenders() {
     logger.info("Informing senders of request to terminate sending.");
     final FragmentHandle handlePrototype = FragmentHandle.newBuilder()
