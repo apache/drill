@@ -153,7 +153,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     try (OperatorRecordBatch opBatch = makeOpBatch(opExec)) {
 
       assertSame(fixture.getFragmentContext(), opBatch.fragmentContext());
-      assertNull(opBatch.getContext());
+      assertNotNull(opBatch.getContext());
 
       // First call to next() builds schema
 
