@@ -92,8 +92,8 @@ public class TestHashAggrSpill extends DrillTest {
    */
   @Test
   public void testSimpleHashAggrSpill() throws Exception {
-    testSpill(68_000_000, 16, 2, 2, false,
-      true, null, 1_200_000, 1, 2, 1, 3);
+    testSpill(80_000_000, 16, 2, 2, false,
+      true, null, 1_200_000, 1, 1, 1, 3);
   }
 
   /**
