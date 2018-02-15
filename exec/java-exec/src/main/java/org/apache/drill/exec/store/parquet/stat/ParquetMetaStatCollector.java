@@ -24,6 +24,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.store.parquet.Metadata;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.parquet.column.statistics.BinaryStatistics;
+import org.apache.parquet.column.statistics.BooleanStatistics;
 import org.apache.parquet.column.statistics.DoubleStatistics;
 import org.apache.parquet.column.statistics.FloatStatistics;
 import org.apache.parquet.column.statistics.IntStatistics;
@@ -179,6 +180,9 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
         final long minMS = convertToDrillDateValue(Integer.parseInt(min.toString()));
         final long maxMS = convertToDrillDateValue(Integer.parseInt(max.toString()));
         ((LongStatistics) convertedStat ).setMinMax(minMS, maxMS);
+        break;
+      case BIT:
+        ((BooleanStatistics) stat).setMinMax(Boolean.parseBoolean(min.toString()), Boolean.parseBoolean(max.toString()));
         break;
       default:
       }

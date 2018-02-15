@@ -388,6 +388,45 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testParquetFilterPD(query3, 49, 2, false);
   }
 
+  @Test
+  public void testBooleanPredicate() throws Exception {
+    // Table blnTbl was created by CTAS in drill 1.12.0 and consist of 4 files withe the next data:
+    //    File 0_0_0.parquet has col_bln column with the next values: true, true, true.
+    //    File 0_0_1.parquet has col_bln column with the next values: false, false, false.
+    //    File 0_0_2.parquet has col_bln column with the next values: true, null, false.
+    //    File 0_0_3.parquet has col_bln column with the next values: null, null, null.
+
+    final String queryIsNull = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is null";
+    testParquetFilterPD(queryIsNull, 4, 2, false);
+
+    final String queryIsNotNull = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is not null";
+    testParquetFilterPD(queryIsNotNull, 8, 3, false);
+
+    final String queryIsTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is true";
+    testParquetFilterPD(queryIsTrue, 4, 2, false);
+
+    final String queryIsNotTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is not true";
+    testParquetFilterPD(queryIsNotTrue, 8, 3, false);
+
+    final String queryIsFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is false";
+    testParquetFilterPD(queryIsFalse, 4, 2, false);
+
+    final String queryIsNotFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is not false";
+    testParquetFilterPD(queryIsNotFalse, 8, 3, false);
+
+    final String queryEqualTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = true";
+    testParquetFilterPD(queryEqualTrue, 4, 2, false);
+
+    final String queryNotEqualTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where not col_bln = true";
+    testParquetFilterPD(queryNotEqualTrue, 4, 2, false);
+
+    final String queryEqualFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = false";
+    testParquetFilterPD(queryEqualFalse, 4, 2, false);
+
+    final String queryNotEqualFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where not col_bln = false";
+    testParquetFilterPD(queryNotEqualFalse, 4, 2, false);
+  }
+
   @Test // DRILL-5359
   public void testFilterWithItemFlatten() throws Exception {
     final String sql = "select n_regionkey\n"
