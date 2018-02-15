@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,6 +30,7 @@ import org.apache.drill.exec.expr.fn.DrillSimpleFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
@@ -37,7 +38,9 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
-import org.apache.drill.exec.expr.stat.ParquetPredicates;
+import org.apache.drill.exec.expr.stat.ParquetBooleanPredicates;
+import org.apache.drill.exec.expr.stat.ParquetComparisonPredicates;
+import org.apache.drill.exec.expr.stat.ParquetIsPredicates;
 import org.apache.drill.exec.expr.stat.TypedFieldExpr;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.slf4j.Logger;
@@ -124,6 +127,11 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
   }
 
   @Override
+  public LogicalExpression visitBooleanConstant(ValueExpressions.BooleanExpression booleanExpression, Set<LogicalExpression> value) throws RuntimeException {
+    return booleanExpression;
+  }
+
+  @Override
   public LogicalExpression visitBooleanOperator(BooleanOperator op, Set<LogicalExpression> value) {
     List<LogicalExpression> childPredicates = new ArrayList<>();
     String functionName = op.getName();
@@ -146,9 +154,9 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       return childPredicates.get(0); // only one leg is qualified, remove boolean op.
     } else {
       if (functionName.equals("booleanOr")) {
-        return new ParquetPredicates.OrPredicate(op.getName(), childPredicates, op.getPosition());
+        return new ParquetBooleanPredicates.OrPredicate(op.getName(), childPredicates, op.getPosition());
       } else {
-        return new ParquetPredicates.AndPredicate(op.getName(), childPredicates, op.getPosition());
+        return new ParquetBooleanPredicates.AndPredicate(op.getName(), childPredicates, op.getPosition());
       }
     }
   }
@@ -181,6 +189,8 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       return ValueExpressions.getTimeStamp(((TimeStampHolder) holder).value);
     case TIME:
       return ValueExpressions.getTime(((TimeHolder) holder).value);
+    case BIT:
+      return ValueExpressions.getBit(((BitHolder) holder).value == 1);
     default:
       return null;
     }
@@ -214,6 +224,10 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       return handleCompareFunction(funcHolderExpr, value);
     }
 
+    if (isIsFunction(funcName)) {
+      return handleIsFunction(funcHolderExpr, value);
+    }
+
     if (CastFunctions.isCastFunction(funcName)) {
       List<LogicalExpression> newArgs = new ArrayList();
       for (LogicalExpression arg : funcHolderExpr.args) {
@@ -245,19 +259,50 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
 
     switch (funcName) {
     case FunctionGenerationHelper.EQ :
-      return new ParquetPredicates.EqualPredicate(newArgs.get(0), newArgs.get(1));
+      return new ParquetComparisonPredicates.EqualPredicate(newArgs.get(0), newArgs.get(1));
     case FunctionGenerationHelper.GT :
-      return new ParquetPredicates.GTPredicate(newArgs.get(0), newArgs.get(1));
+      return new ParquetComparisonPredicates.GTPredicate(newArgs.get(0), newArgs.get(1));
     case FunctionGenerationHelper.GE :
-      return new ParquetPredicates.GEPredicate(newArgs.get(0), newArgs.get(1));
+      return new ParquetComparisonPredicates.GEPredicate(newArgs.get(0), newArgs.get(1));
     case FunctionGenerationHelper.LT :
-      return new ParquetPredicates.LTPredicate(newArgs.get(0), newArgs.get(1));
+      return new ParquetComparisonPredicates.LTPredicate(newArgs.get(0), newArgs.get(1));
     case FunctionGenerationHelper.LE :
-      return new ParquetPredicates.LEPredicate(newArgs.get(0), newArgs.get(1));
+      return new ParquetComparisonPredicates.LEPredicate(newArgs.get(0), newArgs.get(1));
     case FunctionGenerationHelper.NE :
-      return new ParquetPredicates.NEPredicate(newArgs.get(0), newArgs.get(1));
+      return new ParquetComparisonPredicates.NEPredicate(newArgs.get(0), newArgs.get(1));
     default:
       return null;
+    }
+  }
+
+  private LogicalExpression handleIsFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
+    String funcName;
+
+    if (functionHolderExpression.getHolder() instanceof DrillSimpleFuncHolder) {
+      funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
+    } else {
+      logger.warn("Can not cast {} to DrillSimpleFuncHolder. Parquet filter pushdown can not handle function.",
+          functionHolderExpression.getHolder());
+      return null;
+    }
+    LogicalExpression arg = functionHolderExpression.args.get(0);
+
+    switch (funcName) {
+      case FunctionGenerationHelper.IS_NULL:
+        return new ParquetIsPredicates.IsNullPredicate(arg.accept(this, value));
+      case FunctionGenerationHelper.IS_NOT_NULL:
+        return new ParquetIsPredicates.IsNotNullPredicate(arg.accept(this, value));
+      case FunctionGenerationHelper.IS_TRUE:
+        return new ParquetIsPredicates.IsTruePredicate(arg.accept(this, value));
+      case FunctionGenerationHelper.IS_NOT_TRUE:
+        return new ParquetIsPredicates.IsNotTruePredicate(arg.accept(this, value));
+      case FunctionGenerationHelper.IS_FALSE:
+        return new ParquetIsPredicates.IsFalsePredicate(arg.accept(this, value));
+      case FunctionGenerationHelper.IS_NOT_FALSE:
+        return new ParquetIsPredicates.IsNotFalsePredicate(arg.accept(this, value));
+      default:
+        logger.warn("Unhandled IS function. Function name: {}", funcName);
+        return null;
     }
   }
 
@@ -278,6 +323,10 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     return COMPARE_FUNCTIONS_SET.contains(funcName);
   }
 
+  private static boolean isIsFunction(String funcName) {
+    return IS_FUNCTIONS_SET.contains(funcName);
+  }
+
   private static final ImmutableSet<String> COMPARE_FUNCTIONS_SET;
 
   static {
@@ -289,6 +338,20 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
         .add(FunctionGenerationHelper.LT)
         .add(FunctionGenerationHelper.LE)
         .add(FunctionGenerationHelper.NE)
+        .build();
+  }
+
+  private static final ImmutableSet<String> IS_FUNCTIONS_SET;
+
+  static {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    IS_FUNCTIONS_SET = builder
+        .add(FunctionGenerationHelper.IS_NULL)
+        .add(FunctionGenerationHelper.IS_NOT_NULL)
+        .add(FunctionGenerationHelper.IS_TRUE)
+        .add(FunctionGenerationHelper.IS_NOT_TRUE)
+        .add(FunctionGenerationHelper.IS_FALSE)
+        .add(FunctionGenerationHelper.IS_NOT_FALSE)
         .build();
   }
 
