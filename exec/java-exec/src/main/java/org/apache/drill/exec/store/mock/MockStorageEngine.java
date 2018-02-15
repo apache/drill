@@ -56,6 +56,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   private final MockSchema schema;
 
   public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context, String name) {
+    super(context, name);
     this.configuration = configuration;
     this.schema = new MockSchema(this, name);
   }

@@ -44,19 +44,14 @@ public class KafkaStoragePlugin extends AbstractStoragePlugin {
   private static final Logger logger = LoggerFactory.getLogger(KafkaStoragePlugin.class);
   private final KafkaSchemaFactory kafkaSchemaFactory;
   private final KafkaStoragePluginConfig config;
-  private final DrillbitContext context;
   private final Closer closer = Closer.create();
 
   public KafkaStoragePlugin(KafkaStoragePluginConfig config, DrillbitContext context, String name)
       throws ExecutionSetupException {
+    super(context, name);
     logger.debug("Initializing {}", KafkaStoragePlugin.class.getName());
     this.config = config;
-    this.context = context;
     this.kafkaSchemaFactory = new KafkaSchemaFactory(this, name);
-  }
-
-  public DrillbitContext getContext() {
-    return this.context;
   }
 
   @Override

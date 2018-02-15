@@ -31,15 +31,14 @@ import java.io.IOException;
 
 public class OpenTSDBStoragePlugin extends AbstractStoragePlugin {
 
-  private final DrillbitContext context;
-
   private final OpenTSDBStoragePluginConfig engineConfig;
   private final OpenTSDBSchemaFactory schemaFactory;
 
   private final ServiceImpl db;
 
-  public OpenTSDBStoragePlugin(OpenTSDBStoragePluginConfig configuration, DrillbitContext context, String name) throws IOException {
-    this.context = context;
+  public OpenTSDBStoragePlugin(OpenTSDBStoragePluginConfig configuration, DrillbitContext context, String name)
+      throws IOException {
+    super(context, name);
     this.schemaFactory = new OpenTSDBSchemaFactory(this, name);
     this.engineConfig = configuration;
     this.db = new ServiceImpl(configuration.getConnection());
@@ -69,9 +68,5 @@ public class OpenTSDBStoragePlugin extends AbstractStoragePlugin {
 
   public ServiceImpl getClient() {
     return db;
-  }
-
-  DrillbitContext getContext() {
-    return this.context;
   }
 }
