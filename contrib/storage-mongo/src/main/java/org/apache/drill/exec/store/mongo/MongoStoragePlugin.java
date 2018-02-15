@@ -54,7 +54,6 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   static final Logger logger = LoggerFactory
       .getLogger(MongoStoragePlugin.class);
 
-  private final DrillbitContext context;
   private final MongoStoragePluginConfig mongoConfig;
   private final MongoSchemaFactory schemaFactory;
   private final Cache<MongoCnxnKey, MongoClient> addressClientMap;
@@ -63,17 +62,13 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig,
       DrillbitContext context, String name) throws IOException,
       ExecutionSetupException {
-    this.context = context;
+    super(context, name);
     this.mongoConfig = mongoConfig;
     this.clientURI = new MongoClientURI(this.mongoConfig.getConnection());
     this.addressClientMap = CacheBuilder.newBuilder()
         .expireAfterAccess(24, TimeUnit.HOURS)
         .removalListener(new AddressCloser()).build();
     this.schemaFactory = new MongoSchemaFactory(this, name);
-  }
-
-  public DrillbitContext getContext() {
-    return this.context;
   }
 
   @Override
