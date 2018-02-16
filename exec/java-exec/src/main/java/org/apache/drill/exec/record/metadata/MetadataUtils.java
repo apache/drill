@@ -57,10 +57,6 @@ public class MetadataUtils {
     case LIST:
       switch (field.getType().getMode()) {
       case OPTIONAL:
-
-        // List of unions (or a degenerate union of a single type.)
-        // Not supported in Drill.
-
         return new VariantColumnMetadata(field);
       case REPEATED:
 
@@ -69,6 +65,10 @@ public class MetadataUtils {
 
         return new RepeatedListColumnMetadata(field);
       default:
+
+        // List of unions (or a degenerate union of a single type.)
+        // Not supported in Drill.
+
         throw new UnsupportedOperationException(
             String.format("Unsupported mode %s for type %s",
                 field.getType().getMode().name(),

@@ -25,6 +25,12 @@ import com.google.common.base.Preconditions;
 
 public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
 
+  /**
+   * Indicates we don't know the number of dimensions.
+   */
+
+  public static final int UNKNOWN_DIMENSIONS = -1;
+
   private AbstractColumnMetadata childSchema;
 
   public RepeatedListColumnMetadata(MaterializedField field) {
@@ -88,7 +94,7 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
     // If there is no child, then we don't know the
     // dimensionality.
 
-    return childSchema == null ? -1
+    return childSchema == null ? UNKNOWN_DIMENSIONS
         : childSchema.dimensions() + 1;
   }
 }
