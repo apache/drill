@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +38,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
 
   @Test
   public void testSqlQueryOnInvalidTopic() throws Exception {
-    String queryString = String.format(QueryConstants.MSG_SELECT_QUERY, QueryConstants.INVALID_TOPIC);
+    String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.INVALID_TOPIC);
     try {
       testBuilder().sqlQuery(queryString).unOrdered().baselineRecords(Collections.<Map<String, Object>> emptyList())
           .build().run();
@@ -51,7 +50,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
 
   @Test
   public void testResultCount() throws Exception {
-    String queryString = String.format(QueryConstants.MSG_SELECT_QUERY, QueryConstants.JSON_TOPIC);
+    String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.JSON_TOPIC);
     runKafkaSQLVerifyCount(queryString, TestKafkaSuit.NUM_JSON_MSG);
   }
 
@@ -60,9 +59,9 @@ public class KafkaQueriesTest extends KafkaTestBase {
     // following kafka.tools.GetOffsetShell for earliest as -2
     Map<TopicPartition, Long> startOffsetsMap = fetchOffsets(-2);
 
-    String queryString = String.format(QueryConstants.MIN_OFFSET_QUERY, QueryConstants.JSON_TOPIC);
+    String queryString = String.format(TestQueryConstants.MIN_OFFSET_QUERY, TestQueryConstants.JSON_TOPIC);
     testBuilder().sqlQuery(queryString).unOrdered().baselineColumns("minOffset")
-        .baselineValues(startOffsetsMap.get(new TopicPartition(QueryConstants.JSON_TOPIC, 0))).go();
+        .baselineValues(startOffsetsMap.get(new TopicPartition(TestQueryConstants.JSON_TOPIC, 0))).go();
   }
 
   @Test
@@ -70,9 +69,9 @@ public class KafkaQueriesTest extends KafkaTestBase {
     // following kafka.tools.GetOffsetShell for latest as -1
     Map<TopicPartition, Long> endOffsetsMap = fetchOffsets(-1);
 
-    String queryString = String.format(QueryConstants.MAX_OFFSET_QUERY, QueryConstants.JSON_TOPIC);
+    String queryString = String.format(TestQueryConstants.MAX_OFFSET_QUERY, TestQueryConstants.JSON_TOPIC);
     testBuilder().sqlQuery(queryString).unOrdered().baselineColumns("maxOffset")
-        .baselineValues(endOffsetsMap.get(new TopicPartition(QueryConstants.JSON_TOPIC, 0))-1).go();
+        .baselineValues(endOffsetsMap.get(new TopicPartition(TestQueryConstants.JSON_TOPIC, 0))-1).go();
   }
 
   private Map<TopicPartition, Long> fetchOffsets(int flag) {
@@ -80,7 +79,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
 
     Map<TopicPartition, Long> offsetsMap = Maps.newHashMap();
-    kafkaConsumer.subscribe(Arrays.asList(QueryConstants.JSON_TOPIC));
+    kafkaConsumer.subscribe(Collections.singletonList(TestQueryConstants.JSON_TOPIC));
     // based on KafkaConsumer JavaDoc, seekToBeginning/seekToEnd functions
     // evaluates lazily, seeking to the
     // first/last offset in all partitions only when poll(long) or
@@ -108,6 +107,12 @@ public class KafkaQueriesTest extends KafkaTestBase {
       kafkaConsumer.close();
     }
     return offsetsMap;
+  }
+
+  @Test
+  public void testPhysicalPlanSubmission() throws Exception {
+    String query = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.JSON_TOPIC);
+    testPhysicalPlanExecutionBasedOnQuery(query);
   }
 
 }

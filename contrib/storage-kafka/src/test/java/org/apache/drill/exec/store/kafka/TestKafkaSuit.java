@@ -72,15 +72,15 @@ public class TestKafkaSuit {
         Properties topicProps = new Properties();
         zkClient = new ZkClient(embeddedKafkaCluster.getZkServer().getConnectionString(), SESSION_TIMEOUT, CONN_TIMEOUT, ZKStringSerializer$.MODULE$);
         ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(embeddedKafkaCluster.getZkServer().getConnectionString()), false);
-        AdminUtils.createTopic(zkUtils, QueryConstants.JSON_TOPIC, 1, 1, topicProps, RackAwareMode.Disabled$.MODULE$);
+        AdminUtils.createTopic(zkUtils, TestQueryConstants.JSON_TOPIC, 1, 1, topicProps, RackAwareMode.Disabled$.MODULE$);
 
         org.apache.kafka.common.requests.MetadataResponse.TopicMetadata fetchTopicMetadataFromZk = AdminUtils
-            .fetchTopicMetadataFromZk(QueryConstants.JSON_TOPIC, zkUtils);
+            .fetchTopicMetadataFromZk(TestQueryConstants.JSON_TOPIC, zkUtils);
         logger.info("Topic Metadata: " + fetchTopicMetadataFromZk);
 
         KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(),
             StringSerializer.class);
-        generator.populateJsonMsgIntoKafka(QueryConstants.JSON_TOPIC, NUM_JSON_MSG);
+        generator.populateJsonMsgIntoKafka(TestQueryConstants.JSON_TOPIC, NUM_JSON_MSG);
       }
       initCount.incrementAndGet();
       runningSuite = true;

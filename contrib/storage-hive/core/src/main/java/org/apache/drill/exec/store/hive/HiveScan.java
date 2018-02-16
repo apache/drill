@@ -61,41 +61,36 @@ public class HiveScan extends AbstractGroupScan {
 
   private static int HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN = 20;
 
-  @JsonProperty("hive-table")
-  public HiveReadEntry hiveReadEntry;
+  private final HiveStoragePlugin hiveStoragePlugin;
+  private final HiveReadEntry hiveReadEntry;
+  private final HiveMetadataProvider metadataProvider;
 
-  @JsonIgnore
-  public HiveStoragePlugin storagePlugin;
-
-  @JsonProperty("columns")
-  public List<SchemaPath> columns;
-
-  @JsonIgnore
-  protected final HiveMetadataProvider metadataProvider;
-
-  @JsonIgnore
   private List<List<LogicalInputSplit>> mappings;
+  private List<LogicalInputSplit> inputSplits;
 
-  @JsonIgnore
-  protected List<LogicalInputSplit> inputSplits;
+  protected List<SchemaPath> columns;
 
   @JsonCreator
   public HiveScan(@JsonProperty("userName") final String userName,
-                  @JsonProperty("hive-table") final HiveReadEntry hiveReadEntry,
-                  @JsonProperty("storage-plugin") final String storagePluginName,
+                  @JsonProperty("hiveReadEntry") final HiveReadEntry hiveReadEntry,
+                  @JsonProperty("hiveStoragePluginConfig") final HiveStoragePluginConfig hiveStoragePluginConfig,
                   @JsonProperty("columns") final List<SchemaPath> columns,
                   @JacksonInject final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
-    this(userName, hiveReadEntry, (HiveStoragePlugin) pluginRegistry.getPlugin(storagePluginName), columns, null);
+    this(userName,
+        hiveReadEntry,
+        (HiveStoragePlugin) pluginRegistry.getPlugin(hiveStoragePluginConfig),
+        columns,
+        null);
   }
 
-  public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin storagePlugin,
+  public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin hiveStoragePlugin,
       final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider) throws ExecutionSetupException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
-    this.storagePlugin = storagePlugin;
+    this.hiveStoragePlugin = hiveStoragePlugin;
     if (metadataProvider == null) {
-      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, storagePlugin.getHiveConf());
+      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, hiveStoragePlugin.getHiveConf());
     } else {
       this.metadataProvider = metadataProvider;
     }
@@ -105,25 +100,46 @@ public class HiveScan extends AbstractGroupScan {
     super(that);
     this.columns = that.columns;
     this.hiveReadEntry = that.hiveReadEntry;
-    this.storagePlugin = that.storagePlugin;
+    this.hiveStoragePlugin = that.hiveStoragePlugin;
     this.metadataProvider = that.metadataProvider;
   }
 
   public HiveScan clone(final HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
-    return new HiveScan(getUserName(), hiveReadEntry, storagePlugin, columns, metadataProvider);
+    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider);
   }
 
+  @JsonProperty
+  public HiveReadEntry getHiveReadEntry() {
+    return hiveReadEntry;
+  }
+
+  @JsonProperty
+  public HiveStoragePluginConfig getHiveStoragePluginConfig() {
+    return hiveStoragePlugin.getConfig();
+  }
+
+  @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
   }
 
-  protected List<LogicalInputSplit> getInputSplits() {
+  @JsonIgnore
+  public HiveStoragePlugin getStoragePlugin() {
+    return hiveStoragePlugin;
+  }
+
+  protected HiveMetadataProvider getMetadataProvider() {
+    return metadataProvider;
+  }
+
+  private List<LogicalInputSplit> getInputSplits() {
     if (inputSplits == null) {
       inputSplits = metadataProvider.getInputSplits(hiveReadEntry);
     }
 
     return inputSplits;
   }
+
 
   @Override
   public void applyAssignments(final List<CoordinationProtos.DrillbitEndpoint> endpoints) {
@@ -160,7 +176,7 @@ public class HiveScan extends AbstractGroupScan {
       }
 
       final HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.getTableWrapper(), parts);
-      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, storagePlugin);
+      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -174,7 +190,7 @@ public class HiveScan extends AbstractGroupScan {
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     final Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
-    for (final DrillbitEndpoint endpoint : storagePlugin.getContext().getBits()) {
+    for (final DrillbitEndpoint endpoint : hiveStoragePlugin.getContext().getBits()) {
       endpointMap.put(endpoint.getAddress(), endpoint);
       logger.debug("endpoing address: {}", endpoint.getAddress());
     }
@@ -285,7 +301,7 @@ public class HiveScan extends AbstractGroupScan {
 
   @JsonIgnore
   public HiveConf getHiveConf() {
-    return storagePlugin.getHiveConf();
+    return hiveStoragePlugin.getHiveConf();
   }
 
   @JsonIgnore

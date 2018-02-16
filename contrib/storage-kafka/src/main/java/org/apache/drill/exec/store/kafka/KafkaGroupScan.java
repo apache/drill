@@ -69,47 +69,49 @@ public class KafkaGroupScan extends AbstractGroupScan {
   private static final long MSG_SIZE = 1024;
 
   private final KafkaStoragePlugin kafkaStoragePlugin;
-  private final KafkaStoragePluginConfig kafkaStoragePluginConfig;
-  private List<SchemaPath> columns;
   private final KafkaScanSpec kafkaScanSpec;
 
+  private List<SchemaPath> columns;
   private List<PartitionScanWork> partitionWorkList;
   private ListMultimap<Integer, PartitionScanWork> assignments;
   private List<EndpointAffinity> affinities;
 
   @JsonCreator
   public KafkaGroupScan(@JsonProperty("userName") String userName,
-      @JsonProperty("kafkaStoragePluginConfig") KafkaStoragePluginConfig kafkaStoragePluginConfig,
-      @JsonProperty("columns") List<SchemaPath> columns, @JsonProperty("scanSpec") KafkaScanSpec scanSpec,
-      @JacksonInject StoragePluginRegistry pluginRegistry) {
-    this(userName, kafkaStoragePluginConfig, columns, scanSpec, (KafkaStoragePlugin) pluginRegistry);
+                        @JsonProperty("kafkaStoragePluginConfig") KafkaStoragePluginConfig kafkaStoragePluginConfig,
+                        @JsonProperty("columns") List<SchemaPath> columns,
+                        @JsonProperty("kafkaScanSpec") KafkaScanSpec scanSpec,
+                        @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+    this(userName,
+        (KafkaStoragePlugin) pluginRegistry.getPlugin(kafkaStoragePluginConfig),
+        columns,
+        scanSpec);
   }
 
   public KafkaGroupScan(KafkaStoragePlugin kafkaStoragePlugin, KafkaScanSpec kafkaScanSpec, List<SchemaPath> columns) {
     super(StringUtils.EMPTY);
     this.kafkaStoragePlugin = kafkaStoragePlugin;
-    this.kafkaStoragePluginConfig = (KafkaStoragePluginConfig) kafkaStoragePlugin.getConfig();
     this.columns = columns;
     this.kafkaScanSpec = kafkaScanSpec;
     init();
   }
 
-  public KafkaGroupScan(String userName, KafkaStoragePluginConfig kafkaStoragePluginConfig, List<SchemaPath> columns,
-      KafkaScanSpec kafkaScanSpec, KafkaStoragePlugin pluginRegistry) {
+  public KafkaGroupScan(String userName,
+                        KafkaStoragePlugin kafkaStoragePlugin,
+                        List<SchemaPath> columns,
+                        KafkaScanSpec kafkaScanSpec) {
     super(userName);
-    this.kafkaStoragePluginConfig = kafkaStoragePluginConfig;
+    this.kafkaStoragePlugin = kafkaStoragePlugin;
     this.columns = columns;
     this.kafkaScanSpec = kafkaScanSpec;
-    this.kafkaStoragePlugin = pluginRegistry;
     init();
   }
 
   public KafkaGroupScan(KafkaGroupScan that) {
     super(that);
-    this.kafkaStoragePluginConfig = that.kafkaStoragePluginConfig;
+    this.kafkaStoragePlugin = that.kafkaStoragePlugin;
     this.columns = that.columns;
     this.kafkaScanSpec = that.kafkaScanSpec;
-    this.kafkaStoragePlugin = that.kafkaStoragePlugin;
     this.partitionWorkList = that.partitionWorkList;
     this.assignments = that.assignments;
   }
@@ -242,7 +244,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
           work.getBeginOffset(), work.getLatestOffset()));
     }
 
-    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, kafkaStoragePluginConfig, columns, scanSpecList);
+    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, scanSpecList);
   }
 
   @Override
@@ -291,9 +293,9 @@ public class KafkaGroupScan extends AbstractGroupScan {
     return clone;
   }
 
-  @JsonProperty("kafkaStoragePluginConfig")
-  public KafkaStoragePluginConfig getStorageConfig() {
-    return this.kafkaStoragePluginConfig;
+  @JsonProperty
+  public KafkaStoragePluginConfig getKafkaStoragePluginConfig() {
+    return kafkaStoragePlugin.getConfig();
   }
 
   @JsonProperty
@@ -301,8 +303,8 @@ public class KafkaGroupScan extends AbstractGroupScan {
     return columns;
   }
 
-  @JsonProperty("kafkaScanSpec")
-  public KafkaScanSpec getScanSpec() {
+  @JsonProperty
+  public KafkaScanSpec getKafkaScanSpec() {
     return kafkaScanSpec;
   }
 
