@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
   @Override
@@ -37,7 +37,7 @@ public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     final List<MockScanEntry> entries = config.getReadEntries();
-    final List<RecordReader> readers = Lists.newArrayList();
+    final List<RecordReader> readers = new LinkedList<>();
     for(final MockTableDef.MockScanEntry e : entries) {
       if ( e.isExtended( ) ) {
         readers.add(new ExtendedMockRecordReader(e));

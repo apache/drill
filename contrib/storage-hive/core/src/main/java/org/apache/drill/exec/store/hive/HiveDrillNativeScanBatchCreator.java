@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -95,7 +96,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     final OperatorContext oContext = context.newOperatorContext(config);
 
     int currentPartitionIndex = 0;
-    final List<RecordReader> readers = Lists.newArrayList();
+    final List<RecordReader> readers = new LinkedList<>();
 
     final HiveConf conf = config.getHiveConf();
 

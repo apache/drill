@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -93,7 +94,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
     // keep footers in a map to avoid re-reading them
     Map<String, ParquetMetadata> footers = Maps.newHashMap();
-    List<RecordReader> readers = Lists.newArrayList();
+    List<RecordReader> readers = new LinkedList<>();
     List<Map<String, String>> implicitColumns = Lists.newArrayList();
     Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
     for(RowGroupReadEntry e : rowGroupScan.getRowGroupReadEntries()){

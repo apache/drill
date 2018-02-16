@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -31,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
   static final Logger logger = LoggerFactory
@@ -41,7 +41,7 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
   public ScanBatch getBatch(ExecutorFragmentContext context, MongoSubScan subScan,
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    List<RecordReader> readers = Lists.newArrayList();
+    List<RecordReader> readers = new LinkedList<>();
     List<SchemaPath> columns = null;
     for (MongoSubScan.MongoSubScanSpec scanSpec : subScan
         .getChunkScanSpecList()) {

@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -398,7 +399,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
         readers = getJsonReadersFromInputFiles(fs, inputPaths, fragContext, columnsToRead);
       }
 
-      List<RecordReader> readerList = new ArrayList<>();
+      List<RecordReader> readerList = new LinkedList<>();
       while(readers.hasNext()) {
         readerList.add(readers.next());
       }
@@ -441,7 +442,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
     }
 
     private RecordBatch getScanBatch() throws Exception {
-      List<RecordReader> readers = Lists.newArrayList();
+      List<RecordReader> readers = new LinkedList<>();
 
       for (String path : inputPaths) {
         ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), new Path(path));
