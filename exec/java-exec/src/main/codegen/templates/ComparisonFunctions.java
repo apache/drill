@@ -118,9 +118,18 @@
       {
         <@compareNullsSubblock leftType=leftType rightType=rightType
           output="out.value" breakTarget="outside" nullCompare=true nullComparesHigh=nullComparesHigh />
-
+    // NaN is the biggest possible value, and NaN == NaN
     <#if mode == "primitive">
-      ${output} = left.value < right.value ? -1 : (left.value == right.value ? 0 : 1);
+      if(Double.isNaN(left.value) && Double.isNaN(right.value)) {
+        ${output} = 0;
+      } else if (!Double.isNaN(left.value) && Double.isNaN(right.value)) {
+        ${output} = -1;
+      } else if (Double.isNaN(left.value) && !Double.isNaN(right.value)) {
+        ${output} = 1;
+      } else {
+        ${output} = left.value < right.value ? -1 : (left.value == right.value ? 0 : 1);
+      }
+
     <#elseif mode == "varString">
       ${output} = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(
           left.buffer, left.start, left.end, right.buffer, right.start, right.end );

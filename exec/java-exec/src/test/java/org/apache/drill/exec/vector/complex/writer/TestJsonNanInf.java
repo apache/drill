@@ -274,4 +274,61 @@ public class TestJsonNanInf extends BaseTestQuery {
           .run();
   }
 
+  @Test
+  public void testOrderByWithNaN() throws Exception {
+    String table_name = "nan_test.json";
+    String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+        "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
+        "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":5, \"attr4\":-Infinity}\n" +
+        "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}";
+    String query = String.format("SELECT name, attr4 from dfs.`%s` order by name, attr4 ", table_name);
+
+    File file = new File(dirTestWatcher.getRootDir(), table_name);
+    try {
+      FileUtils.writeStringToFile(file, json);
+      test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("name", "attr4")
+          .baselineValues("obj1", Double.POSITIVE_INFINITY)
+          .baselineValues("obj1", Double.NaN)
+          .baselineValues("obj2", Double.NEGATIVE_INFINITY)
+          .baselineValues("obj2", Double.NaN)
+          .build()
+          .run();
+    } finally {
+      test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      FileUtils.deleteQuietly(file);
+    }
+  }
+
+  @Test
+  public void testInnerJoinWithNaN() throws Exception {
+    String table_name = "nan_test.json";
+    String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+        "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
+        "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":5, \"attr4\":-Infinity}\n" +
+        "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}";
+    String query = String.format("select distinct t.name from dfs.`%s` t inner join dfs.`%s` " +
+        " tt on t.attr4 = tt.attr4 ", table_name, table_name);
+
+    File file = new File(dirTestWatcher.getRootDir(), table_name);
+    try {
+      FileUtils.writeStringToFile(file, json);
+      test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("name")
+          .baselineValues("obj1")
+          .baselineValues("obj2")
+          .build()
+          .run();
+    } finally {
+      test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      FileUtils.deleteQuietly(file);
+    }
+  }
+
 }
