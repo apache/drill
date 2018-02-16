@@ -28,7 +28,6 @@ import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
