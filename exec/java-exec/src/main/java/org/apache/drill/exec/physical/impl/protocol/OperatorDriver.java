@@ -29,7 +29,46 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
  */
 
 public class OperatorDriver {
-  public enum State { START, SCHEMA, RUN, END, FAILED, CLOSED }
+  public enum State {
+
+    /**
+     * Before the first call to next().
+     */
+
+    START,
+
+    /**
+     * The first call to next() has been made and schema (only)
+     * was returned. On the subsequent call to next(), return any
+     * data that might have accompanied that first batch.
+     */
+
+    SCHEMA,
+
+    /**
+     * The second call to next() has been made and there is more
+     * data to deliver on subsequent calls.
+     */
+
+    RUN,
+
+    /**
+     * No more data to deliver.
+     */
+
+    END,
+
+    /**
+     * An error occurred. Operation was cancelled.
+     */
+
+    FAILED,
+
+    /**
+     * close() called and resources are released.
+     */
+
+    CLOSED }
 
   private OperatorDriver.State state = State.START;
 
@@ -43,8 +82,8 @@ public class OperatorDriver {
   private final BatchAccessor batchAccessor;
   private int schemaVersion;
 
-  public OperatorDriver(OperatorContext opServicees, OperatorExec opExec) {
-    this.opContext = opServicees;
+  public OperatorDriver(OperatorContext opContext, OperatorExec opExec) {
+    this.opContext = opContext;
     this.operatorExec = opExec;
     batchAccessor = operatorExec.batchAccessor();
   }

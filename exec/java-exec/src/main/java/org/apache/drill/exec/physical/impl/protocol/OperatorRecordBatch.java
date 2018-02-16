@@ -22,7 +22,6 @@ import java.util.Iterator;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.FragmentContextInterface;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
@@ -84,21 +83,11 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
 
   @Override
   public FragmentContext getContext() {
-
-    // Backward compatibility with the full server context. Awkward for testing
-
-    FragmentContext fragmentContext = fragmentContext();
-    if (fragmentContext instanceof FragmentContext) {
-      return (FragmentContext) fragmentContext;
-    } else {
-      return null;
-    }
+    return fragmentContext();
   }
 
-  /**
-   * Revised method that returns the testing-compatible context.
-   * @return
-   */
+  // No longer needed, can be removed after all
+  // batch size control work is committed.
 
   public FragmentContext fragmentContext() {
     return driver.operatorContext().getFragmentContext();
