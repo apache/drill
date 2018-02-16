@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.physical.impl.join;
 
-
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
@@ -31,8 +30,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
-
+import java.util.regex.Pattern;
 
 @Category(OperatorTest.class)
 public class TestHashJoinAdvanced extends JoinTestBase {
@@ -41,6 +39,8 @@ public class TestHashJoinAdvanced extends JoinTestBase {
   @BeforeClass
   public static void disableMergeJoin() throws Exception {
     dirTestWatcher.copyResourceToRoot(Paths.get("join", "empty_part"));
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "region.parquet"));
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "nation.parquet"));
     test(DISABLE_MJ);
   }
 
@@ -196,5 +196,15 @@ public class TestHashJoinAdvanced extends JoinTestBase {
     } finally {
       BaseTestQuery.resetSessionOption(ExecConstants.SLICE_TARGET);
     }
+  }
+
+  @Test // DRILL-6089
+  public void testJoinOrdering() throws Exception {
+    final String query = "select * from dfs.`sample-data/nation.parquet` nation left outer join " +
+      "(select * from dfs.`sample-data/region.parquet`) " +
+      "as region on region.r_regionkey = nation.n_nationkey order by nation.n_name desc";
+
+    final Pattern sortHashJoinPattern = Pattern.compile(".*Sort.*HashJoin", Pattern.DOTALL);
+    testPlanMatchingPatterns(query, new Pattern[]{sortHashJoinPattern}, null);
   }
 }
