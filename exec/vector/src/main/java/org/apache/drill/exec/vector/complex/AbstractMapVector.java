@@ -297,6 +297,10 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   @Override
   public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
     int count = 0;
 
     for (final ValueVector v : vectors.values()) {

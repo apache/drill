@@ -57,18 +57,21 @@ public class RecordIterator implements VectorAccessible {
   private final VectorContainer container; // Holds VectorContainer of current record batch
   private final TreeRangeMap<Long, RecordBatchData> batches = TreeRangeMap.create();
 
+  private final AbstractRecordBatchMemoryManager newBatchCallBack;
+
   public RecordIterator(RecordBatch incoming,
                         AbstractRecordBatch<?> outgoing,
                         OperatorContext oContext,
-                        int inputIndex) {
-    this(incoming, outgoing, oContext, inputIndex, true);
+                        int inputIndex, AbstractRecordBatchMemoryManager callBack) {
+    this(incoming, outgoing, oContext, inputIndex, true, callBack);
   }
 
   public RecordIterator(RecordBatch incoming,
                         AbstractRecordBatch<?> outgoing,
                         OperatorContext oContext,
                         int inputIndex,
-                        boolean enableMarkAndReset) {
+                        boolean enableMarkAndReset,
+                        AbstractRecordBatchMemoryManager callBack) {
     this.incoming = incoming;
     this.outgoing = outgoing;
     this.inputIndex = inputIndex;
@@ -78,6 +81,7 @@ public class RecordIterator implements VectorAccessible {
     resetIndices();
     this.initialized = false;
     this.enableMarkAndReset = enableMarkAndReset;
+    this.newBatchCallBack = callBack;
   }
 
   private void resetIndices() {
@@ -97,6 +101,9 @@ public class RecordIterator implements VectorAccessible {
       return;
     }
     lastOutcome = outgoing != null ? outgoing.next(inputIndex, incoming) : incoming.next();
+    if ((lastOutcome == IterOutcome.OK || lastOutcome == IterOutcome.OK_NEW_SCHEMA) && newBatchCallBack != null) {
+      newBatchCallBack.update(inputIndex);
+    }
   }
 
   public void mark() {
