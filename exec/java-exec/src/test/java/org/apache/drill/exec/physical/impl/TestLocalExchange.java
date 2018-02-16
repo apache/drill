@@ -46,13 +46,10 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.List;
@@ -212,7 +209,7 @@ public class TestLocalExchange extends PlanTestBase {
       testBuilder.baselineValues(new Object[] { (long)i, (long)0, (long)0, (long)numOccurrances});
     }
 
-    testBuilder.go();
+          testBuilder.go();
   }
 
   @Test
