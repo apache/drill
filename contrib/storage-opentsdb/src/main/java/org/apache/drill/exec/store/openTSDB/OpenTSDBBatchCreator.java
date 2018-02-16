@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.openTSDB;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
@@ -28,6 +27,7 @@ import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class OpenTSDBBatchCreator implements BatchCreator<OpenTSDBSubScan> {
@@ -35,7 +35,7 @@ public class OpenTSDBBatchCreator implements BatchCreator<OpenTSDBSubScan> {
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context, OpenTSDBSubScan subScan,
                                        List<RecordBatch> children) throws ExecutionSetupException {
-    List<RecordReader> readers = Lists.newArrayList();
+    List<RecordReader> readers = new LinkedList<>();
     List<SchemaPath> columns;
 
     for (OpenTSDBSubScan.OpenTSDBSubScanSpec scanSpec : subScan.getTabletScanSpecList()) {

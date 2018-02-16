@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -32,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class KafkaScanBatchCreator implements BatchCreator<KafkaSubScan> {
   static final Logger logger = LoggerFactory.getLogger(KafkaScanBatchCreator.class);
@@ -43,7 +43,7 @@ public class KafkaScanBatchCreator implements BatchCreator<KafkaSubScan> {
     Preconditions.checkArgument(children.isEmpty());
     List<SchemaPath> columns = subScan.getColumns() != null ? subScan.getColumns() : GroupScan.ALL_COLUMNS;
 
-    List<RecordReader> readers = Lists.newArrayListWithCapacity(subScan.getPartitionSubScanSpecList().size());
+    List<RecordReader> readers = new LinkedList<>();
     for (KafkaSubScan.KafkaSubScanSpec scanSpec : subScan.getPartitionSubScanSpecList()) {
       readers.add(new KafkaRecordReader(scanSpec, columns, context, subScan.getKafkaStoragePlugin()));
     }
