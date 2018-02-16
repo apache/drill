@@ -24,6 +24,7 @@ import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
@@ -60,8 +61,6 @@ public class FragmentsRunner {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentsRunner.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(FragmentsRunner.class);
-
-  private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
 
   private final WorkerBee bee;
   private final UserClientConnection initiatingClient;
@@ -278,7 +277,7 @@ public class FragmentsRunner {
       sendRemoteFragments(ep, remoteFragmentMap.get(ep), endpointLatch, fragmentSubmitFailures);
     }
 
-    final long timeout = RPC_WAIT_IN_MSECS_PER_FRAGMENT * numIntFragments;
+    final long timeout = drillbitContext.getOptionManager().getLong(ExecConstants.FRAG_RUNNER_RPC_TIMEOUT) * numIntFragments;
     if (numIntFragments > 0 && !endpointLatch.awaitUninterruptibly(timeout)) {
       long numberRemaining = endpointLatch.getCount();
       throw UserException.connectionError()
