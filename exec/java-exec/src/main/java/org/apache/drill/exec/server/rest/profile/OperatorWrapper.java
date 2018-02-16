@@ -45,12 +45,25 @@ public class OperatorWrapper {
   private final String operatorName;
   private final int size;
 
-  public OperatorWrapper(int major, List<ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String>> opsAndHostsList) {
+  public OperatorWrapper(int major, List<ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String>> opsAndHostsList, Map<String, String> phyOperMap) {
     Preconditions.checkArgument(opsAndHostsList.size() > 0);
     this.major = major;
     firstProfile = opsAndHostsList.get(0).getLeft().getLeft();
     operatorType = CoreOperatorType.valueOf(firstProfile.getOperatorType());
-    operatorName = operatorType == null ? UNKNOWN_OPERATOR : operatorType.toString();
+    //Update Name from Physical Map
+    String path = new OperatorPathBuilder().setMajor(major).setOperator(firstProfile).build();
+    //Use Plan Extracted Operator Names if available
+    String extractedOpName = phyOperMap.get(path);
+    String inferredOpName = operatorType == null ? UNKNOWN_OPERATOR : operatorType.toString();
+    //Revert to inferred names for exceptional cases
+    // 1. Extracted 'FLATTEN' operator is NULL
+    // 2. Extracted 'SCAN' could be a PARQUET_ROW_GROUP_SCAN, or KAFKA_SUB_SCAN, or etc.
+    // 3. Extracted 'UNION_EXCHANGE' could be a SINGLE_SENDER or UNORDERED_RECEIVER
+    if (extractedOpName == null || inferredOpName.contains(extractedOpName) || extractedOpName.endsWith("_EXCHANGE")) {
+      operatorName =  inferredOpName;
+    } else {
+      operatorName =  extractedOpName;
+    }
     this.opsAndHosts = opsAndHostsList;
     size = opsAndHostsList.size();
   }
