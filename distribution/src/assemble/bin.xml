@@ -404,6 +404,9 @@
     </file>
     <file>
       <source>src/resources/saffron.properties</source>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drill-on-yarn-example.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>

@@ -54,6 +54,7 @@ import org.apache.drill.exec.coord.zk.ZkDistributedSemaphore;
 import org.apache.drill.exec.coord.zk.ZkEphemeralStore;
 import org.apache.drill.exec.coord.zk.ZkTransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
 
 import com.google.common.base.Function;
 
@@ -182,7 +183,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
       ServiceInstance<DrillbitEndpoint> serviceInstance = newServiceInstance(
           data);
       discovery.registerService(serviceInstance);
-      return new ZKRegistrationHandle(serviceInstance.getId());
+      return new ZKRegistrationHandle(serviceInstance.getId(), data);
     } catch (Exception e) {
       throw propagate(e);
     }
@@ -296,6 +297,22 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     return ServiceDiscoveryBuilder.builder(DrillbitEndpoint.class).basePath("/")
         .client(curator).serializer(DrillServiceInstanceHelper.SERIALIZER)
         .build();
+  }
+
+  @Override
+  public Collection<DrillbitEndpoint> getOnlineEndPoints() {
+
+    // Not used in DoY
+
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public RegistrationHandle update(RegistrationHandle handle, State state) {
+
+    // Not used in DoY
+
+    throw new UnsupportedOperationException();
   }
 
 }
