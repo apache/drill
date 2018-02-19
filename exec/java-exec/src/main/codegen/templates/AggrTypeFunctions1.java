@@ -71,9 +71,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  <#elseif type.runningType?starts_with("BigInt")>
 	    value.value = Long.MAX_VALUE;
 	  <#elseif type.runningType?starts_with("Float4")>
-		value.value = Float.MAX_VALUE;
+		value.value = Float.NaN;
 	  <#elseif type.runningType?starts_with("Float8")>
-		value.value = Double.MAX_VALUE;	    
+		value.value = Double.NaN;
 	  </#if>
 	<#elseif aggrtype.funcName == "max">
     <#if type.runningType?starts_with("Bit")>
@@ -101,8 +101,21 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	    }
 	  </#if>
     nonNullCount.value = 1;
+	// For min/max functions: NaN is the biggest value,
+    // Infinity is the second biggest value
+    // -Infinity is the smallest  value
 	  <#if aggrtype.funcName == "min">
-	    value.value = Math.min(value.value, in.value);
+	    <#if type.inputType?contains("Float4")>
+		if(!Float.isNaN(in.value)) {
+		  value.value = Float.isNaN(value.value) ? in.value : Math.min(value.value, in.value);
+		}
+	    <#elseif type.inputType?contains("Float8")>
+	    if(!Double.isNaN(in.value)) {
+	      value.value = Double.isNaN(value.value) ? in.value : Math.min(value.value, in.value);
+	    }
+        <#else>
+		value.value = Math.min(value.value, in.value);
+		</#if>
 	  <#elseif aggrtype.funcName == "max">
 	    value.value = Math.max(value.value,  in.value);
 	  <#elseif aggrtype.funcName == "sum">
@@ -138,9 +151,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  <#elseif type.runningType?starts_with("BigInt")>
 	    value.value = Long.MAX_VALUE;
 	  <#elseif type.runningType?starts_with("Float4")>
-		value.value = Float.MAX_VALUE;
+		value.value = Float.NaN;
 	  <#elseif type.runningType?starts_with("Float8")>
-		value.value = Double.MAX_VALUE;	    
+		value.value = Double.NaN;
 	  </#if>
 	<#elseif aggrtype.funcName == "max">
 	  <#if type.runningType?starts_with("Int")>
