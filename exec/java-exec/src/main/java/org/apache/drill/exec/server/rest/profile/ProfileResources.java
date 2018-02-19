@@ -383,10 +383,7 @@ public class ProfileResources {
     QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
 
     // first check local running
-    Foreman f = work.getBee().getForemanForQueryId(id);
-    if(f != null){
-      checkOrThrowQueryCancelAuthorization(f.getQueryContext().getQueryUserName(), queryId);
-      f.cancel();
+    if (work.getBee().cancelForeman(id, principal)) {
       return String.format("Cancelled query %s on locally running node.", queryId);
     }
 
