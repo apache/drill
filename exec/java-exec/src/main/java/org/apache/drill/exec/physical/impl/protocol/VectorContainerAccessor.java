@@ -108,14 +108,16 @@ public class VectorContainerAccessor implements BatchAccessor {
 
   @Override
   public SelectionVector2 getSelectionVector2() {
-    // Throws an exception by default
+    // Throws an exception by default because containers
+    // do not support selection vectors.
     return container.getSelectionVector2();
   }
 
   @Override
   public SelectionVector4 getSelectionVector4() {
-    // Throws an exception by default
-    return container.getSelectionVector4();
+    // Throws an exception by default because containers
+    // do not support selection vectors.
+     return container.getSelectionVector4();
   }
 
   @Override

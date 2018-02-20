@@ -59,16 +59,28 @@ public class OperatorDriver {
     END,
 
     /**
-     * An error occurred. Operation was cancelled.
+     * An error occurred.
      */
 
     FAILED,
 
     /**
-     * close() called and resources are released.
+     * Operation was cancelled. No more batches will be returned,
+     * but close() has not yet been called.
      */
 
-    CLOSED }
+    CANCELED,
+
+    /**
+     * close() called and resources are released. No more batches
+     * will be returned, but close() has not yet been called.
+     * (This state is semantically identical to FAILED, it exists just
+     * in case an implementation needs to know the difference between the
+     * END, FAILED and CANCELED states.)
+     */
+
+    CLOSED
+  }
 
   private OperatorDriver.State state = State.START;
 
@@ -100,7 +112,7 @@ public class OperatorDriver {
         return start();
       case RUN:
         return doNext();
-       default:
+      default:
         OperatorRecordBatch.logger.debug("Extra call to next() in state " + state + ": " + operatorLabel());
         return IterOutcome.NONE;
       }
@@ -132,7 +144,7 @@ public class OperatorDriver {
         break;
       }
     } finally {
-      state = State.FAILED;
+      state = State.CANCELED;
     }
   }
 
