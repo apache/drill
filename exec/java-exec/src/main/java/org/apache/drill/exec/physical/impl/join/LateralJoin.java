@@ -41,7 +41,9 @@ public interface LateralJoin {
   // Produce output records taking into account join type
   public int crossJoinAndOutputRecords(int leftIndex, int rightIndex);
 
-  public void generateLeftJoinOutput(int leftIndex);
+  public int generateLeftJoinOutput(int leftIndex);
+
+  public void updateOutputIndex(int newOutputIndex);
 
   // Project the record at offset 'leftIndex' in the left input batch into the output container at offset 'outIndex'
   public void emitLeft(int leftIndex, int outIndex);

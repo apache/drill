@@ -54,8 +54,6 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
     // Left can get batch with zero or more records with OK_NEW_SCHEMA outcome as first batch
     leftUpstream = next(0, left);
 
-    // Right will always get zero records with OK_NEW_SCHEMA outcome as first batch, since right
-    // now Lateral will always be tied up with UNNEST
     rightUpstream = next(1, right);
 
     if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
