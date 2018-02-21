@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.record.vector;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -48,6 +49,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
@@ -57,6 +59,7 @@ import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
@@ -826,6 +829,45 @@ the interface to load has changed
 
     vectorFrom.clear();
     vector.clear();
+  }
+
+  /**
+   * For VariableLengthVectors when we clear of the vector and then explicitly set the
+   * ValueCount of zero, then it should not fail with IndexOutOfBoundException.
+   * @throws Exception
+   */
+  @Test
+  public void testVarLengthVector_SetCountZeroAfterClear() throws Exception {
+    try {
+      final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+      VariableWidthVector vector = new VarCharVector(field, allocator);
+      vector.allocateNew();
+      vector.clear();
+      assertTrue(vector.getAccessor().getValueCount() == 0);
+      vector.getMutator().setValueCount(0);
+      assertTrue(vector.getAccessor().getValueCount() == 0);
+    } catch (Exception ex) {
+      fail();
+    }
+  }
+
+  /** For VariableLengthVectors when we try to set value count greater than value count for which memory is allocated,
+   * then it should fail with IndexOutOfBoundException.
+   * @throws Exception
+   */
+  @Test
+  public void testVarLengthVector_SetOOBCount() throws Exception {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+    VariableWidthVector vector = new VarCharVector(field, allocator);
+    try {
+      vector.allocateNew(10, 1);
+      vector.getMutator().setValueCount(4);
+      fail();
+    } catch (Exception ex) {
+      assertTrue(ex instanceof IndexOutOfBoundsException);
+    } finally {
+      vector.clear();
+    }
   }
 
 }

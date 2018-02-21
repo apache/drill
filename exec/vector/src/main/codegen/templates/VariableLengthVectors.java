@@ -700,7 +700,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     @Override
     public void setValueCount(int valueCount) {
       final int currentByteCapacity = getByteCapacity();
-      final int idx = offsetVector.getAccessor().get(valueCount);
+      // Check if valueCount to be set is zero and current capacity is also zero. If yes then
+      // we should not call get to read start index from offset vector at that value count.
+      final int idx = (valueCount == 0 && currentByteCapacity == 0)
+        ? 0
+        : offsetVector.getAccessor().get(valueCount);
       data.writerIndex(idx);
       if (valueCount > 0 && currentByteCapacity > idx * 2) {
         incrementAllocationMonitor();
