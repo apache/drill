@@ -22,27 +22,31 @@ import java.util.List;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
-
+import org.apache.drill.common.logical.data.Order.Ordering;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
- * UnorderedMuxExchange is a version of MuxExchange where the incoming batches are not sorted.
+ * OrderedMuxExchange is a version of MuxExchange where the incoming batches are sorted
+ * merge operation is performed to produced a sorted stream as output.
  */
-@JsonTypeName("unordered-mux-exchange")
-public class UnorderedMuxExchange extends AbstractMuxExchange {
+@JsonTypeName("ordered-mux-exchange")
+public class OrderedMuxExchange extends AbstractMuxExchange {
 
-  public UnorderedMuxExchange(@JsonProperty("child") PhysicalOperator child) {
+  private final List<Ordering> orderings;
+
+  public OrderedMuxExchange(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings")List<Ordering> orderings) {
     super(child);
+    this.orderings = orderings;
   }
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new UnorderedReceiver(senderMajorFragmentId, getSenders(minorFragmentId), false);
+    return new MergingReceiverPOP(senderMajorFragmentId, getSenders(minorFragmentId), orderings, false);
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new UnorderedMuxExchange(child);
+    return new OrderedMuxExchange(child, orderings);
   }
 }

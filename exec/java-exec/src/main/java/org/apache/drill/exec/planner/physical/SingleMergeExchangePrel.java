@@ -36,6 +36,7 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.drill.exec.server.options.OptionManager;
 
 public class SingleMergeExchangePrel extends ExchangePrel {
 
@@ -93,6 +94,22 @@ public class SingleMergeExchangePrel extends ExchangePrel {
     return creator.addMetadata(this, g);
   }
 
+  /**
+   * This method creates a new OrderedMux exchange if mux operators are enabled.
+   * @param child input to the new muxPrel or new SingleMergeExchange node.
+   * @param options options manager to check if mux is enabled.
+   */
+  @Override
+  public Prel constructMuxPrel(Prel child, OptionManager options) throws RuntimeException {
+    Prel outPrel = child;
+    if (options.getOption(PlannerSettings.ORDERED_MUX_EXCHANGE.getOptionName()).bool_val &&
+        options.getOption(PlannerSettings.MUX_EXCHANGE.getOptionName()).bool_val) {
+      outPrel = new OrderedMuxExchangePrel(getCluster(), getTraitSet(), getInput(), getCollation());
+    }
+
+    return new SingleMergeExchangePrel(getCluster(), getTraitSet(), outPrel, getCollation());
+  }
+
   @Override
   public RelWriter explainTerms(RelWriter pw) {
     super.explainTerms(pw);
@@ -104,6 +121,10 @@ public class SingleMergeExchangePrel extends ExchangePrel {
       }
     }
     return pw;
+  }
+
+  public RelCollation getCollation() {
+    return this.collation;
   }
 
   @Override

@@ -90,10 +90,6 @@ public class HashToMergeExchangePrel extends ExchangePrel {
 
   }
 
-  public List<DistributionField> getDistFields() {
-    return this.distFields;
-  }
-
   public RelCollation getCollation() {
     return this.collation;
   }
