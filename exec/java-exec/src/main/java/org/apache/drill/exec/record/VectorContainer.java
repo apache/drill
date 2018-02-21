@@ -18,12 +18,14 @@
 package org.apache.drill.exec.record;
 
 import java.lang.reflect.Array;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -49,7 +51,7 @@ public class VectorContainer implements VectorAccessible {
     allocator = null;
   }
 
-  public VectorContainer(OperatorContext oContext) {
+  public VectorContainer( OperatorContext oContext) {
     this(oContext.getAllocator());
   }
 
@@ -136,10 +138,24 @@ public class VectorContainer implements VectorAccessible {
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
     final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getName()));
     final ValueVector vector;
-    final Class<?> clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
+
     if (id != null) {
-      vector = getValueAccessorById(id.getFieldIds()).getValueVector();
+      vector                = getValueAccessorById(id.getFieldIds()).getValueVector();
+      final Class<?> clazz  = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
+
+      // Check whether incoming field and the current one are compatible; if not then replace previous one with the new one
       if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(vector.getClass())) {
+        final ValueVector newVector = TypeHelper.getNewVector(field, this.getAllocator(), callBack);
+        replace(vector, newVector);
+        return (T) newVector;
+      }
+
+      // At this point, we know incoming and current fields are compatible. Maps can have children,
+      // we need to ensure they have the same structure.
+      if (MinorType.MAP.equals(field.getType().getMinorType())
+       && vector != null
+       && !SchemaUtil.isSameSchemaIncludingOrder(vector.getField().getChildren(), field.getChildren())) {
+
         final ValueVector newVector = TypeHelper.getNewVector(field, this.getAllocator(), callBack);
         replace(vector, newVector);
         return (T) newVector;
@@ -154,6 +170,48 @@ public class VectorContainer implements VectorAccessible {
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     MaterializedField field = MaterializedField.create(name, type);
     return addOrGet(field);
+  }
+
+  /**
+   * This method will handle the following schema changes:
+   * <ul>
+   * <li>Replace any existing field which has changed (including children for complex types);
+   * note that the index is kept as it is key for code generation
+   * <li>Removing dangling fields (field which only exist in this container)
+   * </ul>
+   *
+   * <b>NOTE - </b>If dangling fields are detected, then all wrappers
+   * are cleared and the incoming fields will be added (potentially with
+   * new indexes). The schemaChanged flag will be set.
+   *
+   * @param incoming incoming batch
+   * @param callBack schema change callback
+   * @param transfers transfer pairs
+   */
+  public void onSchemaChange(RecordBatch incoming,
+    SchemaChangeCallBack callBack,
+    List<TransferPair> transfers) {
+
+    // We need to figure out whether there are dangling fields; this is
+    // critical as a) we cannot keep them in there as otherwise the copy
+    // logic will attempt accessing uninitialized data and b) removing
+    // them will cause issues as code generation is based on field index
+    // within the container.
+    boolean danglingColumns = danglingColumnsFound(incoming);
+
+    if (danglingColumns) {
+      schemaChanged = true;
+      zeroVectors();
+      wrappers.clear();
+    }
+
+    // - Add a field if it didn't exist & unchanged
+    // - Replace changed fields
+    // - If there were dangling columns, then essentially all incoming fields will be added
+    for(final VectorWrapper<?> v : incoming) {
+      final TransferPair pair = v.getValueVector().makeTransferPair(addOrGet(v.getField(), callBack));
+      transfers.add(pair);
+    }
   }
 
   /**
@@ -374,7 +432,7 @@ public class VectorContainer implements VectorAccessible {
 
   public void zeroVectors() {
     VectorAccessibleUtilities.clear(this);
-  }
+    }
 
   public int getNumberOfColumns() {
     return wrappers.size();
@@ -393,6 +451,33 @@ public class VectorContainer implements VectorAccessible {
       }
     }
     return true;
+  }
+
+  /**
+   * @param incoming incoming record batch
+   * @return returns true if there are dangling fields
+   */
+  public boolean danglingColumnsFound(RecordBatch incoming) {
+    // Could happen for null input (when operators are used for output)
+    if (wrappers.size() == 0
+     || incoming == null || incoming.iterator() == null) {
+      return false;
+    }
+
+    // Map to detect dangling fields
+    final HashSet<String> oldFields = new HashSet<String>(wrappers.size());
+
+    // Add existing columns
+    for(VectorWrapper<?> wrapper : wrappers) {
+      oldFields.add(wrapper.getField().getName());
+    }
+
+    // Remove columns from the incoming batch
+    for(final VectorWrapper<?> v : incoming) {
+      oldFields.remove(v.getField().getName());
+    }
+
+    return !oldFields.isEmpty();
   }
 
   /**
@@ -447,4 +532,5 @@ public class VectorContainer implements VectorAccessible {
     schemaChanged = other.schemaChanged;
     other.schemaChanged = temp2;
   }
+
 }

@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
-import com.carrotsearch.hppc.IntHashSet;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -67,9 +68,10 @@ import org.apache.drill.exec.vector.UntypedNullVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
+import com.carrotsearch.hppc.IntHashSet;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectRecordBatch.class);
@@ -303,7 +305,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     return expr.getPath().contains(SchemaPath.DYNAMIC_STAR);
   }
 
-  private void setupNewSchemaFromInput(RecordBatch incomingBatch) throws SchemaChangeException {
+  /**
+   * Sets up projection logic based on the metadata and incoming batch
+   * @param incomingBatch incoming batch
+   * @param clearContainers indicator on whether to clear the current containers
+   * @return true if there are dangling columns in the container (could happen due to schema changes)
+   */
+  private boolean setupNewSchemaFromInput(RecordBatch incomingBatch, boolean clearContainers) throws SchemaChangeException {
     if (allocationVectors != null) {
       for (final ValueVector v : allocationVectors) {
         v.clear();
@@ -311,10 +319,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     this.allocationVectors = Lists.newArrayList();
     if (complexWriters != null) {
-      container.clear();
+      clearContainers = true;
     } else {
       container.zeroVectors();
     }
+
+    if (clearContainers) {
+      container.clear();
+    }
+
     final List<NamedExpression> exprs = getExpressionList();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
@@ -325,7 +338,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     // cg.getCodeGenerator().saveCodeForDebugging(true);
 
     final IntHashSet transferFieldIds = new IntHashSet();
-
+    final HashSet<String> usedColumns = !clearContainers ? new HashSet<String>(container.getNumberOfColumns()) : null;
     final boolean isAnyWildcard = isAnyWildcard(exprs);
 
     final ClassifierResult result = new ClassifierResult();
@@ -358,6 +371,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
               final FieldReference ref = new FieldReference(name);
               final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref.getAsNamePart().getName(), vvIn.getField().getType()), callBack);
+
+              if (usedColumns != null) {
+                usedColumns.add(vvOut.getField().getName());
+              }
               final TransferPair tp = vvIn.makeTransferPair(vvOut);
               transfers.add(tp);
             }
@@ -385,6 +402,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
               final MaterializedField outputField = MaterializedField.create(name, expr.getMajorType());
               final ValueVector vv = container.addOrGet(outputField, callBack);
+
+              if (usedColumns != null) {
+                usedColumns.add(vv.getField().getName());
+              }
               allocationVectors.add(vv);
               final TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getName()));
               final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
@@ -438,6 +459,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         final FieldReference ref = getRef(namedExpression);
         final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref.getLastSegment().getNameSegment().getPath(),
                                                                               vectorRead.getMajorType()), callBack);
+        if (usedColumns != null) {
+          usedColumns.add(vvOut.getField().getName());
+        }
+
         final TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
         transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
@@ -462,6 +487,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       } else {
         // need to do evaluation.
         final ValueVector vector = container.addOrGet(outputField, callBack);
+
+        if (usedColumns != null) {
+          usedColumns.add(vector.getField().getName());
+        }
+
         allocationVectors.add(vector);
         final TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getName()));
         final boolean useSetSafe = !(vector instanceof FixedWidthVector);
@@ -491,11 +521,20 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
+
+    return usedColumns != null && usedColumns.size() != container.getNumberOfColumns();
   }
 
   @Override
   protected boolean setupNewSchema() throws SchemaChangeException {
-    setupNewSchemaFromInput(this.incoming);
+    if (setupNewSchemaFromInput(this.incoming, false)) {
+      // There are dangling columns; we need to re-perform this task
+      // though with the clear vector indicator on.
+      // NOTE - the reason I am rerunning the setup operation instead of just
+      //        removing columns is that the setup code seems to be aware of
+      //        container columns position (TypeFieldId).
+      setupNewSchemaFromInput(this.incoming, true);
+    }
     if (container.isSchemaChanged()) {
       container.buildSchema(SelectionVectorMode.NONE);
       return true;
@@ -800,7 +839,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     RecordBatch emptyIncomingBatch = new SimpleRecordBatch(emptyVC, context);
 
     try {
-      setupNewSchemaFromInput(emptyIncomingBatch);
+      setupNewSchemaFromInput(emptyIncomingBatch, false);
     } catch (SchemaChangeException e) {
       kill(false);
       logger.error("Failure during query", e);

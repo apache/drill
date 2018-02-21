@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -29,6 +32,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -179,4 +183,120 @@ public class SchemaUtil {
     Preconditions.checkState(vectorMap.size() == 0, "Leftover vector from incoming batch");
     return c;
   }
+
+  /**
+   * Check if two schemas are the same. The schemas, given as lists, represent the
+   * children of the original and new maps (AKA structures.)
+   *
+   * @param currentChildren current children of a Drill map
+   * @param newChildren new children, in an incoming batch, of the same
+   * Drill map
+   * @return true if the schemas are identical, false if a child is missing
+   * or has changed type or cardinality (AKA "mode").
+   */
+  public static boolean isSameSchema(Collection<MaterializedField> currentChildren,
+      List<SerializedField> newChildren) {
+    if (currentChildren.size() != newChildren.size()) {
+      return false;
+    }
+
+    // Column order can permute (see DRILL-5828). So, use a map
+    // for matching.
+
+    Map<String, MaterializedField> childMap = CaseInsensitiveMap.newHashMap();
+    for (MaterializedField currentChild : currentChildren) {
+      childMap.put(currentChild.getName(), currentChild);
+    }
+    for (SerializedField newChild : newChildren) {
+      MaterializedField currentChild = childMap.get(newChild.getNamePart().getName());
+
+      // New map member?
+
+      if (currentChild == null) {
+        return false;
+      }
+
+      // Changed data type?
+
+      if (! currentChild.getType().equals(newChild.getMajorType())) {
+        return false;
+      }
+
+      // Perform schema diff for child column(s)
+      if (MinorType.MAP.equals(currentChild.getType().getMinorType())) {
+        if (currentChild.getChildren().size() != newChild.getChildCount()) {
+          return false;
+        }
+
+        if (!currentChild.getChildren().isEmpty()) {
+          if (!isSameSchema(currentChild.getChildren(), newChild.getChildList())) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // Everything matches.
+
+    return true;
+  }
+
+  /**
+   * Check if two schemas are the same including the order of their children. The schemas, given as lists, represent the
+   * children of the original and new maps (AKA structures.)
+   *
+   * @param currentChildren current children of a Drill map
+   * @param newChildren new children, in an incoming batch, of the same
+   * Drill map
+   * @return true if the schemas are identical, false if a child is missing
+   * or has changed type or cardinality (AKA "mode").
+   */
+  public static boolean isSameSchemaIncludingOrder(Collection<MaterializedField> currentChildren,
+    Collection<MaterializedField> newChildren) {
+
+    if (currentChildren.size() != newChildren.size()) {
+      return false;
+    }
+
+    // Insert the two collections in a List data structure to implement ordering logic
+    // TODO - MaterializedField should expose a LIST data structure since ordering is key for
+    //        batch operators.
+    List<MaterializedField> currentChildrenList = new ArrayList<MaterializedField>(currentChildren);
+    List<MaterializedField> newChildrenList     = new ArrayList<MaterializedField>(newChildren);
+
+    for (int idx = 0; idx < newChildrenList.size(); idx++) {
+      MaterializedField currentChild = currentChildrenList.get(idx);
+      MaterializedField newChild     = newChildrenList.get(idx);
+
+      // Same name ?
+      if (!currentChild.getName().equalsIgnoreCase(newChild.getName())) {
+        return false;
+      }
+
+      // Changed data type?
+      if (!currentChild.getType().equals(newChild.getType())) {
+        return false;
+      }
+
+      // Perform schema diff for child column(s)
+      if (MinorType.MAP.equals(currentChild.getType().getMinorType())) {
+        if (currentChild.getChildren().size() != newChild.getChildren().size()) {
+          return false;
+        }
+
+        if (!currentChild.getChildren().isEmpty()) {
+          if (!isSameSchemaIncludingOrder(currentChild.getChildren(), newChild.getChildren())) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // Everything matches.
+
+    return true;
+  }
+
+
+
 }
