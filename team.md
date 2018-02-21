@@ -40,5 +40,7 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Laurent Goujon | laurent |  
 | Charles Givre | cgivre |   
 | Boaz Ben-Zvi | boaz |  
-| Anil Kumar Batchu | akumarb2010 |   
+| Anil Kumar Batchu | akumarb2010 |  
+| Vitalii Diravka  | vitalii |  
+| Kamesh Bhallamudi | kameshb |  
 
