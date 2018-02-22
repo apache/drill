@@ -79,7 +79,7 @@
                   </span>
                 </td>
                 <td id="status" >${drillbit.getState()}</td>
-                <#if model.shouldShowAdminInfo()>
+                <#if model.shouldShowAdminInfo() || !model.isAuthEnabled() >
                   <td>
                       <button type="button" id="shutdown" onClick="shutdown('${drillbit.getAddress()}',$(this));"> SHUTDOWN </button>
                   </td>
@@ -269,7 +269,7 @@
                               }
                         });
       }
-       <#if model.shouldShowAdminInfo()>
+      <#if model.shouldShowAdminInfo() || !model.isAuthEnabled() >
           function shutdown(address,button) {
               url = "http://"+address+":"+portNum+"/gracefulShutdown";
               var result = $.ajax({
