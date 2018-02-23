@@ -22,12 +22,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeAction;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeTask;
-import org.apache.drill.test.ConfigBuilder;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,8 +43,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
    */
   @Test
   public void testConfigDefaults() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getOptionManager());
     // Zero means no artificial limit
     assertEquals(0, sortConfig.maxMemory());
     // Zero mapped to large number
@@ -67,16 +67,18 @@ public class TestExternalSortInternals extends SubOperatorTest {
   @Test
   public void testConfigOverride() {
     // Verify the various HOCON ways of setting memory
-    DrillConfig drillConfig = new ConfigBuilder()
+    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MAX_MEMORY, "2000K")
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, 10)
         .put(ExecConstants.EXTERNAL_SORT_SPILL_FILE_SIZE, "10M")
         .put(ExecConstants.EXTERNAL_SORT_SPILL_BATCH_SIZE, 500_000)
-        .put(ExecConstants.EXTERNAL_SORT_MERGE_BATCH_SIZE, 600_000)
         .put(ExecConstants.EXTERNAL_SORT_BATCH_LIMIT, 50)
         .put(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE, 10)
         .build();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    FragmentContext fragmentContext = builder.build().getFragmentContext();
+    fragmentContext.getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, 600_000);
+    SortConfig sortConfig = new SortConfig(fragmentContext.getConfig(), fragmentContext.getOptions());
     assertEquals(2000 * 1024, sortConfig.maxMemory());
     assertEquals(10, sortConfig.mergeLimit());
     assertEquals(10 * ONE_MEG, sortConfig.spillFileSize());
@@ -91,15 +93,17 @@ public class TestExternalSortInternals extends SubOperatorTest {
    */
   @Test
   public void testConfigLimits() {
-    DrillConfig drillConfig = new ConfigBuilder()
+    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, SortConfig.MIN_MERGE_LIMIT - 1)
         .put(ExecConstants.EXTERNAL_SORT_SPILL_FILE_SIZE, SortConfig.MIN_SPILL_FILE_SIZE - 1)
         .put(ExecConstants.EXTERNAL_SORT_SPILL_BATCH_SIZE, SortConfig.MIN_SPILL_BATCH_SIZE - 1)
-        .put(ExecConstants.EXTERNAL_SORT_MERGE_BATCH_SIZE, SortConfig.MIN_MERGE_BATCH_SIZE - 1)
         .put(ExecConstants.EXTERNAL_SORT_BATCH_LIMIT, 1)
         .put(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE, 0)
         .build();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    FragmentContext fragmentContext = builder.build().getFragmentContext();
+    fragmentContext.getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, SortConfig.MIN_MERGE_BATCH_SIZE - 1);
+    SortConfig sortConfig = new SortConfig(fragmentContext.getConfig(), fragmentContext.getOptions());
     assertEquals(SortConfig.MIN_MERGE_LIMIT, sortConfig.mergeLimit());
     assertEquals(SortConfig.MIN_SPILL_FILE_SIZE, sortConfig.spillFileSize());
     assertEquals(SortConfig.MIN_SPILL_BATCH_SIZE, sortConfig.spillBatchSize());
@@ -110,8 +114,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testMemoryManagerBasics() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
     long memoryLimit = 70 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
@@ -217,8 +220,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testSmallRows() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
     long memoryLimit = 100 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
@@ -263,8 +265,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testLowMemory() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
     int memoryLimit = 10 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
@@ -306,8 +307,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testLowerMemory() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
     int memoryLimit = 10 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
@@ -352,8 +352,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testExtremeLowMemory() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
     long memoryLimit = 10 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
@@ -391,8 +390,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testMemoryOverflow() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
     long memoryLimit = 10 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
@@ -413,34 +411,36 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testConfigConstraints() {
-    int memConstaint = 40 * ONE_MEG;
-    int batchSizeConstaint = ONE_MEG / 2;
-    int mergeSizeConstaint = ONE_MEG;
-    DrillConfig drillConfig = new ConfigBuilder()
-        .put(ExecConstants.EXTERNAL_SORT_MAX_MEMORY, memConstaint)
-        .put(ExecConstants.EXTERNAL_SORT_SPILL_BATCH_SIZE, batchSizeConstaint)
-        .put(ExecConstants.EXTERNAL_SORT_MERGE_BATCH_SIZE, mergeSizeConstaint)
+    int memConstraint = 40 * ONE_MEG;
+    int batchSizeConstraint = ONE_MEG / 2;
+    int mergeSizeConstraint = ONE_MEG;
+
+    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    builder.configBuilder()
+        .put(ExecConstants.EXTERNAL_SORT_MAX_MEMORY, memConstraint)
+        .put(ExecConstants.EXTERNAL_SORT_SPILL_BATCH_SIZE, batchSizeConstraint)
         .build();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    FragmentContext fragmentContext = builder.build().getFragmentContext();
+    fragmentContext.getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, mergeSizeConstraint);
+    SortConfig sortConfig = new SortConfig(fragmentContext.getConfig(), fragmentContext.getOptions());
     long memoryLimit = 50 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
-    assertEquals(batchSizeConstaint, memManager.getPreferredSpillBatchSize());
-    assertEquals(mergeSizeConstaint, memManager.getPreferredMergeBatchSize());
-    assertEquals(memConstaint, memManager.getMemoryLimit());
+    assertEquals(batchSizeConstraint, memManager.getPreferredSpillBatchSize());
+    assertEquals(mergeSizeConstraint, memManager.getPreferredMergeBatchSize());
+    assertEquals(memConstraint, memManager.getMemoryLimit());
 
     int rowWidth = 300;
     int rowCount = 10000;
     int batchSize = rowWidth * rowCount * 2;
 
     memManager.updateEstimates(batchSize, rowWidth, rowCount);
-    verifyCalcs(sortConfig, memConstaint, memManager, batchSize, rowWidth, rowCount);
+    verifyCalcs(sortConfig, memConstraint, memManager, batchSize, rowWidth, rowCount);
   }
 
   @Test
   public void testMemoryDynamics() {
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
     long memoryLimit = 50 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
 
@@ -471,10 +471,12 @@ public class TestExternalSortInternals extends SubOperatorTest {
     // No artificial merge limit
 
     int mergeLimitConstraint = 100;
-    DrillConfig drillConfig = new ConfigBuilder()
+    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, mergeLimitConstraint)
         .build();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    FragmentContext fragmentContext = builder.build().getFragmentContext();
+    SortConfig sortConfig = new SortConfig(fragmentContext.getConfig(), fragmentContext.getOptions());
 
     // Allow four spill batches, 8 MB each, plus one output of 16
     // Allow for internal fragmentation
@@ -569,9 +571,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testMergeCalcsExtreme() {
-
-    DrillConfig drillConfig = DrillConfig.create();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    SortConfig sortConfig = new SortConfig(fixture.getFragmentContext().getConfig(), fixture.getFragmentContext().getOptions());
 
     // Force odd situation in which the spill batch is larger
     // than memory. Won't actually run, but needed to test
@@ -600,10 +600,12 @@ public class TestExternalSortInternals extends SubOperatorTest {
   public void testMergeLimit() {
     // Constrain merge width
     int mergeLimitConstraint = 5;
-    DrillConfig drillConfig = new ConfigBuilder()
+    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, mergeLimitConstraint)
         .build();
-    SortConfig sortConfig = new SortConfig(drillConfig);
+    FragmentContext fragmentContext = builder.build().getFragmentContext();
+    SortConfig sortConfig = new SortConfig(fragmentContext.getConfig(), fragmentContext.getOptions());
     // Plenty of memory, memory will not be a limit
     long memoryLimit = 400 * ONE_MEG;
     SortMemoryManager memManager = new SortMemoryManager(sortConfig, memoryLimit);
