@@ -87,12 +87,12 @@ function estCodeCacheInMB() {
 #Print Current Allocation
 function printCurrAllocation()
 {
-  if [ -n "$DRILLBIT_MAX_PROC_MEM" ]; then echo -e "\tDRILLBIT_MAX_PROC_MEM=$DRILLBIT_MAX_PROC_MEM"; fi
-  if [ -n "$DRILL_HEAP" ]; then echo -e "\tDRILL_HEAP=$DRILL_HEAP"; fi
-  if [ -n "$DRILL_MAX_DIRECT_MEMORY" ]; then echo -e "\tDRILL_MAX_DIRECT_MEMORY=$DRILL_MAX_DIRECT_MEMORY"; fi
+  if [ -n "$DRILLBIT_MAX_PROC_MEM" ]; then echo -e "    DRILLBIT_MAX_PROC_MEM=$DRILLBIT_MAX_PROC_MEM" 1>&2; fi
+  if [ -n "$DRILL_HEAP" ]; then echo -e "    DRILL_HEAP=$DRILL_HEAP" 1>&2; fi
+  if [ -n "$DRILL_MAX_DIRECT_MEMORY" ]; then echo -e "    DRILL_MAX_DIRECT_MEMORY=$DRILL_MAX_DIRECT_MEMORY" 1>&2; fi
   if [ -n "$DRILLBIT_CODE_CACHE_SIZE" ]; then
-    echo -e "\tDRILLBIT_CODE_CACHE_SIZE=$DRILLBIT_CODE_CACHE_SIZE "
-    echo -e "\t*NOTE: It is recommended not to specify DRILLBIT_CODE_CACHE_SIZE as this will be auto-computed based on the HeapSize and would not exceed 1GB"
+    echo -e "    DRILLBIT_CODE_CACHE_SIZE=$DRILLBIT_CODE_CACHE_SIZE " 1>&2
+    echo -e "    *NOTE: It is recommended not to specify DRILLBIT_CODE_CACHE_SIZE as this will be auto-computed based on the HeapSize and would not exceed 1GB" 1>&2
   fi
 }
 
@@ -129,7 +129,7 @@ elif [[ "$OSTYPE" == "msys" ]]; then
   let freeRAM_inMB=`cat /proc/meminfo | grep MemFree | tr ' ' '\n'| grep '[0-9]'`/1024
 else
   # Unknown OS
-  echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Unknown OS ("$OSTYPE"). Will not attempt to auto-configure memory"
+  echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Unknown OS ("$OSTYPE"). Will not attempt to auto-configure memory" 1>&2
   AutoMemConfigStatus="PASSED"
 fi
 
@@ -141,7 +141,7 @@ DbitMaxCodeCacheMem=$(valueInMB $DRILLBIT_CODE_CACHE_SIZE)
 
 # Alert for %age usage
 if [[ "$DRILLBIT_MAX_PROC_MEM" == *% ]] && [ -z "$AutoMemConfigStatus" ]; then
-  echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] "$DRILLBIT_MAX_PROC_MEM" of System Memory ("$(valueInGB $totalRAM_inMB'm')" GB) translates to "$(valueInGB $DbitMaxProcMem'm')" GB"
+  echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] "$DRILLBIT_MAX_PROC_MEM" of System Memory ("$(valueInGB $totalRAM_inMB'm')" GB) translates to "$(valueInGB $DbitMaxProcMem'm')" GB" 1>&2
 fi
 
 ### Performing Auto-Configuration
@@ -165,30 +165,30 @@ elif [ -z "$AutoMemConfigStatus" ]; then
     let calcTotalInMB=$DbitMaxDirectMem+$DbitMaxHeapMem+$DbitMaxCodeCacheMem
     # Fail if exceeding process limit
     if [ $calcTotalInMB -gt $DbitMaxProcMem ]; then
-      echo `date +%Y-%m-%d" "%H:%M:%S`"  [ERROR]    Unable to start Drillbit due to memory constraint violations"
-      echo "  Total Memory Requested : "$(valueInGB $calcTotalInMB'm')" GB"
-      echo "  Check the following settings to possibly modify (or increase the Max Memory Permitted):"
+      echo "[ERROR]    Unable to start Drillbit due to memory constraint violations" 1>&2
+      echo "  Total Memory Requested : "$(valueInGB $calcTotalInMB'm')" GB" 1>&2
+      echo "  Check the following settings to possibly modify (or increase the Max Memory Permitted):" 1>&2
       printCurrAllocation
       exit 127
     else
       #All numbers align
       let deltaInGB=($DbitMaxProcMem-$calcTotalInMB)/1024
       if [ $deltaInGB -gt 1 ]; then
-        echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] You have an allocation of "$deltaInGB" GB that is currently unused from a total of "$(valueInGB $DbitMaxProcMem'm')" GB. You can increase your existing memory configuration to use this extra memory";
+        echo "[WARN] You have an allocation of "$deltaInGB" GB that is currently unused from a total of "$(valueInGB $DbitMaxProcMem'm')" GB. You can increase your existing memory configuration to use this extra memory" 1>&2
         printCurrAllocation
       fi
     fi
   elif [ -n "$DbitMaxHeapMem" ] && [ -z "$DbitMaxDirectMem" ]; then
     ## [SCENARIO 3]: Total and only Heap is defined
-    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Only \$DRILL_HEAP is defined. Auto-configuring for Direct memory"
+    echo "[WARN] Only DRILL_HEAP is defined. Auto-configuring for Direct memory" 1>&2
     let DbitMaxDirectMem=$DbitMaxProcMem-$DbitMaxHeapMem-$DbitMaxCodeCacheMem
   elif [ -z "$DbitMaxHeapMem" ] && [ -n "$DbitMaxDirectMem" ]; then
     ## [SCENARIO 4]: Total and only Direct is defined
-    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Only \$DRILL_MAX_DIRECT_MEMORY is defined. Auto-configuring for Heap"
+    echo "[WARN] Only DRILL_MAX_DIRECT_MEMORY is defined. Auto-configuring for Heap" 1>&2
     let DbitMaxHeapMem=$DbitMaxProcMem-$DbitMaxDirectMem-$DbitMaxCodeCacheMem
   elif [ -z "$DbitMaxDirectMem" ] && [ -z "$DbitMaxHeapMem" ]; then
     ## [SCENARIO 5]: Only Total is defined
-    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Only \$DRILLBIT_MAX_PROC_MEM is defined. Auto-configuring for Heap & Direct memory"
+    echo "[WARN] Only DRILLBIT_MAX_PROC_MEM is defined. Auto-configuring for Heap & Direct memory" 1>&2
     ## Compute Direct & Heap
     let DbitMaxProcMemInGB=$(valueInGB $DbitMaxProcMem'm')
     let DbitMaxHeapMemInGB=`echo $DbitMaxProcMemInGB | awk '{heap=-13.2+6.12*log($1); if (heap<1) {heap=1}; printf "%0.0f\n", heap }'`
@@ -207,14 +207,18 @@ if [ -z "$AutoMemConfigStatus" ]; then
   DbitMaxDirectMem=$(valueInMB $DRILL_MAX_DIRECT_MEMORY)
   DbitMaxHeapMem=$(valueInMB $DRILL_HEAP)
   DbitMaxCodeCacheMem=$(valueInMB $DRILLBIT_CODE_CACHE_SIZE)
-  let totalDBitMem_inMB=$DbitMaxDirectMem+$DbitMaxHeapMem+$DbitMaxCodeCacheMem
+  echo "[INFO] Attempting to start up Drill with the following settings" 1>&2
+  echo "  DRILL_HEAP="$DRILL_HEAP 1>&2
+  echo "  DRILL_MAX_DIRECT_MEMORY="$DRILL_MAX_DIRECT_MEMORY 1>&2
+  echo "  DRILLBIT_CODE_CACHE_SIZE="$DRILLBIT_CODE_CACHE_SIZE 1>&2
+  let totalDBitMem_inMB=$DbitMaxDirectMem+$DbitMaxHeapMem+$DbitMaxCodeCacheMem 1>&2
   if [ $totalDBitMem_inMB -gt $totalRAM_inMB ]; then
-    echo `date +%Y-%m-%d" "%H:%M:%S`"  [ERROR] Total Memory Allocation for Drillbit ("$(valueInGB $totalDBitMem_inMB'm')"GB) exceeds total system memory ("$(valueInGB $totalRAM_inMB'm')"GB)"
-    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Drillbit not will start up"
+    echo "[ERROR] Total Memory Allocation for Drillbit ("$(valueInGB $totalDBitMem_inMB'm')"GB) exceeds total system memory ("$(valueInGB $totalRAM_inMB'm')"GB)" 1>&2
+    echo "[ERROR] Drillbit not will start up. Please check your allocations" 1>&2
     exit 127
   elif [ $totalDBitMem_inMB -gt $freeRAM_inMB ]; then
-    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Total Memory Allocation for Drillbit ("$(valueInGB $totalDBitMem_inMB'm')"GB) exceeds available free memory ("$(valueInGB $freeRAM_inMB'm')"GB)"
-    echo `date +%Y-%m-%d" "%H:%M:%S`"  [WARN] Drillbit will start up, but can potentially crash due to oversubscribing of system memory."
+    echo "[WARN] Total Memory Allocation for Drillbit ("$(valueInGB $totalDBitMem_inMB'm')"GB) exceeds available free memory ("$(valueInGB $freeRAM_inMB'm')"GB)" 1>&2
+    echo "[WARN] Drillbit will start up, but can potentially crash due to oversubscribing of system memory." 1>&2
   fi
 fi
 
