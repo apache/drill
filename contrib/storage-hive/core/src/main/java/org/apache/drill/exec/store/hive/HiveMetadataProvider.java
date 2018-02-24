@@ -264,6 +264,7 @@ public class HiveMetadataProvider {
           final List<LogicalInputSplit> splits = Lists.newArrayList();
           final JobConf job = new JobConf(hiveConf);
           HiveUtilities.addConfToJob(job, properties);
+          HiveUtilities.verifyAndAddTransactionalProperties(job, sd);
           job.setInputFormat(HiveUtilities.getInputFormatClass(job, sd, hiveReadEntry.getTable()));
           final Path path = new Path(sd.getLocation());
           final FileSystem fs = path.getFileSystem(job);

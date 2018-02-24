@@ -393,6 +393,16 @@ public class TestHiveStorage extends HiveTestBase {
   }
 
   @Test // DRILL-3938
+  public void readFromAlteredPartitionedTableWithEmptyGroupType() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT newcol FROM hive.kv_parquet LIMIT 1")
+        .unOrdered()
+        .baselineColumns("newcol")
+        .baselineValues(new Object[]{null})
+        .go();
+  }
+
+  @Test // DRILL-3938
   public void nativeReaderIsDisabledForAlteredPartitionedTable() throws Exception {
     try {
       test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
