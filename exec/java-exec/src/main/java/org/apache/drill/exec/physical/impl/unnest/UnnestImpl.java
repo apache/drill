@@ -29,11 +29,20 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import java.util.List;
 
-public abstract class UnnestTemplate implements Unnest {
-  private static final Logger logger = LoggerFactory.getLogger(UnnestTemplate.class);
+/**
+ * Contains the actual unnest operation. Unnest is a simple transfer operation in this impelementation.
+ * For use as a table function, we will need to change the logic of the unnest method to operate on
+ * more than one row at a time and remove any dependence on Lateral
+ * {@link org.apache.drill.exec.physical.impl.flatten.FlattenTemplate}.
+ * This class follows the pattern of other operators that generate code at runtime. Normally this class
+ * would be abstract and have placeholders for doSetup and doEval. Unnest however, doesn't require code
+ * generation so we can simply implement the code in a simple class that looks similar to the code gen
+ * templates used by other operators but does not implement the doSetup and doEval methods.
+ */
+public class UnnestImpl implements Unnest {
+  private static final Logger logger = LoggerFactory.getLogger(UnnestImpl.class);
 
   private static final int OUTPUT_ROW_COUNT = ValueVector.MAX_ROW_COUNT;
 
@@ -122,9 +131,4 @@ public abstract class UnnestTemplate implements Unnest {
     this.innerValueIndex = 0;
   }
 
-  //public abstract void doSetup(@Named("context") FragmentContext context,
-  //                             @Named("incoming") RecordBatch incoming,
-  //                             @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
-  //public abstract boolean doEval(@Named("inIndex") int inIndex,
-  //                               @Named("outIndex") int outIndex) throws SchemaChangeException;
 }

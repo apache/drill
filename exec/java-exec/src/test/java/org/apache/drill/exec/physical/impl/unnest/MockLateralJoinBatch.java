@@ -18,18 +18,13 @@
 package org.apache.drill.exec.physical.impl.unnest;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.LateralContract;
-import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.CloseableRecordBatch;
-import org.apache.drill.exec.record.ExpandableHyperContainer;
-import org.apache.drill.exec.record.HyperVectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -54,8 +49,10 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
 
   private int recordIndex = 0;
   private RecordBatch unnest;
+  private int unnestLimit = -1; // Unnest will EMIT if the number of records cross this limit
 
   private boolean isDone;
+  private IterOutcome currentLeftOutcome = IterOutcome.NOT_YET;
 
   private final FragmentContext context;
   private  final OperatorContext oContext;
@@ -77,13 +74,8 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return recordIndex;
   }
 
-  /**
-   * TODO: Update based on the requirement.
-   * @return
-   */
-  @Override
-  public IterOutcome getLeftOutcome() {
-    return IterOutcome.OK;
+  @Override public IterOutcome getLeftOutcome() {
+    return currentLeftOutcome;
   }
 
   public void moveToNextRecord() {
@@ -98,6 +90,10 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     this.unnest = unnest;
   }
 
+  public void setUnnestLimit(int limit){
+    this.unnestLimit = limit;
+  }
+
   public RecordBatch getUnnest() {
     return unnest;
   }
@@ -105,6 +101,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   public IterOutcome next() {
 
     IterOutcome currentOutcome = incoming.next();
+    currentLeftOutcome = currentOutcome;
     recordIndex = 0;
 
     switch (currentOutcome) {
@@ -114,6 +111,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
         IterOutcome outcome;
         // consume all the outout from unnest until EMIT or end of
         // incoming data
+        int unnestCount = 0; // number of values unnested for current record
         while (recordIndex < incoming.getRecordCount()) {
           outcome = unnest.next();
           if (outcome == IterOutcome.OK_NEW_SCHEMA) {
@@ -124,10 +122,18 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
           }
           // We put each batch output from unnest into a hypervector
           // the calling test can match this against the baseline
-          addBatchToHyperContainer(unnest);
-
+          //unnestCount +=
+          //    unnest.getOutgoingContainer().hasRecordCount() ? unnest.getOutgoingContainer().getRecordCount() : 0;
+          unnestCount += addBatchToHyperContainer(unnest);
           if (outcome == IterOutcome.EMIT) {
+            // reset unnest count
+            unnestCount = 0;
             moveToNextRecord();
+          }
+          // Pretend that an operator somewhere between lateral and unnest
+          // wants to terminate processing of the record.
+          if(unnestLimit > 0 && unnestCount >= unnestLimit) {
+            unnest.kill(true);
           }
         }
         return currentOutcome;
@@ -180,7 +186,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   }
 
   @Override public void kill(boolean sendUpstream) {
-
+    unnest.kill(sendUpstream);
   }
 
   @Override public VectorContainer getOutgoingContainer() {
@@ -204,12 +210,16 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return isDone;
   }
 
-  private void addBatchToHyperContainer(RecordBatch inputBatch) {
+  // returns number of records added to output hyper container
+  private int addBatchToHyperContainer(RecordBatch inputBatch) {
+    int count = 0;
     final RecordBatchData batchCopy = new RecordBatchData(inputBatch, oContext.getAllocator());
     boolean success = false;
     try {
       for (VectorWrapper<?> w : batchCopy.getContainer()) {
-        resultList.add(w.getValueVector());
+        ValueVector vv = w.getValueVector();
+        count += vv.getAccessor().getValueCount();
+        resultList.add(vv);
       }
       success = true;
     } finally {
@@ -217,6 +227,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
         batchCopy.clear();
       }
     }
+    return count;
   }
 
 

@@ -46,6 +46,7 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import java.io.IOException;
 import java.util.List;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
 
 // TODO - handle the case where a user tries to unnest a scalar, should just return the column as is
@@ -53,12 +54,22 @@ public class UnnestRecordBatch extends AbstractSingleRecordBatch<UnnestPOP> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnnestRecordBatch.class);
 
   private Unnest unnest;
-  private boolean hasRemainder = false;
+  private boolean hasRemainder = false; // set to true if there is data left over for the current row AND if we want
+                                        // to keep processing it. Kill may be called by a limit in a subquery that
+                                        // requires us to stop processing thecurrent row, but not stop processing
+                                        // the data.
+  // In some cases we need to return a predetermined state from a call to next. These are:
+  // 1) Kill is called due to an error occurring in the processing of the query. IterOutcome should be NONE
+  // 2) Kill is called by LIMIT to stop processing of the current row (This occurs when the LIMIT is part of a subquery
+  //    between UNNEST and LATERAL. Iteroutcome should be EMIT
+  // 3) Kill is called by LIMIT downstream from LATERAL. IterOutcome should be NONE
+  private IterOutcome nextState = OK;
   private int remainderIndex = 0;
   private int recordCount;
   private long outputBatchSize;
   private LateralContract lateral;
   private MaterializedField unnestFieldMetadata;
+
 
 
   /**
@@ -121,22 +132,35 @@ public class UnnestRecordBatch extends AbstractSingleRecordBatch<UnnestPOP> {
 
   @Override
   protected void killIncoming(boolean sendUpstream) {
-    // Do not call kill on incoming. Lateral Join has the
-    // responsibility for killing incoming
-    hasRemainder = false;
+    // Do not call kill on incoming. Lateral Join has the responsibility for killing incoming
+    if (context.getExecutorState().isFailed() || lateral.getLeftOutcome() == IterOutcome.STOP) {
+      nextState = IterOutcome.NONE ;
+    } else {
+      // if we have already processed the record, then kill from a limit has no meaning.
+      // if, however, we have values remaining to be emitted, and limit has been reached,
+      // we abandon the remainder and send an empty batch with EMIT.
+      if(hasRemainder) {
+        nextState = IterOutcome.EMIT;
+      }
+    }
+    hasRemainder = false; // whatever the case, we need to stop processing the current row.
   }
 
 
   @Override
   public IterOutcome innerNext() {
 
-    if (hasRemainder) {
-      return handleRemainder();
-    }
-
     // Short circuit if record batch has already sent all data and is done
     if (state == BatchState.DONE) {
       return IterOutcome.NONE;
+    }
+
+    if (nextState == IterOutcome.NONE || nextState == IterOutcome.EMIT) {
+      return nextState;
+    }
+
+    if (hasRemainder) {
+      return handleRemainder();
     }
 
     // We do not need to call next() unlike the other operators.
@@ -312,13 +336,6 @@ public class UnnestRecordBatch extends AbstractSingleRecordBatch<UnnestPOP> {
     container.clear();
     final List<TransferPair> transfers = Lists.newArrayList();
 
-    //TODO: Remove code gen.
-    // It is totally unnecessary to do code gen for Unnest since the transfer of the vector
-    // is sufficient to unnest the data
-    final ClassGenerator<Unnest> cg = CodeGenerator.getRoot(Unnest.TEMPLATE_DEFINITION, context.getOptions());
-    cg.getCodeGenerator().plainJavaCapable(true);
-    cg.getCodeGenerator().preferPlainJava(true);
-
     final NamedExpression unnestExpr =
         new NamedExpression(popConfig.getColumn(), new FieldReference(popConfig.getColumn()));
     final FieldReference fieldReference = unnestExpr.getRef();
@@ -330,13 +347,9 @@ public class UnnestRecordBatch extends AbstractSingleRecordBatch<UnnestPOP> {
     logger.debug("Added transfer for unnest expression.");
     container.buildSchema(SelectionVectorMode.NONE);
 
-    try {
-      this.unnest = context.getImplementationClass(cg.getCodeGenerator());
-      unnest.setup(context, incoming, this, transfers, lateral);
-      setUnnestVector();
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
-    }
+    this.unnest = new UnnestImpl();
+    unnest.setup(context, incoming, this, transfers, lateral);
+    setUnnestVector();
     return true;
   }
 
