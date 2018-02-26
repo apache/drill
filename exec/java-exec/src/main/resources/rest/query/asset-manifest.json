@@ -1,7 +1,7 @@
 {
-  "main.css": "/static/css/main.3e173177.css",
-  "main.css.map": "/static/css/main.3e173177.css.map",
-  "main.js": "/static/js/main.3ecf97ba.js",
-  "main.js.map": "/static/js/main.3ecf97ba.js.map",
-  "static\\media\\Pacman-1.2s-100px.gif": "/static/media/Pacman-1.2s-100px.21aa6a7b.gif"
+  "main.css": "static/css/main.b9c6151e.css",
+  "main.css.map": "static/css/main.b9c6151e.css.map",
+  "main.js": "static/js/main.31525d42.js",
+  "main.js.map": "static/js/main.31525d42.js.map",
+  "static\\media\\Spinner-1s-200px.gif": "static/media/Spinner-1s-200px.4e242a31.gif"
 }

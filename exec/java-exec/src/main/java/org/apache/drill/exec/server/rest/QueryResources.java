@@ -71,7 +71,7 @@ import java.util.concurrent.TimeUnit;
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class QueryResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResources.class);
-  final String ZKPATH = "/drill/infomation/";
+  final String ZKPATH = "/drill/information/";
 
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
@@ -163,11 +163,13 @@ public class QueryResources {
     String username = webUserConnection.getSession().getCredentials().getUserName();
     logger.info("picasso: getData: username: " + username);
 
+
     if(username.equals("")) {
       username = "bingxing.wang";
     }
     String nodePath = ZKPATH + username;
-    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION);
+    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION).split(",")[0];
+    logger.info(zk_ip);
     ZooKeeper zk = new ZooKeeper(zk_ip, 5000, new ZookeeperSimple());
     Gson gson = new Gson();
     Map<String, String> res = new HashMap<>();
@@ -217,6 +219,7 @@ public class QueryResources {
     }
 
     logger.info("picasso: setData: data:" + data);
+
     //logger.info("picasso: setData: sql:" + sql);
 
     Gson gson = new Gson();
@@ -226,15 +229,18 @@ public class QueryResources {
     String type;
 
     String nodePath = ZKPATH + username;
-    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION);
+    String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION).split(",")[0];
+    logger.info(zk_ip);
     ZooKeeper zk = new ZooKeeper(zk_ip, 5000, new ZookeeperSimple());
 
     try{
       if(zk.exists(nodePath, true) == null) {
+        logger.info("picasso: no node exist, create new node");
         zk.create(nodePath, sqls.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         zk.close();
         type = "success";
       } else {
+        logger.info("picasso: set data on node");
         zk.setData(nodePath, sqls.getBytes(), -1);
         zk.close();
         type = "success";
