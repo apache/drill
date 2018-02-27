@@ -114,6 +114,15 @@
       <version>1.0.13</version>
       <scope>test</scope>
     </dependency>
+    
+    <!--  Testing -->
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
