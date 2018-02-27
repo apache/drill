@@ -331,7 +331,7 @@ public class ProfileWrapper {
 
   //Generates operator names inferred from physical plan
   private void generateOpMap(String plan) {
-    this.physicalOperatorMap = new HashMap<String,String>();
+    this.physicalOperatorMap = new HashMap<>();
     if (plan.isEmpty()) {
       return;
     }
