@@ -19,6 +19,7 @@
 #ifndef __LOGGER_H
 #define __LOGGER_H
 
+#include <iostream>
 #include <sstream>
 #include <ostream>
 #include <iostream>
