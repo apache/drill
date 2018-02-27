@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector.accessor.reader;
 
 import java.util.List;
 
-import org.apache.drill.exec.record.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
 /**
  * Reader for a Drill Map type. Maps are actually tuples, just like rows.

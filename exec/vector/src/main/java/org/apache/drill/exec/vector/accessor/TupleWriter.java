@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
-import org.apache.drill.exec.record.ColumnMetadata;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
  * Writer for a tuple. A tuple is composed of columns with a fixed order and

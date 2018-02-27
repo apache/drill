@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
-import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
  * Interface for reading from tuples (rows or maps). Provides

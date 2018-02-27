@@ -350,7 +350,7 @@ public class DrillTestWrapper {
     for (VectorAccessible loader : batches)  {
       numBatch++;
       if (expectedSchema != null) {
-        if (! expectedSchema.equals(loader.getSchema())) {
+        if (! expectedSchema.isEquivalent(loader.getSchema())) {
           throw new SchemaChangeException(String.format("Batch schema does not match expected schema\n" +
                   "Actual schema: %s.  Expected schema : %s",
               loader.getSchema(), expectedSchema));
@@ -469,8 +469,8 @@ public class DrillTestWrapper {
         final String expectedSchemaPath = expectedSchema.get(i).getLeft().getRootSegmentPath();
         final TypeProtos.MajorType expectedMajorType = expectedSchema.get(i).getValue();
 
-        if (!actualSchemaPath.equals(expectedSchemaPath)
-            || !actualMajorType.equals(expectedMajorType)) {
+        if (! actualSchemaPath.equals(expectedSchemaPath) ||
+            ! Types.isEquivalent(actualMajorType, expectedMajorType)) {
           throw new Exception(String.format("Schema path or type mismatch for column #%d:\n" +
                   "Expected schema path: %s\nActual   schema path: %s\nExpected type: %s\nActual   type: %s",
               i, expectedSchemaPath, actualSchemaPath, Types.toString(expectedMajorType),

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -142,7 +141,7 @@ public class TestCsv extends ClusterTest {
         .add("b", MinorType.VARCHAR)
         .add("C", MinorType.VARCHAR)
         .build();
-    assertEquals(expectedSchema, actual.batchSchema());
+    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", "foo", "bar")
