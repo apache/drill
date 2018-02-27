@@ -45,7 +45,7 @@
 # configuration file. The option takes precedence over the
 # DRILL_CONF_DIR environment variable.
 #
-# The command is one of: start|stop|status|restart|run
+# The command is one of: start|stop|status|restart|run|graceful_stop
 #
 # Additional arguments are passed as JVM options to the Drill-bit.
 # They typically are of the form:
@@ -56,7 +56,7 @@
 # The value overrides any value in the user or Drill configuration files.
 
 usage="Usage: drillbit.sh [--config|--site <site-dir>]\
- (start|stop|status|restart|run) [args]"
+ (start|stop|status|restart|run|graceful_stop) [args]"
 
 bin=`dirname "${BASH_SOURCE-$0}"`
 bin=`cd -P "$bin">/dev/null; pwd`
