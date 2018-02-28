@@ -331,19 +331,21 @@
     <file>
       <source>src/resources/drill-override.conf</source>
       <outputDirectory>conf</outputDirectory>
+      <fileMode>0640</fileMode>
     </file>
     <file>
       <source>src/resources/logback.xml</source>
       <outputDirectory>conf</outputDirectory>
+      <fileMode>0640</fileMode>
     </file>
     <file>
       <source>src/resources/drill-env.sh</source>
-      <fileMode>0755</fileMode>
+      <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
       <source>src/resources/distrib-env.sh</source>
-      <fileMode>0755</fileMode>
+      <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
@@ -353,21 +355,23 @@
     </file>
     <file>
       <source>src/resources/drill-setup.sh</source>
-      <fileMode>0755</fileMode>
+      <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
       <source>src/resources/distrib-setup.sh</source>
-      <fileMode>0755</fileMode>
+      <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
       <source>src/resources/drill-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
+      <fileMode>0640</fileMode>
     </file>
     <file>
       <source>src/resources/core-site-example.xml</source>
       <outputDirectory>conf</outputDirectory>
+      <fileMode>0640</fileMode>
     </file>
     <file>
       <source>src/resources/saffron.properties</source>

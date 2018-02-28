@@ -23,7 +23,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.databind.ser.PropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import org.apache.calcite.plan.RelOptCostImpl;
 import org.apache.calcite.plan.RelOptLattice;
 import org.apache.calcite.plan.RelOptMaterialization;
@@ -158,7 +162,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   protected void log(final String name, final PhysicalPlan plan, final Logger logger) throws JsonProcessingException {
     if (logger.isDebugEnabled()) {
-      String planText = plan.unparse(context.getLpPersistence().getMapper().writer());
+      PropertyFilter filter = new SimpleBeanPropertyFilter.SerializeExceptFilter(Sets.newHashSet("password"));
+      String planText = plan.unparse(context.getLpPersistence().getMapper()
+              .writer(new SimpleFilterProvider().addFilter("passwordFilter", filter)));
       logger.debug(name + " : \n" + planText);
     }
   }
