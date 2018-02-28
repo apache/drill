@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
@@ -94,7 +95,7 @@ public class TestSortImpl extends DrillTest {
           .setMinorFragmentId(3)
           .setQueryId(queryId)
           .build();
-    SortConfig sortConfig = new SortConfig(opContext.getFragmentContext().getConfig());
+    SortConfig sortConfig = new SortConfig(opContext.getFragmentContext().getConfig(), opContext.getFragmentContext().getOptions());
 
     SpillSet spillSet = new SpillSet(opContext.getFragmentContext().getConfig(), handle, popConfig);
     PriorityQueueCopierWrapper copierHolder = new PriorityQueueCopierWrapper(opContext);
