@@ -153,7 +153,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
         finalOI = (StructObjectInspector)ObjectInspectorConverters.getConvertedOI(partitionOI, tableOI);
         partTblObjectInspectorConverter = ObjectInspectorConverters.getConverter(partitionOI, finalOI);
         job.setInputFormat(HiveUtilities.getInputFormatClass(job, partition.getSd(), table));
-        HiveUtilities.verifyAndAddTransactionalProperties(job, table.getSd());
+        HiveUtilities.verifyAndAddTransactionalProperties(job, partition.getSd());
       } else {
         // For non-partitioned tables, there is no need to create converter as there are no schema changes expected.
         partitionDeserializer = tableDeserializer;
@@ -161,6 +161,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
         partTblObjectInspectorConverter = null;
         finalOI = tableOI;
         job.setInputFormat(HiveUtilities.getInputFormatClass(job, table.getSd(), table));
+        HiveUtilities.verifyAndAddTransactionalProperties(job, table.getSd());
       }
 
       if (logger.isTraceEnabled()) {
