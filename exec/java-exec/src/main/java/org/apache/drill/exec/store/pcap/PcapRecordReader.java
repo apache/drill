@@ -267,6 +267,76 @@ public class PcapRecordReader extends AbstractRecordReader {
             setIntegerColumnValue(packet.getSequenceNumber(), pci, count);
           }
           break;
+        case "tcp_ack":
+          if (packet.isTcpPacket()) {
+            setIntegerColumnValue(packet.getAckNumber(), pci, count);
+          }
+          break;
+        case "tcp_flags":
+          if (packet.isTcpPacket()) {
+            setIntegerColumnValue(packet.getFlags(), pci, count);
+          }
+          break;
+        case "tcp_parsed_flags":
+          if (packet.isTcpPacket()) {
+            setStringColumnValue(packet.getParsedFlags(), pci, count);
+          }
+          break;
+        case "tcp_flags_ns":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x100) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_cwr":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x80) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_ece ":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x40) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_ece_ecn_capable":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x42) == 0x42, pci, count);
+          }
+          break;
+        case "tcp_flags_ece_congestion_experienced":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x42) == 0x40, pci, count);
+          }
+          break;
+        case "tcp_flags_urg":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x20) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_ack":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x10) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_psh":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x8) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_rst":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x4) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_syn":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x2) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_fin":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x1) != 0, pci, count);
+          }
+          break;
         case "packet_length":
           setIntegerColumnValue(packet.getPacketLength(), pci, count);
           break;
@@ -290,6 +360,11 @@ public class PcapRecordReader extends AbstractRecordReader {
   private void setIntegerColumnValue(final int data, final ProjectedColumnInfo pci, final int count) {
     ((NullableIntVector.Mutator) pci.vv.getMutator())
         .setSafe(count, data);
+  }
+
+  private void setBooleanColumnValue(final boolean data, final ProjectedColumnInfo pci, final int count) {
+    ((NullableIntVector.Mutator) pci.vv.getMutator())
+        .setSafe(count, data ? 1 : 0);
   }
 
   private void setTimestampColumnValue(final long data, final ProjectedColumnInfo pci, final int count) {
