@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
-import org.apache.drill.exec.proto.beans.CoreOperatorType;
 
 import com.google.common.collect.Lists;
 
@@ -32,13 +31,6 @@ import com.google.common.collect.Lists;
 public class FragmentStats {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStats.class);
 
-  //Skip operators that already have stats reported by org.apache.drill.exec.physical.impl.BaseRootExec
-  private static final List<Integer> operatorStatsInitToSkip = Lists.newArrayList(
-      CoreOperatorType.SCREEN.getNumber(),
-      CoreOperatorType.SINGLE_SENDER.getNumber(),
-      CoreOperatorType.BROADCAST_SENDER.getNumber(),
-      CoreOperatorType.HASH_PARTITION_SENDER.getNumber()
-      );
   private List<OperatorStats> operators = Lists.newArrayList();
   private final long startTime;
   private final DrillbitEndpoint endpoint;
@@ -69,7 +61,7 @@ public class FragmentStats {
    */
   public OperatorStats newOperatorStats(final OpProfileDef profileDef, final BufferAllocator allocator) {
     final OperatorStats stats = new OperatorStats(profileDef, allocator);
-    if(profileDef.operatorType != -1 && !operatorStatsInitToSkip.contains(profileDef.operatorType)) {
+    if(profileDef.operatorType != -1) {
       operators.add(stats);
     }
     return stats;
@@ -79,4 +71,21 @@ public class FragmentStats {
     operators.add(stats);
   }
 
+  //DRILL-6197
+  public OperatorStats addOrReplaceOperatorStats(OperatorStats stats) {
+    //Remove existing stat
+    OperatorStats replacedStat = null;
+    int index = 0;
+    for (OperatorStats opStat : operators) {
+      if (opStat.operatorId == stats.operatorId && opStat.operatorType == stats.operatorType) {
+        replacedStat = operators.remove(index);
+        break; //Expecting only one entry
+      }
+      index++;
+    }
+    //Add new stat
+    operators.add(stats);
+    //Return replaced Stat to caller
+    return replacedStat;
+  }
 }
