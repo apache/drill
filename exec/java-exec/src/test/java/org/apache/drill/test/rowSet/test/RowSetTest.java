@@ -727,7 +727,7 @@ public class RowSetTest extends SubOperatorTest {
         writer.save();
         count++;
       }
-    } catch (IndexOutOfBoundsException e) {
+    } catch (Exception e) {
       assertTrue(e.getMessage().contains("Overflow"));
     }
     writer.done();

@@ -783,8 +783,6 @@ public abstract class HashTableTemplate implements HashTable {
       updateBatches();  // Needed to update the value vectors in the generated code with the new incoming
     } catch (SchemaChangeException e) {
       throw new IllegalStateException("Unexpected schema change", e);
-    } catch(IndexOutOfBoundsException ioob) {
-      throw new IllegalStateException("reinit update batches", ioob);
     }
   }
 

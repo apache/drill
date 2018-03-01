@@ -145,14 +145,13 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
 
     @Override
     public void splitAndTransfer(int startIndex, int length) {
-      checkBounds(startIndex);
-      checkBounds(startIndex + length - 1);
+      Preconditions.checkPositionIndexes(startIndex, startIndex + length, valueCount);
       splitAndTransferTo(startIndex, length, to);
     }
 
     @Override
     public void copyValueSafe(int fromIndex, int toIndex) {
-      checkBounds(fromIndex);
+      Preconditions.checkElementIndex(fromIndex, valueCount);
       to.copyFromSafe(fromIndex, toIndex, UntypedNullVector.this);
     }
   }
@@ -161,12 +160,6 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
 
   public void copyFromSafe(int fromIndex, int thisIndex, UntypedNullVector from) { }
 
-  private void checkBounds(int index) {
-    if (index < 0 || index >= valueCount) {
-      throw new IndexOutOfBoundsException(String.format(
-          "index: %d, expected: range(0, %d-1))", index, valueCount));
-    }
-  }
   @Override
   public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
     ((UntypedNullVector) from).data.getBytes(fromIndex * 4, data, toIndex * 4, 4);
@@ -180,23 +173,23 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
 
     @Override
     public boolean isNull(int index){
-      checkBounds(index);
+      Preconditions.checkElementIndex(index, valueCount);
       return true;
     }
 
     public int isSet(int index) {
-      checkBounds(index);
+      Preconditions.checkElementIndex(index, valueCount);
       return 0;
     }
 
     @Override
     public Object getObject(int index) {
-      checkBounds(index);
+      Preconditions.checkElementIndex(index, valueCount);
       return null;
     }
 
     public void get(int index, UntypedNullHolder holder) {
-      checkBounds(index);
+      Preconditions.checkElementIndex(index, valueCount);
     }
   }
 

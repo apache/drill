@@ -37,9 +37,7 @@ public class EmptyValuePopulator {
    * @throws java.lang.IndexOutOfBoundsException  if lastIndex is negative or greater than offsets capacity.
    */
   public void populate(int lastIndex) {
-    if (lastIndex < 0) {
-      throw new IndexOutOfBoundsException("index cannot be negative");
-    }
+    Preconditions.checkElementIndex(lastIndex, Integer.MAX_VALUE);
     final UInt4Vector.Accessor accessor = offsets.getAccessor();
     final UInt4Vector.Mutator mutator = offsets.getMutator();
     final int lastSet = Math.max(accessor.getValueCount() - 1, 0);

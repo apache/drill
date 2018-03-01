@@ -404,8 +404,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
     final Cursor.Accessor accessor;
     try {
       accessor = accessorList.get(columnIndex - 1);
-    } catch (IndexOutOfBoundsException e) {
-      throw new SQLException("invalid column ordinal: " + columnIndex);
+    } catch (RuntimeException e) {
+      throw new SQLException(e);
     }
     final ColumnMetaData metaData = columnMetaDataList.get(columnIndex - 1);
     // Drill returns a float (4bytes) for a SQL Float whereas Calcite would return a double (8bytes)
