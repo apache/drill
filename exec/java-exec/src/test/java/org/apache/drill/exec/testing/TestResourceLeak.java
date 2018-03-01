@@ -87,7 +87,7 @@ public class TestResourceLeak extends DrillTest {
 
     bit = new Drillbit(config, serviceSet);
     bit.run();
-    client = QueryTestUtil.createClient(config, serviceSet, 2, null);
+    client = QueryTestUtil.createClient(config, serviceSet, 2, new Properties());
   }
 
   @Test

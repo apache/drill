@@ -78,7 +78,7 @@ public class ControlConnection extends AbstractServerConnection<ControlConnectio
 
   @Override
   public boolean isActive() {
-    return active;
+    return active && super.isActive();
   }
 
   @Override

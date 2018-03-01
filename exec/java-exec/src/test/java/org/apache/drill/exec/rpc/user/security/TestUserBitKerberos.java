@@ -175,7 +175,7 @@ public class TestUserBitKerberos extends BaseTestQuery {
 
     // Check unencrypted counters value
     assertTrue(1 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-    assertTrue(2 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
     assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
   }
 

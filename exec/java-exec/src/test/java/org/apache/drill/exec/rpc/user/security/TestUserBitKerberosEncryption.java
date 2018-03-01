@@ -111,7 +111,22 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
     connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
     connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
     connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-    updateClient(connectionProps);
+
+    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
+      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+        ConfigValueFactory.fromAnyRef(true))
+      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
+        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
+      .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
+      .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
+      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
+        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
+        ConfigValueFactory.fromAnyRef(true)));
+
+    updateTestCluster(1, newConfig, connectionProps);
 
     // Run few queries using the new client
     testBuilder()
@@ -145,7 +160,22 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
     connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
     connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
     connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-    updateClient(connectionProps);
+
+    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
+      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+        ConfigValueFactory.fromAnyRef(true))
+      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
+        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
+      .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
+      .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
+      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
+        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
+        ConfigValueFactory.fromAnyRef(true)));
+
+    updateTestCluster(1, newConfig, connectionProps);
 
     assertTrue(UserRpcMetrics.getInstance().getEncryptedConnectionCount() == 1);
     assertTrue(UserRpcMetrics.getInstance().getUnEncryptedConnectionCount() == 0);
@@ -177,10 +207,24 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
     final Subject clientSubject = JaasKrbUtil.loginUsingKeytab(krbHelper.CLIENT_PRINCIPAL,
                                                                krbHelper.clientKeytab.getAbsoluteFile());
 
+    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
+      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+        ConfigValueFactory.fromAnyRef(true))
+      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
+        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
+      .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
+      .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
+      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
+        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
+      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
+        ConfigValueFactory.fromAnyRef(true)));
+
     Subject.doAs(clientSubject, new PrivilegedExceptionAction<Void>() {
       @Override
       public Void run() throws Exception {
-        updateClient(connectionProps);
+        updateTestCluster(1, newConfig, connectionProps);
         return null;
       }
     });
