@@ -17,11 +17,9 @@
 package org.apache.drill.exec.store.pcap;
 
 import org.apache.drill.exec.store.pcap.decoder.Packet;
-import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -72,26 +70,27 @@ public class TestPcapRecordReader extends BaseTestQuery {
 
   @Test
   public void checkFlags() throws Exception {
-    List<QueryDataBatch> results = runSQLWithResults(
-            "select tcp_session, tcp_ack, tcp_flags from dfs.`store/pcap/synscan.pcap`");
-    System.out.printf("%d results\n", results.size());
+    runSQLVerifyCount(
+        "select tcp_session, tcp_ack, tcp_flags from dfs.`store/pcap/synscan.pcap`", 2011);
   }
 
   private void runSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
     List<QueryDataBatch> results = runSQLWithResults(sql);
-    printResultAndVerifyRowCount(results, expectedRowCount);
+    verifyRowCount(results, expectedRowCount);
   }
 
   private List<QueryDataBatch> runSQLWithResults(String sql) throws Exception {
     return testSqlWithResults(sql);
   }
 
-  private void printResultAndVerifyRowCount(List<QueryDataBatch> results,
-                                            int expectedRowCount) throws SchemaChangeException {
-    setColumnWidth(25);
-    int rowCount = printResult(results);
-    if (expectedRowCount != -1) {
-      assertEquals(expectedRowCount, rowCount);
+  private void verifyRowCount(List<QueryDataBatch> results,
+                              int expectedRowCount) throws SchemaChangeException {
+    int count = 0;
+    for (final QueryDataBatch result : results) {
+      count += result.getHeader().getRowCount();
+      result.release();
     }
+    System.out.println("Total record count: " + count);
+    assertEquals(expectedRowCount, count);
   }
 }
