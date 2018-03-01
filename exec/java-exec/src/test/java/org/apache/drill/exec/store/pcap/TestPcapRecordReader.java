@@ -48,7 +48,8 @@ public class TestPcapRecordReader extends BaseTestQuery {
 
   @Test
   public void testDistinctQuery() throws Exception {
-    runSQLVerifyCount("select distinct * from dfs.`store/pcap/tcp-1.pcap`", 1);
+    // omit data field from distinct count for now
+    runSQLVerifyCount("select distinct type, network, `timestamp`, src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address, tcp_session, packet_length from dfs.`store/pcap/tcp-1.pcap`", 1);
   }
 
   private void runSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
@@ -62,7 +63,7 @@ public class TestPcapRecordReader extends BaseTestQuery {
 
   private void printResultAndVerifyRowCount(List<QueryDataBatch> results,
                                             int expectedRowCount) throws SchemaChangeException {
-    setColumnWidth(25);
+    setColumnWidth(35);
     int rowCount = printResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
