@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
@@ -32,18 +32,14 @@ import org.apache.drill.exec.rpc.BasicClient;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.ResponseSender;
-import org.apache.drill.exec.rpc.RpcCommand;
+import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.RpcOutcomeListener;
-import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
+import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
 import org.apache.drill.exec.rpc.security.SaslProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import javax.security.sasl.SaslClient;
-import javax.security.sasl.SaslException;
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 public class DataClient extends BasicClient<RpcType, DataClientConnection, BitClientHandshake, BitServerHandshake> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClient.class);
@@ -103,6 +99,23 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   }
 
   @Override
+  protected void prepareSaslHandshake(final RpcConnectionHandler<DataClientConnection> connectionListener)
+    throws RpcException {
+    try {
+      final Map<String, String> saslProperties = SaslProperties.getSaslProperties(connection.isEncryptionEnabled(),
+        connection.getMaxWrappedSize());
+      final UserGroupInformation ugi = UserGroupInformation.getLoginUser();
+      final AuthenticatorFactory factory = config.getAuthFactory(serverAuthMechanisms);
+      startSaslHandshake(connectionListener, saslProperties, ugi, factory, RpcType.SASL_MESSAGE);
+    } catch (final IOException e) {
+      logger.error("Failed while doing setup for starting sasl handshake for connection", connection.getName());
+      final Exception ex = new RpcException(String.format("Failed to initiate authentication to %s",
+        remoteEndpoint.getAddress()), e);
+      connectionListener.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
+    }
+  }
+
+    @Override
   protected void validateHandshake(BitServerHandshake handshake) throws RpcException {
     if (handshake.getRpcVersion() != DataRpcConfig.RPC_VERSION) {
       throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.",
@@ -110,104 +123,15 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
     }
 
     if (handshake.getAuthenticationMechanismsCount() != 0) { // remote requires authentication
-      final SaslClient saslClient;
-      try {
-
-        final Map<String, String> saslProperties = SaslProperties.getSaslProperties(connection.isEncryptionEnabled(),
-                                                                                    connection.getMaxWrappedSize());
-
-        saslClient = config.getAuthFactory(handshake.getAuthenticationMechanismsList())
-            .createSaslClient(UserGroupInformation.getLoginUser(),
-                config.getSaslClientProperties(remoteEndpoint, saslProperties));
-      } catch (final IOException e) {
-        throw new RpcException(String.format("Failed to initiate authenticate to %s", remoteEndpoint.getAddress()), e);
-      }
-      if (saslClient == null) {
-        throw new RpcException("Unexpected failure. Could not initiate SASL exchange.");
-      }
-      connection.setSaslClient(saslClient);
+      authRequired = true;
+      authComplete = false;
+      serverAuthMechanisms = ImmutableList.copyOf(handshake.getAuthenticationMechanismsList());
     } else {
-      if (config.getAuthMechanismToUse() != null) {
-        throw new RpcException(String.format("Drillbit (%s) does not require auth, but auth is enabled.",
-            remoteEndpoint.getAddress()));
+      if (config.getAuthMechanismToUse() != null) { // local requires authentication
+        throw new RpcException(String.format("Remote Drillbit does not require auth, but auth is enabled in " +
+          "local Drillbit configuration. [Details: connection: (%s) and LocalAuthMechanism: (%s). Please check " +
+          "security configuration for bit-to-bit.", connection.getName(), config.getAuthMechanismToUse()));
       }
-    }
-  }
-
-  protected <M extends MessageLite> RpcCommand<M, DataClientConnection>
-  getInitialCommand(final RpcCommand<M, DataClientConnection> command) {
-    final RpcCommand<M, DataClientConnection> initialCommand = super.getInitialCommand(command);
-    if (config.getAuthMechanismToUse() == null) {
-      return initialCommand;
-    } else {
-      return new AuthenticationCommand<>(initialCommand);
-    }
-  }
-
-  private class AuthenticationCommand<M extends MessageLite> implements RpcCommand<M, DataClientConnection> {
-
-    private final RpcCommand<M, DataClientConnection> command;
-
-    AuthenticationCommand(RpcCommand<M, DataClientConnection> command) {
-      this.command = command;
-    }
-
-    @Override
-    public void connectionAvailable(DataClientConnection connection) {
-      command.connectionFailed(FailureType.AUTHENTICATION, new SaslException("Should not reach here."));
-    }
-
-    @Override
-    public void connectionSucceeded(final DataClientConnection connection) {
-      final UserGroupInformation loginUser;
-      try {
-        loginUser = UserGroupInformation.getLoginUser();
-      } catch (final IOException e) {
-        logger.debug("Unexpected failure trying to login.", e);
-        command.connectionFailed(FailureType.AUTHENTICATION, e);
-        return;
-      }
-
-      final SettableFuture<Void> future = SettableFuture.create();
-      new AuthenticationOutcomeListener<>(DataClient.this, connection, RpcType.SASL_MESSAGE,
-          loginUser,
-          new RpcOutcomeListener<Void>() {
-            @Override
-            public void failed(RpcException ex) {
-              logger.debug("Authentication failed.", ex);
-              future.setException(ex);
-            }
-
-            @Override
-            public void success(Void value, ByteBuf buffer) {
-              future.set(null);
-            }
-
-            @Override
-            public void interrupted(InterruptedException e) {
-              logger.debug("Authentication failed.", e);
-              future.setException(e);
-            }
-          }).initiate(config.getAuthMechanismToUse());
-
-      try {
-        logger.trace("Waiting until authentication completes..");
-        future.get();
-        command.connectionSucceeded(connection);
-      } catch (InterruptedException e) {
-        command.connectionFailed(FailureType.AUTHENTICATION, e);
-        // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
-        // interruption and respond to it if it wants to.
-        Thread.currentThread().interrupt();
-      } catch (ExecutionException e) {
-        command.connectionFailed(FailureType.AUTHENTICATION, e);
-      }
-    }
-
-    @Override
-    public void connectionFailed(FailureType type, Throwable t) {
-      logger.debug("Authentication failed.", t);
-      command.connectionFailed(FailureType.AUTHENTICATION, t);
     }
   }
 

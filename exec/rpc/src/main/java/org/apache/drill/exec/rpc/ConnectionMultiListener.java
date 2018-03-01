@@ -153,10 +153,19 @@ public class ConnectionMultiListener<T extends EnumLite, CC extends ClientConnec
       try {
         parent.validateHandshake(value);
         parent.finalizeConnection(value, parent.connection);
-        connectionListener.connectionSucceeded(parent.connection);
-        // logger.debug("Handshake completed succesfully.");
+
+        // If auth is required then start the SASL handshake
+        if (parent.isAuthRequired()) {
+          parent.prepareSaslHandshake(connectionListener);
+        } else {
+          connectionListener.connectionSucceeded(parent.connection);
+          logger.debug("Handshake completed successfully.");
+        }
+      } catch (NonTransientRpcException ex) {
+        logger.error("Failure while validating client and server sasl compatibility", ex);
+        connectionListener.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
       } catch (Exception ex) {
-        logger.debug("Failure while validating handshake", ex);
+        logger.error("Failure while validating handshake", ex);
         connectionListener.connectionFailed(RpcConnectionHandler.FailureType.HANDSHAKE_VALIDATION, ex);
       }
     }
