@@ -404,7 +404,7 @@ public class WebServer implements AutoCloseable {
 
     // SSL Connector
     final ServerConnector sslConnector = new ServerConnector(embeddedJetty,
-        null, null, null, -1, -1,
+        null, null, null, acceptors, selectors,
         new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
         new HttpConnectionFactory(httpsConfig));
     sslConnector.setPort(port);
