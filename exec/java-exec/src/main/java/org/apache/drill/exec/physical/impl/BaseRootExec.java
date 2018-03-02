@@ -43,20 +43,20 @@ public abstract class BaseRootExec implements RootExec {
   private List<CloseableRecordBatch> operators;
 
   public BaseRootExec(final RootFragmentContext fragmentContext, final PhysicalOperator config) throws OutOfMemoryException {
-    this.oContext = fragmentContext.newOperatorContext(config, stats);
-    stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
-        config.getOperatorType(), OperatorUtilities.getChildCount(config)),
-        oContext.getAllocator());
-    fragmentContext.getStats().addOperatorStats(this.stats);
-    this.fragmentContext = fragmentContext;
+    this(fragmentContext, null, config);
   }
 
   public BaseRootExec(final RootFragmentContext fragmentContext, final OperatorContext oContext,
                       final PhysicalOperator config) throws OutOfMemoryException {
-    this.oContext = oContext;
+    if (oContext == null) {
+      this.oContext = fragmentContext.newOperatorContext(config, stats);
+    } else {
+      this.oContext = oContext;
+    }
+    //Creating new stat for appending to list
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
         config.getOperatorType(), OperatorUtilities.getChildCount(config)),
-      oContext.getAllocator());
+      this.oContext.getAllocator());
     fragmentContext.getStats().addOperatorStats(this.stats);
     this.fragmentContext = fragmentContext;
   }
