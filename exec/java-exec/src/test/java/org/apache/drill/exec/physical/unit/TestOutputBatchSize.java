@@ -656,12 +656,12 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     batchString.append("[");
 
-    numRows = 1000;
+    numRows = 100;
 
     for (int i = 0; i < numRows; i++) {
-      batchString.append("{\"a\": 5, " + "\"b\" : " + "\"" + wideString + "\"," + "\"c\":" + flattenElement + "},");
+      batchString.append("{\"a\": 5, "  + "\"c\":" + flattenElement + "},");
     }
-    batchString.append("{\"a\": 5, " + "\"b\" : " + "\"" + wideString + "\"," + "\"c\":" + flattenElement + "}");
+    batchString.append("{\"a\": 5, " + "\"c\":" + flattenElement + "}");
     batchString.append("]");
     inputJsonBatches.add(batchString.toString());
 
@@ -674,18 +674,18 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     expectedBatchString.append("[");
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < 1000; j++) {
-        expectedBatchString.append("{\"a\": 5, " + "\"b\" : " + "\"" + wideString + "\"," + "\"c\" :");
+        expectedBatchString.append("{\"a\": 5, "  + "\"c\" :");
         expectedBatchString.append(j);
         expectedBatchString.append("},");
       }
     }
     for (int j = 0; j < 999; j++) {
-      expectedBatchString.append("{\"a\": 5, " + "\"b\" : " + "\"" + wideString + "\"," + "\"c\" :");
+      expectedBatchString.append("{\"a\": 5, "  + "\"c\" :");
       expectedBatchString.append(j);
       expectedBatchString.append("},");
     }
 
-    expectedBatchString.append("{\"a\": 5, " + "\"b\" : " + "\"" + wideString + "\"," + "\"c\" :");
+    expectedBatchString.append("{\"a\": 5, "  + "\"c\" :");
     expectedBatchString.append(1000);
     expectedBatchString.append("}");
 
@@ -701,13 +701,13 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     OperatorTestBuilder opTestBuilder = opTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
-      .baselineColumns("a", "b", "c")
-      .expectedNumBatches(16) // verify number of batches
+      .baselineColumns("a", "c")
+      .expectedNumBatches(2) // verify number of batches
       .expectedBatchSize(totalSize / 2);  // verify batch size.
 
     for (long i = 0; i < numRows + 1; i++) {
       for (long j = 0; j < 1001; j++) {
-        opTestBuilder.baselineValues(5l, wideString, j);
+        opTestBuilder.baselineValues(5l, j);
       }
     }
 
