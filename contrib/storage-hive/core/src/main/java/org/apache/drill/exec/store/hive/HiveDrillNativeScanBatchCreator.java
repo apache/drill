@@ -76,11 +76,11 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
 
     final List<String[]> partitionColumns = Lists.newArrayList();
     final List<Integer> selectedPartitionColumns = Lists.newArrayList();
-    List<SchemaPath> newColumns = columns;
+    List<SchemaPath> tableColumns = columns;
     if (!selectAllQuery) {
       // Separate out the partition and non-partition columns. Non-partition columns are passed directly to the
       // ParquetRecordReader. Partition columns are passed to ScanBatch.
-      newColumns = Lists.newArrayList();
+      tableColumns = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
         Matcher m = pattern.matcher(column.getRootSegmentPath());
@@ -88,7 +88,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
           selectedPartitionColumns.add(
               Integer.parseInt(column.getRootSegmentPath().substring(partitionDesignator.length())));
         } else {
-          newColumns.add(column);
+          tableColumns.add(column);
         }
       }
     }
@@ -139,7 +139,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
                 CodecFactory.createDirectCodecFactory(fs.getConf(),
                     new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
                 parquetMetadata,
-                newColumns,
+                tableColumns,
                 containsCorruptDates)
             );
             Map<String, String> implicitValues = Maps.newLinkedHashMap();
@@ -174,7 +174,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),
     // create an empty RecordReader to output the schema
     if (readers.size() == 0) {
-      readers.add(new HiveDefaultReader(table, null, null, columns, context, conf,
+      readers.add(new HiveDefaultReader(table, null, null, tableColumns, context, conf,
         ImpersonationUtil.createProxyUgi(config.getUserName(), context.getQueryUserName())));
     }
 
