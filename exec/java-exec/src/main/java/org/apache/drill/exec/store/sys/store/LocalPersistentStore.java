@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.Nullable;
@@ -64,6 +65,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
+  private final AutoCloseableLock readCachedProfilesLock = new AutoCloseableLock(new ReentrantLock());
 
   //Provides a threshold above which we report the time to load
   private static final long LIST_TIME_THRESHOLD_MSEC = 2000L;
@@ -144,7 +146,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
     logger.info("Requesting thread: {}-{}" , Thread.currentThread().getName(), Thread.currentThread().getId());
     //Acquiring lock to avoid reloading for request coming in before completion of profile read
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (AutoCloseableLock lock = readCachedProfilesLock.open()) {
       try {
         long expectedFileCount = fs.getFileStatus(basePath).getLen();
         logger.debug("Current ModTime: {} (Last known ModTime: {})", currBasePathModified, basePathLastModified);
