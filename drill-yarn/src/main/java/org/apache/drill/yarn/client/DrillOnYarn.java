@@ -144,8 +144,33 @@ public class DrillOnYarn {
     try {
       cmd.run();
     } catch (ClientException e) {
-      ClientContext.err.println(e.getMessage());
+      displayError(opts, e);
       context.exit(1);
+    }
+  }
+
+  private static void displayError(CommandLineOptions opts, ClientException e) {
+
+    // Show the Drill-provided explanation of the error.
+
+    ClientContext.err.println(e.getMessage());
+
+    // Add the underlying exception information, if any.
+
+    Throwable parent = e;
+    Throwable cause = e.getCause();
+    while (cause != null && cause != parent) {
+      ClientContext.err.print("  Caused by: ");
+      ClientContext.err.println(cause.getMessage());
+      parent = cause;
+      cause = cause.getCause();
+    }
+
+    // Include the full stack trace if requested.
+
+    if (opts.verbose) {
+      ClientContext.err.println("Full stack trace:");
+      e.printStackTrace(ClientContext.err);
     }
   }
 }
