@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(JdbcStorageConfig.NAME)
+@JsonFilter("passwordFilter")
 public class JdbcStorageConfig extends StoragePluginConfig {
 
   public static final String NAME = "jdbc";

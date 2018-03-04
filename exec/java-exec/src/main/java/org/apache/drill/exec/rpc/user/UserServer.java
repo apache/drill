@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc.user;
 
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
@@ -90,6 +91,40 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   //Initializing the singleton map during startup
   static {
     userConnectionMap = new ConcurrentHashMap<>();
+  }
+
+  /**
+   * Serialize {@link org.apache.drill.exec.proto.UserProtos.BitToUserHandshake} instance without password
+   * @param inbound handshake instance for serialization
+   * @return String of serialized object
+   */
+  private String serializeUserToBitHandshakeWithoutPassword(UserToBitHandshake inbound) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("rpc_version: ");
+    sb.append(inbound.getRpcVersion());
+    sb.append("\ncredentials:\n\t");
+    sb.append(inbound.getCredentials());
+    sb.append("properties:");
+    List<Property> props = inbound.getProperties().getPropertiesList();
+    for (Property p: props) {
+      if (!p.getKey().equalsIgnoreCase("password")) {
+        sb.append("\n\tproperty:\n\t\t");
+        sb.append("key: \"");
+        sb.append(p.getKey());
+        sb.append("\"\n\t\tvalue: \"");
+        sb.append(p.getValue());
+        sb.append("\"");
+      }
+    }
+    sb.append("\nsupport_complex_types: ");
+    sb.append(inbound.getSupportComplexTypes());
+    sb.append("\nsupport_timeout: ");
+    sb.append(inbound.getSupportTimeout());
+    sb.append("sasl_support: ");
+    sb.append(inbound.getSaslSupport());
+    sb.append("\nclient_infos:\n\t");
+    sb.append(inbound.getClientInfos().toString().replace("\n", "\n\t"));
+    return sb.toString();
   }
 
   public UserServer(BootStrapContext context, BufferAllocator allocator, EventLoopGroup eventLoopGroup,
@@ -320,8 +355,9 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
 
       @Override
       public BitToUserHandshake getHandshakeResponse(UserToBitHandshake inbound) throws Exception {
-        logger.trace("Handling handshake from user to bit. {}", inbound);
-
+        if (logger.isTraceEnabled()) {
+          logger.trace("Handling handshake from user to bit. {}", serializeUserToBitHandshakeWithoutPassword(inbound));
+        }
         // if timeout is unsupported or is set to false, disable timeout.
         if (!inbound.hasSupportTimeout() || !inbound.getSupportTimeout()) {
           connection.disableReadTimeout();

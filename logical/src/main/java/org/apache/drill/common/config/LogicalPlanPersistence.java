@@ -19,6 +19,7 @@ package org.apache.drill.common.config;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfigBase;
@@ -52,6 +53,7 @@ public class LogicalPlanPersistence {
     mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     mapper.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, true);
     mapper.configure(Feature.ALLOW_COMMENTS, true);
+    mapper.setFilterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));
     registerSubtypes(LogicalOperatorBase.getSubTypes(scanResult));
     registerSubtypes(StoragePluginConfigBase.getSubTypes(scanResult));
     registerSubtypes(FormatPluginConfigBase.getSubTypes(scanResult));
