@@ -335,17 +335,17 @@
     </file>
     <file>
       <source>src/resources/drill-on-yarn.sh</source>
-      <fileMode>0755</fileMode>
+      <fileMode>0750</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
       <source>src/resources/drill-am.sh</source>
-      <fileMode>0755</fileMode>
+      <fileMode>0750</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
       <source>src/resources/yarn-drillbit.sh</source>
-      <fileMode>0755</fileMode>
+      <fileMode>0750</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
@@ -364,10 +364,12 @@
     <file>
       <source>src/resources/yarn-client-log.xml</source>
       <outputDirectory>conf</outputDirectory>
-    </file>
+      <fileMode>0640</fileMode>
+   </file>
     <file>
       <source>src/resources/drill-am-log.xml</source>
       <outputDirectory>conf</outputDirectory>
+     <fileMode>0640</fileMode>
     </file>
     <file>
       <source>src/resources/drill-env.sh</source>
@@ -409,6 +411,7 @@
     <file>
       <source>src/resources/drill-on-yarn-example.conf</source>
       <outputDirectory>conf</outputDirectory>
-    </file>
+      <fileMode>0640</fileMode>
+   </file>
   </files>
 </assembly>
