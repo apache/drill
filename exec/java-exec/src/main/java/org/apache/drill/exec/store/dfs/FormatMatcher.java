@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +18,17 @@
 package org.apache.drill.exec.store.dfs;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.hadoop.fs.FileStatus;
 
 import java.io.IOException;
 
 public abstract class FormatMatcher {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatMatcher.class);
 
   public abstract boolean supportDirectoryReads();
   public abstract DrillTable isReadable(DrillFileSystem fs,
       FileSelection selection, FileSystemPlugin fsPlugin,
-      String storageEngineName, String userName) throws IOException;
+      String storageEngineName, SchemaConfig schemaConfig) throws IOException;
   public abstract boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException;
   public abstract FormatPlugin getFormatPlugin();
 }

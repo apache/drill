@@ -598,7 +598,7 @@ public class WorkspaceSchemaFactory {
     }
 
     private DrillTable isReadable(FormatMatcher m, FileSelection fileSelection) throws IOException {
-      return m.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+      return m.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig);
     }
 
     @Override
@@ -619,7 +619,7 @@ public class WorkspaceSchemaFactory {
         if (hasDirectories) {
           for (final FormatMatcher matcher : dirMatchers) {
             try {
-              DrillTable table = matcher.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+              DrillTable table = matcher.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig);
               if (table != null) {
                 return table;
               }
@@ -637,7 +637,7 @@ public class WorkspaceSchemaFactory {
         }
 
         for (final FormatMatcher matcher : fileMatchers) {
-          DrillTable table = matcher.isReadable(getFS(), newSelection, plugin, storageEngineName, schemaConfig.getUserName());
+          DrillTable table = matcher.isReadable(getFS(), newSelection, plugin, storageEngineName, schemaConfig);
           if (table != null) {
             return table;
           }

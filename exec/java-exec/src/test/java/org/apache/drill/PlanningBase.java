@@ -105,7 +105,8 @@ public class PlanningBase extends ExecTest {
     when(context.getLpPersistence()).thenReturn(new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config)));
     when(context.getStorage()).thenReturn(registry);
     when(context.getFunctionRegistry()).thenReturn(functionRegistry);
-    when(context.getSession()).thenReturn(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build());
+    when(context.getSession()).thenReturn(
+        UserSession.Builder.newBuilder().withOptionManager(sessionOptions).setSupportComplexTypes(true).build());
     when(context.getCurrentEndpoint()).thenReturn(DrillbitEndpoint.getDefaultInstance());
     when(context.getActiveEndpoints()).thenReturn(ImmutableList.of(DrillbitEndpoint.getDefaultInstance()));
     when(context.getPlannerSettings()).thenReturn(new PlannerSettings(queryOptions, functionRegistry));

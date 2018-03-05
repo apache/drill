@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.avro;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.apache.drill.common.exceptions.UserException;
@@ -26,6 +28,7 @@ import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -188,6 +191,105 @@ public class AvroFormatTest extends BaseTestQuery {
       Assert.fail("Test should fail as e_dummy2 does not exist.");
     } catch(UserException ue) {
       Assert.assertTrue("Test should fail as e_dummy2 does not exist.", true);
+    }
+  }
+
+  @Test
+  public void testImplicitColumnsWithStar() throws Exception {
+    AvroTestUtil.AvroTestRecordWriter testWriter = generateSimplePrimitiveSchema_NoNullValues(1);
+    final String file = testWriter.getFileName();
+    // removes "." and ".." from the path
+    String tablePath = new File(testWriter.getFilePath()).getCanonicalPath();
+
+    List<Map<String, Object>> expectedRecords = testWriter.getExpectedRecords();
+    expectedRecords.get(0).put("`filename`", file);
+    expectedRecords.get(0).put("`suffix`", "avro");
+    expectedRecords.get(0).put("`fqn`", tablePath);
+    expectedRecords.get(0).put("`filepath`", new File(tablePath).getParent());
+    try {
+      testBuilder()
+          .sqlQuery("select filename, *, suffix, fqn, filepath from dfs.`%s`", file)
+          .unOrdered()
+          .baselineRecords(expectedRecords)
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(new File(tablePath));
+    }
+  }
+
+  @Test
+  public void testImplicitColumnAlone() throws Exception {
+    AvroTestUtil.AvroTestRecordWriter testWriter = generateSimplePrimitiveSchema_NoNullValues(1);
+    final String file = testWriter.getFileName();
+    // removes "." and ".." from the path
+    String tablePath = new File(testWriter.getFilePath()).getCanonicalPath();
+    try {
+      testBuilder()
+          .sqlQuery("select filename from dfs.`%s`", file)
+          .unOrdered()
+          .baselineColumns("filename")
+          .baselineValues(file)
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(new File(tablePath));
+    }
+  }
+
+  @Test
+  public void testImplicitColumnInWhereClause() throws Exception {
+    AvroTestUtil.AvroTestRecordWriter testWriter = generateSimplePrimitiveSchema_NoNullValues(1);
+    final String file = testWriter.getFileName();
+    // removes "." and ".." from the path
+    String tablePath = new File(testWriter.getFilePath()).getCanonicalPath();
+
+    List<Map<String, Object>> expectedRecords = testWriter.getExpectedRecords();
+    try {
+      testBuilder()
+          .sqlQuery("select * from dfs.`%1$s` where filename = '%1$s'", file)
+          .unOrdered()
+          .baselineRecords(expectedRecords)
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(new File(tablePath));
+    }
+  }
+
+  @Test
+  public void testPartitionColumn() throws Exception {
+    setSessionOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL, "directory");
+    String file = "avroTable";
+    String partitionColumn = "2018";
+    AvroTestUtil.AvroTestRecordWriter testWriter =
+        generateSimplePrimitiveSchema_NoNullValues(1, FileUtils.getFile(file, partitionColumn).getPath());
+    try {
+      testBuilder()
+          .sqlQuery("select directory0 from dfs.`%s`", file)
+          .unOrdered()
+          .baselineColumns("directory0")
+          .baselineValues(partitionColumn)
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(new File(testWriter.getFilePath()));
+      resetSessionOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+    }
+  }
+
+  @Test
+  public void testSelectAllWithPartitionColumn() throws Exception {
+    String file = "avroTable";
+    String partitionColumn = "2018";
+    AvroTestUtil.AvroTestRecordWriter testWriter =
+      generateSimplePrimitiveSchema_NoNullValues(1, FileUtils.getFile(file, partitionColumn).getPath());
+    List<Map<String, Object>> expectedRecords = testWriter.getExpectedRecords();
+    expectedRecords.get(0).put("`dir0`", partitionColumn);
+    try {
+      testBuilder()
+          .sqlQuery("select * from dfs.`%s`", file)
+          .unOrdered()
+          .baselineRecords(expectedRecords)
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(new File(testWriter.getFilePath()));
     }
   }
 
