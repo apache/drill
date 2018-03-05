@@ -620,6 +620,7 @@ public class TestDrillbitResilience extends DrillTest {
 
   @Test // DRILL-2383: Cancellation TC 2: cancel in the middle of fetching result set
   @Repeat(count = NUM_RUNS)
+  @Ignore("DRILL-6228")
   public void cancelInMiddleOfFetchingResults() {
     final long before = countAllocatedMemory();
 
@@ -650,6 +651,7 @@ public class TestDrillbitResilience extends DrillTest {
 
   @Test // DRILL-2383: Cancellation TC 3: cancel after all result set are produced but not all are fetched
   @Repeat(count = NUM_RUNS)
+  @Ignore("DRILL-6228")
   public void cancelAfterAllResultsProduced() {
     final long before = countAllocatedMemory();
 

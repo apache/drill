@@ -57,10 +57,6 @@
 
 #export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"8G"}
 
-# Value for the JVM -XX:MaxPermSize option for the Drillbit. Default is 512M.
-
-#export DRILLBIT_MAX_PERM=${DRILLBIT_MAX_PERM:-"512M"}
-
 # Native library path passed to Java. Note: use this form instead
 # of the old form of DRILLBIT_JAVA_OPTS="-Djava.library.path=<dir>"
 # The old form is not compatible with Drill-on-YARN.
@@ -141,12 +137,12 @@
 
 #export SERVER_LOG_GC=${SERVER_LOG_GC:-1}
 
-# JVM options when running the sqlline Drill client. For example, adjust the
-# JVM heap memory here. These are used ONLY in non-embedded mode; these
+# JVM options when running the sqlline Drill client.
+# These are used ONLY in non-embedded mode; these
 # are client-only settings. (The Drillbit settings are used when Drill
 # is embedded.)
 
-#export SQLLINE_JAVA_OPTS="-XX:MaxPermSize=512M"
+#export SQLLINE_JAVA_OPTS=""
 
 # Arguments passed to sqlline (the Drill shell) at all times: whether
 # Drill is embedded in Sqlline or not.

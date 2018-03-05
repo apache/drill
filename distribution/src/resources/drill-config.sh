@@ -77,6 +77,14 @@ else
   JAVA_BIN="java"
 fi
 
+# Standardize error messages
+
+fatal_error() {
+  echo "ERROR: $@" 1>&2
+  exit 1
+}
+
+
 # Test for or find JAVA_HOME
 
 if [ -z "$JAVA_HOME" ]; then
@@ -116,9 +124,9 @@ if [ ! -e "$JAVA" ]; then
 fi
 
 # Ensure that Java version is at least 1.7
-"$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6" > /dev/null
+"$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6|1\.7" > /dev/null
 if [ $? -eq 0 ]; then
-  fatal_error "Java 1.7 or later is required to run Apache Drill."
+  fatal_error "Java 1.8 or later is required to run Apache Drill."
 fi
 
 # Check if a file exists and has relevant lines for execution
@@ -144,12 +152,6 @@ this="$home/bin/$script"
 # the root of the drill installation
 DRILL_HOME=${DRILL_HOME:-$home}
 
-# Standardize error messages
-
-fatal_error() {
-  echo "ERROR: $@" 1>&2
-  exit 1
-}
 
 # Check to see if the conf dir or drill home are given as an optional arguments
 # Arguments may appear anywhere on the command line. --site is an alias, better
@@ -210,7 +212,7 @@ fi
 
 # The SQLline client does not need the code cache.
 
-export SQLLINE_JAVA_OPTS=${SQLLINE_JAVA_OPTS:-"-XX:MaxPermSize=512M"}
+export SQLLINE_JAVA_OPTS=${SQLLINE_JAVA_OPTS:-""}
 
 # Class unloading is disabled by default in Java 7
 # http://hg.openjdk.java.net/jdk7u/jdk7u60/hotspot/file/tip/src/share/vm/runtime/globals.hpp#l1622
@@ -294,18 +296,10 @@ fi
 export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"8G"}
 export DRILL_HEAP=${DRILL_HEAP:-"4G"}
 export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
-export DRILLBIT_MAX_PERM=${DRILLBIT_MAX_PERM:-"512M"}
 
 export DRILLBIT_OPTS="-Xms$DRILL_HEAP -Xmx$DRILL_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
 export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CACHE_SIZE -Ddrill.exec.enable-epoll=false"
 
-# Remove MaxPermSize for JVM version >= 1.8.0
-jvmVersion=`"$JAVA" -version 2>&1 | grep "version" | tr '"_' '\n' | grep '[0-9].[0.9]'`
-if [[ $jvmVersion < "1.8.0" ]]; then
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:MaxPermSize=$DRILLBIT_MAX_PERM"
-else
-  unset DRILLBIT_MAX_PERM
-fi
 
 # Under YARN, the log directory is usually YARN-provided. Replace any
 # value that may have been set in drill-env.sh.
