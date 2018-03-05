@@ -25,6 +25,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
 import org.apache.drill.exec.record.metadata.MapColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.PrimitiveColumnMetadata;
@@ -42,8 +44,8 @@ import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.metadata.VariantColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.SchemaBuilder;
-import org.apache.drill.test.rowSet.SchemaBuilder.ColumnBuilder;
+import org.apache.drill.test.rowSet.schema.ColumnBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
@@ -679,5 +681,150 @@ public class TestTupleSchema extends SubOperatorTest {
     assertEquals(2, colC.schema().getChildren().size());
 
     assertTrue(colA.schema().isEquivalent(fieldA));
+  }
+
+  @Test
+  public void testUnionSchema() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addUnion("u")
+          .addType(MinorType.BIGINT)
+          .addType(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+
+    assertEquals(1, schema.size());
+    ColumnMetadata col = schema.metadata(0);
+    assertTrue(col instanceof VariantColumnMetadata);
+    assertEquals(MinorType.UNION, col.type());
+    assertEquals(DataMode.OPTIONAL, col.mode());
+    assertTrue(col.isNullable());
+    assertFalse(col.isArray());
+    assertTrue(col.isVariant());
+    assertEquals(StructureType.VARIANT, col.structureType());
+
+    VariantMetadata union = col.variantSchema();
+    assertNotNull(union);
+    assertEquals(2, union.size());
+    assertTrue(union.hasType(MinorType.BIGINT));
+    assertTrue(union.hasType(MinorType.VARCHAR));
+    assertFalse(union.hasType(MinorType.INT));
+    Collection<MinorType> types = union.types();
+    assertNotNull(types);
+    assertEquals(2, types.size());
+    assertTrue(types.contains(MinorType.BIGINT));
+    assertTrue(types.contains(MinorType.VARCHAR));
+
+    BatchSchema batchSchema = ((TupleSchema) schema).toBatchSchema(SelectionVectorMode.NONE);
+
+    MaterializedField field = batchSchema.getColumn(0);
+    assertEquals("u", field.getName());
+    MajorType majorType = field.getType();
+    assertEquals(MinorType.UNION, majorType.getMinorType());
+    assertEquals(DataMode.OPTIONAL, majorType.getMode());
+    assertEquals(2, majorType.getSubTypeCount());
+    List<MinorType> subtypes = majorType.getSubTypeList();
+    assertEquals(2, subtypes.size());
+    assertTrue(subtypes.contains(MinorType.BIGINT));
+    assertTrue(subtypes.contains(MinorType.VARCHAR));
+  }
+
+  @Test
+  public void testListSchema() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addList("list")
+          .addType(MinorType.BIGINT)
+          .addType(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+
+    assertEquals(1, schema.size());
+    ColumnMetadata col = schema.metadata(0);
+    assertTrue(col instanceof VariantColumnMetadata);
+
+    // Implementation shows through here: actual major
+    // type is (LIST, OPTIONAL) even though the metadata
+    // lies that this is a variant array.
+
+    assertEquals(MinorType.LIST, col.type());
+    assertEquals(DataMode.OPTIONAL, col.mode());
+    assertTrue(col.isNullable());
+    assertTrue(col.isArray());
+    assertTrue(col.isVariant());
+    assertEquals(StructureType.VARIANT, col.structureType());
+
+    VariantMetadata union = col.variantSchema();
+    assertNotNull(union);
+    assertEquals(2, union.size());
+    assertTrue(union.hasType(MinorType.BIGINT));
+    assertTrue(union.hasType(MinorType.VARCHAR));
+    assertFalse(union.hasType(MinorType.INT));
+    Collection<MinorType> types = union.types();
+    assertNotNull(types);
+    assertEquals(2, types.size());
+    assertTrue(types.contains(MinorType.BIGINT));
+    assertTrue(types.contains(MinorType.VARCHAR));
+
+    BatchSchema batchSchema = ((TupleSchema) schema).toBatchSchema(SelectionVectorMode.NONE);
+
+    MaterializedField field = batchSchema.getColumn(0);
+    assertEquals("list", field.getName());
+    MajorType majorType = field.getType();
+    assertEquals(MinorType.LIST, majorType.getMinorType());
+    assertEquals(DataMode.OPTIONAL, majorType.getMode());
+    assertEquals(2, majorType.getSubTypeCount());
+    List<MinorType> subtypes = majorType.getSubTypeList();
+    assertEquals(2, subtypes.size());
+    assertTrue(subtypes.contains(MinorType.BIGINT));
+    assertTrue(subtypes.contains(MinorType.VARCHAR));
+  }
+
+  @Test
+  public void testNestedSchema() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addList("list")
+          .addType(MinorType.BIGINT)
+          .addType(MinorType.VARCHAR)
+          .addMap()
+            .add("a", MinorType.INT)
+            .add("b", MinorType.VARCHAR)
+            .resumeUnion()
+          .addList()
+            .addType(MinorType.FLOAT8)
+            .addType(MinorType.DECIMAL18)
+            .buildNested()
+          .resumeSchema()
+        .buildSchema();
+
+    assertEquals(1, schema.size());
+    ColumnMetadata col = schema.metadata(0);
+    assertTrue(col.isVariant());
+    VariantMetadata union = col.variantSchema();
+    assertNotNull(union);
+    assertEquals(4, union.size());
+    assertTrue(union.hasType(MinorType.MAP));
+    assertTrue(union.hasType(MinorType.LIST));
+
+    ColumnMetadata mapCol = union.member(MinorType.MAP);
+    TupleMetadata mapSchema = mapCol.mapSchema();
+    assertEquals(2, mapSchema.size());
+
+    ColumnMetadata listCol = union.member(MinorType.LIST);
+    VariantMetadata listSchema = listCol.variantSchema();
+    assertEquals(2, listSchema.size());
+    assertTrue(listSchema.hasType(MinorType.FLOAT8));
+    assertTrue(listSchema.hasType(MinorType.DECIMAL18));
+  }
+
+  @Test
+  public void testDuplicateType() {
+    try {
+      new SchemaBuilder()
+          .addList("list")
+            .addType(MinorType.BIGINT)
+            .addType(MinorType.BIGINT);
+      fail();
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
   }
 }

@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.cache;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,8 +30,8 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.cache.VectorSerializer.Reader;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.test.DirTestWatcher;
@@ -39,13 +43,11 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class TestBatchSerialization extends DrillTest {
 
@@ -179,17 +181,17 @@ public class TestBatchSerialization extends DrillTest {
 
   private SingleRowSet buildMapSet(BatchSchema schema) {
     return fixture.rowSetBuilder(schema)
-        .addRow(1, new Object[] {100, "first"})
-        .addRow(2, new Object[] {200, "second"})
-        .addRow(3, new Object[] {300, "third"})
+        .addRow(1, objArray(100, "first"))
+        .addRow(2, objArray(200, "second"))
+        .addRow(3, objArray(300, "third"))
         .build();
   }
 
   private SingleRowSet buildArraySet(BatchSchema schema) {
     return fixture.rowSetBuilder(schema)
-        .addRow(1, new String[] { "first, second, third" } )
+        .addRow(1, strArray("first, second, third"))
         .addRow(2, null)
-        .addRow(3, new String[] { "third, fourth, fifth" } )
+        .addRow(3, strArray("third, fourth, fifth"))
         .build();
   }
 
@@ -206,7 +208,7 @@ public class TestBatchSerialization extends DrillTest {
         .addMap("map")
           .add("key", MinorType.INT)
           .add("value", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .build();
 
     verifySerialize(buildMapSet(schema).toIndirect(),

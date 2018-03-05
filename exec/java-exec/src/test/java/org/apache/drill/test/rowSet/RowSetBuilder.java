@@ -74,13 +74,13 @@ public final class RowSetBuilder {
    */
 
   public RowSetBuilder addRow(Object...values) {
-    writer.setRow(values);
+    writer.addRow(values);
     return this;
   }
 
   public RowSetBuilder addSelection(boolean selected, Object...values) {
     final int index = writer.rowIndex();
-    writer.setRow(values);
+    writer.addRow(values);
 
     if (!selected) {
       skipIndices.add(index);

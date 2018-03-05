@@ -17,7 +17,11 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
-import static org.junit.Assert.*;
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,9 +39,9 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -244,15 +248,15 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .addMap("m1")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .addMap("m2")
           .add("c", MinorType.INT)
           .add("d", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .addMap("m3")
           .add("e", MinorType.INT)
           .add("f", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ResultSetOptions options = new OptionBuilder()
         .setProjection(selection)
@@ -312,14 +316,14 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addMap("m1")
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
-        .buildMap()
+        .resumeSchema()
       .addMap("m2")
         .add("d", MinorType.INT)
-        .buildMap()
+        .resumeSchema()
       .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-      .addRow(new Object[] {1, 2}, new Object[] {4})
-      .addRow(new Object[] {11, 12}, new Object[] {14})
+      .addRow(objArray(1, 2), objArray(4))
+      .addRow(objArray(11, 12), objArray(14))
       .build();
     new RowSetComparison(expected)
         .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
@@ -341,15 +345,15 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .addMapArray("m1")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .addMapArray("m2")
           .add("c", MinorType.INT)
           .add("d", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .addMapArray("m3")
           .add("e", MinorType.INT)
           .add("f", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ResultSetOptions options = new OptionBuilder()
         .setProjection(selection)
@@ -362,13 +366,13 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     rsLoader.startBatch();
     rootWriter.addRow(
-        new Object[] { new Object[] {10, 20}, new Object[] {11, 21}},
-        new Object[] { new Object[] {30, 40}, new Object[] {31, 42}},
-        new Object[] { new Object[] {50, 60}, new Object[] {51, 62}});
+        objArray(objArray(10, 20), objArray(11, 21)),
+        objArray(objArray(30, 40), objArray(31, 42)),
+        objArray(objArray(50, 60), objArray(51, 62)));
     rootWriter.addRow(
-        new Object[] { new Object[] {110, 120}, new Object[] {111, 121}},
-        new Object[] { new Object[] {130, 140}, new Object[] {131, 142}},
-        new Object[] { new Object[] {150, 160}, new Object[] {151, 162}});
+        objArray(objArray(110, 120), objArray(111, 121)),
+        objArray(objArray(130, 140), objArray(131, 142)),
+        objArray(objArray(150, 160), objArray(151, 162)));
 
     // Verify. Only the projected columns appear in the result set.
 
@@ -376,18 +380,18 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addMapArray("m1")
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
-        .buildMap()
+        .resumeSchema()
       .addMapArray("m2")
         .add("d", MinorType.INT)
-        .buildMap()
+        .resumeSchema()
       .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
       .addRow(
-          new Object[] { new Object[] {10, 20}, new Object[] {11, 21}},
-          new Object[] { new Object[] {40}, new Object[] {42}})
+          objArray(objArray(10, 20), objArray(11, 21)),
+          objArray(objArray(40), objArray(42)))
       .addRow(
-          new Object[] { new Object[] {110, 120}, new Object[] {111, 121}},
-          new Object[] { new Object[] {140}, new Object[] {142}})
+          objArray(objArray(110, 120), objArray(111, 121)),
+          objArray(objArray(140), objArray(142)))
       .build();
     new RowSetComparison(expected)
         .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
