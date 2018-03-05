@@ -80,9 +80,8 @@ public class AuthDynamicFeature implements DynamicFeature {
               URLEncoder.encode(requestContext.getUriInfo().getRequestUri().toString(), "UTF-8");
           final URI loginURI = requestContext.getUriInfo().getBaseUriBuilder()
               .path(LogInLogOutResources.LOGIN_RESOURCE)
-              .queryParam(LogInLogOutResources.REDIRECT_QUERY_PARM, destResource)
               .build();
-          requestContext.abortWith(Response.temporaryRedirect(loginURI).build()
+          requestContext.abortWith(Response.seeOther(loginURI).build()
           );
         } catch (final Exception ex) {
           final String errMsg = String.format("Failed to forward the request to login page: %s", ex.getMessage());

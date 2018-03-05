@@ -98,6 +98,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       final long maxAllocation) throws OutOfMemoryException {
     super(parentAllocator, initReservation, maxAllocation);
 
+
     if (parentAllocator != null) {
       this.root = parentAllocator.root;
       empty = parentAllocator.empty;

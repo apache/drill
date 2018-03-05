@@ -56,9 +56,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,6 +71,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.drill.exec.server.rest.auth.AuthDynamicFeature.isUserLoggedIn;
 
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
@@ -103,6 +110,28 @@ public class QueryResources {
     } finally {
       // no-op for authenticated user
       webUserConnection.cleanupSession();
+    }
+  }
+
+  private void loginV(ContainerRequestContext requestContext){
+    if (!isUserLoggedIn(sc)) {
+      try {
+        final String destResource =
+                URLEncoder.encode(requestContext.getUriInfo().getRequestUri().toString(), "UTF-8");
+        final URI loginURI = requestContext.getUriInfo().getBaseUriBuilder()
+                .path(LogInLogOutResources.LOGIN_RESOURCE)
+                .queryParam(LogInLogOutResources.REDIRECT_QUERY_PARM, destResource)
+                .build();
+        requestContext.abortWith(Response.temporaryRedirect(loginURI).build()
+        );
+      } catch (final Exception ex) {
+        final String errMsg = String.format("Failed to forward the request to login page: %s", ex.getMessage());
+        logger.error(errMsg, ex);
+        requestContext.abortWith(
+                Response.serverError()
+                        .entity(errMsg)
+                        .build());
+      }
     }
   }
 
@@ -159,14 +188,14 @@ public class QueryResources {
   @Path("/data")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_PLAIN)
-  public String getData(@QueryParam("username") String UserName) throws Exception {
+  public String getData(@QueryParam("username") String UserName, @Context ContainerRequestContext requestContext) throws Exception {
+
+//    loginV(requestContext);
+
     String username = webUserConnection.getSession().getCredentials().getUserName();
     logger.info("picasso: getData: username: " + username);
 
 
-    if(username.equals("")) {
-      username = "bingxing.wang";
-    }
     String nodePath = ZKPATH + username;
     String zk_ip = work.getContext().getConfig().getString(ExecConstants.ZK_CONNECTION).split(",")[0];
     logger.info(zk_ip);
@@ -183,11 +212,12 @@ public class QueryResources {
         msg = "";
         type = "success";
       } else {
-        String data = new String(zk.getData(nodePath, true, null));
+        String data = new String(zk.getData(nodePath, true, null), "utf-8");
         zk.close();
         // json格式的字符串
         msg = data;
         type = "success";
+        logger.info("picasso: getData:success msg:" + msg);
       }
     } catch (InterruptedException e) {
         msg = e.getMessage();
@@ -210,7 +240,10 @@ public class QueryResources {
   @Path("/data")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public String setData(@FormParam("username") String UserName, @FormParam("data") String data) throws Exception {
+  public String setData(@FormParam("username") String UserName, @FormParam("data") String data, @Context ContainerRequestContext requestContext) throws Exception {
+
+//    loginV(requestContext);
+
     String username = webUserConnection.getSession().getCredentials().getUserName();
     logger.info("picasso: setData: username: " + username);
 
@@ -236,12 +269,12 @@ public class QueryResources {
     try{
       if(zk.exists(nodePath, true) == null) {
         logger.info("picasso: no node exist, create new node");
-        zk.create(nodePath, sqls.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        zk.create(nodePath, sqls.getBytes("utf-8"), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         zk.close();
         type = "success";
       } else {
-        logger.info("picasso: set data on node");
-        zk.setData(nodePath, sqls.getBytes(), -1);
+        logger.info("picasso: set data on node. data:" + sqls);
+        zk.setData(nodePath, sqls.getBytes("utf-8"), -1);
         zk.close();
         type = "success";
       }
@@ -260,7 +293,9 @@ public class QueryResources {
   @Path("/query")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public String submitQuery(@FormParam("query") String query) throws Exception {
+  public String submitQuery(@FormParam("query") String query, @Context ContainerRequestContext requestContext) throws Exception {
+
+//    loginV(requestContext);
 
     // 这里需要设置为constant
     String queryType = "SQL";

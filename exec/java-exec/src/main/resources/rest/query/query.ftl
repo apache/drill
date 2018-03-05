@@ -16,17 +16,17 @@
     </#if>
     <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
     <script src="/static/js/jquery-3.2.1.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js"></script>
-    <link href="/static/css/main.b9c6151e.css" rel="stylesheet">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js"></script>
+    <link href="/static/css/main.d557dfac.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>
   <a href="/queries">back</a><br/>
    <noscript>You need to enable JavaScript to run this app.</noscript>
    <div id="root"></div>
-   <script type="text/javascript" src="/static/js/main.31525d42.js"></script>
+   <script type="text/javascript" src="/static/js/main.c3cb0de8.js"></script>
 </#macro>
 
 <@page_html/>
