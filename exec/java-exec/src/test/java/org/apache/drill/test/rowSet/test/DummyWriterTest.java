@@ -28,7 +28,7 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 public class DummyWriterTest extends SubOperatorTest {
@@ -117,10 +117,10 @@ public class DummyWriterTest extends SubOperatorTest {
         .addMap("m1")
           .add("a", MinorType.INT)
           .addArray("b", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .addMapArray("m2")
           .add("c", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     List<AbstractObjectWriter> writers = new ArrayList<>();
 

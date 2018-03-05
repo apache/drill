@@ -40,7 +40,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -306,7 +306,7 @@ public class TestLoad extends ExecTest {
     BatchSchema schema1 = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addMap("m")
-          .buildMap()
+          .resumeSchema()
         .build();
     {
       assertTrue(loadBatch(allocator, batchLoader, schema1));
@@ -330,7 +330,7 @@ public class TestLoad extends ExecTest {
         .add("a", MinorType.INT)
         .addMap("m")
           .add("b", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .build();
     {
       assertTrue(loadBatch(allocator, batchLoader, schema2));
@@ -356,7 +356,7 @@ public class TestLoad extends ExecTest {
           .addMap("m")
             .add("b", MinorType.VARCHAR)
             .add("c", MinorType.INT)
-            .buildMap()
+            .resumeSchema()
           .build();
       assertTrue(loadBatch(allocator, batchLoader, schema));
       assertTrue(schema.isEquivalent(batchLoader.getSchema()));
@@ -371,7 +371,7 @@ public class TestLoad extends ExecTest {
           .add("a", MinorType.INT)
           .addMap("m")
             .add("b", MinorType.VARCHAR)
-            .buildMap()
+            .resumeSchema()
           .build();
       assertTrue(loadBatch(allocator, batchLoader, schema));
       assertTrue(schema.isEquivalent(batchLoader.getSchema()));
@@ -386,7 +386,7 @@ public class TestLoad extends ExecTest {
           .add("a", MinorType.INT)
           .addMap("m")
             .add("b", MinorType.INT)
-            .buildMap()
+            .resumeSchema()
           .build();
       assertTrue(loadBatch(allocator, batchLoader, schema));
       assertTrue(schema.isEquivalent(batchLoader.getSchema()));

@@ -117,9 +117,15 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
   }
 
   @Override
-  public void setRow(Object...values) {
+  public RowSetWriter addRow(Object...values) {
     setObject(values);
     save();
+    return this;
+  }
+
+  @Override
+  public RowSetWriter addSingleCol(Object value) {
+    return addRow(new Object[] {value});
   }
 
   @Override

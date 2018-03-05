@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -42,7 +43,7 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
@@ -440,8 +441,8 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(5, rsLoader.schemaVersion());
     SingleRowSet expected = fixture.rowSetBuilder(result.batchSchema())
-        .addRow("foo", "second", "",    null,  new String[] { } )
-        .addRow("bar", "",       "c.2", "d.2", new String[] {"e1", "e2", "e3"} )
+        .addRow("foo", "second", "",    null,  strArray())
+        .addRow("bar", "",       "c.2", "d.2", strArray("e1", "e2", "e3"))
         .build();
     new RowSetComparison(expected)
         .verifyAndClearAll(result);

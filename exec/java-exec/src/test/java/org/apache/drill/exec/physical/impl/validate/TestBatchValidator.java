@@ -17,13 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.validate;
 
-import static org.junit.Assert.*;
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.validate.BatchValidator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.vector.RepeatedVarCharVector;
@@ -33,7 +35,7 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -108,9 +110,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .addRow(new int[] {}, new String[] {})
-        .addRow(new int[] {1, 2, 3}, new String[] {"fred", "barney", "wilma"})
-        .addRow(new int[] {4}, new String[] {"dino"})
+        .addRow(intArray(), strArray())
+        .addRow(intArray(1, 2, 3), strArray("fred", "barney", "wilma"))
+        .addRow(intArray(4), strArray("dino"))
         .build();
 
     BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
@@ -135,10 +137,8 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
     // Don't do this in real code!
 
     VectorAccessible va = batch.vectorAccessible();
-    @SuppressWarnings("resource")
     ValueVector v = va.iterator().next().getValueVector();
     VarCharVector vc = (VarCharVector) v;
-    @SuppressWarnings("resource")
     UInt4Vector ov = vc.getOffsetVector();
     assertTrue(ov.getAccessor().get(3) > 0);
     ov.getMutator().set(3, 0);
@@ -183,10 +183,8 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
     // Don't do this in real code!
 
     VectorAccessible va = batch.vectorAccessible();
-    @SuppressWarnings("resource")
     ValueVector v = va.iterator().next().getValueVector();
     VarCharVector vc = (VarCharVector) v;
-    @SuppressWarnings("resource")
     UInt4Vector ov = vc.getOffsetVector();
     ov.getMutator().set(index, bogusValue);
   }
@@ -270,16 +268,14 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .addRow((Object) new String[] {})
-        .addRow((Object) new String[] {"fred", "barney", "wilma"})
-        .addRow((Object) new String[] {"dino"})
+        .addRow((Object) strArray())
+        .addRow((Object) strArray("fred", "barney", "wilma"))
+        .addRow((Object) strArray("dino"))
         .build();
 
     VectorAccessible va = batch.vectorAccessible();
-    @SuppressWarnings("resource")
     ValueVector v = va.iterator().next().getValueVector();
     RepeatedVarCharVector vc = (RepeatedVarCharVector) v;
-    @SuppressWarnings("resource")
     UInt4Vector ov = vc.getOffsetVector();
     ov.getMutator().set(3, 1);
 
@@ -298,18 +294,15 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .build();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
-        .addRow((Object) new String[] {})
-        .addRow((Object) new String[] {"fred", "barney", "wilma"})
-        .addRow((Object) new String[] {"dino"})
+        .addRow((Object) strArray())
+        .addRow((Object) strArray("fred", "barney", "wilma"))
+        .addRow((Object) strArray("dino"))
         .build();
 
     VectorAccessible va = batch.vectorAccessible();
-    @SuppressWarnings("resource")
     ValueVector v = va.iterator().next().getValueVector();
     RepeatedVarCharVector rvc = (RepeatedVarCharVector) v;
-    @SuppressWarnings("resource")
     VarCharVector vc = rvc.getDataVector();
-    @SuppressWarnings("resource")
     UInt4Vector ov = vc.getOffsetVector();
     ov.getMutator().set(4, 100_000);
 

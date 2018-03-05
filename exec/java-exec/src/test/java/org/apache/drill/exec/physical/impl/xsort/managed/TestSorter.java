@@ -39,10 +39,10 @@ import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -635,7 +635,7 @@ public class TestSorter extends DrillTest {
         .addMap("map")
           .add("key", MinorType.INT)
           .add("value", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .build();
 
     SingleRowSet input = fixture.rowSetBuilder(schema)

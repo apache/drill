@@ -34,7 +34,7 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObj
 import org.apache.drill.exec.vector.accessor.writer.NullableScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
 import org.apache.drill.test.OperatorFixture;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 
 import com.google.common.base.Stopwatch;
 
