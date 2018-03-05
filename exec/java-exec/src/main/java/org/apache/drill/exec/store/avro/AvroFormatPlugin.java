@@ -30,6 +30,7 @@ import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -102,9 +103,10 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
     @Override
     public DrillTable isReadable(DrillFileSystem fs,
         FileSelection selection, FileSystemPlugin fsPlugin,
-        String storageEngineName, String userName) throws IOException {
+        String storageEngineName, SchemaConfig schemaConfig) throws IOException {
       if (isFileReadable(fs, selection.getFirstPath(fs))) {
-        return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(plugin.getConfig(), selection));
+        return new AvroDrillTable(storageEngineName, fsPlugin, schemaConfig,
+            new FormatSelection(plugin.getConfig(), selection));
       }
       return null;
     }

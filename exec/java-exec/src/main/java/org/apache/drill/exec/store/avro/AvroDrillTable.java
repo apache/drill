@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,10 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.ExtendableRelDataType;
+import org.apache.drill.exec.planner.types.ExtendableRelDataTypeHolder;
+import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.hadoop.fs.Path;
@@ -38,17 +42,20 @@ import org.apache.hadoop.fs.Path;
 import com.google.common.collect.Lists;
 
 public class AvroDrillTable extends DrillTable {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AvroDrillTable.class);
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AvroDrillTable.class);
-  private DataFileReader<GenericContainer> reader = null;
+  private final DataFileReader<GenericContainer> reader;
+  private final SchemaConfig schemaConfig;
+  private ExtendableRelDataTypeHolder holder;
 
   public AvroDrillTable(String storageEngineName,
                        FileSystemPlugin plugin,
-                       String userName,
+                       SchemaConfig schemaConfig,
                        FormatSelection selection) {
-    super(storageEngineName, plugin, userName, selection);
+    super(storageEngineName, plugin, schemaConfig.getUserName(), selection);
     List<String> asFiles = selection.getAsFiles();
     Path path = new Path(asFiles.get(0));
+    this.schemaConfig = schemaConfig;
     try {
       reader = new DataFileReader<>(new FsInput(path, plugin.getFsConf()), new GenericDatumReader<GenericContainer>());
     } catch (IOException e) {
@@ -58,16 +65,32 @@ public class AvroDrillTable extends DrillTable {
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    List<RelDataType> typeList = Lists.newArrayList();
-    List<String> fieldNameList = Lists.newArrayList();
+    // ExtendableRelDataTypeHolder is reused to preserve previously added implicit columns
+    if (holder == null) {
+      List<RelDataType> typeList = Lists.newArrayList();
+      List<String> fieldNameList = Lists.newArrayList();
 
-    Schema schema = reader.getSchema();
-    for (Field field : schema.getFields()) {
-      fieldNameList.add(field.name());
-      typeList.add(getNullableRelDataTypeFromAvroType(typeFactory, field.schema()));
+      // adds partition columns to RowType since they always present in star queries
+      List<String> partitions =
+          ColumnExplorer.getPartitionColumnNames(((FormatSelection) getSelection()).getSelection(), schemaConfig);
+      for (String partitionName : partitions) {
+        fieldNameList.add(partitionName);
+        typeList.add(typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARCHAR), true));
+      }
+
+      // adds non-partition table columns to RowType
+      Schema schema = reader.getSchema();
+      for (Field field : schema.getFields()) {
+        fieldNameList.add(field.name());
+        typeList.add(getNullableRelDataTypeFromAvroType(typeFactory, field.schema()));
+      }
+
+      holder = new ExtendableRelDataTypeHolder(
+          typeFactory.createStructType(typeList, fieldNameList).getFieldList(),
+          ColumnExplorer.getImplicitColumnsNames(schemaConfig));
     }
 
-    return typeFactory.createStructType(typeList, fieldNameList);
+    return new ExtendableRelDataType(holder, typeFactory);
   }
 
   private RelDataType getNullableRelDataTypeFromAvroType(
