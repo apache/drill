@@ -17,7 +17,7 @@ before_install: git fetch --unshallow
 sudo: required
 language: java
 jdk:
-  - openjdk7
+  - openjdk8
 cache:
   directories:
   - "$HOME/.m2"

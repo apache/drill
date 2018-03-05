@@ -327,8 +327,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <maxmem>2048m</maxmem>
           <useIncrementalCompilation>false</useIncrementalCompilation>
           <fork>true</fork>
@@ -469,7 +469,7 @@
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -Ddrill.test.query.printing.silent=true
               -Ddrill.catastrophic_to_standard_out=true
-              -XX:MaxPermSize=512M -XX:MaxDirectMemorySize=${directMemoryMb}M
+              -XX:MaxDirectMemorySize=${directMemoryMb}M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
               -XX:+CMSClassUnloadingEnabled -ea
