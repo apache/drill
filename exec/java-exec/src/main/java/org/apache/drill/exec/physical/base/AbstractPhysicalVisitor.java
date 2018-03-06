@@ -138,21 +138,6 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
-  public T visitMergeJoin(MergeJoinPOP join, X value) throws E {
-    return visitOp(join, value);
-  }
-
-  @Override
-  public T visitHashJoin(HashJoinPOP join, X value) throws E {
-    return visitOp(join, value);
-  }
-
-  @Override
-  public T visitNestedLoopJoin(NestedLoopJoinPOP join, X value) throws E {
-    return visitOp(join, value);
-  }
-
-  @Override
   public T visitHashPartitionSender(HashPartitionSender op, X value) throws E {
     return visitSender(op, value);
   }
