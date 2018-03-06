@@ -62,9 +62,6 @@ public interface PhysicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   public RETURN visitSort(Sort sort, EXTRA value) throws EXCEP;
   public RETURN visitLimit(Limit limit, EXTRA value) throws EXCEP;
   public RETURN visitFlatten(FlattenPOP flatten, EXTRA value) throws EXCEP;
-  public RETURN visitMergeJoin(MergeJoinPOP join, EXTRA value) throws EXCEP;
-  public RETURN visitHashJoin(HashJoinPOP join, EXTRA value) throws EXCEP;
-  public RETURN visitNestedLoopJoin(NestedLoopJoinPOP join, EXTRA value) throws EXCEP;
   public RETURN visitSender(Sender sender, EXTRA value) throws EXCEP;
   public RETURN visitReceiver(Receiver receiver, EXTRA value) throws EXCEP;
   public RETURN visitStreamingAggregate(StreamingAggregate agg, EXTRA value) throws EXCEP;
