@@ -54,7 +54,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
       String query = String.format("select equal(nan_col, nan_col) as nan_col, equal(inf_col, inf_col) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {false, true};
+      Object[] values = {true, true};
       evalTest(table_name, json, query, columns, values);
 
     }
@@ -65,7 +65,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
       String query = String.format("select not_equal(nan_col, nan_col) as nan_col, not_equal(inf_col, inf_col) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {true, false};
+      Object[] values = {false, false};
       evalTest(table_name, json, query, columns, values);
     }
 
@@ -85,7 +85,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
       String query = String.format("select greater_than(nan_col, 5) as nan_col, greater_than(inf_col, 5) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {false, true};
+      Object[] values = {true, true};
       evalTest(table_name, json, query, columns, values);
     }
 
