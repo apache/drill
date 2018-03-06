@@ -53,7 +53,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractMapVector
-    implements RepeatedValueVector, RepeatedFixedWidthVectorLike {
+    implements RepeatedValueVector {
 
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
 
@@ -97,7 +97,6 @@ public class RepeatedMapVector extends AbstractMapVector
   @Override
   public RepeatedMapReaderImpl getReader() { return reader; }
 
-  @Override
   public void allocateNew(int groupCount, int innerValueCount) {
     clear();
     try {
@@ -609,4 +608,20 @@ public class RepeatedMapVector extends AbstractMapVector
   public void toNullable(ValueVector nullableVector) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
+    int entryCount = offsets.getAccessor().get(valueCount);
+    int count = offsets.getPayloadByteCount(valueCount);
+
+    for (final ValueVector v : getChildren()) {
+      count += v.getPayloadByteCount(entryCount);
+    }
+    return count;
+  }
+
 }
