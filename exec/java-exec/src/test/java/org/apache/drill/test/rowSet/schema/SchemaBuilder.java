@@ -22,9 +22,9 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.MaterializedField;
 
 /**
  * Builder of a row set schema expressed as a list of materialized
@@ -56,7 +56,7 @@ import org.apache.drill.exec.record.MaterializedField;
  *            .buildNested()
  *          .build()
  *        .addArray("i", MinorType.BIGINT)
- *        .addRepeatedList("k")
+ *        .addRepeatedList("j")
  *          .addDimension()
  *            .addArray(MinorType.VARCHAR)
  *            .endDimension()
