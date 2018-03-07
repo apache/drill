@@ -27,6 +27,7 @@ public abstract class AbstractRecordBatchMemoryManager {
   protected static final int MIN_NUM_ROWS = 1;
   private int outputRowCount = MAX_NUM_ROWS;
   private int outgoingRowWidth;
+  private RecordBatchSizer sizer;
 
   public void update(int inputIndex) {};
 
@@ -41,14 +42,20 @@ public abstract class AbstractRecordBatchMemoryManager {
    * the min and max that is allowed.
    */
   public void setOutputRowCount(int targetBatchSize, int rowWidth) {
-    this.outputRowCount = adjustOutputRowCount(RecordBatchSizer.safeDivide(targetBatchSize/WORST_CASE_FRAGMENTATION_FACTOR, rowWidth));
+    this.outputRowCount = adjustOutputRowCount(RecordBatchSizer.safeDivide(targetBatchSize, rowWidth));
+  }
+
+  public void setOutputRowCount(int outputRowCount) {
+    this.outputRowCount = outputRowCount;
   }
 
   /**
    * This will adjust rowCount taking into account the min and max that is allowed.
+   * We will round down to nearest power of two - 1 for better memory utilization.
+   * -1 is done for adjusting accounting for offset vectors.
    */
   public static int adjustOutputRowCount(int rowCount) {
-    return (Math.min(MAX_NUM_ROWS, Math.max(rowCount, MIN_NUM_ROWS)));
+    return (Math.min(MAX_NUM_ROWS, Math.max(Integer.highestOneBit(rowCount) - 1, MIN_NUM_ROWS)));
   }
 
   public void setOutgoingRowWidth(int outgoingRowWidth) {
@@ -58,4 +65,17 @@ public abstract class AbstractRecordBatchMemoryManager {
   public int getOutgoingRowWidth() {
     return outgoingRowWidth;
   }
+
+  public void setRecordBatchSizer(RecordBatchSizer sizer) {
+    this.sizer = sizer;
+  }
+
+  public RecordBatchSizer getRecordBatchSizer() {
+    return sizer;
+  }
+
+  public RecordBatchSizer.ColumnSize getColumnSize(String name) {
+    return sizer.getColumn(name);
+  }
+
 }
