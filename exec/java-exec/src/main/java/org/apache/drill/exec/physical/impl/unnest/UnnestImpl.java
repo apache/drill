@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.unnest;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -31,11 +32,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static org.apache.drill.exec.record.BatchSchema.SelectionVectorMode.NONE;
+
 /**
  * Contains the actual unnest operation. Unnest is a simple transfer operation in this impelementation.
  * For use as a table function, we will need to change the logic of the unnest method to operate on
  * more than one row at a time and remove any dependence on Lateral
- * {@link org.apache.drill.exec.physical.impl.flatten.FlattenTemplate}.
  * This class follows the pattern of other operators that generate code at runtime. Normally this class
  * would be abstract and have placeholders for doSetup and doEval. Unnest however, doesn't require code
  * generation so we can simply implement the code in a simple class that looks similar to the code gen
@@ -43,8 +45,6 @@ import java.util.List;
  */
 public class UnnestImpl implements Unnest {
   private static final Logger logger = LoggerFactory.getLogger(UnnestImpl.class);
-
-  private static final int OUTPUT_ROW_COUNT = ValueVector.MAX_ROW_COUNT;
 
   private ImmutableList<TransferPair> transfers;
   private LateralContract lateral; // corresponding lateral Join (or other operator implementing the Lateral Contract)
@@ -56,7 +56,7 @@ public class UnnestImpl implements Unnest {
    * The output batch limit starts at OUTPUT_ROW_COUNT, but may be decreased
    * if records are found to be large.
    */
-  private int outputLimit = OUTPUT_ROW_COUNT;
+  private int outputLimit = ValueVector.MAX_ROW_COUNT;
 
 
   // The index in the unnest column that is being processed.We start at zero and continue until
@@ -82,52 +82,44 @@ public class UnnestImpl implements Unnest {
   }
 
   @Override
-  public final int unnestRecords(final int recordCount, final int firstOutputIndex) {
-    switch (svMode) {
-      case FOUR_BYTE:
-        throw new UnsupportedOperationException("Unnest does not support selection vector inputs.");
-
-      case TWO_BYTE:
-        throw new UnsupportedOperationException("Unnest does not support selection vector inputs.");
-
-      case NONE:
-        if (innerValueIndex == -1) {
-          innerValueIndex = 0;
-        }
-
-        // Current record being processed in the incoming record batch. We could keep
-        // track of it ourselves, but it is better to check with the Lateral Join and get the
-        // current record being processed thru the Lateral Join Contract.
-        final int currentRecord = lateral.getRecordIndex();
-        final int innerValueCount = accessor.getInnerValueCountAt(currentRecord);
-        final int count = Math.min(Math.min(innerValueCount, outputLimit), recordCount);
-
-        for (TransferPair t : transfers) {
-          t.splitAndTransfer(innerValueIndex, count);
-        }
-        innerValueIndex += count;
-        return count;
-
-      default:
-        throw new UnsupportedOperationException();
+  public final int unnestRecords(final int recordCount) {
+    Preconditions.checkArgument(svMode == NONE, "Unnest does not support selection vector inputs.");
+    if (innerValueIndex == -1) {
+      innerValueIndex = 0;
     }
-  }
 
-  @Override public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing,
+    // Current record being processed in the incoming record batch. We could keep
+    // track of it ourselves, but it is better to check with the Lateral Join and get the
+    // current record being processed thru the Lateral Join Contract.
+    final int currentRecord = lateral.getRecordIndex();
+    final int innerValueCount = accessor.getInnerValueCountAt(currentRecord);
+    final int count = Math.min(Math.min(innerValueCount, outputLimit), recordCount);
+
+    logger.debug("Unnest: currentRecord: {}, innerValueCount: {}, record count: {}, output limit: {}", innerValueCount,
+        recordCount, outputLimit);
+    for (TransferPair t : transfers) {
+      t.splitAndTransfer(innerValueIndex, count);
+    }
+    innerValueIndex += count;
+    return count;
+
+    }
+
+  @Override
+  public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing,
       List<TransferPair> transfers, LateralContract lateral) throws SchemaChangeException {
 
     this.svMode = incoming.getSchema().getSelectionVectorMode();
-    switch (svMode) {
-      case FOUR_BYTE:
-        throw new UnsupportedOperationException("Unnest does not support selection vector inputs.");
-      case TWO_BYTE:
-        throw new UnsupportedOperationException("Unnest does not support selection vector inputs.");
+    if (svMode == NONE) {
+      this.transfers = ImmutableList.copyOf(transfers);
+      this.lateral = lateral;
+    } else {
+      throw new UnsupportedOperationException("Unnest does not support selection vector inputs.");
     }
-    this.transfers = ImmutableList.copyOf(transfers);
-    this.lateral = lateral;
   }
 
-  @Override public void resetGroupIndex() {
+  @Override
+  public void resetGroupIndex() {
     this.innerValueIndex = 0;
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.unnest;
 
-import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.LateralContract;
@@ -27,18 +26,42 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 import java.util.List;
 
+/**
+ * Placeholder for future unnest implementation that may require code generation. Current implementation does not
+ * require any
+ * @see UnnestImpl
+ */
 public interface Unnest {
-  TemplateClassDefinition<Unnest> TEMPLATE_DEFINITION = new TemplateClassDefinition<Unnest>(Unnest.class, UnnestImpl.class);
+  //TemplateClassDefinition<Unnest> TEMPLATE_DEFINITION = new TemplateClassDefinition<Unnest>(Unnest.class, UnnestImpl
+  // .class);
 
   void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers,
       LateralContract lateral) throws SchemaChangeException;
 
-  int unnestRecords(int recordCount, int firstOutputIndex);
+  /**
+   * Performs the actual unnest operation.
+   * @param recordCount
+   * @return number of values in output
+   */
+  int unnestRecords(int recordCount);
 
+  /**
+   * Set the field to be unnested
+   * @param repeatedColumn
+   */
   void setUnnestField(RepeatedValueVector repeatedColumn);
+
+  /**
+   * Set the maximum number of values allowed in the output.
+   * @param outputCount
+   */
   void setOutputCount(int outputCount);
 
   RepeatedValueVector getUnnestField();
 
+  /**
+   * Reset the index at which the incoming vector is being processed. Called every
+   * time a new batch comes in.
+   */
   void resetGroupIndex();
 }
