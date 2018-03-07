@@ -245,8 +245,8 @@ public class FragmentExecutor implements Runnable {
         // we have a heap out of memory error. The JVM in unstable, exit.
         CatastrophicFailure.exit(e, "Unable to handle out of memory condition in FragmentExecutor.", -2);
       }
-    } catch (AssertionError | Exception e) {
-      fail(e);
+    } catch (Throwable t) {
+      fail(t);
     } finally {
 
       // no longer allow this thread to be interrupted. We synchronize here to make sure that cancel can't set an
