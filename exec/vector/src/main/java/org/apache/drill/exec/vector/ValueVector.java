@@ -89,6 +89,9 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   String BITS_VECTOR_NAME = "$bits$";
   String OFFSETS_VECTOR_NAME = "$offsets$";
+
+  @Deprecated
+  // See DRILL-6216
   String VALUES_VECTOR_NAME = "$values$";
 
   /**
