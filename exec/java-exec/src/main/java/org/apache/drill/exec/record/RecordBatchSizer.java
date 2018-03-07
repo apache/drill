@@ -27,7 +27,11 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.NullableVector;
+import org.apache.drill.exec.vector.UInt1Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.UntypedNullVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
@@ -36,6 +40,7 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
 import com.google.common.collect.Sets;
+import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
 
 /**
  * Given a record batch or vector container, determines the actual memory
@@ -43,6 +48,9 @@ import com.google.common.collect.Sets;
  */
 
 public class RecordBatchSizer {
+  private static final int OFFSET_VECTOR_WIDTH = UInt4Vector.VALUE_WIDTH;
+  private static final int BIT_VECTOR_WIDTH = UInt1Vector.VALUE_WIDTH;
+  private static final int STD_REPETITION_FACTOR = 10;
 
   /**
    * Column size information.
@@ -52,20 +60,19 @@ public class RecordBatchSizer {
     public final MaterializedField metadata;
 
     /**
-     * Assumed size from Drill metadata. Note that this information is
-     * 100% bogus for variable-width columns. Do not use it for such
-     * columns.
+     * This is the total size of just pure data for the column
+     * for all entries.
      */
 
-    public int stdSize;
+    private int totalDataSize;
 
     /**
-     * Actual average column width as determined from actual memory use. This
-     * size is larger than the actual data size since this size includes per-
-     * column overhead such as any unused vector space, etc.
+     * This is the total size of data for the column + additional
+     * metadata vector overhead we add for cardinality, variable length etc.
+     * for all entries.
      */
 
-    public final int estSize;
+    private int totalNetSize;
 
     /**
      * Number of occurrences of the value in the batch. This is trivial
@@ -76,28 +83,16 @@ public class RecordBatchSizer {
      * greater than (but unlikely) same as the row count.
      */
 
-    public final int valueCount;
+    private final int valueCount;
 
     /**
-     * Total number of elements for a repeated type, or 1 if this is
-     * a non-repeated type. That is, a batch of 100 rows may have an
-     * array with 10 elements per row. In this case, the element count
-     * is 1000.
+     * Total number of elements for a repeated type, or same as
+     * valueCount if this is a non-repeated type. That is, a batch
+     * of 100 rows may have an array with 10 elements per row.
+     * In this case, the element count is 1000.
      */
 
-    public final int elementCount;
-
-    /**
-     * Size of the top level value vector. For map and repeated list,
-     * this is just size of offset vector.
-     */
-    public int dataSize;
-
-    /**
-     * Total size of the column includes the sum total of memory for all
-     * value vectors representing the column.
-     */
-    public int netSize;
+    private int elementCount;
 
     /**
      * The estimated, average number of elements per parent value.
@@ -105,75 +100,307 @@ public class RecordBatchSizer {
      * this is the average entries per array (per repeated element).
      */
 
-    public final float estElementCountPerArray;
-    public final boolean isVariableWidth;
+    private float cardinality;
+
+    /**
+     * Indicates if it is variable width column.
+     * For map columns, this is true if any of the children is variable
+     * width column.
+     */
+
+    private boolean isVariableWidth;
+
+    /**
+     * Indicates if cardinality is repeated(top level only).
+     */
+
+    private boolean isRepeated;
+
+    /**
+     * Indicates if cardinality is optional i.e. nullable(top level only).
+     */
+    private boolean isOptional;
+
+    /**
+     * Child columns if this is a map column.
+     */
+    private Map<String, ColumnSize> children = CaseInsensitiveMap.newHashMap();
+
+    /**
+     * std pure data size per entry from Drill metadata, based on type.
+     * Does not include metadata vector overhead we add for cardinality,
+     * variable length etc.
+     * For variable-width columns, we use 50 as std size for entry width.
+     * For repeated column, we assume repetition of 10.
+     */
+    public int getStdDataSizePerEntry() {
+      int stdDataSize;
+
+      try {
+        stdDataSize = TypeHelper.getSize(metadata.getType());
+
+        // For variable width, typeHelper includes offset vector width. Adjust for that.
+        if (isVariableWidth) {
+          stdDataSize -= OFFSET_VECTOR_WIDTH;
+        }
+
+        if (isRepeated) {
+          stdDataSize = stdDataSize * STD_REPETITION_FACTOR;
+        }
+      } catch (Exception e) {
+        // For unsupported types, just set stdSize to 0.
+        // Map, Union, List etc.
+        stdDataSize = 0;
+      }
+
+      // Add sizes of children.
+      for (ColumnSize columnSize : children.values()) {
+        stdDataSize += columnSize.getStdDataSizePerEntry();
+      }
+
+      if (isRepeatedList()) {
+        stdDataSize = stdDataSize * STD_REPETITION_FACTOR;
+      }
+
+      return stdDataSize;
+    }
+
+    /**
+     * std net size per entry taking into account additional metadata vectors
+     * we add on top for variable length, cardinality etc.
+     * For variable-width columns, we use 50 as std data size for entry width.
+     * For repeated column, we assume repetition of 10.
+     */
+    public int getStdNetSizePerEntry() {
+      int stdNetSize;
+      try {
+        stdNetSize = TypeHelper.getSize(metadata.getType());
+      } catch (Exception e) {
+        stdNetSize = 0;
+      }
+
+      if (isOptional) {
+        stdNetSize += BIT_VECTOR_WIDTH;
+      }
+
+      if (isRepeated) {
+        stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
+      }
+
+      for (ColumnSize columnSize : children.values()) {
+        stdNetSize += columnSize.getStdNetSizePerEntry();
+      }
+
+      if (isRepeatedList()) {
+        stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
+      }
+
+      return stdNetSize;
+    }
+
+    /**
+     * This is the average actual per entry data size in bytes. Does not
+     * include any overhead of metadata vectors.
+     * For repeated columns, it is average for the repeated array, not
+     * individual entry in the array.
+     */
+    public int getDataSizePerEntry() {
+      return safeDivide(getTotalDataSize(), getValueCount());
+    }
+
+    /**
+     * This is the average per entry size of just pure data plus
+     * overhead of additional vectors we add on top like bits vector,
+     * offset vector etc. This
+     * size is larger than the actual data size since this size includes per-
+     * column overhead for additional vectors we add for
+     * cardinality, variable length etc.
+     */
+    public int getNetSizePerEntry() {
+      return safeDivide(getTotalNetSize(), getValueCount());
+    }
+
+    /**
+     * This is the total data size for the column, including children for map
+     * columns. Does not include any overhead of metadata vectors.
+     */
+    public int getTotalDataSize() {
+      int dataSize = this.totalDataSize;
+      for (ColumnSize columnSize : children.values()) {
+        dataSize += columnSize.getTotalDataSize();
+      }
+      return dataSize;
+    }
+
+    /**
+     * This is the total net size for the column, including children for map
+     * columns. Includes overhead of metadata vectors.
+     */
+    public int getTotalNetSize() {
+      return this.totalNetSize;
+    }
+
+    public int getValueCount() {
+      return valueCount;
+    }
+
+    public int getElementCount() {
+      return elementCount;
+    }
+
+    public float getCardinality() {
+      return cardinality;
+    }
+
+    public boolean isVariableWidth() {
+      return isVariableWidth;
+    }
+
+    public Map<String, ColumnSize> getChildren() {
+      return children;
+    }
+
+    public boolean isComplex() {
+      return metadata.getType().getMinorType() == MinorType.MAP ||
+        metadata.getType().getMinorType() == MinorType.UNION ||
+        metadata.getType().getMinorType() == MinorType.LIST;
+    }
+
+    public boolean isRepeatedList() {
+      if (metadata.getType().getMinorType() == MinorType.LIST &&
+        metadata.getDataMode() == DataMode.REPEATED) {
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * This is the average per entry width, used for vector allocation.
+     */
+    public int getEntryWidth() {
+      int width = 0;
+      if (isVariableWidth) {
+        width = getNetSizePerEntry() - OFFSET_VECTOR_WIDTH;
+
+        // Subtract out the bits (is-set) vector width
+        if (metadata.getDataMode() == DataMode.OPTIONAL) {
+          width -= BIT_VECTOR_WIDTH;
+        }
+      }
+
+      return (safeDivide(width, cardinality));
+    }
 
     public ColumnSize(ValueVector v, String prefix) {
       this.prefix = prefix;
       valueCount = v.getAccessor().getValueCount();
       metadata = v.getField();
-      isVariableWidth = v instanceof VariableWidthVector;
+      isVariableWidth = (v instanceof VariableWidthVector || v instanceof RepeatedVariableWidthVectorLike);
+      elementCount = valueCount;
+      cardinality = 1;
+      totalNetSize = v.getPayloadByteCount(valueCount);
 
-      // The amount of memory consumed by the payload: the actual
-      // data stored in the vectors.
+      // Special case. For union and list vectors, it is very complex
+      // to figure out raw data size. Make it same as net size.
+      if (metadata.getType().getMinorType() == MinorType.UNION ||
+        (metadata.getType().getMinorType() == MinorType.LIST && v.getField().getDataMode() != DataMode.REPEATED)) {
+        totalDataSize = totalNetSize;
+      }
 
-      if (v.getField().getDataMode() == DataMode.REPEATED) {
-        elementCount = buildRepeated(v);
-        estElementCountPerArray = valueCount == 0 ? 0 : elementCount * 1.0f / valueCount;
-      } else {
-        elementCount = 1;
-        estElementCountPerArray = 1;
+      switch(v.getField().getDataMode()) {
+        case REPEATED:
+          isRepeated = true;
+          elementCount  = getElementCount(v);
+          cardinality = valueCount == 0 ? 0 : elementCount * 1.0f / valueCount;
+
+          // For complex types, there is nothing more to do for top columns.
+          // Data size is calculated recursively for children later.
+          if (isComplex()) {
+            return;
+          }
+
+          // Calculate pure data size.
+          if (isVariableWidth) {
+            UInt4Vector offsetVector = ((RepeatedValueVector) v).getOffsetVector();
+            int innerValueCount = offsetVector.getAccessor().get(valueCount);
+            VariableWidthVector dataVector = ((VariableWidthVector) ((RepeatedValueVector) v).getDataVector());
+            totalDataSize = dataVector.getOffsetVector().getAccessor().get(innerValueCount);
+          } else {
+            ValueVector dataVector = ((RepeatedValueVector) v).getDataVector();
+            totalDataSize = dataVector.getPayloadByteCount(elementCount);
+          }
+
+          break;
+        case OPTIONAL:
+          isOptional = true;
+
+          // For complex types, there is nothing more to do for top columns.
+          // Data size is calculated recursively for children later.
+          if (isComplex()) {
+            return;
+          }
+
+          // Calculate pure data size.
+          if (isVariableWidth) {
+            VariableWidthVector variableWidthVector = ((VariableWidthVector) ((NullableVector) v).getValuesVector());
+            totalDataSize = variableWidthVector.getOffsetVector().getAccessor().get(valueCount);
+          } else {
+            // Another special case.
+            if (v instanceof UntypedNullVector) {
+              return;
+            }
+            totalDataSize = ((NullableVector) v).getValuesVector().getPayloadByteCount(valueCount);
+          }
+          break;
+
+        case REQUIRED:
+          // For complex types, there is nothing more to do for top columns.
+          // Data size is calculated recursively for children later.
+          if (isComplex()) {
+            return;
+          }
+
+          // Calculate pure data size.
+          if (isVariableWidth) {
+            UInt4Vector  offsetVector = ((VariableWidthVector)v).getOffsetVector();
+            totalDataSize = offsetVector.getAccessor().get(valueCount);
+          } else {
+            totalDataSize = v.getPayloadByteCount(valueCount);
+          }
+          break;
+
+        default:
+            break;
       }
-      switch (metadata.getType().getMinorType()) {
-      case LIST:
-        buildList(v);
-        break;
-      case MAP:
-      case UNION:
-        // No standard size for Union type
-        dataSize = v.getPayloadByteCount(valueCount);
-        break;
-      default:
-        dataSize = v.getPayloadByteCount(valueCount);
-        try {
-          stdSize = TypeHelper.getSize(metadata.getType()) * elementCount;
-        } catch (Exception e) {
-          // For unsupported types, just set stdSize to 0.
-          stdSize = 0;
-        }
-      }
-      estSize = safeDivide(dataSize, valueCount);
-      netSize = v.getPayloadByteCount(valueCount);
     }
 
     @SuppressWarnings("resource")
-    private int buildRepeated(ValueVector v) {
-
+    private int getElementCount(ValueVector v) {
       // Repeated vectors are special: they have an associated offset vector
       // that changes the value count of the contained vectors.
-
       UInt4Vector offsetVector = ((RepeatedValueVector) v).getOffsetVector();
       int childCount = valueCount == 0 ? 0 : offsetVector.getAccessor().get(valueCount);
-      if (metadata.getType().getMinorType() == MinorType.MAP) {
 
-        // For map, the only data associated with the map vector
-        // itself is the offset vector, if any.
-
-        dataSize = offsetVector.getPayloadByteCount(valueCount);
-      }
       return childCount;
     }
 
-    @SuppressWarnings("resource")
-    private void buildList(ValueVector v) {
-      // complex ListVector cannot be casted to RepeatedListVector.
-      // check the mode.
-      if (v.getField().getDataMode() != DataMode.REPEATED) {
-        dataSize = v.getPayloadByteCount(valueCount);
+    private void allocateMap(AbstractMapVector map, int recordCount) {
+      if (map instanceof RepeatedMapVector) {
+        ((RepeatedMapVector) map).allocateOffsetsNew(recordCount);
+          recordCount *= getCardinality();
+        }
+
+      for (ValueVector vector : map) {
+        children.get(vector.getField().getName()).allocateVector(vector, recordCount);
+      }
+    }
+
+    public void allocateVector(ValueVector vector, int recordCount) {
+      if (vector instanceof AbstractMapVector) {
+        allocateMap((AbstractMapVector) vector, recordCount);
         return;
       }
-      UInt4Vector offsetVector = ((RepeatedListVector) v).getOffsetVector();
-      dataSize = offsetVector.getPayloadByteCount(valueCount);
+      AllocationHelper.allocate(vector, recordCount, getEntryWidth(), getCardinality());
     }
 
     @Override
@@ -191,15 +418,21 @@ public class RecordBatchSizer {
         buf.append(", elements: ")
            .append(elementCount)
            .append(", per-array: ")
-           .append(estElementCountPerArray);
+           .append(cardinality);
       }
-      buf .append(", std size: ")
-          .append(stdSize)
-          .append(", actual size: ")
-          .append(estSize)
-          .append(", data size: ")
-          .append(dataSize)
-          .append(")");
+      buf.append("Per entry: std data size: ")
+         .append(getStdDataSizePerEntry())
+         .append(", std net size: ")
+         .append(getStdNetSizePerEntry())
+         .append(", actual data size: ")
+         .append(getDataSizePerEntry())
+         .append(", actual net size: ")
+         .append(getNetSizePerEntry())
+         .append("  Totals: data size: ")
+         .append(getTotalDataSize())
+         .append(", net size: ")
+         .append(getTotalNetSize())
+         .append(")");
       return buf.toString();
     }
 
@@ -214,7 +447,7 @@ public class RecordBatchSizer {
      * for this column
      */
 
-    private void buildVectorInitializer(VectorInitializer initializer) {
+    public void buildVectorInitializer(VectorInitializer initializer) {
       int width = 0;
       switch(metadata.getType().getMinorType()) {
       case VAR16CHAR:
@@ -222,11 +455,11 @@ public class RecordBatchSizer {
       case VARCHAR:
 
         // Subtract out the offset vector width
-        width = estSize - 4;
+        width = getNetSizePerEntry() - OFFSET_VECTOR_WIDTH;
 
         // Subtract out the bits (is-set) vector width
         if (metadata.getDataMode() == DataMode.OPTIONAL) {
-          width -= 1;
+          width -= BIT_VECTOR_WIDTH;
         }
         break;
       default:
@@ -237,23 +470,32 @@ public class RecordBatchSizer {
         if (width > 0) {
           // Estimated width is width of entire column. Divide
           // by element count to get per-element size.
-          initializer.variableWidthArray(name, width / estElementCountPerArray, estElementCountPerArray);
+          initializer.variableWidthArray(name, width / cardinality, cardinality);
         } else {
-          initializer.fixedWidthArray(name, estElementCountPerArray);
+          initializer.fixedWidthArray(name, cardinality);
         }
       }
       else if (width > 0) {
         initializer.variableWidth(name, width);
       }
+
+      for (ColumnSize columnSize : children.values()) {
+        columnSize.buildVectorInitializer(initializer);
+      }
     }
+
   }
 
   public static ColumnSize getColumn(ValueVector v, String prefix) {
     return new ColumnSize(v, prefix);
   }
 
-  public static final int MAX_VECTOR_SIZE = ValueVector.MAX_BUFFER_SIZE; // 16 MiB
+  public ColumnSize getColumn(String name) {
+    return columnSizes.get(name);
+  }
 
+  // This keeps information for only top level columns. Information for nested
+  // columns can be obtained from children of topColumns.
   private Map<String, ColumnSize> columnSizes = CaseInsensitiveMap.newHashMap();
 
   /**
@@ -334,7 +576,15 @@ public class RecordBatchSizer {
   public RecordBatchSizer(VectorAccessible va, SelectionVector2 sv2) {
     rowCount = va.getRecordCount();
     for (VectorWrapper<?> vw : va) {
-      measureColumn(vw.getValueVector(), "");
+      ColumnSize colSize = measureColumn(vw.getValueVector(), "");
+      columnSizes.put(vw.getField().getName(), colSize);
+      stdRowWidth += colSize.getStdDataSizePerEntry();
+      netBatchSize += colSize.getTotalNetSize();
+      maxSize = Math.max(maxSize, colSize.getTotalDataSize());
+      if (colSize.metadata.isNullable()) {
+        nullableCount++;
+      }
+      netRowWidth += colSize.getNetSizePerEntry();
     }
 
     for (BufferLedger ledger : ledgers) {
@@ -385,44 +635,35 @@ public class RecordBatchSizer {
     return 64;
   }
 
-  private void measureColumn(ValueVector v, String prefix) {
-
+  private ColumnSize measureColumn(ValueVector v, String prefix) {
     ColumnSize colSize = new ColumnSize(v, prefix);
-    columnSizes.put(v.getField().getName(), colSize);
-    stdRowWidth += colSize.stdSize;
-    netBatchSize += colSize.dataSize;
-    maxSize = Math.max(maxSize, colSize.dataSize);
-    if (colSize.metadata.isNullable()) {
-      nullableCount++;
-    }
-
-    // Maps consume no size themselves. However, their contained
-    // vectors do consume space, so visit columns recursively.
-
     switch (v.getField().getType().getMinorType()) {
       case MAP:
-        expandMap((AbstractMapVector) v, prefix + v.getField().getName() + ".");
+        // Maps consume no size themselves. However, their contained
+        // vectors do consume space, so visit columns recursively.
+        expandMap(colSize, (AbstractMapVector) v, prefix + v.getField().getName() + ".");
         break;
       case LIST:
         // complex ListVector cannot be casted to RepeatedListVector.
         // do not expand the list if it is not repeated mode.
         if (v.getField().getDataMode() == DataMode.REPEATED) {
-          expandList((RepeatedListVector) v, prefix + v.getField().getName() + ".");
+          expandList(colSize, (RepeatedListVector) v, prefix + v.getField().getName() + ".");
         }
         break;
       default:
         v.collectLedgers(ledgers);
     }
 
-    netRowWidth += colSize.estSize;
-    netRowWidthCap50 += ! colSize.isVariableWidth ? colSize.estSize :
-        8 /* offset vector */ + roundUpToPowerOf2(Math.min(colSize.estSize,50));
+    netRowWidthCap50 += ! colSize.isVariableWidth ? colSize.getNetSizePerEntry() :
+        8 /* offset vector */ + roundUpToPowerOf2(Math.min(colSize.getNetSizePerEntry(),50));
         // above change 8 to 4 after DRILL-5446 is fixed
+
+    return colSize;
   }
 
-  private void expandMap(AbstractMapVector mapVector, String prefix) {
+  private void expandMap(ColumnSize colSize, AbstractMapVector mapVector, String prefix) {
     for (ValueVector vector : mapVector) {
-      measureColumn(vector, prefix);
+      colSize.children.put(vector.getField().getName(), measureColumn(vector, prefix));
     }
 
     // For a repeated map, we need the memory for the offset vector (only).
@@ -433,15 +674,28 @@ public class RecordBatchSizer {
     }
   }
 
-  private void expandList(RepeatedListVector vector, String prefix) {
-    measureColumn(vector.getDataVector(), prefix);
+  private void expandList(ColumnSize colSize, RepeatedListVector vector, String prefix) {
+    colSize.children.put(vector.getField().getName(), measureColumn(vector.getDataVector(), prefix));
 
     // Determine memory for the offset vector (only).
-
     vector.collectLedgers(ledgers);
   }
 
   public static int safeDivide(long num, long denom) {
+    if (denom == 0) {
+      return 0;
+    }
+    return (int) Math.ceil((double) num / denom);
+  }
+
+  public static int safeDivide(int num, int denom) {
+    if (denom == 0) {
+      return 0;
+    }
+    return (int) Math.ceil((double) num / denom);
+  }
+
+  public static int safeDivide(int num, float denom) {
     if (denom == 0) {
       return 0;
     }
@@ -506,5 +760,12 @@ public class RecordBatchSizer {
       colSize.buildVectorInitializer(initializer);
     }
     return initializer;
+  }
+
+  public void allocateVectors(VectorContainer container, int recordCount) {
+    for (VectorWrapper w : container) {
+      ColumnSize colSize = columnSizes.get(w.getField().getName());
+      colSize.allocateVector(w.getValueVector(), recordCount);
+    }
   }
 }
