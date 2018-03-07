@@ -84,6 +84,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
 
   int MAX_ROW_COUNT = Character.MAX_VALUE + 1;
+  int MIN_ROW_COUNT = 1;
 
   // Commonly-used internal vector names
 
