@@ -220,7 +220,8 @@ case $startStopStatus in
 
 (restart)
   # stop the command
-  stop_bit
+  kill_drillbit=true
+  stop_bit $kill_drillbit
   # wait a user-specified sleep period
   sp=${DRILL_RESTART_SLEEP:-3}
   if [ $sp -gt 0 ]; then
