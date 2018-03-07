@@ -205,12 +205,12 @@ public class DrillRoot {
       return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
           userEncryptionEnabled, bitEncryptionEnabled, shouldShowAdminInfo,
           QueueInfo.build(dbContext.getResourceManager()),
-          processUser, processUserGroups, adminUsers, adminUserGroups);
+          processUser, processUserGroups, adminUsers, adminUserGroups, authEnabled.get());
     }
 
     return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
         userEncryptionEnabled, bitEncryptionEnabled, shouldShowAdminInfo,
-        QueueInfo.build(dbContext.getResourceManager()));
+        QueueInfo.build(dbContext.getResourceManager()), authEnabled.get());
   }
 
   /**
@@ -341,6 +341,7 @@ public static class ClusterInfo {
   private final boolean userEncryptionEnabled;
   private final boolean bitEncryptionEnabled;
   private final boolean shouldShowAdminInfo;
+  private final boolean authEnabled;
   private final QueueInfo queueInfo;
 
   private String adminUsers;
@@ -355,7 +356,8 @@ public static class ClusterInfo {
                      boolean userEncryption,
                      boolean bitEncryption,
                      boolean shouldShowAdminInfo,
-                     QueueInfo queueInfo) {
+                     QueueInfo queueInfo,
+                     boolean authEnabled) {
     this.drillbits = Sets.newTreeSet(drillbits);
     this.currentVersion = currentVersion;
     this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
@@ -363,6 +365,7 @@ public static class ClusterInfo {
     this.bitEncryptionEnabled = bitEncryption;
     this.shouldShowAdminInfo = shouldShowAdminInfo;
     this.queueInfo = queueInfo;
+    this.authEnabled = authEnabled;
   }
 
   @JsonCreator
@@ -376,8 +379,9 @@ public static class ClusterInfo {
                      String processUser,
                      String processUserGroups,
                      String adminUsers,
-                     String adminUserGroups) {
-    this(drillbits, currentVersion, mismatchedVersions, userEncryption, bitEncryption, shouldShowAdminInfo, queueInfo);
+                     String adminUserGroups,
+                     boolean authEnabled) {
+    this(drillbits, currentVersion, mismatchedVersions, userEncryption, bitEncryption, shouldShowAdminInfo, queueInfo, authEnabled);
     this.processUser = processUser;
     this.processUserGroups = processUserGroups;
     this.adminUsers = adminUsers;
@@ -411,6 +415,8 @@ public static class ClusterInfo {
   public boolean shouldShowAdminInfo() { return shouldShowAdminInfo; }
 
   public QueueInfo queueInfo() { return queueInfo; }
+
+  public boolean isAuthEnabled() { return  authEnabled; }
 }
 
 public static class DrillbitInfo implements Comparable<DrillbitInfo> {
