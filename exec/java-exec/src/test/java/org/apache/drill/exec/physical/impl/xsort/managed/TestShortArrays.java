@@ -72,15 +72,15 @@ public class TestShortArrays extends SubOperatorTest {
     RecordBatchSizer sizer = new RecordBatchSizer(rows.container());
     assertEquals(2, sizer.columns().size());
     ColumnSize bCol = sizer.columns().get("b");
-    assertEquals(0.1, bCol.estElementCountPerArray, 0.01);
-    assertEquals(1, bCol.elementCount);
+    assertEquals(0.1, bCol.getCardinality(), 0.01);
+    assertEquals(1, bCol.getElementCount());
 
     // Create a vector initializer using the sizer info.
 
     VectorInitializer vi = sizer.buildVectorInitializer();
     AllocationHint bHint = vi.hint("b");
     assertNotNull(bHint);
-    assertEquals(bHint.elementCount, bCol.estElementCountPerArray, 0.001);
+    assertEquals(bHint.elementCount, bCol.getCardinality(), 0.001);
 
     // Create a new batch, and new vector, using the sizer and
     // initializer inferred from the previous batch.
