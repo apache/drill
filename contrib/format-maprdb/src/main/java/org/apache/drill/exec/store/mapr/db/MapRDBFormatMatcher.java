@@ -23,6 +23,7 @@ import java.util.List;
 import com.mapr.fs.tables.TableProperties;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -52,7 +53,7 @@ public class MapRDBFormatMatcher extends TableFormatMatcher {
   @Override
   public DrillTable isReadable(DrillFileSystem fs,
                                FileSelection selection, FileSystemPlugin fsPlugin,
-                               String storageEngineName, String userName) throws IOException {
+                               String storageEngineName, SchemaConfig schemaConfig) throws IOException {
 
     if (isFileReadable(fs, selection.getFirstPath(fs))) {
       List<String> files = selection.getFiles();
@@ -61,7 +62,7 @@ public class MapRDBFormatMatcher extends TableFormatMatcher {
       TableProperties props = getFormatPlugin().getMaprFS().getTableProperties(new Path(tableName));
 
       if (props.getAttr().getJson()) {
-        return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+        return new DynamicDrillTable(fsPlugin, storageEngineName, schemaConfig.getUserName(),
             new FormatSelection(getFormatPlugin().getConfig(), selection));
       } else {
         FormatSelection formatSelection = new FormatSelection(getFormatPlugin().getConfig(), selection);

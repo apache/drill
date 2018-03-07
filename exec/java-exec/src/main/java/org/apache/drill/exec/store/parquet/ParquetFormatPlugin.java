@@ -40,6 +40,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -219,7 +220,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
     @Override
     public DrillTable isReadable(DrillFileSystem fs, FileSelection selection,
-        FileSystemPlugin fsPlugin, String storageEngineName, String userName)
+        FileSystemPlugin fsPlugin, String storageEngineName, SchemaConfig schemaConfig)
         throws IOException {
       if(selection.containsDirectories(fs)) {
         Path dirMetaPath = new Path(selection.getSelectionRoot(), Metadata.METADATA_DIRECTORIES_FILENAME);
@@ -237,16 +238,16 @@ public class ParquetFormatPlugin implements FormatPlugin{
             dirSelection.setExpandedPartial();
             dirSelection.setMetaContext(metaContext);
 
-            return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+            return new DynamicDrillTable(fsPlugin, storageEngineName, schemaConfig.getUserName(),
                 new FormatSelection(plugin.getConfig(), dirSelection));
           }
         }
         if(isDirReadable(fs, selection.getFirstPath(fs))) {
-          return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+          return new DynamicDrillTable(fsPlugin, storageEngineName, schemaConfig.getUserName(),
               new FormatSelection(plugin.getConfig(), selection));
         }
       }
-      return super.isReadable(fs, selection, fsPlugin, storageEngineName, userName);
+      return super.isReadable(fs, selection, fsPlugin, storageEngineName, schemaConfig);
     }
 
     private Path getMetadataPath(FileStatus dir) {
