@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
 import org.apache.drill.exec.vector.NullableVector;
@@ -32,7 +33,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 public class TestRecordBatchSizer extends SubOperatorTest {
@@ -68,7 +69,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     for (long i = 0; i < 10; i++) {
-      builder.addRow(i, (float) i * 0.1);
+      builder.addRow(i, i * 0.1);
     }
     RowSet rows = builder.build();
 
@@ -127,7 +128,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     for (long i = 0; i < 10; i++) {
-      builder.addRow(new long[] {1, 2, 3, 4, 5}, new double[] {(double)i*0.1, (double)i*0.1, (double)i*0.1, (double)i*0.2, (double)i*0.3});
+      builder.addRow(new long[] {1, 2, 3, 4, 5}, new double[] {i*0.1, i*0.1, i*0.1, i*0.2, i*0.3});
     }
     RowSet rows = builder.build();
 
@@ -200,7 +201,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     for (long i = 0; i < 10; i++) {
-      builder.addRow(i, (float)i*0.1);
+      builder.addRow(i, i*0.1);
     }
 
     RowSet rows = builder.build();
@@ -506,7 +507,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
       .addMap("map")
         .add("key", MinorType.INT)
         .add("value", MinorType.VARCHAR)
-      .buildMap()
+      .resumeSchema()
       .build();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
@@ -589,7 +590,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
     BatchSchema schema = new SchemaBuilder().addMapArray("map").
       add("key", MinorType.INT).
       add("value", MinorType.VARCHAR).
-      buildMap().build();
+      resumeSchema().build();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
@@ -694,8 +695,8 @@ public class TestRecordBatchSizer extends SubOperatorTest {
         .addMap("childMap")
           .add("childKey", MinorType.INT)
           .add("childValue", MinorType.VARCHAR)
-          .buildMap()
-       .buildMap()
+          .resumeMap()
+       .resumeSchema()
       .build();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
