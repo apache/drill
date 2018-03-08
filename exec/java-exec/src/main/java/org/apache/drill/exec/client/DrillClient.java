@@ -217,9 +217,14 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @throws RpcException
    */
   public void connect() throws RpcException {
-    connect(null, null);
+    connect(null, new Properties());
   }
 
+  /**
+   * Start's a connection from client to server
+   * @param props - not null {@link Properties} filled with connection url parameters
+   * @throws RpcException
+   */
   public void connect(Properties props) throws RpcException {
     connect(null, props);
   }
@@ -308,17 +313,18 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     return endpointList;
   }
 
+  /**
+   * Start's a connection from client to server
+   * @param connect - Zookeeper connection string provided at connection URL
+   * @param props - not null {@link Properties} filled with connection url parameters
+   * @throws RpcException
+   */
   public synchronized void connect(String connect, Properties props) throws RpcException {
     if (connected) {
       return;
     }
 
-    if (props == null) {
-      props = new Properties();
-    }
-
     properties = DrillProperties.createFromProperties(props);
-
     final List<DrillbitEndpoint> endpoints = new ArrayList<>();
 
     if (isDirectConnection) {
@@ -378,6 +384,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       endpoint = endpoints.get(triedEndpointIndex);
 
       // Set in both props and properties since props is passed to UserClient
+      // TODO: Logically here it's doing putIfAbsent, please change to use that api once JDK 8 is minimum required
+      // version
       if (!properties.containsKey(DrillProperties.SERVICE_HOST)) {
         properties.setProperty(DrillProperties.SERVICE_HOST, endpoint.getAddress());
         props.setProperty(DrillProperties.SERVICE_HOST, endpoint.getAddress());

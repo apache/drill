@@ -69,6 +69,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -206,8 +207,8 @@ public class TestBitBitKerberos extends BaseTestQuery {
     final BootStrapContext c1 =
       new BootStrapContext(newConfig, SystemOptionManager.createDefaultOptionDefinitions(), result);
 
-    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any()))
-      .thenReturn(setupFragmentContextAndManager(c1.getAllocator()));
+    final FragmentManager manager = setupFragmentContextAndManager(c1.getAllocator());
+    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
 
     DataConnectionConfig config = new DataConnectionConfig(c1.getAllocator(), c1,
         new DataServerRequestHandler(workBus, bee));
@@ -264,8 +265,8 @@ public class TestBitBitKerberos extends BaseTestQuery {
     final BootStrapContext c2 =
       new BootStrapContext(newConfig, SystemOptionManager.createDefaultOptionDefinitions(), result);
 
-    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any()))
-      .thenReturn(setupFragmentContextAndManager(c2.getAllocator()));
+    final FragmentManager manager = setupFragmentContextAndManager(c2.getAllocator());
+    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
 
     final DataConnectionConfig config =
       new DataConnectionConfig(c2.getAllocator(), c2, new DataServerRequestHandler(workBus, bee));
@@ -323,8 +324,8 @@ public class TestBitBitKerberos extends BaseTestQuery {
     final BootStrapContext c2 =
       new BootStrapContext(newConfig, SystemOptionManager.createDefaultOptionDefinitions(), result);
 
-    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).
-      thenReturn(setupFragmentContextAndManager(c2.getAllocator()));
+    final FragmentManager manager = setupFragmentContextAndManager(c2.getAllocator());
+    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
 
     final DataConnectionConfig config = new DataConnectionConfig(c2.getAllocator(), c2,
       new DataServerRequestHandler(workBus, bee));

@@ -28,18 +28,15 @@ import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
 import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.BasicClient;
+import org.apache.drill.exec.rpc.BitRpcUtility;
 import org.apache.drill.exec.rpc.FailingRequestHandler;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
-import org.apache.drill.exec.rpc.security.SaslProperties;
-import org.apache.hadoop.security.UserGroupInformation;
 
-import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 public class ControlClient extends BasicClient<RpcType, ControlConnection, BitControlHandshake, BitControlHandshake> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlClient.class);
@@ -97,40 +94,16 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   }
 
   @Override
-  protected void prepareSaslHandshake(final RpcConnectionHandler<ControlConnection> connectionListener)
-    throws RpcException {
-    try {
-      final Map<String, String> saslProperties = SaslProperties.getSaslProperties(connection.isEncryptionEnabled(),
-        connection.getMaxWrappedSize());
-      final UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-      final AuthenticatorFactory factory = config.getAuthFactory(serverAuthMechanisms);
-      startSaslHandshake(connectionListener, saslProperties, ugi, factory, RpcType.SASL_MESSAGE);
-    } catch (final IOException e) {
-      logger.error("Failed while doing setup for starting sasl handshake for connection", connection.getName());
-      final Exception ex = new RpcException(String.format("Failed to initiate authentication to %s",
-        remoteEndpoint.getAddress()), e);
-      connectionListener.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
-    }
+  protected void prepareSaslHandshake(final RpcConnectionHandler<ControlConnection> connectionHandler,
+                                      List<String> serverAuthMechanisms) {
+    BitRpcUtility.prepareSaslHandshake(connectionHandler, serverAuthMechanisms, connection, config, remoteEndpoint,
+      this, RpcType.SASL_MESSAGE);
   }
 
   @Override
-  protected void validateHandshake(BitControlHandshake handshake) throws RpcException {
-    if (handshake.getRpcVersion() != ControlRpcConfig.RPC_VERSION) {
-      throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.",
-          handshake.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
-    }
-
-    if (handshake.getAuthenticationMechanismsCount() != 0) { // remote requires authentication
-      authRequired = true;
-      authComplete = false;
-      serverAuthMechanisms = ImmutableList.copyOf(handshake.getAuthenticationMechanismsList());
-    } else {
-      if (config.getAuthMechanismToUse() != null) { // local requires authentication
-        throw new RpcException(String.format("Remote Drillbit does not require auth, but auth is enabled in " +
-            "local Drillbit configuration. [Details: connection: (%s) and LocalAuthMechanism: (%s). Please check " +
-            "security configuration for bit-to-bit.", connection.getName(), config.getAuthMechanismToUse()));
-      }
-    }
+  protected List<String> validateHandshake(BitControlHandshake handshake) throws RpcException {
+    return BitRpcUtility.validateHandshake(handshake.getRpcVersion(), handshake.getAuthenticationMechanismsList(),
+      ControlRpcConfig.RPC_VERSION, connection, config, this);
   }
 
   @Override

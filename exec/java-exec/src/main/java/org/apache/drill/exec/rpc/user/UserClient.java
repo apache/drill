@@ -84,6 +84,7 @@ import org.slf4j.Logger;
 import javax.net.ssl.SSLEngine;
 import javax.security.sasl.SaslException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -204,7 +205,7 @@ public class UserClient
       throw new NonTransientRpcException(msg);
     } catch (SaslException e) {
       throw new NonTransientRpcException(e);
-    } catch (NonTransientRpcException e) {
+    } catch (RpcException e) {
       throw e;
     } catch (Exception e) {
       throw new RpcException(e);
@@ -215,13 +216,17 @@ public class UserClient
    * Validate that security requirements from client and Drillbit side is compatible. For example: It verifies if one
    * side needs authentication / encryption then other side is also configured to support that security properties.
    * @param properties - DrillClient connection parameters
+   * @param serverAuthMechs - list of auth mechanisms supported by server
    * @throws NonTransientRpcException - When DrillClient security requirements doesn't match Drillbit side of security
    *                                    configurations.
    */
-  private void validateSaslCompatibility(DrillProperties properties) throws NonTransientRpcException {
+  private void validateSaslCompatibility(DrillProperties properties, List<String> serverAuthMechs)
+    throws NonTransientRpcException {
 
     final boolean clientNeedsEncryption = properties.containsKey(DrillProperties.SASL_ENCRYPT)
         && Boolean.parseBoolean(properties.getProperty(DrillProperties.SASL_ENCRYPT));
+
+    final boolean serverAuthConfigured = (serverAuthMechs != null);
 
     // Check if client needs encryption and server is not configured for encryption.
     if (clientNeedsEncryption && !connection.isEncryptionEnabled()) {
@@ -232,7 +237,7 @@ public class UserClient
     }
 
     // Check if client needs encryption and server doesn't support any security mechanisms.
-    if (clientNeedsEncryption && serverAuthMechanisms == null) {
+    if (clientNeedsEncryption && !serverAuthConfigured) {
       throw new NonTransientRpcException(
           "Client needs encrypted connection but server doesn't support any security mechanisms." +
               " Please contact your administrator. [Warn: It may be due to wrong config or a security attack in" +
@@ -240,7 +245,7 @@ public class UserClient
     }
 
     // Check if client needs authentication and server doesn't support any security mechanisms.
-    if (clientNeedsAuthExceptPlain(properties) && serverAuthMechanisms == null) {
+    if (clientNeedsAuthExceptPlain(properties) && !serverAuthConfigured) {
       throw new NonTransientRpcException(
           "Client needs authentication but server doesn't support any security mechanisms." +
               " Please contact your administrator. [Warn: It may be due to wrong config or a security attack in" +
@@ -318,8 +323,16 @@ public class UserClient
     return connectionFuture;
   }
 
-  private AuthenticatorFactory getAuthenticatorFactory(final DrillProperties properties)
-      throws SaslException {
+  /**
+   * Get's the authenticator factory for the mechanism required by client if it's supported on the server side too.
+   * Otherwise it throws {@link SaslException}
+   * @param properties - client connection properties
+   * @param serverAuthMechanisms - list of authentication mechanisms supported by server
+   * @return - {@link AuthenticatorFactory} for the mechanism required by client for authentication
+   * @throws SaslException - In case of failure
+   */
+  private AuthenticatorFactory getAuthenticatorFactory(final DrillProperties properties,
+                                                       List<String> serverAuthMechanisms) throws SaslException {
     final Set<String> mechanismSet = AuthStringUtil.asSet(serverAuthMechanisms);
 
     // first, check if a certain mechanism must be used
@@ -351,7 +364,7 @@ public class UserClient
 
     throw new SaslException(String
         .format("Server requires authentication using %s. Insufficient credentials?. " + "[Details: %s]. ",
-            serverAuthMechanisms, connection.getEncryptionCtxtString()));
+          mechanismSet, connection.getEncryptionCtxtString()));
   }
 
   protected <SEND extends MessageLite, RECEIVE extends MessageLite> void send(
@@ -394,7 +407,7 @@ public class UserClient
 
   @Override protected void handle(UserToBitConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody,
       ResponseSender sender) throws RpcException {
-    if (!authComplete) {
+    if (!isAuthComplete()) {
       // Remote should not be making any requests before authenticating, drop connection
       throw new RpcException(String.format("Request of type %d is not allowed without authentication. "
               + "Remote on %s must authenticate before making requests. Connection dropped.", rpcType,
@@ -415,9 +428,8 @@ public class UserClient
   }
 
   @Override
-  protected void prepareSaslHandshake(final RpcConnectionHandler<UserToBitConnection> connectionListener)
-    throws RpcException {
-
+  protected void prepareSaslHandshake(final RpcConnectionHandler<UserToBitConnection> connectionHandler,
+                                      List<String> serverAuthMechanisms) {
     try {
       final Map<String, String> saslProperties = properties.stringPropertiesAsMap();
 
@@ -427,7 +439,7 @@ public class UserClient
       saslProperties.putAll(
         SaslProperties.getSaslProperties(connection.isEncryptionEnabled(), connection.getMaxWrappedSize()));
 
-      final AuthenticatorFactory factory = getAuthenticatorFactory(properties);
+      final AuthenticatorFactory factory = getAuthenticatorFactory(properties, serverAuthMechanisms);
       final String mechanismName = factory.getSimpleName();
       logger.trace("Will try to authenticate to server using {} mechanism with encryption context {}",
         mechanismName, connection.getEncryptionCtxtString());
@@ -441,17 +453,19 @@ public class UserClient
       // Reset the thread context class loader to original one
       Thread.currentThread().setContextClassLoader(oldThreadCtxtCL);
 
-      startSaslHandshake(connectionListener, saslProperties, ugi, factory, RpcType.SASL_MESSAGE);
+      startSaslHandshake(connectionHandler, saslProperties, ugi, factory, RpcType.SASL_MESSAGE);
     } catch (final IOException e) {
       logger.error("Failed while doing setup for starting SASL handshake for connection", connection.getName());
       final Exception ex = new RpcException(String.format("Failed to initiate authentication for connection %s",
         connection.getName()), e);
-      connectionListener.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
+      connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
     }
   }
 
-  @Override protected void validateHandshake(BitToUserHandshake inbound) throws RpcException {
+  @Override protected List<String> validateHandshake(BitToUserHandshake inbound) throws RpcException {
     //    logger.debug("Handling handshake from bit to user. {}", inbound);
+    List<String> serverAuthMechanisms = null;
+
     if (inbound.hasServerInfos()) {
       serverInfos = inbound.getServerInfos();
     }
@@ -460,10 +474,9 @@ public class UserClient
     switch (inbound.getStatus()) {
       case SUCCESS:
         break;
-      case AUTH_REQUIRED: {
-        authComplete = false;
-        authRequired = true;
+      case AUTH_REQUIRED:
         serverAuthMechanisms = ImmutableList.copyOf(inbound.getAuthenticationMechanismsList());
+        setAuthComplete(false);
         connection.setEncryption(inbound.hasEncrypted() && inbound.getEncrypted());
 
         if (inbound.hasMaxWrappedSize()) {
@@ -473,7 +486,6 @@ public class UserClient
             .format("Server requires authentication with encryption context %s before proceeding.",
                 connection.getEncryptionCtxtString()));
         break;
-      }
       case AUTH_FAILED:
       case RPC_VERSION_MISMATCH:
       case UNKNOWN_FAILURE:
@@ -486,7 +498,8 @@ public class UserClient
 
     // Before starting SASL handshake validate if both client and server are compatible in their security
     // requirements for the connection
-    validateSaslCompatibility(properties);
+    validateSaslCompatibility(properties, serverAuthMechanisms);
+    return serverAuthMechanisms;
   }
 
   @Override protected UserToBitConnection initRemoteConnection(SocketChannel channel) {

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.drill.exec.work.foreman.FragmentsRunner;
@@ -205,7 +206,7 @@ public class TestDrillbitResilience extends DrillTest {
 
     // create a client
     final DrillConfig drillConfig = zkHelper.getConfig();
-    drillClient = QueryTestUtil.createClient(drillConfig, remoteServiceSet, 1, null);
+    drillClient = QueryTestUtil.createClient(drillConfig, remoteServiceSet, 1, new Properties());
     clearAllInjections();
   }
 
