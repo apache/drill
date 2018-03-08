@@ -67,25 +67,17 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   private final UInt1Vector bits = new UInt1Vector(bitsField, allocator);
 
-  private final ${valuesName} values;
+  /**
+   * The values vector has same name as Nullable vector name, and has the same type and attributes
+   * as the nullable vector. This ensures that things like scale and precision are preserved in the values vector.
+   */
+  private final ${valuesName} values = new ${minor.class}Vector(field, allocator);
 
   private final Mutator mutator = new Mutator();
-  private final Accessor accessor;
+  private final Accessor accessor = new Accessor();
 
   public ${className}(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    
-    // The values vector has its own name, and has the same type and attributes
-    // as the nullable vector. This ensures that
-    // things like scale and precision are preserved in the values vector.
-    
-    values = new ${minor.class}Vector(
-        MaterializedField.create(VALUES_VECTOR_NAME, field.getType()),
-        allocator);
-    
-    field.addChild(bits.getField());
-    field.addChild(values.getField());
-    accessor = new Accessor();
   }
 
   @Override
