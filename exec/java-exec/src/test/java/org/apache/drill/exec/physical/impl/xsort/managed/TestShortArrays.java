@@ -17,15 +17,16 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorInitializer;
 import org.apache.drill.exec.record.VectorInitializer.AllocationHint;
 import org.apache.drill.exec.vector.IntVector;
@@ -35,7 +36,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
@@ -61,9 +62,9 @@ public class TestShortArrays extends SubOperatorTest {
         .addArray("b", MinorType.INT)
         .build();
     RowSetBuilder builder = fixture.rowSetBuilder(schema)
-        .addRow(1, new int[] {10});
+        .addRow(1, intArray(10));
     for (int i = 2; i <= 10; i++) {
-      builder.addRow(i, new int[] {});
+      builder.addRow(i, intArray());
     }
     RowSet rows = builder.build();
 

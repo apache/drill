@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -35,7 +36,7 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 public class TestResultSetSchemaChange extends SubOperatorTest {
@@ -136,16 +137,16 @@ public class TestResultSetSchemaChange extends SubOperatorTest {
         .addArray("f", MinorType.VARCHAR)
         .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow("a_1", null, null,   "",       0, new String[] {})
-        .addRow("a_2", null, null,   "",       0, new String[] {})
-        .addRow("a_3",    3, null,   "",       0, new String[] {})
-        .addRow("a_4",    4, null,   "",       0, new String[] {})
-        .addRow("a_5",    5, "c_5",  "",       0, new String[] {})
-        .addRow("a_6",    6, "c_6",  "",       0, new String[] {})
-        .addRow("a_7",    7, "c_7",  "d_7",   70, new String[] {})
-        .addRow("a_8",    8, "c_8",  "d_8",   80, new String[] {})
-        .addRow("a_9",    9, "c_9",  "d_9",   90, new String[] {"f_9-1",  "f_9-2"})
-        .addRow("a_10",  10, "c_10", "d_10", 100, new String[] {"f_10-1", "f_10-2"})
+        .addRow("a_1", null, null,   "",       0, strArray())
+        .addRow("a_2", null, null,   "",       0, strArray())
+        .addRow("a_3",    3, null,   "",       0, strArray())
+        .addRow("a_4",    4, null,   "",       0, strArray())
+        .addRow("a_5",    5, "c_5",  "",       0, strArray())
+        .addRow("a_6",    6, "c_6",  "",       0, strArray())
+        .addRow("a_7",    7, "c_7",  "d_7",   70, strArray())
+        .addRow("a_8",    8, "c_8",  "d_8",   80, strArray())
+        .addRow("a_9",    9, "c_9",  "d_9",   90, strArray("f_9-1",  "f_9-2"))
+        .addRow("a_10",  10, "c_10", "d_10", 100, strArray("f_10-1", "f_10-2"))
         .build();
 
     new RowSetComparison(expected)
