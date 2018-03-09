@@ -1504,6 +1504,73 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
   }
 
   /**
+   * Test to see if there are multiple rows in left batch and for some rows right side produces multiple batches such
+   * that some are with records and some are empty then we are not duplicating those left side records based on left
+   * join type. In this case all the output will be produces only in 1 record batch.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testLeftLateralJoin_WithMatchingAndEmptyBatch() throws Exception {
+    // Get the left container with dummy data for Lateral Join
+    final RowSet.SingleRowSet leftRowSet2 = fixture.rowSetBuilder(leftSchema)
+      .addRow(1, 10, "item10")
+      .addRow(2, 20, "item20")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyRightRowSet2 = fixture.rowSetBuilder(rightSchema)
+      .addRow(6, 60, "item61")
+      .addRow(7, 70, "item71")
+      .addRow(8, 80, "item81")
+      .build();
+
+    leftContainer.add(leftRowSet2.container());
+
+    // Get the left IterOutcomes for Lateral Join
+    leftOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+
+    // Create Left MockRecordBatch
+    final CloseableRecordBatch leftMockBatch = new MockRecordBatch(fixture.getFragmentContext(), operatorContext,
+      leftContainer, leftOutcomes, leftContainer.get(0).getSchema());
+
+    // Get the right container with dummy data
+    rightContainer.add(emptyRightRowSet.container());
+    rightContainer.add(nonEmptyRightRowSet.container());
+    rightContainer.add(nonEmptyRightRowSet2.container());
+    rightContainer.add(emptyRightRowSet.container());
+    rightContainer.add(emptyRightRowSet.container());
+
+    rightOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    rightOutcomes.add(RecordBatch.IterOutcome.EMIT);
+    rightOutcomes.add(RecordBatch.IterOutcome.OK);
+    rightOutcomes.add(RecordBatch.IterOutcome.OK);
+    rightOutcomes.add(RecordBatch.IterOutcome.EMIT);
+
+    final CloseableRecordBatch rightMockBatch = new MockRecordBatch(fixture.getFragmentContext(), operatorContext,
+      rightContainer, rightOutcomes, rightContainer.get(0).getSchema());
+
+    final LateralJoinPOP popConfig = new LateralJoinPOP(null, null, JoinRelType.LEFT);
+
+    final LateralJoinBatch ljBatch = new LateralJoinBatch(popConfig, fixture.getFragmentContext(),
+      leftMockBatch, rightMockBatch);
+
+    try {
+      final int expectedOutputRecordCount = 6; // 3 for first left row and 1 for second left row
+      assertTrue(RecordBatch.IterOutcome.OK_NEW_SCHEMA == ljBatch.next());
+      assertTrue(RecordBatch.IterOutcome.OK == ljBatch.next());
+      assertTrue(ljBatch.getRecordCount() == expectedOutputRecordCount);
+      assertTrue(RecordBatch.IterOutcome.NONE == ljBatch.next());
+    } catch (AssertionError | Exception error) {
+      fail();
+    } finally {
+      // Close all the resources for this test case
+      ljBatch.close();
+      leftMockBatch.close();
+      rightMockBatch.close();
+    }
+  }
+
+  /**
    * Test to see if there are multiple rows in left batch and for some rows right side produces batch with records
    * and for other rows right side produces empty batches then based on left join type we are populating the output
    * batch correctly. Expectation is that for left rows if we find corresponding right rows then we will output both
