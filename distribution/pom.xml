@@ -324,6 +324,14 @@
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-protocol</artifactId>
         </dependency>
+        <dependency>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-maprdb-json-handler</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>com.mapr.db</groupId>
+          <artifactId>maprdb-mapreduce</artifactId>
+        </dependency>
       </dependencies>
       <build>
       </build>

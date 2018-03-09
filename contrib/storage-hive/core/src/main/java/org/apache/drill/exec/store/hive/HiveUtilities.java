@@ -64,6 +64,7 @@ import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
+import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
@@ -393,6 +394,9 @@ public class HiveUtilities {
             "InputFormat class explicitly specified nor StorageHandler class");
       }
       final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
+      TableDesc tableDesc = new TableDesc();
+      tableDesc.setProperties(MetaStoreUtils.getTableMetadata(table));
+      storageHandler.configureInputJobProperties(tableDesc, table.getParameters());
       return (Class<? extends InputFormat<?, ?>>) storageHandler.getInputFormatClass();
     } else {
       return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName) ;
