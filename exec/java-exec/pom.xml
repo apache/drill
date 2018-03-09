@@ -19,7 +19,7 @@
   <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
   <properties>
-    <libpam4j.version>1.8-rev1</libpam4j.version>
+    <libpam4j.version>1.8-rev2</libpam4j.version>
   </properties>
 
   <dependencies>
