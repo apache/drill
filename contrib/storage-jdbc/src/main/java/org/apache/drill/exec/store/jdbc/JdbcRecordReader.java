@@ -25,6 +25,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -70,7 +71,8 @@ class JdbcRecordReader extends AbstractRecordReader {
   private ResultSet resultSet;
   private final String storagePluginName;
   private Connection connection;
-  private Statement statement;
+  //private Statement statement;
+  private PreparedStatement statement;
   private final String sql;
   private ImmutableList<ValueVector> vectors;
   private ImmutableList<Copier<?>> copiers;
@@ -166,8 +168,8 @@ class JdbcRecordReader extends AbstractRecordReader {
   public void setup(OperatorContext operatorContext, OutputMutator output) throws ExecutionSetupException {
     try {
       connection = source.getConnection();
-      statement = connection.createStatement();
-      resultSet = statement.executeQuery(sql);
+      statement = connection.prepareStatement(sql);
+      resultSet = statement.executeQuery();
 
       final ResultSetMetaData meta = resultSet.getMetaData();
       final int columns = meta.getColumnCount();
