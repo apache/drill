@@ -66,7 +66,7 @@
               <tr id="row-${i}">
                 <td>${i}</td>
                 <td id="address" >${drillbit.getAddress()}<#if drillbit.isCurrent()>
-                    <span class="label label-info">Current</span>
+                    <span class="label label-info" id="current">Current</span>
                   </#if>
                 </td>
                 <td id="port" >${drillbit.getUserPort()}</td>
@@ -79,9 +79,9 @@
                   </span>
                 </td>
                 <td id="status" >${drillbit.getState()}</td>
-                <#if model.shouldShowAdminInfo() || !model.isAuthEnabled() >
+                <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && drillbit.isCurrent() >
                   <td>
-                      <button type="button" id="shutdown" onClick="shutdown('${drillbit.getAddress()}',$(this));"> SHUTDOWN </button>
+                      <button type="button" id="shutdown" onClick="shutdown($(this));"> SHUTDOWN </button>
                   </td>
                 </#if>
                 <td id="queriesCount">  </td>
@@ -143,7 +143,6 @@
             </div>
         </div>
    </#if>
-
   <#assign queueInfo = model.queueInfo() />
   <div class="row">
       <div class="col-md-12">
@@ -193,7 +192,6 @@
       var port = getPortNum();
       var timeout;
       var size = $("#size").html();
-
 
       function getPortNum() {
           var port = $.ajax({
@@ -247,19 +245,22 @@
                 $("#row-"+i).find("#queriesCount").text("");
             }
             else {
-                if( status_map[key] == "ONLINE") {
+                if (status_map[key] == "ONLINE") {
                     $("#row-"+i).find("#status").text(status_map[key]);
                 }
                 else {
-                    fillQueryCount(address,i);
+                    if ($("#row-"+i).find("#current").html() == "Current") {
+                        fillQueryCount(i);
+                    }
                     $("#row-"+i).find("#status").text(status_map[key]);
                 }
             }
           }
       }
-      function fillQueryCount(address,row_id) {
-          url = "http://"+address+":"+portNum+"/queriesCount";
-          var result = $.ajax({
+      function fillQueryCount(row_id) {
+          var requestPath = "/queriesCount";
+          var url = getRequestUrl(requestPath);
+	   var result = $.ajax({
                         type: 'GET',
                         url: url,
                         complete: function(data) {
@@ -269,9 +270,10 @@
                               }
                         });
       }
-      <#if model.shouldShowAdminInfo() || !model.isAuthEnabled() >
-          function shutdown(address,button) {
-              url = "http://"+address+":"+portNum+"/gracefulShutdown";
+       <#if model.shouldShowAdminInfo() || !model.isAuthEnabled()>
+          function shutdown(button) {
+              var requestPath = "/gracefulShutdown";
+              var url = getRequestUrl(requestPath);
               var result = $.ajax({
                     type: 'POST',
                     url: url,
@@ -283,6 +285,12 @@
               });
           }
       </#if>
+      function getRequestUrl(requestPath) {
+            var protocol = location.protocol;
+            var host = location.host;
+            var url = protocol + "//" + host + requestPath;
+            return url;
+      }
     </script>
 </#macro>
 
