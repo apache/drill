@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,12 +23,12 @@ import java.util.Map;
 
 import org.apache.calcite.linq4j.Ord;
 
+import org.apache.calcite.rel.RelCollations;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionType;
 import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
@@ -52,7 +52,7 @@ public class ProjectPrule extends Prule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillProjectRel project = (DrillProjectRel) call.rel(0);
+    final DrillProjectRel project = call.rel(0);
     final RelNode input = project.getInput();
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
@@ -126,14 +126,14 @@ public class ProjectPrule extends Prule {
     }
 
     if (newFields.isEmpty()) {
-      return RelCollationImpl.of();
+      return RelCollations.of();
     } else {
-      return RelCollationImpl.of(newFields);
+      return RelCollations.of(newFields);
     }
   }
 
   private Map<Integer, Integer> getDistributionMap(DrillProjectRel project) {
-    Map<Integer, Integer> m = new HashMap<Integer, Integer>();
+    Map<Integer, Integer> m = new HashMap<>();
 
     for (Ord<RexNode> node : Ord.zip(project.getProjects())) {
       // For distribution, either $0 or cast($0 as ...) would keep the distribution after projection.
@@ -151,7 +151,7 @@ public class ProjectPrule extends Prule {
   }
 
   private Map<Integer, Integer> getCollationMap(DrillProjectRel project) {
-    Map<Integer, Integer> m = new HashMap<Integer, Integer>();
+    Map<Integer, Integer> m = new HashMap<>();
 
     for (Ord<RexNode> node : Ord.zip(project.getProjects())) {
       // For collation, only $0 will keep the sort-ness after projection.

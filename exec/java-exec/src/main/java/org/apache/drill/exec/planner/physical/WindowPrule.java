@@ -24,6 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -31,7 +32,6 @@ import org.apache.drill.exec.planner.logical.DrillWindowRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -115,9 +115,7 @@ public class WindowPrule extends Prule {
       }
 
       List<RelDataTypeField> newRowFields = Lists.newArrayList();
-      for(RelDataTypeField field : convertedInput.getRowType().getFieldList()) {
-        newRowFields.add(field);
-      }
+      newRowFields.addAll(convertedInput.getRowType().getFieldList());
 
       Iterable<RelDataTypeField> newWindowFields = Iterables.filter(window.getRowType().getFieldList(), new Predicate<RelDataTypeField>() {
             @Override
@@ -200,11 +198,9 @@ public class WindowPrule extends Prule {
       fields.add(new RelFieldCollation(group));
     }
 
-    for (RelFieldCollation field : window.orderKeys.getFieldCollations()) {
-      fields.add(field);
-    }
+    fields.addAll(window.orderKeys.getFieldCollations());
 
-    return RelCollationImpl.of(fields);
+    return RelCollations.of(fields);
   }
 
   private List<DrillDistributionTrait.DistributionField> getDistributionFields(Window.Group window) {

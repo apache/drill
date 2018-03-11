@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.planner.logical;
 
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,6 +27,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Window;
@@ -48,7 +49,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -199,27 +199,29 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         inputExprs.size() - input.getRowType().getFieldCount();
     if (extraArgCount > 0) {
       input =
-          RelOptUtil.createProject(
-              input,
-              inputExprs,
-              CompositeList.of(
+          relBuilderFactory
+              .create(input.getCluster(), null)
+              .push(input)
+              .projectNamed(
+                  inputExprs,
+                  CompositeList.of(
                   input.getRowType().getFieldNames(),
-                  Collections.<String>nCopies(
+                  Collections.nCopies(
                       extraArgCount,
                       null)),
-              false,
-              relBuilderFactory.create(input.getCluster(), null));
+                  true)
+              .build();
     }
     Aggregate newAggRel =
         newAggregateRel(
             oldAggRel, input, newCalls);
 
     RelNode projectRel =
-        RelOptUtil.createProject(
-            newAggRel,
-            projList,
-            oldAggRel.getRowType().getFieldNames(),
-            DrillRelFactories.LOGICAL_BUILDER);
+        relBuilderFactory
+            .create(newAggRel.getCluster(), null)
+            .push(newAggRel)
+            .projectNamed(projList, oldAggRel.getRowType().getFieldNames(), true)
+            .build();
 
     ruleCall.transformTo(projectRel);
   }
@@ -318,7 +320,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             iAvgInput);
     RelDataType sumType =
         TypeInferenceUtils.getDrillSqlReturnTypeInference(SqlKind.SUM.name(),
-            ImmutableList.<DrillFuncHolder>of())
+            ImmutableList.of())
           .inferReturnType(oldCall.createBinding(oldAggRel));
     sumType =
         typeFactory.createTypeWithNullability(
@@ -508,7 +510,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
 
     RelDataType sumType =
         TypeInferenceUtils.getDrillSqlReturnTypeInference(SqlKind.SUM.name(),
-            ImmutableList.<DrillFuncHolder>of())
+            ImmutableList.of())
           .inferReturnType(oldCall.createBinding(oldAggRel));
     sumType = typeFactory.createTypeWithNullability(sumType, true);
     final AggregateCall sumArgSquaredAggCall =
@@ -667,7 +669,9 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       Aggregate oldAggRel,
       RelNode inputRel,
       List<AggregateCall> newCalls) {
-    return LogicalAggregate.create(inputRel, oldAggRel.indicator, oldAggRel.getGroupSet(), oldAggRel.getGroupSets(), newCalls);
+    RelOptCluster cluster = inputRel.getCluster();
+    return new LogicalAggregate(cluster, cluster.traitSetOf(Convention.NONE),
+        inputRel, oldAggRel.indicator, oldAggRel.getGroupSet(), oldAggRel.getGroupSets(), newCalls);
   }
 
   private RelDataType getFieldType(RelNode relNode, int i) {

@@ -60,6 +60,6 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount {
   public Double getDistinctRowCount(DrillScanRel scan, RelMetadataQuery mq,
       ImmutableBitSet groupKey, RexNode predicate) {
     // Consistent with the estimation of Aggregate row count in RelMdRowCount : distinctRowCount = rowCount * 10%.
-    return scan.getRows() * 0.1;
+    return scan.estimateRowCount(mq) * 0.1;
   }
 }

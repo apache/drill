@@ -690,7 +690,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         SqlValidatorUtil.EXPR_SUGGESTER,
         rel.getCluster().getTypeFactory().getTypeSystem().isSchemaCaseSensitive());
 
-    RelDataType newRowType = RexUtil.createStructType(rel.getCluster().getTypeFactory(), projections, fieldNames2);
+    RelDataType newRowType = RexUtil.createStructType(rel.getCluster().getTypeFactory(),
+        projections, fieldNames2, null);
 
     DrillProjectRel topProj = DrillProjectRel.create(rel.getCluster(), rel.getTraitSet(), rel, projections, newRowType);
 

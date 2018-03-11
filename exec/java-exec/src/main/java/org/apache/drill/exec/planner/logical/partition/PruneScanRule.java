@@ -136,11 +136,11 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
   }
 
-  public static final RelOptRule getDirFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
+  public static RelOptRule getDirFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
     return new DirPruneScanFilterOnProjectRule(optimizerRulesContext);
   }
 
-  public static final RelOptRule getDirFilterOnScan(OptimizerRulesContext optimizerRulesContext) {
+  public static RelOptRule getDirFilterOnScan(OptimizerRulesContext optimizerRulesContext) {
     return new DirPruneScanFilterOnScanRule(optimizerRulesContext);
   }
 
@@ -165,7 +165,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       condition = filterRel.getCondition();
     } else {
       // get the filter as if it were below the projection.
-      condition = RelOptUtil.pushFilterPastProject(filterRel.getCondition(), projectRel);
+      condition = RelOptUtil.pushPastProject(filterRel.getCondition(), projectRel);
     }
 
     RewriteAsBinaryOperators visitor = new RewriteAsBinaryOperators(true, filterRel.getCluster().getRexBuilder());

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
@@ -90,7 +91,7 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
 
     for (int i = 0; i< numConjuncts; i++) {
       RexNode conjFilter = RexUtil.composeConjunction(this.getCluster().getRexBuilder(), conjunctions.subList(0, i + 1), false);
-      compNum += Filter.estimateFilteredRows(child, conjFilter);
+      compNum += RelMdUtil.estimateFilteredRows(child, conjFilter, mq);
     }
 
     return compNum * DrillCostBase.COMPARE_CPU_COST;

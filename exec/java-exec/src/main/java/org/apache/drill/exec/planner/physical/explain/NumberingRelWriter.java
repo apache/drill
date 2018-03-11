@@ -46,7 +46,7 @@ class NumberingRelWriter implements RelWriter {
   protected final PrintWriter pw;
   private final SqlExplainLevel detailLevel;
   protected final Spacer spacer = new Spacer();
-  private final List<Pair<String, Object>> values = new ArrayList<Pair<String, Object>>();
+  private final List<Pair<String, Object>> values = new ArrayList<>();
 
   private final Map<Prel, OpId> ids;
   //~ Constructors -----------------------------------------------------------
@@ -160,6 +160,7 @@ class NumberingRelWriter implements RelWriter {
     return this;
   }
 
+  @SuppressWarnings("deprecation")
   public RelWriter done(RelNode node) {
     int i = 0;
     if (values.size() > 0 && values.get(0).left.equals("subset")) {

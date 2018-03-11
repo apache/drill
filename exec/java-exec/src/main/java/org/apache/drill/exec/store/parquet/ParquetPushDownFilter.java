@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -108,15 +108,15 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       return;
     }
 
-    RexNode condition = null;
+    RexNode condition;
     if (project == null) {
       condition = filter.getCondition();
     } else {
       // get the filter as if it were below the projection.
-      condition = RelOptUtil.pushFilterPastProject(filter.getCondition(), project);
+      condition = RelOptUtil.pushPastProject(filter.getCondition(), project);
     }
 
-    if (condition == null || condition.equals(ValueExpressions.BooleanExpression.TRUE)) {
+    if (condition == null || condition.isAlwaysTrue()) {
       return;
     }
 
@@ -158,7 +158,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       inputRel = project.copy(project.getTraitSet(), ImmutableList.of(inputRel));
     }
 
-    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.<RelNode>of(inputRel));
+    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.of(inputRel));
 
     call.transformTo(newFilter);
   }

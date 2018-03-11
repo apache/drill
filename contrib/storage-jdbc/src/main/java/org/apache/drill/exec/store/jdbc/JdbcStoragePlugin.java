@@ -38,6 +38,7 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.rel2sql.SqlImplementor;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -46,6 +47,7 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
@@ -101,7 +103,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     }
 
     this.source = source;
-    this.dialect = JdbcSchema.createDialect(source);
+    this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, source);
     this.convention = new DrillJdbcConvention(dialect, name);
   }
 
@@ -163,7 +165,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
    * Returns whether a condition is supported by {@link JdbcJoin}.
    *
    * <p>Corresponds to the capabilities of
-   * {@link JdbcJoin#convertConditionToSqlNode}.
+   * {@link SqlImplementor#convertConditionToSqlNode}.
    *
    * @param node Condition
    * @return Whether condition is supported

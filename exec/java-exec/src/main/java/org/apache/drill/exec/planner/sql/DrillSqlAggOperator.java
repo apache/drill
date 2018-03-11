@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,9 @@ public class DrillSqlAggOperator extends SqlAggFunction {
         sqlReturnTypeInference,
         null,
         Checker.getChecker(argCountMin, argCountMax),
-        SqlFunctionCategory.USER_DEFINED_FUNCTION);
+        SqlFunctionCategory.USER_DEFINED_FUNCTION,
+        false,
+        false);
     this.functions = functions;
   }
 

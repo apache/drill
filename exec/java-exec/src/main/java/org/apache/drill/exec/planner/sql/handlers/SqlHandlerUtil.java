@@ -37,7 +37,6 @@ import org.apache.drill.exec.store.AbstractSchema;
 
 import org.apache.calcite.tools.ValidationException;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 
 import java.io.IOException;
@@ -206,8 +205,11 @@ public class SqlHandlerUtil {
             }
           };
 
-      return RelOptUtil.createProject(input, refs, names, false,
-          DrillRelFactories.LOGICAL_BUILDER.create(input.getCluster(), null));
+      return DrillRelFactories.LOGICAL_BUILDER
+          .create(input.getCluster(), null)
+          .push(input)
+          .projectNamed(refs, names, true)
+          .build();
     }
   }
 

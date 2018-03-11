@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,11 +21,11 @@ import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
+import org.apache.calcite.util.Litmus;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 
 import org.apache.calcite.sql.SqlSelectKeyword;
@@ -479,7 +479,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
    * If the condition is true, mark flag 'find' as true.
    */
   private static class ExprFinder extends SqlBasicVisitor<Void> {
-    private boolean find = false;
+    private boolean find;
     private final SqlNodeCondition condition;
 
     public ExprFinder(SqlNodeCondition condition) {
@@ -512,15 +512,15 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
    * @param sqlSelect SELECT-CLAUSE in the query
    */
   private void detectMultiplePartitions(SqlSelect sqlSelect) {
-    for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+    for (SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
       // If the window function is used with an alias,
       // enter the first operand of AS operator
-      if(nodeInSelectList.getKind() == SqlKind.AS
+      if (nodeInSelectList.getKind() == SqlKind.AS
           && (((SqlCall) nodeInSelectList).getOperandList().get(0).getKind() == SqlKind.OVER)) {
         nodeInSelectList = ((SqlCall) nodeInSelectList).getOperandList().get(0);
       }
 
-      if(nodeInSelectList.getKind() != SqlKind.OVER) {
+      if (nodeInSelectList.getKind() != SqlKind.OVER) {
         continue;
       }
 
@@ -530,10 +530,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
 
       // Partition window is referenced as a SqlIdentifier,
       // which is defined in the window list
-      if(window instanceof SqlIdentifier) {
+      if (window instanceof SqlIdentifier) {
         // Expand the SqlIdentifier as the expression defined in the window list
-        for(SqlNode sqlNode : sqlSelect.getWindowList()) {
-          if(((SqlWindow) sqlNode).getDeclName().equalsDeep(window, false)) {
+        for (SqlNode sqlNode : sqlSelect.getWindowList()) {
+          if (((SqlWindow) sqlNode).getDeclName().equalsDeep(window, Litmus.IGNORE)) {
             window = sqlNode;
             break;
           }
@@ -543,10 +543,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
 
       // In a SELECT-SCOPE, only a partition can be defined
-      if(definedWindow == null) {
+      if (definedWindow == null) {
         definedWindow = window;
       } else {
-        if(!definedWindow.equalsDeep(window, false)) {
+        if (!definedWindow.equalsDeep(window, Litmus.IGNORE)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
               "Multiple window definitions in a single SELECT list is not currently supported \n" +
               "See Apache Drill JIRA: DRILL-3196");

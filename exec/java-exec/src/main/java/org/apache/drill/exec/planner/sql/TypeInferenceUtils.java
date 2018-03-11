@@ -601,6 +601,7 @@ public class TypeInferenceUtils {
     private static final DrillCastSqlReturnTypeInference INSTANCE = new DrillCastSqlReturnTypeInference();
 
     @Override
+    @SuppressWarnings("deprecation")
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
       final RelDataTypeFactory factory = opBinding.getTypeFactory();
       final boolean isNullable = opBinding
