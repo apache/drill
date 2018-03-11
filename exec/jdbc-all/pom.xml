@@ -252,7 +252,7 @@
           <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false -Djava.net.preferIPv4Stack=true
             -Ddrill.exec.sys.store.provider.local.write=false
             -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
-            -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=3072M
+            -XX:MaxDirectMemorySize=3072M
             -XX:+CMSClassUnloadingEnabled -ea</argLine>
           <additionalClasspathElements>
             <additionalClasspathElements>${settings.localRepository}/junit/junit/${junit.version}/junit-${junit.version}.jar</additionalClasspathElements>
