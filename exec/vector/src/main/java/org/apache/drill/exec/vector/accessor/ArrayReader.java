@@ -32,7 +32,7 @@ package org.apache.drill.exec.vector.accessor;
  * {@see ArrayWriter}
  */
 
-public interface ArrayReader {
+public interface ArrayReader extends ColumnReader {
 
   /**
    * Number of elements in the array.
@@ -50,26 +50,6 @@ public interface ArrayReader {
   ObjectType entryType();
 
   /**
-   * Return a reader for the elements of a scalar array.
-   * @return reader for scalar elements
-   */
-
-  ScalarElementReader elements();
-
-  /**
-   * Return a generic object reader for the array entry. Not available
-   * for scalar elements. Positions the reader to read the selected
-   * element.
-   *
-   * @param index array index
-   * @return generic object reader
-   */
-
-  ObjectReader entry(int index);
-  TupleReader tuple(int index);
-  ArrayReader array(int index);
-
-  /**
    * Return the generic object reader for the array element. This
    * version <i>does not</i> position the reader, the client must
    * call {@link setPosn()} to set the position. This form allows
@@ -77,6 +57,7 @@ public interface ArrayReader {
    */
 
   ObjectReader entry();
+  ScalarReader scalar();
   TupleReader tuple();
   ArrayReader array();
 
@@ -88,19 +69,14 @@ public interface ArrayReader {
 
   void setPosn(int index);
 
-  /**
-   * Return the entire array as an <tt>List</tt> of objects.
-   * Note, even if the array is scalar, the elements are still returned
-   * as a list. This method is primarily for testing.
-   * @return array as a <tt>List</tt> of objects
-   */
-
-  Object getObject();
+  void rewind();
 
   /**
-   * Return the entire array as a string. Primarily for debugging.
-   * @return string representation of the array
+   * Move forward one position.
+   *
+   * @return true if another position is available, false if
+   * the end of the array is reached
    */
 
-  String getAsString();
+  boolean next();
 }

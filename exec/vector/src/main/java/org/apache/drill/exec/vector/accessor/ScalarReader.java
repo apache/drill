@@ -44,7 +44,7 @@ import org.joda.time.Period;
  * {@see ScalarWriter}
  */
 
-public interface ScalarReader {
+public interface ScalarReader extends ColumnReader {
   /**
    * Describe the type of the value. This is a compression of the
    * value vector type: it describes which method will return the
@@ -54,14 +54,6 @@ public interface ScalarReader {
    */
 
   ValueType valueType();
-
-  /**
-   * Report if the column is null. Non-nullable columns always
-   * return <tt>false</tt>.
-   * @return true if the column value is null, false if the
-   * value is set
-   */
-  boolean isNull();
   int getInt();
   long getLong();
   double getDouble();
@@ -69,7 +61,4 @@ public interface ScalarReader {
   byte[] getBytes();
   BigDecimal getDecimal();
   Period getPeriod();
-
-  Object getObject();
-  String getAsString();
 }
