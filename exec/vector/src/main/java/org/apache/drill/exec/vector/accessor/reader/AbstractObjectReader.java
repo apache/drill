@@ -17,18 +17,18 @@
  */
 package org.apache.drill.exec.vector.accessor.reader;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
-import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
-import org.apache.drill.exec.vector.accessor.ScalarElementReader;
+import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 
 public abstract class AbstractObjectReader implements ObjectReader {
 
-  public abstract void bindIndex(ColumnReaderIndex index);
-
-  public void reposition() { }
+  @Override
+  public ColumnMetadata schema() { return reader().schema(); }
 
   @Override
   public ScalarReader scalar() {
@@ -45,8 +45,13 @@ public abstract class AbstractObjectReader implements ObjectReader {
     throw new UnsupportedOperationException();
   }
 
+  public abstract ReaderEvents events();
+
+  public abstract ColumnReader reader();
+
   @Override
-  public ScalarElementReader elements() {
-    throw new UnsupportedOperationException();
-  }
+  public boolean isNull() { return reader().isNull(); }
+
+  @Override
+  public ObjectType type() { return reader().type(); }
 }

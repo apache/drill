@@ -22,68 +22,81 @@ import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.model.AbstractReaderBuilder;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.VectorDescrip;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
-import org.apache.drill.exec.vector.accessor.reader.ColumnReaderFactory;
+import org.apache.drill.exec.vector.accessor.reader.AbstractScalarReader;
+import org.apache.drill.exec.vector.accessor.reader.ArrayReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.MapReader;
-import org.apache.drill.exec.vector.accessor.reader.ObjectArrayReader;
+import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
+import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.SingleVectorAccessor;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
-public abstract class BaseReaderBuilder {
+public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
 
   protected List<AbstractObjectReader> buildContainerChildren(
       VectorContainer container, MetadataProvider mdProvider) {
-    List<AbstractObjectReader> writers = new ArrayList<>();
+    List<AbstractObjectReader> readers = new ArrayList<>();
     for (int i = 0; i < container.getNumberOfColumns(); i++) {
-      @SuppressWarnings("resource")
       ValueVector vector = container.getValueVector(i).getValueVector();
       VectorDescrip descrip = new VectorDescrip(mdProvider, i, vector.getField());
-      writers.add(buildVectorReader(vector, descrip));
+      readers.add(buildVectorReader(vector, descrip));
     }
-    return writers;
+    return readers;
   }
 
-  private AbstractObjectReader buildVectorReader(ValueVector vector, VectorDescrip descrip) {
-    MajorType type = vector.getField().getType();
-    if (type.getMinorType() == MinorType.MAP) {
-      if (type.getMode() == DataMode.REPEATED) {
-        return buildMapArrayReader((RepeatedMapVector) vector, descrip);
-      } else {
-        return buildMapReader((MapVector) vector, descrip);
-      }
-    } else {
-      return buildPrimitiveReader(vector, descrip);
+  protected AbstractObjectReader buildVectorReader(ValueVector vector, VectorDescrip descrip) {
+    VectorAccessor va = new SingleVectorAccessor(vector);
+    MajorType type = va.type();
+
+    switch(type.getMinorType()) {
+    case MAP:
+      return buildMap((AbstractMapVector) vector, va, type.getMode(), descrip);
+    case LATE:
+
+      // Occurs for a list with no type: a list of nulls.
+
+      return AbstractScalarReader.nullReader(descrip.metadata);
+    default:
+      return buildScalarReader(va, descrip.metadata);
     }
   }
 
-  private AbstractObjectReader buildMapArrayReader(RepeatedMapVector vector, VectorDescrip descrip) {
-    AbstractObjectReader mapReader = MapReader.build(descrip.metadata, buildMap(vector, descrip));
-    return ObjectArrayReader.build(vector, mapReader);
+  private AbstractObjectReader buildMap(AbstractMapVector vector, VectorAccessor va, DataMode mode, VectorDescrip descrip) {
+
+    boolean isArray = mode == DataMode.REPEATED;
+
+    // Map type
+
+    AbstractObjectReader mapReader = MapReader.build(
+        descrip.metadata,
+        isArray ? null : va,
+        buildMapMembers(vector,
+            descrip.parent.childProvider(descrip.metadata)));
+
+    // Single map
+
+    if (! isArray) {
+      return mapReader;
+    }
+
+    // Repeated map
+
+    return ArrayReaderImpl.buildTuple(descrip.metadata, va, mapReader);
   }
 
-  private AbstractObjectReader buildMapReader(MapVector vector, VectorDescrip descrip) {
-    return MapReader.build(descrip.metadata, buildMap(vector, descrip));
-  }
-
-  private AbstractObjectReader buildPrimitiveReader(ValueVector vector, VectorDescrip descrip) {
-    return ColumnReaderFactory.buildColumnReader(vector);
-  }
-
-  private List<AbstractObjectReader> buildMap(AbstractMapVector vector, VectorDescrip descrip) {
+  protected List<AbstractObjectReader> buildMapMembers(AbstractMapVector mapVector, MetadataProvider provider) {
     List<AbstractObjectReader> readers = new ArrayList<>();
-    MetadataProvider provider = descrip.parent.childProvider(descrip.metadata);
     int i = 0;
-    for (ValueVector child : vector) {
-      VectorDescrip childDescrip = new VectorDescrip(provider, i, child.getField());
-      readers.add(buildVectorReader(child, childDescrip));
+    for (ValueVector vector : mapVector) {
+      VectorDescrip descrip = new VectorDescrip(provider, i, vector.getField());
+      readers.add(buildVectorReader(vector, descrip));
       i++;
     }
     return readers;
   }
+
 }

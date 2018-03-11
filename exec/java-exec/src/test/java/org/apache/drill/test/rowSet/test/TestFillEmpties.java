@@ -24,17 +24,17 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.vector.accessor.ScalarElementReader;
+import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
@@ -219,16 +219,18 @@ public class TestFillEmpties extends SubOperatorTest {
     }
     SingleRowSet result = writer.done();
     RowSetReader reader = result.reader();
-    ScalarElementReader colReader = reader.array(0).elements();
+    ArrayReader aReader = reader.array(0);
+    ScalarReader colReader = aReader.scalar();
     for (int i = 0; i < ROW_COUNT; i++) {
       assertTrue(reader.next());
       if (i % 5 != 0) {
         // Empty arrays are defined to be the same as a zero-length array.
 
-        assertEquals(0, colReader.size());
+        assertEquals(0, aReader.size());
       } else {
         for (int j = 0; j < 2; j++) {
-          Object actual = colReader.getObject(j);
+          assertTrue(aReader.next());
+          Object actual = colReader.getObject();
           Object expected = RowSetUtilities.testDataFromInt(valueType, majorType, i + j);
           RowSetUtilities.assertEqualValues(
               majorType.toString().replace('\n', ' ') + "[" + i + "][" + j + "]",

@@ -20,9 +20,11 @@ package org.apache.drill.test.rowSet;
 import java.util.List;
 
 import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
 import org.apache.drill.exec.vector.accessor.reader.AbstractTupleReader;
+import org.apache.drill.exec.vector.accessor.reader.NullStateReaders;
 
 /**
  * Reader implementation for a row set.
@@ -30,11 +32,14 @@ import org.apache.drill.exec.vector.accessor.reader.AbstractTupleReader;
 
 public class RowSetReaderImpl extends AbstractTupleReader implements RowSetReader {
 
+  private final TupleMetadata schema;
   protected final ReaderIndex readerIndex;
 
   public RowSetReaderImpl(TupleMetadata schema, ReaderIndex index, AbstractObjectReader[] readers) {
-    super(schema, readers);
+    super(readers);
+    this.schema = schema;
     this.readerIndex = index;
+    bindNullState(NullStateReaders.REQUIRED_STATE_READER);
     bindIndex(index);
   }
 
@@ -54,23 +59,26 @@ public class RowSetReaderImpl extends AbstractTupleReader implements RowSetReade
   }
 
   @Override
-  public boolean valid() { return readerIndex.valid(); }
-
-  @Override
-  public int index() { return readerIndex.position(); }
+  public int logicalIndex() { return readerIndex.logicalIndex(); }
 
   @Override
   public int rowCount() { return readerIndex.size(); }
 
   @Override
-  public int rowIndex() { return readerIndex.vectorIndex(); }
+  public int offset() { return readerIndex.offset(); }
 
   @Override
-  public int batchIndex() { return readerIndex.batchIndex(); }
+  public int hyperVectorIndex() { return readerIndex.hyperVectorIndex(); }
 
   @Override
-  public void set(int index) {
+  public void setPosn(int index) {
     this.readerIndex.set(index);
     reposition();
   }
+
+  @Override
+  public ColumnMetadata schema() { return null; }
+
+  @Override
+  public TupleMetadata tupleSchema() { return schema; }
 }

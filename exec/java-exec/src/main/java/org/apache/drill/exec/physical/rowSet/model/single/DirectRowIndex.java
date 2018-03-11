@@ -15,15 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor.reader;
+package org.apache.drill.exec.physical.rowSet.model.single;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
+import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
 
-public interface VectorAccessor {
-  boolean isHyper();
-  MajorType type();
-  void bind(ColumnReaderIndex index);
-  <T extends ValueVector> T vector();
+/**
+ * Reader index that points directly to each row in the row set.
+ * This index starts with pointing to the -1st row, so that the
+ * reader can require a <tt>next()</tt> for every row, including
+ * the first. (This is the JDBC <tt>RecordSet</tt> convention.)
+ */
+
+public class DirectRowIndex extends ReaderIndex {
+
+  public DirectRowIndex(int rowCount) {
+    super(rowCount);
+  }
+
+  @Override
+  public int offset() { return position; }
+
+  @Override
+  public int hyperVectorIndex() { return 0; }
 }

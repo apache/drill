@@ -18,21 +18,14 @@
 package org.apache.drill.exec.vector.accessor.reader;
 
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
-import org.apache.drill.exec.vector.accessor.reader.AbstractArrayReader.BaseElementIndex;
 
 /**
- * Index into the vector of elements for a repeated vector.
- * Keeps track of the current offset in terms of value positions.
+ * Internal operations to wire up a set of readers.
  */
 
-public class FixedWidthElementReaderIndex extends BaseElementIndex implements ElementReaderIndex {
-
-  public FixedWidthElementReaderIndex(ColumnReaderIndex base) {
-    super(base);
-  }
-
-  @Override
-  public int vectorIndex(int posn) {
-    return elementIndex(posn);
-  }
+public interface ReaderEvents {
+  void bindIndex(ColumnReaderIndex rowIndex);
+  void bindNullState(NullStateReader nullStateReader);
+  NullStateReader nullStateReader();
+  void reposition();
 }

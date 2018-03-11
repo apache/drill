@@ -823,4 +823,19 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       historicalLog.buildHistory(sb, indent + 1, verbosity.includeStackTraces);
     }
   }
+
+  /**
+   * Convenience method to read buffer bytes into a newly allocated byte
+   * array.
+   *
+   * @param srcOffset the offset into this buffer of the data to read
+   * @param length number of bytes to read
+   * @return byte array with the requested bytes
+   */
+
+  public byte[] unsafeGetMemory(int srcOffset, int length) {
+    byte buf[] = new byte[length];
+    PlatformDependent.copyMemory(addr + srcOffset, buf, 0, length);
+    return buf;
+  }
 }

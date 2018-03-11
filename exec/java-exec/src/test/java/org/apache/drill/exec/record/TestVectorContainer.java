@@ -28,6 +28,7 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -72,7 +73,7 @@ public class TestVectorContainer extends DrillTest {
         .addRow(30, "wilma")
         .build();
 
-    // Simulated "implicit" coumns: row number and file name
+    // Simulated "implicit" columns: row number and file name
 
     BatchSchema rightSchema = new SchemaBuilder()
         .add("x", MinorType.SMALLINT)
