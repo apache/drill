@@ -17,6 +17,7 @@
  */
 package org.apache.drill.test.rowSet;
 
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -142,5 +143,11 @@ public interface RowSet {
 
   interface HyperRowSet extends RowSet {
     SelectionVector4 getSv4();
+  }
+
+  interface HyperRowSetBuilder {
+    void addBatch(SingleRowSet rowSet);
+    void addBatch(VectorContainer container);
+    HyperRowSet build() throws SchemaChangeException;
   }
 }

@@ -15,39 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.test.rowSet;
+package org.apache.drill.exec.physical.rowSet.model.single;
 
-import org.apache.drill.exec.vector.accessor.TupleReader;
+import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
 
 /**
- * Reader for all types of row sets.
+ * Reader index that points directly to each row in the row set.
+ * This index starts with pointing to the -1st row, so that the
+ * reader can require a <tt>next()</tt> for every row, including
+ * the first. (This is the JDBC <tt>RecordSet</tt> convention.)
  */
 
-public interface RowSetReader extends TupleReader {
+public class DirectRowIndex extends ReaderIndex {
 
-  /**
-   * Total number of rows in the row set.
-   * @return total number of rows
-   */
-  int rowCount();
+  public DirectRowIndex(int rowCount) {
+    super(rowCount);
+  }
 
-  boolean next();
-  int logicalIndex();
-  void setPosn(int index);
+  @Override
+  public int offset() { return position; }
 
-  /**
-   * Batch index: 0 for a single batch, batch for the current
-   * row is a hyper-batch.
-   * @return index of the batch for the current row
-   */
-  int hyperVectorIndex();
-
-  /**
-   * The index of the underlying row which may be indexed by an
-   * SV2 or SV4.
-   *
-   * @return
-   */
-
-  int offset();
+  @Override
+  public int hyperVectorIndex() { return 0; }
 }

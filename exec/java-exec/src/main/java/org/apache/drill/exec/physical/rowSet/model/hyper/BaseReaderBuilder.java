@@ -21,27 +21,54 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.rowSet.model.MetadataProvider;
-import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.VectorDescrip;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.physical.rowSet.model.AbstractReaderBuilder;
 import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
-import org.apache.drill.exec.record.HyperVectorWrapper;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
-import org.apache.drill.exec.vector.accessor.reader.ColumnReaderFactory;
+import org.apache.drill.exec.vector.accessor.reader.ArrayReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.MapReader;
-import org.apache.drill.exec.vector.accessor.reader.ObjectArrayReader;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.accessor.reader.VectorAccessors;
+import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.BaseHyperVectorAccessor;
 
-public abstract class BaseReaderBuilder {
+/**
+ * Base reader builder for a hyper-batch. The semantics of hyper-batches are
+ * a bit rough. When a single batch, we can walk the vector tree to get the
+ * information we need. But, hyper vector wrappers don't provide that same
+ * information, so we can't just walk them. Further, the code that builds
+ * hyper-batches appears perfectly happy to accept batches with differing
+ * schemas, something that will cause the readers to blow up because they
+ * must commit to a particular kind of reader for each vector.
+ * <p>
+ * The solution is to build the readers in two passes. The first builds a
+ * metadata model for each batch and merges those models. (This version
+ * requires strict identity in schemas; a fancier solution could handle,
+ * say, the addition of map members in one batch vs. another or the addition
+ * of union/list members across batches.)
+ * <p>
+ * The metadata (by design) has the information we need, so in the second pass
+ * we walk the metadata hierarchy and build up readers from that, creating
+ * vector accessors as we go to provide a runtime path from the root vectors
+ * (selected by the SV4) to the inner vectors (which are not represented as
+ * hypervectors.)
+ * <p>
+ * The hypervector wrapper mechanism provides a crude way to handle inner
+ * vectors, but it is awkward, and does not lend itself to the kind of caching
+ * we'd like for performance, so we use our own accessors for inner vectors.
+ * The outermost hyper vector accessors wrap a hyper vector wrapper. Inner
+ * accessors directly navigate at the vector level (from a vector provided by
+ * the outer vector accessor.)
+ */
+
+public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
 
   /**
    * Read-only row index into the hyper row set with batch and index
@@ -58,13 +85,13 @@ public abstract class BaseReaderBuilder {
     }
 
     @Override
-    public int vectorIndex() {
-      return AccessorUtilities.sv4Index(sv4.get(rowIndex));
+    public int offset() {
+      return AccessorUtilities.sv4Index(sv4.get(position));
     }
 
     @Override
-    public int batchIndex( ) {
-      return AccessorUtilities.sv4Batch(sv4.get(rowIndex));
+    public int hyperVectorIndex( ) {
+      return AccessorUtilities.sv4Batch(sv4.get(position));
     }
   }
 
@@ -72,14 +99,18 @@ public abstract class BaseReaderBuilder {
    * Vector accessor used by the column accessors to obtain the vector for
    * each column value. That is, position 0 might be batch 4, index 3,
    * while position 1 might be batch 1, index 7, and so on.
+   * <p>
+   * Must be here: the reader layer is in the <tt>vector</tt> package
+   * and does not have visibility to <tt>java-exec</tt> classes.
    */
 
-  public static class HyperVectorAccessor implements VectorAccessor {
+  public static class HyperVectorAccessor extends BaseHyperVectorAccessor {
 
     private final ValueVector[] vectors;
     private ColumnReaderIndex rowIndex;
 
     public HyperVectorAccessor(VectorWrapper<?> vw) {
+      super(vw.getField().getType());
       vectors = vw.getValueVectors();
     }
 
@@ -88,61 +119,70 @@ public abstract class BaseReaderBuilder {
       rowIndex = index;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public ValueVector vector() {
-      return vectors[rowIndex.batchIndex()];
+    public <T extends ValueVector> T vector() {
+      return (T) vectors[rowIndex.hyperVectorIndex()];
     }
   }
 
+  protected List<AbstractObjectReader> buildContainerChildren(
+      VectorContainer container) throws SchemaChangeException {
+    TupleMetadata schema = new HyperSchemaInference().infer(container);
+    return buildContainerChildren(container, schema);
+  }
 
-  protected AbstractObjectReader[] buildContainerChildren(
-      VectorContainer container, MetadataProvider mdProvider) {
+  protected List<AbstractObjectReader> buildContainerChildren(
+      VectorContainer container, TupleMetadata schema) {
     List<AbstractObjectReader> readers = new ArrayList<>();
     for (int i = 0; i < container.getNumberOfColumns(); i++) {
       VectorWrapper<?> vw = container.getValueVector(i);
-      VectorDescrip descrip = new VectorDescrip(mdProvider, i, vw.getField());
-      readers.add(buildVectorReader(vw, descrip));
+      VectorAccessor va = new HyperVectorAccessor(vw);
+      readers.add(buildVectorReader(va, schema.metadata(i)));
     }
-    return readers.toArray(new AbstractObjectReader[readers.size()]);
+    return readers;
   }
 
-  @SuppressWarnings("unchecked")
-  private AbstractObjectReader buildVectorReader(VectorWrapper<?> vw, VectorDescrip descrip) {
-    MajorType type = vw.getField().getType();
-    if (type.getMinorType() == MinorType.MAP) {
-      if (type.getMode() == DataMode.REPEATED) {
-        return buildMapArrayReader((HyperVectorWrapper<? extends AbstractMapVector>) vw, descrip);
-      } else {
-        return buildMapReader((HyperVectorWrapper<? extends AbstractMapVector>) vw, descrip);
-      }
-    } else {
-      return buildPrimitiveReader(vw, descrip);
+  protected AbstractObjectReader buildVectorReader(VectorAccessor va, ColumnMetadata metadata) {
+    switch(metadata.type()) {
+    case MAP:
+      return buildMap(va, metadata.mode(), metadata);
+    default:
+      return buildScalarReader(va, metadata);
     }
   }
 
-  private AbstractObjectReader buildMapArrayReader(HyperVectorWrapper<? extends AbstractMapVector> vectors, VectorDescrip descrip) {
-    AbstractObjectReader mapReader = MapReader.build(descrip.metadata, buildMap(vectors, descrip));
-    return ObjectArrayReader.build(new HyperVectorAccessor(vectors), mapReader);
+  private AbstractObjectReader buildMap(VectorAccessor va, DataMode mode, ColumnMetadata metadata) {
+
+    boolean isArray = mode == DataMode.REPEATED;
+
+    // Map type
+
+    AbstractObjectReader mapReader = MapReader.build(
+        metadata,
+        isArray ? null : va,
+        buildMapMembers(va, metadata.mapSchema()));
+
+    // Single map
+
+    if (! isArray) {
+      return mapReader;
+    }
+
+    // Repeated map
+
+    return ArrayReaderImpl.buildTuple(metadata, va, mapReader);
   }
 
-  private AbstractObjectReader buildMapReader(HyperVectorWrapper<? extends AbstractMapVector> vectors, VectorDescrip descrip) {
-    return MapReader.build(descrip.metadata, buildMap(vectors, descrip));
-  }
-
-  private AbstractObjectReader buildPrimitiveReader(VectorWrapper<?> vw, VectorDescrip descrip) {
-    return ColumnReaderFactory.buildColumnReader(
-        vw.getField().getType(), new HyperVectorAccessor(vw));
-  }
-
-  private List<AbstractObjectReader> buildMap(HyperVectorWrapper<? extends AbstractMapVector> vectors, VectorDescrip descrip) {
+  protected List<AbstractObjectReader> buildMapMembers(VectorAccessor va, TupleMetadata mapSchema) {
     List<AbstractObjectReader> readers = new ArrayList<>();
-    MetadataProvider provider = descrip.parent.childProvider(descrip.metadata);
-    MaterializedField mapField = vectors.getField();
-    for (int i = 0; i < mapField.getChildren().size(); i++) {
-      HyperVectorWrapper<? extends ValueVector> child = (HyperVectorWrapper<? extends ValueVector>) vectors.getChildWrapper(new int[] {i});
-      VectorDescrip childDescrip = new VectorDescrip(provider, i, child.getField());
-      readers.add(buildVectorReader(child, childDescrip));
-      i++;
+    for (int i = 0; i < mapSchema.size(); i++) {
+      ColumnMetadata member = mapSchema.metadata(i);
+      // Does not use the hyper-vector mechanism.
+
+      readers.add(buildVectorReader(
+          new VectorAccessors.MapMemberHyperVectorAccessor(va, i, member.majorType()),
+          member));
     }
     return readers;
   }

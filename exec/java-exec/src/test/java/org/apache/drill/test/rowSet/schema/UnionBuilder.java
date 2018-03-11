@@ -17,9 +17,9 @@
  */
 package org.apache.drill.test.rowSet.schema;
 
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantSchema;
@@ -33,7 +33,6 @@ public class UnionBuilder implements SchemaContainer {
   private final SchemaContainer parent;
   private final String name;
   private final MinorType type;
-  private final DataMode mode;
   private final VariantSchema union;
 
   public UnionBuilder(SchemaContainer parent, String name,
@@ -41,7 +40,6 @@ public class UnionBuilder implements SchemaContainer {
     this.parent = parent;
     this.name = name;
     this.type = type;
-    this.mode = mode;
     union = new VariantSchema();
   }
 
