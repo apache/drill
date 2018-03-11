@@ -28,6 +28,7 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.slf4j.Logger;
 
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -151,12 +152,21 @@ public class ConnectionMultiListener<T extends EnumLite, CC extends ClientConnec
     public void success(HR value, ByteBuf buffer) {
       // logger.debug("Handshake received. {}", value);
       try {
-        parent.validateHandshake(value);
+        final List<String> serverAuthMechanisms = parent.validateHandshake(value);
         parent.finalizeConnection(value, parent.connection);
-        connectionListener.connectionSucceeded(parent.connection);
-        // logger.debug("Handshake completed succesfully.");
+
+        // If auth is required then start the SASL handshake
+        if (serverAuthMechanisms != null) {
+          parent.prepareSaslHandshake(connectionListener, serverAuthMechanisms);
+        } else {
+          connectionListener.connectionSucceeded(parent.connection);
+          logger.debug("Handshake completed successfully.");
+        }
+      } catch (NonTransientRpcException ex) {
+        logger.error("Failure while validating client and server sasl compatibility", ex);
+        connectionListener.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
       } catch (Exception ex) {
-        logger.debug("Failure while validating handshake", ex);
+        logger.error("Failure while validating handshake", ex);
         connectionListener.connectionFailed(RpcConnectionHandler.FailureType.HANDSHAKE_VALIDATION, ex);
       }
     }
