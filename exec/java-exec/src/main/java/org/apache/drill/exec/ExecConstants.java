@@ -640,4 +640,6 @@ public final class ExecConstants {
 
   public static final String DRILL_PORT_HUNT = "drill.exec.port_hunt";
 
+  public static final String ALLOW_LOOPBACK_ADDRESS_BINDING = "drill.exec.enable_loopback_address_binding";
+
 }
