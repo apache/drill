@@ -115,9 +115,6 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     RowSet actual = fixture.wrap(rsLoader.harvest());
     assertEquals(5, rsLoader.schemaVersion());
     assertEquals(2, actual.rowCount());
-    @SuppressWarnings("resource")
-    MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
-    assertEquals(2, mapVector.getAccessor().getValueCount());
 
     // Validate data
 
@@ -251,7 +248,6 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     assertEquals(3, rsLoader.schemaVersion());
     assertEquals(3, actual.rowCount());
 
-    @SuppressWarnings("resource")
     MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
     MaterializedField mapField = mapVector.getField();
     assertEquals(1, mapField.getChildren().size());
@@ -652,16 +648,6 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(expectedCount, result.rowCount());
-
-    // Ensure the odd map vector value count variable is set correctly.
-
-    @SuppressWarnings("resource")
-    MapVector m1Vector = (MapVector) result.container().getValueVector(1).getValueVector();
-    assertEquals(expectedCount, m1Vector.getAccessor().getValueCount());
-    @SuppressWarnings("resource")
-    MapVector m2Vector = (MapVector) m1Vector.getChildByOrdinal(1);
-    assertEquals(expectedCount, m2Vector.getAccessor().getValueCount());
-
     result.clear();
 
     // Next batch should start with the overflow row
