@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server.rest.profile;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -58,6 +59,7 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.glassfish.jersey.server.mvc.Viewable;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
 @Path("/")
@@ -71,6 +73,7 @@ public class ProfileResources {
   @Inject SecurityContext sc;
 
   public static class ProfileInfo implements Comparable<ProfileInfo> {
+    private static final String TRAILING_DOTS = " ... ";
     private static final int QUERY_SNIPPET_MAX_CHAR = 150;
     private static final int QUERY_SNIPPET_MAX_LINES = 8;
 
@@ -171,13 +174,13 @@ public class ProfileResources {
       //Trimming down based on line-count
       if (QUERY_SNIPPET_MAX_LINES < queryParts.length) {
         int linesConstructed = 0;
-        StringBuilder lineCappedQuerySnippet = new StringBuilder();
+        StringBuilder lineCappedQuerySnippet = new StringBuilder(QUERY_SNIPPET_MAX_CHAR + TRAILING_DOTS.length());
         for (String qPart : queryParts) {
           lineCappedQuerySnippet.append(qPart);
           if (++linesConstructed < QUERY_SNIPPET_MAX_LINES) {
             lineCappedQuerySnippet.append(System.lineSeparator());
           } else {
-            lineCappedQuerySnippet.append(" ... ");
+            lineCappedQuerySnippet.append(TRAILING_DOTS);
             break;
           }
         }
@@ -260,8 +263,6 @@ public class ProfileResources {
 
       Collections.sort(runningQueries, Collections.reverseOrder());
 
-      final List<ProfileInfo> finishedQueries = Lists.newArrayList();
-
       //Defining #Profiles to load
       int maxProfilesToLoad = work.getContext().getConfig().getInt(ExecConstants.HTTP_MAX_PROFILES);
       String maxProfilesParams = uriInfo.getQueryParameters().getFirst(MAX_QPROFILES_PARAM);
@@ -269,8 +270,9 @@ public class ProfileResources {
         maxProfilesToLoad = Integer.valueOf(maxProfilesParams);
       }
 
-      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad);
+      final List<ProfileInfo> finishedQueries = new ArrayList<ProfileResources.ProfileInfo>(maxProfilesToLoad);
 
+      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad);
       while (range.hasNext()) {
         try {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();

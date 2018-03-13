@@ -68,7 +68,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private final AutoCloseableLock readCachedProfilesLock = new AutoCloseableLock(new ReentrantLock());
 
   //Provides a threshold above which we report the time to load
-  private static final long LIST_TIME_THRESHOLD_MSEC = 2000L;
+  private static final long RESPONSE_TIME_THRESHOLD_MSEC = 2000L;
 
   private static final int drillSysFileExtSize = DRILL_SYS_FILE_SUFFIX.length();
   private final Path basePath;
@@ -76,12 +76,17 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private final DrillFileSystem fs;
   private int version = -1;
   private TreeSet<String> profilesSet;
+  private int profilesSetSize;
 //  private String mostRecentProfile;
   private long basePathLastModified;
   private long lastKnownFileCount;
   private int maxSetCapacity;
   private Stopwatch listAndBuildWatch;
+  private Stopwatch transformWatch;
   private PathFilter sysFileSuffixFilter;
+  private Function<String, Entry<String, V>> transformer;
+
+  private Iterable<Entry<String, V>> iterableProfileSet;
 
   public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config) {
     super();
@@ -89,11 +94,20 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     this.config = config;
     this.fs = fs;
     this.profilesSet = new TreeSet<String>();
+    this.profilesSetSize= 0;
     this.basePathLastModified = 0L;
     this.lastKnownFileCount = 0L;
     this.sysFileSuffixFilter = new DrillSysFilePathFilter();
     //this.mostRecentProfile = null;
     this.listAndBuildWatch = Stopwatch.createUnstarted();
+    this.transformWatch = Stopwatch.createUnstarted();
+    this.transformer = new Function<String, Entry<String, V>>() {
+      @Nullable
+      @Override
+      public Entry<String, V> apply(String key) {
+        return new ImmutableEntry<>(key, get(key));
+      }
+    };
 
     try {
       if (!fs.mkdirs(basePath)) {
@@ -177,30 +191,33 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
           //Force a reload of the profile.
           //Note: We shouldn't need to do this if the load is incremental (i.e. using mostRecentProfile)
           profilesSet.clear();
-          int profileCounter = 0;
+          profilesSetSize = 0;
+          int profilesInStoreCount = 0;
           //Constructing TreeMap from List
           for (FileStatus stat : fileStatuses) {
             String profileName = stat.getPath().getName();
-            profileCounter = addToProfileSet(profileName, profileCounter, maxSetCapacity);
+            profilesSetSize = addToProfileSet(profileName, profilesSetSize, maxSetCapacity);
+            profilesInStoreCount++;
           }
 
           //Report Lag
-          if (listAndBuildWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= LIST_TIME_THRESHOLD_MSEC) {
-            logger.warn("Took {} ms to list+map from {} profiles", listAndBuildWatch.elapsed(TimeUnit.MILLISECONDS), profileCounter);
+          if (listAndBuildWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
+            logger.warn("Took {} ms to list&map from {} profiles (out of {} profiles in store)", listAndBuildWatch.elapsed(TimeUnit.MILLISECONDS)
+                , profilesSetSize, profilesInStoreCount);
           }
           //Recording last checked modified time and the most recent profile
           basePathLastModified = currBasePathModified;
           /*TODO: mostRecentProfile = profilesSet.first();*/
           lastKnownFileCount = expectedFileCount;
-        }
 
-        return Iterables.transform(Iterables.limit(Iterables.skip(profilesSet, skip), take), new Function<String, Entry<String, V>>() {
-          @Nullable
-          @Override
-          public Entry<String, V> apply(String key) {
-            return new ImmutableEntry<>(key, get(key));
+          //Transform profileSet for consumption
+          transformWatch.start();
+          iterableProfileSet = Iterables.transform(profilesSet, transformer);
+          if (transformWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
+            logger.warn("Took {} ms to transform {} profiles", transformWatch.elapsed(TimeUnit.MILLISECONDS), profilesSetSize);
           }
-        }).iterator();
+        }
+        return iterableProfileSet.iterator();
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
