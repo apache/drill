@@ -28,6 +28,7 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -236,4 +237,8 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
     return null;
   }
 
+  @Override
+  public Void visitTypedFieldExpr(TypedFieldExpr e, ErrorCollector value) throws RuntimeException {
+    return null;
+  }
 }

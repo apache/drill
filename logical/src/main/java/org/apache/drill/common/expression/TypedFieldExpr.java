@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,20 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.stat;
+package org.apache.drill.common.expression;
 
-import com.google.common.collect.Iterators;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.LogicalExpressionBase;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 public class TypedFieldExpr extends LogicalExpressionBase {
-  TypeProtos.MajorType type;
-  SchemaPath path;
+  private final TypeProtos.MajorType type;
+  private final SchemaPath path;
 
   public TypedFieldExpr(SchemaPath path, TypeProtos.MajorType type) {
     super(path.getPosition());
@@ -38,12 +35,12 @@ public class TypedFieldExpr extends LogicalExpressionBase {
 
   @Override
   public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
-    return visitor.visitUnknown(this, value);
+    return visitor.visitTypedFieldExpr(this, value);
   }
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   @Override

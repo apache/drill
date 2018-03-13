@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.expr.stat;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.fn.FuncHolder;
@@ -70,17 +70,20 @@ public class RangeExprEvaluator extends AbstractExprVisitor<Statistics, Void, Ru
 
   @Override
   public Statistics visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
-    if (e instanceof TypedFieldExpr) {
-      TypedFieldExpr fieldExpr = (TypedFieldExpr) e;
-      final ColumnStatistics columnStatistics = columnStatMap.get(fieldExpr.getPath());
-      if (columnStatistics != null) {
-        return columnStatistics.getStatistics();
-      } else if (fieldExpr.getMajorType().equals(Types.OPTIONAL_INT)) {
-        // field does not exist.
-        IntStatistics intStatistics = new IntStatistics();
-        intStatistics.setNumNulls(rowCount); // all values are nulls
-        return intStatistics;
-      }
+    // do nothing for the unknown expression
+    return null;
+  }
+
+  @Override
+  public Statistics visitTypedFieldExpr(TypedFieldExpr typedFieldExpr, Void value) throws RuntimeException {
+    final ColumnStatistics columnStatistics = columnStatMap.get(typedFieldExpr.getPath());
+    if (columnStatistics != null) {
+      return columnStatistics.getStatistics();
+    } else if (typedFieldExpr.getMajorType().equals(Types.OPTIONAL_INT)) {
+      // field does not exist.
+      IntStatistics intStatistics = new IntStatistics();
+      intStatistics.setNumNulls(rowCount); // all values are nulls
+      return intStatistics;
     }
     return null;
   }
