@@ -86,7 +86,7 @@ public class IncomingBuffers implements AutoCloseable {
 
     // we want to make sure that we only generate local record batch reference in the case that we're not closed.
     // Otherwise we would leak memory.
-    try (AutoCloseableLock lock = sharedIncomingBatchLock.open()) {
+    try (@SuppressWarnings("unused") AutoCloseables.Closeable lock = sharedIncomingBatchLock.open()) {
       if (closed) {
         return false;
       }
@@ -135,7 +135,7 @@ public class IncomingBuffers implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    try (AutoCloseableLock lock = exclusiveCloseLock.open()) {
+    try (@SuppressWarnings("unused") AutoCloseables.Closeable lock = exclusiveCloseLock.open()) {
       closed = true;
       AutoCloseables.close(collectorMap.values());
     }
