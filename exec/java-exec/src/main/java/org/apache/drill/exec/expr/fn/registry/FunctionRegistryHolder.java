@@ -22,6 +22,8 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
+
+import org.apache.drill.common.AutoCloseables.Closeable;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
@@ -104,7 +106,7 @@ public class FunctionRegistryHolder {
    * @return local function registry version number
    */
   public long getVersion() {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       return version;
     }
   }
@@ -121,7 +123,7 @@ public class FunctionRegistryHolder {
    * @param newJars jars and list of their function holders, each contains function name, signature and holder
    */
   public void addJars(Map<String, List<FunctionHolder>> newJars, long version) {
-    try (AutoCloseableLock lock = writeLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = writeLock.open()) {
       for (Map.Entry<String, List<FunctionHolder>> newJar : newJars.entrySet()) {
         String jarName = newJar.getKey();
         removeAllByJar(jarName);
@@ -141,7 +143,7 @@ public class FunctionRegistryHolder {
    * @param jarName jar name to be removed
    */
   public void removeJar(String jarName) {
-    try (AutoCloseableLock lock = writeLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = writeLock.open()) {
       removeAllByJar(jarName);
     }
   }
@@ -153,7 +155,7 @@ public class FunctionRegistryHolder {
    * @return list of all jar names
    */
   public List<String> getAllJarNames() {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       return Lists.newArrayList(jars.keySet());
     }
   }
@@ -167,7 +169,7 @@ public class FunctionRegistryHolder {
    * @return list of functions names associated from the jar
    */
   public List<String> getFunctionNamesByJar(String jarName) {
-    try  (AutoCloseableLock lock = readLock.open()){
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()){
       Map<String, Queue<String>> functions = jars.get(jarName);
       return functions == null ? Lists.<String>newArrayList() : Lists.newArrayList(functions.keySet());
     }
@@ -184,7 +186,7 @@ public class FunctionRegistryHolder {
    * @return all functions which their holders
    */
   public ListMultimap<String, DrillFuncHolder> getAllFunctionsWithHolders(AtomicLong version) {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       if (version != null) {
         version.set(this.version);
       }
@@ -215,7 +217,7 @@ public class FunctionRegistryHolder {
    * @return all functions which their signatures
    */
   public ListMultimap<String, String> getAllFunctionsWithSignatures() {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       ListMultimap<String, String> functionsWithSignatures = ArrayListMultimap.create();
       for (Map.Entry<String, Map<String, DrillFuncHolder>> function : functions.entrySet()) {
         functionsWithSignatures.putAll(function.getKey(), Lists.newArrayList(function.getValue().keySet()));
@@ -235,7 +237,7 @@ public class FunctionRegistryHolder {
    * @return list of function holders
    */
   public List<DrillFuncHolder> getHoldersByFunctionName(String functionName, AtomicLong version) {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       if (version != null) {
         version.set(this.version);
       }
@@ -263,7 +265,7 @@ public class FunctionRegistryHolder {
    * @return true if jar exists, else false
    */
   public boolean containsJar(String jarName) {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       return jars.containsKey(jarName);
     }
   }
@@ -275,7 +277,7 @@ public class FunctionRegistryHolder {
    * @return quantity of functions
    */
   public int functionsSize() {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       return functions.size();
     }
   }
@@ -291,7 +293,7 @@ public class FunctionRegistryHolder {
    * @return jar name
    */
   public String getJarNameByFunctionSignature(String functionName, String functionSignature) {
-    try (AutoCloseableLock lock = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = readLock.open()) {
       for (Map.Entry<String, Map<String, Queue<String>>> jar : jars.entrySet()) {
         Queue<String> functionSignatures = jar.getValue().get(functionName);
         if (functionSignatures != null && functionSignatures.contains(functionSignature)) {

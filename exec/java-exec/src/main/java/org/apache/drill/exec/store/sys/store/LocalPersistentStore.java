@@ -35,9 +35,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.collections.ImmutableEntry;
-import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
@@ -59,33 +57,32 @@ import org.slf4j.LoggerFactory;
 public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStore.class);
 
-  private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-  private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
-  private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
-
   private final Path basePath;
   private final PersistentStoreConfig<V> config;
   private final DrillFileSystem fs;
-  private int version = -1;
 
   public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config) {
-    super();
     this.basePath = new Path(base, config.getName());
     this.config = config;
     this.fs = fs;
-
     try {
-      if (!fs.mkdirs(basePath)) {
-        version++;
-      }
+      mkdirs(getBasePath());
     } catch (IOException e) {
       throw new RuntimeException("Failure setting pstore configuration path.");
     }
   }
 
+  protected Path getBasePath() {
+    return basePath;
+  }
+
   @Override
   public PersistentStoreMode getMode() {
     return PersistentStoreMode.PERSISTENT;
+  }
+
+  private void mkdirs(Path path) throws IOException {
+    fs.mkdirs(path);
   }
 
   public static Path getLogDir() {
@@ -114,39 +111,37 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
-    try (AutoCloseableLock lock = readLock.open()) {
-      try {
-        // list only files with sys file suffix
-        PathFilter sysFileSuffixFilter = new PathFilter() {
-          @Override
-          public boolean accept(Path path) {
-            return path.getName().endsWith(DRILL_SYS_FILE_SUFFIX);
-          }
-        };
-
-        List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, sysFileSuffixFilter);
-        if (fileStatuses.isEmpty()) {
-          return Collections.emptyIterator();
+    try {
+      // list only files with sys file suffix
+      PathFilter sysFileSuffixFilter = new PathFilter() {
+        @Override
+        public boolean accept(Path path) {
+          return path.getName().endsWith(DRILL_SYS_FILE_SUFFIX);
         }
+      };
 
-        List<String> files = Lists.newArrayList();
-        for (FileStatus stat : fileStatuses) {
-          String s = stat.getPath().getName();
-          files.add(s.substring(0, s.length() - DRILL_SYS_FILE_SUFFIX.length()));
-        }
-
-        Collections.sort(files);
-
-        return Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), new Function<String, Entry<String, V>>() {
-          @Nullable
-          @Override
-          public Entry<String, V> apply(String key) {
-            return new ImmutableEntry<>(key, get(key));
-          }
-        }).iterator();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+      List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, sysFileSuffixFilter);
+      if (fileStatuses.isEmpty()) {
+        return Collections.emptyIterator();
       }
+
+      List<String> files = Lists.newArrayList();
+      for (FileStatus stat : fileStatuses) {
+        String s = stat.getPath().getName();
+        files.add(s.substring(0, s.length() - DRILL_SYS_FILE_SUFFIX.length()));
+      }
+
+      Collections.sort(files);
+
+      return Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), new Function<String, Entry<String, V>>() {
+        @Nullable
+        @Override
+        public Entry<String, V> apply(String key) {
+          return new ImmutableEntry<>(key, get(key));
+        }
+      }).iterator();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -160,108 +155,68 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public boolean contains(String key) {
-    return contains(key, null);
-  }
-
-  @Override
-  public boolean contains(String key, DataChangeVersion dataChangeVersion) {
-    try (AutoCloseableLock lock = readLock.open()) {
-      try {
-        Path path = makePath(key);
-        boolean exists = fs.exists(path);
-        if (exists && dataChangeVersion != null) {
-          dataChangeVersion.setVersion(version);
-        }
-        return exists;
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+    try {
+      return fs.exists(makePath(key));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
   @Override
   public V get(String key) {
-    return get(key, null);
-  }
-
-  @Override
-  public V get(String key, DataChangeVersion dataChangeVersion) {
-    try (AutoCloseableLock lock = readLock.open()) {
-      try {
-        if (dataChangeVersion != null) {
-          dataChangeVersion.setVersion(version);
-        }
-        Path path = makePath(key);
-        if (!fs.exists(path)) {
-          return null;
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+    try {
+      Path path = makePath(key);
+      if (!fs.exists(path)) {
+        return null;
       }
-      final Path path = makePath(key);
-      try (InputStream is = fs.open(path)) {
-        return config.getSerializer().deserialize(IOUtils.toByteArray(is));
-      } catch (IOException e) {
-        throw new RuntimeException("Unable to deserialize \"" + path + "\"", e);
-      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    final Path path = makePath(key);
+    try (InputStream is = fs.open(path)) {
+      return config.getSerializer().deserialize(IOUtils.toByteArray(is));
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to deserialize \"" + path + "\"", e);
     }
   }
 
   @Override
   public void put(String key, V value) {
-    put(key, value, null);
-  }
-
-  @Override
-  public void put(String key, V value, DataChangeVersion dataChangeVersion) {
-    try (AutoCloseableLock lock = writeLock.open()) {
-      if (dataChangeVersion != null && dataChangeVersion.getVersion() != version) {
-        throw new VersionMismatchException("Version mismatch detected", dataChangeVersion.getVersion());
-      }
-      try (OutputStream os = fs.create(makePath(key))) {
-        IOUtils.write(config.getSerializer().serialize(value), os);
-        version++;
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+    try (OutputStream os = fs.create(makePath(key))) {
+      IOUtils.write(config.getSerializer().serialize(value), os);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
   @Override
   public boolean putIfAbsent(String key, V value) {
-    try (AutoCloseableLock lock = writeLock.open()) {
-      try {
-        Path p = makePath(key);
-        if (fs.exists(p)) {
-          return false;
-        } else {
-          try (OutputStream os = fs.create(makePath(key))) {
-            IOUtils.write(config.getSerializer().serialize(value), os);
-            version++;
-          }
-          return true;
+    try {
+      Path p = makePath(key);
+      if (fs.exists(p)) {
+        return false;
+      } else {
+        try (OutputStream os = fs.create(makePath(key))) {
+          IOUtils.write(config.getSerializer().serialize(value), os);
         }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+        return true;
       }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
   @Override
   public void delete(String key) {
-    try (AutoCloseableLock lock = writeLock.open()) {
-      try {
-        fs.delete(makePath(key), false);
-        version++;
-      } catch (IOException e) {
-        logger.error("Unable to delete data from storage.", e);
-        throw new RuntimeException(e);
-      }
+    try {
+      fs.delete(makePath(key), false);
+    } catch (IOException e) {
+      logger.error("Unable to delete data from storage.", e);
+      throw new RuntimeException(e);
     }
   }
 
   @Override
   public void close() {
   }
-
 }

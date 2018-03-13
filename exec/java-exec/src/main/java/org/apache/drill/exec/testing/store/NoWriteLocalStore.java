@@ -20,30 +20,19 @@ package org.apache.drill.exec.testing.store;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import org.apache.drill.common.concurrent.AutoCloseableLock;
-import org.apache.drill.exec.exception.VersionMismatchException;
+
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
-import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 
 public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
-  private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-  private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
-  private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
   private final ConcurrentMap<String, V> store = Maps.newConcurrentMap();
-  private int version = -1;
 
   @Override
   public void delete(final String key) {
-    try (AutoCloseableLock lock = writeLock.open()) {
-      store.remove(key);
-      version++;
-    }
+    store.remove(key);
   }
 
   @Override
@@ -53,74 +42,35 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
 
   @Override
   public boolean contains(final String key) {
-    return contains(key, null);
-  }
-
-  @Override
-  public boolean contains(final String key, final DataChangeVersion dataChangeVersion) {
-    try (AutoCloseableLock lock = readLock.open()) {
-      if (dataChangeVersion != null) {
-        dataChangeVersion.setVersion(version);
-      }
-      return store.containsKey(key);
-    }
+    return store.containsKey(key);
   }
 
   @Override
   public V get(final String key) {
-    return get(key, null);
-  }
-
-  @Override
-  public V get(final String key, final DataChangeVersion dataChangeVersion) {
-    try (AutoCloseableLock lock = readLock.open()) {
-      if (dataChangeVersion != null) {
-        dataChangeVersion.setVersion(version);
-      }
-      return store.get(key);
-    }
+    return store.get(key);
   }
 
   @Override
   public void put(final String key, final V value) {
-    put(key, value, null);
-  }
-
-  @Override
-  public void put(final String key, final V value, final DataChangeVersion dataChangeVersion) {
-    try (AutoCloseableLock lock = writeLock.open()) {
-      if (dataChangeVersion != null && dataChangeVersion.getVersion() != version) {
-        throw new VersionMismatchException("Version mismatch detected", dataChangeVersion.getVersion());
-      }
-      store.put(key, value);
-      version++;
-    }
+    store.put(key, value);
   }
 
   @Override
   public boolean putIfAbsent(final String key, final V value) {
-    try (AutoCloseableLock lock = writeLock.open()) {
-      final V old = store.putIfAbsent(key, value);
-      if (old == null) {
-        version++;
-        return true;
-      }
-      return false;
+    final V old = store.putIfAbsent(key, value);
+    if (old == null) {
+      return true;
     }
+    return false;
   }
 
   @Override
   public Iterator<Map.Entry<String, V>> getRange(final int skip, final int take) {
-    try (AutoCloseableLock lock = readLock.open()) {
-      return Iterables.limit(Iterables.skip(store.entrySet(), skip), take).iterator();
-    }
+    return Iterables.limit(Iterables.skip(store.entrySet(), skip), take).iterator();
   }
 
   @Override
-  public void close() throws Exception {
-    try (AutoCloseableLock lock = writeLock.open()) {
-      store.clear();
-      version = -1;
-    }
+  public void close() {
+    store.clear();
   }
 }

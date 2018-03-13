@@ -19,10 +19,12 @@ package org.apache.drill.common.concurrent;
 
 import java.util.concurrent.locks.Lock;
 
+import org.apache.drill.common.AutoCloseables.Closeable;
+
 /**
  * Simple wrapper class that allows Locks to be released via an try-with-resources block.
  */
-public class AutoCloseableLock implements AutoCloseable {
+public class AutoCloseableLock implements Closeable {
 
   private final Lock lock;
 
@@ -30,7 +32,7 @@ public class AutoCloseableLock implements AutoCloseable {
     this.lock = lock;
   }
 
-  public AutoCloseableLock open() {
+  public Closeable open() {
     lock.lock();
     return this;
   }
