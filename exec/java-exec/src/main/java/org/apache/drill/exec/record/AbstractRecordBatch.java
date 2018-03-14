@@ -42,7 +42,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final OperatorContext oContext;
   protected final OperatorStats stats;
   protected final boolean unionTypeEnabled;
-
   protected BatchState state;
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context) throws OutOfMemoryException {
