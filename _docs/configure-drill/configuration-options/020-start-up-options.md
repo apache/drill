@@ -1,6 +1,6 @@
 ---
 title: "Start-Up Options"
-date: 2017-08-17 21:20:19 UTC
+date: 2018-03-14 00:58:06 UTC
 parent: "Configuration Options"
 ---
 The start-up options for Drill reside in a [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) configuration file format, which is a hybrid between a properties file and a JSON file. Drill start-up options consist of a group of files with a nested relationship. At the bottom of the file hierarchy are the default files that Drill provides, starting with `drill-default.conf`. 
@@ -56,10 +56,10 @@ The summary of start-up options, also known as boot options, lists default value
   Defines the amount of memory available, in terms of record batches, to hold data on the downstream side of an operation. Drill pushes data downstream as quickly as possible to make data immediately available. This requires Drill to use memory to hold the data pending operations. When data on a downstream operation is required, that data is immediately available so Drill does not have to go over the network to process it. Providing more memory to this option increases the speed at which Drill completes a query.  
   
 * **drill.exe.spill.fs**  
-Introduced in Drill 1.11. The default file system on the local machine into which the Sort and Hash Aggregate operators spill data. This is the recommended option to use for spilling. You can configure this option so that data spills into a distributed file system, such as hdfs. For example, "hdfs:///". The default setting is "file:///". See [Sort-Based and Hash-Based Memory Constrained Operators]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/) for more information.   
+Introduced in Drill 1.11. The default file system on the local machine into which the Sort, Hash Aggregate, and Hash Join operators spill data. This is the recommended option to use for spilling. You can configure this option so that data spills into a distributed file system, such as hdfs. For example, "hdfs:///". The default setting is "file:///". See [Sort-Based and Hash-Based Memory Constrained Operators]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/) for more information.   
   
 * **drill.exec.spill.directories**  
-Introduced in Drill 1.11. The list of directories into which the Sort and Hash Aggregate operators spill data. The list must be an array with directories separated by a comma, for example ["/fs1/drill/spill" , "/fs2/drill/spill" , "/fs3/drill/spill"]. This is the recommended option for spilling to multiple directories. The default setting is ["/tmp/drill/spill"]. See [Sort-Based and Hash-Based Memory Constrained Operators]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/) for more information.  
+Introduced in Drill 1.11. The list of directories into which the Sort, Hash Aggregate, and Hash Join operators spill data. The list must be an array with directories separated by a comma, for example ["/fs1/drill/spill" , "/fs2/drill/spill" , "/fs3/drill/spill"]. This is the recommended option for spilling to multiple directories. The default setting is ["/tmp/drill/spill"]. See [Sort-Based and Hash-Based Memory Constrained Operators]({{site.baseurl}}/docs/sort-based-and-hash-based-memory-constrained-operators/) for more information.  
 
 * **drill.exec.zk.connect**  
   Provides Drill with the ZooKeeper quorum to use to connect to data sources. Change this setting to point to the ZooKeeper quorum that you want Drill to use. You must configure this option on each Drillbit node.  

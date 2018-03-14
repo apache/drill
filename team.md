@@ -43,4 +43,5 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Anil Kumar Batchu | akumarb2010 |  
 | Vitalii Diravka  | vitalii |  
 | Kamesh Bhallamudi | kameshb |  
+| Kunal Khatua | kunal |
 
