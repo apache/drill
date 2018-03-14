@@ -485,6 +485,8 @@
                <exclude>org/yaml/**</exclude>
                <exclude>hello/**</exclude>
                <exclude>webapps/**</exclude>
+               <exclude>**/org/apache/calcite/avatica/metrics/**</exclude>
+               <exclude>**/org/apache/calcite/avatica/org/**</exclude>
              </excludes>
            </filter>
          </filters>
@@ -511,7 +513,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>39000000</maxsize>
+                  <maxsize>38000000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -571,7 +573,7 @@
                           This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                         </message>
-                        <maxsize>37000000</maxsize>
+                        <maxsize>35000000</maxsize>
                         <minsize>15000000</minsize>
                         <files>
                           <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -788,6 +790,8 @@
                       <exclude>org/yaml/**</exclude>
                       <exclude>hello/**</exclude>
                       <exclude>webapps/**</exclude>
+                      <exclude>**/org/apache/calcite/avatica/metrics/**</exclude>
+                      <exclude>**/org/apache/calcite/avatica/org/**</exclude>
                     </excludes>
                   </filter>
                 </filters>
