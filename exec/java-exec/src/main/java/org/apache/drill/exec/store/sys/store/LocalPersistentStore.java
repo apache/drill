@@ -40,6 +40,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
@@ -60,6 +61,8 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 
 public class LocalPersistentStore<V> extends BasePersistentStore<V> {
+  private static final String ARCHIVE_LOCATION = "archived";
+
   private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStore.class);
 
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -75,32 +78,58 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private final PersistentStoreConfig<V> config;
   private final DrillFileSystem fs;
   private int version = -1;
+  private Function<String, Entry<String, V>> transformer;
+
   private TreeSet<String> profilesSet;
   private int profilesSetSize;
+  private PathFilter sysFileSuffixFilter;
 //  private String mostRecentProfile;
   private long basePathLastModified;
   private long lastKnownFileCount;
   private int maxSetCapacity;
   private Stopwatch listAndBuildWatch;
   private Stopwatch transformWatch;
-  private PathFilter sysFileSuffixFilter;
-  private Function<String, Entry<String, V>> transformer;
 
+  private boolean enableArchiving;
+  private Path archivePath;
+  private TreeSet<String> pendingArchivalSet;
+  private int pendingArchivalSetSize;
+  private int archivalThreshold;
+  private int archivalRate;
   private Iterable<Entry<String, V>> iterableProfileSet;
+  private Stopwatch archiveWatch;
 
-  public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config) {
+  public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config, DrillConfig drillConfig) {
     super();
     this.basePath = new Path(base, config.getName());
     this.config = config;
     this.fs = fs;
+    //MRU Profile Cache
     this.profilesSet = new TreeSet<String>();
     this.profilesSetSize= 0;
     this.basePathLastModified = 0L;
     this.lastKnownFileCount = 0L;
     this.sysFileSuffixFilter = new DrillSysFilePathFilter();
     //this.mostRecentProfile = null;
+
+    //Initializing for archiving
+    if (drillConfig != null ) {
+      this.enableArchiving = drillConfig.getBoolean(ExecConstants.PROFILES_STORE_ARCHIVE_ENABLED); //(maxStoreCapacity > 0); //Implicitly infer
+      this.archivalThreshold = drillConfig.getInt(ExecConstants.PROFILES_STORE_CAPACITY);
+      this.archivalRate = drillConfig.getInt(ExecConstants.PROFILES_STORE_ARCHIVE_RATE);
+    } else {
+      this.enableArchiving = false;
+    }
+    this.pendingArchivalSet = new TreeSet<String>();
+    this.pendingArchivalSetSize = 0;
+    this.archivePath = new Path(basePath, ARCHIVE_LOCATION);
+
+    // Timing
     this.listAndBuildWatch = Stopwatch.createUnstarted();
     this.transformWatch = Stopwatch.createUnstarted();
+    this.archiveWatch = Stopwatch.createUnstarted();
+
+    // One time transformer function instantiation
     this.transformer = new Function<String, Entry<String, V>>() {
       @Nullable
       @Override
@@ -109,9 +138,21 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       }
     };
 
+    //Base Dir
     try {
       if (!fs.mkdirs(basePath)) {
         version++;
+      }
+      //Creating Archive if required
+      if (enableArchiving) {
+        try {
+          if (!fs.exists(archivePath)) {
+            fs.mkdirs(archivePath);
+          }
+        } catch (IOException e) {
+          logger.warn("Disabling profile archiving due to failure in creating profile archive {} : {}", archivePath, e);
+          this.enableArchiving = false;
+        }
       }
     } catch (IOException e) {
       throw new RuntimeException("Failure setting pstore configuration path.");
@@ -193,11 +234,22 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
           profilesSet.clear();
           profilesSetSize = 0;
           int profilesInStoreCount = 0;
+
+          if (enableArchiving) {
+            pendingArchivalSet.clear();
+            pendingArchivalSetSize = 0;
+          }
+
           //Constructing TreeMap from List
           for (FileStatus stat : fileStatuses) {
             String profileName = stat.getPath().getName();
             profilesSetSize = addToProfileSet(profileName, profilesSetSize, maxSetCapacity);
             profilesInStoreCount++;
+          }
+
+          //Archive older profiles
+          if (enableArchiving) {
+            archiveProfiles(fs, profilesInStoreCount);
           }
 
           //Report Lag
@@ -224,6 +276,38 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     }
   }
 
+  private void archiveProfiles(DrillFileSystem fs, int profilesInStoreCount) {
+    if (profilesInStoreCount > archivalThreshold) {
+      int pendingArchivalCount = profilesInStoreCount - archivalThreshold;
+      logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", pendingArchivalCount
+          , Math.min(pendingArchivalCount, archivalRate), archivePath);
+      try {
+        if (fs.isDirectory(archivePath)) {
+          int archivedCount = 0;
+          archiveWatch.reset().start(); //Clockig
+          while (archivedCount < archivalRate) {
+            String toArchive = pendingArchivalSet.pollLast() + DRILL_SYS_FILE_SUFFIX;
+            boolean renameStatus = DrillFileSystemUtil.rename(fs, new Path(basePath, toArchive), new Path(archivePath, toArchive));
+            if (!renameStatus) {
+              //Stop attempting any more archiving since other StoreProviders might be archiving
+              logger.error("Move failed for {} from {} to {}", toArchive, basePath.toString(), archivePath.toString());
+              logger.warn("Skip archiving under the assumption that another Drillbit is archiving");
+              break;
+            }
+            archivedCount++;
+          }
+          logger.info("Archived {} profiles to {} in {} ms", archivedCount, archivePath, archiveWatch.stop().elapsed(TimeUnit.MILLISECONDS));
+        } else {
+          logger.error("Unable to archive {} profiles to {}", pendingArchivalSetSize, archivePath.toString());
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    //Clean up
+    pendingArchivalSet.clear();
+  }
+
   /**
    * Add profile name to a TreeSet
    * @param profileName Name of the profile to add
@@ -240,7 +324,34 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       boolean addedProfile = profilesSet.add(profileName.substring(0, profileName.length() - drillSysFileExtSize));
       //Remove existing 'oldest' file
       if (addedProfile) {
-        profilesSet.pollLast();
+        String oldestProfile = profilesSet.pollLast();
+        if (enableArchiving) {
+          addToArchiveSet(oldestProfile, archivalRate);
+        }
+      }
+    }
+    return currentSize;
+  }
+
+  /**
+   * Add profile name to a TreeSet
+   * @param profileName Name of the profile to add
+   * @param currentSize Provided so as to avoid the need to recount
+   * @param maximumCapacity Maximum number of profiles to maintain
+   * @return Current size of tree after addition
+   */
+  private int addToArchiveSet(String profileName, int maximumCapacity) {
+    //TODO make this global
+    int currentSize = pendingArchivalSet.size();
+    //Add if not reached max capacity
+    if (currentSize < maximumCapacity) {
+      pendingArchivalSet.add(profileName);
+      currentSize++;
+    } else {
+      boolean addedProfile = pendingArchivalSet.add(profileName);
+      //Remove existing 'youngest' file
+      if (addedProfile) {
+        pendingArchivalSet.pollFirst();
       }
     }
     return currentSize;
@@ -359,5 +470,4 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   @Override
   public void close() {
   }
-
 }
