@@ -81,7 +81,7 @@ import static org.mockito.Mockito.verify;
 public class TestDynamicUDFSupport extends BaseTestQuery {
 
   private static final Path jars = TestTools.WORKING_PATH
-    .resolve(TestTools.TEST_RESOURCES)
+    .resolve(TestTools.TEST_RESOURCES_REL)
     .resolve("jars");
   private static final String default_binary_name = "DrillUDF-1.0.jar";
   private static final String UDF_SUB_DIR = "udf";

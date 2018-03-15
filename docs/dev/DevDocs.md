@@ -6,4 +6,8 @@ For information about configuring your development enviornment see [Environment.
 
 ## Testing
 
-For information about how to do Integration and Unit Testing in Drill see [Testing.md](Testing.md).
+For information about how to do integration and unit testing in Drill see [Testing.md](Testing.md).
+
+## License Headers
+
+For more information about working with license headers see [LicenseHeaders.md](LicenseHeaders.md)

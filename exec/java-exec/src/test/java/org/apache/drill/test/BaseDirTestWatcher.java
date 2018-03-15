@@ -27,17 +27,31 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
+ * <h4>Overview</h4>
  * <p>
  * This is a {@link DirTestWatcher} which creates all the temporary directories required by a Drillbit and the various <b>dfs.*</b> storage workspaces. It also
  * provides convenience methods that do the following:
- * </p>
  *
  * <ol>
  *   <li>Copy project files to temp directories. This is useful for copying the sample data into a temp directory.</li>
  *   <li>Copy resource files to temp.</li>
  *   <li>Updating parquet metadata files.</li>
  * </ol>
+ * </p>
  *
+ * <p>
+ *   The {@link BaseDirTestWatcher} creates the following directories in the <b>base temp directory</b> (for a description of where the <b>base temp directory</b>
+ *   is located please read the docs for {@link DirTestWatcher}):
+ *
+ *   <ul>
+ *     <li><b>tmp:</b> {@link #getTmpDir()}</li>
+ *     <li><b>store:</b> {@link #getStoreDir()}</li>
+ *     <li><b>root:</b> {@link #getRootDir()}</li>
+ *     <li><b>dfsTestTmp:</b> {@link #getDfsTestTmpDir()}</li>
+ *   </ul>
+ * </p>
+ *
+ * <h4>Examples</h4>
  * <p>
  *   The {@link BaseDirTestWatcher} is used in {@link BaseTestQuery} and an example of how it is used in conjunction with the {@link ClusterFixture} can be found in
  *   {@link ExampleTest}.

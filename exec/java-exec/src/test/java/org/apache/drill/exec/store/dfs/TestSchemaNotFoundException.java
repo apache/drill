@@ -27,7 +27,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testSchemaNotFoundForWrongStoragePlgn() throws Exception {
-        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
+        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES_REL));
         final String query = String.format("select * from dfs1.`%s`", table);
         try {
             testNoResult(query);
@@ -41,7 +41,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testSchemaNotFoundForWrongWorkspace() throws Exception {
-        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
+        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES_REL));
         final String query = String.format("select * from dfs.tmp1.`%s`", table);
         try {
             testNoResult(query);
@@ -55,7 +55,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testSchemaNotFoundForWrongWorkspaceUsingDefaultWorkspace() throws Exception {
-        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
+        final String table = String.format("%s/empty", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES_REL));
         final String query = String.format("select * from tmp1.`%s`", table);
         try {
             testNoResult("use dfs");
@@ -70,7 +70,7 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
 
     @Test(expected = Exception.class)
     public void testTableNotFoundException() throws Exception {
-        final String table = String.format("%s/missing.parquet", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES));
+        final String table = String.format("%s/missing.parquet", TestTools.WORKING_PATH.resolve(TestTools.TEST_RESOURCES_REL));
         final String query = String.format("select * from tmp.`%s`", table);
         try {
             testNoResult("use dfs");

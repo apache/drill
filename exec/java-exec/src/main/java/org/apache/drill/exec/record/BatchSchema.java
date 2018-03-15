@@ -25,6 +25,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
+/**
+ * Historically {@link BatchSchema} is used to represent the schema of a batch. However, it does not handle complex types well. If you have a choice, use
+ * {@link org.apache.drill.exec.record.metadata.TupleMetadata} instead.
+ */
 public class BatchSchema implements Iterable<MaterializedField> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
 
