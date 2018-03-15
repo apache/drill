@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2018-03-14 01:21:10 UTC
+date: 2018-03-15 17:08:44 UTC
 parent: "Query Plans and Tuning"
 --- 
 
@@ -19,7 +19,7 @@ When the Sort, Hash Aggregate, and Hash Join operators finish processing the dat
 
 Ideally, you want to allocate enough memory for Drill to perform all operations in memory. When data spills to disk, you will not see any difference in terms of how queries run, however spilling to disk can impact performance due to the additional I/O required to write data to disk and read the data back. See Memory Allocation (page 4) for more information. 
 
-**Note:** Drill 1.14 and later supports spilling to disk for the Hash Join, Hash Aggregate, and Sort operators. Drill 1.11 and 1.12 supports spilling to disk for the Hash Aggregate and Sort operators. Releases of Drill prior to 1.11 only support spilling to disk for the Sort operator.  
+**Note:** Drill 1.14 and later supports spilling to disk for the Hash Join, Hash Aggregate, and Sort operators. Drill 1.11, 1.12, and 1.13 supports spilling to disk for the Hash Aggregate and Sort operators. Releases of Drill prior to 1.11 only support spilling to disk for the Sort operator.  
 
 **Spill Locations** 
 
