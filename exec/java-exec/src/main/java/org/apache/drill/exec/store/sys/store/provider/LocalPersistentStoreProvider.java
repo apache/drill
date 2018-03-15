@@ -41,6 +41,8 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
   // This flag is used in testing. Ideally, tests should use a specific PersistentStoreProvider that knows
   // how to handle this flag.
   private final boolean enableWrite;
+  //Config reference for archiving
+  private final DrillConfig drillConfig;
 
   public LocalPersistentStoreProvider(final PersistentStoreRegistry<?> registry) throws StoreException {
     this(registry.getConfig());
@@ -48,6 +50,7 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
 
   public LocalPersistentStoreProvider(final DrillConfig config) throws StoreException {
     this.path = new Path(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
+    this.drillConfig = config;
     this.enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
     try {
       this.fs = LocalPersistentStore.getFileSystem(config, path);
@@ -62,7 +65,7 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
     case BLOB_PERSISTENT:
     case PERSISTENT:
       if (enableWrite) {
-        return new LocalPersistentStore<>(fs, path, storeConfig);
+        return new LocalPersistentStore<>(fs, path, storeConfig, drillConfig);
       }
       return new NoWriteLocalStore<>();
     default:

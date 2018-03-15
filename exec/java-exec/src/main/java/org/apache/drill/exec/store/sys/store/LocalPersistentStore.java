@@ -28,7 +28,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.Nullable;
@@ -37,46 +40,119 @@ import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Iterables;
+
 public class LocalPersistentStore<V> extends BasePersistentStore<V> {
+  private static final String ARCHIVE_LOCATION = "archived";
+
   private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStore.class);
 
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
+  private final AutoCloseableLock readCachedProfilesLock = new AutoCloseableLock(new ReentrantLock());
 
+  //Provides a threshold above which we report the time to load
+  private static final long RESPONSE_TIME_THRESHOLD_MSEC = 2000L;
+
+  private static final int drillSysFileExtSize = DRILL_SYS_FILE_SUFFIX.length();
   private final Path basePath;
   private final PersistentStoreConfig<V> config;
   private final DrillFileSystem fs;
   private int version = -1;
+  private Function<String, Entry<String, V>> transformer;
 
-  public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config) {
+  private TreeSet<String> profilesSet;
+  private int profilesSetSize;
+  private PathFilter sysFileSuffixFilter;
+//  private String mostRecentProfile;
+  private long basePathLastModified;
+  private long lastKnownFileCount;
+  private int maxSetCapacity;
+  private Stopwatch listAndBuildWatch;
+  private Stopwatch transformWatch;
+
+  private boolean enableArchiving;
+  private Path archivePath;
+  private TreeSet<String> pendingArchivalSet;
+  private int pendingArchivalSetSize;
+  private int archivalThreshold;
+  private int archivalRate;
+  private Iterable<Entry<String, V>> iterableProfileSet;
+  private Stopwatch archiveWatch;
+
+  public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config, DrillConfig drillConfig) {
     super();
     this.basePath = new Path(base, config.getName());
     this.config = config;
     this.fs = fs;
+    //MRU Profile Cache
+    this.profilesSet = new TreeSet<String>();
+    this.profilesSetSize= 0;
+    this.basePathLastModified = 0L;
+    this.lastKnownFileCount = 0L;
+    this.sysFileSuffixFilter = new DrillSysFilePathFilter();
+    //this.mostRecentProfile = null;
 
+    //Initializing for archiving
+    if (drillConfig != null ) {
+      this.enableArchiving = drillConfig.getBoolean(ExecConstants.PROFILES_STORE_ARCHIVE_ENABLED); //(maxStoreCapacity > 0); //Implicitly infer
+      this.archivalThreshold = drillConfig.getInt(ExecConstants.PROFILES_STORE_CAPACITY);
+      this.archivalRate = drillConfig.getInt(ExecConstants.PROFILES_STORE_ARCHIVE_RATE);
+    } else {
+      this.enableArchiving = false;
+    }
+    this.pendingArchivalSet = new TreeSet<String>();
+    this.pendingArchivalSetSize = 0;
+    this.archivePath = new Path(basePath, ARCHIVE_LOCATION);
+
+    // Timing
+    this.listAndBuildWatch = Stopwatch.createUnstarted();
+    this.transformWatch = Stopwatch.createUnstarted();
+    this.archiveWatch = Stopwatch.createUnstarted();
+
+    // One time transformer function instantiation
+    this.transformer = new Function<String, Entry<String, V>>() {
+      @Nullable
+      @Override
+      public Entry<String, V> apply(String key) {
+        return new ImmutableEntry<>(key, get(key));
+      }
+    };
+
+    //Base Dir
     try {
       if (!fs.mkdirs(basePath)) {
         version++;
+      }
+      //Creating Archive if required
+      if (enableArchiving) {
+        try {
+          if (!fs.exists(archivePath)) {
+            fs.mkdirs(archivePath);
+          }
+        } catch (IOException e) {
+          logger.warn("Disabling profile archiving due to failure in creating profile archive {} : {}", archivePath, e);
+          this.enableArchiving = false;
+        }
       }
     } catch (IOException e) {
       throw new RuntimeException("Failure setting pstore configuration path.");
@@ -114,47 +190,178 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
-    try (AutoCloseableLock lock = readLock.open()) {
+    //Marking currently seen modification time
+    long currBasePathModified = 0L;
+    try {
+      currBasePathModified = fs.getFileStatus(basePath).getModificationTime();
+    } catch (IOException e) {
+      logger.error("Failed to get FileStatus for {}", basePath, e);
+      throw new RuntimeException(e);
+    }
+
+    logger.info("Requesting thread: {}-{}" , Thread.currentThread().getName(), Thread.currentThread().getId());
+    //Acquiring lock to avoid reloading for request coming in before completion of profile read
+    try (AutoCloseableLock lock = readCachedProfilesLock.open()) {
       try {
-        // list only files with sys file suffix
-        PathFilter sysFileSuffixFilter = new PathFilter() {
-          @Override
-          public boolean accept(Path path) {
-            return path.getName().endsWith(DRILL_SYS_FILE_SUFFIX);
+        long expectedFileCount = fs.getFileStatus(basePath).getLen();
+        logger.debug("Current ModTime: {} (Last known ModTime: {})", currBasePathModified, basePathLastModified);
+        logger.debug("Expected {} files (Last known {} files)", expectedFileCount, lastKnownFileCount);
+
+        //Force-read list of profiles based on change of any of the 3 states
+        if (this.basePathLastModified < currBasePathModified  //Has ModificationTime changed?
+            || this.lastKnownFileCount != expectedFileCount   //Has Profile Count changed?
+            || (skip + take) > maxSetCapacity ) {             //Does requestSize exceed current cached size
+
+          if (maxSetCapacity < (skip + take)) {
+            logger.debug("Updating last Max Capacity from {} to {}", maxSetCapacity , (skip + take) );
+            maxSetCapacity = skip + take;
           }
-        };
+          //Mark Start Time
+          listAndBuildWatch.reset().start();
 
-        List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, sysFileSuffixFilter);
-        if (fileStatuses.isEmpty()) {
-          return Collections.emptyIterator();
-        }
-
-        List<String> files = Lists.newArrayList();
-        for (FileStatus stat : fileStatuses) {
-          String s = stat.getPath().getName();
-          files.add(s.substring(0, s.length() - DRILL_SYS_FILE_SUFFIX.length()));
-        }
-
-        Collections.sort(files);
-
-        return Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), new Function<String, Entry<String, V>>() {
-          @Nullable
-          @Override
-          public Entry<String, V> apply(String key) {
-            return new ImmutableEntry<>(key, get(key));
+          //Listing ALL DrillSysFiles
+          //Can apply MostRecentProfile name as filter. Unfortunately, Hadoop (2.7.1) currently doesn't leverage this to speed up
+          List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false,
+              sysFileSuffixFilter
+              );
+          //Checking if empty
+          if (fileStatuses.isEmpty()) {
+            //WithoutFilter::
+            return Collections.emptyIterator();
           }
-        }).iterator();
+          //Force a reload of the profile.
+          //Note: We shouldn't need to do this if the load is incremental (i.e. using mostRecentProfile)
+          profilesSet.clear();
+          profilesSetSize = 0;
+          int profilesInStoreCount = 0;
+
+          if (enableArchiving) {
+            pendingArchivalSet.clear();
+            pendingArchivalSetSize = 0;
+          }
+
+          //Constructing TreeMap from List
+          for (FileStatus stat : fileStatuses) {
+            String profileName = stat.getPath().getName();
+            profilesSetSize = addToProfileSet(profileName, profilesSetSize, maxSetCapacity);
+            profilesInStoreCount++;
+          }
+
+          //Archive older profiles
+          if (enableArchiving) {
+            archiveProfiles(fs, profilesInStoreCount);
+          }
+
+          //Report Lag
+          if (listAndBuildWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
+            logger.warn("Took {} ms to list&map from {} profiles (out of {} profiles in store)", listAndBuildWatch.elapsed(TimeUnit.MILLISECONDS)
+                , profilesSetSize, profilesInStoreCount);
+          }
+          //Recording last checked modified time and the most recent profile
+          basePathLastModified = currBasePathModified;
+          /*TODO: mostRecentProfile = profilesSet.first();*/
+          lastKnownFileCount = expectedFileCount;
+
+          //Transform profileSet for consumption
+          transformWatch.start();
+          iterableProfileSet = Iterables.transform(profilesSet, transformer);
+          if (transformWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
+            logger.warn("Took {} ms to transform {} profiles", transformWatch.elapsed(TimeUnit.MILLISECONDS), profilesSetSize);
+          }
+        }
+        return iterableProfileSet.iterator();
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
     }
   }
 
+  private void archiveProfiles(DrillFileSystem fs, int profilesInStoreCount) {
+    if (profilesInStoreCount > archivalThreshold) {
+      int pendingArchivalCount = profilesInStoreCount - archivalThreshold;
+      logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", pendingArchivalCount
+          , Math.min(pendingArchivalCount, archivalRate), archivePath);
+      try {
+        if (fs.isDirectory(archivePath)) {
+          int archivedCount = 0;
+          archiveWatch.reset().start(); //Clockig
+          while (archivedCount < archivalRate) {
+            String toArchive = pendingArchivalSet.pollLast() + DRILL_SYS_FILE_SUFFIX;
+            boolean renameStatus = DrillFileSystemUtil.rename(fs, new Path(basePath, toArchive), new Path(archivePath, toArchive));
+            if (!renameStatus) {
+              //Stop attempting any more archiving since other StoreProviders might be archiving
+              logger.error("Move failed for {} from {} to {}", toArchive, basePath.toString(), archivePath.toString());
+              logger.warn("Skip archiving under the assumption that another Drillbit is archiving");
+              break;
+            }
+            archivedCount++;
+          }
+          logger.info("Archived {} profiles to {} in {} ms", archivedCount, archivePath, archiveWatch.stop().elapsed(TimeUnit.MILLISECONDS));
+        } else {
+          logger.error("Unable to archive {} profiles to {}", pendingArchivalSetSize, archivePath.toString());
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    //Clean up
+    pendingArchivalSet.clear();
+  }
+
+  /**
+   * Add profile name to a TreeSet
+   * @param profileName Name of the profile to add
+   * @param currentSize Provided so as to avoid the need to recount
+   * @param maximumCapacity Maximum number of profiles to maintain
+   * @return Current size of tree after addition
+   */
+  private int addToProfileSet(String profileName, int currentSize, int maximumCapacity) {
+    //Add if not reached max capacity
+    if (currentSize < maximumCapacity) {
+      profilesSet.add(profileName.substring(0, profileName.length() - drillSysFileExtSize));
+      currentSize++;
+    } else {
+      boolean addedProfile = profilesSet.add(profileName.substring(0, profileName.length() - drillSysFileExtSize));
+      //Remove existing 'oldest' file
+      if (addedProfile) {
+        String oldestProfile = profilesSet.pollLast();
+        if (enableArchiving) {
+          addToArchiveSet(oldestProfile, archivalRate);
+        }
+      }
+    }
+    return currentSize;
+  }
+
+  /**
+   * Add profile name to a TreeSet
+   * @param profileName Name of the profile to add
+   * @param currentSize Provided so as to avoid the need to recount
+   * @param maximumCapacity Maximum number of profiles to maintain
+   * @return Current size of tree after addition
+   */
+  private int addToArchiveSet(String profileName, int maximumCapacity) {
+    //TODO make this global
+    int currentSize = pendingArchivalSet.size();
+    //Add if not reached max capacity
+    if (currentSize < maximumCapacity) {
+      pendingArchivalSet.add(profileName);
+      currentSize++;
+    } else {
+      boolean addedProfile = pendingArchivalSet.add(profileName);
+      //Remove existing 'youngest' file
+      if (addedProfile) {
+        pendingArchivalSet.pollFirst();
+      }
+    }
+    return currentSize;
+  }
+
   private Path makePath(String name) {
     Preconditions.checkArgument(
         !name.contains("/") &&
-            !name.contains(":") &&
-            !name.contains(".."));
+        !name.contains(":") &&
+        !name.contains(".."));
     return new Path(basePath, name + DRILL_SYS_FILE_SUFFIX);
   }
 
@@ -263,5 +470,4 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   @Override
   public void close() {
   }
-
 }

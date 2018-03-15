@@ -136,6 +136,18 @@ public class FileSystemUtil {
   }
 
   /**
+   * Helper method that will rename/move file specified in the source path to a destination path
+   *
+   * @param fs current file system
+   * @param src path to source
+   * @param dst path to destination
+   * @return status of rename/move
+   */
+  public static boolean rename(FileSystem fs, Path src, Path dst) throws IOException {
+    return fs.rename(src, dst);
+  }
+
+  /**
    * Helper method that will store in given holder statuses of all directories present in given path applying custom filter.
    * If recursive flag is set to true, will call itself recursively to add statuses of nested directories.
    *
