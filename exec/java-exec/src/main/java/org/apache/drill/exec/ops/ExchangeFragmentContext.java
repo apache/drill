@@ -21,6 +21,9 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
+/**
+ * This provides the resources required by an exchange operator.
+ */
 public interface ExchangeFragmentContext extends FragmentContext {
   void waitForSendComplete();
 

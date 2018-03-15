@@ -35,6 +35,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <h4>Overview</h4>
+ * <p>
+ *   Builds a json file containing the data in a {@link RowSet}.
+ * </p>
+ * <h4>Example</h4>
+ * <p>
+ *   You can find an example of how to use {@link JsonFileBuilder} at {@link org.apache.drill.test.ExampleTest#secondTest()}.
+ * </p>
+ */
 public class JsonFileBuilder
 {
   public static final String DEFAULT_DOUBLE_FORMATTER = "%f";
@@ -57,11 +67,22 @@ public class JsonFileBuilder
   private final RowSet rowSet;
   private final Map<String, String> customFormatters = Maps.newHashMap();
 
+  /**
+   * Creates a {@link JsonFileBuilder} that will write the given {@link RowSet} to a file.
+   *
+   * @param rowSet The {@link RowSet} to be written to a file.
+   */
   public JsonFileBuilder(RowSet rowSet) {
     this.rowSet = Preconditions.checkNotNull(rowSet);
     Preconditions.checkArgument(rowSet.rowCount() > 0, "The given rowset is empty.");
   }
 
+  /**
+   * Sets a custom formatter for a column using {@link String#format(String, Object...)} notation.
+   * @param columnName The name of the column to change the formatter for.
+   * @param columnFormatter The {@link String#format(String, Object...)} to use when writing a column value to the json file.
+   * @return The {@link JsonFileBuilder}.
+   */
   public JsonFileBuilder setCustomFormatter(final String columnName, final String columnFormatter) {
     Preconditions.checkNotNull(columnName);
     Preconditions.checkNotNull(columnFormatter);
@@ -86,6 +107,11 @@ public class JsonFileBuilder
     return this;
   }
 
+  /**
+   * Writes the configured data to the given file in json format.
+   * @param tableFile The file to write the json data to.
+   * @throws IOException
+   */
   public void build(File tableFile) throws IOException {
     tableFile.getParentFile().mkdirs();
 

@@ -69,9 +69,31 @@ import com.google.common.collect.Maps;
 import io.netty.buffer.DrillBuf;
 
 /**
- * Contextual objects required for execution of a particular fragment.
- * This is the implementation; use <tt>FragmentContext</tt>
- * in code to allow tests to use test-time implementations.
+ * <p>
+ *   This is the core Context which implements all the Context interfaces:
+ *
+ *   <ul>
+ *     <li>{@link FragmentContext}: A context provided to non-exchange operators.</li>
+ *     <li>{@link ExchangeFragmentContext}: A context provided to exchange operators.</li>
+ *     <li>{@link RootFragmentContext}: A context provided to fragment roots.</li>
+ *     <li>{@link ExecutorFragmentContext}: A context used by the Drillbit.</li>
+ *   </ul>
+ *
+ *   The interfaces above expose resources to varying degrees. They are ordered from most restrictive ({@link FragmentContext})
+ *   to least restrictive ({@link ExecutorFragmentContext}).
+ * </p>
+ * <p>
+ *   Since {@link FragmentContextImpl} implements all of the interfaces listed above, the facade pattern is used in order
+ *   to cast a {@link FragmentContextImpl} object to the desired interface where-ever it is needed. The facade pattern
+ *   is powerful since it allows us to easily create minimal context objects to be used in unit tests. Without
+ *   the use of interfaces and the facade pattern we would have to create a complete {@link FragmentContextImpl} object
+ *   to unit test any part of the code that depends on a context.
+ * </p>
+ * <p>
+ *  <b>General guideline:</b> Use the most narrow interface for the task. For example, "internal" operators don't need visibility to the networking functionality.
+ *  Using the narrow interface allows unit testing without using mocking libraries. Often, the surrounding structure already has exposed the most narrow interface. If there are
+ *  opportunities to clean up older code, we can do so as needed to make testing easier.
+ * </p>
  */
 public class FragmentContextImpl extends BaseFragmentContext implements ExecutorFragmentContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContextImpl.class);

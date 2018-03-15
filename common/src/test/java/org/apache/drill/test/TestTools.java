@@ -34,9 +34,12 @@ public class TestTools {
     PROJECT
   }
 
-  public static final Path TEST_RESOURCES = Paths.get("src", "test", "resources");
+  public static final Path TEST_RESOURCES_REL = Paths.get("src", "test", "resources");
   public static final Path PROJECT_ROOT = Paths.get("..", "..");
   public static final Path WORKING_PATH = new File(".").toPath();
+
+  public static final Path TEST_RESOURCES_ABS = WORKING_PATH.resolve(TEST_RESOURCES_REL);
+  public static final Path SAMPLE_DATA = PROJECT_ROOT.resolve("sample-data");
 
   static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean()
     .getInputArguments()
@@ -56,7 +59,7 @@ public class TestTools {
 
   public static File getResourceFile(Path relPath) {
     return WORKING_PATH
-      .resolve(TEST_RESOURCES)
+      .resolve(TEST_RESOURCES_REL)
       .resolve(relPath)
       .toFile();
   }

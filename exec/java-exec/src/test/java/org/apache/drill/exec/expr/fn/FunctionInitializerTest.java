@@ -59,7 +59,7 @@ public class FunctionInitializerTest {
   @BeforeClass
   public static void init() throws Exception {
     Path jars = TestTools.WORKING_PATH
-      .resolve(TestTools.TEST_RESOURCES)
+      .resolve(TestTools.TEST_RESOURCES_REL)
       .resolve("jars");
     String binaryName = "DrillUDF-1.0.jar";
     String sourceName = JarUtil.getSourceName(binaryName);
