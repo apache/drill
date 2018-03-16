@@ -804,4 +804,27 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   }
 
+  /**
+   * Test to verify that record batch sizer handles the actual empty vectors correctly. RowSetBuilder by default
+   * allocates Drillbuf of 10bytes for each vector type which makes their capacity >0 and not ==0 which will be in
+   * case of empty vectors.
+   */
+  @Test
+  public void testEmptyVariableWidthVector() {
+    BatchSchema schema = new SchemaBuilder()
+      .add("key", MinorType.INT)
+      .add("value", MinorType.VARCHAR)
+      .build();
+
+    RowSetBuilder builder = fixture.rowSetBuilder(schema);
+    RowSet rows = builder.build();
+
+    // Release the inital bytes allocated by RowSetBuilder
+    VectorAccessibleUtilities.clear(rows.container());
+
+    // Run the record batch sizer on the resulting batch.
+    RecordBatchSizer sizer = new RecordBatchSizer(rows.container());
+    assertEquals(2, sizer.columns().size());
+    rows.clear();
+  }
 }

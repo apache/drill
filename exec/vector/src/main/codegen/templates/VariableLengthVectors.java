@@ -111,9 +111,15 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return data.capacity();
   }
 
+  /**
+  * Return the number of bytes contained in the current var len byte vector.
+  * TODO: Remove getVarByteLength with it's implementation after all client's are moved to using getCurrentSizeInBytes.
+  * It's kept as is to preserve backward compatibility
+  * @return
+  */
   @Override
   public int getCurrentSizeInBytes() {
-    return offsetVector.getAccessor().get(getAccessor().getValueCount());
+    return getVarByteLength();
   }
 
   /**
