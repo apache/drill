@@ -1194,20 +1194,267 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
       // Allocates to nearest power of two
       colSize.allocateVector(v, testRowCount);
+
+      // offset vector of delegate vector i.e. outer array should have row count number of values.
       UInt4Vector offsetVector = ((RepeatedListVector) v).getOffsetVector();
-      assertEquals((Integer.highestOneBit(testRowCount * 2) << 1), offsetVector.getValueCapacity());
-      ValueVector dataVector = ((RepeatedValueVector) v).getDataVector();
-      assertEquals(Integer.highestOneBit((testRowCount * 2)  << 1) - 1, dataVector.getValueCapacity());
+      assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
+
+      // Get inner vector of delegate vector.
+      ValueVector vector = ((RepeatedValueVector) v).getDataVector();
+
+      // Data vector of inner vector should
+      // have 2 (outer array cardinality) * 4 (inner array cardinality) * row count number of values.
+      ValueVector dataVector = ((RepeatedValueVector) vector).getDataVector();
+      assertEquals(Integer.highestOneBit((testRowCount*8)  << 1), dataVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * row count number of values.
+      offsetVector = ((RepeatedValueVector) vector).getOffsetVector();
+      assertEquals((Integer.highestOneBit(testRowCount*2) << 1), offsetVector.getValueCapacity());
       v.clear();
 
       // Allocates the same as value passed since it is already power of two.
       // -1 is done for adjustment needed for offset vector.
       colSize.allocateVector(v, testRowCountPowerTwo - 1);
+
+      // offset vector of delegate vector i.e. outer array should have row count number of values.
       offsetVector = ((RepeatedListVector) v).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
-      dataVector = ((RepeatedValueVector) v).getDataVector();
-      assertEquals(Integer.highestOneBit(testRowCountPowerTwo)-1, dataVector.getValueCapacity());
+
+      // Get inner vector of delegate vector.
+      vector = ((RepeatedValueVector) v).getDataVector();
+
+      // Data vector of inner vector should
+      // have 2 (outer array cardinality) * 4 (inner array cardinality) * row count number of values.
+      dataVector = ((RepeatedValueVector) vector).getDataVector();
+      assertEquals(testRowCountPowerTwo * 8, dataVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * row count number of values.
+      offsetVector = ((RepeatedValueVector) vector).getOffsetVector();
+      assertEquals(testRowCountPowerTwo * 2, offsetVector.getValueCapacity());
+      v.clear();
+
+      // MAX ROW COUNT
+      colSize.allocateVector(v, ValueVector.MAX_ROW_COUNT - 1);
+
+      // offset vector of delegate vector i.e. outer array should have row count number of values.
+      offsetVector = ((RepeatedListVector) v).getOffsetVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
+
+      // Get inner vector of delegate vector.
+      vector = ((RepeatedValueVector) v).getDataVector();
+
+      // Data vector of inner vector should
+      // have 2 (outer array cardinality) * 4 (inner array cardinality) * row count number of values.
+      dataVector = ((RepeatedValueVector) vector).getDataVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT*8, dataVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * row count number of values.
+      offsetVector = ((RepeatedValueVector) vector).getOffsetVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT*2, offsetVector.getValueCapacity());
+      v.clear();
+
+      // MIN ROW COUNT
+      colSize.allocateVector(v, 0);
+
+      // offset vector of delegate vector i.e. outer array should have 1 value.
+      offsetVector = ((RepeatedListVector) v).getOffsetVector();
+      assertEquals(ValueVector.MIN_ROW_COUNT, offsetVector.getValueCapacity());
+
+      // Get inner vector of delegate vector.
+      vector = ((RepeatedValueVector) v).getDataVector();
+
+      // Data vector of inner vector should have 1 value
+      dataVector = ((RepeatedValueVector) vector).getDataVector();
+      assertEquals(ValueVector.MIN_ROW_COUNT, dataVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * 1.
+      offsetVector = ((RepeatedValueVector) vector).getOffsetVector();
+      assertEquals(ValueVector.MIN_ROW_COUNT*2, offsetVector.getValueCapacity());
       v.clear();
     }
   }
+
+  @Test
+  public void testSizerRepeatedRepeatedList() throws Exception {
+    List<String> inputJsonBatches = Lists.newArrayList();
+    StringBuilder batchString = new StringBuilder();
+
+    StringBuilder newString = new StringBuilder();
+    newString.append("[ [[1,2,3,4], [5,6,7,8]], [[1,2,3,4], [5,6,7,8]] ]");
+
+    numRows = 9;
+    batchString.append("[");
+    for (int i = 0; i < numRows; i++) {
+      batchString.append("{\"c\" : " + newString);
+      batchString.append("},");
+    }
+    batchString.append("{\"c\" : " + newString);
+    batchString.append("}");
+
+    batchString.append("]");
+    inputJsonBatches.add(batchString.toString());
+
+    // Create a dummy scanBatch to figure out the size.
+    RecordBatch scanBatch = new ScanBatch(new MockPhysicalOperator(),
+      fragContext, getReaderListForJsonBatches(inputJsonBatches, fragContext));
+
+    VectorAccessible va = new BatchIterator(scanBatch).iterator().next();
+    RecordBatchSizer sizer = new RecordBatchSizer(va);
+
+    assertEquals(1, sizer.columns().size());
+    RecordBatchSizer.ColumnSize column = sizer.columns().get("c");
+    assertNotNull(column);
+
+    /**
+     * stdDataSize:8*10*10*10, stdNetSize:8*10*10*10 + 8*10*10 + 8*10 + 4,
+     * dataSizePerEntry:16*8, netSizePerEntry:16*8 + 16*4 + 4*2 + 4*2,
+     * totalDataSize:16*8*10, totalNetSize:netSizePerEntry*10, valueCount:10,
+     * elementCount:10, estElementCountPerArray:1, isVariableWidth:false
+     */
+    assertEquals(8000, column.getStdDataSizePerEntry());
+    assertEquals(8884, column.getStdNetSizePerEntry());
+    assertEquals(128, column.getDataSizePerEntry());
+    assertEquals(156, column.getNetSizePerEntry());
+    assertEquals(1280, column.getTotalDataSize());
+    assertEquals(1560, column.getTotalNetSize());
+    assertEquals(10, column.getValueCount());
+    assertEquals(20, column.getElementCount());
+    assertEquals(2, column.getCardinality(), 0.01);
+    assertEquals(false, column.isVariableWidth());
+
+    final int testRowCount = 1000;
+    final int testRowCountPowerTwo = 2048;
+
+    for (VectorWrapper<?> vw : va) {
+      ValueVector v = vw.getValueVector();
+      v.clear();
+
+      RecordBatchSizer.ColumnSize colSize = sizer.getColumn(v.getField().getName());
+
+      // Allocates to nearest power of two
+      colSize.allocateVector(v, testRowCount);
+
+      // offset vector of delegate vector i.e. outer array should have row count number of values.
+      UInt4Vector offsetVector = ((RepeatedListVector) v).getOffsetVector();
+      assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
+
+      // Get data vector of delegate vector. This is repeated list again
+      ValueVector dataVector = ((RepeatedListVector) v).getDataVector();
+
+      // offset vector of delegate vector of the inner repeated list
+      // This should have row count * 2 number of values.
+      offsetVector = ((RepeatedListVector) dataVector).getOffsetVector();
+      assertEquals((Integer.highestOneBit(testRowCount*2) << 1), offsetVector.getValueCapacity());
+
+      // Data vector of inner vector should have row count * 2 number of values - 1 (for offset vector adjustment).
+      ValueVector innerDataVector = ((RepeatedValueVector) dataVector).getDataVector();
+      assertEquals((Integer.highestOneBit((testRowCount*2)  << 1) - 1), dataVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * 2 (inner array cardinality) * row count number of values.
+      offsetVector = ((RepeatedValueVector) innerDataVector).getOffsetVector();
+      assertEquals((Integer.highestOneBit(testRowCount*4) << 1), offsetVector.getValueCapacity());
+
+      // Data vector of inner vector should
+      // have 2 (outer array cardinality) * 2 (inner array cardinality)  * row count number of values.
+      dataVector = ((RepeatedValueVector) innerDataVector).getDataVector();
+      assertEquals(Integer.highestOneBit(testRowCount << 1) * 16, dataVector.getValueCapacity());
+
+      v.clear();
+
+      // Allocates the same as value passed since it is already power of two.
+      // -1 is done for adjustment needed for offset vector.
+      colSize.allocateVector(v, testRowCountPowerTwo - 1);
+
+      // offset vector of delegate vector i.e. outer array should have row count number of values.
+      offsetVector = ((RepeatedListVector) v).getOffsetVector();
+      assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
+
+      // Get data vector of delegate vector. This is repeated list again
+      dataVector = ((RepeatedListVector) v).getDataVector();
+
+      // offset vector of delegate vector of the inner repeated list
+      // This should have row count * 2 number of values.
+      offsetVector = ((RepeatedListVector) dataVector).getOffsetVector();
+      assertEquals(testRowCountPowerTwo*2, offsetVector.getValueCapacity());
+
+      // Data vector of inner vector should have row count * 2 number of values - 1 (for offset vector adjustment).
+      innerDataVector = ((RepeatedValueVector) dataVector).getDataVector();
+      assertEquals(testRowCountPowerTwo*2 - 1, dataVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * 2 (inner array cardinality) * row count number of values.
+      offsetVector = ((RepeatedValueVector) innerDataVector).getOffsetVector();
+      assertEquals(testRowCountPowerTwo*4, offsetVector.getValueCapacity());
+
+      // Data vector of inner vector should
+      // have 2 (outer array cardinality) * 2 (inner array cardinality)  * row count number of values.
+      dataVector = ((RepeatedValueVector) innerDataVector).getDataVector();
+      assertEquals(testRowCountPowerTwo * 16, dataVector.getValueCapacity());
+
+      v.clear();
+
+      // MAX ROW COUNT
+      colSize.allocateVector(v, ValueVector.MAX_ROW_COUNT - 1);
+
+      // offset vector of delegate vector i.e. outer array should have row count number of values.
+      offsetVector = ((RepeatedListVector) v).getOffsetVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
+
+      // Get data vector of delegate vector. This is repeated list again
+      dataVector = ((RepeatedListVector) v).getDataVector();
+
+      // offset vector of delegate vector of the inner repeated list
+      // This should have row count * 2 number of values.
+      offsetVector = ((RepeatedListVector) dataVector).getOffsetVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT*2, offsetVector.getValueCapacity());
+
+      // Data vector of inner vector should have row count * 2 number of values - 1 (for offset vector adjustment).
+      innerDataVector = ((RepeatedValueVector) dataVector).getDataVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT*2 - 1, dataVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * 2 (inner array cardinality) * row count number of values.
+      offsetVector = ((RepeatedValueVector) innerDataVector).getOffsetVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT*4, offsetVector.getValueCapacity());
+
+      // Data vector of inner vector should
+      // have 2 (outer array cardinality) * 2 (inner array cardinality)  * row count number of values.
+      dataVector = ((RepeatedValueVector) innerDataVector).getDataVector();
+      assertEquals(ValueVector.MAX_ROW_COUNT*16, dataVector.getValueCapacity());
+
+      v.clear();
+
+      // MIN ROW COUNT
+      colSize.allocateVector(v, 0);
+
+      // offset vector of delegate vector i.e. outer array should have 1 value.
+      offsetVector = ((RepeatedListVector) v).getOffsetVector();
+      assertEquals(ValueVector.MIN_ROW_COUNT, offsetVector.getValueCapacity());
+
+      // Get data vector of delegate vector. This is repeated list again
+      dataVector = ((RepeatedListVector) v).getDataVector();
+
+      // offset vector of delegate vector of the inner repeated list
+      offsetVector = ((RepeatedListVector) dataVector).getOffsetVector();
+      assertEquals(ValueVector.MIN_ROW_COUNT, offsetVector.getValueCapacity());
+
+      // offset vector of inner vector should have
+      // 2 (outer array cardinality) * 1.
+      offsetVector = ((RepeatedValueVector) innerDataVector).getOffsetVector();
+      assertEquals(ValueVector.MIN_ROW_COUNT*2, offsetVector.getValueCapacity());
+
+      // Data vector of inner vector should 1 value.
+      dataVector = ((RepeatedValueVector) innerDataVector).getDataVector();
+      assertEquals(ValueVector.MIN_ROW_COUNT, dataVector.getValueCapacity());
+
+      v.clear();
+
+    }
+  }
+
 }
