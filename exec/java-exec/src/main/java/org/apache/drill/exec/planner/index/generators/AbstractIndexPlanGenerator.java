@@ -30,7 +30,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationTraitDef;
-import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -43,16 +42,19 @@ import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillSortRel;
 import org.apache.drill.exec.planner.common.DrillProjectRelBase;
+import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.physical.SubsetTransformer;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.Prule;
+import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.SortPrel;
 import org.apache.drill.exec.planner.physical.HashToMergeExchangePrel;
 import org.apache.drill.exec.planner.physical.SingleMergeExchangePrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.planner.physical.Prule;
-import org.apache.drill.exec.planner.physical.SubsetTransformer;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
+import org.apache.drill.exec.planner.physical.TopNPrel;
+import org.apache.drill.exec.planner.physical.SortPrel;
+import org.apache.drill.exec.planner.physical.LimitPrel;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -67,7 +69,6 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
   final protected DrillProjectRelBase origProject;
   final protected DrillScanRelBase origScan;
   final protected DrillProjectRelBase upperProject;
-  final protected RelNode origSort;
 
   final protected RexNode indexCondition;
   final protected RexNode remainderCondition;
@@ -84,7 +85,6 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
     this.origProject = indexContext.getLowerProject();
     this.origScan = indexContext.getScan();
     this.upperProject = indexContext.getUpperProject();
-    this.origSort = indexContext.getSort();
     this.indexCondition = indexCondition;
     this.remainderCondition = remainderCondition;
     this.indexContext = indexContext;
@@ -168,8 +168,8 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
     return set;
   }
 
-  protected static boolean toRemoveSort(Sort sort, RelCollation inputCollation) {
-    if ( (inputCollation != null) && inputCollation.satisfies(IndexPlanUtils.getCollation(sort))) {
+  protected static boolean toRemoveSort(RelCollation sortCollation, RelCollation inputCollation) {
+    if ( (inputCollation != null) && inputCollation.satisfies(sortCollation)) {
       return true;
     }
     return false;
@@ -194,18 +194,34 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
     }
   }
 
+  private static RelNode getSortOrTopN(IndexCallContext indexContext,
+                                       RelNode sortNode, RelNode newRel, RelNode child) {
+    if (sortNode instanceof TopNPrel) {
+      return new TopNPrel(sortNode.getCluster(),
+                    newRel.getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(indexContext.getCollation()),
+                    child, ((TopNPrel)sortNode).getLimit(), indexContext.getCollation());
+    }
+    return new SortPrel(sortNode.getCluster(),
+            newRel.getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(indexContext.getCollation()),
+            child, indexContext.getCollation());
+  }
+
   public static RelNode getSortNode(IndexCallContext indexContext, RelNode newRel, boolean donotGenerateSort,
                                     boolean isSingleton, boolean isExchangeRequired) {
-    Sort rel = indexContext.getSort();
+    OrderedRel rel = indexContext.getSort();
     DrillDistributionTrait hashDistribution =
         new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
             ImmutableList.copyOf(indexContext.getDistributionFields()));
 
-    if ( toRemoveSort(indexContext.getSort(), newRel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE))) {
+    if ( toRemoveSort(indexContext.getCollation(), newRel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE))) {
       //we are going to remove sort
       logger.debug("Not generating SortPrel since we have the required collation");
-
-      RelTraitSet traits = newRel.getTraitSet().plus(IndexPlanUtils.getCollation(rel)).plus(Prel.DRILL_PHYSICAL);
+      if (IndexPlanUtils.generateLimit(rel)) {
+        newRel = new LimitPrel(newRel.getCluster(),
+                newRel.getTraitSet().plus(indexContext.getCollation()).plus(Prel.DRILL_PHYSICAL),
+                newRel, IndexPlanUtils.getOffset(rel), IndexPlanUtils.getFetch(rel));
+      }
+      RelTraitSet traits = newRel.getTraitSet().plus(indexContext.getCollation()).plus(Prel.DRILL_PHYSICAL);
       newRel = Prule.convert(newRel, traits);
       newRel = getExchange(newRel.getCluster(), isSingleton, isExchangeRequired,
                                  traits, hashDistribution, indexContext, newRel);
@@ -215,10 +231,9 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
         logger.debug("Not generating SortPrel and index plan, since just picking index for full index scan is not beneficial.");
         return null;
       }
-      RelTraitSet traits = newRel.getTraitSet().plus(IndexPlanUtils.getCollation(rel)).plus(Prel.DRILL_PHYSICAL);
-      newRel = new SortPrel(rel.getCluster(),
-              newRel.getTraitSet().replace(Prel.DRILL_PHYSICAL).plus(IndexPlanUtils.getCollation(rel)),
-          Prule.convert(newRel, newRel.getTraitSet().replace(Prel.DRILL_PHYSICAL)), IndexPlanUtils.getCollation(rel));
+      RelTraitSet traits = newRel.getTraitSet().plus(indexContext.getCollation()).plus(Prel.DRILL_PHYSICAL);
+      newRel = getSortOrTopN(indexContext, rel, newRel,
+                  Prule.convert(newRel, newRel.getTraitSet().replace(Prel.DRILL_PHYSICAL)));
       newRel = getExchange(newRel.getCluster(), isSingleton, isExchangeRequired,
                                  traits, hashDistribution, indexContext, newRel);
     }

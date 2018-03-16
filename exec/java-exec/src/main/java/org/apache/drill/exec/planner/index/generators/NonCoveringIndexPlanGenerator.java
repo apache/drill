@@ -319,7 +319,7 @@ public class NonCoveringIndexPlanGenerator extends AbstractIndexPlanGenerator {
     if (indexContext.getSort() != null) {
       // When ordering is required, serialize the index scan side. With parallel index scans, the rowkey join may receive
       // unsorted input because ordering is not guaranteed across different parallel inputs.
-      if (toRemoveSort(indexContext.getSort(), newRel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE))) {
+      if (toRemoveSort(indexContext.getCollation(), newRel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE))) {
         ((IndexGroupScan)indexScanPrel.getGroupScan()).setParallelizationWidth(1);
       }
       newRel = getSortNode(indexContext, newRel, false,true, true);
