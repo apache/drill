@@ -18,6 +18,8 @@
 package org.apache.drill.exec.planner.index.rules;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -39,7 +41,7 @@ import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
-import org.apache.drill.exec.planner.physical.SortPrel;
+import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.HashToRandomExchangePrel;
 import org.apache.calcite.rel.RelNode;
@@ -52,21 +54,21 @@ public class DbScanSortRemovalRule extends Prule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DbScanSortRemovalRule.class);
 
   public static final RelOptRule INDEX_SORT_EXCHANGE_SCAN =
-      new DbScanSortRemovalRule(RelOptHelper.some(SortPrel.class,
+      new DbScanSortRemovalRule(RelOptHelper.some(OrderedRel.class,
           RelOptHelper.some(HashToRandomExchangePrel.class,
               RelOptHelper.any(ScanPrel.class))), "DbScanSortRemovalRule:sort_exchange_Scan", new MatchSES());
 
   public static final RelOptRule INDEX_SORT_SCAN =
-          new DbScanSortRemovalRule(RelOptHelper.some(SortPrel.class,
+          new DbScanSortRemovalRule(RelOptHelper.some(OrderedRel.class,
                           RelOptHelper.any(ScanPrel.class)), "DbScanSortRemovalRule:Sort_Scan", new MatchSS());
 
   public static final RelOptRule INDEX_SORT_PROJ_SCAN =
-          new DbScanSortRemovalRule(RelOptHelper.some(SortPrel.class,
+          new DbScanSortRemovalRule(RelOptHelper.some(OrderedRel.class,
                   RelOptHelper.some(ProjectPrel.class,
                     RelOptHelper.any(ScanPrel.class))), "DbScanSortRemovalRule:Sort_Proj_Scan", new MatchSPS());
 
   public static final RelOptRule INDEX_SORT_EXCHANGE_PROJ_SCAN =
-      new DbScanSortRemovalRule(RelOptHelper.some(SortPrel.class,
+      new DbScanSortRemovalRule(RelOptHelper.some(OrderedRel.class,
           RelOptHelper.some(HashToRandomExchangePrel.class,
               RelOptHelper.some(ProjectPrel.class,
                   RelOptHelper.any(ScanPrel.class)))), "DbScanSortRemovalRule:sort_exchange_proj_Scan", new MatchSEPS());
@@ -80,16 +82,21 @@ public class DbScanSortRemovalRule extends Prule {
     this.match = match;
   }
 
+  private static boolean isRemovableRel(OrderedRel node) {
+    return node.canBeDropped();
+  }
+
   private static class MatchSES extends AbstractMatchFunction<IndexPhysicalPlanCallContext> {
 
     public boolean match(RelOptRuleCall call) {
-      final ScanPrel scan = (ScanPrel)call.rel(2);
-      return checkScan(scan.getGroupScan());
+      final OrderedRel sort = call.rel(0);
+      final ScanPrel scan = call.rel(2);
+      return sort instanceof Prel && checkScan(scan.getGroupScan()) && isRemovableRel(sort);
     }
 
     public IndexPhysicalPlanCallContext onMatch(RelOptRuleCall call) {
       final ScanPrel scan = call.rel(2);
-      final SortPrel sort = call.rel(0);
+      final OrderedRel sort = call.rel(0);
       final ExchangePrel exch = call.rel(1);
       return new IndexPhysicalPlanCallContext(call, sort, null, scan, exch);
     }
@@ -98,13 +105,14 @@ public class DbScanSortRemovalRule extends Prule {
   private static class MatchSS extends AbstractMatchFunction<IndexPhysicalPlanCallContext> {
 
     public boolean match(RelOptRuleCall call) {
-      final ScanPrel scan = (ScanPrel)call.rel(1);
-      return checkScan(scan.getGroupScan());
+      final OrderedRel sort = call.rel(0);
+      final ScanPrel scan = call.rel(1);
+      return sort instanceof Prel && checkScan(scan.getGroupScan()) && isRemovableRel(sort);
     }
 
     public IndexPhysicalPlanCallContext onMatch(RelOptRuleCall call) {
       final ScanPrel scan = call.rel(1);
-      final SortPrel sort = call.rel(0);
+      final OrderedRel sort = call.rel(0);
       return new IndexPhysicalPlanCallContext(call, sort, null, scan, null);
     }
   }
@@ -112,14 +120,15 @@ public class DbScanSortRemovalRule extends Prule {
   private static class MatchSPS extends AbstractMatchFunction<IndexPhysicalPlanCallContext> {
 
     public boolean match(RelOptRuleCall call) {
-      final ScanPrel scan = (ScanPrel)call.rel(2);
-      return checkScan(scan.getGroupScan());
+      final OrderedRel sort = call.rel(0);
+      final ScanPrel scan = call.rel(2);
+      return sort instanceof Prel && checkScan(scan.getGroupScan()) && isRemovableRel(sort);
     }
 
     public IndexPhysicalPlanCallContext onMatch(RelOptRuleCall call) {
       final ScanPrel scan = call.rel(2);
       final ProjectPrel proj = call.rel(1);
-      final SortPrel sort = call.rel(0);
+      final OrderedRel sort = call.rel(0);
       return new IndexPhysicalPlanCallContext(call, sort, proj, scan, null);
     }
   }
@@ -127,13 +136,14 @@ public class DbScanSortRemovalRule extends Prule {
   private static class MatchSEPS extends AbstractMatchFunction<IndexPhysicalPlanCallContext> {
 
     public boolean match(RelOptRuleCall call) {
-      final ScanPrel scan = (ScanPrel)call.rel(3);
-      return checkScan(scan.getGroupScan());
+      final OrderedRel sort = call.rel(0);
+      final ScanPrel scan = call.rel(3);
+      return sort instanceof Prel && checkScan(scan.getGroupScan()) && isRemovableRel(sort);
     }
 
     public IndexPhysicalPlanCallContext onMatch(RelOptRuleCall call) {
       final ScanPrel scan = call.rel(3);
-      final SortPrel sort = call.rel(0);
+      final OrderedRel sort = call.rel(0);
       final ProjectPrel proj = call.rel(2);
       final ExchangePrel exch = call.rel(1);
       return new IndexPhysicalPlanCallContext(call,  sort, proj, scan, exch);
@@ -187,12 +197,15 @@ public class DbScanSortRemovalRule extends Prule {
                           false, settings);
           if (planGen.convertChild() != null) {
             indexContext.getCall().transformTo(planGen.convertChild());
+          } else {
+            logger.debug("Not able to generate index plan in ", this.getClass().toString());
           }
         } catch (Exception e) {
           logger.warn("Exception while trying to generate indexscan to remove sort", e);
         }
       }
     } else {
+      Preconditions.checkNotNull(indexContext.getSort());
       //This case tries to use the already generated index to see if a sort can be removed.
       if (indexContext.scan.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE).getFieldCollations().size() == 0) {
         return;
@@ -204,12 +217,12 @@ public class DbScanSortRemovalRule extends Prule {
           inputs.add(finalRel);
           finalRel = indexContext.lowerProject.copy(indexContext.lowerProject.getTraitSet(), inputs);
         }
-        if (indexContext.getSort() != null) {
-          finalRel = AbstractIndexPlanGenerator.getSortNode(indexContext, finalRel, true,false,
+
+        finalRel = AbstractIndexPlanGenerator.getSortNode(indexContext, finalRel, true,false,
                   indexContext.exch != null);
-        }
 
         if (finalRel == null) {
+          logger.debug("Not able to generate index plan in ", this.getClass().toString());
           return;
         }
 

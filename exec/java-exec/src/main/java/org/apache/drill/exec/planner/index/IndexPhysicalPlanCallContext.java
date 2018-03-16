@@ -21,7 +21,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -29,10 +28,10 @@ import org.apache.drill.exec.physical.base.AbstractDbGroupScan;
 import org.apache.drill.exec.physical.base.DbGroupScan;
 import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
-import org.apache.drill.exec.planner.physical.SortPrel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
+import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.HashToRandomExchangePrel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
@@ -42,8 +41,9 @@ import java.util.List;
 import java.util.Set;
 
 public class IndexPhysicalPlanCallContext implements IndexCallContext {
+
   final public RelOptRuleCall call;
-  final public SortPrel sort;
+  final public OrderedRel sort;
   final public ProjectPrel upperProject;
   final public FilterPrel filter;
   final public ProjectPrel lowerProject;
@@ -67,7 +67,7 @@ public class IndexPhysicalPlanCallContext implements IndexCallContext {
   }
 
   public IndexPhysicalPlanCallContext(RelOptRuleCall call,
-                                      SortPrel sort,
+                                      OrderedRel sort,
                                       ProjectPrel capProject,
                                       FilterPrel filter,
                                       ProjectPrel project,
@@ -83,7 +83,7 @@ public class IndexPhysicalPlanCallContext implements IndexCallContext {
   }
 
   public IndexPhysicalPlanCallContext(RelOptRuleCall call,
-                                      SortPrel sort,
+                                      OrderedRel sort,
                                       ProjectPrel project,
                                       ScanPrel scan, ExchangePrel exch) {
     this.call = call;
@@ -171,7 +171,7 @@ public class IndexPhysicalPlanCallContext implements IndexCallContext {
     return origPushedCondition;
   }
 
-  public Sort getSort() {
+  public OrderedRel getSort() {
     return sort;
   }
 

@@ -26,8 +26,11 @@ import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.TopN;
+import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -40,7 +43,7 @@ import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 
-public class TopNPrel extends SinglePrel {
+public class TopNPrel extends SinglePrel implements OrderedRel,Prel {
 
   protected int limit;
   protected final RelCollation collation;
@@ -64,6 +67,28 @@ public class TopNPrel extends SinglePrel {
 
     TopN topN = new TopN(childPOP, PrelUtil.getOrdering(this.collation, getInput().getRowType()), false, this.limit);
     return creator.addMetadata(this, topN);
+  }
+
+  @Override
+  public RelCollation getCollation() {
+    return collation;
+  }
+
+  @Override
+  public RexNode getOffset() {
+    return getCluster().getRexBuilder().makeExactLiteral(BigDecimal.ZERO,
+                  getCluster().getTypeFactory().createSqlType(SqlTypeName.INTEGER));
+  }
+
+  @Override
+  public RexNode getFetch() {
+    return getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(limit),
+                 getCluster().getTypeFactory().createSqlType(SqlTypeName.INTEGER));
+  }
+
+  @Override
+  public boolean canBeDropped() {
+    return true;
   }
 
   /**
@@ -91,6 +116,10 @@ public class TopNPrel extends SinglePrel {
   public RelWriter explainTerms(RelWriter pw) {
     return super.explainTerms(pw)
         .item("limit", limit);
+  }
+
+  public int getLimit() {
+    return limit;
   }
 
   @Override

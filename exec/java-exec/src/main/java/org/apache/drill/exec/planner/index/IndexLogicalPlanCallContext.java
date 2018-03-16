@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.index;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -31,6 +30,7 @@ import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillSortRel;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.calcite.rel.RelNode;
 
@@ -164,7 +164,7 @@ public class IndexLogicalPlanCallContext implements IndexCallContext {
     return origPushedCondition;
   }
 
-  public Sort getSort() {
+  public OrderedRel getSort() {
     return sort;
   }
 

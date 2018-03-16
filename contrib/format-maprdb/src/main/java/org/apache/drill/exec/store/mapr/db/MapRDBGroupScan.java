@@ -39,6 +39,9 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.drill.exec.planner.index.IndexCollection;
 
 import org.apache.drill.exec.planner.cost.PluginCost;
+import org.apache.drill.exec.planner.index.IndexDiscover;
+import org.apache.drill.exec.planner.index.IndexDiscoverFactory;
+import org.apache.drill.exec.planner.index.MapRDBIndexDiscover;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
@@ -307,8 +310,13 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
 
   @Override
   public IndexCollection getSecondaryIndexCollection(RelNode scanRel) {
-    //XXX to implement for complete secondary index framework
-    return null;
+    IndexDiscover discover = IndexDiscoverFactory.getIndexDiscover(
+        getStorageConfig(), this, scanRel, MapRDBIndexDiscover.class);
+
+    if (discover == null) {
+      logger.error("Null IndexDiscover was found for {}!", scanRel);
+    }
+    return discover.getTableIndex(getTableName());
   }
 
   @JsonIgnore
