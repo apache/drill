@@ -38,6 +38,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -56,6 +57,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
+import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexInputRef;
@@ -345,6 +347,21 @@ public class IndexPlanUtils {
   public static List<RexNode> getProjects(DrillProjectRelBase proj) {
     return proj.getProjects();
   }
+
+  public static boolean generateLimit(OrderedRel sort) {
+    RexNode fetchNode = sort.getFetch();
+    int fetchValue = (fetchNode == null) ? -1 : RexLiteral.intValue(fetchNode);
+    return fetchValue >=0;
+  }
+
+  public static RexNode getOffset(OrderedRel sort) {
+    return sort.getOffset();
+  }
+
+  public static RexNode getFetch(OrderedRel sort) {
+    return sort.getFetch();
+  }
+
 
   /**
    * generate logical expressions for sort rexNodes in SortRel, the result is store to IndexPlanCallContext

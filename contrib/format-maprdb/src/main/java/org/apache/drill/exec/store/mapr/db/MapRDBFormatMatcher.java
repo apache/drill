@@ -20,7 +20,10 @@ package org.apache.drill.exec.store.mapr.db;
 import java.io.IOException;
 
 import com.mapr.fs.MapRFileStatus;
+import com.mapr.db.index.IndexDesc;
 import com.mapr.fs.tables.TableProperties;
+import org.apache.drill.exec.planner.index.IndexDescriptor;
+import org.apache.drill.exec.planner.index.MapRDBIndexDescriptor;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -33,6 +36,7 @@ import org.apache.drill.exec.store.mapr.TableFormatMatcher;
 import org.apache.drill.exec.store.mapr.TableFormatPlugin;
 
 import org.apache.drill.exec.store.mapr.db.binary.MapRDBBinaryTable;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 public class MapRDBFormatMatcher extends TableFormatMatcher {
@@ -47,6 +51,44 @@ public class MapRDBFormatMatcher extends TableFormatMatcher {
         .getMaprFS()
         .getTableBasicAttrs(status.getPath())
         .getIsMarlinTable();
+  }
+
+
+  /**
+   * Get an instance of DrillTable for a particular native secondary index
+   * @param fs
+   * @param selection
+   * @param fsPlugin
+   * @param storageEngineName
+   * @param userName
+   * @param secondaryIndexDesc
+   * @return
+   * @throws IOException
+   */
+  public DrillTable isReadableIndex(DrillFileSystem fs,
+                                    FileSelection selection, FileSystemPlugin fsPlugin,
+                                    String storageEngineName, String userName,
+                                    IndexDescriptor secondaryIndexDesc) throws IOException {
+    FileStatus status = selection.getFirstPath(fs);
+
+    if (!isFileReadable(fs, status)) {
+      return null;
+    }
+
+    MapRDBFormatPlugin fp = (MapRDBFormatPlugin) getFormatPlugin();
+    DrillTable dt = new DynamicDrillTable(fsPlugin,
+        storageEngineName,
+        userName,
+        new FormatSelection(fp.getConfig(),
+            selection));
+
+    // TODO:  Create groupScan using index descriptor
+    dt.setGroupScan(fp.getGroupScan(userName,
+        selection,
+        null /* columns */,
+        (IndexDesc) ((MapRDBIndexDescriptor) secondaryIndexDesc).getOriginalDesc()));
+
+    return dt;
   }
 
   @Override

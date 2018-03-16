@@ -26,11 +26,13 @@ import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.LimitPrel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
+import org.apache.drill.exec.planner.physical.RowKeyJoinPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
 import org.apache.drill.exec.store.mapr.db.binary.BinaryTableGroupScan;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
+import org.apache.drill.exec.store.mapr.db.json.RestrictedJsonTableGroupScan;
 
 public abstract class MapRDBPushLimitIntoScan extends StoragePluginOptimizerRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBPushLimitIntoScan.class);
@@ -59,8 +61,8 @@ public abstract class MapRDBPushLimitIntoScan extends StoragePluginOptimizerRule
       if (scan.getGroupScan().supportsLimitPushdown()
             && !limit.isPushDown() && limit.getFetch() != null) {
         if ((scan.getGroupScan() instanceof JsonTableGroupScan
-              && ((JsonTableGroupScan) scan.getGroupScan()).isIndexScan()) ) {
-            //|| (scan.getGroupScan() instanceof RestrictedJsonTableGroupScan)) {
+              && ((JsonTableGroupScan) scan.getGroupScan()).isIndexScan())
+            || (scan.getGroupScan() instanceof RestrictedJsonTableGroupScan)) {
           return true;
         }
       }
@@ -111,6 +113,26 @@ public abstract class MapRDBPushLimitIntoScan extends StoragePluginOptimizerRule
     }
   };
 
+  public static final StoragePluginOptimizerRule LIMIT_ON_RKJOIN =
+      new MapRDBPushLimitIntoScan(RelOptHelper.some(LimitPrel.class, RelOptHelper.any(RowKeyJoinPrel.class)),
+          "MapRDBPushLimitIntoScan:Limit_On_RKJoin") {
+
+    @Override
+    public void onMatch(RelOptRuleCall call) {
+      final RowKeyJoinPrel join = call.rel(1);
+      final LimitPrel limit = call.rel(0);
+      doPushLimitIntoRowKeyJoin(call, limit, null, join);
+    }
+
+    @Override
+    public boolean matches(RelOptRuleCall call) {
+      final LimitPrel limit = call.rel(0);
+      // We do not fire this rule if fetch() is null (indicating we have to fetch all the
+      // remaining rows starting from offset.
+      return !limit.isPushDown() && limit.getFetch() != null;
+    }
+  };
+
   protected void doPushLimitIntoGroupScan(RelOptRuleCall call,
       LimitPrel limit, final ProjectPrel project, ScanPrel scan, GroupScan groupScan) {
     try {
@@ -152,6 +174,30 @@ public abstract class MapRDBPushLimitIntoScan extends StoragePluginOptimizerRule
           binaryTableGroupScan.getTableStats()).applyLimit(offset + fetch);
     }
     return null;
+  }
+
+  protected void doPushLimitIntoRowKeyJoin(RelOptRuleCall call,
+    LimitPrel limit, final ProjectPrel project, RowKeyJoinPrel join) {
+    final RelNode newChild;
+    try {
+      RelNode left = join.getLeft();
+      RelNode right = join.getRight();
+      final RelNode limitOnLeft = new LimitPrel(left.getCluster(), left.getTraitSet(), left,
+          limit.getOffset(), limit.getFetch());
+      RowKeyJoinPrel newJoin = new RowKeyJoinPrel(join.getCluster(), join.getTraitSet(), limitOnLeft, right,
+          join.getCondition(), join.getJoinType());
+      if (project != null) {
+        final ProjectPrel newProject = new ProjectPrel(project.getCluster(), project.getTraitSet(), newJoin,
+            project.getProjects(), project.getRowType());
+        newChild = newProject;
+      } else {
+        newChild = newJoin;
+      }
+      call.transformTo(newChild);
+      logger.debug("pushLimitIntoRowKeyJoin: Pushed limit on left side of Join " + join.toString());
+    } catch (Exception e) {
+      logger.warn("pushLimitIntoRowKeyJoin: Exception while trying limit pushdown!", e);
+    }
   }
 }
 
