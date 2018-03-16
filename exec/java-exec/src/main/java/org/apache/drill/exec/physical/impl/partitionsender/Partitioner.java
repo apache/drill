@@ -29,6 +29,8 @@ import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.record.RecordBatch;
 
 public interface Partitioner {
+  int DEFAULT_RECORD_BATCH_SIZE = (1 << 10) - 1;
+
   void setup(ExchangeFragmentContext context,
              RecordBatch incoming,
              HashPartitionSender popConfig,

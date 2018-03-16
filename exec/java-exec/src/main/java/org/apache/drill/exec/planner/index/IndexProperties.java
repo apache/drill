@@ -37,6 +37,10 @@ public interface IndexProperties  {
                             RexNode indexColumnsRemainderFilter,
                             Statistics stats);
 
+  RexNode getLeadingColumnsFilter();
+
+  RexNode getTotalRemainderFilter();
+
   double getLeadingSelectivity();
 
   double getRemainderSelectivity();
@@ -49,7 +53,8 @@ public interface IndexProperties  {
 
   DrillScanRelBase getPrimaryTableScan();
 
-  RexNode getTotalRemainderFilter();
+  RelOptCost getIntersectCost(IndexGroup index, IndexConditionInfo.Builder builder,
+                                     RelOptPlanner planner);
 
   boolean satisfiesCollation();
 

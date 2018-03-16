@@ -25,8 +25,12 @@ import java.util.Set;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -57,19 +61,21 @@ import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
 import org.apache.drill.exec.physical.impl.common.AbstractSpilledPartitionMetadata;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
-import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.common.HashPartition;
 import org.apache.drill.exec.physical.impl.common.SpilledState;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
+import org.apache.drill.exec.planner.common.JoinControl;
 import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.JoinBatchMemoryManager;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
@@ -81,7 +87,6 @@ import org.apache.drill.exec.work.filter.BloomFilter;
 import org.apache.drill.exec.work.filter.BloomFilterDef;
 import org.apache.drill.exec.work.filter.RuntimeFilterDef;
 import org.apache.drill.exec.work.filter.RuntimeFilterReporter;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
@@ -107,7 +112,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA
  *   The code tracks these spilling "cycles". Normally any such "again" (i.e. cycle of 2 or greater) is a waste,
  *   indicating that the number of partitions chosen was too small.
  */
-public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
+public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implements RowKeyJoin {
   protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashJoinBatch.class);
 
   /**
@@ -123,6 +128,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
   // Join conditions
   private final List<JoinCondition> conditions;
+
+  private RowKeyJoin.RowKeyJoinState rkJoinState = RowKeyJoin.RowKeyJoinState.INITIAL;
 
   // Runtime generated class implementing HashJoinProbe interface
   private HashJoinProbe hashJoinProbe = null;
@@ -162,6 +169,16 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   // Schema of the probe side
   private BatchSchema probeSchema;
 
+  // Whether this HashJoin is used for a row-key based join
+  private boolean isRowKeyJoin = false;
+
+  private JoinControl joinControl;
+
+  // An iterator over the build side hash table (only applicable for row-key joins)
+  private boolean buildComplete = false;
+
+  // indicates if we have previously returned an output batch
+  private boolean firstOutputBatch = true;
 
   private int rightHVColPosition;
   private BufferAllocator allocator;
@@ -506,6 +523,24 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
           return buildExecuteTermination;
         }
 
+        buildComplete = true;
+
+        if (isRowKeyJoin) {
+          // discard the first left batch which was fetched by buildSchema, and get the new
+          // one based on rowkey join
+          leftUpstream = next(left);
+
+          if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
+            state = BatchState.STOP;
+            return leftUpstream;
+          }
+
+          if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
+            state = BatchState.OUT_OF_MEMORY;
+            return leftUpstream;
+          }
+        }
+
         // Update the hash table related stats for the operator
         updateStats();
       }
@@ -614,7 +649,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       // No more output records, clean up and return
       state = BatchState.DONE;
 
-      this.cleanup();
+      cleanup();
 
       return IterOutcome.NONE;
     } catch (SchemaChangeException e) {
@@ -669,7 +704,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     }
 
     final HashTableConfig htConfig = new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
-      true, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators);
+      true, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators, joinControl.asInt());
 
     // Create the chained hash table
     baseHashTable =
@@ -1129,6 +1164,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     joinIsRightOrFull = joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL;
     conditions = popConfig.getConditions();
     this.popConfig = popConfig;
+    this.isRowKeyJoin = popConfig.isRowKeyJoin();
+    this.joinControl = new JoinControl(popConfig.getJoinControl());
+
     rightExpr = new ArrayList<>(conditions.size());
     buildJoinColumns = Sets.newHashSet();
     List<SchemaPath> rightConditionPaths = new ArrayList<>();
@@ -1265,6 +1303,48 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     this.stats.setLongStat(Metric.SPILLED_PARTITIONS, numSpilled);
   }
 
+  /**
+   * Get the hash table iterator that is created for the build side of the hash join if
+   * this hash join was instantiated as a row-key join.
+   * @return hash table iterator or null if this hash join was not a row-key join or if it
+   * was a row-key join but the build has not yet completed.
+   */
+  @Override
+  public Pair<ValueVector, Integer> nextRowKeyBatch() {
+    if (buildComplete) {
+      // partition 0 because Row Key Join has only a single partition - no spilling
+      Pair<VectorContainer, Integer> pp = partitions[0].nextBatch();
+      if (pp != null) {
+        VectorWrapper<?> vw = Iterables.get(pp.getLeft(), 0);
+        ValueVector vv = vw.getValueVector();
+        return Pair.of(vv, pp.getRight());
+      }
+    } else if(partitions == null && firstOutputBatch) { //if there is data coming to right(build) side in build Schema stage, use it.
+      firstOutputBatch = false;
+      if ( right.getRecordCount() > 0 ) {
+        VectorWrapper<?> vw = Iterables.get(right, 0);
+        ValueVector vv = vw.getValueVector();
+        return Pair.of(vv, right.getRecordCount()-1);
+      }
+    }
+    return null;
+  }
+
+  @Override    // implement RowKeyJoin interface
+  public boolean hasRowKeyBatch() {
+    return buildComplete;
+  }
+
+  @Override   // implement RowKeyJoin interface
+  public BatchState getBatchState() {
+    return state;
+  }
+
+  @Override  // implement RowKeyJoin interface
+  public void setBatchState(BatchState newState) {
+    state = newState;
+  }
+
   @Override
   public void killIncoming(boolean sendUpstream) {
     wasKilled = true;
@@ -1287,6 +1367,16 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     stats.setLongStat(HashJoinBatch.Metric.AVG_OUTPUT_BATCH_BYTES, batchMemoryManager.getAvgOutputBatchSize());
     stats.setLongStat(HashJoinBatch.Metric.AVG_OUTPUT_ROW_BYTES, batchMemoryManager.getAvgOutputRowWidth());
     stats.setLongStat(HashJoinBatch.Metric.OUTPUT_RECORD_COUNT, batchMemoryManager.getTotalOutputRecords());
+  }
+
+  @Override
+  public void setRowKeyJoinState(RowKeyJoin.RowKeyJoinState newState) {
+    this.rkJoinState = newState;
+  }
+
+  @Override
+  public RowKeyJoin.RowKeyJoinState getRowKeyJoinState() {
+    return rkJoinState;
   }
 
   @Override

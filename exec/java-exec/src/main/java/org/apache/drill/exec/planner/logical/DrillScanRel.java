@@ -18,12 +18,11 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.util.ArrayList;
-import java.io.IOException;
 import java.util.List;
 
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
@@ -34,7 +33,6 @@ import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -50,12 +48,10 @@ import org.apache.drill.exec.util.Utilities;
  */
 public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   private final static int STAR_COLUMN_COST = 10000;
-
-  final private RelDataType rowType;
-  private GroupScan groupScan;
-  private List<SchemaPath> columns;
   private PlannerSettings settings;
+  private List<SchemaPath> columns;
   private final boolean partitionFilterPushdown;
+  final private RelDataType rowType;
 
   /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
@@ -80,17 +76,12 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
                       final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
-    super(DRILL_LOGICAL, cluster, traits, table);
+    super(cluster, traits, table, columns);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.rowType = rowType;
     Preconditions.checkNotNull(columns);
     this.columns = columns;
     this.partitionFilterPushdown = partitionFilterPushdown;
-    try {
-      this.groupScan = drillTable.getGroupScan().clone(this.columns);
-    } catch (final IOException e) {
-      throw new DrillRuntimeException("Failure creating scan.", e);
-    }
   }
 
   /** Creates a DrillScanRel for a particular GroupScan */
@@ -102,10 +93,9 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   /** Creates a DrillScanRel for a particular GroupScan */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
                       final RelOptTable table, final GroupScan groupScan, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
-    super(DRILL_LOGICAL, cluster, traits, table);
+    super(cluster, traits, groupScan, table);
     this.rowType = rowType;
     this.columns = columns;
-    this.groupScan = groupScan;
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.partitionFilterPushdown = partitionFilterPushdown;
   }
@@ -144,12 +134,12 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("groupscan", groupScan.getDigest());
+    return super.explainTerms(pw).item("groupscan", getGroupScan().getDigest());
   }
 
   @Override
   public double estimateRowCount(RelMetadataQuery mq) {
-    return this.groupScan.getScanStats(settings).getRecordCount();
+    return getGroupScan().getScanStats(settings).getRecordCount();
   }
 
   /// TODO: this method is same as the one for ScanPrel...eventually we should consolidate
@@ -157,7 +147,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   /// by both logical and physical rels.
   @Override
   public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
-    final ScanStats stats = groupScan.getScanStats(settings);
+    final ScanStats stats = getGroupScan().getScanStats(settings);
     int columnCount = getRowType().getFieldCount();
     double ioCost = 0;
     boolean isStarQuery = Utilities.isStarQuery(columns);
@@ -176,19 +166,10 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
       return planner.getCostFactory().makeCost(rowCount * columnCount, stats.getCpuCost(), stats.getDiskCost());
     }
 
-    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count.
-    // Even though scan is reading from disk, in the currently generated plans all plans will
-    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.
-    // In the future we might consider alternative scans that go against projections or
-    // different compression schemes etc that affect the amount of data read. Such alternatives
-    // would affect both cpu and io cost.
+    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count and number of columns
 
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);
-  }
-
-  public GroupScan getGroupScan() {
-    return groupScan;
   }
 
   public boolean partitionFilterPushdown() {

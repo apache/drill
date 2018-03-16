@@ -115,6 +115,28 @@ public class PlannerSettings implements Context{
   public static final String UNIONALL_DISTRIBUTE_KEY = "planner.enable_unionall_distribute";
   public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY, null);
 
+  // ------------------------------------------- Index planning related options BEGIN --------------------------------------------------------------
+  public static final String USE_SIMPLE_OPTIMIZER_KEY = "planner.use_simple_optimizer";
+  public static final BooleanValidator USE_SIMPLE_OPTIMIZER = new BooleanValidator(USE_SIMPLE_OPTIMIZER_KEY, null);
+  public static final BooleanValidator INDEX_PLANNING = new BooleanValidator("planner.enable_index_planning", null);
+  public static final BooleanValidator ENABLE_STATS = new BooleanValidator("planner.enable_statistics", null);
+  public static final BooleanValidator DISABLE_FULL_TABLE_SCAN = new BooleanValidator("planner.disable_full_table_scan", null);
+  public static final RangeLongValidator INDEX_MAX_CHOSEN_INDEXES_PER_TABLE = new RangeLongValidator("planner.index.max_chosen_indexes_per_table", 0, 100, null);
+  public static final BooleanValidator INDEX_FORCE_SORT_NONCOVERING = new BooleanValidator("planner.index.force_sort_noncovering", null);
+  public static final BooleanValidator INDEX_USE_HASHJOIN_NONCOVERING = new BooleanValidator("planner.index.use_hashjoin_noncovering", null);
+  public static final RangeDoubleValidator INDEX_COVERING_SELECTIVITY_THRESHOLD =
+      new RangeDoubleValidator("planner.index.covering_selectivity_threshold", 0.0, 1.0, null);
+  public static final RangeDoubleValidator INDEX_NONCOVERING_SELECTIVITY_THRESHOLD =
+      new RangeDoubleValidator("planner.index.noncovering_selectivity_threshold", 0.0, 1.0, null);
+  public static final RangeDoubleValidator INDEX_ROWKEYJOIN_COST_FACTOR =
+      new RangeDoubleValidator("planner.index.rowkeyjoin_cost_factor", 0, Double.MAX_VALUE, null);
+  // TODO: Deprecate the following 2 (also in SystemOptionManager.java)
+  public static final BooleanValidator INDEX_PREFER_INTERSECT_PLANS = new BooleanValidator("planner.index.prefer_intersect_plans", null);
+  public static final RangeLongValidator INDEX_MAX_INDEXES_TO_INTERSECT = new RangeLongValidator("planner.index.max_indexes_to_intersect", 2, 100, null);
+  public static final RangeDoubleValidator INDEX_STATS_ROWCOUNT_SCALING_FACTOR =
+      new RangeDoubleValidator("planner.index.statistics_rowcount_scaling_factor", 0.0, 1.0, null);
+  // ------------------------------------------- Index planning related options END ----------------------------------------------------------------
+
   public static final OptionValidator IDENTIFIER_MAX_LENGTH =
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
                               Integer.MAX_VALUE,
@@ -363,6 +385,54 @@ public class PlannerSettings implements Context{
 
   public boolean isUnnestLateralEnabled() {
     return options.getOption(ENABLE_UNNEST_LATERAL);
+  }
+
+  public boolean isIndexPlanningEnabled() {
+    return options.getOption(INDEX_PLANNING);
+  }
+
+  public boolean isStatisticsEnabled() {
+    return options.getOption(ENABLE_STATS);
+  }
+
+  public boolean isDisableFullTableScan() {
+    return options.getOption(DISABLE_FULL_TABLE_SCAN);
+  }
+
+  public long getIndexMaxChosenIndexesPerTable() {
+    return options.getOption(INDEX_MAX_CHOSEN_INDEXES_PER_TABLE);
+  }
+
+  public boolean isIndexForceSortNonCovering() {
+    return options.getOption(INDEX_FORCE_SORT_NONCOVERING);
+  }
+
+  public boolean isIndexUseHashJoinNonCovering() {
+    return options.getOption(INDEX_USE_HASHJOIN_NONCOVERING);
+  }
+
+  public double getIndexCoveringSelThreshold() {
+    return options.getOption(INDEX_COVERING_SELECTIVITY_THRESHOLD);
+  }
+
+  public double getIndexNonCoveringSelThreshold() {
+    return options.getOption(INDEX_NONCOVERING_SELECTIVITY_THRESHOLD);
+  }
+
+  public double getIndexRowKeyJoinCostFactor() {
+    return options.getOption(INDEX_ROWKEYJOIN_COST_FACTOR);
+  }
+
+  public boolean isIndexIntersectPlanPreferred() {
+    return options.getOption(INDEX_PREFER_INTERSECT_PLANS);
+  }
+
+  public long getMaxIndexesToIntersect() {
+    return options.getOption(INDEX_MAX_INDEXES_TO_INTERSECT);
+  }
+
+  public double getIndexStatsRowCountScalingFactor() {
+    return options.getOption(INDEX_STATS_ROWCOUNT_SCALING_FACTOR);
   }
 
   @Override

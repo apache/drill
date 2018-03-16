@@ -180,6 +180,9 @@ public class SchemaPath extends LogicalExpressionBase {
       return null;
     }
     try {
+      if (SchemaPath.DYNAMIC_STAR.equals(expr)) {
+        return SchemaPath.getSimplePath(expr);
+      }
       ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
       CommonTokenStream tokens = new CommonTokenStream(lexer);
       ExprParser parser = new ExprParser(tokens);
