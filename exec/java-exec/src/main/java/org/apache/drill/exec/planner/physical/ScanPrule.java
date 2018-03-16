@@ -44,7 +44,7 @@ public class ScanPrule extends Prule{
 
     final RelTraitSet traits = scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(partition);
 
-    final DrillScanPrel newScan = new ScanPrel(scan, traits, groupScan, scan.getRowType());
+    final ScanPrel newScan = new ScanPrel(scan, traits, groupScan, scan.getRowType(), scan.getTable());
 
     call.transformTo(newScan);
   }

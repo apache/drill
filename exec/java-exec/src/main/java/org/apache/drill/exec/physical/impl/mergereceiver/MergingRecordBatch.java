@@ -536,7 +536,10 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
   @Override
   public BatchSchema getSchema() {
-    return outgoingContainer.getSchema();
+    if (outgoingContainer.hasSchema()) {
+      return outgoingContainer.getSchema();
+    }
+    return null;
   }
 
   @Override

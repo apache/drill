@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -150,6 +151,8 @@ public interface HashTable {
   void setTargetBatchRowCount(int batchRowCount);
 
   int getTargetBatchRowCount();
+
+  Pair<VectorContainer, Integer> nextBatch();
 }
 
 

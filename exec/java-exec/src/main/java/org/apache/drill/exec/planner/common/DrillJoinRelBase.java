@@ -174,7 +174,11 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
   private RelOptCost computeHashJoinCostWithKeySize(RelOptPlanner planner, int keySize, RelMetadataQuery mq) {
     double probeRowCount = mq.getRowCount(this.getLeft());
     double buildRowCount = mq.getRowCount(this.getRight());
+    return computeHashJoinCostWithRowCntKeySize(planner, probeRowCount, buildRowCount, keySize);
+  }
 
+  public static RelOptCost computeHashJoinCostWithRowCntKeySize(RelOptPlanner planner, double probeRowCount,
+                                                                double buildRowCount, int keySize) {
     // cpu cost of hashing the join keys for the build side
     double cpuCostBuild = DrillCostBase.HASH_CPU_COST * keySize * buildRowCount;
     // cpu cost of hashing the join keys for the probe side

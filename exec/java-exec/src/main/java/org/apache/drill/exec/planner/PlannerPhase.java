@@ -27,6 +27,8 @@ import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
 import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.RuleSets;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.planner.index.rules.DbScanSortRemovalRule;
+import org.apache.drill.exec.planner.index.rules.DbScanToIndexScanPrule;
 import org.apache.drill.exec.planner.logical.DrillAggregateRule;
 import org.apache.drill.exec.planner.logical.DrillCorrelateRule;
 import org.apache.drill.exec.planner.logical.DrillFilterAggregateTransposeRule;
@@ -63,7 +65,7 @@ import org.apache.drill.exec.planner.physical.FilterPrule;
 import org.apache.drill.exec.planner.physical.HashAggPrule;
 import org.apache.drill.exec.planner.physical.HashJoinPrule;
 import org.apache.drill.exec.planner.physical.LimitPrule;
-import org.apache.drill.exec.planner.physical.LimitUnionExchangeTransposeRule;
+import org.apache.drill.exec.planner.physical.LimitExchangeTransposeRule;
 import org.apache.drill.exec.planner.physical.MergeJoinPrule;
 import org.apache.drill.exec.planner.physical.NestedLoopJoinPrule;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -192,6 +194,7 @@ public enum PlannerPhase {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           PlannerPhase.getPhysicalRules(context),
+          getIndexRules(context),
           getStorageRules(context, plugins, this));
     }
   },
@@ -310,6 +313,7 @@ public enum PlannerPhase {
       // RuleInstance.PROJECT_SET_OP_TRANSPOSE_RULE,
       RuleInstance.PROJECT_WINDOW_TRANSPOSE_RULE,
       DrillPushProjectIntoScanRule.INSTANCE,
+      DrillPushProjectIntoScanRule.DRILL_LOGICAL_INSTANCE,
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.
@@ -383,6 +387,32 @@ public enum PlannerPhase {
         .build();
 
     return RuleSets.ofList(pruneRules);
+  }
+  /**
+   *
+   */
+  static RuleSet getIndexRules(OptimizerRulesContext optimizerRulesContext) {
+    final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
+    if (!ps.isIndexPlanningEnabled()) {
+      return RuleSets.ofList(ImmutableSet.<RelOptRule>builder().build());
+    }
+
+    final ImmutableSet<RelOptRule> indexRules = ImmutableSet.<RelOptRule>builder()
+        .add(
+            DbScanToIndexScanPrule.REL_FILTER_SCAN,
+            DbScanToIndexScanPrule.SORT_FILTER_PROJECT_SCAN,
+            DbScanToIndexScanPrule.SORT_PROJECT_FILTER_PROJECT_SCAN,
+            DbScanToIndexScanPrule.PROJECT_FILTER_PROJECT_SCAN,
+            DbScanToIndexScanPrule.SORT_PROJECT_FILTER_SCAN,
+            DbScanToIndexScanPrule.FILTER_PROJECT_SCAN,
+            DbScanToIndexScanPrule.FILTER_SCAN,
+            DbScanSortRemovalRule.INDEX_SORT_EXCHANGE_PROJ_SCAN,
+            DbScanSortRemovalRule.INDEX_SORT_EXCHANGE_SCAN,
+            DbScanSortRemovalRule.INDEX_SORT_SCAN,
+            DbScanSortRemovalRule.INDEX_SORT_PROJ_SCAN
+        )
+        .build();
+    return RuleSets.ofList(indexRules);
   }
 
   /**
@@ -458,7 +488,7 @@ public enum PlannerPhase {
     ruleList.add(WriterPrule.INSTANCE);
     ruleList.add(WindowPrule.INSTANCE);
     ruleList.add(PushLimitToTopN.INSTANCE);
-    ruleList.add(LimitUnionExchangeTransposeRule.INSTANCE);
+    ruleList.add(LimitExchangeTransposeRule.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
     ruleList.add(ValuesPrule.INSTANCE);
     ruleList.add(DirectScanPrule.INSTANCE);

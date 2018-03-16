@@ -54,8 +54,7 @@ public interface Statistics {
    *  @param scanRel - The current scan rel
    *  @return the leading rowcount
    */
-  double getLeadingRowCount(RexNode condition, String tabIdxName, RelNode scanRel);
-
+  public double getLeadingRowCount(RexNode condition, String tabIdxName, DrillScanRelBase scanRel);
   /** Returns the average row size for the specified filter condition
    * @param tabIdxName - The index name generated using {@code buildUniqueIndexIdentifier}
    * @param isIndexScan - Whether the current rel is an index scan (false for primary table)

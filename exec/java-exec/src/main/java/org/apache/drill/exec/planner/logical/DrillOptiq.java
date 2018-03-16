@@ -22,7 +22,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -42,6 +42,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -94,17 +95,32 @@ public class DrillOptiq {
     final RexToDrill visitor = new RexToDrill(context, inputs);
     return expr.accept(visitor);
   }
+  public static LogicalExpression toDrill(DrillParseContext context, RelDataType type,
+                                          RexBuilder builder, RexNode expr) {
+    final RexToDrill visitor = new RexToDrill(context, type, builder);
+    return expr.accept(visitor);
+  }
 
-  private static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
+  public static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
     private final List<RelNode> inputs;
     private final DrillParseContext context;
     private final List<RelDataTypeField> fieldList;
+    private final RelDataType rowType;
+    private final RexBuilder builder;
 
     RexToDrill(DrillParseContext context, List<RelNode> inputs) {
       super(true);
       this.context = context;
       this.inputs = inputs;
       this.fieldList = Lists.newArrayList();
+      if (inputs.size() > 0 && inputs.get(0)!=null) {
+        this.rowType = inputs.get(0).getRowType();
+        this.builder = inputs.get(0).getCluster().getRexBuilder();
+      }
+      else {
+        this.rowType = null;
+        this.builder = null;
+      }
       /*
          Fields are enumerated by their presence order in input. Details {@link org.apache.calcite.rex.RexInputRef}.
          Thus we can merge field list from several inputs by adding them into the list in order of appearance.
@@ -124,12 +140,31 @@ public class DrillOptiq {
         }
       }
     }
+    public RexToDrill(DrillParseContext context, RelNode input) {
+      this(context, Lists.newArrayList(input));
+    }
+
+    public RexToDrill(DrillParseContext context, RelDataType rowType, RexBuilder builder) {
+      super(true);
+      this.context = context;
+      this.rowType = rowType;
+      this.builder = builder;
+      this.inputs = Lists.newArrayList();
+      this.fieldList = rowType.getFieldList();
+    }
+
+    protected RelDataType getRowType() {
+      return rowType;
+    }
+
+    protected RexBuilder getRexBuilder() {
+      return builder;
+    }
 
     @Override
     public LogicalExpression visitInputRef(RexInputRef inputRef) {
       final int index = inputRef.getIndex();
       final RelDataTypeField field = fieldList.get(index);
-      Preconditions.checkNotNull(field, "Unable to find field using input reference");
       return FieldReference.getWithQuotedRef(field.getName());
     }
 
@@ -161,7 +196,6 @@ public class DrillOptiq {
         }
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       case PREFIX:
-        logger.debug("Prefix");
         LogicalExpression arg = call.getOperands().get(0).accept(this);
         switch(call.getKind()){
           case NOT:
@@ -174,7 +208,6 @@ public class DrillOptiq {
         }
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       case SPECIAL:
-        logger.debug("Special");
         switch(call.getKind()){
         case CAST:
           return getDrillCastFunctionFromOptiq(call);
