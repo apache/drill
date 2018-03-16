@@ -178,7 +178,7 @@ public class HashJoinHelper {
     return compositeIndexes;
   }
 
-  public void setRecordMatched(int index) {
+  public boolean setRecordMatched(int index) {
     int batchIdx  = index >>> SHIFT_SIZE;
     int recordIdx = index & HashTable.BATCH_MASK;
 
@@ -186,7 +186,11 @@ public class HashJoinHelper {
     BuildInfo info = buildInfoList.get(batchIdx);
     BitSet bitVector = info.getKeyMatchBitVector();
 
+    if(bitVector.get(recordIdx)) {
+      return true;
+    }
     bitVector.set(recordIdx);
+    return false;
   }
 
   public void setCurrentIndex(int keyIndex, int batchIndex, int recordIndex) throws SchemaChangeException {
@@ -196,6 +200,11 @@ public class HashJoinHelper {
      * denotes the global index where the key for this record is
      * stored in the hash table
      */
+    if (keyIndex < 0) {
+      //receive a negative index, meaning we are not going to add this index (in distinct case when key already present)
+      return;
+    }
+
     int batchIdx  = keyIndex / HashTable.BATCH_SIZE;
     int offsetIdx = keyIndex % HashTable.BATCH_SIZE;
 

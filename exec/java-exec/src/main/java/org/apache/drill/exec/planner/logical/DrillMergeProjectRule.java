@@ -32,6 +32,9 @@ import org.apache.calcite.rel.core.RelFactories.ProjectFactory;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.exec.planner.DrillRelBuilder;
+import org.apache.drill.exec.planner.physical.PrelFactories;
+
+import java.util.List;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -164,6 +167,27 @@ public class DrillMergeProjectRule extends RelOptRule {
       list.add(rex);
     }
     return list;
+  }
+
+  public static Project replace(Project topProject, Project bottomProject) {
+    final List<RexNode> newProjects =
+        RelOptUtil.pushPastProject(topProject.getProjects(), bottomProject);
+
+    // replace the two projects with a combined projection
+    if(topProject instanceof DrillProjectRel) {
+      RelNode newProjectRel = DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY.createProject(
+          bottomProject.getInput(), newProjects,
+          topProject.getRowType().getFieldNames());
+
+      return (Project) newProjectRel;
+    }
+    else {
+      RelNode newProjectRel = PrelFactories.PROJECT_FACTORY.createProject(
+          bottomProject.getInput(), newProjects,
+          topProject.getRowType().getFieldNames());
+
+      return (Project) newProjectRel;
+    }
   }
 
 }

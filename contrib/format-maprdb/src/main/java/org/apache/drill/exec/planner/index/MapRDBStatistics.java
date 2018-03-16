@@ -185,7 +185,7 @@ public class MapRDBStatistics implements Statistics {
    *  @return approximate rows satisfying the leading filter
    */
   @Override
-  public double getLeadingRowCount(RexNode condition, String tabIdxName, RelNode scanRel) {
+  public double getLeadingRowCount(RexNode condition, String tabIdxName, DrillScanRelBase scanRel) {
     String conditionAsStr = nullConditionAsString;
     Map<String, StatisticsPayload> payloadMap;
     if ((scanRel instanceof DrillScanRel && ((DrillScanRel)scanRel).getGroupScan() instanceof DbGroupScan)

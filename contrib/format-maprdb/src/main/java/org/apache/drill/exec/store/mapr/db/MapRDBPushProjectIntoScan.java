@@ -28,6 +28,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
@@ -36,6 +37,7 @@ import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.mapr.db.binary.BinaryTableGroupScan;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
+import org.apache.drill.exec.util.Utilities;
 
 import java.util.List;
 
@@ -82,9 +84,10 @@ public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRu
       ProjectPrel project, ScanPrel scan, MapRDBGroupScan groupScan) {
     try {
 
-      PrelUtil.ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), project.getProjects());
-      if (columnInfo == null || columnInfo.isStarQuery() //
-          || !groupScan.canPushdownProjects(columnInfo.columns)) {
+      DrillRelOptUtil.ProjectPushInfo columnInfo =
+          DrillRelOptUtil.getFieldsInformation(scan.getRowType(), project.getProjects());
+      if (columnInfo == null || Utilities.isStarQuery(columnInfo.getFields()) //
+          || !groupScan.canPushdownProjects(columnInfo.getFields())) {
         return;
       }
       RelTraitSet newTraits = call.getPlanner().emptyTraitSet();
@@ -95,12 +98,12 @@ public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRu
         }
       }
       final ScanPrel newScan = new ScanPrel(scan.getCluster(), newTraits.plus(Prel.DRILL_PHYSICAL),
-          groupScan.clone(columnInfo.columns),
-          columnInfo.createNewRowType(project.getInput().getCluster().getTypeFactory()));
+          groupScan.clone(columnInfo.getFields()),
+          columnInfo.createNewRowType(project.getInput().getCluster().getTypeFactory()), scan.getTable());
 
       List<RexNode> newProjects = Lists.newArrayList();
       for (RexNode n : project.getChildExps()) {
-        newProjects.add(n.accept(columnInfo.getInputRewriter()));
+        newProjects.add(n.accept(columnInfo.getInputReWriter()));
       }
 
       final ProjectPrel newProj =

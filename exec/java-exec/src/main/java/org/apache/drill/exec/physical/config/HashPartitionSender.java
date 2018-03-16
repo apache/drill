@@ -24,6 +24,7 @@ import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.physical.impl.partitionsender.Partitioner;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -35,23 +36,38 @@ public class HashPartitionSender extends AbstractSender {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashPartitionSender.class);
 
   private final LogicalExpression expr;
+  private final int outgoingBatchSize;
 
   @JsonCreator
   public HashPartitionSender(@JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId,
                              @JsonProperty("child") PhysicalOperator child,
                              @JsonProperty("expr") LogicalExpression expr,
-                             @JsonProperty("destinations") List<MinorFragmentEndpoint> endpoints) {
+                             @JsonProperty("destinations") List<MinorFragmentEndpoint> endpoints,
+                             @JsonProperty("outgoingBatchSize") int outgoingBatchSize) {
     super(oppositeMajorFragmentId, child, endpoints);
     this.expr = expr;
+    this.outgoingBatchSize = outgoingBatchSize;
+  }
+
+  public HashPartitionSender(int oppositeMajorFragmentId,
+                             PhysicalOperator child,
+                             LogicalExpression expr,
+                             List<MinorFragmentEndpoint> endpoints) {
+    this(oppositeMajorFragmentId, child, expr, endpoints, Partitioner.DEFAULT_RECORD_BATCH_SIZE);
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new HashPartitionSender(oppositeMajorFragmentId, child, expr, destinations);
+    return new HashPartitionSender(oppositeMajorFragmentId, child, expr,
+        destinations, outgoingBatchSize);
   }
 
   public LogicalExpression getExpr() {
     return expr;
+  }
+
+  public int getOutgoingBatchSize() {
+    return outgoingBatchSize;
   }
 
   @Override

@@ -21,9 +21,8 @@ package org.apache.drill.common.logical;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-public abstract class StoragePluginConfig{
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
+public abstract class StoragePluginConfig {
 
   private Boolean enabled;
 
@@ -56,5 +55,9 @@ public abstract class StoragePluginConfig{
 
   @Override
   public abstract int hashCode();
+
+  public String getValue(String key) {
+    return null;
+  }
 
 }

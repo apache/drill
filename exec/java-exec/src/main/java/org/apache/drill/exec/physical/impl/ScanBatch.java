@@ -169,6 +169,90 @@ public class ScanBatch implements CloseableRecordBatch {
     }
   }
 
+  /**
+   * This method is to perform scan specific actions when the scan needs to clean/reset readers and return NONE status
+   * @return NONE
+   */
+  private IterOutcome cleanAndReturnNone() {
+    if(isRepeatableScan) {
+      readers = readerList.iterator();
+      return IterOutcome.NONE;
+    }
+    else {
+      releaseAssets(); // All data has been read. Release resource.
+      done = true;
+      return IterOutcome.NONE;}
+  }
+
+  /**
+   * When receive zero record from current reader, update reader accordingly,
+   * and return the decision whether the iteration should continue
+   * @return whether we could continue iteration
+   * @throws Exception
+   */
+  private boolean shouldContinueAfterNoRecords() throws Exception {
+    logger.trace("scan got 0 record.");
+    if(isRepeatableScan) {
+      if (!currentReader.hasNext()) {
+        currentReader = null;
+        readers = readerList.iterator();
+        return false;
+      }
+      return true;
+    }
+    else {// Regular scan
+      currentReader.close();
+      currentReader = null;
+      return true;// In regular case, we always continue the iteration, if no more reader, we will break out at the head of loop
+    }
+  }
+
+  private IterOutcome internalNext() throws Exception {
+    while (true) {
+      if (currentReader == null && !getNextReaderIfHas()) {
+        logger.trace("currentReader is null");
+        return cleanAndReturnNone();
+      }
+      injector.injectChecked(context.getExecutionControls(), "next-allocate", OutOfMemoryException.class);
+      currentReader.allocate(mutator.fieldVectorMap());
+
+      recordCount = currentReader.next();
+      logger.trace("currentReader.next return recordCount={}", recordCount);
+      Preconditions.checkArgument(recordCount >= 0, "recordCount from RecordReader.next() should not be negative");
+      boolean isNewSchema = mutator.isNewSchema();
+      populateImplicitVectorsAndSetCount();
+      oContext.getStats().batchReceived(0, recordCount, isNewSchema);
+
+      boolean toContinueIter = true;
+      if (recordCount == 0) {
+        // If we got 0 record, we may need to clean and exit, but we may need to return a new schema in below code block,
+        // so we use toContinueIter to mark the decision whether we should continue the iteration
+        toContinueIter = shouldContinueAfterNoRecords();
+      }
+
+      if (isNewSchema) {
+        // Even when recordCount = 0, we should return return OK_NEW_SCHEMA if current reader presents a new schema.
+        // This could happen when data sources have a non-trivial schema with 0 row.
+        container.buildSchema(SelectionVectorMode.NONE);
+        schema = container.getSchema();
+        return IterOutcome.OK_NEW_SCHEMA;
+      }
+
+      // Handle case of same schema.
+      if (recordCount == 0) {
+        if (toContinueIter) {
+          continue; // Skip to next loop iteration if reader returns 0 row and has same schema.
+        } else {
+          // Return NONE if recordCount ==0 && !isNewSchema
+          return IterOutcome.NONE;
+        }
+      } else {
+        // return OK if recordCount > 0 && ! isNewSchema
+        return IterOutcome.OK;
+      }
+    }
+  }
+
   @Override
   public IterOutcome next() {
     if (done) {
@@ -176,44 +260,7 @@ public class ScanBatch implements CloseableRecordBatch {
     }
     oContext.getStats().startProcessing();
     try {
-      while (true) {
-        if (currentReader == null && !getNextReaderIfHas()) {
-          releaseAssets(); // All data has been read. Release resource.
-          done = true;
-          return IterOutcome.NONE;
-        }
-        injector.injectChecked(context.getExecutionControls(), "next-allocate", OutOfMemoryException.class);
-        currentReader.allocate(mutator.fieldVectorMap());
-
-        recordCount = currentReader.next();
-        Preconditions.checkArgument(recordCount >= 0, "recordCount from RecordReader.next() should not be negative");
-        boolean isNewSchema = mutator.isNewSchema();
-        populateImplicitVectorsAndSetCount();
-        oContext.getStats().batchReceived(0, recordCount, isNewSchema);
-        logRecordBatchStats();
-
-        if (recordCount == 0) {
-          currentReader.close();
-          currentReader = null; // indicate currentReader is complete,
-                                // and fetch next reader in next loop iterator if required.
-        }
-
-        if (isNewSchema) {
-          // Even when recordCount = 0, we should return return OK_NEW_SCHEMA if current reader presents a new schema.
-          // This could happen when data sources have a non-trivial schema with 0 row.
-          container.buildSchema(SelectionVectorMode.NONE);
-          schema = container.getSchema();
-          return IterOutcome.OK_NEW_SCHEMA;
-        }
-
-        // Handle case of same schema.
-        if (recordCount == 0) {
-            continue; // Skip to next loop iteration if reader returns 0 row and has same schema.
-        } else {
-          // return OK if recordCount > 0 && ! isNewSchema
-          return IterOutcome.OK;
-        }
-      }
+      return internalNext();
     } catch (OutOfMemoryException ex) {
       clearFieldVectorMap();
       throw UserException.memoryError(ex).build(logger);
@@ -225,13 +272,11 @@ public class ScanBatch implements CloseableRecordBatch {
           logger.error("Close failed for reader " + currentReaderClassName, e2);
         }
       }
-      throw UserException.internalError(e)
+      throw UserException.systemError(e)
           .addContext("Setup failed for", currentReaderClassName)
           .build(logger);
-    } catch (UserException ex) {
-      throw ex;
     } catch (Exception ex) {
-      throw UserException.internalError(ex).build(logger);
+      throw UserException.systemError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
     }
@@ -274,9 +319,9 @@ public class ScanBatch implements CloseableRecordBatch {
       }
     } catch(SchemaChangeException e) {
       // No exception should be thrown here.
-      throw UserException.internalError(e)
-        .addContext("Failure while allocating implicit vectors")
-        .build(logger);
+      throw UserException.systemError(e)
+          .addContext("Failure while allocating implicit vectors")
+          .build(logger);
     }
   }
 
