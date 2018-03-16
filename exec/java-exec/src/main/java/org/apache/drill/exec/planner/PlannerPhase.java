@@ -29,6 +29,7 @@ import org.apache.calcite.tools.RuleSets;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.logical.DrillAggregateRule;
 import org.apache.drill.exec.planner.logical.DrillFilterAggregateTransposeRule;
+import org.apache.drill.exec.planner.logical.DrillFilterItemStarReWriterRule;
 import org.apache.drill.exec.planner.logical.DrillFilterJoinRules;
 import org.apache.drill.exec.planner.logical.DrillFilterRule;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
@@ -41,7 +42,6 @@ import org.apache.drill.exec.planner.logical.DrillPushLimitToScanRule;
 import org.apache.drill.exec.planner.logical.DrillPushProjectIntoScanRule;
 import org.apache.drill.exec.planner.logical.DrillPushProjectPastFilterRule;
 import org.apache.drill.exec.planner.logical.DrillPushProjectPastJoinRule;
-import org.apache.drill.exec.planner.logical.DrillFilterItemStarReWriterRule;
 import org.apache.drill.exec.planner.logical.DrillReduceAggregatesRule;
 import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
@@ -80,6 +80,7 @@ import org.apache.drill.exec.store.parquet.ParquetPushDownFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Returns RuleSet for concrete planner phase.
@@ -227,7 +228,7 @@ public enum PlannerPhase {
 
     // This list is used to store rules that can be turned on an off
     // by user facing planning options
-    final Builder<RelOptRule> userConfigurableRules = ImmutableSet.<RelOptRule>builder();
+    final Builder<RelOptRule> userConfigurableRules = ImmutableSet.builder();
 
     if (ps.isConstantFoldingEnabled()) {
       // TODO - DRILL-2218
@@ -337,8 +338,8 @@ public enum PlannerPhase {
    */
   static RuleSet getPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
     final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
+        .addAll(getItemStarRules())
         .add(
-            DrillFilterItemStarReWriterRule.INSTANCE,
             PruneScanRule.getDirFilterOnProject(optimizerRulesContext),
             PruneScanRule.getDirFilterOnScan(optimizerRulesContext),
             ParquetPruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
@@ -373,14 +374,15 @@ public enum PlannerPhase {
   }
 
   /**
-   *  Get an immutable list of directory-based partition pruing rules that will be used in Calcite logical planning.
-   * @param optimizerRulesContext
-   * @return
+   *  Get an immutable list of directory-based partition pruning rules that will be used in Calcite logical planning.
+   *
+   * @param optimizerRulesContext rules context
+   * @return directory-based partition pruning rules
    */
   static RuleSet getDirPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
-    final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
+    final Set<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
+        .addAll(getItemStarRules())
         .add(
-            DrillFilterItemStarReWriterRule.INSTANCE,
             PruneScanRule.getDirFilterOnProject(optimizerRulesContext),
             PruneScanRule.getDirFilterOnScan(optimizerRulesContext)
         )
@@ -402,7 +404,7 @@ public enum PlannerPhase {
       ProjectPrule.INSTANCE
     ));
 
-  static final RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
+  static RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
     final List<RelOptRule> ruleList = new ArrayList<>();
     final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
@@ -471,5 +473,18 @@ public enum PlannerPhase {
     }
     return RuleSets.ofList(relOptRuleSetBuilder.build());
   }
+
+  /**
+   * @return collection of rules to re-write item star operator for filter push down and partition pruning
+   */
+  private static ImmutableSet<RelOptRule> getItemStarRules() {
+    return ImmutableSet.<RelOptRule>builder()
+       .add(
+             DrillFilterItemStarReWriterRule.PROJECT_ON_SCAN,
+             DrillFilterItemStarReWriterRule.FILTER_ON_SCAN,
+             DrillFilterItemStarReWriterRule.FILTER_PROJECT_SCAN
+       ).build();
+  }
+
 
 }
