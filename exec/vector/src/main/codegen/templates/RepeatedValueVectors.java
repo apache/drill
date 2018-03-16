@@ -228,7 +228,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   @Override
   protected SerializedField.Builder getMetadataBuilder() {
     return super.getMetadataBuilder()
-            .setVarByteLength(values.getVarByteLength());
+            .setVarByteLength(values.getCurrentSizeInBytes());
   }
 
   @Override
