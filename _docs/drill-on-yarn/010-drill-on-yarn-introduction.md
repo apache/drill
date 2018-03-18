@@ -1,10 +1,10 @@
 ---
 title: "Drill-on-YARN Introduction"
-date:  
+date: 2018-03-18 20:11:39 UTC
 parent: "Drill-on-YARN"
 ---  
 
-As of Drill 1.13, Drill integrates with YARN to manage resources. Drill becomes a long running application with YARN. When you launch Drill, YARN automatically deploys (“localizes”) the Drill software onto each node, avoiding the need to preinstall Drill on each node. Resource management is simplified because YARN is aware of the resources dedicated to Drill.
+As of Drill 1.13, Drill integrates with YARN to manage resources. Drill becomes a long running application with YARN. When you launch Drill, YARN automatically deploys (localizes) the Drill software onto each node, avoiding the need to pre-install Drill on each node. Resource management is simplified because YARN is aware of the resources dedicated to Drill.
 
 Before you install and deploy Drill under YARN, you should be familiar with YARN concepts, such as the Resource Manager (RM), Node Manager (NM), and so on. You should also have a working Drill cluster that you want to launch under YARN. Drill configuration is best tested by launching Drill directly. You can launch Drill
 under YARN when the configuration becomes stable. 

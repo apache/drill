@@ -253,8 +253,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
+            "next_title": "Drill-on-YARN", 
+            "next_url": "/docs/drill-on-yarn/", 
             "parent": "Tutorials", 
             "previous_title": "Analyzing Social Media", 
             "previous_url": "/docs/analyzing-social-media/", 
@@ -494,11 +494,28 @@
             "next_title": "Apache Drill 1.11.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
             "parent": "Release Notes", 
-            "previous_title": "Release Notes", 
-            "previous_url": "/docs/release-notes/", 
-            "relative_path": "_docs/rn/001-1.12.0-rn.md", 
+            "previous_title": "Apache Drill 1.13.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-13-0-release-notes/", 
+            "relative_path": "_docs/rn/009-1.12.0-rn.md", 
             "title": "Apache Drill 1.12.0 Release Notes", 
             "url": "/docs/apache-drill-1-12-0-release-notes/"
+        }, 
+        "Apache Drill 1.13.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Apache Drill 1.12.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
+            "parent": "Release Notes", 
+            "previous_title": "Release Notes", 
+            "previous_url": "/docs/release-notes/", 
+            "relative_path": "_docs/rn/001-1.13.0-rn.md", 
+            "title": "Apache Drill 1.13.0 Release Notes", 
+            "url": "/docs/apache-drill-1-13-0-release-notes/"
         }, 
         "Apache Drill 1.2.0 Release Notes": {
             "breadcrumbs": [
@@ -694,6 +711,74 @@
             "relative_path": "_docs/rn/074-m1-alpha-rn.md", 
             "title": "Apache Drill M1 Release Notes (Apache Drill Alpha)", 
             "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
+        }, 
+        "Appendix A: Release Note Issues": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Appendix B: drill-env.sh Settings", 
+            "next_url": "/docs/appendix-b-drill-env-sh-settings/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Enabling Web UI Security", 
+            "previous_url": "/docs/enabling-web-ui-security/", 
+            "relative_path": "_docs/drill-on-yarn/090-appendix-a-release-note-issues.md", 
+            "title": "Appendix A: Release Note Issues", 
+            "url": "/docs/appendix-a-release-note-issues/"
+        }, 
+        "Appendix B: drill-env.sh Settings": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Appendix C: Troubleshooting", 
+            "next_url": "/docs/appendix-c-troubleshooting/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Appendix A: Release Note Issues", 
+            "previous_url": "/docs/appendix-a-release-note-issues/", 
+            "relative_path": "_docs/drill-on-yarn/091-appendix-b-drill-env.sh-settings.md", 
+            "title": "Appendix B: drill-env.sh Settings", 
+            "url": "/docs/appendix-b-drill-env-sh-settings/"
+        }, 
+        "Appendix C: Troubleshooting": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Appendix D: Recreate the Drill Archive", 
+            "next_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Appendix B: drill-env.sh Settings", 
+            "previous_url": "/docs/appendix-b-drill-env-sh-settings/", 
+            "relative_path": "_docs/drill-on-yarn/092-appendix-c-troubleshooting.md", 
+            "title": "Appendix C: Troubleshooting", 
+            "url": "/docs/appendix-c-troubleshooting/"
+        }, 
+        "Appendix D: Recreate the Drill Archive": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Appendix C: Troubleshooting", 
+            "previous_url": "/docs/appendix-c-troubleshooting/", 
+            "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
+            "title": "Appendix D: Recreate the Drill Archive", 
+            "url": "/docs/appendix-d-recreate-the-drill-archive/"
         }, 
         "Architecture": {
             "breadcrumbs": [], 
@@ -1096,6 +1181,23 @@
             "relative_path": "_docs/configure-drill/configuration-options/010-configuration-options-introduction.md", 
             "title": "Configuration Options Introduction", 
             "url": "/docs/configuration-options-introduction/"
+        }, 
+        "Configuration Reference": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Drill-on-YARN Command-Line Tool", 
+            "next_url": "/docs/drill-on-yarn-command-line-tool/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Launch Drill Under YARN", 
+            "previous_url": "/docs/launch-drill-under-yarn/", 
+            "relative_path": "_docs/drill-on-yarn/040-configuration-reference.md", 
+            "title": "Configuration Reference", 
+            "url": "/docs/configuration-reference/"
         }, 
         "Configure Drill": {
             "breadcrumbs": [], 
@@ -2677,6 +2779,23 @@
             "title": "Creating Custom Authenticators", 
             "url": "/docs/creating-custom-authenticators/"
         }, 
+        "Creating a Basic Drill Cluster": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Launch Drill Under YARN", 
+            "next_url": "/docs/launch-drill-under-yarn/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Drill-on-YARN Introduction", 
+            "previous_url": "/docs/drill-on-yarn-introduction/", 
+            "relative_path": "_docs/drill-on-yarn/020-creating-a-basic-drill-cluster.md", 
+            "title": "Creating a Basic Drill Cluster", 
+            "url": "/docs/creating-a-basic-drill-cluster/"
+        }, 
         "Custom Function Interfaces": {
             "breadcrumbs": [
                 {
@@ -3948,6 +4067,257 @@
             "title": "Drill in 10 Minutes", 
             "url": "/docs/drill-in-10-minutes/"
         }, 
+        "Drill-on-YARN": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Creating a Basic Drill Cluster", 
+                    "next_url": "/docs/creating-a-basic-drill-cluster/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Drill-on-YARN", 
+                    "previous_url": "/docs/drill-on-yarn/", 
+                    "relative_path": "_docs/drill-on-yarn/010-drill-on-yarn-introduction.md", 
+                    "title": "Drill-on-YARN Introduction", 
+                    "url": "/docs/drill-on-yarn-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Launch Drill Under YARN", 
+                    "next_url": "/docs/launch-drill-under-yarn/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Drill-on-YARN Introduction", 
+                    "previous_url": "/docs/drill-on-yarn-introduction/", 
+                    "relative_path": "_docs/drill-on-yarn/020-creating-a-basic-drill-cluster.md", 
+                    "title": "Creating a Basic Drill Cluster", 
+                    "url": "/docs/creating-a-basic-drill-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Reference", 
+                    "next_url": "/docs/configuration-reference/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Creating a Basic Drill Cluster", 
+                    "previous_url": "/docs/creating-a-basic-drill-cluster/", 
+                    "relative_path": "_docs/drill-on-yarn/030-launch-drill-under-yarn.md", 
+                    "title": "Launch Drill Under YARN", 
+                    "url": "/docs/launch-drill-under-yarn/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Drill-on-YARN Command-Line Tool", 
+                    "next_url": "/docs/drill-on-yarn-command-line-tool/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Launch Drill Under YARN", 
+                    "previous_url": "/docs/launch-drill-under-yarn/", 
+                    "relative_path": "_docs/drill-on-yarn/040-configuration-reference.md", 
+                    "title": "Configuration Reference", 
+                    "url": "/docs/configuration-reference/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using the Drill-on-YARN Web UI", 
+                    "next_url": "/docs/using-the-drill-on-yarn-web-ui/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Configuration Reference", 
+                    "previous_url": "/docs/configuration-reference/", 
+                    "relative_path": "_docs/drill-on-yarn/050-drill-on-yarn-command-line-tool.md", 
+                    "title": "Drill-on-YARN Command-Line Tool", 
+                    "url": "/docs/drill-on-yarn-command-line-tool/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Multiple Drill Clusters", 
+                    "next_url": "/docs/multiple-drill-clusters/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Drill-on-YARN Command-Line Tool", 
+                    "previous_url": "/docs/drill-on-yarn-command-line-tool/", 
+                    "relative_path": "_docs/drill-on-yarn/060-using-the-drill-on-yarn-web-ui.md", 
+                    "title": "Using the Drill-on-YARN Web UI", 
+                    "url": "/docs/using-the-drill-on-yarn-web-ui/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Enabling Web UI Security", 
+                    "next_url": "/docs/enabling-web-ui-security/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Using the Drill-on-YARN Web UI", 
+                    "previous_url": "/docs/using-the-drill-on-yarn-web-ui/", 
+                    "relative_path": "_docs/drill-on-yarn/070-multiple-drill-clusters.md", 
+                    "title": "Multiple Drill Clusters", 
+                    "url": "/docs/multiple-drill-clusters/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix A: Release Note Issues", 
+                    "next_url": "/docs/appendix-a-release-note-issues/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Multiple Drill Clusters", 
+                    "previous_url": "/docs/multiple-drill-clusters/", 
+                    "relative_path": "_docs/drill-on-yarn/080-enabling-web-ui-security.md", 
+                    "title": "Enabling Web UI Security", 
+                    "url": "/docs/enabling-web-ui-security/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix B: drill-env.sh Settings", 
+                    "next_url": "/docs/appendix-b-drill-env-sh-settings/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Enabling Web UI Security", 
+                    "previous_url": "/docs/enabling-web-ui-security/", 
+                    "relative_path": "_docs/drill-on-yarn/090-appendix-a-release-note-issues.md", 
+                    "title": "Appendix A: Release Note Issues", 
+                    "url": "/docs/appendix-a-release-note-issues/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix C: Troubleshooting", 
+                    "next_url": "/docs/appendix-c-troubleshooting/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix A: Release Note Issues", 
+                    "previous_url": "/docs/appendix-a-release-note-issues/", 
+                    "relative_path": "_docs/drill-on-yarn/091-appendix-b-drill-env.sh-settings.md", 
+                    "title": "Appendix B: drill-env.sh Settings", 
+                    "url": "/docs/appendix-b-drill-env-sh-settings/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix D: Recreate the Drill Archive", 
+                    "next_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix B: drill-env.sh Settings", 
+                    "previous_url": "/docs/appendix-b-drill-env-sh-settings/", 
+                    "relative_path": "_docs/drill-on-yarn/092-appendix-c-troubleshooting.md", 
+                    "title": "Appendix C: Troubleshooting", 
+                    "url": "/docs/appendix-c-troubleshooting/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix C: Troubleshooting", 
+                    "previous_url": "/docs/appendix-c-troubleshooting/", 
+                    "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
+                    "title": "Appendix D: Recreate the Drill Archive", 
+                    "url": "/docs/appendix-d-recreate-the-drill-archive/"
+                }
+            ], 
+            "next_title": "Drill-on-YARN Introduction", 
+            "next_url": "/docs/drill-on-yarn-introduction/", 
+            "parent": "", 
+            "previous_title": "Analyzing Data Using Window Functions", 
+            "previous_url": "/docs/analyzing-data-using-window-functions/", 
+            "relative_path": "_docs/031-drill-on-yarn.md", 
+            "title": "Drill-on-YARN", 
+            "url": "/docs/drill-on-yarn/"
+        }, 
+        "Drill-on-YARN Command-Line Tool": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using the Drill-on-YARN Web UI", 
+            "next_url": "/docs/using-the-drill-on-yarn-web-ui/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Configuration Reference", 
+            "previous_url": "/docs/configuration-reference/", 
+            "relative_path": "_docs/drill-on-yarn/050-drill-on-yarn-command-line-tool.md", 
+            "title": "Drill-on-YARN Command-Line Tool", 
+            "url": "/docs/drill-on-yarn-command-line-tool/"
+        }, 
+        "Drill-on-YARN Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Creating a Basic Drill Cluster", 
+            "next_url": "/docs/creating-a-basic-drill-cluster/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Drill-on-YARN", 
+            "previous_url": "/docs/drill-on-yarn/", 
+            "relative_path": "_docs/drill-on-yarn/010-drill-on-yarn-introduction.md", 
+            "title": "Drill-on-YARN Introduction", 
+            "url": "/docs/drill-on-yarn-introduction/"
+        }, 
         "Dynamic UDFs": {
             "breadcrumbs": [
                 {
@@ -4031,6 +4401,23 @@
             "relative_path": "_docs/performance-tuning/query-plans-and-tuning/060-enabling-query-queuing.md", 
             "title": "Enabling Query Queuing", 
             "url": "/docs/enabling-query-queuing/"
+        }, 
+        "Enabling Web UI Security": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Appendix A: Release Note Issues", 
+            "next_url": "/docs/appendix-a-release-note-issues/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Multiple Drill Clusters", 
+            "previous_url": "/docs/multiple-drill-clusters/", 
+            "relative_path": "_docs/drill-on-yarn/080-enabling-web-ui-security.md", 
+            "title": "Enabling Web UI Security", 
+            "url": "/docs/enabling-web-ui-security/"
         }, 
         "Enron Emails": {
             "breadcrumbs": [
@@ -4760,8 +5147,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Data Using Window Functions", 
-            "previous_url": "/docs/analyzing-data-using-window-functions/", 
+            "previous_title": "Appendix D: Recreate the Drill Archive", 
+            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -5329,6 +5716,23 @@
             "title": "LIMIT Clause", 
             "url": "/docs/limit-clause/"
         }, 
+        "Launch Drill Under YARN": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Reference", 
+            "next_url": "/docs/configuration-reference/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Creating a Basic Drill Cluster", 
+            "previous_url": "/docs/creating-a-basic-drill-cluster/", 
+            "relative_path": "_docs/drill-on-yarn/030-launch-drill-under-yarn.md", 
+            "title": "Launch Drill Under YARN", 
+            "url": "/docs/launch-drill-under-yarn/"
+        }, 
         "Learn Drill with the MapR Sandbox": {
             "breadcrumbs": [
                 {
@@ -5874,6 +6278,23 @@
             "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
             "title": "Monitoring and Canceling Queries in the Drill Web Console", 
             "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/"
+        }, 
+        "Multiple Drill Clusters": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Enabling Web UI Security", 
+            "next_url": "/docs/enabling-web-ui-security/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Using the Drill-on-YARN Web UI", 
+            "previous_url": "/docs/using-the-drill-on-yarn-web-ui/", 
+            "relative_path": "_docs/drill-on-yarn/070-multiple-drill-clusters.md", 
+            "title": "Multiple Drill Clusters", 
+            "url": "/docs/multiple-drill-clusters/"
         }, 
         "Nested Data Functions": {
             "breadcrumbs": [
@@ -9118,12 +9539,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.11.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
+                    "next_title": "Apache Drill 1.12.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
-                    "relative_path": "_docs/rn/001-1.12.0-rn.md", 
+                    "relative_path": "_docs/rn/001-1.13.0-rn.md", 
+                    "title": "Apache Drill 1.13.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-13-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.11.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.13.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-13-0-release-notes/", 
+                    "relative_path": "_docs/rn/009-1.12.0-rn.md", 
                     "title": "Apache Drill 1.12.0 Release Notes", 
                     "url": "/docs/apache-drill-1-12-0-release-notes/"
                 }, 
@@ -9468,8 +9906,8 @@
                     "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
                 }
             ], 
-            "next_title": "Apache Drill 1.12.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
+            "next_title": "Apache Drill 1.13.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-13-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
@@ -13150,8 +13588,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Drill-on-YARN", 
+                    "next_url": "/docs/drill-on-yarn/", 
                     "parent": "Tutorials", 
                     "previous_title": "Analyzing Social Media", 
                     "previous_url": "/docs/analyzing-social-media/", 
@@ -13844,6 +14282,23 @@
             "title": "Using libpam4j as the PAM Authenticator", 
             "url": "/docs/using-libpam4j-as-the-pam-authenticator/"
         }, 
+        "Using the Drill-on-YARN Web UI": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Multiple Drill Clusters", 
+            "next_url": "/docs/multiple-drill-clusters/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Drill-on-YARN Command-Line Tool", 
+            "previous_url": "/docs/drill-on-yarn-command-line-tool/", 
+            "relative_path": "_docs/drill-on-yarn/060-using-the-drill-on-yarn-web-ui.md", 
+            "title": "Using the Drill-on-YARN Web UI", 
+            "url": "/docs/using-the-drill-on-yarn-web-ui/"
+        }, 
         "Using the JDBC Driver": {
             "breadcrumbs": [
                 {
@@ -14391,8 +14846,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Drill-on-YARN", 
+                    "next_url": "/docs/drill-on-yarn/", 
                     "parent": "Tutorials", 
                     "previous_title": "Analyzing Social Media", 
                     "previous_url": "/docs/analyzing-social-media/", 
@@ -14409,6 +14864,223 @@
             "relative_path": "_docs/030-tutorials.md", 
             "title": "Tutorials", 
             "url": "/docs/tutorials/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Creating a Basic Drill Cluster", 
+                    "next_url": "/docs/creating-a-basic-drill-cluster/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Drill-on-YARN", 
+                    "previous_url": "/docs/drill-on-yarn/", 
+                    "relative_path": "_docs/drill-on-yarn/010-drill-on-yarn-introduction.md", 
+                    "title": "Drill-on-YARN Introduction", 
+                    "url": "/docs/drill-on-yarn-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Launch Drill Under YARN", 
+                    "next_url": "/docs/launch-drill-under-yarn/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Drill-on-YARN Introduction", 
+                    "previous_url": "/docs/drill-on-yarn-introduction/", 
+                    "relative_path": "_docs/drill-on-yarn/020-creating-a-basic-drill-cluster.md", 
+                    "title": "Creating a Basic Drill Cluster", 
+                    "url": "/docs/creating-a-basic-drill-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Reference", 
+                    "next_url": "/docs/configuration-reference/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Creating a Basic Drill Cluster", 
+                    "previous_url": "/docs/creating-a-basic-drill-cluster/", 
+                    "relative_path": "_docs/drill-on-yarn/030-launch-drill-under-yarn.md", 
+                    "title": "Launch Drill Under YARN", 
+                    "url": "/docs/launch-drill-under-yarn/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Drill-on-YARN Command-Line Tool", 
+                    "next_url": "/docs/drill-on-yarn-command-line-tool/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Launch Drill Under YARN", 
+                    "previous_url": "/docs/launch-drill-under-yarn/", 
+                    "relative_path": "_docs/drill-on-yarn/040-configuration-reference.md", 
+                    "title": "Configuration Reference", 
+                    "url": "/docs/configuration-reference/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using the Drill-on-YARN Web UI", 
+                    "next_url": "/docs/using-the-drill-on-yarn-web-ui/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Configuration Reference", 
+                    "previous_url": "/docs/configuration-reference/", 
+                    "relative_path": "_docs/drill-on-yarn/050-drill-on-yarn-command-line-tool.md", 
+                    "title": "Drill-on-YARN Command-Line Tool", 
+                    "url": "/docs/drill-on-yarn-command-line-tool/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Multiple Drill Clusters", 
+                    "next_url": "/docs/multiple-drill-clusters/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Drill-on-YARN Command-Line Tool", 
+                    "previous_url": "/docs/drill-on-yarn-command-line-tool/", 
+                    "relative_path": "_docs/drill-on-yarn/060-using-the-drill-on-yarn-web-ui.md", 
+                    "title": "Using the Drill-on-YARN Web UI", 
+                    "url": "/docs/using-the-drill-on-yarn-web-ui/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Enabling Web UI Security", 
+                    "next_url": "/docs/enabling-web-ui-security/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Using the Drill-on-YARN Web UI", 
+                    "previous_url": "/docs/using-the-drill-on-yarn-web-ui/", 
+                    "relative_path": "_docs/drill-on-yarn/070-multiple-drill-clusters.md", 
+                    "title": "Multiple Drill Clusters", 
+                    "url": "/docs/multiple-drill-clusters/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix A: Release Note Issues", 
+                    "next_url": "/docs/appendix-a-release-note-issues/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Multiple Drill Clusters", 
+                    "previous_url": "/docs/multiple-drill-clusters/", 
+                    "relative_path": "_docs/drill-on-yarn/080-enabling-web-ui-security.md", 
+                    "title": "Enabling Web UI Security", 
+                    "url": "/docs/enabling-web-ui-security/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix B: drill-env.sh Settings", 
+                    "next_url": "/docs/appendix-b-drill-env-sh-settings/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Enabling Web UI Security", 
+                    "previous_url": "/docs/enabling-web-ui-security/", 
+                    "relative_path": "_docs/drill-on-yarn/090-appendix-a-release-note-issues.md", 
+                    "title": "Appendix A: Release Note Issues", 
+                    "url": "/docs/appendix-a-release-note-issues/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix C: Troubleshooting", 
+                    "next_url": "/docs/appendix-c-troubleshooting/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix A: Release Note Issues", 
+                    "previous_url": "/docs/appendix-a-release-note-issues/", 
+                    "relative_path": "_docs/drill-on-yarn/091-appendix-b-drill-env.sh-settings.md", 
+                    "title": "Appendix B: drill-env.sh Settings", 
+                    "url": "/docs/appendix-b-drill-env-sh-settings/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Appendix D: Recreate the Drill Archive", 
+                    "next_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix B: drill-env.sh Settings", 
+                    "previous_url": "/docs/appendix-b-drill-env-sh-settings/", 
+                    "relative_path": "_docs/drill-on-yarn/092-appendix-c-troubleshooting.md", 
+                    "title": "Appendix C: Troubleshooting", 
+                    "url": "/docs/appendix-c-troubleshooting/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix C: Troubleshooting", 
+                    "previous_url": "/docs/appendix-c-troubleshooting/", 
+                    "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
+                    "title": "Appendix D: Recreate the Drill Archive", 
+                    "url": "/docs/appendix-d-recreate-the-drill-archive/"
+                }
+            ], 
+            "next_title": "Drill-on-YARN Introduction", 
+            "next_url": "/docs/drill-on-yarn-introduction/", 
+            "parent": "", 
+            "previous_title": "Analyzing Data Using Window Functions", 
+            "previous_url": "/docs/analyzing-data-using-window-functions/", 
+            "relative_path": "_docs/031-drill-on-yarn.md", 
+            "title": "Drill-on-YARN", 
+            "url": "/docs/drill-on-yarn/"
         }, 
         {
             "breadcrumbs": [], 
@@ -14689,8 +15361,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Data Using Window Functions", 
-            "previous_url": "/docs/analyzing-data-using-window-functions/", 
+            "previous_title": "Appendix D: Recreate the Drill Archive", 
+            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -19106,12 +19778,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.11.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
+                    "next_title": "Apache Drill 1.12.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
-                    "relative_path": "_docs/rn/001-1.12.0-rn.md", 
+                    "relative_path": "_docs/rn/001-1.13.0-rn.md", 
+                    "title": "Apache Drill 1.13.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-13-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.11.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-11-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.13.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-13-0-release-notes/", 
+                    "relative_path": "_docs/rn/009-1.12.0-rn.md", 
                     "title": "Apache Drill 1.12.0 Release Notes", 
                     "url": "/docs/apache-drill-1-12-0-release-notes/"
                 }, 
@@ -19456,8 +20145,8 @@
                     "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
                 }
             ], 
-            "next_title": "Apache Drill 1.12.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-12-0-release-notes/", 
+            "next_title": "Apache Drill 1.13.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-13-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
