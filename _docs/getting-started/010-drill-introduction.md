@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2017-12-16 06:24:22 UTC
+date: 2018-03-18 20:02:37 UTC
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -9,6 +9,27 @@ the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.  
+
+## What's New in Apache Drill 1.13  
+- JDK 8 support. ([DRILL-1491](https://issues.apache.org/jira/browse/DRILL-1491))    
+- Upgrade to [Calcite version 1.15](https://calcite.apache.org/docs/history.html#v1-15-0). ([DRILL-3993](https://issues.apache.org/jira/browse/DRILL-3993)) 
+- JDBC Statement.setQueryTimeout(int) support to cancel queries if they do not complete within the specified time. ([DRILL-3640](https://issues.apache.org/jira/browse/DRILL-3640))  
+- Batch processing improvements that enable you to [limit the amount of memory]({{site.baseurl}}/docs/configuring-drill-memory/#modifying-memory-allocated-to-queries) that the Flatten, Merge Join, and External Sort operators allocate to outgoing batches. ([DRILL-6123](https://issues.apache.org/jira/browse/DRILL-6123))  
+- Enhanced DESCRIBE command. ([DRILL-4559](https://issues.apache.org/jira/browse/DRILL-4559))   
+- Support for SPNEGO to extend Kerberos to Web applications through HTTP. ([DRILL-5425](https://issues.apache.org/jira/browse/DRILL-5425))   
+- Ability to run [Drill under YARN]({{site.baseurl}}/docs/drill-on-yarn/). ([DRILL-1170](https://issues.apache.org/jira/browse/DRILL-1170))   
+- Parquet filter pushdown support for IS [NOT] NULL, TRUE, and FALSE operators and implicit and explicit casts for timestamp, date, and time data types. ([DRILL-6174](https://issues.apache.org/jira/browse/DRILL-6174))  
+- Performance improvements with support for project push down, filter push down, and partition pruning on dynamically expanded columns when represented as a star in the ITEM operator. ([DRILL-6118](https://issues.apache.org/jira/browse/DRILL-6118))  
+- Updated Hive libraries and the Drill Hive client updated to 2.3.2 with support for querying Hive transactional ORC bucketed tables. ([DRILL-5978](https://issues.apache.org/jira/browse/DRILL-5978))
+- Ability to automatically manage memory allocations during Drill startup. ([DRILL-5741](https://issues.apache.org/jira/browse/DRILL-5741))  
+- Ability to query an empty directory and use it for queries with any JOIN and UNION (UNION ALL) operators. ([Drill-4185](https://issues.apache.org/jira/browse/DRILL-4185))  
+- Non-numeric support for JSON processing. ([Drill-5919](https://issues.apache.org/jira/browse/DRILL-5919))  
+- New options to that enable you to configure the number of Jetty acceptors and selectors ([DRILL-5994](https://issues.apache.org/jira/browse/DRILL-5994))  
+- Support SQL syntax highlighting of queries, auto-complete support in SQL editors, and snippets. ([DRILL-5868](https://issues.apache.org/jira/browse/DRILL-5868))  
+- Improved performance of the Single Merge Exchange operator. ([DRILL-6115](https://issues.apache.org/jira/browse/DRILL-6115))   
+- Like operator optimization. [DRILL-5879](https://issues.apache.org/jira/browse/DRILL-5879)    
+- User/Distribution-specific configuration checks during startup ([DRILL-5741](https://issues.apache.org/jira/browse/DRILL-5741)).    
+    
 
 ## What's New in Apache Drill 1.12  
 
