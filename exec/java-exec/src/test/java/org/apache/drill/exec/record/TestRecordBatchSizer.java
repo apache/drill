@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.record;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
 import org.apache.drill.exec.vector.NullableVector;
@@ -35,6 +32,10 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
+
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class TestRecordBatchSizer extends SubOperatorTest {
   private final int testRowCount = 1000;
@@ -811,20 +812,31 @@ public class TestRecordBatchSizer extends SubOperatorTest {
    */
   @Test
   public void testEmptyVariableWidthVector() {
-    BatchSchema schema = new SchemaBuilder()
+    final BatchSchema schema = new SchemaBuilder()
       .add("key", MinorType.INT)
       .add("value", MinorType.VARCHAR)
       .build();
 
-    RowSetBuilder builder = fixture.rowSetBuilder(schema);
-    RowSet rows = builder.build();
+    final RowSetBuilder builder = fixture.rowSetBuilder(schema);
+    final RowSet rows = builder.build();
 
-    // Release the inital bytes allocated by RowSetBuilder
+    // Release the initial bytes allocated by RowSetBuilder
     VectorAccessibleUtilities.clear(rows.container());
 
-    // Run the record batch sizer on the resulting batch.
-    RecordBatchSizer sizer = new RecordBatchSizer(rows.container());
-    assertEquals(2, sizer.columns().size());
-    rows.clear();
+    try {
+      // Create RecordBatchSizer for this empty container and it should not fail
+      final RecordBatchSizer sizer = new RecordBatchSizer(rows.container());
+      int totalDataSize = 0;
+
+      for (ColumnSize colSize : sizer.columns().values()) {
+        totalDataSize += colSize.getTotalDataSize();
+      }
+      // Verify that the totalDataSize for all the columns is zero
+      assertEquals(0, totalDataSize);
+    } catch (Exception ex) {
+      fail();
+    } finally {
+      rows.clear();
+    }
   }
 }
