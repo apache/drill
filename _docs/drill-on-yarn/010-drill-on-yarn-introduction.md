@@ -1,6 +1,6 @@
 ---
 title: "Drill-on-YARN Introduction"
-date: 2018-03-18 20:11:39 UTC
+date: 2018-03-19 23:54:28 UTC
 parent: "Drill-on-YARN"
 ---  
 
@@ -20,8 +20,8 @@ distributions also provide disk settings.
 
 For memory, you first configure Drill’s memory as described below, then you inform YARN of the Drill configuration. 
 
-Drill will use all available disk I/Os. Drill will also use all available CPU. Consider enabling Linux
-cgroups to limit Drill's CPU usage to match the YARN vcores allocation.  
+Drill will use all available disk I/Os. Drill will also use all available CPU. Consider enabling [Linux
+cgroups](https://drill.apache.org/docs/appendix-e-using-cgroups-to-control-cpu-usage/) to limit Drill's CPU usage to match the YARN vcores allocation.  
 
 ##Drill-on-YARN Components  
 
