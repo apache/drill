@@ -1311,8 +1311,9 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinBatch ljBatch = new LateralJoinBatch(ljPopConfig, fixture.getFragmentContext(),
       leftMockBatch, rightMockBatch);
 
-    int originalMaxBatchSize = LateralJoinBatch.MAX_BATCH_SIZE;
-    LateralJoinBatch.MAX_BATCH_SIZE = 2;
+    final int maxBatchSize = 2;
+    ljBatch.setUseMemoryManager(false);
+    ljBatch.setMaxOutputRowCount(maxBatchSize);
 
     try {
       int totalRecordCount = 0;
@@ -1321,11 +1322,11 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
       // 1st output batch
       assertTrue(RecordBatch.IterOutcome.OK == ljBatch.next());
       totalRecordCount += ljBatch.getRecordCount();
-      assertTrue(ljBatch.getRecordCount() == LateralJoinBatch.MAX_BATCH_SIZE);
+      assertTrue(ljBatch.getRecordCount() == maxBatchSize);
 
       // 2nd output batch
       assertTrue(RecordBatch.IterOutcome.OK == ljBatch.next());
-      assertTrue(ljBatch.getRecordCount() == LateralJoinBatch.MAX_BATCH_SIZE);
+      assertTrue(ljBatch.getRecordCount() == maxBatchSize);
       totalRecordCount += ljBatch.getRecordCount();
 
       // 3rd output batch
@@ -1346,7 +1347,6 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
       rightMockBatch.close();
       leftRowSet2.clear();
       nonEmptyRightRowSet2.clear();
-      LateralJoinBatch.MAX_BATCH_SIZE = originalMaxBatchSize;
     }
   }
 
@@ -1693,8 +1693,9 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinBatch ljBatch = new LateralJoinBatch(popConfig, fixture.getFragmentContext(),
       leftMockBatch, rightMockBatch);
 
-    int originalMaxBatchSize = LateralJoinBatch.MAX_BATCH_SIZE;
-    LateralJoinBatch.MAX_BATCH_SIZE = 2;
+    int originalMaxBatchSize = 2;
+    ljBatch.setUseMemoryManager(false);
+    ljBatch.setMaxOutputRowCount(originalMaxBatchSize);
 
     try {
       final int expectedOutputRecordCount = 7; // 3 for first left row and 1 for second left row
@@ -1717,7 +1718,6 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
       ljBatch.close();
       leftMockBatch.close();
       rightMockBatch.close();
-      LateralJoinBatch.MAX_BATCH_SIZE = originalMaxBatchSize;
     }
   }
 
@@ -1959,13 +1959,14 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final CloseableRecordBatch rightMockBatch_1 = new MockRecordBatch(fixture.getFragmentContext(), operatorContext,
       rightContainer, rightOutcomes, rightContainer.get(0).getSchema());
 
-    int originalMaxBatchSize = LateralJoinBatch.MAX_BATCH_SIZE;
-    LateralJoinBatch.MAX_BATCH_SIZE = 2;
-
     final LateralJoinPOP popConfig_1 = new LateralJoinPOP(null, null, JoinRelType.FULL);
 
     final LateralJoinBatch lowerLateral = new LateralJoinBatch(popConfig_1, fixture.getFragmentContext(),
       leftMockBatch_1, rightMockBatch_1);
+
+    // Use below api to enforce static output batch limit
+    lowerLateral.setUseMemoryManager(false);
+    lowerLateral.setMaxOutputRowCount(2);
 
     // ** Prepare second pair of left and right batch for upper LATERAL Lateral_2 **
 
@@ -1997,6 +1998,10 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     final LateralJoinBatch upperLateral = new LateralJoinBatch(popConfig_1, fixture.getFragmentContext(),
       leftMockBatch_2, lowerLateral);
 
+    // Use below api to enforce static output batch limit
+    upperLateral.setUseMemoryManager(false);
+    upperLateral.setMaxOutputRowCount(2);
+
     try {
       final int expectedOutputRecordCount = 6;
 
@@ -2021,7 +2026,6 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
       rightMockBatch_1.close();
       leftContainer2.clear();
       leftOutcomes2.clear();
-      LateralJoinBatch.MAX_BATCH_SIZE = originalMaxBatchSize;
     }
   }
 
