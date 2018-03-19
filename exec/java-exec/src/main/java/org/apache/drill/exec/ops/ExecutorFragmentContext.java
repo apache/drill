@@ -18,6 +18,7 @@
 package org.apache.drill.exec.ops;
 
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
@@ -31,6 +32,11 @@ import java.util.Map;
 import java.util.Set;
 
 public interface ExecutorFragmentContext extends RootFragmentContext {
+  /**
+   * Returns the root allocator for the Drillbit.
+   * @return The root allocator for the Drillbit.
+   */
+  BufferAllocator getRootAllocator();
 
   PhysicalPlanReader getPlanReader();
 
