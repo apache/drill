@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.sys;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,47 +34,76 @@ import org.apache.drill.exec.util.ImpersonationUtil;
  * Base class for Profile Iterators
  */
 public abstract class ProfileIterator implements Iterator<Object> {
+
+  private static final int DEFAULT_NUMBER_OF_PROFILES_TO_FETCH = 4000;
+
   protected final QueryProfileStoreContext profileStoreContext;
   protected final String queryingUsername;
   protected final boolean isAdmin;
 
-  public ProfileIterator(ExecutorFragmentContext context) {
-    //Grab profile Store Context
-    profileStoreContext = context.getProfileStoreContext();
+  private final int maxRecords;
 
-    queryingUsername = context.getQueryUserName();
-    isAdmin = hasAdminPrivileges(context);
-  }
-
-  protected boolean hasAdminPrivileges(ExecutorFragmentContext context) {
-    OptionManager options = context.getOptions();
-    if (context.isUserAuthenticationEnabled() &&
-        !ImpersonationUtil.hasAdminPrivileges(
-          context.getQueryUserName(),
-          ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
-          ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
-      return false;
-    }
-
-    //Passed checks
-    return true;
+  protected ProfileIterator(ExecutorFragmentContext context, int maxRecords) {
+    this.profileStoreContext = context.getProfileStoreContext();
+    this.queryingUsername = context.getQueryUserName();
+    this.isAdmin = hasAdminPrivileges(context);
+    this.maxRecords = maxRecords;
   }
 
   //Returns an iterator for authorized profiles
-  protected Iterator<Entry<String, QueryProfile>> getAuthorizedProfiles (
-      Iterator<Entry<String, QueryProfile>> allProfiles, String username, boolean isAdministrator) {
-    if (isAdministrator) {
-      return allProfiles;
+  protected Iterator<Entry<String, QueryProfile>> getAuthorizedProfiles(String username, boolean isAdministrator) {
+    if (maxRecords == 0) {
+      return Collections.emptyIterator();
     }
 
-    List<Entry<String, QueryProfile>> authorizedProfiles = new LinkedList<Entry<String, QueryProfile>>();
-    while (allProfiles.hasNext()) {
-      Entry<String, QueryProfile> profileKVPair = allProfiles.next();
-      //Check if user matches
-      if (profileKVPair.getValue().getUser().equals(username)) {
-        authorizedProfiles.add(profileKVPair);
+    if (isAdministrator) {
+      return getProfiles(0, maxRecords);
+    }
+
+
+    /*
+      For non-administrators getting profiles by range might not return exact number of requested profiles
+      since some extracted profiles may belong to different users.
+      In order not to extract all profiles, proceed extracting profiles based on max between default and given maxRecords
+      until number of authorized user's profiles equals to the provided limit.
+      Using max between default and given maxRecords will be helpful in case maxRecords number is low (ex: 1).
+      Reading profiles in a bulk will be much faster.
+     */
+    List<Entry<String, QueryProfile>> authorizedProfiles = new LinkedList<>();
+    int skip = 0;
+    int take = Math.max(maxRecords, DEFAULT_NUMBER_OF_PROFILES_TO_FETCH);
+
+    while (skip < Integer.MAX_VALUE) {
+      Iterator<Entry<String, QueryProfile>> profiles = getProfiles(skip, take);
+      int fetchedProfilesCount = 0;
+      while (profiles.hasNext()) {
+        fetchedProfilesCount++;
+        Entry<String, QueryProfile> profileKVPair = profiles.next();
+        // check if user matches
+        if (profileKVPair.getValue().getUser().equals(username)) {
+          authorizedProfiles.add(profileKVPair);
+          // if we have all needed authorized profiles, return iterator
+          if (authorizedProfiles.size() == maxRecords) {
+            return authorizedProfiles.iterator();
+          }
+        }
+      }
+
+      // if returned number of profiles is less then given range then there are no more profiles in the store
+      // return all found authorized profiles
+      if (fetchedProfilesCount != take) {
+        return authorizedProfiles.iterator();
+      }
+
+      try {
+        // since we request profiles in batches, define number of profiles to skip
+        // if we hit integer overflow return all found authorized profiles
+        skip = Math.addExact(skip, take);
+      } catch (ArithmeticException e) {
+        return authorizedProfiles.iterator();
       }
     }
+
     return authorizedProfiles.iterator();
   }
 
@@ -84,4 +114,34 @@ public abstract class ProfileIterator implements Iterator<Object> {
       return 0;
     }
   }
+
+  /**
+   * Returns profiles based of given range.
+   *
+   * @param skip number of profiles to skip
+   * @param take number of profiles to return
+   * @return profiles iterator
+   */
+  protected abstract Iterator<Entry<String, QueryProfile>> getProfiles(int skip, int take);
+
+  /**
+   * Checks is current user has admin privileges.
+   *
+   * @param context fragment context
+   * @return true if user is admin, false otherwise
+   */
+  private boolean hasAdminPrivileges(ExecutorFragmentContext context) {
+    OptionManager options = context.getOptions();
+    if (context.isUserAuthenticationEnabled() &&
+        !ImpersonationUtil.hasAdminPrivileges(
+            context.getQueryUserName(),
+            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
+      return false;
+    }
+
+    //Passed checks
+    return true;
+  }
+
 }

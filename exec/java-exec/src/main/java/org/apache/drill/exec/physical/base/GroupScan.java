@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,16 +40,16 @@ public interface GroupScan extends Scan, HasAffinity{
    *                             2) NULL is interpreted as ALL_COLUMNS.
    *  How to handle skipAll query is up to each storage plugin, with different policy in corresponding RecordReader.
    */
-  public static final List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.STAR_COLUMN);
+  List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.STAR_COLUMN);
 
-  public static final long NO_COLUMN_STATS = -1;
+  long NO_COLUMN_STATS = -1;
 
-  public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
+  void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 
-  public abstract SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException;
+  SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException;
 
   @JsonIgnore
-  public int getMaxParallelizationWidth();
+  int getMaxParallelizationWidth();
 
   /**
    * At minimum, the GroupScan requires these many fragments to run.
@@ -57,7 +57,7 @@ public interface GroupScan extends Scan, HasAffinity{
    * @return the minimum number of fragments that should run
    */
   @JsonIgnore
-  public int getMinParallelizationWidth();
+  int getMinParallelizationWidth();
 
   /**
    * Check if GroupScan enforces width to be maximum parallelization width.
@@ -69,50 +69,50 @@ public interface GroupScan extends Scan, HasAffinity{
    */
   @JsonIgnore
   @Deprecated
-  public boolean enforceWidth();
+  boolean enforceWidth();
 
   /**
    * Returns a signature of the {@link GroupScan} which should usually be composed of
    * all its attributes which could describe it uniquely.
    */
   @JsonIgnore
-  public abstract String getDigest();
+  String getDigest();
 
   @JsonIgnore
-  public ScanStats getScanStats(PlannerSettings settings);
+  ScanStats getScanStats(PlannerSettings settings);
 
   /**
    * Returns a clone of GroupScan instance, except that the new GroupScan will use the provided list of columns .
    */
-  public GroupScan clone(List<SchemaPath> columns);
+  GroupScan clone(List<SchemaPath> columns);
 
   /**
    * GroupScan should check the list of columns, and see if it could support all the columns in the list.
    */
-  public boolean canPushdownProjects(List<SchemaPath> columns);
+  boolean canPushdownProjects(List<SchemaPath> columns);
 
   /**
    * Return the number of non-null value in the specified column. Raise exception, if groupscan does not
    * have exact column row count.
    */
-  public long getColumnValueCount(SchemaPath column);
+  long getColumnValueCount(SchemaPath column);
 
   /**
    * Whether or not this GroupScan supports pushdown of partition filters (directories for filesystems)
    */
-  public boolean supportsPartitionFilterPushdown();
+  boolean supportsPartitionFilterPushdown();
 
   /**
    * Returns a list of columns that can be used for partition pruning
    *
    */
   @JsonIgnore
-  public List<SchemaPath> getPartitionColumns();
+  List<SchemaPath> getPartitionColumns();
 
   /**
    * Whether or not this GroupScan supports limit pushdown
    */
-  public boolean supportsLimitPushdown();
+  boolean supportsLimitPushdown();
 
   /**
    * Apply rowcount based prune for "LIMIT n" query.
@@ -120,18 +120,18 @@ public interface GroupScan extends Scan, HasAffinity{
    * @return  a new instance of group scan if the prune is successful.
    *          null when either if row-based prune is not supported, or if prune is not successful.
    */
-  public GroupScan applyLimit(long maxRecords);
+  GroupScan applyLimit(int maxRecords);
 
   /**
    * Return true if this GroupScan can return its selection as a list of file names (retrieved by getFiles()).
    */
   @JsonIgnore
-  public boolean hasFiles();
+  boolean hasFiles();
 
   /**
    * Returns a collection of file names associated with this GroupScan. This should be called after checking
    * hasFiles().  If this GroupScan cannot provide file names, it returns null.
    */
-  public Collection<String> getFiles();
+  Collection<String> getFiles();
 
 }
