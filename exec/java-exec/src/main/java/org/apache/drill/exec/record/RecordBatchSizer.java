@@ -321,10 +321,8 @@ public class RecordBatchSizer {
 
           // Calculate pure data size.
           if (isVariableWidth) {
-            UInt4Vector offsetVector = ((RepeatedValueVector) v).getOffsetVector();
-            int innerValueCount = offsetVector.getAccessor().get(valueCount);
             VariableWidthVector dataVector = ((VariableWidthVector) ((RepeatedValueVector) v).getDataVector());
-            totalDataSize = dataVector.getOffsetVector().getAccessor().get(innerValueCount);
+            totalDataSize = dataVector.getCurrentSizeInBytes();
           } else {
             ValueVector dataVector = ((RepeatedValueVector) v).getDataVector();
             totalDataSize = dataVector.getPayloadByteCount(elementCount);
@@ -343,7 +341,7 @@ public class RecordBatchSizer {
           // Calculate pure data size.
           if (isVariableWidth) {
             VariableWidthVector variableWidthVector = ((VariableWidthVector) ((NullableVector) v).getValuesVector());
-            totalDataSize = variableWidthVector.getOffsetVector().getAccessor().get(valueCount);
+            totalDataSize = variableWidthVector.getCurrentSizeInBytes();
           } else {
             // Another special case.
             if (v instanceof UntypedNullVector) {
@@ -362,8 +360,7 @@ public class RecordBatchSizer {
 
           // Calculate pure data size.
           if (isVariableWidth) {
-            UInt4Vector  offsetVector = ((VariableWidthVector)v).getOffsetVector();
-            totalDataSize = offsetVector.getAccessor().get(valueCount);
+            totalDataSize = ((VariableWidthVector) v).getCurrentSizeInBytes();
           } else {
             totalDataSize = v.getPayloadByteCount(valueCount);
           }
