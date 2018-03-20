@@ -1,6 +1,6 @@
 ---
 title: "Starting Drill in Distributed Mode"
-date: 2018-03-19 23:54:29 UTC
+date: 2018-03-20 00:07:31 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 
@@ -84,7 +84,7 @@ To exit the Drill shell, issue the following command:
 
 ## Shut Down the Drill Process on a Node
 
-You can abruptly stop the Drill process on a node, or you can have the Drill process on the node shutdown gracefully. When you stop the Drill process on a node, active queries cannot complete if they require more time than the default five second wait period. In Drill 1.12 and later, you can use the Graceful Shutdown option, which transitions a Drillbit into a quiescent state in which the Drill process can complete in-progress queries before shutting down.  
+You can abruptly stop the Drill process on a node, or you can gracefully shut down the Drill process on a node. When you stop the Drill process on a node, active queries cannot complete if they need additional time beyond the default five second wait period. In Drill 1.12 and later, you can use the graceful_stop command, which transitions a Drillbit into a quiescent state in which the Drill process can complete in-progress queries before shutting down.  
 
 ###Stopping the Drill Process
 To stop the Drill process on the node, issue the `drillbit.sh stop` command, as shown:  
