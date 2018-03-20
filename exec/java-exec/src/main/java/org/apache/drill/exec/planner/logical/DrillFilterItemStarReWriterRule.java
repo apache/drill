@@ -32,7 +32,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
-import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+import org.apache.drill.exec.store.parquet.AbstractParquetGroupScan;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,7 +73,7 @@ public class DrillFilterItemStarReWriterRule {
     @Override
     public boolean matches(RelOptRuleCall call) {
       DrillScanRel scan = call.rel(1);
-      return scan.getGroupScan() instanceof ParquetGroupScan && super.matches(call);
+      return scan.getGroupScan() instanceof AbstractParquetGroupScan && super.matches(call);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class DrillFilterItemStarReWriterRule {
     @Override
     public boolean matches(RelOptRuleCall call) {
       DrillScanRel scan = call.rel(1);
-      return scan.getGroupScan() instanceof ParquetGroupScan && super.matches(call);
+      return scan.getGroupScan() instanceof AbstractParquetGroupScan && super.matches(call);
     }
 
     @Override
@@ -149,7 +149,7 @@ public class DrillFilterItemStarReWriterRule {
     @Override
     public boolean matches(RelOptRuleCall call) {
       DrillScanRel scan = call.rel(2);
-      return scan.getGroupScan() instanceof ParquetGroupScan && super.matches(call);
+      return scan.getGroupScan() instanceof AbstractParquetGroupScan && super.matches(call);
     }
 
     @Override

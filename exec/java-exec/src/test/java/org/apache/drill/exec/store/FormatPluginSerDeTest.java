@@ -18,21 +18,45 @@
 package org.apache.drill.exec.store;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.avro.AvroTestUtil;
 import org.junit.Test;
 
 import java.nio.file.Paths;
 
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+
 public class FormatPluginSerDeTest extends PlanTestBase {
 
   @Test
   public void testParquet() throws Exception {
-    test("alter session set `planner.slice_target` = 1");
-    testPhysicalPlanSubmission(
-        String.format("select * from table(cp.`%s`(type=>'parquet'))", "parquet/alltypes_required.parquet"),
-        String.format("select * from table(cp.`%s`(type=>'parquet', autoCorrectCorruptDates=>false))", "parquet/alltypes_required.parquet"),
-        String.format("select * from table(cp.`%s`(type=>'parquet', autoCorrectCorruptDates=>true))", "parquet/alltypes_required.parquet")
-    );
+    try {
+      setSessionOption(ExecConstants.SLICE_TARGET, 1);
+      testPhysicalPlanSubmission(
+          String.format("select * from table(cp.`%s`(type=>'parquet'))", "parquet/alltypes_required.parquet"),
+          String.format("select * from table(cp.`%s`(type=>'parquet', autoCorrectCorruptDates=>false))", "parquet/alltypes_required.parquet"),
+          String.format("select * from table(cp.`%s`(type=>'parquet', autoCorrectCorruptDates=>true))", "parquet/alltypes_required.parquet"));
+    } finally {
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+    }
+  }
+
+  @Test
+  public void testParquetWithMetadata() throws Exception {
+    String tableName = "alltypes_required_with_metadata";
+    test("use %s", DFS_TMP_SCHEMA);
+    try {
+      test("create table %s as select * from cp.`parquet/alltypes_required.parquet`", tableName);
+      test("refresh table metadata %s", tableName);
+      setSessionOption(ExecConstants.SLICE_TARGET, 1);
+      testPhysicalPlanSubmission(
+          String.format("select * from table(`%s`(type=>'parquet'))", tableName),
+          String.format("select * from table(`%s`(type=>'parquet', autoCorrectCorruptDates=>false))", tableName),
+          String.format("select * from table(`%s`(type=>'parquet', autoCorrectCorruptDates=>true))", tableName));
+    } finally {
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+      test("drop table if exists %s", tableName);
+    }
   }
 
   @Test

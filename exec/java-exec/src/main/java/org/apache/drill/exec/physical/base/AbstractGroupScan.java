@@ -24,12 +24,16 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.drill.exec.server.options.OptionManager;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
 
@@ -163,5 +167,15 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @Override
   public DistributionAffinity getDistributionAffinity() {
     return DistributionAffinity.SOFT;
+  }
+
+  @Override
+  public LogicalExpression getFilter() {
+    return null;
+  }
+
+  @Override
+  public GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities, FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
+    return null;
   }
 }

@@ -20,18 +20,15 @@ package org.apache.drill.exec.store;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
+import com.google.common.base.Stopwatch;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
 /**
@@ -115,7 +112,7 @@ public abstract class TimedRunnable<V> implements Runnable {
    * @throws IOException All exceptions are coerced to IOException since this was build for storage system tasks initially.
    */
   public static <V> List<V> run(final String activity, final Logger logger, final List<TimedRunnable<V>> runnables, int parallelism) throws IOException {
-    Stopwatch watch = Stopwatch.createStarted();
+    Stopwatch watch = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     long timedRunnableStart=System.nanoTime();
     if(runnables.size() == 1){
       parallelism = 1;
@@ -186,21 +183,22 @@ public abstract class TimedRunnable<V> implements Runnable {
       }
     }
 
-    if(logger.isInfoEnabled()){
+    if (watch != null) {
       double avg = (sum/1000.0/1000.0)/(count*1.0d);
       double avgStart = (totalStart/1000.0)/(count*1.0d);
 
-      logger.info(
+      logger.debug(
           String.format("%s: Executed %d out of %d using %d threads. "
               + "Time: %dms total, %fms avg, %dms max.",
               activity, count, runnables.size(), parallelism, watch.elapsed(TimeUnit.MILLISECONDS), avg, max/1000/1000));
-      logger.info(
+      logger.debug(
               String.format("%s: Executed %d out of %d using %d threads. "
                               + "Earliest start: %f \u03BCs, Latest start: %f \u03BCs, Average start: %f \u03BCs .",
                       activity, count, runnables.size(), parallelism, earliestStart/1000.0, latestStart/1000.0, avgStart));
+      watch.stop();
     }
 
-    if(excep != null) {
+    if (excep != null) {
       throw excep;
     }
 

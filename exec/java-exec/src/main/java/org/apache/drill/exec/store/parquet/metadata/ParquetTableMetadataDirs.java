@@ -15,32 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.dfs;
+package org.apache.drill.exec.store.parquet.metadata;
 
-import org.apache.drill.exec.store.dfs.easy.FileWork;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ReadEntryFromHDFS extends ReadEntryWithPath implements FileWork {
+import java.util.List;
 
-  private long start;
-  private long length;
+public class ParquetTableMetadataDirs {
 
-  @JsonCreator
-  public ReadEntryFromHDFS(@JsonProperty("path") String path,@JsonProperty("start") long start, @JsonProperty("length") long length) {
-    super(path);
-    this.start = start;
-    this.length = length;
+  @JsonProperty
+  List<String> directories;
+
+  public ParquetTableMetadataDirs() {
+    // default constructor needed for deserialization
   }
 
-  @Override
-  public long getStart() {
-    return start;
+  public ParquetTableMetadataDirs(List<String> directories) {
+    this.directories = directories;
   }
 
-  @Override
-  public long getLength() {
-    return length;
+  @JsonIgnore
+  public List<String> getDirectories() {
+    return directories;
+  }
+
+  /** If directories list contains relative paths, update it to absolute ones
+   * @param baseDir base parent directory
+   */
+  @JsonIgnore public void updateRelativePaths(String baseDir) {
+    this.directories = MetadataPathUtils.convertToAbsolutePaths(directories, baseDir);
   }
 }

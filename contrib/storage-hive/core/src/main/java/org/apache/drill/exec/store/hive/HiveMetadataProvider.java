@@ -243,7 +243,10 @@ public class HiveMetadataProvider {
       data += split.getLength();
     }
 
-    return new HiveStats(data/RECORD_SIZE, data);
+    long numRows = data / RECORD_SIZE;
+    // if the result of division is zero and data size > 0, estimate to one row
+    numRows = numRows == 0 && data > 0 ? 1 : numRows;
+    return new HiveStats(numRows, data);
   }
 
   /**

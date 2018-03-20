@@ -95,7 +95,7 @@ public class FileSelection {
       final String cacheFileRoot, final boolean wasAllPartitionsPruned, final StatusType dirStatus) {
     this.statuses = statuses;
     this.files = files;
-    this.selectionRoot = Preconditions.checkNotNull(selectionRoot);
+    this.selectionRoot = selectionRoot;
     this.dirStatus = dirStatus;
     this.cacheFileRoot = cacheFileRoot;
     this.wasAllPartitionsPruned = wasAllPartitionsPruned;
@@ -121,7 +121,7 @@ public class FileSelection {
   }
 
   public List<FileStatus> getStatuses(final DrillFileSystem fs) throws IOException {
-    Stopwatch timer = Stopwatch.createStarted();
+    Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
 
     if (statuses == null)  {
       final List<FileStatus> newStatuses = Lists.newArrayList();
@@ -130,8 +130,11 @@ public class FileSelection {
       }
       statuses = newStatuses;
     }
-    logger.info("FileSelection.getStatuses() took {} ms, numFiles: {}",
-        timer.elapsed(TimeUnit.MILLISECONDS), statuses == null ? 0 : statuses.size());
+    if (timer != null) {
+      logger.debug("FileSelection.getStatuses() took {} ms, numFiles: {}",
+          timer.elapsed(TimeUnit.MILLISECONDS), statuses == null ? 0 : statuses.size());
+      timer.stop();
+    }
 
     return statuses;
   }
@@ -164,7 +167,7 @@ public class FileSelection {
     if (isExpandedFully()) {
       return this;
     }
-    Stopwatch timer = Stopwatch.createStarted();
+    Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     List<FileStatus> statuses = getStatuses(fs);
 
     List<FileStatus> nonDirectories = Lists.newArrayList();
@@ -173,8 +176,10 @@ public class FileSelection {
     }
 
     final FileSelection fileSel = create(nonDirectories, null, selectionRoot);
-    logger.debug("FileSelection.minusDirectories() took {} ms, numFiles: {}",
-        timer.elapsed(TimeUnit.MILLISECONDS), statuses.size());
+    if (timer != null) {
+      logger.debug("FileSelection.minusDirectories() took {} ms, numFiles: {}", timer.elapsed(TimeUnit.MILLISECONDS), statuses.size());
+      timer.stop();
+    }
 
     // fileSel will be null if we query an empty folder
     if (fileSel != null) {
@@ -259,7 +264,7 @@ public class FileSelection {
 
   public static FileSelection create(final DrillFileSystem fs, final String parent, final String path,
       final boolean allowAccessOutsideWorkspace) throws IOException {
-    Stopwatch timer = Stopwatch.createStarted();
+    Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     boolean hasWildcard = path.contains(WILD_CARD);
 
     final Path combined = new Path(parent, removeLeadingSlash(path));
@@ -271,7 +276,10 @@ public class FileSelection {
       return null;
     }
     final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().getPath());
-    logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+    if (timer != null) {
+      logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+    }
     if (fileSel == null) {
       return null;
     }
@@ -322,7 +330,7 @@ public class FileSelection {
 
   public static FileSelection createFromDirectories(final List<String> dirPaths, final FileSelection selection,
       final String cacheFileRoot) {
-    Stopwatch timer = Stopwatch.createStarted();
+    Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     final String root = selection.getSelectionRoot();
     if (Strings.isNullOrEmpty(root)) {
       throw new DrillRuntimeException("Selection root is null or empty" + root);
@@ -338,9 +346,7 @@ public class FileSelection {
         dirs.add(status.getPath().toString());
       }
     } else {
-      for (String s : dirPaths) {
-        dirs.add(s);
-      }
+      dirs.addAll(dirPaths);
     }
 
     final Path rootPath = handleWildCard(root);
@@ -349,7 +355,10 @@ public class FileSelection {
     final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
     FileSelection fileSel = new FileSelection(null, dirs, path.toString(), cacheFileRoot, false);
     fileSel.setHadWildcard(selection.hadWildcard());
-    logger.info("FileSelection.createFromDirectories() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+    if (timer != null) {
+      logger.debug("FileSelection.createFromDirectories() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+    }
     return fileSel;
   }
 
