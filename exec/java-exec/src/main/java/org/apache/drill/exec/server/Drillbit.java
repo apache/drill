@@ -134,19 +134,19 @@ public class Drillbit implements AutoCloseable {
     final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Construction started.");
     boolean drillPortHunt = config.getBoolean(ExecConstants.DRILL_PORT_HUNT);
+    boolean bindToLoopbackAddress = config.getBoolean(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING);
     final boolean allowPortHunting = (serviceSet != null) || drillPortHunt;
     context = new BootStrapContext(config, definitions, classpathScan);
     manager = new WorkManager(context);
 
     webServer = new WebServer(context, manager, this);
-    boolean isDistributedMode = false;
+    boolean isDistributedMode = (serviceSet == null) && !bindToLoopbackAddress;
     if (serviceSet != null) {
       coord = serviceSet.getCoordinator();
       storeProvider = new CachingPersistentStoreProvider(new LocalPersistentStoreProvider(config));
     } else {
       coord = new ZKClusterCoordinator(config);
       storeProvider = new PersistentStoreRegistry<ClusterCoordinator>(this.coord, config).newPStoreProvider();
-      isDistributedMode = true;
     }
 
     //Check if InMemory Profile Store, else use Default Store Provider
