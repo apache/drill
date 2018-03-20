@@ -29,6 +29,48 @@ public abstract class AbstractRecordBatchMemoryManager {
   private int outgoingRowWidth;
   private RecordBatchSizer sizer;
 
+  /**
+   * operator metric stats
+   */
+  private long numIncomingBatches;
+  private long sumInputBatchSizes;
+  private long totalInputRecords;
+  private long numOutgoingBatches;
+  private long sumOutputBatchSizes;
+  private long totalOutputRecords;
+
+  public long getNumIncomingBatches() {
+    return numIncomingBatches;
+  }
+
+  public long getTotalInputRecords() {
+    return totalInputRecords;
+  }
+
+  public long getNumOutgoingBatches() {
+    return numOutgoingBatches;
+  }
+
+  public long getTotalOutputRecords() {
+    return totalOutputRecords;
+  }
+
+  public long getAvgInputBatchSize() {
+    return RecordBatchSizer.safeDivide(sumInputBatchSizes, numIncomingBatches);
+  }
+
+  public long getAvgInputRowWidth() {
+    return RecordBatchSizer.safeDivide(sumInputBatchSizes, totalInputRecords);
+  }
+
+  public long getAvgOutputBatchSize() {
+    return RecordBatchSizer.safeDivide(sumOutputBatchSizes, numOutgoingBatches);
+  }
+
+  public long getAvgOutputRowWidth() {
+    return RecordBatchSizer.safeDivide(sumOutputBatchSizes, totalOutputRecords);
+  }
+
   public void update(int inputIndex) {};
 
   public void update() {};
@@ -78,4 +120,15 @@ public abstract class AbstractRecordBatchMemoryManager {
     return sizer.getColumn(name);
   }
 
+  public void updateIncomingStats() {
+    numIncomingBatches++;
+    sumInputBatchSizes += sizer.netSize();
+    totalInputRecords += sizer.rowCount();
+  }
+
+  public void updateOutgoingStats(int outputRecords) {
+    numOutgoingBatches++;
+    totalOutputRecords += outputRecords;
+    sumOutputBatchSizes += outgoingRowWidth * outputRecords;
+  }
 }
