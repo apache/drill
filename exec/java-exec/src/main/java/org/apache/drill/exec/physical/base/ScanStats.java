@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.base;
 
 public class ScanStats {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanStats.class);
 
   public static final ScanStats TRIVIAL_TABLE = new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, 20, 1, 1);
 
@@ -30,7 +29,6 @@ public class ScanStats {
   private final GroupScanProperty property;
 
   public ScanStats(GroupScanProperty property, long recordCount, float cpuCost, float diskCost) {
-    super();
     this.recordCount = recordCount;
     this.cpuCost = cpuCost;
     this.diskCost = diskCost;
@@ -49,6 +47,11 @@ public class ScanStats {
     return diskCost;
   }
 
+  @Override
+  public String toString() {
+    return "ScanStats{" + "recordCount=" + recordCount + ", cpuCost=" + cpuCost + ", diskCost=" + diskCost + ", property=" + property + '}';
+  }
+
   /**
    * Return if GroupScan knows the exact row count in the result of getSize() call.
    * By default, groupscan does not know the exact row count, before it scans every rows.
@@ -60,7 +63,7 @@ public class ScanStats {
 
 
 
-  public static enum GroupScanProperty {
+  public enum GroupScanProperty {
     NO_EXACT_ROW_COUNT(false, false),
     EXACT_ROW_COUNT(true, true);
 

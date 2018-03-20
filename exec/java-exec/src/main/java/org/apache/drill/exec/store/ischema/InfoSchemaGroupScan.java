@@ -70,7 +70,7 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   }
 
   @JsonProperty("filter")
-  public InfoSchemaFilter getFilter() {
+  public InfoSchemaFilter getSchemaFilter() {
     return filter;
   }
 

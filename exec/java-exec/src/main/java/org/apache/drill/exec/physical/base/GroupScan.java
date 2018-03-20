@@ -21,13 +21,17 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
+import org.apache.drill.exec.server.options.OptionManager;
 
 /**
  * A GroupScan operator represents all data which will be scanned by a given physical
@@ -133,5 +137,11 @@ public interface GroupScan extends Scan, HasAffinity{
    * hasFiles().  If this GroupScan cannot provide file names, it returns null.
    */
   Collection<String> getFiles();
+
+  @JsonIgnore
+  LogicalExpression getFilter();
+
+  GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
+                        FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager);
 
 }

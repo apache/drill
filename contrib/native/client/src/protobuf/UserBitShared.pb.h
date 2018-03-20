@@ -246,11 +246,12 @@ enum CoreOperatorType {
   KUDU_SUB_SCAN = 39,
   FLATTEN = 40,
   LATERAL_JOIN = 41,
-  UNNEST = 42
+  UNNEST = 42,
+  HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = UNNEST;
+const CoreOperatorType CoreOperatorType_MAX = HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();

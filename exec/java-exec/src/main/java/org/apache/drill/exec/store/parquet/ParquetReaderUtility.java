@@ -22,9 +22,12 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.parquet.SemanticVersion;
@@ -52,6 +55,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V2.ColumnTypeMetadata_v2;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V2.ParquetTableMetadata_v2;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ColumnTypeMetadata_v3;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetTableMetadata_v3;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ColumnMetadata;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetTableMetadataBase;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetFileMetadata;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.RowGroupMetadata;
 
 /**
  * Utility class where we can capture common logic between the two parquet readers
@@ -142,7 +154,7 @@ public class ParquetReaderUtility {
     return (int) (corruptedDate - CORRECT_CORRUPT_DATE_SHIFT);
   }
 
-  public static void correctDatesInMetadataCache(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
+  public static void correctDatesInMetadataCache(ParquetTableMetadataBase parquetTableMetadata) {
     DateCorruptionStatus cacheFileCanContainsCorruptDates =
         new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 0)) >= 0 ?
         DateCorruptionStatus.META_SHOWS_NO_CORRUPTION : DateCorruptionStatus.META_UNCLEAR_TEST_VALUES;
@@ -150,19 +162,19 @@ public class ParquetReaderUtility {
       // Looking for the DATE data type of column names in the metadata cache file ("metadata_version" : "v2")
       String[] names = new String[0];
       if (new MetadataVersion(2, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()))) {
-        for (Metadata.ColumnTypeMetadata_v2 columnTypeMetadata :
-            ((Metadata.ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
+        for (ColumnTypeMetadata_v2 columnTypeMetadata :
+            ((ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
           if (OriginalType.DATE.equals(columnTypeMetadata.originalType)) {
             names = columnTypeMetadata.name;
           }
         }
       }
-      for (Metadata.ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
+      for (ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
         // Drill has only ever written a single row group per file, only need to correct the statistics
         // on the first row group
-        Metadata.RowGroupMetadata rowGroupMetadata = file.getRowGroups().get(0);
+        RowGroupMetadata rowGroupMetadata = file.getRowGroups().get(0);
         Long rowCount = rowGroupMetadata.getRowCount();
-        for (Metadata.ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
+        for (ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
           // Setting Min/Max values for ParquetTableMetadata_v1
           if (new MetadataVersion(1, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()))) {
             OriginalType originalType = columnMetadata.getOriginalType();
@@ -192,15 +204,15 @@ public class ParquetReaderUtility {
    *
    * @param parquetTableMetadata table metadata that should be corrected
    */
-  public static void correctBinaryInMetadataCache(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
+  public static void correctBinaryInMetadataCache(ParquetTableMetadataBase parquetTableMetadata) {
     // Looking for the names of the columns with BINARY data type
     // in the metadata cache file for V2 and all v3 versions
     Set<List<String>> columnsNames = getBinaryColumnsNames(parquetTableMetadata);
 
-    for (Metadata.ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
-      for (Metadata.RowGroupMetadata rowGroupMetadata : file.getRowGroups()) {
+    for (ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
+      for (RowGroupMetadata rowGroupMetadata : file.getRowGroups()) {
         Long rowCount = rowGroupMetadata.getRowCount();
-        for (Metadata.ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
+        for (ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
           // Setting Min/Max values for ParquetTableMetadata_v1
           if (new MetadataVersion(1, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()))) {
             if (columnMetadata.getPrimitiveType() == PrimitiveTypeName.BINARY
@@ -231,19 +243,19 @@ public class ParquetReaderUtility {
    * @param parquetTableMetadata table metadata the source of the columns to check
    * @return set of the lists with column names
    */
-  private static Set<List<String>> getBinaryColumnsNames(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
+  private static Set<List<String>> getBinaryColumnsNames(ParquetTableMetadataBase parquetTableMetadata) {
     Set<List<String>> names = Sets.newHashSet();
-    if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v2) {
-      for (Metadata.ColumnTypeMetadata_v2 columnTypeMetadata :
-        ((Metadata.ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
+    if (parquetTableMetadata instanceof ParquetTableMetadata_v2) {
+      for (ColumnTypeMetadata_v2 columnTypeMetadata :
+        ((ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
         if (columnTypeMetadata.primitiveType == PrimitiveTypeName.BINARY
             || columnTypeMetadata.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
           names.add(Arrays.asList(columnTypeMetadata.name));
         }
       }
-    } else if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v3) {
-      for (Metadata.ColumnTypeMetadata_v3 columnTypeMetadata :
-        ((Metadata.ParquetTableMetadata_v3) parquetTableMetadata).columnTypeInfo.values()) {
+    } else if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
+      for (ColumnTypeMetadata_v3 columnTypeMetadata :
+        ((ParquetTableMetadata_v3) parquetTableMetadata).columnTypeInfo.values()) {
         if (columnTypeMetadata.primitiveType == PrimitiveTypeName.BINARY
             || columnTypeMetadata.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
           names.add(Arrays.asList(columnTypeMetadata.name));
@@ -260,7 +272,7 @@ public class ParquetReaderUtility {
    * @param columnMetadata column metadata that should be changed
    * @param rowCount       rows count in column chunk
    */
-  private static void setMinMaxValues(Metadata.ColumnMetadata columnMetadata, long rowCount) {
+  private static void setMinMaxValues(ColumnMetadata columnMetadata, long rowCount) {
     if (columnMetadata.hasSingleValue(rowCount)) {
       Object minValue = columnMetadata.getMinValue();
       if (minValue != null && minValue instanceof String) {
@@ -278,7 +290,7 @@ public class ParquetReaderUtility {
    * @param columnMetadata column metadata that should be changed
    * @param rowCount       rows count in column chunk
    */
-  private static void convertMinMaxValues(Metadata.ColumnMetadata columnMetadata, long rowCount) {
+  private static void convertMinMaxValues(ColumnMetadata columnMetadata, long rowCount) {
     if (columnMetadata.hasSingleValue(rowCount)) {
       Object minValue = columnMetadata.getMinValue();
       if (minValue != null && minValue instanceof String) {
@@ -362,8 +374,8 @@ public class ParquetReaderUtility {
    * This method only checks the first Row Group, because Drill has only ever written
    * a single Row Group per file.
    *
-   * @param footer
-   * @param columns
+   * @param footer parquet footer
+   * @param columns list of columns schema path
    * @param autoCorrectCorruptDates user setting to allow enabling/disabling of auto-correction
    *                                of corrupt dates. There are some rare cases (storing dates thousands
    *                                of years into the future, with tools other than Drill writing files)
@@ -459,4 +471,66 @@ public class ParquetReaderUtility {
       }
     }
   }
+
+  /**
+   * Builds major type using given {@code OriginalType originalType} or {@code PrimitiveTypeName type}.
+   * For DECIMAL will be returned major type with scale and precision.
+   *
+   * @param type         parquet primitive type
+   * @param originalType parquet original type
+   * @param scale        type scale (used for DECIMAL type)
+   * @param precision    type precision (used for DECIMAL type)
+   * @return major type
+   */
+  public static TypeProtos.MajorType getType(PrimitiveTypeName type, OriginalType originalType, int scale, int precision) {
+    if (originalType != null) {
+      switch (originalType) {
+        case DECIMAL:
+          return Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL18, TypeProtos.DataMode.OPTIONAL, scale, precision);
+        case DATE:
+          return Types.optional(TypeProtos.MinorType.DATE);
+        case TIME_MILLIS:
+          return Types.optional(TypeProtos.MinorType.TIME);
+        case TIMESTAMP_MILLIS:
+          return Types.optional(TypeProtos.MinorType.TIMESTAMP);
+        case UTF8:
+          return Types.optional(TypeProtos.MinorType.VARCHAR);
+        case UINT_8:
+          return Types.optional(TypeProtos.MinorType.UINT1);
+        case UINT_16:
+          return Types.optional(TypeProtos.MinorType.UINT2);
+        case UINT_32:
+          return Types.optional(TypeProtos.MinorType.UINT4);
+        case UINT_64:
+          return Types.optional(TypeProtos.MinorType.UINT8);
+        case INT_8:
+          return Types.optional(TypeProtos.MinorType.TINYINT);
+        case INT_16:
+          return Types.optional(TypeProtos.MinorType.SMALLINT);
+        case INTERVAL:
+          return Types.optional(TypeProtos.MinorType.INTERVAL);
+      }
+    }
+
+    switch (type) {
+      case BOOLEAN:
+        return Types.optional(TypeProtos.MinorType.BIT);
+      case INT32:
+        return Types.optional(TypeProtos.MinorType.INT);
+      case INT64:
+        return Types.optional(TypeProtos.MinorType.BIGINT);
+      case FLOAT:
+        return Types.optional(TypeProtos.MinorType.FLOAT4);
+      case DOUBLE:
+        return Types.optional(TypeProtos.MinorType.FLOAT8);
+      case BINARY:
+      case FIXED_LEN_BYTE_ARRAY:
+      case INT96:
+        return Types.optional(TypeProtos.MinorType.VARBINARY);
+      default:
+        // Should never hit this
+        throw new UnsupportedOperationException("Unsupported type:" + type);
+    }
+  }
+
 }

@@ -64,7 +64,8 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
     KUDU_SUB_SCAN(39),
     FLATTEN(40),
     LATERAL_JOIN(41),
-    UNNEST(42);
+    UNNEST(42),
+    HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN(43);
     
     public final int number;
     
@@ -125,6 +126,7 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
             case 40: return FLATTEN;
             case 41: return LATERAL_JOIN;
             case 42: return UNNEST;
+            case 43: return HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
             default: return null;
         }
     }

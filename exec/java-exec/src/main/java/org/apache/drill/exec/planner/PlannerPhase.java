@@ -365,6 +365,7 @@ public enum PlannerPhase {
             // Ideally this should be done in logical planning, before join order planning is done.
             // Before we can make such change, we have to figure out how to adjust the selectivity
             // estimation of filter operator, after filter is pushed down to scan.
+
             ParquetPushDownFilter.getFilterOnProject(optimizerRulesContext),
             ParquetPushDownFilter.getFilterOnScan(optimizerRulesContext)
         )
@@ -425,6 +426,9 @@ public enum PlannerPhase {
     ruleList.add(UnionAllPrule.INSTANCE);
     ruleList.add(ValuesPrule.INSTANCE);
     ruleList.add(DirectScanPrule.INSTANCE);
+
+    ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_PROJECT);
+    ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_SCAN);
 
     if (ps.isHashAggEnabled()) {
       ruleList.add(HashAggPrule.INSTANCE);

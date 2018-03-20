@@ -330,6 +330,7 @@ enum CoreOperatorType {
   FLATTEN = 40;
   LATERAL_JOIN = 41;
   UNNEST = 42;
+  HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;
 }
 
 /* Registry that contains list of jars, each jar contains its name and list of function signatures.

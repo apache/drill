@@ -65,7 +65,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       @Override
       public boolean matches(RelOptRuleCall call) {
         final ScanPrel scan = call.rel(2);
-        if (scan.getGroupScan() instanceof ParquetGroupScan) {
+        if (scan.getGroupScan() instanceof AbstractParquetGroupScan) {
           return super.matches(call);
         }
         return false;
@@ -90,7 +90,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       @Override
       public boolean matches(RelOptRuleCall call) {
         final ScanPrel scan = call.rel(1);
-        if (scan.getGroupScan() instanceof ParquetGroupScan) {
+        if (scan.getGroupScan() instanceof AbstractParquetGroupScan) {
           return super.matches(call);
         }
         return false;
@@ -114,7 +114,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
   }
 
   protected void doOnMatch(RelOptRuleCall call, FilterPrel filter, ProjectPrel project, ScanPrel scan) {
-    ParquetGroupScan groupScan = (ParquetGroupScan) scan.getGroupScan();
+    AbstractParquetGroupScan groupScan = (AbstractParquetGroupScan) scan.getGroupScan();
     if (groupScan.getFilter() != null && !groupScan.getFilter().equals(ValueExpressions.BooleanExpression.TRUE)) {
       return;
     }
@@ -152,25 +152,26 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
     LogicalExpression conditionExp = DrillOptiq.toDrill(
         new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, qualifedPred);
 
-    Stopwatch timer = Stopwatch.createStarted();
+
+    Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     final GroupScan newGroupScan = groupScan.applyFilter(conditionExp,optimizerContext,
         optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions());
-    logger.info("Took {} ms to apply filter on parquet row groups. ", timer.elapsed(TimeUnit.MILLISECONDS));
+    if (timer != null) {
+      logger.debug("Took {} ms to apply filter on parquet row groups. ", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+    }
 
     if (newGroupScan == null ) {
       return;
     }
 
-    final ScanPrel newScanRel = ScanPrel.create(scan, scan.getTraitSet(), newGroupScan, scan.getRowType());
 
-    RelNode inputRel = newScanRel;
+    RelNode newScan = ScanPrel.create(scan, scan.getTraitSet(), newGroupScan, scan.getRowType());;
 
     if (project != null) {
-      inputRel = project.copy(project.getTraitSet(), ImmutableList.of(inputRel));
+      newScan = project.copy(project.getTraitSet(), ImmutableList.of(newScan));
     }
-
-    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.of(inputRel));
-
+    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.<RelNode>of(newScan));
     call.transformTo(newFilter);
   }
 }
