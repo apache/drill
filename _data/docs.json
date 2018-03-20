@@ -771,14 +771,31 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
+            "next_title": "Appendix E: Using cgroups to Control CPU Usage", 
+            "next_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
             "parent": "Drill-on-YARN", 
             "previous_title": "Appendix C: Troubleshooting", 
             "previous_url": "/docs/appendix-c-troubleshooting/", 
             "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
             "title": "Appendix D: Recreate the Drill Archive", 
             "url": "/docs/appendix-d-recreate-the-drill-archive/"
+        }, 
+        "Appendix E: Using cgroups to Control CPU Usage": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill-on-YARN", 
+                    "url": "/docs/drill-on-yarn/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Drill-on-YARN", 
+            "previous_title": "Appendix D: Recreate the Drill Archive", 
+            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+            "relative_path": "_docs/drill-on-yarn/094-appendix-e-using-cgroups-to-control-cpu-usage.md", 
+            "title": "Appendix E: Using cgroups to Control CPU Usage", 
+            "url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/"
         }, 
         "Architecture": {
             "breadcrumbs": [], 
@@ -4265,14 +4282,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Appendix E: Using cgroups to Control CPU Usage", 
+                    "next_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
                     "parent": "Drill-on-YARN", 
                     "previous_title": "Appendix C: Troubleshooting", 
                     "previous_url": "/docs/appendix-c-troubleshooting/", 
                     "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
                     "title": "Appendix D: Recreate the Drill Archive", 
                     "url": "/docs/appendix-d-recreate-the-drill-archive/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix D: Recreate the Drill Archive", 
+                    "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+                    "relative_path": "_docs/drill-on-yarn/094-appendix-e-using-cgroups-to-control-cpu-usage.md", 
+                    "title": "Appendix E: Using cgroups to Control CPU Usage", 
+                    "url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/"
                 }
             ], 
             "next_title": "Drill-on-YARN Introduction", 
@@ -5147,8 +5181,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Appendix D: Recreate the Drill Archive", 
-            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+            "previous_title": "Appendix E: Using cgroups to Control CPU Usage", 
+            "previous_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -15063,14 +15097,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Appendix E: Using cgroups to Control CPU Usage", 
+                    "next_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
                     "parent": "Drill-on-YARN", 
                     "previous_title": "Appendix C: Troubleshooting", 
                     "previous_url": "/docs/appendix-c-troubleshooting/", 
                     "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
                     "title": "Appendix D: Recreate the Drill Archive", 
                     "url": "/docs/appendix-d-recreate-the-drill-archive/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill-on-YARN", 
+                            "url": "/docs/drill-on-yarn/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Drill-on-YARN", 
+                    "previous_title": "Appendix D: Recreate the Drill Archive", 
+                    "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+                    "relative_path": "_docs/drill-on-yarn/094-appendix-e-using-cgroups-to-control-cpu-usage.md", 
+                    "title": "Appendix E: Using cgroups to Control CPU Usage", 
+                    "url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/"
                 }
             ], 
             "next_title": "Drill-on-YARN Introduction", 
@@ -15361,8 +15412,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Appendix D: Recreate the Drill Archive", 
-            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
+            "previous_title": "Appendix E: Using cgroups to Control CPU Usage", 
+            "previous_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
