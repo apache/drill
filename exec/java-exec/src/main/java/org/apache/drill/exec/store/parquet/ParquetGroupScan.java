@@ -1189,7 +1189,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   }
 
   @Override
-  public GroupScan applyLimit(long maxRecords) {
+  public GroupScan applyLimit(int maxRecords) {
     Preconditions.checkArgument(rowGroupInfos.size() >= 0);
 
     maxRecords = Math.max(maxRecords, 1); // Make sure it request at least 1 row -> 1 rowGroup.

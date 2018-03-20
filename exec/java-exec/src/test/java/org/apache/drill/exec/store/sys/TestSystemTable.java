@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,17 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class TestSystemTable extends BaseTestQuery {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSystemTable.class);
+public class TestSystemTable extends PlanTestBase {
 
   @BeforeClass
-  public static void setupMultiNodeCluster() throws Exception {
+  public static void setupMultiNodeCluster() {
     updateTestCluster(3, null);
   }
 
@@ -83,5 +82,12 @@ public class TestSystemTable extends BaseTestQuery {
   @Test
   public void profilesJsonTable() throws Exception {
     test("select * from sys.profiles_json");
+  }
+
+  @Test
+  public void testProfilesLimitPushDown() throws Exception {
+    String query = "select * from sys.profiles limit 10";
+    String numFilesPattern = "maxRecordsToRead=10";
+    testPlanMatchingPatterns(query, new String[] {numFilesPattern}, new String[] {});
   }
 }

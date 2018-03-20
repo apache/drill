@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,91 +26,91 @@ import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
  * An enumeration of all tables in Drill's system ("sys") schema.
  * <p>
  *   OPTION, DRILLBITS and VERSION are local tables available on every Drillbit.
- *   MEMORY and THREADS are distributed tables with one record on every
- *   Drillbit.
+ *   MEMORY and THREADS are distributed tables with one record on every Drillbit.
+ *   PROFILES and PROFILES_JSON are stored in local / distributed storage.
  * </p>
  */
 public enum SystemTable {
   OPTION("options", false, OptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_PUBLIC);
     }
   },
 
   OPTION_VAL("options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new ExtendedOptionIterator(context, false);
     }
   },
 
   INTERNAL_OPTIONS("internal_options", false, OptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_INTERNAL);
     }
   },
 
   INTERNAL_OPTIONS_VAL("internal_options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new ExtendedOptionIterator(context, true);
     }
   },
 
   BOOT("boot", false, OptionValueWrapper.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new OptionIterator(context, OptionIterator.Mode.BOOT);
     }
   },
 
   DRILLBITS("drillbits", false,DrillbitIterator.DrillbitInstance.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new DrillbitIterator(context);
     }
   },
 
   VERSION("version", false, VersionIterator.VersionInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new VersionIterator();
     }
   },
 
   MEMORY("memory", true, MemoryIterator.MemoryInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new MemoryIterator(context);
     }
   },
 
   CONNECTIONS("connections", true, BitToUserConnectionIterator.ConnectionInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new BitToUserConnectionIterator(context);
     }
   },
 
   PROFILES("profiles", false, ProfileInfoIterator.ProfileInfo.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
-      return new ProfileInfoIterator(context);
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
+      return new ProfileInfoIterator(context, maxRecords);
     }
   },
 
   PROFILES_JSON("profiles_json", false, ProfileJsonIterator.ProfileJson.class) {
     @Override
-    public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
-      return new ProfileJsonIterator(context);
+    public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
+      return new ProfileJsonIterator(context, maxRecords);
     }
   },
 
   THREADS("threads", true, ThreadsIterator.ThreadsInfo.class) {
     @Override
-  public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+  public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new ThreadsIterator(context);
     }
   };
@@ -125,7 +125,7 @@ public enum SystemTable {
     this.pojoClass = pojoClass;
   }
 
-  public Iterator<Object> getIterator(final ExecutorFragmentContext context) {
+  public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
     throw new UnsupportedOperationException(tableName + " must override this method.");
   }
 

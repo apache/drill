@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,24 +37,25 @@ public class ProfileInfoIterator extends ProfileIterator {
 
   private final Iterator<ProfileInfo> itr;
 
-  public ProfileInfoIterator(ExecutorFragmentContext context) {
-    super(context);
-    itr = iterateProfileInfo();
+  public ProfileInfoIterator(ExecutorFragmentContext context, int maxRecords) {
+    super(context, maxRecords);
+    this.itr = iterateProfileInfo();
+  }
+
+  @Override
+  protected Iterator<Entry<String, QueryProfile>> getProfiles(int skip, int take) {
+    return profileStoreContext
+      .getCompletedProfileStore()
+      .getRange(skip, take);
   }
 
   //Returns an iterator for authorized profiles
   private Iterator<ProfileInfo> iterateProfileInfo() {
     try {
       //Transform authorized profiles to iterator for ProfileInfo
-      return transform(
-          getAuthorizedProfiles(
-            profileStoreContext
-              .getCompletedProfileStore()
-              .getAll(),
-            queryingUsername, isAdmin));
-
+      return transform(getAuthorizedProfiles(queryingUsername, isAdmin));
     } catch (Exception e) {
-      logger.error(e.getMessage());
+      logger.error(e.getMessage(), e);
       return Iterators.singletonIterator(ProfileInfo.getDefault());
     }
   }
@@ -109,7 +110,7 @@ public class ProfileInfoIterator extends ProfileIterator {
   }
 
   public static class ProfileInfo {
-    private static final String UnknownValue = "N/A";
+    private static final String UNKNOWN_VALUE = "N/A";
 
     private static final ProfileInfo DEFAULT = new ProfileInfo();
 
@@ -144,14 +145,16 @@ public class ProfileInfoIterator extends ProfileIterator {
     }
 
     private ProfileInfo() {
-      this(UnknownValue, new Timestamp(0), UnknownValue, 0L, UnknownValue, UnknownValue, 0L, 0L, 0L, UnknownValue, UnknownValue);
+      this(UNKNOWN_VALUE, new Timestamp(0), UNKNOWN_VALUE, 0L,
+          UNKNOWN_VALUE, UNKNOWN_VALUE, 0L, 0L,
+          0L, UNKNOWN_VALUE, UNKNOWN_VALUE);
     }
 
     /**
      * If unable to get ProfileInfo, use this default instance instead.
      * @return the default instance
      */
-    public static final ProfileInfo getDefault() {
+    public static ProfileInfo getDefault() {
       return DEFAULT;
     }
   }

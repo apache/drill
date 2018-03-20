@@ -43,6 +43,12 @@ public class PojoRecordReader<T> extends AbstractPojoRecordReader<T> {
     this.fields = new ArrayList<>();
   }
 
+  public PojoRecordReader(Class<T> pojoClass, List<T> records, int maxRecordToRead) {
+    super(records, maxRecordToRead);
+    this.pojoClass = pojoClass;
+    this.fields = new ArrayList<>();
+  }
+
   /**
    * Creates writers based on pojo field class types. Ignores static fields.
    *
