@@ -113,20 +113,10 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
-        <executions>
-          <execution>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>java</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
-          <mainClass>org.apache.drill.common.scanner.BuildTimeScan</mainClass>
-          <arguments>
-            <argument>${project.build.outputDirectory}</argument>
-          </arguments>
+          <additionalClasspathElements>
+            <additionalClasspathElement>${project.basedir}/src/test/resources/</additionalClasspathElement>
+          </additionalClasspathElements>
         </configuration>
       </plugin>
     </plugins>

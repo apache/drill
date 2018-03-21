@@ -828,31 +828,9 @@
           </execution>
         </executions>
       </plugin>
-      <plugin> <!-- classpath scanning  -->
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.drill</groupId>
-            <artifactId>drill-common</artifactId>
-            <version>${project.version}</version>
-            <classifier>tests</classifier>
-          </dependency>
-        </dependencies>
-        <executions>
-          <execution>
-            <phase>process-classes</phase>
-            <goals><goal>java</goal></goals>
-          </execution>
-        </executions>
-        <configuration>
-          <mainClass>org.apache.drill.common.scanner.BuildTimeScan</mainClass>
-          <includePluginDependencies>true</includePluginDependencies>
-          <arguments>
-            <argument>${project.build.outputDirectory}</argument>
-          </arguments>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
