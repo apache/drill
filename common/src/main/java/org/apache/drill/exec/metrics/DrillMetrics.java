@@ -20,7 +20,7 @@ package org.apache.drill.exec.metrics;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.TimeUnit;
 
-import com.codahale.metrics.JmxReporter;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
