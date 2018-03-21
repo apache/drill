@@ -17,19 +17,21 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
-import org.apache.drill.exec.compile.TemplateClassDefinition;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
+public class OutputWidthVisitorState {
 
-import java.util.List;
+    ProjectMemoryManager manager;
+    ProjectMemoryManager.OutputColumnType outputColumnType;
 
-public interface Projector {
+    public OutputWidthVisitorState(ProjectMemoryManager manager, ProjectMemoryManager.OutputColumnType outputColumnType) {
+        this.manager = manager;
+        this.outputColumnType = outputColumnType;
+    }
 
-  public abstract void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;
-  public abstract int projectRecords(RecordBatch incomingBatch, int startIndex, int recordCount, int firstOutputIndex);
+    public ProjectMemoryManager getManager() {
+        return manager;
+    }
 
-  public static TemplateClassDefinition<Projector> TEMPLATE_DEFINITION = new TemplateClassDefinition<Projector>(Projector.class, ProjectorTemplate.class);
-
+    public ProjectMemoryManager.OutputColumnType getOutputColumnType() {
+        return outputColumnType;
+    }
 }
