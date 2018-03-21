@@ -25,6 +25,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.SpnegoLoginService;
@@ -38,6 +39,7 @@ import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 
 import javax.security.auth.Subject;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.security.PrivilegedExceptionAction;
@@ -121,15 +123,19 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
         }
 
         if (gContext.isEstablished()) {
-          String clientName = gContext.getSrcName().toString();
-          String role = clientName.substring(clientName.indexOf(64) + 1);
+          final String clientName = gContext.getSrcName().toString();
+          final String realm = clientName.substring(clientName.indexOf(64) + 1);
 
+          // Get the client user short name
+          final String userShortName = new HadoopKerberosName(clientName).getShortName();
+
+          logger.debug("Client Name: {}, realm: {} and shortName: {}", clientName, realm, userShortName);
           final SystemOptionManager sysOptions = drillContext.getOptionManager();
-          final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(role,
+          final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(userShortName,
               ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(sysOptions),
               ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(sysOptions));
 
-          final Principal user = new DrillUserPrincipal(clientName, isAdmin);
+          final Principal user = new DrillUserPrincipal(userShortName, isAdmin);
           final Subject subject = new Subject();
           subject.getPrincipals().add(user);
 
@@ -142,6 +148,8 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
       }
     } catch (GSSException gsse) {
       logger.warn("Caught GSSException trying to authenticate the client", gsse);
+    } catch (IOException ex) {
+      logger.warn("Caught IOException trying to get shortName of client user", ex);
     }
     return null;
   }

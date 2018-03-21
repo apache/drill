@@ -107,9 +107,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
             ConfigValueFactory.fromAnyRef("kerberos"))
         .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(true))
-        .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+        .withValue(ExecConstants.SERVICE_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
             ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
     // Ignore the compile time warning caused by the code below.
@@ -198,9 +198,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
           ConfigValueFactory.fromAnyRef("kerberos"))
         .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
           ConfigValueFactory.fromAnyRef(true))
-        .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+        .withValue(ExecConstants.SERVICE_PRINCIPAL,
           ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
           ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
     final ScanResult result = ClassPathScanner.fromPrescan(newConfig);
@@ -256,9 +256,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
         ConfigValueFactory.fromAnyRef(true))
-      .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+      .withValue(ExecConstants.SERVICE_PRINCIPAL,
         ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
         ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
     final ScanResult result = ClassPathScanner.fromPrescan(newConfig);
@@ -315,9 +315,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
           ConfigValueFactory.fromAnyRef(100000))
         .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
           ConfigValueFactory.fromAnyRef(true))
-        .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+        .withValue(ExecConstants.SERVICE_PRINCIPAL,
           ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
           ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
     final ScanResult result = ClassPathScanner.fromPrescan(newConfig);
@@ -371,9 +371,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
             ConfigValueFactory.fromAnyRef(true))
           .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(true))
-          .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+          .withValue(ExecConstants.SERVICE_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-          .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+          .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
             ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
 
       updateTestCluster(1, newConfig);
@@ -405,9 +405,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
             ConfigValueFactory.fromAnyRef(true))
         .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
             ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+        .withValue(ExecConstants.SERVICE_PRINCIPAL,
             ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
             ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
         .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
@@ -448,9 +448,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
               ConfigValueFactory.fromAnyRef(true))
           .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
               ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-          .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+          .withValue(ExecConstants.SERVICE_PRINCIPAL,
               ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-          .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+          .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
               ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
           .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
               ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
