@@ -237,7 +237,10 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
   private void handleRemainder() {
     int remainingRecordCount = flattener.getFlattenField().getAccessor().getInnerValueCount() - remainderIndex;
-    if (!doAlloc(remainingRecordCount)) {
+
+    // remainingRecordCount can be much higher than number of rows we will have in outgoing batch.
+    // Do memory allocation only for number of rows we are going to have in the batch.
+    if (!doAlloc(Math.min(remainingRecordCount, flattenMemoryManager.getOutputRowCount()))) {
       outOfMemory = true;
       return;
     }
