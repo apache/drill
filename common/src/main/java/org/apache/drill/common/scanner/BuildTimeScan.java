@@ -45,8 +45,8 @@ public class BuildTimeScan {
   private static final String REGISTRY_FILE = "META-INF/drill-module-scan/registry.json";
 
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
-  private static final ObjectReader reader = mapper.reader(ScanResult.class);
-  private static final ObjectWriter writer = mapper.writerWithType(ScanResult.class);
+  private static final ObjectReader reader = mapper.readerFor(ScanResult.class);
+  private static final ObjectWriter writer = mapper.writerFor(ScanResult.class);
 
   /**
    * @return paths that have the prescanned registry file in them
@@ -118,10 +118,10 @@ public class BuildTimeScan {
    */
   public static void main(String[] args) throws Exception {
     if (args.length != 1) {
-      throw new IllegalArgumentException("Usage: java {cp} " + ClassPathScanner.class.getName() + " path/to/scan");
+      throw new IllegalArgumentException("Usage: java {cp} " + BuildTimeScan.class.getName() + " path/to/scan");
     }
     String basePath = args[0];
-    System.out.println("Scanning: " + basePath);
+    logger.info("Scanning: {}", basePath);
     File registryFile = new File(basePath, REGISTRY_FILE);
     File dir = registryFile.getParentFile();
     if ((!dir.exists() && !dir.mkdirs()) || !dir.isDirectory()) {
