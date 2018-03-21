@@ -1,6 +1,6 @@
 ---
 title: "Starting Drill in Distributed Mode"
-date: 2018-03-20 00:07:31 UTC
+date: 2018-03-21 01:38:36 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 
@@ -84,7 +84,7 @@ To exit the Drill shell, issue the following command:
 
 ## Shut Down the Drill Process on a Node
 
-You can abruptly stop the Drill process on a node, or you can gracefully shut down the Drill process on a node. When you stop the Drill process on a node, active queries cannot complete if they need additional time beyond the default five second wait period. In Drill 1.12 and later, you can use the graceful_stop command, which transitions a Drillbit into a quiescent state in which the Drill process can complete in-progress queries before shutting down.  
+You can abruptly stop the Drill process on a node, or you can gracefully shut down the Drill process on a node. When you stop the Drill process on a node, active queries cannot complete if they need additional time beyond the default five second wait period. In Drill 1.12 and later, you can use the graceful_stop command to transition a Drillbit into a quiescent state in which the Drillbit can complete in-progress queries before shutting down.  
 
 ###Stopping the Drill Process
 To stop the Drill process on the node, issue the `drillbit.sh stop` command, as shown:  
@@ -93,7 +93,7 @@ To stop the Drill process on the node, issue the `drillbit.sh stop` command, as 
 
 ###Gracefully Shutting Down the Drill Process
 
-Graceful shutdown is enabled by default. You can gracefully shutdown a Drillbit from the command line or the Drill Web Console. When you initiate a graceful shutdown from the Drill Web Console, the console posts an alert stating that a graceful shutdown was triggered. You can see the progress of the shutdown as the Drillbit completes queries and transitions through the quiescent state.  
+Graceful shutdown is enabled by default. You can gracefully shut down a Drillbit from the command line or the Drill Web Console. When you initiate graceful shutdown from the Drill Web Console, the console posts an alert stating that a graceful shutdown was triggered. You can see the progress of the shut down as the Drillbit completes queries and transitions through the quiescent state.  
 
 **How A Drillbit Shuts Down Gracefully**  
 
@@ -110,7 +110,7 @@ The following list describes the various states that a Drillbit transitions thro
 - **Shutdown**: The final state in which a Drillbit removes itself from the ZooKeeper registry.  
 
 **Shutting Down a Drillbit Gracefully**  
-You can gracefully shutdown a node from the command line or the Drill Web Console. 
+You can gracefully shut down a Drillbit from the command line or the Drill Web Console. 
  
 From the command line, run the following command on the node you want to shut down:  
 

@@ -1,6 +1,6 @@
 ---
 title: "Drill in 10 Minutes"
-date: 2018-03-18 20:02:37 UTC
+date: 2018-03-21 01:38:38 UTC
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---
@@ -22,7 +22,7 @@ After installing Drill, you start the Drill shell. The Drill shell is a pure-Jav
 
 You need to meet the following prerequisites to run Drill:
 
-* Linux, Mac OS X, and Windows: Oracle JDK [version 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) or [version 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) if running Drill 1.6 or later  
+* Linux, Mac OS X, and Windows: Oracle JDK [version 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
 * Windows only:  
   * A JAVA_HOME environment variable set up that points to the JDK installation  
   * A PATH environment variable that includes a pointer to the bin directory of the JDK installation 
@@ -30,14 +30,14 @@ You need to meet the following prerequisites to run Drill:
   
 ### Java Installation Prerequisite Check
 
-Run the following command in a terminal (Linux and Mac OS X) or Command Prompt (Windows) to verify that Java 7 or 8 is the version in effect:
+Run the following command in a terminal (Linux and Mac OS X) or Command Prompt (Windows) to verify that Java 8 is the version in effect:
 
 `java -version`
 
 The output looks something like this:
 
-    java version "1.7.0_79"
-    Java(TM) SE Runtime Environment (build 1.7.0_7965-b15)
+    java version "1.8.0"
+    Java(TM) SE Runtime Environment (build 1.8.0_7965-b15)
     Java HotSpot(TM) 64-Bit Server VM (build 24.79-b02, mixed mode)
 
 ## Install Drill on Linux or Mac OS X

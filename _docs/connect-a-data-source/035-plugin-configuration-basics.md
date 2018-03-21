@@ -1,6 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
-date: 2018-02-13 00:00:44 UTC
+date: 2018-03-21 01:38:35 UTC
 parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin configurations on one Drill node in a 
@@ -25,7 +25,19 @@ name. Names are case-sensitive.
 4. Click **Create**.  
 5. In Configuration, use JSON formatting to modify a copy of an existing configuration if possible.  
    Using a copy of an existing configuration reduces the risk of JSON coding errors. Use the Storage Plugin Attributes table in the next section as a guide for making typical modifications.  
-6. Click **Create**.
+6. Click **Create**.  
+
+Note: Drill 1.12 and later provides syntax highlighting and error checking for plugin configurations to prevent syntax errors, such as missing commas or curly brackets, when configuring storage plugins. 
+ 
+You can see an example of syntax highlighting for a storage plugin configuration in the following image:  
+
+![](https://i.imgur.com/LdiQC7E.png)  
+
+A red box with an x indicates that the syntax contains an error, as shown in the following image:  
+
+![](https://i.imgur.com/cFDCH0v.png) 
+  
+
 
 
 ## Storage Plugin Attributes

@@ -1,6 +1,6 @@
 ---
 title: "Query Data Introduction"
-date:  
+date: 2018-03-21 01:38:37 UTC
 parent: "Query Data"
 ---
 You can query local and distributed file systems, Hive, HBase data, complex data, INFORMATION SCHEMA, and system tables as described in the subtopics of this section. 
@@ -40,4 +40,31 @@ Remember the following tips when querying data with Drill:
     `Example: `!set maxwidth 10000`
   * Use backticks around [keywords]({{site.baseurl}}/docs/reserved-keywords), special characters, and [identifiers]({{site.baseurl}}/docs/lexical-structure/#identifier) that SQL cannot parse, such as the keyword default and a path that contains a forward slash character:
     Example: ``SELECT * FROM dfs.`default`.`/Users/drilluser/apache-drill-1.1.0/sample-data/nation.parquet`;``
-  * When selecting all (SELECT *) schema-less data, the order of returned columns might differ from the stored order and might vary from query to query.
+  * When selecting all (SELECT *) schema-less data, the order of returned columns might differ from the stored order and might vary from query to query.  
+
+###Syntax Highlighting and SQL Templates  
+Drill 1.13 extends the syntax highlighting feature for storage plugin configurations to queries. 
+
+You can see queries with highlighted syntax in the query profile on the Query tab, as shown in the following image:  
+
+![](https://i.imgur.com/ZcXDQwV.png)  
+
+The Edit Query tab auto-populates with the query so you can easily edit and rerun a query.  
+
+In addition to syntax highlighting, an autocomplete feature enables you to use snippets (SQL templates) to quickly write syntax for queries.  
+  
+**Using the Autocomplete Feature**  
+
+On the Query page in the Drill Web Console, place your cursor in the Query window and press `ctrl+space`. A drop-down menu of Drill keywords, functions, and templates appears. Use the up and down arrows on the keyboard to scroll through the list.  
+ 
+**Note:** The `s*` option provides the template for a SELECT query.  
+
+The following image shows the snippet for creating a temporary table:  
+
+![](https://i.imgur.com/yKMSIRV.png)  
+
+When you select the `ctas` option, the CTAS syntax is automatically written for you, as shown in the following image:  
+
+![](https://i.imgur.com/TzmZFi5.png)
+
+
