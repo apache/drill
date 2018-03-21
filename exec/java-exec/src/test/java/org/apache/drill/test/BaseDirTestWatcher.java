@@ -53,7 +53,6 @@ public class BaseDirTestWatcher extends DirTestWatcher {
     TEST_TMP // Corresponds to the directory that should be mapped to dfs.tmp
   }
 
-  private File codegenDir;
   private File tmpDir;
   private File storeDir;
   private File dfsTestTmpParentDir;
@@ -79,7 +78,6 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   protected void starting(Description description) {
     super.starting(description);
 
-    codegenDir = makeSubDir(Paths.get("codegen"));
     rootDir = makeSubDir(Paths.get("root"));
     tmpDir = makeSubDir(Paths.get("tmp"));
     storeDir = makeSubDir(Paths.get("store"));
@@ -132,14 +130,6 @@ public class BaseDirTestWatcher extends DirTestWatcher {
    */
   public File getRootDir() {
     return rootDir;
-  }
-
-  /**
-   * Gets the temp directory that should be used to save generated code files.
-   * @return The temp directory that should be used to save generated code files.
-   */
-  public File getCodegenDir() {
-    return codegenDir;
   }
 
   /**
