@@ -245,6 +245,10 @@ public class RecordBatchMemoryManager {
     return null;
   }
 
+  public RecordBatchSizer.ColumnSize getComplexColumnSize(String name) {
+    return sizer[DEFAULT_INPUT_INDEX].getComplexColumn(name);
+  }
+
   public void updateIncomingStats(int index) {
     Preconditions.checkArgument(index >= 0 && index < numInputs);
     Preconditions.checkArgument(inputBatchStats[index] != null);

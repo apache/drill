@@ -29,8 +29,10 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.UInt8Holder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 
-@FunctionTemplate(name = "convert_toUINT8", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "convert_toUINT8", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+                  variableOutputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_UINT8_LENGTH)
 public class UInt8ConvertTo implements DrillSimpleFunc {
 
   @Param UInt8Holder in;

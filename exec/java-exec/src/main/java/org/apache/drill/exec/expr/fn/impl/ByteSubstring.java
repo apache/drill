@@ -42,7 +42,8 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
  */
 @FunctionTemplate(names = {"bytesubstring", "byte_substr"},
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
-                  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+                  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+                  outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.CUSTOM_CLONE_DEFAULT)
 public class ByteSubstring implements DrillSimpleFunc {
 
   @Param VarBinaryHolder in;
