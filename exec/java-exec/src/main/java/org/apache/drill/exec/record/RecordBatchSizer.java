@@ -395,11 +395,26 @@ public class RecordBatchSizer {
       }
     }
 
+    private void allocateRepeatedList(RepeatedListVector vector, int recordCount) {
+      vector.allocateOffsetsNew(recordCount);
+      recordCount *= getCardinality();
+      ColumnSize child = children.get(vector.getField().getName());
+      if (vector.getDataVector() != null) {
+        child.allocateVector(vector.getDataVector(), recordCount);
+      }
+    }
+
     public void allocateVector(ValueVector vector, int recordCount) {
       if (vector instanceof AbstractMapVector) {
         allocateMap((AbstractMapVector) vector, recordCount);
         return;
       }
+
+      if (vector instanceof RepeatedListVector) {
+        allocateRepeatedList((RepeatedListVector) vector, recordCount);
+        return;
+      }
+
       AllocationHelper.allocate(vector, recordCount, getEntryWidth(), getCardinality());
     }
 
