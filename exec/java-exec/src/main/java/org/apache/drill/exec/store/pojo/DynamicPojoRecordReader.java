@@ -45,12 +45,16 @@ import java.util.Map;
 public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>> {
 
   @JsonProperty
-  private final LinkedHashMap<String, Class<?>> schema;
+  private LinkedHashMap<String, Class<?>> schema;
 
   public DynamicPojoRecordReader(LinkedHashMap<String, Class<?>> schema, List<List<T>> records) {
     super(records);
-    Preconditions.checkState(schema != null && !schema.isEmpty(), "Undefined schema is not allowed.");
-    this.schema = schema;
+    validateAndSetSchema(schema);
+  }
+
+  public DynamicPojoRecordReader(LinkedHashMap<String, Class<?>> schema, List<List<T>> records, int maxRecordsToRead) {
+    super(records, maxRecordsToRead);
+    validateAndSetSchema(schema);
   }
 
   /**
@@ -80,12 +84,16 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
         "}";
   }
 
+  private void validateAndSetSchema(LinkedHashMap<String, Class<?>> schema) {
+    Preconditions.checkState(schema != null && !schema.isEmpty(), "Undefined schema is not allowed.");
+    this.schema = schema;
+  }
+
   /**
    * An utility class that converts from {@link com.fasterxml.jackson.databind.JsonNode}
    * to DynamicPojoRecordReader during physical plan fragment deserialization.
    */
-  public static class Converter extends StdConverter<JsonNode, DynamicPojoRecordReader>
-  {
+  public static class Converter extends StdConverter<JsonNode, DynamicPojoRecordReader> {
     private static final TypeReference<LinkedHashMap<String, Class<?>>> schemaType =
         new TypeReference<LinkedHashMap<String, Class<?>>>() {};
 
@@ -105,7 +113,8 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
       for (Class<?> fieldType : schema.values()) {
         records.add(mapper.convertValue(recordsIterator.next(), fieldType));
       }
-      return new DynamicPojoRecordReader(schema, Collections.singletonList(records));
+      int maxRecordsToRead = value.get("recordsPerBatch").asInt();
+      return new DynamicPojoRecordReader(schema, Collections.singletonList(records), maxRecordsToRead);
     }
   }
 }

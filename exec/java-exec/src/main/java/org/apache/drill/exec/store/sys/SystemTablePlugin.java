@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -68,13 +67,12 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     parent.add(schema.getName(), schema);
   }
 
   @Override
-  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
-      throws IOException {
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) {
     SystemTable table = selection.getWith(context.getLpPersistence(), SystemTable.class);
     return new SystemTableScan(table, this);
   }
@@ -87,7 +85,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
     private final Set<String> tableNames;
 
     public SystemSchema() {
-      super(ImmutableList.<String>of(), SYS_SCHEMA_NAME);
+      super(ImmutableList.of(), SYS_SCHEMA_NAME);
       Set<String> names = Sets.newHashSet();
       for (SystemTable t : SystemTable.values()) {
         names.add(t.getTableName());
