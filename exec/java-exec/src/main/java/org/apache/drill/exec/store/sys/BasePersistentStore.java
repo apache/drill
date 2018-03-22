@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import org.apache.drill.exec.store.sys.store.DataChangeVersion;
-
 import java.util.Iterator;
 import java.util.Map;
 
@@ -27,26 +25,6 @@ public abstract class BasePersistentStore<V> implements PersistentStore<V> {
   @Override
   public Iterator<Map.Entry<String, V>> getAll() {
     return getRange(0, Integer.MAX_VALUE);
-  }
-
-  /** By default contains with version will behave the same way as without version.
-   * Override this method to add version support. */
-  public boolean contains(String key, DataChangeVersion version) {
-    return contains(key);
-  }
-
-  /** By default get with version will behave the same way as without version.
-   * Override this method to add version support. */
-  @Override
-  public V get(String key, DataChangeVersion version) {
-    return get(key);
-  }
-
-  /** By default put with version will behave the same way as without version.
-   * Override this method to add version support. */
-  @Override
-  public void put(String key, V value, DataChangeVersion version) {
-    put(key, value);
   }
 
 }

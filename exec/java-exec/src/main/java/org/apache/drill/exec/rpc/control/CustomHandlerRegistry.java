@@ -23,6 +23,7 @@ import io.netty.buffer.DrillBuf;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.drill.common.AutoCloseables.Closeable;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.proto.BitControl.CustomMessage;
 import org.apache.drill.exec.proto.BitControl.RpcType;
@@ -60,7 +61,7 @@ public class CustomHandlerRegistry {
     Preconditions.checkNotNull(handler);
     Preconditions.checkNotNull(requestSerde);
     Preconditions.checkNotNull(responseSerde);
-    try (AutoCloseableLock lock = write.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = write.open()) {
       ParsingHandler<?, ?> parsingHandler = handlers.get(messageTypeId);
       if (parsingHandler != null) {
         throw new IllegalStateException(String.format(
@@ -76,7 +77,7 @@ public class CustomHandlerRegistry {
 
   public Response handle(CustomMessage message, DrillBuf dBody) throws RpcException {
     final ParsingHandler<?, ?> handler;
-    try (AutoCloseableLock lock = read.open()) {
+    try (@SuppressWarnings("unused") Closeable lock = read.open()) {
       handler = handlers.get(message.getType());
     }
 

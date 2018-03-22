@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.drill.common.AutoCloseables.Closeable;
 import org.apache.drill.common.HistoricalLog;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
@@ -109,7 +110,7 @@ public class AllocationManager {
           "A buffer can only be associated between two allocators that share the same root.");
     }
 
-    try (AutoCloseableLock read = readLock.open()) {
+    try (@SuppressWarnings("unused") Closeable read = readLock.open()) {
 
       final BufferLedger ledger = map.get(allocator);
       if (ledger != null) {
@@ -119,7 +120,7 @@ public class AllocationManager {
         return ledger;
       }
     }
-    try (AutoCloseableLock write = writeLock.open()) {
+    try (@SuppressWarnings("unused") Closeable write = writeLock.open()) {
       // we have to recheck existing ledger since a second reader => writer could be competing with us.
 
       final BufferLedger existingLedger = map.get(allocator);
@@ -242,7 +243,7 @@ public class AllocationManager {
 
       // since two balance transfers out from the allocator manager could cause incorrect accounting, we need to ensure
       // that this won't happen by synchronizing on the allocator manager instance.
-      try (AutoCloseableLock write = writeLock.open()) {
+      try (@SuppressWarnings("unused") Closeable write = writeLock.open()) {
         if (owningLedger != this) {
           return true;
         }
@@ -320,7 +321,7 @@ public class AllocationManager {
       allocator.assertOpen();
 
       final int outcome;
-      try (AutoCloseableLock write = writeLock.open()) {
+      try (@SuppressWarnings("unused") Closeable write = writeLock.open()) {
         outcome = bufRefCnt.addAndGet(-decrement);
         if (outcome == 0) {
           lDestructionTime = System.nanoTime();
@@ -424,7 +425,7 @@ public class AllocationManager {
      * @return Amount of accounted(owned) memory associated with this ledger.
      */
     public int getAccountedSize() {
-      try (AutoCloseableLock read = readLock.open()) {
+      try (@SuppressWarnings("unused") Closeable read = readLock.open()) {
         if (owningLedger == this) {
           return size;
         } else {

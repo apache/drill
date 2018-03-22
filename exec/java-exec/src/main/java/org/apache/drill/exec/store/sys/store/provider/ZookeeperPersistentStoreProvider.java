@@ -28,7 +28,9 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
+import org.apache.drill.exec.store.sys.store.VersionedDelegatingStore;
 import org.apache.drill.exec.store.sys.store.ZookeeperPersistentStore;
 import org.apache.hadoop.fs.Path;
 
@@ -77,6 +79,24 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
       return store;
     default:
       throw new IllegalStateException();
+    }
+  }
+
+  @Override
+  public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(final PersistentStoreConfig<V> config) throws StoreException {
+    switch(config.getMode()){
+      case BLOB_PERSISTENT:
+        return new VersionedDelegatingStore<>(new LocalPersistentStore<>(fs, blobRoot, config));
+      case PERSISTENT:
+        final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
+        try {
+          store.start();
+        } catch (Exception e) {
+          throw new StoreException("unable to start zookeeper store", e);
+        }
+        return store;
+      default:
+        throw new IllegalStateException();
     }
   }
 
