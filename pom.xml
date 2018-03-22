@@ -66,6 +66,7 @@
     <excludedGroups />
     <memoryMb>4096</memoryMb>
     <directMemoryMb>4096</directMemoryMb>
+    <additionalparam>-Xdoclint:none</additionalparam>
   </properties>
 
   <scm>
@@ -1213,12 +1214,6 @@
       <!-- this profile adds/overrides few features of the 'apache-release'
         profile in the parent pom. -->
       <id>apache-release</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <properties>
-        <additionalparam>-Xdoclint:none</additionalparam>
-      </properties>
       <build>
         <plugins>
           <plugin>
@@ -1253,7 +1248,9 @@
                 <configuration>
                   <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                   <appendAssemblyId>false</appendAssemblyId>
-                  <descriptor>src/main/resources/assemblies/source-assembly.xml</descriptor>
+                  <descriptors>
+                    <descriptor>src/main/resources/assemblies/source-assembly.xml</descriptor>
+                  </descriptors>
                   <finalName>apache-drill-${project.version}-src</finalName>
                   <tarLongFileMode>gnu</tarLongFileMode>
                 </configuration>
