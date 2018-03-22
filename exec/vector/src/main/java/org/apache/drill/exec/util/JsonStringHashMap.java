@@ -34,6 +34,7 @@ public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
 
   static {
     mapper = new ObjectMapper();
+    mapper.registerModule(SerializationModule.getModule());
   }
 
   @Override

@@ -110,8 +110,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         .ordered()
         .baselineColumns("employee_id", "full_name", "position_id", "department_id", "birth_date", "hire_date",
             "salary", "fsalary", "single", "education_level", "gender")
-        .baselineValues(1, "Sheri Nowmer", 1, 1L, new DateTime(Date.valueOf("1961-08-26").getTime()),
-            new DateTime(Date.valueOf("1994-12-01").getTime()), 80000.0D, 80000.0F, true, "Graduate Degree", "F")
+        .baselineValues(1, "Sheri Nowmer", 1, 1L, Date.valueOf("1961-08-26"),
+            Date.valueOf("1994-12-01"), 80000.0D, 80000.0F, true, "Graduate Degree", "F")
         .go();
   }
 

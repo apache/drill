@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.bson;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -38,14 +36,15 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.DateWriter;
-import org.apache.drill.exec.vector.complex.writer.TimeWriter;
+import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
 import org.bson.BsonBinary;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Preconditions;
+
+import io.netty.buffer.DrillBuf;
 
 public class BsonRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BsonRecordReader.class);
@@ -247,14 +246,14 @@ public class BsonRecordReader {
   }
 
   private void writeTimeStamp(int timestamp, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    DateTime dateTime = new DateTime(timestamp);
-    TimeWriter t;
+    DateTime dateTime = new DateTime(timestamp*1000L);
+    TimeStampWriter t;
     if (isList == false) {
-      t = writer.map.time(fieldName);
+      t = writer.map.timeStamp(fieldName);
     } else {
-      t = writer.list.time();
+      t = writer.list.timeStamp();
     }
-    t.writeTime((int) (dateTime.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
+    t.writeTimeStamp((int) (dateTime.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis()));
   }
 
   private void writeString(String readString, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
@@ -297,13 +296,13 @@ public class BsonRecordReader {
 
   private void writeDateTime(long readDateTime, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
     DateTime date = new DateTime(readDateTime);
-    DateWriter dt;
+    TimeStampWriter dt;
     if (isList == false) {
-      dt = writer.map.date(fieldName);
+      dt = writer.map.timeStamp(fieldName);
     } else {
-      dt = writer.list.date();
+      dt = writer.list.timeStamp();
     }
-    dt.writeDate(date.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+    dt.writeTimeStamp(date.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
   }
 
   private void writeBoolean(boolean readBoolean, final MapOrListWriterImpl writer, String fieldName, boolean isList) {

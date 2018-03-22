@@ -17,19 +17,23 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import mockit.integration.junit4.JMockit;
-import org.apache.drill.test.BaseTestQuery;
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
@@ -82,7 +86,7 @@ public class TestCastFunctions extends BaseTestQuery {
       .sqlQuery(query)
       .ordered()
       .baselineColumns("col")
-      .baselineValues(new DateTime(1969, 12, 31, 0, 0))
+      .baselineValues(new Date(new DateTime(1969, 12, 31, 0, 0).getMillis()))
       .build()
       .run();
   }

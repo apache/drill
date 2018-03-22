@@ -509,7 +509,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public ${friendlyType} getObject(int index) {
       org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
       date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-      return date;
+      return new java.sql.Date(date.getMillis());
     }
     <#elseif minor.class == "TimeStamp">
 
@@ -517,7 +517,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public ${friendlyType} getObject(int index) {
       org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
       date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-      return date;
+      return new java.sql.Timestamp(date.getMillis());
     }
     <#elseif minor.class == "IntervalYear">
 
@@ -532,10 +532,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     <#elseif minor.class == "Time">
 
     @Override
-    public DateTime getObject(int index) {
+    public java.sql.Time getObject(int index) {
       org.joda.time.DateTime time = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
       time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-      return time;
+      return new java.sql.Time(time.getMillis());
     }
     <#elseif minor.class == "Decimal9" || minor.class == "Decimal18">
 

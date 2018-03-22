@@ -20,6 +20,7 @@ package org.apache.drill.exec.fn.interp;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;
@@ -48,12 +49,11 @@ import org.apache.drill.exec.store.mock.MockScanBatchCreator;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.exec.store.mock.MockTableDef;
 import org.apache.drill.exec.vector.ValueVector;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.collect.Lists;
-import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class, SqlTest.class})
 public class ExpressionInterpreterTest  extends PopUnitTestBase {
@@ -141,7 +141,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final ByteBuffer buffer = ByteBuffer.allocate(12);
     buffer.putLong(out.value);
     final long l = buffer.getLong(0);
-    final DateTime t = new DateTime(l);
+    final Timestamp t = new Timestamp(l);
 
     final String[] expectedFirstTwoValues = {t.toString(), t.toString()};
 

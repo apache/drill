@@ -17,8 +17,19 @@
  */
 package org.apache.drill.exec.hive;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
@@ -28,24 +39,13 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
-import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStorage extends HiveTestBase {
@@ -160,8 +160,8 @@ public class TestHiveStorage extends HiveTestBase {
             3455,
             "stringfield",
             "varcharfield",
-            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            Timestamp.valueOf("2013-07-05 17:01:00"),
+            Date.valueOf("2013-07-05"),
             "charfield",
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
             //"binary",
@@ -179,8 +179,8 @@ public class TestHiveStorage extends HiveTestBase {
             3455,
             "string",
             "varchar",
-            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            Timestamp.valueOf("2013-07-05 17:01:00"),
+            Date.valueOf("2013-07-05"),
             "char")
         .baselineValues( // All fields are null, but partition fields have non-null values
             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
@@ -200,8 +200,8 @@ public class TestHiveStorage extends HiveTestBase {
             3455,
             "string",
             "varchar",
-            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            Timestamp.valueOf("2013-07-05 17:01:00"),
+            Date.valueOf("2013-07-05"),
             "char")
         .go();
   }
@@ -275,7 +275,7 @@ public class TestHiveStorage extends HiveTestBase {
               3455,
               "stringfield",
               "varcharfield",
-              new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+              Timestamp.valueOf("2013-07-05 17:01:00"),
               "charfield",
               // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
               //"binary",
@@ -293,8 +293,8 @@ public class TestHiveStorage extends HiveTestBase {
               3455,
               "string",
               "varchar",
-              new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-              new DateTime(Date.valueOf("2013-07-05").getTime()),
+              Timestamp.valueOf("2013-07-05 17:01:00"),
+              Date.valueOf("2013-07-05"),
               "char")
           .baselineValues( // All fields are null, but partition fields have non-null values
               null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
@@ -314,8 +314,8 @@ public class TestHiveStorage extends HiveTestBase {
               3455,
               "string",
               "varchar",
-              new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-              new DateTime(Date.valueOf("2013-07-05").getTime()),
+              Timestamp.valueOf("2013-07-05 17:01:00"),
+              Date.valueOf("2013-07-05"),
               "char")
           .go();
     } finally {

@@ -17,6 +17,13 @@
  */
 package org.apache.drill;
 
+import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
+import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
+
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Timestamp;
+
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
@@ -26,11 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.math.BigDecimal;
-
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
 
 @Category(SqlFunctionTest.class)
 public class TestFunctionsQuery extends BaseTestQuery {
@@ -554,7 +556,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("TS")
-        .baselineValues(date)
+        .baselineValues(new Timestamp(date.getMillis()))
         .go();
   }
 
@@ -691,7 +693,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "To_DaTe('2003/07/09', 'yyyy/MM/dd') as col3 " +
         "from cp.`employee.json` LIMIT 1";
 
-    DateTime date = formatDate.parseDateTime("2003-07-09");
+    Date date = new Date(formatDate.parseDateTime("2003-07-09").getMillis());
 
     testBuilder()
         .sqlQuery(query)
@@ -758,8 +760,8 @@ public class TestFunctionsQuery extends BaseTestQuery {
     String query = "select to_timestamp(cast('800120400.12312' as decimal(38, 5))) as DEC38_TS, to_timestamp(200120400) as INT_TS " +
         "from cp.`employee.json` where employee_id < 2";
 
-    DateTime result1 = new DateTime(800120400123l);
-    DateTime result2 = new DateTime(200120400000l);
+    Timestamp result1 = new Timestamp(800120400123l);
+    Timestamp result2 = new Timestamp(200120400000l);
 
     testBuilder()
         .sqlQuery(query)

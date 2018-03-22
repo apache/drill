@@ -613,7 +613,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .unOrdered()
           .sqlQuery("SELECT * FROM dfs.tmp.`%s`", newTblName)
           .baselineColumns("id", "name", "bday")
-          .baselineValues(1, "Sheri Nowmer", new DateTime(Date.valueOf("1961-08-26").getTime()))
+          .baselineValues(1, "Sheri Nowmer", Date.valueOf("1961-08-26"))
           .go();
     } finally {
       deleteTableIfExists(newTblName);
@@ -980,10 +980,10 @@ public class TestParquetWriter extends BaseTestQuery {
           .optionSettingQueriesForTestQuery(
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .baselineColumns("c", "d")
-          .baselineValues(new DateTime(Date.valueOf("2012-12-15").getTime()),
-              new DateTime(convertToLocalTimestamp("2016-04-24 20:06:28")))
-          .baselineValues(new DateTime(Date.valueOf("2011-07-09").getTime()),
-              new DateTime(convertToLocalTimestamp("2015-04-15 22:35:49")))
+          .baselineValues(Date.valueOf("2012-12-15"),
+              convertToLocalTimestamp("2016-04-24 20:06:28"))
+          .baselineValues(Date.valueOf("2011-07-09"),
+              convertToLocalTimestamp("2015-04-15 22:35:49"))
           .build()
           .run();
     } finally {

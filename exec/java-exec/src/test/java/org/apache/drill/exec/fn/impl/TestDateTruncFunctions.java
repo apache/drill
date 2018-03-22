@@ -17,17 +17,20 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.categories.SqlFunctionTest;
-import org.apache.drill.categories.UnlikelyTest;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTime;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.BaseTestQuery;
+import org.joda.time.Period;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateTruncFunctions extends BaseTestQuery {
@@ -52,16 +55,16 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("second", "minute", "hour", "day", "month", "year", "quarter", "decade", "century", "millennium")
         .baselineValues(
-            formatTime.parseDateTime("2:30:21.0"), // seconds
-            formatTime.parseDateTime("2:30:00.0"), // minute
-            formatTime.parseDateTime("2:00:00.0"), // hour
-            formatTime.parseDateTime("0:00:00.0"), // day
-            formatTime.parseDateTime("0:00:00.0"), // month
-            formatTime.parseDateTime("0:00:00.0"), // year
-            formatTime.parseDateTime("0:00:00.0"), // quarter
-            formatTime.parseDateTime("0:00:00.0"), // decade
-            formatTime.parseDateTime("0:00:00.0"), // century
-            formatTime.parseDateTime("0:00:00.0")) // millennium
+            new Time(formatTime.parseDateTime("2:30:21.0").getMillis()), // seconds
+            new Time(formatTime.parseDateTime("2:30:00.0").getMillis()), // minute
+            new Time(formatTime.parseDateTime("2:00:00.0").getMillis()), // hour
+            new Time(formatTime.parseDateTime("0:00:00.0").getMillis()), // day
+            new Time(formatTime.parseDateTime("0:00:00.0").getMillis()), // month
+            new Time(formatTime.parseDateTime("0:00:00.0").getMillis()), // year
+            new Time(formatTime.parseDateTime("0:00:00.0").getMillis()), // quarter
+            new Time(formatTime.parseDateTime("0:00:00.0").getMillis()), // decade
+            new Time(formatTime.parseDateTime("0:00:00.0").getMillis()), // century
+            new Time(formatTime.parseDateTime("0:00:00.0").getMillis())) // millennium
         .go();
   }
 
@@ -88,19 +91,19 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("second", "minute", "hour", "day", "month", "week" , "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
         .baselineValues(
-            formatDate.parseDateTime("2011-02-03"), // seconds
-            formatDate.parseDateTime("2011-02-03"), // minute
-            formatDate.parseDateTime("2011-02-03"), // hour
-            formatDate.parseDateTime("2011-02-03"), // day
-            formatDate.parseDateTime("2011-02-01"), // month
-            formatDate.parseDateTime("2011-01-31"), // week
-            formatDate.parseDateTime("2011-01-01"), // year
-            formatDate.parseDateTime("2011-04-01"), // quarter-1
-            formatDate.parseDateTime("2011-07-01"), // quarter-2
-            formatDate.parseDateTime("2011-07-01"), // quarter-3
-            formatDate.parseDateTime("2010-01-01"), // decade-1
-            formatDate.parseDateTime("2070-01-01"), // decade-2
-            formatDate.parseDateTime("1970-01-01")) // decade-3
+            new Date(formatDate.parseDateTime("2011-02-03").getMillis()), // seconds
+            new Date(formatDate.parseDateTime("2011-02-03").getMillis()), // minute
+            new Date(formatDate.parseDateTime("2011-02-03").getMillis()), // hour
+            new Date(formatDate.parseDateTime("2011-02-03").getMillis()), // day
+            new Date(formatDate.parseDateTime("2011-02-01").getMillis()), // month
+            new Date(formatDate.parseDateTime("2011-01-31").getMillis()), // week
+            new Date(formatDate.parseDateTime("2011-01-01").getMillis()), // year
+            new Date(formatDate.parseDateTime("2011-04-01").getMillis()), // quarter-1
+            new Date(formatDate.parseDateTime("2011-07-01").getMillis()), // quarter-2
+            new Date(formatDate.parseDateTime("2011-07-01").getMillis()), // quarter-3
+            new Date(formatDate.parseDateTime("2010-01-01").getMillis()), // decade-1
+            new Date(formatDate.parseDateTime("2070-01-01").getMillis()), // decade-2
+            new Date(formatDate.parseDateTime("1970-01-01").getMillis())) // decade-3
         .go();
   }
 
@@ -121,11 +124,11 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4", "c5")
         .baselineValues(
-            formatDate.parseDateTime("2001-01-01"), // c1
-            formatDate.parseDateTime("1901-01-01"), // c2
-            formatDate.parseDateTime("1901-01-01"), // c3
-            formatDate.parseDateTime("0801-01-01"), // c4
-            formatDate.parseDateTime("0001-01-01")) // c5
+            new Date(formatDate.parseDateTime("2001-01-01").getMillis()), // c1
+            new Date(formatDate.parseDateTime("1901-01-01").getMillis()), // c2
+            new Date(formatDate.parseDateTime("1901-01-01").getMillis()), // c3
+            new Date(formatDate.parseDateTime("0801-01-01").getMillis()), // c4
+            new Date(formatDate.parseDateTime("0001-01-01").getMillis())) // c5
         .go();
   }
 
@@ -153,11 +156,11 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("m1", "m2", "m3", "m4", "m5")
         .baselineValues(
-            formatDate.parseDateTime("2001-01-01"), // m1
-            formatDate.parseDateTime("1001-01-01"), // m2
-            formatDate.parseDateTime("1001-01-01"), // m3
-            formatDate.parseDateTime("0001-01-01"), // m4
-            formatDate.parseDateTime("0001-01-01")) // m5
+                new Date(formatDate.parseDateTime("2001-01-01").getMillis()), // m1
+                new Date(formatDate.parseDateTime("1001-01-01").getMillis()), // m2
+                new Date(formatDate.parseDateTime("1001-01-01").getMillis()), // m3
+                new Date(formatDate.parseDateTime("0001-01-01").getMillis()), // m4
+                new Date(formatDate.parseDateTime("0001-01-01").getMillis())) // m5
         .go();
   }
 
@@ -184,19 +187,19 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("second", "minute", "hour", "day", "month", "week" , "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
         .baselineValues(
-            formatTimeStamp.parseDateTime("2011-02-03 10:11:12.0"), // seconds
-            formatTimeStamp.parseDateTime("2011-02-03 10:11:00.0"), // minute
-            formatTimeStamp.parseDateTime("2011-02-03 10:00:00.0"), // hour
-            formatTimeStamp.parseDateTime("2011-02-03 00:00:00.0"), // day
-            formatTimeStamp.parseDateTime("2011-02-01 00:00:00.0"), // month
-            formatTimeStamp.parseDateTime("2011-01-31 00:00:00.0"), // week
-            formatTimeStamp.parseDateTime("2011-01-01 00:00:00.0"), // year
-            formatTimeStamp.parseDateTime("2011-04-01 00:00:00.0"), // quarter-1
-            formatTimeStamp.parseDateTime("2011-07-01 00:00:00.0"), // quarter-2
-            formatTimeStamp.parseDateTime("2011-07-01 00:00:00.0"), // quarter-3
-            formatTimeStamp.parseDateTime("2010-01-01 00:00:00.0"), // decade-1
-            formatTimeStamp.parseDateTime("2070-01-01 00:00:00.0"), // decade-2
-            formatTimeStamp.parseDateTime("1970-01-01 00:00:00.0")) // decade-3
+            new Timestamp(formatTimeStamp.parseDateTime("2011-02-03 10:11:12.0").getMillis()), // seconds
+            new Timestamp(formatTimeStamp.parseDateTime("2011-02-03 10:11:00.0").getMillis()), // minute
+            new Timestamp(formatTimeStamp.parseDateTime("2011-02-03 10:00:00.0").getMillis()), // hour
+            new Timestamp(formatTimeStamp.parseDateTime("2011-02-03 00:00:00.0").getMillis()), // day
+            new Timestamp(formatTimeStamp.parseDateTime("2011-02-01 00:00:00.0").getMillis()), // month
+            new Timestamp(formatTimeStamp.parseDateTime("2011-01-31 00:00:00.0").getMillis()), // week
+            new Timestamp(formatTimeStamp.parseDateTime("2011-01-01 00:00:00.0").getMillis()), // year
+            new Timestamp(formatTimeStamp.parseDateTime("2011-04-01 00:00:00.0").getMillis()), // quarter-1
+            new Timestamp(formatTimeStamp.parseDateTime("2011-07-01 00:00:00.0").getMillis()), // quarter-2
+            new Timestamp(formatTimeStamp.parseDateTime("2011-07-01 00:00:00.0").getMillis()), // quarter-3
+            new Timestamp(formatTimeStamp.parseDateTime("2010-01-01 00:00:00.0").getMillis()), // decade-1
+            new Timestamp(formatTimeStamp.parseDateTime("2070-01-01 00:00:00.0").getMillis()), // decade-2
+            new Timestamp(formatTimeStamp.parseDateTime("1970-01-01 00:00:00.0").getMillis())) // decade-3
         .go();
   }
 
@@ -217,11 +220,11 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4", "c5")
         .baselineValues(
-            formatTimeStamp.parseDateTime("2001-01-01 00:00:00.0"), // c1
-            formatTimeStamp.parseDateTime("1901-01-01 00:00:00.0"), // c2
-            formatTimeStamp.parseDateTime("1901-01-01 00:00:00.0"), // c3
-            formatTimeStamp.parseDateTime("0801-01-01 00:00:00.0"), // c4
-            formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0")) // c5
+            new Timestamp(formatTimeStamp.parseDateTime("2001-01-01 00:00:00.0").getMillis()), // c1
+            new Timestamp(formatTimeStamp.parseDateTime("1901-01-01 00:00:00.0").getMillis()), // c2
+            new Timestamp(formatTimeStamp.parseDateTime("1901-01-01 00:00:00.0").getMillis()), // c3
+            new Timestamp(formatTimeStamp.parseDateTime("0801-01-01 00:00:00.0").getMillis()), // c4
+            new Timestamp(formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0").getMillis())) // c5
         .go();
   }
 
@@ -242,11 +245,11 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("m1", "m2", "m3", "m4", "m5")
         .baselineValues(
-            formatTimeStamp.parseDateTime("2001-01-01 00:00:00.0"), // m1
-            formatTimeStamp.parseDateTime("1001-01-01 00:00:00.0"), // m2
-            formatTimeStamp.parseDateTime("1001-01-01 00:00:00.0"), // m3
-            formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0"), // m4
-            formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0")) // m5
+            new Timestamp(formatTimeStamp.parseDateTime("2001-01-01 00:00:00.0").getMillis()), // m1
+            new Timestamp(formatTimeStamp.parseDateTime("1001-01-01 00:00:00.0").getMillis()), // m2
+            new Timestamp(formatTimeStamp.parseDateTime("1001-01-01 00:00:00.0").getMillis()), // m3
+            new Timestamp(formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0").getMillis()), // m4
+            new Timestamp(formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0").getMillis())) // m5
         .go();
   }
 
@@ -327,12 +330,12 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         + "date_trunc('YEAR', date '2011-2-2') as DATE2 "
         + "from cp.`employee.json` where employee_id < 2";
 
-    DateTime time1 = formatTime.parseDateTime("2:30:00.0");
-    DateTime time2 = formatTime.parseDateTime("2:30:21.0");
-    DateTime ts1 = formatTimeStamp.parseDateTime("1991-05-05 10:00:00.0");
-    DateTime ts2 = formatTimeStamp.parseDateTime("1991-05-05 10:11:12.0");
-    DateTime date1 = formatDate.parseDateTime("2011-02-01");
-    DateTime date2 = formatDate.parseDateTime("2011-01-01");
+    Time time1 = new Time(formatTime.parseDateTime("2:30:00.0").getMillis());
+    Time time2 = new Time(formatTime.parseDateTime("2:30:21.0").getMillis());
+    Timestamp ts1 = new Timestamp(formatTimeStamp.parseDateTime("1991-05-05 10:00:00.0").getMillis());
+    Timestamp ts2 = new Timestamp(formatTimeStamp.parseDateTime("1991-05-05 10:11:12.0").getMillis());
+    Date date1 = new Date(formatDate.parseDateTime("2011-02-01").getMillis());
+    Date date2 = new Date(formatDate.parseDateTime("2011-01-01").getMillis());
 
     testBuilder()
         .sqlQuery(query)
