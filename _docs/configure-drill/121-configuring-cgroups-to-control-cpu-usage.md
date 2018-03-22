@@ -1,10 +1,10 @@
 ---
-title: "Appendix E: Using cgroups to Control CPU Usage"
-date:  
-parent: "Drill-on-YARN"
+title: "Configuring cgroups to Control CPU Usage"
+date: 2018-03-22 22:14:41 UTC  
+parent: "Configure Drill"
 ---   
 
-Linux cgroups (control groups) enable you to limit system resources to defined user groups or processes. As of Drill 1.13, you can configure a cgroup for Drill (running under YARN) to enforce CPU limits on the Drillbit service by setting the CPU limit on each Drill node in the /etc/cgconfig.conf file.
+Linux cgroups (control groups) enable you to limit system resources to defined user groups or processes. As of Drill 1.13, you can configure a cgroup for Drill to enforce CPU limits on the Drillbit service. You can set a CPU limit for the Drill cgroup on each Drill node in the /etc/cgconfig.conf file.
 
 You can set the CPU limit as a soft or hard limit, or both. The hard limit takes precedence over the soft limit. When Drill hits the hard limit, in-progress queries may not complete.  
 
