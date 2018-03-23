@@ -27,6 +27,7 @@ import java.util.TreeMap;
 
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.BaseTestQuery;
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,44 +36,54 @@ import org.junit.Test;
  */
 public class TestNestedDateTimeTimestamp extends BaseTestQuery {
     private static final String DATAFILE = "cp.`datetime.parquet`";
+    private static final Map<String,Object> expectedRecord = new TreeMap<String,Object>();
+
+    static {
+        /**
+         * Data in the parquet file represents this equavilent JSON, but with typed data, time, and timestamps:
+         * {
+         *    "date" : "1970-01-11",
+         *    "time" : "00:00:03.600",
+         *    "timestamp" : "2018-03-23T17:40:52.123Z",
+         *    "date_list" : [ "1970-01-11" ],
+         *    "time_list" : [ "00:00:03.600" ],
+         *    "timestamp_list" : [ "2018-03-23T17:40:52.123Z" ],
+         *    "time_map" : {
+         *      "date" : "1970-01-11",
+         *      "time" : "00:00:03.600",
+         *      "timestamp" : "2018-03-23T17:40:52.123Z"
+         *    }
+         *  }
+         *
+         * Note that when the above data is read in to Drill, Drill modifies the timestamp
+         * to local time zone, and preserving the <date> and <time> values.  This effectively
+         * changes the timestamp, if the time zone is not UTC.
+         */
+
+        Date date = Date.valueOf("1970-01-11");
+        Time time = new Time(Timestamp.valueOf("1970-01-01 00:00:03.600").getTime());
+        Timestamp timestamp = Timestamp.valueOf("2018-03-23 17:40:52.123");
+        expectedRecord.put("`date`", date);
+        expectedRecord.put("`time`", time);
+        expectedRecord.put("`timestamp`", timestamp);
+        expectedRecord.put("`date_list`", Arrays.asList(date));
+        expectedRecord.put("`time_list`", Arrays.asList(time));
+        expectedRecord.put("`timestamp_list`", Arrays.asList(timestamp));
+        Map<String,Object> nestedMap = new TreeMap<String,Object>();
+        nestedMap.put("date", date);
+        nestedMap.put("time", time);
+        nestedMap.put("timestamp", timestamp);
+
+        expectedRecord.put("`time_map`", nestedMap);
+    }
+
 
     /**
-     * Data in the parquet file represents this equavilent JSON, but with typed data, time, and timestamps:
-     * {
-     *    "date" : "1970-01-11",
-     *    "time" : "00:00:03.600",
-     *    "timestamp" : "2018-03-21 20:30:07.364",
-     *    "date_list" : [ "1970-01-11" ],
-     *    "time_list" : [ "00:00:03.600" ],
-     *    "timestamp_list" : [ "2018-03-21 20:30:07.364" ],
-     *    "time_map" : {
-     *      "date" : "1970-01-11",
-     *      "time" : "00:00:03.600",
-     *      "timestamp" : "2018-03-21 20:30:07.364"
-     *    }
-     *  }
+     * Test reading of from the parquet file that contains nested time, date, and timestamp
      */
     @Test
     public void testNested() throws Exception {
       String query = String.format("select * from %s limit 1", DATAFILE);
-      Map<String,Object> expectedRecord = new TreeMap<String,Object>();
-
-      Date date = Date.valueOf("1970-01-11");
-      Time time = new Time(Timestamp.valueOf("1970-01-01 00:00:03.600").getTime());
-      Timestamp timestamp = Timestamp.valueOf("2018-03-21 20:30:07.364");
-      expectedRecord.put("`date`", date);
-      expectedRecord.put("`time`", time);
-      expectedRecord.put("`timestamp`", timestamp);
-      expectedRecord.put("`date_list`", Arrays.asList(date));
-      expectedRecord.put("`time_list`", Arrays.asList(time));
-      expectedRecord.put("`timestamp_list`", Arrays.asList(timestamp));
-      Map<String,Object> nestedMap = new TreeMap<String,Object>();
-      nestedMap.put("date", date);
-      nestedMap.put("time", time);
-      nestedMap.put("timestamp", timestamp);
-
-      expectedRecord.put("`time_map`", nestedMap);
-
       testBuilder()
               .sqlQuery(query)
               .ordered()
@@ -91,7 +102,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
 
         final String expected =
                 "date | time | timestamp | date_list | time_list | timestamp_list | time_map\n" +
-                "1970-01-11 | 00:00:03 | 2018-03-21 20:30:07.364 | [\"1970-01-11\"] | [\"00:00:03.600\"] | [\"2018-03-21 20:30:07.364\"] | {\"date\":\"1970-01-11\",\"time\":\"00:00:03.600\",\"timestamp\":\"2018-03-21 20:30:07.364\"}";
+                "1970-01-11 | 00:00:03 | 2018-03-23 17:40:52.123 | [\"1970-01-11\"] | [\"00:00:03.600\"] | [\"2018-03-23 17:40:52.123\"] | {\"date\":\"1970-01-11\",\"time\":\"00:00:03.600\",\"timestamp\":\"2018-03-23 17:40:52.123\"}";
 
         Assert.assertEquals(expected.trim(), actual.trim());
     }
@@ -142,7 +153,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
             testBuilder()
                 .sqlQuery(readQuery)
                 .ordered()
-                .jsonBaselineFile("baseline_nested_datetime_extended.json")
+                .jsonBaselineFile("datetime.parquet")
                 .build()
                 .run();
         } finally {
@@ -169,12 +180,33 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
             testBuilder()
                 .sqlQuery(readQuery)
                 .ordered()
-                .jsonBaselineFile("baseline_nested_datetime_extended.json")
+                .jsonBaselineFile("datetime.parquet")
                 .build()
                 .run();
         } finally {
           test("drop table " + testName + "_parquet");
           test("alter session reset store.format ");
+        }
+    }
+
+    /**
+     * Testing time zone change and revert
+     */
+    @Test
+    public void testTimeZoneChangeAndReverse() throws Exception {
+        long timeMillis[] = new long[]{864000000L, 3600L, 1521826852123L};
+
+        for (int i = 0 ; i < timeMillis.length ; i++) {
+            DateTime time1 = new org.joda.time.DateTime(timeMillis[i], org.joda.time.DateTimeZone.UTC);
+            DateTime time2 = new DateTime(timeMillis[i], org.joda.time.DateTimeZone.UTC).withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
+            DateTime time3 = new DateTime(time2.getMillis()).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
+
+            Assert.assertEquals(time1.toString(), time3.toString());
+            Assert.assertEquals(time1.toString().substring(0,23), time2.toString().substring(0,23));
+
+            System.out.println("time1 = " + time1 + ", time2 = " + time2 + ", time3 = " + time3);
+            System.out.println("  time1 = " + time1.toString().substring(0,23) + "\n  time2 = " + time2.toString().substring(0,23) + "\n  time3 = " + time3.toString().substring(0,23));
+
         }
     }
 }

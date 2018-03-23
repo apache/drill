@@ -22,7 +22,8 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,6 +37,12 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
  */
 public class SerializationModule {
 
+    // copied from DateUtility.  Added here for inclusion into drill-jdbc-all
+    public static final DateTimeFormatter formatDate        = DateTimeFormat.forPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter formatTimeStamp    = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    public static final DateTimeFormatter formatTimeStampTZ = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS ZZZ");
+    public static final DateTimeFormatter formatTime        = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+
     public static final SimpleModule drillModule = new SimpleModule("DrillModule");
 
     static {
@@ -43,7 +50,7 @@ public class SerializationModule {
             @Override
             public void serialize(Time value, JsonGenerator gen, SerializerProvider serializers)
                     throws IOException, JsonProcessingException {
-                gen.writeString(DateUtility.formatTime.print(value.getTime()));
+                gen.writeString(formatTime.print(value.getTime()));
             }
         });
 
@@ -51,7 +58,7 @@ public class SerializationModule {
             @Override
             public void serialize(Date value, JsonGenerator gen, SerializerProvider serializers)
                     throws IOException, JsonProcessingException {
-                gen.writeString(DateUtility.formatDate.print(value.getTime()));
+                gen.writeString(formatDate.print(value.getTime()));
             }
         });
 
@@ -59,7 +66,7 @@ public class SerializationModule {
             @Override
             public void serialize(Timestamp value, JsonGenerator gen, SerializerProvider serializers)
                     throws IOException, JsonProcessingException {
-                gen.writeString(DateUtility.formatTimeStamp.print(value.getTime()));
+                gen.writeString(formatTimeStamp.print(value.getTime()));
             }
         });
     }
