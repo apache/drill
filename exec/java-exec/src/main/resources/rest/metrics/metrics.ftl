@@ -43,6 +43,11 @@
         <div id="totalUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
+      Direct (Estimate)
+      <div class="progress">
+        <div id="estDirectUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
+        </div>
+      </div>
     </div>
 
     <div id="mainDiv" class="col-md-9" role="main">
@@ -109,18 +114,23 @@
     };
 
     function updateBars(gauges) {
-      $.each(["heap","non-heap","total"], function(i, key) {
+      $.each(["heap","non-heap","total","drill.allocator.root"], function(i, key) {
         var used    = gauges[key + ".used"].value;
-        var max     = gauges[key + ".max"].value;
-        var usage   = round((used / 1073741824), 2) + "GB";
-        var percent = round((used / max), 2);
+        var max;
+        if (key.startsWith("drill.allocator")) {
+          max       = gauges[key + ".peak"].value;
+        } else {
+          max       = gauges[key + ".max"].value;
+        }
+        var percent = round((100 * used / max), 2);
+        var usage   = round((used / 1073741824), 2) + "GB (" + Math.max(0, percent) + "%)";
 
-        var styleVal = "width: " + percent + "%;"
-        $("#" + key + "Usage").attr({
+        var styleVal = "width: " + percent + "%;color: #202020;white-space: nowrap"
+        $("#" + (key.startsWith("drill.allocator") ? "estDirect" : key) + "Usage").attr({
           "aria-valuenow" : percent,
           "style" : styleVal
         });
-        $("#" + key + "Usage").html(usage);
+        $("#" + (key.startsWith("drill.allocator") ? "estDirect" : key) + "Usage").html(usage);
       });
     };
 
@@ -159,7 +169,7 @@
     };
 
     update();
-    setInterval(update, 2000);
+    setInterval(update, 3000);
   </script>
 </#macro>
 
