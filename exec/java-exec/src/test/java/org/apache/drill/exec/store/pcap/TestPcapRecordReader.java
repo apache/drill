@@ -16,15 +16,16 @@
  */
 package org.apache.drill.exec.store.pcap;
 
+import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestPcapRecordReader extends BaseTestQuery {
   @BeforeClass
@@ -48,24 +49,46 @@ public class TestPcapRecordReader extends BaseTestQuery {
 
   @Test
   public void testDistinctQuery() throws Exception {
-    runSQLVerifyCount("select distinct * from dfs.`store/pcap/tcp-1.pcap`", 1);
+    // omit data field from distinct count for now
+    runSQLVerifyCount("select distinct type, network, `timestamp`, src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address, tcp_session, packet_length from dfs.`store/pcap/tcp-1.pcap`", 1);
+  }
+
+  @Test
+  public void testFlagFormatting() {
+    assertEquals("NS", Packet.formatFlags(0x100));
+    assertEquals("CWR", Packet.formatFlags(0x80));
+    assertEquals("ECE", Packet.formatFlags(0x40).substring(0, 3));
+    assertEquals("ECE", Packet.formatFlags(0x42).substring(0, 3));
+    assertEquals("URG", Packet.formatFlags(0x20));
+    assertEquals("ACK", Packet.formatFlags(0x10));
+    assertEquals("PSH", Packet.formatFlags(0x8));
+    assertEquals("RST", Packet.formatFlags(0x4));
+    assertEquals("SYN", Packet.formatFlags(0x2));
+    assertEquals("FIN", Packet.formatFlags(0x1));
+    assertEquals("RST|SYN|FIN", Packet.formatFlags(0x7));
+  }
+
+  @Test
+  public void checkFlags() throws Exception {
+    runSQLVerifyCount("select tcp_session, tcp_ack, tcp_flags from dfs.`store/pcap/synscan.pcap`", 2011);
   }
 
   private void runSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
     List<QueryDataBatch> results = runSQLWithResults(sql);
-    printResultAndVerifyRowCount(results, expectedRowCount);
+    verifyRowCount(results, expectedRowCount);
   }
 
   private List<QueryDataBatch> runSQLWithResults(String sql) throws Exception {
     return testSqlWithResults(sql);
   }
 
-  private void printResultAndVerifyRowCount(List<QueryDataBatch> results,
-                                            int expectedRowCount) throws SchemaChangeException {
-    setColumnWidth(25);
-    int rowCount = printResult(results);
-    if (expectedRowCount != -1) {
-      Assert.assertEquals(expectedRowCount, rowCount);
+  private void verifyRowCount(List<QueryDataBatch> results, int expectedRowCount) {
+    int count = 0;
+    for (final QueryDataBatch result : results) {
+      count += result.getHeader().getRowCount();
+      result.release();
     }
+    assertEquals(expectedRowCount, count);
   }
+
 }

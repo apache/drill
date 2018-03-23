@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.codehaus.commons.compiler.CompileException;
@@ -126,7 +126,8 @@ public class FunctionInitializer {
    * @return compilation unit
    * @throws IOException if did not find class or could not load it
    */
-  private CompilationUnit convertToCompilationUnit(Class<?> clazz) throws IOException {
+  @VisibleForTesting
+  CompilationUnit convertToCompilationUnit(Class<?> clazz) throws IOException {
     String path = clazz.getName();
     path = path.replaceFirst("\\$.*", "");
     path = path.replace(".", DrillFileUtils.SEPARATOR);

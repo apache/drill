@@ -82,4 +82,11 @@ public class TestMongoQueries extends MongoTestBase {
         DONUTS_DB, DONUTS_COLLECTION);
     runMongoSQLVerifyCount(queryString, 5);
   }
+
+  @Test
+  public void testPhysicalPlanSubmission() throws Exception {
+    String query = String.format(TEST_BOOLEAN_FILTER_QUERY_TEMPLATE1,
+        EMPLOYEE_DB, EMPINFO_COLLECTION);
+    testPhysicalPlanExecutionBasedOnQuery(query);
+  }
 }

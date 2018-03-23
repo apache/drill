@@ -16,12 +16,12 @@
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>18</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.13.0-SNAPSHOT</version>
+  <version>1.14.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -46,16 +46,16 @@
     <ojai.version>1.1</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
     <findbugs.version>3.0.0</findbugs.version>
-    <netty.tcnative.classifier></netty.tcnative.classifier>
+    <netty.tcnative.classifier />
     <commons.io.version>2.4</commons.io.version>
     <junit.version>4.11</junit.version>
     <hamcrest.core.version>1.3</hamcrest.core.version>
 
     <!--
-      Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
-      Apache Hive 1.2. If the version is changed, make sure the jars and their dependencies are updated.
+      Currently Hive storage plugin only supports Apache Hive 2.3.2 or vendor specific variants of the
+      Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated.
     -->
-    <hive.version>1.2.1</hive.version>
+    <hive.version>2.3.2</hive.version>
     <hadoop.version>2.7.1</hadoop.version>
     <hbase.version>1.1.3</hbase.version>
     <fmpp.version>1.0</fmpp.version>
@@ -63,7 +63,7 @@
     <javassist.version>3.16.1-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.8</reflections.version>
-    <excludedGroups></excludedGroups>
+    <excludedGroups />
     <memoryMb>4096</memoryMb>
     <directMemoryMb>4096</directMemoryMb>
   </properties>
@@ -327,8 +327,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <maxmem>2048m</maxmem>
           <useIncrementalCompilation>false</useIncrementalCompilation>
           <fork>true</fork>
@@ -469,7 +469,7 @@
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -Ddrill.test.query.printing.silent=true
               -Ddrill.catastrophic_to_standard_out=true
-              -XX:MaxPermSize=512M -XX:MaxDirectMemorySize=${directMemoryMb}M
+              -XX:MaxDirectMemorySize=${directMemoryMb}M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
               -XX:+CMSClassUnloadingEnabled -ea
@@ -586,6 +586,19 @@
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -885,6 +898,22 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>servlet-api-2.5</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j</artifactId>
+            <groupId>log4j</groupId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -892,6 +921,10 @@
         <artifactId>hive-metastore</artifactId>
         <version>${hive.version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-serde</artifactId>
@@ -923,6 +956,10 @@
         <artifactId>hive-hbase-handler</artifactId>
         <version>${hive.version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
@@ -997,6 +1034,11 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-core</artifactId>
+        <version>4.0.2</version>
+      </dependency>
+      <dependency>
         <groupId>org.codehaus.janino</groupId>
         <artifactId>janino</artifactId>
         <version>${janino.version}</version>
@@ -1010,6 +1052,11 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.databind.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mapr.db</groupId>
@@ -1139,6 +1186,25 @@
         <version>1.8</version>
         <scope>runtime</scope>
       </dependency>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-column</artifactId>
+        <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -1147,6 +1213,12 @@
       <!-- this profile adds/overrides few features of the 'apache-release'
         profile in the parent pom. -->
       <id>apache-release</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <properties>
+        <additionalparam>-Xdoclint:none</additionalparam>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -1162,7 +1234,6 @@
             </executions>
             <configuration>
               <algorithms>
-                <algorithm>MD5</algorithm>
                 <algorithm>SHA-512</algorithm>
               </algorithms>
               <failOnError>false</failOnError>
@@ -1485,6 +1556,62 @@
               <exclusion>
                   <groupId>io.netty</groupId>
                   <artifactId>netty</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+
+              <!-- Exclude the following to prevent enforcer failures. YARN uses them,
+                   but Drill forbids them. -->
+
+              <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1875,7 +2002,7 @@
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
-        <hive.version>1.2.0-mapr-1707</hive.version>
+        <hive.version>2.1.1-mapr-1710</hive.version>
         <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1707</hadoop.version>
       </properties>
@@ -2077,9 +2204,99 @@
             </exclusions>
           </dependency>
           <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+
+              <!-- Exclude the following to prevent enforcer failures. YARN uses them,
+                   but Drill forbids them. -->
+
+              <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>4.5</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-maprdb-json-handler</artifactId>
+            <version>${hive.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-exec</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>com.mapr.db</groupId>
+            <artifactId>maprdb-mapreduce</artifactId>
+            <version>${mapr.release.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+            </exclusions>
           </dependency>
           <dependency>
             <groupId>xerces</groupId>
@@ -2180,10 +2397,6 @@
               <exclusion>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-              </exclusion>
-              <exclusion>
-                <artifactId>slf4j-log4j12</artifactId>
-                <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
@@ -2440,6 +2653,62 @@
               </exclusion>
             </exclusions>
           </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+            <version>2.3.0-cdh5.0.3</version>
+            <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+
+              <!-- Exclude the following to prevent enforcer failures. YARN uses them,
+                   but Drill forbids them. -->
+
+              <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
         </dependencies>
       </dependencyManagement>
       <repositories>
@@ -2511,6 +2780,62 @@
               <exclusion>
                   <groupId>io.netty</groupId>
                   <artifactId>netty-all</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+            <version>2.4.0.2.1.3.0-563</version>
+            <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+
+              <!-- Exclude the following to prevent enforcer failures. YARN uses them,
+                   but Drill forbids them. -->
+
+              <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2631,8 +2956,7 @@
                   <!--<stylesheet>fancy.xsl</stylesheet>-->
                   <!--<stylesheet>summary.xsl</stylesheet>-->
                   <fileMappers>
-                    <fileMapper
-                            implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                    <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
                       <targetExtension>.html</targetExtension>
                     </fileMapper>
                   </fileMappers>
@@ -2657,6 +2981,7 @@
     <module>common</module>
     <module>logical</module>
     <module>exec</module>
+    <module>drill-yarn</module>
     <module>distribution</module>
   </modules>
 </project>

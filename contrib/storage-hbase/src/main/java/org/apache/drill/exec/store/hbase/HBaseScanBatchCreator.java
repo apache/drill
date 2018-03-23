@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hbase;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -29,14 +30,13 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan> {
   @Override
   public ScanBatch getBatch(ExecutorFragmentContext context, HBaseSubScan subScan, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    List<RecordReader> readers = Lists.newArrayList();
+    List<RecordReader> readers = new LinkedList<>();
     List<SchemaPath> columns = null;
     for(HBaseSubScan.HBaseSubScanSpec scanSpec : subScan.getRegionScanSpecList()){
       try {

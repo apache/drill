@@ -26,7 +26,7 @@ import org.apache.drill.exec.store.hive.readers.initilializers.AbstractReadersIn
 import org.apache.hadoop.mapred.InputSplit;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -44,7 +44,7 @@ public class DefaultReadersInitializer extends AbstractReadersInitializer {
     List<HivePartition> partitions = config.getPartitions();
     boolean hasPartitions = partitions != null && !partitions.isEmpty();
 
-    List<RecordReader> readers = new ArrayList<>(inputSplits.size());
+    List<RecordReader> readers = new LinkedList<>();
     Constructor<? extends HiveAbstractReader> readerConstructor = createReaderConstructor();
     for (int i = 0 ; i < inputSplits.size(); i++) {
       readers.add(createReader(readerConstructor, hasPartitions ? partitions.get(i) : null, inputSplits.get(i)));

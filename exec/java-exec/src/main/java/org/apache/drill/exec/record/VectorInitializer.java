@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.record;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -25,6 +25,7 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -56,24 +57,24 @@ public class VectorInitializer {
     @Override
     public String toString() {
       StringBuilder buf = new StringBuilder()
-          .append("{");
+        .append("{");
       String sep = "";
       if (entryWidth > 0) {
         buf.append("width=")
-           .append(entryWidth);
+          .append(entryWidth);
         sep = ", ";
       }
       if (elementCount > 0) {
         buf.append(sep)
-           .append("elements=")
-           .append(elementCount);
+          .append("elements=")
+          .append(elementCount);
       }
       buf.append("}");
       return buf.toString();
     }
   }
 
-  private Map<String, AllocationHint> hints = new HashMap<>();
+  private Map<String, AllocationHint> hints = CaseInsensitiveMap.newHashMap();
 
   public void variableWidth(String name, int width) {
     hints.put(name, new AllocationHint(width, 1));
@@ -97,7 +98,13 @@ public class VectorInitializer {
     }
   }
 
-  private void allocateVector(ValueVector vector, String prefix, int recordCount) {
+  public void allocateVectors(List<ValueVector> valueVectors, int recordCount) {
+    for (ValueVector v : valueVectors) {
+      allocateVector(v, v.getField().getName(), recordCount);
+    }
+  }
+
+  public void allocateVector(ValueVector vector, String prefix, int recordCount) {
     String key = prefix + vector.getField().getName();
     AllocationHint hint = hints.get(key);
     if (vector instanceof AbstractMapVector) {
@@ -117,7 +124,7 @@ public class VectorInitializer {
 //        ", " + size);
   }
 
-  private void allocateVector(ValueVector vector, int recordCount, AllocationHint hint) {
+  public void allocateVector(ValueVector vector, int recordCount, AllocationHint hint) {
     if (hint == null) {
       // Use hard-coded values. Same as ScanBatch
 

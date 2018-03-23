@@ -21,11 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.ColumnMetadata;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.record.TupleSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 
 /**
  * Produce a metadata schema from a vector container. Used when given a
@@ -40,14 +41,14 @@ public class SchemaInference {
       MaterializedField field = container.getValueVector(i).getField();
       columns.add(inferVector(field));
     }
-    return TupleSchema.fromColumns(columns);
+    return MetadataUtils.fromColumns(columns);
   }
 
   private ColumnMetadata inferVector(MaterializedField field) {
     if (field.getType().getMinorType() == MinorType.MAP) {
-      return TupleSchema.newMap(field, inferMapSchema(field));
+      return MetadataUtils.newMap(field, inferMapSchema(field));
     } else {
-      return TupleSchema.fromField(field);
+      return MetadataUtils.fromField(field);
     }
   }
 
@@ -56,6 +57,6 @@ public class SchemaInference {
     for (MaterializedField child : field.getChildren()) {
       columns.add(inferVector(child));
     }
-    return TupleSchema.fromColumns(columns);
+    return MetadataUtils.fromColumns(columns);
   }
 }

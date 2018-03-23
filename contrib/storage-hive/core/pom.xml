@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.drill.contrib.storage-hive</groupId>
     <artifactId>drill-contrib-storage-hive-parent</artifactId>
-    <version>1.13.0-SNAPSHOT</version>
+    <version>1.14.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-storage-hive-core</artifactId>
@@ -63,12 +63,6 @@
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-hbase-handler</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hive</groupId>
-          <artifactId>hive-exec</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -177,6 +171,16 @@
         <dependency>
           <groupId>com.tdunning</groupId>
           <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-maprdb-json-handler</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>com.mapr.db</groupId>
+          <artifactId>maprdb-mapreduce</artifactId>
+          <scope>runtime</scope>
         </dependency>
       </dependencies>
     </profile>

@@ -63,5 +63,12 @@ public class TestFlattenPlanning extends PlanTestBase {
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlans, excludedPlans);
   }
 
+  @Test // DRILL-6099 : push limit past flatten(project)
+  public void testLimitPushdownPastFlatten() throws Exception {
+    final String query = "select rownum, flatten(complex) comp from cp.`store/json/test_flatten_mappify2.json` limit 1";
+    final String[] expectedPatterns = {".*Limit\\(fetch=\\[1\\]\\).*",".*Flatten.*",".*Limit\\(fetch=\\[1\\]\\).*"};
+    final String[] excludedPatterns = null;
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPatterns, excludedPatterns);
+  }
 
 }

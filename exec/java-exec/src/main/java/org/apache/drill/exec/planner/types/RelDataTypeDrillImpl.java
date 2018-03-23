@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,9 +37,9 @@ import org.apache.calcite.sql.type.SqlTypeName;
 public class RelDataTypeDrillImpl extends DynamicRecordType {
 
     private final RelDataTypeFactory typeFactory;
-    private final RelDataTypeHolder holder;
+    private final AbstractRelDataTypeHolder holder;
 
-    public RelDataTypeDrillImpl(RelDataTypeHolder holder, RelDataTypeFactory typeFactory) {
+    public RelDataTypeDrillImpl(AbstractRelDataTypeHolder holder, RelDataTypeFactory typeFactory) {
         this.typeFactory = typeFactory;
         this.holder = holder;
         this.holder.setRelDataTypeFactory(typeFactory);

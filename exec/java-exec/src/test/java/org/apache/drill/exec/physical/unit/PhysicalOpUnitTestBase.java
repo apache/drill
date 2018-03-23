@@ -26,6 +26,7 @@ import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.AccountingUserConnection;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
@@ -38,7 +39,6 @@ import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
@@ -80,6 +80,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -345,6 +346,11 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
 
     @Override
+    public BufferAllocator getRootAllocator() {
+      return null;
+    }
+
+    @Override
     public PhysicalPlanReader getPlanReader() {
       throw new UnsupportedOperationException();
     }
@@ -476,12 +482,12 @@ public class PhysicalOpUnitTestBase extends ExecTest {
   }
 
   private Iterator<RecordReader> getRecordReadersForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
-    return getJsonReadersFromBatchString(jsonBatches, fragContext, Collections.singletonList(SchemaPath.getSimplePath("*")));
+    return getJsonReadersFromBatchString(jsonBatches, fragContext, Collections.singletonList(SchemaPath.STAR_COLUMN));
   }
 
   public List<RecordReader> getReaderListForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
     Iterator<RecordReader> readers = getRecordReadersForJsonBatches(jsonBatches, fragContext);
-    List<RecordReader> readerList = new ArrayList<>();
+    List<RecordReader> readerList = new LinkedList<>();
     while(readers.hasNext()) {
       readerList.add(readers.next());
     }

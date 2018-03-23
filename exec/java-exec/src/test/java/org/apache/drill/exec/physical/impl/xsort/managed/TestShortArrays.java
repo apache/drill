@@ -17,15 +17,16 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorInitializer;
 import org.apache.drill.exec.record.VectorInitializer.AllocationHint;
 import org.apache.drill.exec.vector.IntVector;
@@ -35,7 +36,7 @@ import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
@@ -61,9 +62,9 @@ public class TestShortArrays extends SubOperatorTest {
         .addArray("b", MinorType.INT)
         .build();
     RowSetBuilder builder = fixture.rowSetBuilder(schema)
-        .addRow(1, new int[] {10});
+        .addRow(1, intArray(10));
     for (int i = 2; i <= 10; i++) {
-      builder.addRow(i, new int[] {});
+      builder.addRow(i, intArray());
     }
     RowSet rows = builder.build();
 
@@ -72,15 +73,15 @@ public class TestShortArrays extends SubOperatorTest {
     RecordBatchSizer sizer = new RecordBatchSizer(rows.container());
     assertEquals(2, sizer.columns().size());
     ColumnSize bCol = sizer.columns().get("b");
-    assertEquals(0.1, bCol.estElementCountPerArray, 0.01);
-    assertEquals(1, bCol.elementCount);
+    assertEquals(0.1, bCol.getCardinality(), 0.01);
+    assertEquals(1, bCol.getElementCount());
 
     // Create a vector initializer using the sizer info.
 
     VectorInitializer vi = sizer.buildVectorInitializer();
     AllocationHint bHint = vi.hint("b");
     assertNotNull(bHint);
-    assertEquals(bHint.elementCount, bCol.estElementCountPerArray, 0.001);
+    assertEquals(bHint.elementCount, bCol.getCardinality(), 0.001);
 
     // Create a new batch, and new vector, using the sizer and
     // initializer inferred from the previous batch.

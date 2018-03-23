@@ -18,6 +18,8 @@
 package org.apache.drill.exec.vector.complex.writer;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.physical.impl.join.JoinTestBase;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -272,6 +274,135 @@ public class TestJsonNanInf extends BaseTestQuery {
           .baselineValues(Double.NaN, Double.POSITIVE_INFINITY)
           .build()
           .run();
+  }
+
+  @Test
+  public void testOrderByWithNaN() throws Exception {
+    String table_name = "nan_test.json";
+    String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+        "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
+        "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":5, \"attr4\":-Infinity}\n" +
+        "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}";
+    String query = String.format("SELECT name, attr4 from dfs.`%s` order by name, attr4 ", table_name);
+
+    File file = new File(dirTestWatcher.getRootDir(), table_name);
+    try {
+      FileUtils.writeStringToFile(file, json);
+      test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("name", "attr4")
+          .baselineValues("obj1", Double.POSITIVE_INFINITY)
+          .baselineValues("obj1", Double.NaN)
+          .baselineValues("obj2", Double.NEGATIVE_INFINITY)
+          .baselineValues("obj2", Double.NaN)
+          .build()
+          .run();
+    } finally {
+      test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      FileUtils.deleteQuietly(file);
+    }
+  }
+
+  @Test
+  public void testNestedLoopJoinWithNaN() throws Exception {
+    String table_name = "nan_test.json";
+    String json = "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"object2\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":Infinity}\n" +
+            "{\"name\":\"object2\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":Infinity}\n" +
+            "{\"name\":\"object3\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":Infinity}\n" +
+            "{\"name\":\"object3\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":Infinity}\n" +
+            "{\"name\":\"object4\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"object4\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"object4\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":Infinity}";
+    JoinTestBase.enableJoin(false, false, true);
+    String query = String.format("select distinct t.name from dfs.`%s` t inner join dfs.`%s` " +
+        " tt on t.attr4 = tt.attr4 ", table_name, table_name);
+
+    File file = new File(dirTestWatcher.getRootDir(), table_name);
+    try {
+      FileUtils.writeStringToFile(file, json);
+      test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("name")
+          .baselineValues("object1")
+          .baselineValues("object2")
+          .baselineValues("object3")
+          .baselineValues("object4")
+          .build()
+          .run();
+    } finally {
+      test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      JoinTestBase.resetJoinOptions();
+      FileUtils.deleteQuietly(file);
+    }
+  }
+
+  @Test
+  public void testHashJoinWithNaN() throws Exception {
+    String table_name = "nan_test.json";
+    String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
+            "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":5, \"attr4\":-Infinity}\n" +
+            "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}";
+    JoinTestBase.enableJoin(true, false, false);
+    String query = String.format("select distinct t.name from dfs.`%s` t inner join dfs.`%s` " +
+            " tt on t.attr4 = tt.attr4 ", table_name, table_name);
+
+    File file = new File(dirTestWatcher.getRootDir(), table_name);
+    try {
+      FileUtils.writeStringToFile(file, json);
+      test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .baselineColumns("name")
+              .baselineValues("obj1")
+              .baselineValues("obj2")
+              .build()
+              .run();
+    } finally {
+      test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      JoinTestBase.resetJoinOptions();
+      FileUtils.deleteQuietly(file);
+    }
+  }
+
+
+  @Test
+  public void testMergeJoinWithNaN() throws Exception {
+    String table_name = "nan_test.json";
+    String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
+            "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
+            "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":5, \"attr4\":-Infinity}\n" +
+            "{\"name\":\"obj2\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}";
+    JoinTestBase.enableJoin(false, true, false);
+    String query = String.format("select distinct t.name from dfs.`%s` t inner join dfs.`%s` " +
+            " tt on t.attr4 = tt.attr4 ", table_name, table_name);
+
+    File file = new File(dirTestWatcher.getRootDir(), table_name);
+    try {
+      FileUtils.writeStringToFile(file, json);
+      test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .baselineColumns("name")
+              .baselineValues("obj1")
+              .baselineValues("obj2")
+              .build()
+              .run();
+    } finally {
+      test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+      JoinTestBase.resetJoinOptions();
+      FileUtils.deleteQuietly(file);
+    }
   }
 
 }

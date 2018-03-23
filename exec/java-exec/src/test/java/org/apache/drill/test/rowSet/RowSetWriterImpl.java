@@ -19,7 +19,7 @@ package org.apache.drill.test.rowSet;
 
 import java.util.List;
 
-import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
@@ -117,9 +117,15 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
   }
 
   @Override
-  public void setRow(Object...values) {
+  public RowSetWriter addRow(Object...values) {
     setObject(values);
     save();
+    return this;
+  }
+
+  @Override
+  public RowSetWriter addSingleCol(Object value) {
+    return addRow(new Object[] {value});
   }
 
   @Override

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.drill.exec.work.foreman.FragmentsRunner;
@@ -205,7 +206,7 @@ public class TestDrillbitResilience extends DrillTest {
 
     // create a client
     final DrillConfig drillConfig = zkHelper.getConfig();
-    drillClient = QueryTestUtil.createClient(drillConfig, remoteServiceSet, 1, null);
+    drillClient = QueryTestUtil.createClient(drillConfig, remoteServiceSet, 1, new Properties());
     clearAllInjections();
   }
 
@@ -620,6 +621,7 @@ public class TestDrillbitResilience extends DrillTest {
 
   @Test // DRILL-2383: Cancellation TC 2: cancel in the middle of fetching result set
   @Repeat(count = NUM_RUNS)
+  @Ignore("DRILL-6228")
   public void cancelInMiddleOfFetchingResults() {
     final long before = countAllocatedMemory();
 
@@ -650,6 +652,7 @@ public class TestDrillbitResilience extends DrillTest {
 
   @Test // DRILL-2383: Cancellation TC 3: cancel after all result set are produced but not all are fetched
   @Repeat(count = NUM_RUNS)
+  @Ignore("DRILL-6228")
   public void cancelAfterAllResultsProduced() {
     final long before = countAllocatedMemory();
 

@@ -77,7 +77,6 @@ public class DrillParquetReader extends AbstractRecordReader {
   private MessageType schema;
   private DrillFileSystem fileSystem;
   private RowGroupReadEntry entry;
-  private VectorContainerWriter writer;
   private ColumnChunkIncReadStore pageReadStore;
   private RecordReader<Void> recordReader;
   private DrillParquetRecordMaterializer recordMaterializer;
@@ -253,12 +252,10 @@ public class DrillParquetReader extends AbstractRecordReader {
       }
 
       if (!noColumnsFound) {
-        writer = new VectorContainerWriter(output);
         // Discard the columns not found in the schema when create DrillParquetRecordMaterializer, since they have been added to output already.
         @SuppressWarnings("unchecked")
         final Collection<SchemaPath> columns = columnsNotFound == null || columnsNotFound.size() == 0 ? getColumns(): CollectionUtils.subtract(getColumns(), columnsNotFound);
-        recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, columns,
-            fragmentContext.getOptions(), containsCorruptedDates);
+        recordMaterializer = new DrillParquetRecordMaterializer(output, projection, columns, fragmentContext.getOptions(), containsCorruptedDates);
         recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
       }
     } catch (Exception e) {
@@ -309,7 +306,7 @@ public class DrillParquetReader extends AbstractRecordReader {
       count++;
       totalRead++;
     }
-    writer.setValueCount(count);
+    recordMaterializer.setValueCount(count);
     // if we have requested columns that were not found in the file fill their vectors with null
     // (by simply setting the value counts inside of them, as they start null filled)
     if (nullFilledVectors != null) {
@@ -322,6 +319,13 @@ public class DrillParquetReader extends AbstractRecordReader {
 
   @Override
   public void close() {
+    footer = null;
+    fileSystem = null;
+    entry = null;
+    recordReader = null;
+    recordMaterializer = null;
+    nullFilledVectors = null;
+    columnsNotFound = null;
     try {
       if (pageReadStore != null) {
         pageReadStore.close();

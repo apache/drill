@@ -84,11 +84,15 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
 
   int MAX_ROW_COUNT = Character.MAX_VALUE + 1;
+  int MIN_ROW_COUNT = 1;
 
   // Commonly-used internal vector names
 
   String BITS_VECTOR_NAME = "$bits$";
   String OFFSETS_VECTOR_NAME = "$offsets$";
+
+  @Deprecated
+  // See DRILL-6216
   String VALUES_VECTOR_NAME = "$values$";
 
   /**

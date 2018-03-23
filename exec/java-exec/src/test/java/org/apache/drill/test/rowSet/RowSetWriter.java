@@ -82,7 +82,8 @@ public interface RowSetWriter extends TupleWriter {
    * @param values variable-length argument list of column values
    */
 
-  void setRow(Object...values);
+  RowSetWriter addRow(Object...values);
+  RowSetWriter addSingleCol(Object value);
 
   /**
    * Indicates if the current row position is valid for

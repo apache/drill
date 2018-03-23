@@ -14,7 +14,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.13.0-SNAPSHOT</version>
+    <version>1.14.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>distribution</artifactId>
@@ -56,6 +56,11 @@
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-yarn</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -318,6 +323,14 @@
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-protocol</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-maprdb-json-handler</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>com.mapr.db</groupId>
+          <artifactId>maprdb-mapreduce</artifactId>
         </dependency>
       </dependencies>
       <build>

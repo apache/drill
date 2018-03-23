@@ -19,6 +19,7 @@ package org.apache.drill.exec.hive;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -100,7 +101,6 @@ public class TestHiveStorage extends HiveTestBase {
   /**
    * Test to ensure Drill reads the all supported types correctly both normal fields (converted to Nullable types) and
    * partition fields (converted to Required types).
-   * @throws Exception
    */
   @Test
   public void readAllSupportedHiveDataTypes() throws Exception {
@@ -393,6 +393,16 @@ public class TestHiveStorage extends HiveTestBase {
   }
 
   @Test // DRILL-3938
+  public void readFromAlteredPartitionedTableWithEmptyGroupType() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT newcol FROM hive.kv_parquet LIMIT 1")
+        .unOrdered()
+        .baselineColumns("newcol")
+        .baselineValues(new Object[]{null})
+        .go();
+  }
+
+  @Test // DRILL-3938
   public void nativeReaderIsDisabledForAlteredPartitionedTable() throws Exception {
     try {
       test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
@@ -556,6 +566,11 @@ public class TestHiveStorage extends HiveTestBase {
         .sqlQuery("select * from hive.empty_table where b = 'Абвгде谢谢'")
         .expectsEmptyResultSet()
         .go();
+  }
+
+  @Test
+  public void testPhysicalPlanSubmission() throws Exception {
+    PlanTestBase.testPhysicalPlanExecutionBasedOnQuery("select * from hive.kv");
   }
 
   private void verifyColumnsMetadata(List<UserProtos.ResultColumnMetadata> columnsList, Map<String, Integer> expectedResult) {

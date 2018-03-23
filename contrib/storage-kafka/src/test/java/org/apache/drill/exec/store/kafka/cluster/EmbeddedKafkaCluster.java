@@ -26,7 +26,7 @@ import java.util.Properties;
 
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.store.kafka.KafkaStoragePluginConfig;
-import org.apache.drill.exec.store.kafka.QueryConstants;
+import org.apache.drill.exec.store.kafka.TestQueryConstants;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 
-public class EmbeddedKafkaCluster implements QueryConstants {
+public class EmbeddedKafkaCluster implements TestQueryConstants {
   private static final Logger logger = LoggerFactory.getLogger(EmbeddedKafkaCluster.class);
   private List<KafkaServerStartable> brokers;
   private final ZookeeperHelper zkHelper;

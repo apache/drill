@@ -23,6 +23,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.parquet.io.api.GroupConverter;
 import org.apache.parquet.io.api.RecordMaterializer;
@@ -30,18 +31,22 @@ import org.apache.parquet.schema.MessageType;
 
 public class DrillParquetRecordMaterializer extends RecordMaterializer<Void> {
 
-  public DrillParquetGroupConverter root;
-  private ComplexWriter complexWriter;
+  private final DrillParquetGroupConverter root;
+  private final ComplexWriter writer;
 
-  public DrillParquetRecordMaterializer(OutputMutator mutator, ComplexWriter complexWriter, MessageType schema,
+  public DrillParquetRecordMaterializer(OutputMutator mutator, MessageType schema,
                                         Collection<SchemaPath> columns, OptionManager options,
                                         ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
-    this.complexWriter = complexWriter;
-    root = new DrillParquetGroupConverter(mutator, complexWriter.rootAsMap(), schema, columns, options, containsCorruptedDates);
+    writer = new VectorContainerWriter(mutator);
+    root = new DrillParquetGroupConverter(mutator, writer.rootAsMap(), schema, columns, options, containsCorruptedDates);
   }
 
   public void setPosition(int position) {
-    complexWriter.setPosition(position);
+    writer.setPosition(position);
+  }
+
+  public void setValueCount(int count) {
+    writer.setValueCount(count);
   }
 
   @Override

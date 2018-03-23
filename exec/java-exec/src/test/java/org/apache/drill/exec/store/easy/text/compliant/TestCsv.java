@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -34,7 +33,7 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -142,7 +141,7 @@ public class TestCsv extends ClusterTest {
         .add("b", MinorType.VARCHAR)
         .add("C", MinorType.VARCHAR)
         .build();
-    assertEquals(expectedSchema, actual.batchSchema());
+    assertTrue(expectedSchema.isEquivalent(actual.batchSchema()));
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("10", "foo", "bar")

@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -51,12 +54,17 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.io.AcidUtils;
+import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
+import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
@@ -70,6 +78,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -104,8 +113,7 @@ public class HiveUtilities {
           return Boolean.parseBoolean(value);
         case DECIMAL: {
           DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) typeInfo;
-          return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value),
-              decimalTypeInfo.precision(), decimalTypeInfo.scale());
+          return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value), decimalTypeInfo);
         }
         case DOUBLE:
           return Double.parseDouble(value);
@@ -386,6 +394,9 @@ public class HiveUtilities {
             "InputFormat class explicitly specified nor StorageHandler class");
       }
       final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
+      TableDesc tableDesc = new TableDesc();
+      tableDesc.setProperties(MetaStoreUtils.getTableMetadata(table));
+      storageHandler.configureInputJobProperties(tableDesc, table.getParameters());
       return (Class<? extends InputFormat<?, ?>>) storageHandler.getInputFormatClass();
     } else {
       return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName) ;
@@ -506,6 +517,60 @@ public class HiveUtilities {
     int skipHeader = retrieveIntProperty(tableProperties, serdeConstants.HEADER_COUNT, -1);
     int skipFooter = retrieveIntProperty(tableProperties, serdeConstants.FOOTER_COUNT, -1);
     return skipHeader > 0 || skipFooter > 0;
+  }
+
+  /**
+   * This method checks whether the table is transactional and set necessary properties in {@link JobConf}.
+   * If schema evolution properties aren't set in job conf for the input format, method sets the column names
+   * and types from table/partition properties or storage descriptor.
+   *
+   * @param job the job to update
+   * @param sd storage descriptor
+   */
+  public static void verifyAndAddTransactionalProperties(JobConf job, StorageDescriptor sd) {
+
+    if (AcidUtils.isTablePropertyTransactional(job)) {
+      AcidUtils.setTransactionalTableScan(job, true);
+
+      // No work is needed, if schema evolution is used
+      if (Utilities.isSchemaEvolutionEnabled(job, true) && job.get(IOConstants.SCHEMA_EVOLUTION_COLUMNS) != null &&
+          job.get(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES) != null) {
+        return;
+      }
+
+      String colNames;
+      String colTypes;
+
+      // Try to get get column names and types from table or partition properties. If they are absent there, get columns
+      // data from storage descriptor of the table
+      colNames = job.get(serdeConstants.LIST_COLUMNS);
+      colTypes = job.get(serdeConstants.LIST_COLUMN_TYPES);
+
+      if (colNames == null || colTypes == null) {
+        colNames = Joiner.on(",").join(Lists.transform(sd.getCols(), new Function<FieldSchema, String>()
+        {
+          @Nullable
+          @Override
+          public String apply(@Nullable FieldSchema input)
+          {
+            return input.getName();
+          }
+        }));
+
+        colTypes = Joiner.on(",").join(Lists.transform(sd.getCols(), new Function<FieldSchema, String>()
+        {
+          @Nullable
+          @Override
+          public String apply(@Nullable FieldSchema input)
+          {
+            return input.getType();
+          }
+        }));
+      }
+
+      job.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS, colNames);
+      job.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES, colTypes);
+    }
   }
 }
 

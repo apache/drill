@@ -56,8 +56,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.parseBytesToASCII;
 
 public class PcapRecordReader extends AbstractRecordReader {
-  private static final Logger logger = LoggerFactory.getLogger(PcapRecordReader.class);
+  static final int BUFFER_SIZE = 500_000;  // this should be relatively large relative to max packet
 
+  private static final Logger logger = LoggerFactory.getLogger(PcapRecordReader.class);
   private static final int BATCH_SIZE = 40_000;
 
   private OutputMutator output;
@@ -101,11 +102,10 @@ public class PcapRecordReader extends AbstractRecordReader {
   @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
     try {
-
       this.output = output;
-      this.buffer = new byte[100000];
       this.in = fs.open(pathToFile);
       this.decoder = new PacketDecoder(in);
+      this.buffer = new byte[BUFFER_SIZE + decoder.getMaxLength()];
       this.validBytes = in.read(buffer);
       this.projectedCols = getProjectedColsIfItNull();
       setColumns(projectedColumns);
@@ -197,20 +197,33 @@ public class PcapRecordReader extends AbstractRecordReader {
   private int parsePcapFilesAndPutItToTable() throws IOException {
     Packet packet = new Packet();
     int counter = 0;
-    while (offset < validBytes && counter != BATCH_SIZE) {
+    while (offset < validBytes && counter < BATCH_SIZE) {
+      if (validBytes - offset < decoder.getMaxLength()) {
+        if (validBytes == buffer.length) {
+          // shift data and read more. This is the common case.
+          System.arraycopy(buffer, offset, buffer, 0, validBytes - offset);
+          validBytes = validBytes - offset;
+          offset = 0;
 
-      if (validBytes - offset < 9000) {
-        System.arraycopy(buffer, offset, buffer, 0, validBytes - offset);
-        validBytes = validBytes - offset;
-        offset = 0;
-
-        int n = in.read(buffer, validBytes, buffer.length - validBytes);
-        if (n > 0) {
-          validBytes += n;
+          int n = in.read(buffer, validBytes, buffer.length - validBytes);
+          if (n > 0) {
+            validBytes += n;
+          }
+          logger.info("read {} bytes, at {} offset", n, validBytes);
+        } else {
+          // near the end of the file, we will just top up the buffer without shifting
+          int n = in.read(buffer, offset, buffer.length - offset);
+          if (n > 0) {
+            validBytes = validBytes + n;
+            logger.info("Topped up buffer with {} bytes to yield {}\n", n, validBytes);
+          }
         }
       }
-
-      offset = decoder.decodePacket(buffer, offset, packet);
+      int old = offset;
+      offset = decoder.decodePacket(buffer, offset, packet, decoder.getMaxLength(), validBytes);
+      if (offset > validBytes) {
+        logger.error("Invalid packet at offset {}", old);
+      }
 
       if (addDataToTable(packet, decoder.getNetwork(), counter)) {
         counter++;
@@ -267,6 +280,76 @@ public class PcapRecordReader extends AbstractRecordReader {
             setIntegerColumnValue(packet.getSequenceNumber(), pci, count);
           }
           break;
+        case "tcp_ack":
+          if (packet.isTcpPacket()) {
+            setIntegerColumnValue(packet.getAckNumber(), pci, count);
+          }
+          break;
+        case "tcp_flags":
+          if (packet.isTcpPacket()) {
+            setIntegerColumnValue(packet.getFlags(), pci, count);
+          }
+          break;
+        case "tcp_parsed_flags":
+          if (packet.isTcpPacket()) {
+            setStringColumnValue(packet.getParsedFlags(), pci, count);
+          }
+          break;
+        case "tcp_flags_ns":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x100) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_cwr":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x80) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_ece ":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x40) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_ece_ecn_capable":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x42) == 0x42, pci, count);
+          }
+          break;
+        case "tcp_flags_ece_congestion_experienced":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x42) == 0x40, pci, count);
+          }
+          break;
+        case "tcp_flags_urg":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x20) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_ack":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x10) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_psh":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x8) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_rst":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x4) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_syn":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x2) != 0, pci, count);
+          }
+          break;
+        case "tcp_flags_fin":
+          if (packet.isTcpPacket()) {
+            setBooleanColumnValue((packet.getFlags() & 0x1) != 0, pci, count);
+          }
+          break;
         case "packet_length":
           setIntegerColumnValue(packet.getPacketLength(), pci, count);
           break;
@@ -290,6 +373,11 @@ public class PcapRecordReader extends AbstractRecordReader {
   private void setIntegerColumnValue(final int data, final ProjectedColumnInfo pci, final int count) {
     ((NullableIntVector.Mutator) pci.vv.getMutator())
         .setSafe(count, data);
+  }
+
+  private void setBooleanColumnValue(final boolean data, final ProjectedColumnInfo pci, final int count) {
+    ((NullableIntVector.Mutator) pci.vv.getMutator())
+        .setSafe(count, data ? 1 : 0);
   }
 
   private void setTimestampColumnValue(final long data, final ProjectedColumnInfo pci, final int count) {

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSetWriter;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -348,28 +349,28 @@ public class TestCopier extends SubOperatorTest {
           .add("b", MinorType.INT)
           .addMap("m2")
             .add("c", MinorType.INT)
-            .buildMap()
-          .buildMap()
+            .resumeMap()
+          .resumeSchema()
         .build();
 
     CopierTester tester = new CopierTester(fixture);
     tester.addInput(fixture.rowSetBuilder(schema)
-        .addRow(1, new Object[] {10, new Object[] {100}})
-        .addRow(5, new Object[] {50, new Object[] {500}})
+        .addRow(1, objArray(10, objArray(100)))
+        .addRow(5, objArray(50, objArray(500)))
         .withSv2()
         .build());
 
     tester.addInput(fixture.rowSetBuilder(schema)
-        .addRow(2, new Object[] {20, new Object[] {200}})
-        .addRow(6, new Object[] {60, new Object[] {600}})
+        .addRow(2, objArray(20, objArray(200)))
+        .addRow(6, objArray(60, objArray(600)))
         .withSv2()
         .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-        .addRow(1, new Object[] {10, new Object[] {100}})
-        .addRow(2, new Object[] {20, new Object[] {200}})
-        .addRow(5, new Object[] {50, new Object[] {500}})
-        .addRow(6, new Object[] {60, new Object[] {600}})
+        .addRow(1, objArray(10, objArray(100)))
+        .addRow(2, objArray(20, objArray(200)))
+        .addRow(5, objArray(50, objArray(500)))
+        .addRow(6, objArray(60, objArray(600)))
         .build());
 
     tester.run();

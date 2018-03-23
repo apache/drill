@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.common.base.Preconditions;
+import com.google.protobuf.Internal.EnumLite;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -32,16 +36,17 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-
-import java.util.concurrent.TimeUnit;
-
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
+import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
+import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
+import org.apache.hadoop.security.UserGroupInformation;
 
-import com.google.common.base.Preconditions;
-import com.google.protobuf.Internal.EnumLite;
-import com.google.protobuf.MessageLite;
-import com.google.protobuf.Parser;
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -68,6 +73,9 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
 
   private final IdlePingHandler pingHandler;
   private ConnectionMultiListener.SSLHandshakeListener sslHandshakeListener = null;
+
+  // Determines if authentication is completed between client and server
+  private boolean authComplete = true;
 
   public BasicClient(RpcConfig rpcMapping, ByteBufAllocator alloc, EventLoopGroup eventLoopGroup, T handshakeType,
                      Class<HR> responseClass, Parser<HR> handshakeParser) {
@@ -133,6 +141,19 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
     return false;
   }
 
+  /**
+   * Set's the state for authentication complete.
+   * @param authComplete - state to set. True means authentication between client and server is completed, false
+   *                     means authentication is in progress.
+   */
+  protected void setAuthComplete(boolean authComplete) {
+    this.authComplete = authComplete;
+  }
+
+  protected boolean isAuthComplete() {
+    return authComplete;
+  }
+
   // Save the SslChannel after the SSL handshake so it can be closed later
   public void setSslChannel(Channel c) {
 
@@ -180,7 +201,67 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
     return (connection != null) && connection.isActive();
   }
 
-  protected abstract void validateHandshake(HR validateHandshake) throws RpcException;
+  protected abstract List<String> validateHandshake(HR validateHandshake) throws RpcException;
+
+  /**
+   * Creates various instances needed to start the SASL handshake. This is called from
+   * {@link BasicClient#validateHandshake(MessageLite)} if authentication is required from server side.
+   * @param connectionHandler - Connection handler used by client's to know about success/failure conditions.
+   * @param serverAuthMechanisms - List of auth mechanisms configured on server side
+   */
+  protected abstract void prepareSaslHandshake(final RpcConnectionHandler<CC> connectionHandler,
+                                               List<String> serverAuthMechanisms) throws RpcException;
+
+  /**
+   * Main method which starts the SASL handshake for all client channels (user/data/control) once it's determined
+   * after regular RPC handshake that authentication is required by server side. Once authentication is completed
+   * then only the underlying channel is made available to clients to send other RPC messages. Success and failure
+   * events are notified to the connection handler on which client waits.
+   * @param connectionHandler - Connection handler used by client's to know about success/failure conditions.
+   * @param saslProperties - SASL related properties needed to create SASL client.
+   * @param ugi - UserGroupInformation with logged in client side user
+   * @param authFactory - Authentication factory to use for this SASL handshake.
+   * @param rpcType - SASL_MESSAGE rpc type.
+   */
+  protected void startSaslHandshake(final RpcConnectionHandler<CC> connectionHandler,
+                                    Map<String, ?> saslProperties, UserGroupInformation ugi,
+                                    AuthenticatorFactory authFactory, T rpcType) {
+    final String mechanismName = authFactory.getSimpleName();
+    try {
+      final SaslClient saslClient = authFactory.createSaslClient(ugi, saslProperties);
+      if (saslClient == null) {
+        final Exception ex = new SaslException(String.format("Cannot initiate authentication using %s mechanism. " +
+          "Insufficient credentials or selected mechanism doesn't support configured security layers?", mechanismName));
+        connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
+        return;
+      }
+      connection.setSaslClient(saslClient);
+    } catch (final SaslException e) {
+      logger.error("Failed while creating SASL client for SASL handshake for connection", connection.getName());
+      connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, e);
+      return;
+    }
+
+    logger.debug("Initiating SASL exchange.");
+    new AuthenticationOutcomeListener<>(this, connection, rpcType, ugi,
+      new RpcOutcomeListener<Void>() {
+      @Override
+      public void failed(RpcException ex) {
+        connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
+      }
+
+      @Override
+      public void success(Void value, ByteBuf buffer) {
+        authComplete = true;
+        connectionHandler.connectionSucceeded(connection);
+      }
+
+      @Override
+      public void interrupted(InterruptedException ex) {
+        connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
+      }
+    }).initiate(mechanismName);
+  }
 
   protected void finalizeConnection(HR handshake, CC connection) {
     // no-op
@@ -202,12 +283,6 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
       ByteBuf... dataBodies) {
     super.send(listener, connection, handshakeType, protobufBody, (Class<RECEIVE>) responseClass,
         allowInEventLoop, dataBodies);
-  }
-
-  // the command itself must be "run" by the caller (to avoid calling inEventLoop)
-  protected <M extends MessageLite> RpcCommand<M, CC>
-  getInitialCommand(final RpcCommand<M, CC> command) {
-    return command;
   }
 
   protected void connectAsClient(RpcConnectionHandler<CC> connectionListener, HS handshakeValue,

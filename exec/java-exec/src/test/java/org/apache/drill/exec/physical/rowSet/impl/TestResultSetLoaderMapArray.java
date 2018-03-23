@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +29,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
-import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
@@ -41,7 +43,7 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
@@ -62,7 +64,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
         .addMapArray("m")
           .add("c", MinorType.INT)
           .add("d", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(schema)
@@ -83,28 +85,28 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
     rsLoader.startBatch();
     rootWriter
-      .addRow(10, new Object[] {
-          new Object[] {110, "d1.1"},
-          new Object[] {120, "d2.2"}})
-      .addRow(20, new Object[] {})
-      .addRow(30, new Object[] {
-          new Object[] {310, "d3.1"},
-          new Object[] {320, "d3.2"},
-          new Object[] {330, "d3.3"}})
+      .addRow(10, objArray(
+          objArray(110, "d1.1"),
+          objArray(120, "d2.2")))
+      .addRow(20, objArray())
+      .addRow(30, objArray(
+          objArray(310, "d3.1"),
+          objArray(320, "d3.2"),
+          objArray(330, "d3.3")))
       ;
 
     // Verify the first batch
 
     RowSet actual = fixture.wrap(rsLoader.harvest());
     SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(10, new Object[] {
-            new Object[] {110, "d1.1"},
-            new Object[] {120, "d2.2"}})
-        .addRow(20, new Object[] {})
-        .addRow(30, new Object[] {
-            new Object[] {310, "d3.1"},
-            new Object[] {320, "d3.2"},
-            new Object[] {330, "d3.3"}})
+        .addRow(10, objArray(
+            objArray(110, "d1.1"),
+            objArray(120, "d2.2")))
+        .addRow(20, objArray())
+        .addRow(30, objArray(
+            objArray(310, "d3.1"),
+            objArray(320, "d3.2"),
+            objArray(330, "d3.3")))
         .build();
     new RowSetComparison(expected).verifyAndClearAll(actual);
 
@@ -113,21 +115,21 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
     rsLoader.startBatch();
     rootWriter
-      .addRow(40, new Object[] {
-          new Object[] {410, "d4.1"},
-          new Object[] {420, "d4.2"}});
+      .addRow(40, objArray(
+          objArray(410, "d4.1"),
+          objArray(420, "d4.2")));
 
     TupleWriter mapWriter = rootWriter.array("m").tuple();
     mapWriter.addColumn(SchemaBuilder.columnSchema("e", MinorType.VARCHAR, DataMode.OPTIONAL));
 
     rootWriter
-      .addRow(50, new Object[] {
-          new Object[] {510, "d5.1", "e5.1"},
-          new Object[] {520, "d5.2", null}})
-      .addRow(60, new Object[] {
-          new Object[] {610, "d6.1", "e6.1"},
-          new Object[] {620, "d6.2", null},
-          new Object[] {630, "d6.3", "e6.3"}})
+      .addRow(50, objArray(
+          objArray(510, "d5.1", "e5.1"),
+          objArray(520, "d5.2", null)))
+      .addRow(60, objArray(
+          objArray(610, "d6.1", "e6.1"),
+          objArray(620, "d6.2", null),
+          objArray(630, "d6.3", "e6.3")))
       ;
 
     // Verify the second batch
@@ -139,19 +141,19 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           .add("c", MinorType.INT)
           .add("d", MinorType.VARCHAR)
           .addNullable("e", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow(40, new Object[] {
-            new Object[] {410, "d4.1", null},
-            new Object[] {420, "d4.2", null}})
-        .addRow(50, new Object[] {
-            new Object[] {510, "d5.1", "e5.1"},
-            new Object[] {520, "d5.2", null}})
-        .addRow(60, new Object[] {
-            new Object[] {610, "d6.1", "e6.1"},
-            new Object[] {620, "d6.2", null},
-            new Object[] {630, "d6.3", "e6.3"}})
+        .addRow(40, objArray(
+            objArray(410, "d4.1", null),
+            objArray(420, "d4.2", null)))
+        .addRow(50, objArray(
+            objArray(510, "d5.1", "e5.1"),
+            objArray(520, "d5.2", null)))
+        .addRow(60, objArray(
+            objArray(610, "d6.1", "e6.1"),
+            objArray(620, "d6.2", null),
+            objArray(630, "d6.3", "e6.3")))
         .build();
     new RowSetComparison(expected).verifyAndClearAll(actual);
 
@@ -165,7 +167,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
         .addMapArray("m")
           .add("c", MinorType.INT)
           .addArray("d", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(schema)
@@ -179,28 +181,28 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
     rsLoader.startBatch();
     rootWriter
-      .addRow(10, new Object[] {
-          new Object[] {110, new String[] {"d1.1.1", "d1.1.2"}},
-          new Object[] {120, new String[] {"d1.2.1", "d1.2.2"}}})
-      .addRow(20, new Object[] {})
-      .addRow(30, new Object[] {
-          new Object[] {310, new String[] {"d3.1.1", "d3.2.2"}},
-          new Object[] {320, new String[] {}},
-          new Object[] {330, new String[] {"d3.3.1", "d1.2.2"}}})
+      .addRow(10, objArray(
+          objArray(110, strArray("d1.1.1", "d1.1.2")),
+          objArray(120, strArray("d1.2.1", "d1.2.2"))))
+      .addRow(20, objArray())
+      .addRow(30, objArray(
+          objArray(310, strArray("d3.1.1", "d3.2.2")),
+          objArray(320, strArray()),
+          objArray(330, strArray("d3.3.1", "d1.2.2"))))
       ;
 
     // Verify the batch
 
     RowSet actual = fixture.wrap(rsLoader.harvest());
     SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(10, new Object[] {
-            new Object[] {110, new String[] {"d1.1.1", "d1.1.2"}},
-            new Object[] {120, new String[] {"d1.2.1", "d1.2.2"}}})
-        .addRow(20, new Object[] {})
-        .addRow(30, new Object[] {
-            new Object[] {310, new String[] {"d3.1.1", "d3.2.2"}},
-            new Object[] {320, new String[] {}},
-            new Object[] {330, new String[] {"d3.3.1", "d1.2.2"}}})
+        .addRow(10, objArray(
+            objArray(110, strArray("d1.1.1", "d1.1.2")),
+            objArray(120, strArray("d1.2.1", "d1.2.2"))))
+        .addRow(20, objArray())
+        .addRow(30, objArray(
+            objArray(310, strArray("d3.1.1", "d3.2.2")),
+            objArray(320, strArray()),
+            objArray(330, strArray("d3.3.1", "d1.2.2"))))
         .build();
     new RowSetComparison(expected).verifyAndClearAll(actual);
 
@@ -220,8 +222,8 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           .addMapArray("m2")
             .add("c", MinorType.INT)
             .addArray("d", MinorType.VARCHAR)
-            .buildMap()
-          .buildMap()
+            .resumeMap()
+          .resumeSchema()
         .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(schema)
@@ -304,7 +306,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
         .addMapArray("m")
           .add("b", MinorType.INT)
           .add("c", MinorType.VARCHAR)
-        .buildMap()
+        .resumeSchema()
       .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(schema)
@@ -378,7 +380,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
         .addMapArray("m")
           .addNullable("a", MinorType.INT)
           .addNullable("b", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(schema)
@@ -451,7 +453,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
         .addMapArray("m")
           .add("a", MinorType.INT)
           .add("b", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(schema)

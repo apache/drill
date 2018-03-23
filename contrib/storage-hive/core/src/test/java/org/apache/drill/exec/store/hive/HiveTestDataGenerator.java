@@ -149,6 +149,9 @@ public class HiveTestDataGenerator {
     conf.set(ConfVars.SCRATCHDIR.varname,  scratchDir.getAbsolutePath());
     conf.set(ConfVars.LOCALSCRATCHDIR.varname, localScratchDir.getAbsolutePath());
     conf.set(ConfVars.DYNAMICPARTITIONINGMODE.varname, "nonstrict");
+    conf.set(ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
+    conf.set(ConfVars.METASTORE_SCHEMA_VERIFICATION.varname, "false");
+    conf.set(ConfVars.HIVE_CBO_ENABLED.varname, "false");
 
     SessionState ss = new SessionState(conf);
     SessionState.start(ss);

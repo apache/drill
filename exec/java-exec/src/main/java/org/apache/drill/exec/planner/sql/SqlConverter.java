@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -83,6 +84,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.UserSession;
 
 import com.google.common.base.Joiner;
+import org.apache.drill.exec.store.ColumnExplorer;
 
 /**
  * Class responsible for managing parsing, validation and toRel conversion for sql statements.
@@ -275,6 +277,32 @@ public class SqlConverter {
         changeNamesIfTableIsTemporary(tempNode);
       }
       return SqlValidatorUtil.getAlias(node, ordinal);
+    }
+
+    /**
+     * Checks that specified expression is not implicit column and
+     * adds it to a select list, ensuring that its alias does not
+     * clash with any existing expressions on the list.
+     * <p>
+     * This method may be used when {@link RelDataType#isDynamicStruct}
+     * method returns false. Each column from table row type except
+     * the implicit is added into specified list, aliases and fieldList.
+     * In the opposite case when {@link RelDataType#isDynamicStruct}
+     * returns true, only dynamic star is added into specified
+     * list, aliases and fieldList.
+     */
+    @Override
+    protected void addToSelectList(
+        List<SqlNode> list,
+        Set<String> aliases,
+        List<Map.Entry<String, RelDataType>> fieldList,
+        SqlNode exp,
+        SqlValidatorScope scope,
+        final boolean includeSystemVars) {
+      if (!ColumnExplorer.initImplicitFileColumns(session.getOptions())
+          .containsKey(SqlValidatorUtil.getAlias(exp, -1))) {
+        super.addToSelectList(list, aliases, fieldList, exp, scope, includeSystemVars);
+      }
     }
 
     private void changeNamesIfTableIsTemporary(SqlIdentifier tempNode) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,22 +19,20 @@ package org.apache.drill.exec.planner.types;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.DynamicRecordType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 
-import com.google.common.collect.Lists;
-import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.Util;
+import org.apache.drill.common.expression.SchemaPath;
 
-public class RelDataTypeHolder {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RelDataTypeHolder.class);
+public class RelDataTypeHolder extends AbstractRelDataTypeHolder {
 
-  List<RelDataTypeField> fields = Lists.newArrayList();
-
-  private RelDataTypeFactory typeFactory;
+  public RelDataTypeHolder() {
+    super(Lists.<RelDataTypeField>newArrayList());
+  }
 
   public List<RelDataTypeField> getFieldList(RelDataTypeFactory typeFactory) {
     addStarIfEmpty(typeFactory);
@@ -46,9 +44,9 @@ public class RelDataTypeHolder {
     return fields.size();
   }
 
-  private void addStarIfEmpty(RelDataTypeFactory typeFactory){
-    if (fields.isEmpty()){
-      getField(typeFactory, "*");
+  private void addStarIfEmpty(RelDataTypeFactory typeFactory) {
+    if (fields.isEmpty()) {
+      getField(typeFactory, SchemaPath.DYNAMIC_STAR);
     }
   }
 
@@ -76,32 +74,4 @@ public class RelDataTypeHolder {
 
     return newField;
   }
-
-  public List<String> getFieldNames() {
-    List<String> fieldNames = Lists.newArrayList();
-    for(RelDataTypeField f : fields){
-      fieldNames.add(f.getName());
-    };
-
-    return fieldNames;
-  }
-
-  public void setRelDataTypeFactory(RelDataTypeFactory typeFactory) {
-    this.typeFactory = typeFactory;
-  }
-
-  @Override
-  public int hashCode() {
-    return System.identityHashCode(this);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return (this == obj);
-  }
-
-  private List<RelDataTypeField> getFieldList() {
-    return getFieldList(this.typeFactory);
-  }
-
 }

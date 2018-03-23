@@ -182,7 +182,6 @@ class DrillClientBaseHandle: public DrillClientQueryHandle {
     virtual status_t notifyListener(ListenerValue v, DrillClientError* pErr);
 
     virtual void signalError(DrillClientError* pErr);
-    void setHasError(bool hasError) { m_bHasError = hasError; }
 
     private:
     Listener m_pApplicationListener;

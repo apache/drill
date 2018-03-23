@@ -52,8 +52,10 @@ public class DrillConfig extends NestedConfig {
   public DrillConfig(Config config) {
     super(config);
     logger.debug("Setting up DrillConfig object.");
-    logger.trace("Given Config object is:\n{}",
-                 config.root().render(ConfigRenderOptions.defaults()));
+    // we need to exclude sun.java.command config node while logging, because
+    // it contains user password along with other parameters
+    logger.trace("Given Config object is:\n{}", config.withoutPath("password").withoutPath("sun.java.command")
+                 .root().render(ConfigRenderOptions.defaults()));
     RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
     logger.debug("DrillConfig object initialized.");
@@ -239,7 +241,9 @@ public class DrillConfig extends NestedConfig {
     if (overriderProps != null) {
       logString.append("Overridden Properties:\n");
       for(Entry<Object, Object> entry : overriderProps.entrySet()){
-        logString.append("\t-").append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+        if (!entry.getKey().equals("password")) {
+          logString.append("\t-").append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+        }
       }
       logString.append("\n");
       effectiveConfig =

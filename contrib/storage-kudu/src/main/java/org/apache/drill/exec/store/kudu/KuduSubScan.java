@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,9 +21,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -37,16 +37,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 
 // Class containing information for reading a single Kudu tablet
-@JsonTypeName("kudu-tablet-scan")
+@JsonTypeName("kudu-sub-scan")
 public class KuduSubScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduSubScan.class);
-
-  @JsonProperty
-  public final KuduStoragePluginConfig storage;
-
 
   private final KuduStoragePlugin kuduStoragePlugin;
   private final List<KuduSubScanSpec> tabletScanSpecList;
@@ -54,32 +49,28 @@ public class KuduSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public KuduSubScan(@JacksonInject StoragePluginRegistry registry,
-                      @JsonProperty("storage") StoragePluginConfig storage,
-      @JsonProperty("tabletScanSpecList") LinkedList<KuduSubScanSpec> tabletScanSpecList,
+                      @JsonProperty("kuduStoragePluginConfig") KuduStoragePluginConfig kuduStoragePluginConfig,
+                      @JsonProperty("tabletScanSpecList") LinkedList<KuduSubScanSpec> tabletScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     super((String) null);
-    kuduStoragePlugin = (KuduStoragePlugin) registry.getPlugin(storage);
+    kuduStoragePlugin = (KuduStoragePlugin) registry.getPlugin(kuduStoragePluginConfig);
     this.tabletScanSpecList = tabletScanSpecList;
-    this.storage = (KuduStoragePluginConfig) storage;
     this.columns = columns;
   }
 
-  public KuduSubScan(KuduStoragePlugin plugin, KuduStoragePluginConfig config,
-      List<KuduSubScanSpec> tabletInfoList, List<SchemaPath> columns) {
+  public KuduSubScan(KuduStoragePlugin plugin, List<KuduSubScanSpec> tabletInfoList, List<SchemaPath> columns) {
     super((String) null);
-    kuduStoragePlugin = plugin;
-    storage = config;
+    this.kuduStoragePlugin = plugin;
     this.tabletScanSpecList = tabletInfoList;
     this.columns = columns;
   }
 
-  public List<KuduSubScanSpec> getTabletScanSpecList() {
-    return tabletScanSpecList;
+  public KuduStoragePluginConfig getKuduStoragePluginConfig() {
+    return kuduStoragePlugin.getConfig();
   }
 
-  @JsonIgnore
-  public KuduStoragePluginConfig getStorageConfig() {
-    return storage;
+  public List<KuduSubScanSpec> getTabletScanSpecList() {
+    return tabletScanSpecList;
   }
 
   public List<SchemaPath> getColumns() {
@@ -104,12 +95,12 @@ public class KuduSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new KuduSubScan(kuduStoragePlugin, storage, tabletScanSpecList, columns);
+    return new KuduSubScan(kuduStoragePlugin, tabletScanSpecList, columns);
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return ImmutableSet.<PhysicalOperator>of().iterator();
   }
 
   public static class KuduSubScanSpec {
@@ -143,7 +134,7 @@ public class KuduSubScan extends AbstractBase implements SubScan {
 
   @Override
   public int getOperatorType() {
-    return CoreOperatorType.HBASE_SUB_SCAN_VALUE;
+    return CoreOperatorType.KUDU_SUB_SCAN_VALUE;
   }
 
 }

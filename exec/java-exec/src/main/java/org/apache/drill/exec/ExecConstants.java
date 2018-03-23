@@ -59,6 +59,8 @@ public final class ExecConstants {
   public static final String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
   public static final String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
+  public static final String FRAG_RUNNER_RPC_TIMEOUT = "drill.exec.rpc.fragrunner.timeout";
+  public static final PositiveLongValidator FRAG_RUNNER_RPC_TIMEOUT_VALIDATOR = new PositiveLongValidator(FRAG_RUNNER_RPC_TIMEOUT, Long.MAX_VALUE);
   public static final String TRACE_DUMP_DIRECTORY = "drill.exec.trace.directory";
   public static final String TRACE_DUMP_FILESYSTEM = "drill.exec.trace.filesystem";
   public static final String TEMP_DIRECTORIES = "drill.exec.tmp.directories";
@@ -77,7 +79,9 @@ public final class ExecConstants {
   public static final String SPILL_DIRS = "drill.exec.spill.directories";
 
   public static final String OUTPUT_BATCH_SIZE = "drill.exec.memory.operator.output_batch_size";
-  public static final LongValidator OUTPUT_BATCH_SIZE_VALIDATOR = new RangeLongValidator(OUTPUT_BATCH_SIZE, 1024, 512 * 1024 * 1024);
+  // Output Batch Size in Bytes. We have a small lower bound so we can test with unit tests without the
+  // need to produce very large batches that take up lot of memory.
+  public static final LongValidator OUTPUT_BATCH_SIZE_VALIDATOR = new RangeLongValidator(OUTPUT_BATCH_SIZE, 128, 512 * 1024 * 1024);
 
   // External Sort Boot configuration
 
@@ -138,6 +142,8 @@ public final class ExecConstants {
   public static final String HTTP_MAX_PROFILES = "drill.exec.http.max_profiles";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String HTTP_PORT_HUNT = "drill.exec.http.porthunt";
+  public static final String HTTP_JETTY_SERVER_ACCEPTORS = "drill.exec.http.jetty.server.acceptors";
+  public static final String HTTP_JETTY_SERVER_SELECTORS = "drill.exec.http.jetty.server.selectors";
   public static final String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
   public static final String HTTP_CORS_ENABLED = "drill.exec.http.cors.enabled";
   public static final String HTTP_CORS_ALLOWED_ORIGINS = "drill.exec.http.cors.allowedOrigins";
@@ -170,7 +176,6 @@ public final class ExecConstants {
   public static final String USE_LOGIN_PRINCIPAL = "drill.exec.security.bit.auth.use_login_principal";
   public static final String USER_ENCRYPTION_SASL_ENABLED = "drill.exec.security.user.encryption.sasl.enabled";
   public static final String USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.user.encryption.sasl.max_wrapped_size";
-  public static final String WEB_SERVER_THREAD_POOL_MAX = "drill.exec.web_server.thread_pool_max";
 
   public static final String USER_SSL_ENABLED = "drill.exec.security.user.encryption.ssl.enabled";
   public static final String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
@@ -450,6 +455,9 @@ public final class ExecConstants {
 
   public static final String AVERAGE_FIELD_WIDTH_KEY = "planner.memory.average_field_width";
   public static final OptionValidator AVERAGE_FIELD_WIDTH = new PositiveLongValidator(AVERAGE_FIELD_WIDTH_KEY, Long.MAX_VALUE);
+
+  // Mux Exchange options.
+  public static final String ORDERED_MUX_EXCHANGE = "planner.enable_ordered_mux_exchange";
 
   // Resource management boot-time options.
 

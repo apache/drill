@@ -66,6 +66,7 @@ public class PlannerSettings implements Context{
   public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only");
   public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE);
   public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange");
+  public static final OptionValidator ORDERED_MUX_EXCHANGE = new BooleanValidator("planner.enable_ordered_mux_exchange");
   public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange");
   public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor");
   public static final OptionValidator PARTITION_SENDER_MAX_THREADS = new LongValidator("planner.partitioner_sender_max_threads");

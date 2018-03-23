@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.server.rest.profile;
 
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
@@ -38,7 +38,9 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.rest.WebServer;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.CaseFormat;
+import com.google.common.collect.Maps;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
@@ -57,10 +59,14 @@ public class ProfileWrapper {
   private final long majorFragmentTallyTotal;
   private final OptionList options;
   private final boolean onlyImpersonationEnabled;
+  private Map<String, String> physicalOperatorMap;
 
   public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig) {
     this.profile = profile;
     this.id = QueryIdHelper.getQueryId(profile.getId());
+    //Generating Operator Name map (DRILL-6140)
+    String profileTextPlan = profile.hasPlan() ? profile.getPlan() : "" ;
+    generateOpMap(profileTextPlan);
 
     final List<FragmentWrapper> fragmentProfiles = new ArrayList<>();
 
@@ -107,7 +113,7 @@ public class ProfileWrapper {
     Collections.sort(keys);
 
     for (final ImmutablePair<Integer, Integer> ip : keys) {
-      ows.add(new OperatorWrapper(ip.getLeft(), opmap.get(ip)));
+      ows.add(new OperatorWrapper(ip.getLeft(), opmap.get(ip), physicalOperatorMap));
     }
     this.operatorProfiles = ows;
 
@@ -321,5 +327,26 @@ public class ProfileWrapper {
    */
   public boolean isOnlyImpersonationEnabled() {
     return onlyImpersonationEnabled;
+  }
+
+  //Generates operator names inferred from physical plan
+  private void generateOpMap(String plan) {
+    this.physicalOperatorMap = new HashMap<>();
+    if (plan.isEmpty()) {
+      return;
+    }
+    //[e.g ] operatorLine = "01-03 Flatten(flattenField=[$1]) : rowType = RecordType(ANY rfsSpecCode, ..."
+    String[] operatorLine = plan.split("\\n");
+    for (String line : operatorLine) {
+      String[] lineToken = line.split("\\s+", 3);
+      if (lineToken.length < 2) {
+        continue; //Skip due to possible invalid entry
+      }
+      //[e.g ] operatorPath = "01-xx-03"
+      String operatorPath = lineToken[0].trim().replaceFirst("-", "-xx-"); //Required format for lookup
+      //[e.g ] extractedOperatorName = "FLATTEN"
+      String extractedOperatorName = CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, lineToken[1].split("\\(", 2)[0].trim());
+      physicalOperatorMap.put(operatorPath, extractedOperatorName);
+    }
   }
 }

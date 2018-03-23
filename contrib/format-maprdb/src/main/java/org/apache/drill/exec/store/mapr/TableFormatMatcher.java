@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -45,13 +46,13 @@ public abstract class TableFormatMatcher extends FormatMatcher {
 
   public DrillTable isReadable(DrillFileSystem fs,
       FileSelection selection, FileSystemPlugin fsPlugin,
-      String storageEngineName, String userName) throws IOException {
+      String storageEngineName, SchemaConfig schemaConfig) throws IOException {
     FileStatus status = selection.getFirstPath(fs);
     if (!isFileReadable(fs, status)) {
       return null;
     }
 
-    return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+    return new DynamicDrillTable(fsPlugin, storageEngineName, schemaConfig.getUserName(),
         new FormatSelection(getFormatPlugin().getConfig(), selection));
   }
 

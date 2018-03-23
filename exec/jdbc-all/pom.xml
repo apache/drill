@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.13.0-SNAPSHOT</version>
+    <version>1.14.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -252,7 +252,7 @@
           <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false -Djava.net.preferIPv4Stack=true
             -Ddrill.exec.sys.store.provider.local.write=false
             -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
-            -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=3072M
+            -XX:MaxDirectMemorySize=3072M
             -XX:+CMSClassUnloadingEnabled -ea</argLine>
           <additionalClasspathElements>
             <additionalClasspathElements>${settings.localRepository}/junit/junit/${junit.version}/junit-${junit.version}.jar</additionalClasspathElements>
@@ -269,17 +269,7 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
           <shadedArtifactAttached>false</shadedArtifactAttached>
           <createDependencyReducedPom>true</createDependencyReducedPom>
@@ -583,17 +573,7 @@
             </plugin>
 
             <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-shade-plugin</artifactId>
-              <version>2.4.1</version>
-              <executions>
-                <execution>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>shade</goal>
-                  </goals>
-                </execution>
-              </executions>
               <configuration>
                 <shadedArtifactAttached>false</shadedArtifactAttached>
                 <createDependencyReducedPom>true</createDependencyReducedPom>

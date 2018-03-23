@@ -20,8 +20,8 @@ package org.apache.drill.test.rowSet;
 import com.google.common.collect.Sets;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.TupleMetadata;
-import org.apache.drill.exec.record.TupleSchema;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
@@ -46,7 +46,7 @@ public final class RowSetBuilder {
   private Set<Integer> skipIndices = Sets.newHashSet();
 
   public RowSetBuilder(BufferAllocator allocator, BatchSchema schema) {
-    this(allocator, TupleSchema.fromFields(schema), 10);
+    this(allocator, MetadataUtils.fromFields(schema), 10);
   }
 
   public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema) {
@@ -74,13 +74,13 @@ public final class RowSetBuilder {
    */
 
   public RowSetBuilder addRow(Object...values) {
-    writer.setRow(values);
+    writer.addRow(values);
     return this;
   }
 
   public RowSetBuilder addSelection(boolean selected, Object...values) {
     final int index = writer.rowIndex();
-    writer.setRow(values);
+    writer.addRow(values);
 
     if (!selected) {
       skipIndices.add(index);

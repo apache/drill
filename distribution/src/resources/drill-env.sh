@@ -37,6 +37,16 @@
 #
 # or a more specialized form.
 
+# Amount of total memory for the Drillbit process. This value is defined as the limit
+# that the startup script will try to enforce on the Drill JVM. The values can be
+# defined in terms of percentage of the available system memory, or in terms of actual
+# values, similar to how we define the actual JVM memory parameters like Heap Size.
+# There is no default and depends on how much can be allotted on a machine.
+# This enables Drill's memory auto-configuration logic to kick in, and should be unset
+# if the intent is to not use the auto-configuration.
+
+#export DRILLBIT_MAX_PROC_MEM=${DRILLBIT_MAX_PROC_MEM:-"13G"}
+
 # Amount of heap memory for the Drillbit process. Values are those supported by
 # the Java -Xms option. The default is 4G.
 
@@ -46,10 +56,6 @@
 # supported by -XX:MaxDirectMemorySize. Default is 8G.
 
 #export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"8G"}
-
-# Value for the JVM -XX:MaxPermSize option for the Drillbit. Default is 512M.
-
-#export DRILLBIT_MAX_PERM=${DRILLBIT_MAX_PERM:-"512M"}
 
 # Native library path passed to Java. Note: use this form instead
 # of the old form of DRILLBIT_JAVA_OPTS="-Djava.library.path=<dir>"
@@ -131,12 +137,12 @@
 
 #export SERVER_LOG_GC=${SERVER_LOG_GC:-1}
 
-# JVM options when running the sqlline Drill client. For example, adjust the
-# JVM heap memory here. These are used ONLY in non-embedded mode; these
+# JVM options when running the sqlline Drill client.
+# These are used ONLY in non-embedded mode; these
 # are client-only settings. (The Drillbit settings are used when Drill
 # is embedded.)
 
-#export SQLLINE_JAVA_OPTS="-XX:MaxPermSize=512M"
+#export SQLLINE_JAVA_OPTS=""
 
 # Arguments passed to sqlline (the Drill shell) at all times: whether
 # Drill is embedded in Sqlline or not.

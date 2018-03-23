@@ -47,7 +47,7 @@ import org.apache.drill.exec.vector.complex.impl.RepeatedListReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 public class RepeatedListVector extends AbstractContainerVector
-    implements RepeatedValueVector, RepeatedFixedWidthVectorLike {
+    implements RepeatedValueVector {
 
   public final static MajorType TYPE = Types.repeated(MinorType.LIST);
   private final RepeatedListReaderImpl reader = new RepeatedListReaderImpl(null, this);
@@ -411,12 +411,16 @@ public class RepeatedListVector extends AbstractContainerVector
     return typeify(delegate.getDataVector(), clazz);
   }
 
-  @Override
   public void allocateNew(int valueCount, int innerValueCount) {
     clear();
     getOffsetVector().allocateNew(valueCount + 1);
     getOffsetVector().getMutator().setSafe(0, 0);
     getMutator().reset();
+  }
+
+  public void allocateOffsetsNew(int groupCount) {
+    getOffsetVector().allocateNew(groupCount + 1);
+    getOffsetVector().zeroVector();
   }
 
   @Override
@@ -442,6 +446,9 @@ public class RepeatedListVector extends AbstractContainerVector
 
   @Override
   public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
     return delegate.getPayloadByteCount(valueCount);
   }
 

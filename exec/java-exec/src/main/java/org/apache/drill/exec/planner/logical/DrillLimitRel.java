@@ -38,9 +38,13 @@ public class DrillLimitRel extends DrillLimitRelBase implements DrillRel {
     super(cluster, traitSet, child, offset, fetch);
   }
 
+  public DrillLimitRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch, boolean pushDown) {
+    super(cluster, traitSet, child, offset, fetch, pushDown);
+  }
+
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DrillLimitRel(getCluster(), traitSet, sole(inputs), offset, fetch);
+    return new DrillLimitRel(getCluster(), traitSet, sole(inputs), offset, fetch, isPushDown());
   }
 
   @Override

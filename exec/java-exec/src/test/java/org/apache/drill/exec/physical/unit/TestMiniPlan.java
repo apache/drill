@@ -18,24 +18,26 @@
 
 package org.apache.drill.exec.physical.unit;
 
-import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * This class contains examples to show how to use MiniPlanTestBuilder to test a
@@ -110,7 +112,7 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
         "[{\"a\": 50, \"b\" : 100}]");
 
     RecordBatch batch = new PopBuilder()
-        .physicalOperator(new UnionAll(Collections.EMPTY_LIST)) // Children list is provided through RecordBatch
+        .physicalOperator(new UnionAll(Collections.<PhysicalOperator> emptyList())) // Children list is provided through RecordBatch
         .addInputAsChild()
           .physicalOperator(new Filter(null, parseExpr("a=5"), 1.0f))
           .addJsonScanAsChild()

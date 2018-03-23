@@ -41,6 +41,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillDirectScanRel;
 import org.apache.drill.exec.planner.logical.DrillLimitRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -135,24 +136,9 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     return contains;
   }
 
-  private static boolean isLimit0(RexNode fetch) {
-    if (fetch != null && fetch.isA(SqlKind.LITERAL)) {
-      RexLiteral l = (RexLiteral) fetch;
-      switch (l.getTypeName()) {
-      case BIGINT:
-      case INTEGER:
-      case DECIMAL:
-        if (((long) l.getValue2()) == 0) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   @Override
   public RelNode visit(LogicalSort sort) {
-    if (isLimit0(sort.fetch)) {
+    if (DrillRelOptUtil.isLimit0(sort.fetch)) {
       contains = true;
       return sort;
     }
@@ -163,7 +149,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
   @Override
   public RelNode visit(RelNode other) {
     if (other instanceof DrillLimitRel) {
-      if (isLimit0(((DrillLimitRel) other).getFetch())) {
+      if (DrillRelOptUtil.isLimit0(((DrillLimitRel) other).getFetch())) {
         contains = true;
         return other;
       }

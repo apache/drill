@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -143,7 +144,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       throw new ExecutionSetupException(String.format("Failed to create FileSystem: %s", e.getMessage()), e);
     }
 
-    List<RecordReader> readers = Lists.newArrayList();
+    List<RecordReader> readers = new LinkedList<>();
     List<Map<String, String>> implicitColumns = Lists.newArrayList();
     Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
     for(FileWork work : scan.getWorkUnits()){

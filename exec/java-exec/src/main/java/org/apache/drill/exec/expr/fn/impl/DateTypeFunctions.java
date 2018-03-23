@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -522,6 +522,21 @@ public class DateTypeFunctions {
         public void eval() {
             out.value = (int) (in.value % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         }
+    }
+
+    @FunctionTemplate(name = "castTIME", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class CastDateToTime implements DrillSimpleFunc {
+      @Param DateHolder in;
+      @Output TimeHolder out;
+
+      @Override
+      public void setup() {
+      }
+
+      @Override
+      public void eval() {
+        out.value = 0;
+      }
     }
 
     @FunctionTemplate(name = "unix_timestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)

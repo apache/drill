@@ -17,6 +17,8 @@
  */
 package org.apache.drill.test.rowSet.test;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -28,8 +30,9 @@ import java.util.Arrays;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
@@ -47,7 +50,7 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetWriter;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
 /**
@@ -262,10 +265,10 @@ public class RowSetTest extends SubOperatorTest {
     // utility classes.
 
     SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addSingleCol(new int[] {10, 11})
-        .addSingleCol(new int[] {20, 21, 22})
-        .addSingleCol(new int[] {30})
-        .addSingleCol(new int[] {40, 41})
+        .addSingleCol(intArray(10, 11))
+        .addSingleCol(intArray(20, 21, 22))
+        .addSingleCol(intArray(30))
+        .addSingleCol(intArray(40, 41))
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);
@@ -283,7 +286,7 @@ public class RowSetTest extends SubOperatorTest {
         .add("a", MinorType.INT)
         .addMap("m")
           .addArray("b", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer();
@@ -374,9 +377,9 @@ public class RowSetTest extends SubOperatorTest {
     assertEquals(actual.rowCount(), mapVector.getAccessor().getValueCount());
 
     SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(10, new Object[] {new int[] {11, 12}})
-        .addRow(20, new Object[] {new int[] {21, 22}})
-        .addRow(30, new Object[] {new int[] {31, 32}})
+        .addRow(10, objArray(intArray(11, 12)))
+        .addRow(20, objArray(intArray(21, 22)))
+        .addRow(30, objArray(intArray(31, 32)))
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);
@@ -389,7 +392,7 @@ public class RowSetTest extends SubOperatorTest {
         .addMapArray("m")
           .add("b", MinorType.INT)
           .add("c", MinorType.INT)
-          .buildMap()
+          .resumeSchema()
         .buildSchema();
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer();
@@ -514,9 +517,9 @@ public class RowSetTest extends SubOperatorTest {
     // Verify the readers and writers again using the testing tools.
 
     SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(10, new Object[] {new Object[] {101, 102}, new Object[] {111, 112}})
-        .addRow(20, new Object[] {new Object[] {201, 202}, new Object[] {211, 212}})
-        .addRow(30, new Object[] {new Object[] {301, 302}, new Object[] {311, 312}})
+        .addRow(10, objArray(objArray(101, 102), objArray(111, 112)))
+        .addRow(20, objArray(objArray(201, 202), objArray(211, 212)))
+        .addRow(30, objArray(objArray(301, 302), objArray(311, 312)))
         .build();
     new RowSetComparison(expected)
       .verifyAndClearAll(actual);
@@ -570,8 +573,8 @@ public class RowSetTest extends SubOperatorTest {
     assertFalse(reader.next());
 
     SingleRowSet rs2 = fixture.rowSetBuilder(batchSchema)
-      .addRow(10, new int[] {100, 110})
-      .addRow(20, new int[] {200, 120, 220})
+      .addRow(10, intArray(100, 110))
+      .addRow(20, intArray(200, 120, 220))
       .addRow(30, null)
       .build();
 

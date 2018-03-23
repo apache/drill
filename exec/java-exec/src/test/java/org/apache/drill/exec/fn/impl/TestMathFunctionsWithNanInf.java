@@ -54,7 +54,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
       String query = String.format("select equal(nan_col, nan_col) as nan_col, equal(inf_col, inf_col) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {false, true};
+      Object[] values = {true, true};
       evalTest(table_name, json, query, columns, values);
 
     }
@@ -65,7 +65,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
       String query = String.format("select not_equal(nan_col, nan_col) as nan_col, not_equal(inf_col, inf_col) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {true, false};
+      Object[] values = {false, false};
       evalTest(table_name, json, query, columns, values);
     }
 
@@ -85,7 +85,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
       String query = String.format("select greater_than(nan_col, 5) as nan_col, greater_than(inf_col, 5) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {false, true};
+      Object[] values = {true, true};
       evalTest(table_name, json, query, columns, values);
     }
 
@@ -299,12 +299,22 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
     @Test
     public void testSqrtFunction() throws Exception {
       String table_name = "nan_test.json";
-      String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
-      String query = String.format("select sqrt(nan_col) as nan_col, sqrt(inf_col) as inf_col from dfs.`%s`", table_name);
-      String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {Double.NaN, Double.POSITIVE_INFINITY};
+      String json = "{\"nan_col\":NaN, \"inf_col\":-Infinity, \"pos_inf_col\":Infinity}";
+      String query = String.format("select sqrt(nan_col) as nan_col, sqrt(inf_col) as inf_col, sqrt(pos_inf_col) as pos_inf from dfs.`%s`", table_name);
+      String[] columns = {"nan_col", "inf_col", "pos_inf"};
+      Object[] values = {Double.NaN, Double.NaN, Double.POSITIVE_INFINITY};
       evalTest(table_name, json, query, columns, values);
     }
+
+  @Test
+  public void testSqrtNestedFunction() throws Exception {
+    String table_name = "nan_test.json";
+    String json = "{\"nan_col\":NaN, \"inf_col\":-Infinity, \"pos_inf_col\":Infinity}";
+    String query = String.format("select sqrt(sin(nan_col)) as nan_col, sqrt(sin(inf_col)) as inf_col, sqrt(sin(pos_inf_col)) as pos_inf from dfs.`%s`", table_name);
+    String[] columns = {"nan_col", "inf_col", "pos_inf"};
+    Object[] values = {Double.NaN, Double.NaN, Double.NaN};
+    evalTest(table_name, json, query, columns, values);
+  }
 
     @Test
     public void testCeilFunction() throws Exception {
@@ -390,7 +400,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       public void testTruncFunction() throws Exception {
       String table_name = "nan_test.json";
       String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
-      String query = String.format("select trunc(nan_col,3) as nan_col, trunc(inf_col,3) as inf_col from dfs.`%s`", table_name);
+      String query = String.format("select trunc(nan_col,3) as nan_col, trunc(inf_col) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
       Object[] values = {Double.NaN, Double.NaN};
       evalTest(table_name, json, query, columns, values);
@@ -496,7 +506,7 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
               "{\"nan_col\":5.0, \"inf_col\":5.0}]";
       String query = String.format("select min(nan_col) as nan_col, min(inf_col) as inf_col from dfs.`%s`", table_name);
       String[] columns = {"nan_col", "inf_col"};
-      Object[] values = {Double.NaN, 5.0};
+      Object[] values = {5.0, 5.0};
       evalTest(table_name, json, query, columns, values);
     }
 

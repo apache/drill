@@ -185,7 +185,7 @@ public class ConnectTriesPropertyTestClusterBits {
     ClusterCoordinator.RegistrationHandle fakeEndPoint2Handle = remoteServiceSet.getCoordinator()
                                                                                 .register(fakeEndPoint2);
 
-    client.connect(null);
+    client.connect(new Properties());
     client.close();
 
     // Remove the fake drillbits so that other tests are not affected

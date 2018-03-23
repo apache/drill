@@ -91,6 +91,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(PlannerSettings.NLJOIN_FOR_SCALAR),
       new OptionDefinition(PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR),
       new OptionDefinition(PlannerSettings.MUX_EXCHANGE),
+      new OptionDefinition(PlannerSettings.ORDERED_MUX_EXCHANGE),
       new OptionDefinition(PlannerSettings.DEMUX_EXCHANGE),
       new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER),
       new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE),
@@ -212,7 +213,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.CPU_LOAD_AVERAGE),
       new OptionDefinition(ExecConstants.ENABLE_VECTOR_VALIDATOR),
       new OptionDefinition(ExecConstants.ENABLE_ITERATOR_VALIDATOR),
-      new OptionDefinition(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false))
+      new OptionDefinition(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.FRAG_RUNNER_RPC_TIMEOUT_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, true)),
     };
 
     final CaseInsensitiveMap<OptionDefinition> map = CaseInsensitiveMap.newHashMap();

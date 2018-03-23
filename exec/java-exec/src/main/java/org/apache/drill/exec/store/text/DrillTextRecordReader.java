@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -79,7 +79,7 @@ public class DrillTextRecordReader extends AbstractRecordReader {
       for (SchemaPath path : columns) {
         assert path.getRootSegment().isNamed();
         pathStr = path.getRootSegment().getPath();
-        Preconditions.checkArgument(pathStr.equals(COL_NAME) || (pathStr.equals("*") && path.getRootSegment().getChild() == null),
+        Preconditions.checkArgument(COL_NAME.equals(pathStr) || (SchemaPath.DYNAMIC_STAR.equals(pathStr) && path.getRootSegment().getChild() == null),
             "Selected column(s) must have name 'columns' or must be plain '*'");
 
         if (path.getRootSegment().getChild() != null) {

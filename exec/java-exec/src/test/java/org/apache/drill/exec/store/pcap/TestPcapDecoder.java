@@ -58,12 +58,12 @@ public class TestPcapDecoder extends BaseTestQuery {
     int offset = 0;
 
 
-    byte[] buffer = new byte[100000];
+    byte[] buffer = new byte[PcapRecordReader.BUFFER_SIZE + pd.getMaxLength()];
     int validBytes = in.read(buffer);
     assertTrue(validBytes > 50);
 
-    offset = pd.decodePacket(buffer, offset, p);
-    offset = pd.decodePacket(buffer, offset, p);
+    offset = pd.decodePacket(buffer, offset, p, pd.getMaxLength(), validBytes);
+    offset = pd.decodePacket(buffer, offset, p, pd.getMaxLength(), validBytes);
     assertEquals(228, offset);
 
     assertEquals("FE:00:00:00:00:02", p.getEthernetDestination());
@@ -104,6 +104,7 @@ public class TestPcapDecoder extends BaseTestQuery {
   // the code from here down is useful in that it tests the assumptions that
   // the entire package is based on, but it doesn't really define tests.
   // As such, it can be run as a main class, but isn't supported as unit tests.
+
   /**
    * This tests the speed when creating an actual object for each packet.
    * <p>
@@ -163,7 +164,7 @@ public class TestPcapDecoder extends BaseTestQuery {
     PacketDecoder pd = new PacketDecoder(in);
     Packet p = pd.packet();
 
-    byte[] buffer = new byte[100000];
+    byte[] buffer = new byte[PcapRecordReader.BUFFER_SIZE + pd.getMaxLength()];
     int validBytes = in.read(buffer);
 
     int offset = 0;
@@ -176,7 +177,7 @@ public class TestPcapDecoder extends BaseTestQuery {
       // get new data and shift current data to beginning of buffer if there is any danger
       // of straddling the buffer end in the next packet
       // even with jumbo packets this should be enough space to guarantee parsing
-      if (validBytes - offset < 9000) {
+      if (validBytes - offset < pd.getMaxLength()) {
         System.arraycopy(buffer, 0, buffer, offset, validBytes - offset);
         validBytes = validBytes - offset;
         offset = 0;
@@ -188,7 +189,7 @@ public class TestPcapDecoder extends BaseTestQuery {
       }
 
       // decode the packet as it lies
-      offset = pd.decodePacket(buffer, offset, p);
+      offset = pd.decodePacket(buffer, offset, p, pd.getMaxLength(), validBytes);
       total += p.getPacketLength();
       allCount++;
       if (p.isTcpPacket()) {

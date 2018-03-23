@@ -21,7 +21,7 @@ import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataRetr
 import org.apache.drill.exec.physical.rowSet.model.SchemaInference;
 import org.apache.drill.exec.physical.rowSet.model.hyper.BaseReaderBuilder;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.test.rowSet.RowSet.HyperRowSet;

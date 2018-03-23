@@ -84,11 +84,11 @@ public class RowSetUtilities {
       case BIT:
         return value & 0x01;
       case SMALLINT:
-        return value % 32768;
+        return value & 0x7FFF;
       case UINT2:
         return value & 0xFFFF;
       case TINYINT:
-        return value % 128;
+        return value & 0x7F;
       case UINT1:
         return value & 0xFF;
       default:
@@ -170,4 +170,73 @@ public class RowSetUtilities {
         throw new IllegalStateException( "Unexpected type: " + type);
     }
   }
+
+  public static Object[] mapValue(Object... members) {
+    return members;
+  }
+
+  public static Object[] singleMap(Object member) {
+    return new Object[] { member };
+  }
+
+  public static byte[] byteArray(Integer... elements) {
+    byte array[] = new byte[elements.length];
+    for (int i = 0; i < elements.length; i++) {
+      array[i] = (byte) (int) elements[i];
+    }
+    return array;
+  }
+
+  public static Long[] longArray(Long... elements) {
+    return elements;
+  }
+
+  public static double[] doubleArray(Double... elements) {
+    double array[] = new double[elements.length];
+    for (int i = 0; i < elements.length; i++) {
+      array[i] = elements[i];
+    }
+    return array;
+  }
+
+  public static String[] strArray(String... elements) {
+    return elements;
+  }
+
+  public static int[] intArray(Integer... elements) {
+    int array[] = new int[elements.length];
+    for (int i = 0; i < elements.length; i++) {
+      array[i] = elements[i];
+    }
+    return array;
+  }
+
+  public static Object[][] mapArray(Object[]... elements) {
+    return elements;
+  }
+
+  public static Object[] variantArray(Object... elements) {
+    return elements;
+  }
+
+  public static Object[] listValue(Object... elements) {
+    return elements;
+  }
+
+  public static Object[] singleList(Object element) {
+    return new Object[] { element };
+  }
+
+  public static Object[] objArray(Object... elements) {
+    return elements;
+  }
+
+  public static Object[] singleObjArray(Object element) {
+    return new Object[] {element};
+  }
+
+  public static void verify(RowSet expected, RowSet actual) {
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
 }
