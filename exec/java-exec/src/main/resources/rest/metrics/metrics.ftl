@@ -43,7 +43,7 @@
         <div id="totalUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
-      Direct (Estimate)
+      Actively Used Direct (Estimate)
       <div class="progress">
         <div id="estDirectUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
@@ -82,6 +82,15 @@
     var round = function(val, n) {
       return Math.round(val * Math.pow(10, n)) / Math.pow(10, n);
     };
+    var isAllocator = function(metricName) {
+      return (metricName.startsWith("drill.allocator"));
+    };
+    function getGBUsageText(val, perc) {
+      if (isNaN(perc)) {
+        perc = 0;
+      }
+      return round((val / 1073741824), 2) + "GB (" + Math.max(0, perc) + "%)";
+    }
 
     function updateGauges(gauges) {
       $("#gaugesTable").html(function() {
@@ -115,22 +124,22 @@
 
     function updateBars(gauges) {
       $.each(["heap","non-heap","total","drill.allocator.root"], function(i, key) {
-        var used    = gauges[key + ".used"].value;
+        var used = gauges[key + ".used"].value;
         var max;
-        if (key.startsWith("drill.allocator")) {
-          max       = gauges[key + ".peak"].value;
+        if (isAllocator(key)) {
+          max = gauges[key + ".peak"].value;
         } else {
-          max       = gauges[key + ".max"].value;
+          max = gauges[key + ".max"].value;
         }
         var percent = round((100 * used / max), 2);
-        var usage   = round((used / 1073741824), 2) + "GB (" + Math.max(0, percent) + "%)";
+        var usage = getGBUsageText(used, percent);
 
         var styleVal = "width: " + percent + "%;color: #202020;white-space: nowrap"
-        $("#" + (key.startsWith("drill.allocator") ? "estDirect" : key) + "Usage").attr({
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").attr({
           "aria-valuenow" : percent,
           "style" : styleVal
         });
-        $("#" + (key.startsWith("drill.allocator") ? "estDirect" : key) + "Usage").html(usage);
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").html(usage);
       });
     };
 
