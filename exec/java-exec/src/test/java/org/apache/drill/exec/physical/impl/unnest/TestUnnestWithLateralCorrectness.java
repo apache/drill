@@ -1,20 +1,20 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.drill.exec.physical.impl.unnest;
 
 import org.apache.calcite.rel.core.JoinRelType;
@@ -25,6 +25,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.LateralContract;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.LateralJoinPOP;
 import org.apache.drill.exec.physical.config.UnnestPOP;
@@ -549,13 +550,13 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // setup Unnest record batch
     final UnnestRecordBatch unnestBatch =
-        new UnnestRecordBatch(unnestPopConfig, incomingMockBatch, fixture.getFragmentContext());
+        new UnnestRecordBatch(unnestPopConfig, fixture.getFragmentContext());
 
     final LateralJoinBatch lateralJoinBatch =
         new TestingLateralJoinBatch(ljPopConfig, fixture.getFragmentContext(), incomingMockBatch, unnestBatch);
 
-    // set pointer to Lateral in unnest pop config
-    unnestPopConfig.setLateral(lateralJoinBatch);
+    // set pointer to Lateral in unnest
+    unnestBatch.setIncoming((LateralContract) lateralJoinBatch);
 
     // Simulate the pipeline by calling next on the incoming
 

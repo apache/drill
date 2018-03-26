@@ -15,20 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.unnest;
+package org.apache.drill.exec.record;
 
-import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.LateralJoinPOP;
-import org.apache.drill.exec.physical.impl.join.LateralJoinBatch;
-import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.physical.base.LateralContract;
 
-/**
- * Create a derived class so we can access the protected ctor
- */
-public class TestingLateralJoinBatch extends LateralJoinBatch{
-  protected TestingLateralJoinBatch(LateralJoinPOP popConfig, FragmentContext context, RecordBatch left,
-      RecordBatch right) throws OutOfMemoryException {
-    super(popConfig, context, left, right);
-  }
+public interface TableFunctionContract {
+
+  /**
+   * sets the incoming record batch for the operator. The innerNext() method requires one of the setIncoming methods
+   * to be called before it is called.
+   * @param incoming
+   */
+  void setIncoming(RecordBatch incoming);
+
+  /**
+   * sets the incoming Lateral Contract for the operator. The innerNext() method requires one of the setIncoming methods
+   * to be called before it is called.
+   * @param incoming
+   */
+  void setIncoming(LateralContract incoming);
+
 }

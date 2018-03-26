@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,7 +32,6 @@ public class UnnestBatchCreator implements BatchCreator<UnnestPOP> {
   @Override
   public UnnestRecordBatch getBatch(ExecutorFragmentContext context, UnnestPOP config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    Preconditions.checkArgument(children.size() == 1);
-    return new UnnestRecordBatch(config, children.get(0), context);
+    return new UnnestRecordBatch(config, context);
   }
 }

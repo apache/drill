@@ -82,7 +82,7 @@ public class UnnestImpl implements Unnest {
   }
 
   @Override
-  public final int unnestRecords(final int recordCount, final int firstOutputIndex) {
+  public final int unnestRecords(final int recordCount) {
     switch (svMode) {
       case FOUR_BYTE:
         throw new UnsupportedOperationException("Unnest does not support selection vector inputs.");
@@ -102,6 +102,9 @@ public class UnnestImpl implements Unnest {
         final int innerValueCount = accessor.getInnerValueCountAt(currentRecord);
         final int count = Math.min(Math.min(innerValueCount, outputLimit), recordCount);
 
+        logger.debug("Unnest: currentRecord: {}, innerValueCount: {}, record count: {}, output limit: {}",
+            innerValueCount,
+            recordCount, outputLimit);
         for (TransferPair t : transfers) {
           t.splitAndTransfer(innerValueIndex, count);
         }

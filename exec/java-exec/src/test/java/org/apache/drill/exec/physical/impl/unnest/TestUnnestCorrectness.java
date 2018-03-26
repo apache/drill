@@ -1,20 +1,20 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.drill.exec.physical.impl.unnest;
 
 import org.apache.drill.categories.OperatorTest;
@@ -25,12 +25,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.LateralContract;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.UnnestPOP;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.rowSet.impl.TestResultSetLoaderMapArray;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.store.mock.MockStorePOP;
 import org.apache.drill.exec.vector.ValueVector;
@@ -39,7 +40,7 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -270,9 +271,10 @@ import static org.junit.Assert.assertTrue;
   @Test
   public void testUnnestLimitBatchSize() {
 
-    final int limitedOutputBatchSize = 1024;
-    final int limitedOutputBatchSizeBytes = 1024*4*1; // num rows * size of int
-    final int inputBatchSize = 1024+1;
+    final int limitedOutputBatchSize = 1023; // one less than the power of two. See RecordBatchMemoryManager
+                                             // .adjustOutputRowCount
+    final int limitedOutputBatchSizeBytes = 1024*4*1; // (num rows+1) * size of int
+    final int inputBatchSize = 1023+1;
     // single record batch with single row. The unnest column has one
     // more record than the batch size we want in the output
     Object[][] data = new Object[1][1];
@@ -325,9 +327,10 @@ import static org.junit.Assert.assertTrue;
     // similar to previous test; we split a record across more than one batch.
     // but we also set a limit less than the size of the batch so only one batch gets output.
 
-    final int limitedOutputBatchSize = 1024;
-    final int limitedOutputBatchSizeBytes = 1024*4*1; // num rows * size of int
-    final int inputBatchSize = 1024+1;
+    final int limitedOutputBatchSize = 1023; // one less than the power of two. See RecordBatchMemoryManager
+                                             // .adjustOutputRowCount
+    final int limitedOutputBatchSizeBytes = 1024*4*1; // (num rows+1) * size of int
+    final int inputBatchSize = 1023+1;
     // single record batch with single row. The unnest column has one
     // more record than the batch size we want in the output
     Object[][] data = new Object[1][1];
@@ -380,11 +383,10 @@ import static org.junit.Assert.assertTrue;
   public void testUnnestKillFromLimitSubquery2() {
 
     // similar to previous test but the size of the array fits exactly into the record batch;
-
-
-    final int limitedOutputBatchSize = 1024;
-    final int limitedOutputBatchSizeBytes = 1024*4; // num rows * size of int
-    final int inputBatchSize = 1024;
+    final int limitedOutputBatchSize = 1023; // one less than the power of two. See RecordBatchMemoryManager
+                                             // .adjustOutputRowCount
+    final int limitedOutputBatchSizeBytes = 1024*4*1; // (num rows+1) * size of int
+    final int inputBatchSize = 1023;
     // single record batch with single row. The unnest column has one
     // more record than the batch size we want in the output
     Object[][] data = new Object[1][1];
@@ -516,12 +518,13 @@ import static org.junit.Assert.assertTrue;
     final MockLateralJoinBatch lateralJoinBatch =
         new MockLateralJoinBatch(fixture.getFragmentContext(), operatorContext, incomingMockBatch);
 
-    // set pointer to Lateral in unnest pop config
-    unnestPopConfig.setLateral(lateralJoinBatch);
 
     // setup Unnest record batch
     final UnnestRecordBatch unnestBatch =
-        new UnnestRecordBatch(unnestPopConfig, incomingMockBatch, fixture.getFragmentContext());
+        new UnnestRecordBatch(unnestPopConfig, fixture.getFragmentContext());
+
+    // set pointer to Lateral in unnest pop config
+    unnestBatch.setIncoming((LateralContract) lateralJoinBatch);
 
     // set backpointer to lateral join in unnest
     lateralJoinBatch.setUnnest(unnestBatch);
@@ -620,9 +623,9 @@ import static org.junit.Assert.assertTrue;
     TupleMetadata schema = new SchemaBuilder()
         .add("rowNum", TypeProtos.MinorType.INT)
         .addMapArray("unnestColumn")
-        .add("colA", TypeProtos.MinorType.INT)
-        .addArray("colB", TypeProtos.MinorType.VARCHAR)
-        .buildMap()
+          .add("colA", TypeProtos.MinorType.INT)
+          .addArray("colB", TypeProtos.MinorType.VARCHAR)
+        .resumeSchema()
         .buildSchema();
     return schema;
   }
