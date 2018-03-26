@@ -123,10 +123,10 @@ if [ ! -e "$JAVA" ]; then
   fatal_error "Java not found at JAVA_HOME=$JAVA_HOME."
 fi
 
-# Ensure that Java version is at least 1.7
+# Ensure that Java version is at least 1.8
 "$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6|1\.7" > /dev/null
 if [ $? -eq 0 ]; then
-  fatal_error "Java 1.8 or later is required to run Apache Drill."
+  fatal_error "Java 1.8 is required to run Apache Drill."
 fi
 
 # Check if a file exists and has relevant lines for execution
@@ -214,9 +214,8 @@ fi
 
 export SQLLINE_JAVA_OPTS=${SQLLINE_JAVA_OPTS:-""}
 
-# Class unloading is disabled by default in Java 7
-# http://hg.openjdk.java.net/jdk7u/jdk7u60/hotspot/file/tip/src/share/vm/runtime/globals.hpp#l1622
-export SERVER_GC_OPTS="$SERVER_GC_OPTS -XX:+CMSClassUnloadingEnabled -XX:+UseG1GC"
+
+export SERVER_GC_OPTS="$SERVER_GC_OPTS -XX:+UseG1GC"
 
 # No GC options by default for SQLLine
 export CLIENT_GC_OPTS=${CLIENT_GC_OPTS:-""}
