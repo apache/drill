@@ -749,7 +749,7 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "agmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALL"
     "OCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\t"
     "CANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_"
-    "REQUESTED\020\006*\227\006\n\020CoreOperatorType\022\021\n\rSING"
+    "REQUESTED\020\006*\302\006\n\020CoreOperatorType\022\021\n\rSING"
     "LE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FIL"
     "TER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004"
     "\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDE"
@@ -769,10 +769,12 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "ASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOO"
     "P_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_"
     "SCAN\020%\022\022\n\016KAFKA_SUB_SCAN\020&\022\021\n\rKUDU_SUB_S"
-    "CAN\020\'*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n"
-    "\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014S"
-    "ASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.ap"
-    "ache.drill.exec.protoB\rUserBitSharedH\001", 5078);
+    "CAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014LATERAL_JOIN\020)\022\n\n\006"
+    "UNNEST\020**g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000"
+    "\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020"
+    "\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org"
+    ".apache.drill.exec.protoB\rUserBitSharedH"
+    "\001", 5121);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
@@ -933,6 +935,9 @@ bool CoreOperatorType_IsValid(int value) {
     case 37:
     case 38:
     case 39:
+    case 40:
+    case 41:
+    case 42:
       return true;
     default:
       return false;

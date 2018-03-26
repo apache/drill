@@ -158,7 +158,14 @@ public class WebServer implements AutoCloseable {
     final int selectors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_SELECTORS);
     final QueuedThreadPool threadPool = new QueuedThreadPool(2, 2, 60000);
     embeddedJetty = new Server(threadPool);
-    embeddedJetty.setHandler(createServletContextHandler(authEnabled));
+    ServletContextHandler webServerContext = createServletContextHandler(authEnabled);
+    //Allow for Other Drillbits to make REST calls
+    FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
+    filterHolder.setInitParameter("allowedOrigins", "*");
+    //Allowing CORS for metrics only
+    webServerContext.addFilter(filterHolder, "/status/metrics", null);
+    embeddedJetty.setHandler(webServerContext);
+
     ServerConnector connector = createConnector(port, acceptors, selectors);
     threadPool.setMaxThreads(1 + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
     embeddedJetty.addConnector(connector);
@@ -296,10 +303,14 @@ public class WebServer implements AutoCloseable {
   }
 
   public int getPort() {
-    if (embeddedJetty == null || embeddedJetty.getConnectors().length != 1) {
+    if (!isRunning()) {
       throw new UnsupportedOperationException("Http is not enabled");
     }
     return ((ServerConnector)embeddedJetty.getConnectors()[0]).getPort();
+  }
+
+  public boolean isRunning() {
+    return (embeddedJetty != null && embeddedJetty.getConnectors().length == 1);
   }
 
   private ServerConnector createConnector(int port, int acceptors, int selectors) throws Exception {

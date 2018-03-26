@@ -60,6 +60,7 @@ public final class DrillMetrics {
       REGISTRY.registerAll(new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
       REGISTRY.registerAll(new MemoryUsageGaugeSet());
       REGISTRY.registerAll(new ThreadStatesGaugeSet());
+      REGISTRY.registerAll(new CpuGaugeSet());
       register("fd.usage", new FileDescriptorRatioGauge());
     }
 

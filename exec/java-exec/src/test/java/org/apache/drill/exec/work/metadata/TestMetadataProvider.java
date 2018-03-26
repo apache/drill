@@ -248,7 +248,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(117, columns.size());
+    assertEquals(118, columns.size());
     // too many records to verify the output.
   }
 
@@ -261,7 +261,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(5, columns.size());
+    assertEquals(6, columns.size());
 
     verifyColumn("sys", "drillbits", "user_port", columns);
     verifyColumn("sys", "drillbits", "control_port", columns);
@@ -281,7 +281,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(3, columns.size());
+    assertEquals(4, columns.size());
 
     verifyColumn("sys", "drillbits", "user_port", columns);
     verifyColumn("sys", "drillbits", "control_port", columns);
@@ -302,11 +302,12 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(3, columns.size());
+    assertEquals(4, columns.size());
 
     verifyColumn("sys", "drillbits", "user_port", columns);
     verifyColumn("sys", "drillbits", "control_port", columns);
     verifyColumn("sys", "drillbits", "data_port", columns);
+    verifyColumn("sys", "drillbits", "http_port", columns);
   }
 
   /** Helper method to verify schema contents */
