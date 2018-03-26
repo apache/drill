@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.profile;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +39,17 @@ import com.google.common.base.Preconditions;
  * Wrapper class for profiles of ALL operator instances of the same operator type within a major fragment.
  */
 public class OperatorWrapper {
+  @SuppressWarnings("unused")
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorWrapper.class);
+
+  private static final String HTML_ATTRIB_SPILLS = "spills";
+  private static final String HTML_ATTRIB_CLASS = "class";
+  private static final String HTML_ATTRIB_STYLE = "style";
+  private static final String HTML_ATTRIB_TITLE = "title";
+  private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("#.##");
   private static final String UNKNOWN_OPERATOR = "UNKNOWN_OPERATOR";
+  //Negative valued constant used for denoting invalid index to indicate absence of metric
+  private static final int NO_SPILL_METRIC_INDEX = Integer.MIN_VALUE;
   private final int major;
   private final List<ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String>> opsAndHosts; // [(operatorProfile --> minorFragment number,host), ...]
   private final OperatorProfile firstProfile;
@@ -146,6 +157,11 @@ public class OperatorWrapper {
     tb.appendCell(path, null, null, opTblBgColor);
     tb.appendCell(operatorName);
 
+    //Check if spill information is available
+    int spillCycleMetricIndex = getSpillCycleMetricIndex(operatorType);
+    boolean isSpillableOp = (spillCycleMetricIndex != NO_SPILL_METRIC_INDEX);
+    boolean hasSpilledToDisk = false;
+
     //Get MajorFragment Busy+Wait Time Tally
     long majorBusyNanos = majorFragmentBusyTally.get(new OperatorPathBuilder().setMajor(major).build());
 
@@ -153,6 +169,8 @@ public class OperatorWrapper {
     double processSum = 0.0;
     double waitSum = 0.0;
     double memSum = 0.0;
+    double spillCycleSum = 0.0;
+    long spillCycleMax = 0L;
     long recordSum = 0L;
 
     //Construct list for sorting purposes (using legacy Comparators)
@@ -168,6 +186,22 @@ public class OperatorWrapper {
         recordSum += sp.getRecords();
       }
       opList.add(ip.getLeft());
+
+      //Capture Spill Info
+      //Check to ensure index < #metrics (old profiles have less metrics); else reset isSpillableOp
+      if (isSpillableOp) {
+        //NOTE: We get non-zero value for non-existent metrics, so we can't use getMetric(index)
+        //profile.getMetric(spillCycleMetricIndex).getLongValue();
+        //Forced to iterate list
+        for (MetricValue metricVal : profile.getMetricList()) {
+          if (metricVal.getMetricId() == spillCycleMetricIndex) {
+            long spillCycles = metricVal.getLongValue();
+            spillCycleMax = Math.max(spillCycles, spillCycleMax);
+            spillCycleSum += spillCycles;
+            hasSpilledToDisk = (spillCycleSum > 0.0);
+          }
+        }
+      }
     }
 
     final ImmutablePair<OperatorProfile, Integer> longSetup = Collections.max(opList, Comparators.setupTime);
@@ -190,8 +224,59 @@ public class OperatorWrapper {
     tb.appendFormattedInteger(recordSum);
 
     final ImmutablePair<OperatorProfile, Integer> peakMem = Collections.max(opList, Comparators.operatorPeakMemory);
-    tb.appendBytes(Math.round(memSum / size));
-    tb.appendBytes(peakMem.getLeft().getPeakLocalMemoryAllocated());
+
+    //Inject spill-to-disk attributes
+    Map<String, String> avgSpillMap = null;
+    Map<String, String> maxSpillMap = null;
+    if (hasSpilledToDisk) {
+      avgSpillMap = new HashMap<>();
+      //Average SpillCycle
+      double avgSpillCycle = spillCycleSum/size;
+      avgSpillMap.put(HTML_ATTRIB_TITLE, DECIMAL_FORMATTER.format(avgSpillCycle) + " spills on average");
+      avgSpillMap.put(HTML_ATTRIB_STYLE, "cursor:help;" + spillCycleMax);
+      avgSpillMap.put(HTML_ATTRIB_CLASS, "spill-tag"); //JScript will inject Icon
+      avgSpillMap.put(HTML_ATTRIB_SPILLS, DECIMAL_FORMATTER.format(avgSpillCycle)); //JScript will inject Count
+      maxSpillMap = new HashMap<>();
+      maxSpillMap.put(HTML_ATTRIB_TITLE, "Most # spills: " + spillCycleMax);
+      maxSpillMap.put(HTML_ATTRIB_STYLE, "cursor:help;" + spillCycleMax);
+      maxSpillMap.put(HTML_ATTRIB_CLASS, "spill-tag"); //JScript will inject Icon
+      maxSpillMap.put(HTML_ATTRIB_SPILLS, String.valueOf(spillCycleMax)); //JScript will inject Count
+    }
+
+    tb.appendBytes(Math.round(memSum / size), avgSpillMap);
+    tb.appendBytes(peakMem.getLeft().getPeakLocalMemoryAllocated(), maxSpillMap);
+  }
+
+  /**
+   * Returns index of Spill Count/Cycle metric
+   * @param operatorType
+   * @return index of spill metric
+   */
+  private int getSpillCycleMetricIndex(CoreOperatorType operatorType) {
+    String metricName;
+
+    switch (operatorType) {
+    case EXTERNAL_SORT:
+      metricName = "SPILL_COUNT";
+      break;
+    case HASH_AGGREGATE:
+    case HASH_JOIN:
+      metricName = "SPILL_CYCLE";
+      break;
+    default:
+      return NO_SPILL_METRIC_INDEX;
+    }
+
+    int metricIndex = 0; //Default
+    String[] metricNames = OperatorMetricRegistry.getMetricNames(operatorType.getNumber());
+    for (String name : metricNames) {
+      if (name.equalsIgnoreCase(metricName)) {
+        return metricIndex;
+      }
+      metricIndex++;
+    }
+    //Backward compatibility with rendering older profiles. Ideally we should never touch this if an expected metric is not there
+    return NO_SPILL_METRIC_INDEX;
   }
 
   public String getMetricsTable() {
