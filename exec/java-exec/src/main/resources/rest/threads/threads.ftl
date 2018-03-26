@@ -17,18 +17,41 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
+  <p align="right">Auto Refresh <span class="badge badge-pill badge-info" id="refreshTimeLabel"></span>
+    <button id="clippy" type="button" class="btn btn-default btn-sm" onClick="copyThreads();" title="Copy To Clipboard"> 
+      <!-- Refer: https://glyphicons.bootstrapcheatsheets.com/# for correct rendering -->
+      <span class="glyphicon glyphicon-copy" style="font-size:180%">&#xe205;</span>
+    </button>
+  </p>
   <div id="mainDiv" role="main">
   </div>
   </div>
   <script>
+    var statusUrl = location.protocol + "//" + location.host + "/status/threads";
+    var refreshInterval = 3;
+    document.getElementById('refreshTimeLabel').innerHTML = refreshInterval+" sec"; 
     var update = function() {
-      $.get("/status/threads", function(data) {
+      $.get(statusUrl, function(data) {
         $("#mainDiv").html("<pre>" + data + "</pre>");
       });
     };
 
+    //Ref: https://stackoverflow.com/a/36640126/8323038
+    function copyThreads() {
+      if (document.selection) { 
+        var range = document.body.createTextRange();
+        range.moveToElementText(document.getElementById("mainDiv"));
+        range.select().createTextRange();
+        document.execCommand("copy");
+      } else if (window.getSelection) {
+        var range = document.createRange();
+        range.selectNode(document.getElementById("mainDiv"));
+        window.getSelection().addRange(range);
+        document.execCommand("copy");
+      }
+    }
     update();
-    setInterval(update, 2000);
+    setInterval(update, refreshInterval*1000);
   </script>
 </#macro>
 
