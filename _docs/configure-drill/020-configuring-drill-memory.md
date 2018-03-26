@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2018-03-22 18:52:44 UTC
+date: 2018-03-26 17:37:50 UTC
 parent: "Configure Drill"
 ---
 
@@ -65,7 +65,7 @@ If you do not set this variable, it is disabled. If you set this variable, you c
 
 **Example**  
 
-If a system has 48GB of free memory and you set the following parameters in drill-env.sh:  
+If a system has 48GB of memory and you set the following parameters in drill-env.sh:  
 
        DRILLBIT_MAX_PROC_MEM=25%
        DRILL_HEAP=8G
@@ -78,7 +78,7 @@ The Drillbit fails on startup with the following messages:
        [ERROR] Unable to start Drillbit due to memory constraint violations Total Memory Requested : 19 GB 
        Check and modify the settings or increase the maximum amount of memory permitted.
 
-If DRILLBIT_MAX_PROC_MEM is increased to 50%; the Drillbit starts up with the following warnings:  
+If `DRILLBIT_MAX_PROC_MEM` is increased to 50%; the Drillbit starts up with the following warnings:  
 
        [WARN] 50% of the system memory (48 GB) translates to 24 GB.
        [WARN] You have an allocation of 4 GB that is currently unused from a total of 24 GB. 

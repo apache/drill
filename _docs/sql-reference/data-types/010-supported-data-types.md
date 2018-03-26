@@ -1,6 +1,6 @@
 ---
 title: "Supported Data Types"
-date: 2017-04-05 00:09:57 UTC
+date: 2018-03-26 17:37:51 UTC
 parent: "Data Types"
 ---
 Drill reads from and writes to data sources having a wide variety of types. 
@@ -197,7 +197,7 @@ The [CONVERT_TO function]({{site.baseurl}}/docs/data-type-conversion/#convert_to
 
     CONVERT_TO(mycolumn, 'INT_BE')
 
-The following table lists the data types for use with the CONVERT_TO
+The following table lists the data types you can use with the CONVERT_TO
 and CONVERT_FROM functions:
 
 **Type**| **Input Type**| **Output Type**  

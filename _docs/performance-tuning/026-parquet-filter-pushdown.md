@@ -1,12 +1,20 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2016-11-21 21:25:59 UTC
+date: 2018-03-26 17:37:50 UTC
 parent: "Performance Tuning"
 ---
 
 Drill 1.9 introduces the Parquet filter pushdown option. Parquet filter pushdown is a performance optimization that prunes extraneous data from a Parquet file to reduce the amount of data that Drill scans and reads when a query on a Parquet file contains a filter expression. Pruning data reduces the I/O, CPU, and network overhead to optimize Drill’s performance.
  
 Parquet filter pushdown is enabled by default. When a query contains a filter expression, you can run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see if Drill applies Parquet filter pushdown to the query. You can enable and disable this feature using the [ALTER SYSTEM|SESSION SET]({{site.baseurl}}/docs/alter-system/) command with the `planner.store.parquet.rowgroup.filter.pushdown` option.  
+
+As of Drill 1.13, the query planner in Drill can apply project push down, filter push down, and partition pruning to star queries in common table expressions (CTEs), views, and subqueries, for example:  
+  
+       select col1 from (select * from t)  
+
+When a CTE, view, or subquery contains a star filter condition, the query planner in Drill can apply the filter and prune extraneous data, further reducing the amount of data that the scanner reads and improving performance. 
+ 
+**Note:** Currently, Drill only supports pushdown for simple star subselect queries without filters. See [DRILL-6219](https://www.google.com/url?q=https://issues.apache.org/jira/browse/DRILL-6219&sa=D&ust=1522084453671000&usg=AFQjCNFXp-nWMRXzM466BSRFlV3F63_ZYA) for more information.  
 
 ##How Parquet Filter Pushdown Works
 Drill applies Parquet filter pushdown during the query planning phase. The query planner in Drill performs Parquet filter pushdown by evaluating the filter expressions in the query. If no filter expression exists, the underlying scan operator reads all of the data in a Parquet file and then sends the data to operators downstream. When filter expressions exist, the planner applies each filter and prunes the data, reducing the amount of data that the scanner and Parquet reader must read.
@@ -36,15 +44,15 @@ Because Drill applies Parquet filter pushdown during the query planning phase, y
 Run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see the execution plan for the query. See [Query Plans]({{site.baseurl}}/docs/query-plans/) for more information. 
 
 ##Support 
-The following table lists the supported and unsupported clauses, operators, data types, and scenarios for Parquet filter pushdown:  
+The following table lists the supported and unsupported clauses, operators, data types, function, and scenarios for Parquet filter pushdown:  
 
-|                      | Supported                                                                                                                                                                          | Not Supported                                                                                            |
-|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| Clauses              | WHERE,   HAVING (HAVING is supported if Drill can pass the filter through GROUP   BY.)                                                                                             |                                                                                                          |
-| Operators            | AND,   OR, IN (An IN list is converted to OR if the number in the IN list is within   a certain threshold, for example 20. If greater than the threshold, pruning   cannot occur.) | NOT,   ITEM (Drill does not push the filter past the ITEM operator, which is used   for complex fields.) |
-| Comparison Operators | <>,   <, >, <=, >=, =                                                                                                                 | IS [NOT] NULL                                                                                            |
-| Data Types           | INT,   BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, TIME                                                                                                                                | CHAR,   VARCHAR columns, Hive TIMESTAMP                                                                  |
-| Function             | CAST   is supported among these four numeric types only: int, bigint, float, double                                                                                                |                                                                                                          |
-| Other                | --                                                                                                                                                                                 | Joins,   Files with multiple row groups, Enabled Native Hive reader                                      | 
+**Note:** An asterisk (*) indicates support as of Drill 1.13
 
-
+|                        | **Supported**                                                                                                                                                                                                                     | **Not Supported**                                                                                      |
+|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| **Clauses**                | WHERE, *WITH, HAVING (HAVING is   supported if Drill can pass the filter through GROUP BY.)                                                                                                                                   | --                                                                                                 |
+| **Operators**              | AND, OR, NOT, *IS [NOT] NULL, *IS   [NOT] TRUE|FALSE, IN (An IN list is converted to OR if the number in the IN   list is within a certain threshold, for example 20. If greater than the   threshold, pruning cannot occur.) | ITEM (Drill does not push the filter   past the ITEM operator, which is used for complex fields.)  |
+| Comparison   Operators | <>, <, >, <=, >=, =                                                                                                                                                                                                           | --                                                                                                 |
+| **Data   Types**           | INT, BIGINT, FLOAT, DOUBLE, DATE,   TIMESTAMP, TIME, *BOOLEAN (true|false)                                                                                                                                                    | CHAR, VARCHAR columns, Hive TIMESTAMP                                                              |
+| **Function**               | CAST is supported among the following   types only: int, bigint, float, double, *date, *timestamp, and *time                                                                                                                  | --                                                                                                 |
+| **Other**                  | Files with multiple row groups                                                                                                                                                                                                | Joins, Enabled Native Hive reader                                                                  |

@@ -771,31 +771,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Appendix E: Using cgroups to Control CPU Usage", 
-            "next_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
             "parent": "Drill-on-YARN", 
             "previous_title": "Appendix C: Troubleshooting", 
             "previous_url": "/docs/appendix-c-troubleshooting/", 
             "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
             "title": "Appendix D: Recreate the Drill Archive", 
             "url": "/docs/appendix-d-recreate-the-drill-archive/"
-        }, 
-        "Appendix E: Using cgroups to Control CPU Usage": {
-            "breadcrumbs": [
-                {
-                    "title": "Drill-on-YARN", 
-                    "url": "/docs/drill-on-yarn/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
-            "parent": "Drill-on-YARN", 
-            "previous_title": "Appendix D: Recreate the Drill Archive", 
-            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
-            "relative_path": "_docs/drill-on-yarn/094-appendix-e-using-cgroups-to-control-cpu-usage.md", 
-            "title": "Appendix E: Using cgroups to Control CPU Usage", 
-            "url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/"
         }, 
         "Architecture": {
             "breadcrumbs": [], 
@@ -1731,14 +1714,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Connect a Data Source", 
-                    "next_url": "/docs/connect-a-data-source/", 
+                    "next_title": "Configuring cgroups to Control CPU Usage", 
+                    "next_url": "/docs/configuring-cgroups-to-control-cpu-usage/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
                     "relative_path": "_docs/configure-drill/120-configuring-the-drill-shell.md", 
                     "title": "Configuring the Drill Shell", 
                     "url": "/docs/configuring-the-drill-shell/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring the Drill Shell", 
+                    "previous_url": "/docs/configuring-the-drill-shell/", 
+                    "relative_path": "_docs/configure-drill/121-configuring-cgroups-to-control-cpu-usage.md", 
+                    "title": "Configuring cgroups to Control CPU Usage", 
+                    "url": "/docs/configuring-cgroups-to-control-cpu-usage/"
                 }
             ], 
             "next_title": "Configure Drill Introduction", 
@@ -2324,7 +2324,7 @@
             "title": "Configuring a Multitenant Cluster Introduction", 
             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
         }, 
-        "Configuring the Drill Shell": {
+        "Configuring cgroups to Control CPU Usage": {
             "breadcrumbs": [
                 {
                     "title": "Configure Drill", 
@@ -2334,6 +2334,23 @@
             "children": [], 
             "next_title": "Connect a Data Source", 
             "next_url": "/docs/connect-a-data-source/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring the Drill Shell", 
+            "previous_url": "/docs/configuring-the-drill-shell/", 
+            "relative_path": "_docs/configure-drill/121-configuring-cgroups-to-control-cpu-usage.md", 
+            "title": "Configuring cgroups to Control CPU Usage", 
+            "url": "/docs/configuring-cgroups-to-control-cpu-usage/"
+        }, 
+        "Configuring the Drill Shell": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring cgroups to Control CPU Usage", 
+            "next_url": "/docs/configuring-cgroups-to-control-cpu-usage/", 
             "parent": "Configure Drill", 
             "previous_title": "Ports Used by Drill", 
             "previous_url": "/docs/ports-used-by-drill/", 
@@ -2633,8 +2650,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Configuring the Drill Shell", 
-            "previous_url": "/docs/configuring-the-drill-shell/", 
+            "previous_title": "Configuring cgroups to Control CPU Usage", 
+            "previous_url": "/docs/configuring-cgroups-to-control-cpu-usage/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
@@ -4282,31 +4299,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Appendix E: Using cgroups to Control CPU Usage", 
-                    "next_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
                     "parent": "Drill-on-YARN", 
                     "previous_title": "Appendix C: Troubleshooting", 
                     "previous_url": "/docs/appendix-c-troubleshooting/", 
                     "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
                     "title": "Appendix D: Recreate the Drill Archive", 
                     "url": "/docs/appendix-d-recreate-the-drill-archive/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Drill-on-YARN", 
-                            "url": "/docs/drill-on-yarn/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
-                    "parent": "Drill-on-YARN", 
-                    "previous_title": "Appendix D: Recreate the Drill Archive", 
-                    "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
-                    "relative_path": "_docs/drill-on-yarn/094-appendix-e-using-cgroups-to-control-cpu-usage.md", 
-                    "title": "Appendix E: Using cgroups to Control CPU Usage", 
-                    "url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/"
                 }
             ], 
             "next_title": "Drill-on-YARN Introduction", 
@@ -5181,8 +5181,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Appendix E: Using cgroups to Control CPU Usage", 
-            "previous_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
+            "previous_title": "Appendix D: Recreate the Drill Archive", 
+            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -15097,31 +15097,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Appendix E: Using cgroups to Control CPU Usage", 
-                    "next_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
                     "parent": "Drill-on-YARN", 
                     "previous_title": "Appendix C: Troubleshooting", 
                     "previous_url": "/docs/appendix-c-troubleshooting/", 
                     "relative_path": "_docs/drill-on-yarn/093-appendix-d-recreate-the-drill-archive.md", 
                     "title": "Appendix D: Recreate the Drill Archive", 
                     "url": "/docs/appendix-d-recreate-the-drill-archive/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Drill-on-YARN", 
-                            "url": "/docs/drill-on-yarn/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
-                    "parent": "Drill-on-YARN", 
-                    "previous_title": "Appendix D: Recreate the Drill Archive", 
-                    "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
-                    "relative_path": "_docs/drill-on-yarn/094-appendix-e-using-cgroups-to-control-cpu-usage.md", 
-                    "title": "Appendix E: Using cgroups to Control CPU Usage", 
-                    "url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/"
                 }
             ], 
             "next_title": "Drill-on-YARN Introduction", 
@@ -15412,8 +15395,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Appendix E: Using cgroups to Control CPU Usage", 
-            "previous_url": "/docs/appendix-e-using-cgroups-to-control-cpu-usage/", 
+            "previous_title": "Appendix D: Recreate the Drill Archive", 
+            "previous_url": "/docs/appendix-d-recreate-the-drill-archive/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -15933,14 +15916,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Connect a Data Source", 
-                    "next_url": "/docs/connect-a-data-source/", 
+                    "next_title": "Configuring cgroups to Control CPU Usage", 
+                    "next_url": "/docs/configuring-cgroups-to-control-cpu-usage/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
                     "relative_path": "_docs/configure-drill/120-configuring-the-drill-shell.md", 
                     "title": "Configuring the Drill Shell", 
                     "url": "/docs/configuring-the-drill-shell/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring the Drill Shell", 
+                    "previous_url": "/docs/configuring-the-drill-shell/", 
+                    "relative_path": "_docs/configure-drill/121-configuring-cgroups-to-control-cpu-usage.md", 
+                    "title": "Configuring cgroups to Control CPU Usage", 
+                    "url": "/docs/configuring-cgroups-to-control-cpu-usage/"
                 }
             ], 
             "next_title": "Configure Drill Introduction", 
@@ -16244,8 +16244,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Configuring the Drill Shell", 
-            "previous_url": "/docs/configuring-the-drill-shell/", 
+            "previous_title": "Configuring cgroups to Control CPU Usage", 
+            "previous_url": "/docs/configuring-cgroups-to-control-cpu-usage/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
