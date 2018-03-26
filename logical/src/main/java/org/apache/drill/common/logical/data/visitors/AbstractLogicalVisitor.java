@@ -17,6 +17,8 @@
  */
 package org.apache.drill.common.logical.data.visitors;
 
+import org.apache.drill.common.logical.data.LateralJoin;
+import org.apache.drill.common.logical.data.Unnest;
 import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Flatten;
@@ -122,5 +124,15 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     @Override
     public T visitWriter(Writer writer, X value) throws E {
       return visitOp(writer, value);
+    }
+
+    @Override
+    public T visitUnnest(Unnest unnest, X value) throws E {
+      return visitOp(unnest, value);
+    }
+
+    @Override
+    public T visitLateralJoin(LateralJoin lateralJoin, X value) throws E {
+        return visitOp(lateralJoin, value);
     }
 }
