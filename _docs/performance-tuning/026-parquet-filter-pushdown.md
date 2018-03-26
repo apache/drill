@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2018-03-26 17:37:50 UTC
+date: 2018-03-26 18:15:24 UTC
 parent: "Performance Tuning"
 ---
 
@@ -46,13 +46,13 @@ Run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see t
 ##Support 
 The following table lists the supported and unsupported clauses, operators, data types, function, and scenarios for Parquet filter pushdown:  
 
-**Note:** An asterisk (*) indicates support as of Drill 1.13
+**Note:** An asterisk (*) indicates support as of Drill 1.13  
 
-|                        | **Supported**                                                                                                                                                                                                                     | **Not Supported**                                                                                      |
+|    Type                | Supported                                                                                                                                                                                                                     | Not Supported                                                                                      |
 |------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
-| **Clauses**                | WHERE, *WITH, HAVING (HAVING is   supported if Drill can pass the filter through GROUP BY.)                                                                                                                                   | --                                                                                                 |
-| **Operators**              | AND, OR, NOT, *IS [NOT] NULL, *IS   [NOT] TRUE|FALSE, IN (An IN list is converted to OR if the number in the IN   list is within a certain threshold, for example 20. If greater than the   threshold, pruning cannot occur.) | ITEM (Drill does not push the filter   past the ITEM operator, which is used for complex fields.)  |
-| Comparison   Operators | <>, <, >, <=, >=, =                                                                                                                                                                                                           | --                                                                                                 |
-| **Data   Types**           | INT, BIGINT, FLOAT, DOUBLE, DATE,   TIMESTAMP, TIME, *BOOLEAN (true|false)                                                                                                                                                    | CHAR, VARCHAR columns, Hive TIMESTAMP                                                              |
-| **Function**               | CAST is supported among the following   types only: int, bigint, float, double, *date, *timestamp, and *time                                                                                                                  | --                                                                                                 |
-| **Other**                  | Files with multiple row groups                                                                                                                                                                                                | Joins, Enabled Native Hive reader                                                                  |
+| Clauses                | WHERE, *WITH, HAVING (HAVING is   supported if Drill can pass the filter through GROUP BY.)                                                                                                                                   | None                                                                                               |
+| Operators              | AND, OR, NOT, *IS [NOT] NULL, *IS   [NOT] TRUE|FALSE, IN (An IN list is converted to OR if the number in the IN   list is within a certain threshold, for example 20. If greater than the   threshold, pruning cannot occur.) | ITEM (Drill does not push the filter   past the ITEM operator, which is used for complex fields.)  |
+| Comparison   Operators | <>, <, >, <=, >=, =                                                                                                                                                                                                           | None                                                                                               |
+| Data   Types           | INT, BIGINT, FLOAT, DOUBLE, DATE,   TIMESTAMP, TIME, *BOOLEAN (true|false)                                                                                                                                                    | CHAR, VARCHAR columns, Hive TIMESTAMP                                                              |
+| Function               | CAST is supported among the following   types only: int, bigint, float, double, *date, *timestamp, and *time                                                                                                                  | None                                                                                               |
+| Other                  | Files with multiple row groups                                                                                                                                                                                                | Joins, Enabled Native Hive reader                                                                  |
