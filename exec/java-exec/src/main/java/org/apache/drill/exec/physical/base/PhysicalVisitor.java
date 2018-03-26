@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.config.FlattenPOP;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.config.IteratorValidator;
+import org.apache.drill.exec.physical.config.LateralJoinPOP;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
@@ -78,6 +79,7 @@ public interface PhysicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   public RETURN visitWindowFrame(WindowPOP op, EXTRA value) throws EXCEP;
   public RETURN visitProducerConsumer(ProducerConsumer op, EXTRA value) throws EXCEP;
   public RETURN visitUnnest(UnnestPOP unnest, EXTRA value) throws EXCEP;
+  public RETURN visitLateralJoin(LateralJoinPOP lateralJoinPOP, EXTRA value) throws EXCEP;
 
   public RETURN visitIteratorValidator(IteratorValidator op, EXTRA value) throws EXCEP;
 }

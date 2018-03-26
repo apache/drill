@@ -37,6 +37,7 @@ import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.SinkOperator;
 import org.apache.drill.common.logical.data.Store;
+import org.apache.drill.common.logical.data.Unnest;
 import org.apache.drill.common.logical.data.Window;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 import org.apache.drill.common.types.TypeProtos;
@@ -237,6 +238,11 @@ public class BasicOptimizer extends Optimizer {
       b.setMinorType(MinorType.BIGINT);
       final PhysicalOperator child = filter.getInput().accept(this, obj);
       return new SelectionVectorRemover(new org.apache.drill.exec.physical.config.Filter(child, filter.getExpr(), 1.0f));
+    }
+
+    @Override
+    public PhysicalOperator visitUnnest(final Unnest unnest, final Object obj) throws OptimizerException {
+      return new org.apache.drill.exec.physical.config.UnnestPOP(null, unnest.getColumn());
     }
   }
 }

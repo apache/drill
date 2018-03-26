@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import java.util.List;
@@ -32,6 +33,9 @@ import java.util.List;
 @JsonTypeName("lateral-join")
 public class LateralJoinPOP extends AbstractJoinPop {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LateralJoinPOP.class);
+
+  @JsonProperty("unnestForLateralJoin")
+  private UnnestPOP unnestForLateralJoin;
 
   @JsonCreator
   public LateralJoinPOP(
@@ -45,11 +49,27 @@ public class LateralJoinPOP extends AbstractJoinPop {
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.size() == 2,
       "Lateral join should have two physical operators");
-    return new LateralJoinPOP(children.get(0), children.get(1), joinType);
+    LateralJoinPOP newPOP =  new LateralJoinPOP(children.get(0), children.get(1), joinType);
+    newPOP.unnestForLateralJoin = this.unnestForLateralJoin;
+    return newPOP;
+  }
+
+  @JsonProperty("unnestForLateralJoin")
+  public UnnestPOP getUnnestForLateralJoin() {
+    return this.unnestForLateralJoin;
+  }
+
+  public void setUnnestForLateralJoin(UnnestPOP unnest) {
+    this.unnestForLateralJoin = unnest;
   }
 
   @Override
   public int getOperatorType() {
     return CoreOperatorType.LATERAL_JOIN_VALUE;
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+    return physicalVisitor.visitLateralJoin(this, value);
   }
 }
