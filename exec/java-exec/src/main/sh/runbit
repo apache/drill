@@ -29,9 +29,9 @@ else
   exit 1
 fi
 
-$JAVA -version 2>&1 | grep "version" | egrep -e "1.7" > /dev/null
+$JAVA -version 2>&1 | grep "version" | egrep -e "1.8" > /dev/null
 if [ $? -ne 0 ]; then
-  echo "Java 1.7 is required to run Apache Drill."
+  echo "Java 1.8 is required to run Apache Drill."
   exit 1
 fi
 

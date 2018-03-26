@@ -3,7 +3,7 @@
 ## Prerequisites
   
   * Linux, Windows or OSX 
-  * Oracle JDK 7 (JDK, not JRE)
+  * Oracle/OpenJDK 8 (JDK, not JRE)
 
 Additional requirements when running in clustered mode:
   * Hadoop 2.3+ distribution of Hadoop (such as Apache or MapR)
