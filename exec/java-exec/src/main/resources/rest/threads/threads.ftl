@@ -17,6 +17,11 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
+  <p>Auto refreshes every 2 seconds
+    <button id="clippy" type="button" class="btn btn-default btn-sm" onClick="copyThreads();" title="Use this to copy the thread stack before it auto-refreshes"> 
+      <span class="glyphicon glyphicon-copy"/> Copy To Clipboard  
+    </button> 
+  </p>
   <div id="mainDiv" role="main">
   </div>
   </div>
@@ -27,6 +32,22 @@
       });
     };
 
+    //Ref: https://stackoverflow.com/a/36640126/8323038
+    function copyThreads() {
+      if (document.selection) { 
+        var range = document.body.createTextRange();
+        range.moveToElementText(document.getElementById("mainDiv"));
+        range.select().createTextRange();
+        document.execCommand("copy");
+        alert("Copied thread stack to clipboard");
+      } else if (window.getSelection) {
+        var range = document.createRange();
+        range.selectNode(document.getElementById("mainDiv"));
+        window.getSelection().addRange(range);
+        document.execCommand("copy");
+        alert("Copied thread stack to clipboard");
+      }
+    }
     update();
     setInterval(update, 2000);
   </script>
