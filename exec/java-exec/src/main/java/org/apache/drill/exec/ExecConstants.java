@@ -557,8 +557,7 @@ public final class ExecConstants {
   public static final LongValidator CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR = new LongValidator(CODE_GEN_EXP_IN_METHOD_SIZE);
 
   /**
-   * Timeout for create prepare statement request. If the request exceeds this timeout, then request is timed out.
-   * Default value is 10mins.
+   * Default value is 30 seconds.
    */
   public static final String CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS = "prepare.statement.create_timeout_ms";
   public static final OptionValidator CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR =
