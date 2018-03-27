@@ -65,14 +65,13 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private PartitionerDecorator partitioner;
 
   private ExchangeFragmentContext context;
-  private boolean ok = true;
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
   private final double cost;
 
   private final AtomicIntegerArray remainingReceivers;
   private final AtomicInteger remaingReceiverCount;
-  private volatile boolean done = false;
+  private boolean done = false;
   private boolean first = true;
   private boolean closeIncoming;
 
@@ -146,11 +145,8 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
   @Override
   public boolean innerNext() {
-    if (!ok) {
-      return false;
-    }
-
     IterOutcome out;
+
     if (!done) {
       out = next(incoming);
     } else {
@@ -252,13 +248,11 @@ public class PartitionSenderRootExec extends BaseRootExec {
             startIndex, endIndex);
       }
 
-      synchronized (this) {
-        partitioner = new PartitionerDecorator(subPartitioners, stats, context);
-        for (int index = 0; index < terminations.size(); index++) {
-          partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
-        }
-        terminations.clear();
+      partitioner = new PartitionerDecorator(subPartitioners, stats, context);
+      for (int index = 0; index < terminations.size(); index++) {
+        partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
       }
+      terminations.clear();
 
       success = true;
     } finally {
@@ -328,12 +322,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
   public void receivingFragmentFinished(FragmentHandle handle) {
     final int id = handle.getMinorFragmentId();
     if (remainingReceivers.compareAndSet(id, 0, 1)) {
-      synchronized (this) {
-        if (partitioner == null) {
-          terminations.add(id);
-        } else {
-          partitioner.getOutgoingBatches(id).terminate();
-        }
+      if (partitioner == null) {
+        terminations.add(id);
+      } else {
+        partitioner.getOutgoingBatches(id).terminate();
       }
 
       int remaining = remaingReceiverCount.decrementAndGet();
@@ -347,7 +339,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
   public void close() throws Exception {
     logger.debug("Partition sender stopping.");
     super.close();
-    ok = false;
+
     if (partitioner != null) {
       updateAggregateStats();
       partitioner.clear();
@@ -358,7 +350,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
   }
 
-  public void sendEmptyBatch(boolean isLast) {
+  private void sendEmptyBatch(boolean isLast) {
     BatchSchema schema = incoming.getSchema();
     if (schema == null) {
       // If the incoming batch has no schema (possible when there are no input records),
