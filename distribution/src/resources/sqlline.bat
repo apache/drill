@@ -81,6 +81,14 @@ if x%1 == x--config (
   shift
 )
 
+if x%1 == x--jvm (
+  set DRILL_SHELL_JAVA_OPTS=!DRILL_SHELL_JAVA_OPTS! %2
+  set DRILL_SHELL_JAVA_OPTS=!DRILL_SHELL_JAVA_OPTS:"=!
+  set atleastonearg=1
+  shift
+  shift
+)
+
 if "!atleastonearg!"=="0" (
   set DRILL_ARGS=!DRILL_ARGS! %~1
   shift
