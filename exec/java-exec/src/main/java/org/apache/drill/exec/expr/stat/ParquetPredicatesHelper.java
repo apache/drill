@@ -22,7 +22,16 @@ import org.apache.parquet.column.statistics.Statistics;
 /**
  * Parquet predicates class helper for filter pushdown.
  */
+@SuppressWarnings("rawtypes")
 public class ParquetPredicatesHelper {
+
+  /**
+   * @param stat statistics object
+   * @return true if the input stat object has valid statistics; false otherwise
+   */
+  public static boolean hasStats(Statistics stat) {
+    return stat != null && !stat.isEmpty();
+  }
 
   /**
    * Checks that column chunk's statistics has only nulls
