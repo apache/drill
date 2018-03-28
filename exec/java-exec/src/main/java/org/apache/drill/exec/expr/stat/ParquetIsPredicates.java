@@ -62,7 +62,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -87,8 +87,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -113,8 +112,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -140,8 +138,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -167,8 +164,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -193,8 +189,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
