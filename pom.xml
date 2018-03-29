@@ -372,6 +372,7 @@
                     <exclude>log4j:log4j</exclude>
                     <exclude>jdk.tools:jdk.tools</exclude>
                     <exclude>org.json:json</exclude>
+                    <exclude>org.beanshell:bsh</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
