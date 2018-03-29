@@ -23,6 +23,7 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
+#include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
 
@@ -37,6 +38,27 @@ class DrillbitEndpoint;
 class DrillServiceInstance;
 class Roles;
 
+enum DrillbitEndpoint_State {
+  DrillbitEndpoint_State_STARTUP = 0,
+  DrillbitEndpoint_State_ONLINE = 1,
+  DrillbitEndpoint_State_QUIESCENT = 2,
+  DrillbitEndpoint_State_OFFLINE = 3
+};
+bool DrillbitEndpoint_State_IsValid(int value);
+const DrillbitEndpoint_State DrillbitEndpoint_State_State_MIN = DrillbitEndpoint_State_STARTUP;
+const DrillbitEndpoint_State DrillbitEndpoint_State_State_MAX = DrillbitEndpoint_State_OFFLINE;
+const int DrillbitEndpoint_State_State_ARRAYSIZE = DrillbitEndpoint_State_State_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* DrillbitEndpoint_State_descriptor();
+inline const ::std::string& DrillbitEndpoint_State_Name(DrillbitEndpoint_State value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    DrillbitEndpoint_State_descriptor(), value);
+}
+inline bool DrillbitEndpoint_State_Parse(
+    const ::std::string& name, DrillbitEndpoint_State* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<DrillbitEndpoint_State>(
+    DrillbitEndpoint_State_descriptor(), name, value);
+}
 // ===================================================================
 
 class DrillbitEndpoint : public ::google::protobuf::Message {
@@ -90,6 +112,32 @@ class DrillbitEndpoint : public ::google::protobuf::Message {
   ::google::protobuf::Metadata GetMetadata() const;
 
   // nested types ----------------------------------------------------
+
+  typedef DrillbitEndpoint_State State;
+  static const State STARTUP = DrillbitEndpoint_State_STARTUP;
+  static const State ONLINE = DrillbitEndpoint_State_ONLINE;
+  static const State QUIESCENT = DrillbitEndpoint_State_QUIESCENT;
+  static const State OFFLINE = DrillbitEndpoint_State_OFFLINE;
+  static inline bool State_IsValid(int value) {
+    return DrillbitEndpoint_State_IsValid(value);
+  }
+  static const State State_MIN =
+    DrillbitEndpoint_State_State_MIN;
+  static const State State_MAX =
+    DrillbitEndpoint_State_State_MAX;
+  static const int State_ARRAYSIZE =
+    DrillbitEndpoint_State_State_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  State_descriptor() {
+    return DrillbitEndpoint_State_descriptor();
+  }
+  static inline const ::std::string& State_Name(State value) {
+    return DrillbitEndpoint_State_Name(value);
+  }
+  static inline bool State_Parse(const ::std::string& name,
+      State* value) {
+    return DrillbitEndpoint_State_Parse(name, value);
+  }
 
   // accessors -------------------------------------------------------
 
@@ -147,6 +195,13 @@ class DrillbitEndpoint : public ::google::protobuf::Message {
   inline ::std::string* release_version();
   inline void set_allocated_version(::std::string* version);
 
+  // optional .exec.DrillbitEndpoint.State state = 7;
+  inline bool has_state() const;
+  inline void clear_state();
+  static const int kStateFieldNumber = 7;
+  inline ::exec::DrillbitEndpoint_State state() const;
+  inline void set_state(::exec::DrillbitEndpoint_State value);
+
   // @@protoc_insertion_point(class_scope:exec.DrillbitEndpoint)
  private:
   inline void set_has_address();
@@ -161,6 +216,8 @@ class DrillbitEndpoint : public ::google::protobuf::Message {
   inline void clear_has_roles();
   inline void set_has_version();
   inline void clear_has_version();
+  inline void set_has_state();
+  inline void clear_has_state();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -168,11 +225,12 @@ class DrillbitEndpoint : public ::google::protobuf::Message {
   ::google::protobuf::int32 user_port_;
   ::google::protobuf::int32 control_port_;
   ::exec::Roles* roles_;
-  ::std::string* version_;
   ::google::protobuf::int32 data_port_;
+  int state_;
+  ::std::string* version_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_Coordination_2eproto();
   friend void protobuf_AssignDesc_Coordination_2eproto();
@@ -663,6 +721,29 @@ inline void DrillbitEndpoint::set_allocated_version(::std::string* version) {
   }
 }
 
+// optional .exec.DrillbitEndpoint.State state = 7;
+inline bool DrillbitEndpoint::has_state() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void DrillbitEndpoint::set_has_state() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void DrillbitEndpoint::clear_has_state() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void DrillbitEndpoint::clear_state() {
+  state_ = 0;
+  clear_has_state();
+}
+inline ::exec::DrillbitEndpoint_State DrillbitEndpoint::state() const {
+  return static_cast< ::exec::DrillbitEndpoint_State >(state_);
+}
+inline void DrillbitEndpoint::set_state(::exec::DrillbitEndpoint_State value) {
+  assert(::exec::DrillbitEndpoint_State_IsValid(value));
+  set_has_state();
+  state_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // DrillServiceInstance
@@ -920,6 +1001,10 @@ inline void Roles::set_distributed_cache(bool value) {
 namespace google {
 namespace protobuf {
 
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::DrillbitEndpoint_State>() {
+  return ::exec::DrillbitEndpoint_State_descriptor();
+}
 
 }  // namespace google
 }  // namespace protobuf
