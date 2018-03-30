@@ -44,6 +44,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.record.RecordBatchSizer;
@@ -56,7 +57,7 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.AbstractRecordBatch;
-import org.apache.drill.exec.record.AbstractRecordBatchMemoryManager;
+import org.apache.drill.exec.record.RecordBatchMemoryManager;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
@@ -109,12 +110,37 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private static final String LEFT_INPUT = "LEFT INPUT";
   private static final String RIGHT_INPUT = "RIGHT INPUT";
 
-  private class MergeJoinMemoryManager extends AbstractRecordBatchMemoryManager {
+  private static final int numInputs = 2;
+  private static final int LEFT_INDEX = 0;
+  private static final int RIGHT_INDEX = 1;
+
+  public enum Metric implements MetricDef {
+    LEFT_INPUT_BATCH_COUNT,
+    LEFT_AVG_INPUT_BATCH_BYTES,
+    LEFT_AVG_INPUT_ROW_BYTES,
+    LEFT_INPUT_RECORD_COUNT,
+    RIGHT_INPUT_BATCH_COUNT,
+    RIGHT_AVG_INPUT_BATCH_BYTES,
+    RIGHT_AVG_INPUT_ROW_BYTES,
+    RIGHT_INPUT_RECORD_COUNT,
+    OUTPUT_BATCH_COUNT,
+    AVG_OUTPUT_BATCH_BYTES,
+    AVG_OUTPUT_ROW_BYTES,
+    OUTPUT_RECORD_COUNT;
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
+
+  private class MergeJoinMemoryManager extends RecordBatchMemoryManager {
     private int leftRowWidth;
     private int rightRowWidth;
 
-    private RecordBatchSizer leftSizer;
-    private RecordBatchSizer rightSizer;
+    public MergeJoinMemoryManager() {
+      super(numInputs);
+    }
 
     /**
      * mergejoin operates on one record at a time from the left and right batches
@@ -127,17 +153,20 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     @Override
     public void update(int inputIndex) {
       switch(inputIndex) {
-        case 0:
-          leftSizer = new RecordBatchSizer(left);
-          leftRowWidth = leftSizer.netRowWidth();
+        case LEFT_INDEX:
+          setRecordBatchSizer(inputIndex, new RecordBatchSizer(left));
+          leftRowWidth = getRecordBatchSizer(inputIndex).netRowWidth();
+          logger.debug("left incoming batch size : {}", getRecordBatchSizer(inputIndex));
           break;
-        case 1:
-          rightSizer = new RecordBatchSizer(right);
-          rightRowWidth = rightSizer.netRowWidth();
+        case RIGHT_INDEX:
+          setRecordBatchSizer(inputIndex, new RecordBatchSizer(right));
+          rightRowWidth = getRecordBatchSizer(inputIndex).netRowWidth();
+          logger.debug("right incoming batch size : {}", getRecordBatchSizer(inputIndex));
         default:
           break;
       }
 
+      updateIncomingStats(inputIndex);
       final int newOutgoingRowWidth = leftRowWidth + rightRowWidth;
 
       // If outgoing row width is 0, just return. This is possible for empty batches or
@@ -153,16 +182,22 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       // calculate memory used so far based on previous outgoing row width and how many rows we already processed.
       final long memoryUsed = status.getOutPosition() * getOutgoingRowWidth();
       // This is the remaining memory.
-      final long remainingMemory = Math.max(outputBatchSize/WORST_CASE_FRAGMENTATION_FACTOR - memoryUsed, 0);
+      final long remainingMemory = Math.max(outputBatchSize - memoryUsed, 0);
       // These are number of rows we can fit in remaining memory based on new outgoing row width.
       final int numOutputRowsRemaining = RecordBatchSizer.safeDivide(remainingMemory, newOutgoingRowWidth);
 
-      status.setTargetOutputRowCount(status.getOutPosition() + numOutputRowsRemaining);
+      status.setTargetOutputRowCount(adjustOutputRowCount(status.getOutPosition() + numOutputRowsRemaining));
       setOutgoingRowWidth(newOutgoingRowWidth);
+
+      logger.debug("output batch size : {}, avg outgoing rowWidth : {}, output rowCount : {}",
+        outputBatchSize, getOutgoingRowWidth(), getOutputRowCount());
     }
 
     @Override
     public RecordBatchSizer.ColumnSize getColumnSize(String name) {
+      RecordBatchSizer leftSizer = getRecordBatchSizer(LEFT_INDEX);
+      RecordBatchSizer rightSizer = getRecordBatchSizer(RIGHT_INDEX);
+
       if (leftSizer != null && leftSizer.getColumn(name) != null) {
         return leftSizer.getColumn(name);
       }
@@ -324,10 +359,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       Preconditions.checkArgument(!vw.isHyper());
       vw.getValueVector().getMutator().setValueCount(getRecordCount());
     }
+    mergeJoinMemoryManager.updateOutgoingStats(getRecordCount());
   }
 
   @Override
   public void close() {
+    updateStats();
     super.close();
     leftIterator.close();
     rightIterator.close();
@@ -572,5 +609,34 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         (input == leftIterator ? LEFT_INPUT : RIGHT_INPUT), collector.toErrorString()));
     }
     return materializedExpr;
+  }
+
+  private void updateStats() {
+    stats.setLongStat(MergeJoinBatch.Metric.LEFT_INPUT_BATCH_COUNT, mergeJoinMemoryManager.getNumIncomingBatches(LEFT_INDEX));
+    stats.setLongStat(MergeJoinBatch.Metric.LEFT_AVG_INPUT_BATCH_BYTES, mergeJoinMemoryManager.getAvgInputBatchSize(LEFT_INDEX));
+    stats.setLongStat(MergeJoinBatch.Metric.LEFT_AVG_INPUT_ROW_BYTES, mergeJoinMemoryManager.getAvgInputRowWidth(LEFT_INDEX));
+    stats.setLongStat(Metric.LEFT_INPUT_RECORD_COUNT, mergeJoinMemoryManager.getTotalInputRecords(LEFT_INDEX));
+
+    stats.setLongStat(MergeJoinBatch.Metric.RIGHT_INPUT_BATCH_COUNT, mergeJoinMemoryManager.getNumIncomingBatches(RIGHT_INDEX));
+    stats.setLongStat(MergeJoinBatch.Metric.RIGHT_AVG_INPUT_BATCH_BYTES, mergeJoinMemoryManager.getAvgInputBatchSize(RIGHT_INDEX));
+    stats.setLongStat(MergeJoinBatch.Metric.RIGHT_AVG_INPUT_ROW_BYTES, mergeJoinMemoryManager.getAvgInputRowWidth(RIGHT_INDEX));
+    stats.setLongStat(Metric.RIGHT_INPUT_RECORD_COUNT, mergeJoinMemoryManager.getTotalInputRecords(RIGHT_INDEX));
+
+    stats.setLongStat(MergeJoinBatch.Metric.OUTPUT_BATCH_COUNT, mergeJoinMemoryManager.getNumOutgoingBatches());
+    stats.setLongStat(MergeJoinBatch.Metric.AVG_OUTPUT_BATCH_BYTES, mergeJoinMemoryManager.getAvgOutputBatchSize());
+    stats.setLongStat(MergeJoinBatch.Metric.AVG_OUTPUT_ROW_BYTES, mergeJoinMemoryManager.getAvgOutputRowWidth());
+    stats.setLongStat(MergeJoinBatch.Metric.OUTPUT_RECORD_COUNT, mergeJoinMemoryManager.getTotalOutputRecords());
+
+    logger.debug("left input: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+      mergeJoinMemoryManager.getNumIncomingBatches(LEFT_INDEX), mergeJoinMemoryManager.getAvgInputBatchSize(LEFT_INDEX),
+      mergeJoinMemoryManager.getAvgInputRowWidth(LEFT_INDEX), mergeJoinMemoryManager.getTotalInputRecords(LEFT_INDEX));
+
+    logger.debug("right input: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+      mergeJoinMemoryManager.getNumIncomingBatches(RIGHT_INDEX), mergeJoinMemoryManager.getAvgInputBatchSize(RIGHT_INDEX),
+      mergeJoinMemoryManager.getAvgInputRowWidth(RIGHT_INDEX), mergeJoinMemoryManager.getTotalInputRecords(RIGHT_INDEX));
+
+    logger.debug("output: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+      mergeJoinMemoryManager.getNumOutgoingBatches(), mergeJoinMemoryManager.getAvgOutputBatchSize(),
+      mergeJoinMemoryManager.getAvgOutputRowWidth(), mergeJoinMemoryManager.getTotalOutputRecords());
   }
 }

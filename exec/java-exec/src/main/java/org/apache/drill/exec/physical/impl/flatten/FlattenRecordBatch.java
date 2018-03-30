@@ -45,7 +45,7 @@ import org.apache.drill.exec.physical.config.FlattenPOP;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.AbstractRecordBatchMemoryManager;
+import org.apache.drill.exec.record.RecordBatchMemoryManager;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
@@ -104,11 +104,11 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     INPUT_BATCH_COUNT,
     AVG_INPUT_BATCH_BYTES,
     AVG_INPUT_ROW_BYTES,
-    TOTAL_INPUT_RECORDS,
+    INPUT_RECORD_COUNT,
     OUTPUT_BATCH_COUNT,
     AVG_OUTPUT_BATCH_BYTES,
     AVG_OUTPUT_ROW_BYTES,
-    TOTAL_OUTPUT_RECORDS;
+    OUTPUT_RECORD_COUNT;
 
     @Override
     public int metricId() {
@@ -116,7 +116,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     }
   }
 
-  private class FlattenMemoryManager extends AbstractRecordBatchMemoryManager {
+  private class FlattenMemoryManager extends RecordBatchMemoryManager {
 
     @Override
     public void update() {
@@ -152,9 +152,10 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       // i.e. all rows fit within memory budget.
       setOutputRowCount(Math.min(columnSize.getElementCount(), getOutputRowCount()));
 
-      logger.debug("flatten incoming batch sizer : {}, outputBatchSize : {}," +
-        "avgOutgoingRowWidth : {}, outputRowCount : {}", getRecordBatchSizer(), outputBatchSize,
-        avgOutgoingRowWidth, getOutputRowCount());
+      logger.debug("incoming batch size : {}", getRecordBatchSizer());
+
+      logger.debug("output batch size : {}, avg outgoing rowWidth : {}, output rowCount : {}",
+        outputBatchSize, avgOutgoingRowWidth, getOutputRowCount());
 
       updateIncomingStats();
     }
@@ -496,11 +497,20 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     stats.setLongStat(Metric.INPUT_BATCH_COUNT, flattenMemoryManager.getNumIncomingBatches());
     stats.setLongStat(Metric.AVG_INPUT_BATCH_BYTES, flattenMemoryManager.getAvgInputBatchSize());
     stats.setLongStat(Metric.AVG_INPUT_ROW_BYTES, flattenMemoryManager.getAvgInputRowWidth());
-    stats.setLongStat(Metric.TOTAL_INPUT_RECORDS, flattenMemoryManager.getTotalInputRecords());
+    stats.setLongStat(Metric.INPUT_RECORD_COUNT, flattenMemoryManager.getTotalInputRecords());
     stats.setLongStat(Metric.OUTPUT_BATCH_COUNT, flattenMemoryManager.getNumOutgoingBatches());
     stats.setLongStat(Metric.AVG_OUTPUT_BATCH_BYTES, flattenMemoryManager.getAvgOutputBatchSize());
     stats.setLongStat(Metric.AVG_OUTPUT_ROW_BYTES, flattenMemoryManager.getAvgOutputRowWidth());
-    stats.setLongStat(Metric.TOTAL_OUTPUT_RECORDS, flattenMemoryManager.getTotalOutputRecords());
+    stats.setLongStat(Metric.OUTPUT_RECORD_COUNT, flattenMemoryManager.getTotalOutputRecords());
+
+    logger.debug("input: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+      flattenMemoryManager.getNumIncomingBatches(), flattenMemoryManager.getAvgInputBatchSize(),
+      flattenMemoryManager.getAvgInputRowWidth(), flattenMemoryManager.getTotalInputRecords());
+
+    logger.debug("output: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+      flattenMemoryManager.getNumOutgoingBatches(), flattenMemoryManager.getAvgOutputBatchSize(),
+      flattenMemoryManager.getAvgOutputRowWidth(), flattenMemoryManager.getTotalOutputRecords());
+
   }
 
   @Override
