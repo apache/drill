@@ -38,6 +38,7 @@ public class DrillbitIterator implements Iterator<Object> {
     public int user_port;
     public int control_port;
     public int data_port;
+    public int http_port;
     public boolean current;
     public String version;
     public String state;
@@ -54,6 +55,7 @@ public class DrillbitIterator implements Iterator<Object> {
     DrillbitInstance i = new DrillbitInstance();
     i.current = isCurrent(ep);
     i.hostname = ep.getAddress();
+    i.http_port = ep.getHttpPort();
     i.user_port = ep.getUserPort();
     i.control_port = ep.getControlPort();
     i.data_port = ep.getDataPort();
