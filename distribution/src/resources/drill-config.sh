@@ -421,8 +421,7 @@ CP="$CP:$DRILL_HOME/jars/classb/*"
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   # Linux
   # check for Fedora. netty-tcnative has a Fedora variant
-  linuxvariant=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-  if [[ "$linuxvariant" == "Fedora" ]]; then
+  if [[ -f "/etc/fedora-release" ]]; then
     CP="$CP:$DRILL_HOME/jars/3rdparty/fedora/*"
   else
     CP="$CP:$DRILL_HOME/jars/3rdparty/linux/*"
