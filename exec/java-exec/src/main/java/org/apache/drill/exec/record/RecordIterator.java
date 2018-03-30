@@ -57,12 +57,12 @@ public class RecordIterator implements VectorAccessible {
   private final VectorContainer container; // Holds VectorContainer of current record batch
   private final TreeRangeMap<Long, RecordBatchData> batches = TreeRangeMap.create();
 
-  private final AbstractRecordBatchMemoryManager newBatchCallBack;
+  private final RecordBatchMemoryManager newBatchCallBack;
 
   public RecordIterator(RecordBatch incoming,
                         AbstractRecordBatch<?> outgoing,
                         OperatorContext oContext,
-                        int inputIndex, AbstractRecordBatchMemoryManager callBack) {
+                        int inputIndex, RecordBatchMemoryManager callBack) {
     this(incoming, outgoing, oContext, inputIndex, true, callBack);
   }
 
@@ -71,7 +71,7 @@ public class RecordIterator implements VectorAccessible {
                         OperatorContext oContext,
                         int inputIndex,
                         boolean enableMarkAndReset,
-                        AbstractRecordBatchMemoryManager callBack) {
+                        RecordBatchMemoryManager callBack) {
     this.incoming = incoming;
     this.outgoing = outgoing;
     this.inputIndex = inputIndex;
