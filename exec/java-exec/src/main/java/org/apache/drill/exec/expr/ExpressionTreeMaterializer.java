@@ -44,6 +44,7 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -78,7 +79,6 @@ import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.ExceptionFunction;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
-import org.apache.drill.exec.expr.stat.TypedFieldExpr;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.FunctionResolver;
@@ -323,7 +323,6 @@ public class ExpressionTreeMaterializer {
       } else {
         logger.warn("Unable to find value vector of path {}, returning null-int instance.", path);
         return new TypedFieldExpr(path, Types.OPTIONAL_INT);
-        // return NullExpression.INSTANCE;
       }
     }
   }

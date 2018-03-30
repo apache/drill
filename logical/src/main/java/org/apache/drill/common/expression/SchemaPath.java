@@ -90,19 +90,25 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   public NamePart getAsNamePart() {
-    return getNamePart(rootSegment);
+    return getNamePart(rootSegment, false);
   }
 
-  private static NamePart getNamePart(PathSegment s) {
+  private static NamePart getNamePart(PathSegment s, boolean skipArraySegment) {
     if (s == null) {
       return null;
     }
     NamePart.Builder b = NamePart.newBuilder();
     if (s.getChild() != null) {
-      b.setChild(getNamePart(s.getChild()));
+      NamePart namePart = getNamePart(s.getChild(), skipArraySegment);
+      if (namePart != null) {
+        b.setChild(namePart);
+      }
     }
 
     if (s.isArray()) {
+      if (skipArraySegment) {
+        return null;
+      }
       if (s.getArraySegment().hasIndex()) {
         throw new IllegalStateException("You cannot convert a indexed schema path to a NamePart.  NameParts can only reference Vectors, not individual records or values.");
       }
@@ -126,6 +132,18 @@ public class SchemaPath extends LogicalExpressionBase {
   public static SchemaPath create(NamePart namePart) {
     Preconditions.checkArgument(namePart.getType() == NamePart.Type.NAME);
     return new SchemaPath((NameSegment) getPathSegment(namePart));
+  }
+
+  /**
+   * Returns schema path with for arrays without index.
+   * Is used to find column statistics in parquet metadata.
+   * Example: a.b.c[0] -> a.b.c
+   *
+   * @return un-indexed schema path
+   */
+  public SchemaPath getUnIndexed() {
+    NamePart namePart = getNamePart(rootSegment, true);
+    return create(namePart);
   }
 
   /**
@@ -252,11 +270,6 @@ public class SchemaPath extends LogicalExpressionBase {
 
   public SchemaPath getChild(String childPath) {
     NameSegment newRoot = rootSegment.cloneWithNewChild(new NameSegment(childPath));
-    return new SchemaPath(newRoot);
-  }
-
-  public SchemaPath getUnindexedArrayChild() {
-    NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(null));
     return new SchemaPath(newRoot);
   }
 

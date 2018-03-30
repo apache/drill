@@ -19,8 +19,7 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.fn.FuncHolder;
@@ -41,7 +40,6 @@ import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.stat.ParquetBooleanPredicates;
 import org.apache.drill.exec.expr.stat.ParquetComparisonPredicates;
 import org.apache.drill.exec.expr.stat.ParquetIsPredicates;
-import org.apache.drill.exec.expr.stat.TypedFieldExpr;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,11 +60,12 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
   /**
    * @param expr materialized filter expression
    * @param constantBoundaries set of constant expressions
-   * @param udfUtilities
+   * @param udfUtilities udf utilities
+   *
+   * @return logical expression
    */
   public static LogicalExpression buildParquetFilterPredicate(LogicalExpression expr, final Set<LogicalExpression> constantBoundaries, UdfUtilities udfUtilities) {
-    final LogicalExpression predicate = expr.accept(new ParquetFilterBuilder(udfUtilities), constantBoundaries);
-    return predicate;
+    return expr.accept(new ParquetFilterBuilder(udfUtilities), constantBoundaries);
   }
 
   private ParquetFilterBuilder(UdfUtilities udfUtilities) {
@@ -75,16 +74,13 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
 
   @Override
   public LogicalExpression visitUnknown(LogicalExpression e, Set<LogicalExpression> value) {
-    if (e instanceof TypedFieldExpr &&
-        ! containsArraySeg(((TypedFieldExpr) e).getPath()) &&
-        e.getMajorType().getMode() != TypeProtos.DataMode.REPEATED) {
-      // A filter is not qualified for push down, if
-      // 1. it contains an array segment : a.b[1], a.b[1].c.d
-      // 2. it's repeated type.
-      return e;
-    }
-
+    // for the unknown expression, do nothing
     return null;
+  }
+
+  @Override
+  public LogicalExpression visitTypedFieldExpr(TypedFieldExpr typedFieldExpr, Set<LogicalExpression> value) throws RuntimeException {
+    return typedFieldExpr;
   }
 
   @Override
@@ -161,18 +157,6 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     }
   }
 
-  private boolean containsArraySeg(final SchemaPath schemaPath) {
-    PathSegment seg = schemaPath.getRootSegment();
-
-    while (seg != null) {
-      if (seg.isArray()) {
-        return true;
-      }
-      seg = seg.getChild();
-    }
-    return false;
-  }
-
   private LogicalExpression getValueExpressionFromConst(ValueHolder holder, TypeProtos.MinorType type) {
     switch (type) {
     case INT:
@@ -229,13 +213,9 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     }
 
     if (CastFunctions.isCastFunction(funcName)) {
-      List<LogicalExpression> newArgs = new ArrayList();
-      for (LogicalExpression arg : funcHolderExpr.args) {
-        final LogicalExpression newArg = arg.accept(this, value);
-        if (newArg == null) {
-          return null;
-        }
-        newArgs.add(newArg);
+      List<LogicalExpression> newArgs = generateNewExpressions(funcHolderExpr.args, value);
+      if (newArgs == null) {
+        return null;
       }
 
       return funcHolderExpr.copy(newArgs);
@@ -244,15 +224,22 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     }
   }
 
-  private LogicalExpression handleCompareFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
-    List<LogicalExpression> newArgs = new ArrayList();
-
-    for (LogicalExpression arg : functionHolderExpression.args) {
-      LogicalExpression newArg = arg.accept(this, value);
+  private List<LogicalExpression> generateNewExpressions(List<LogicalExpression> expressions, Set<LogicalExpression> value) {
+    List<LogicalExpression> newExpressions = new ArrayList<>();
+    for (LogicalExpression arg : expressions) {
+      final LogicalExpression newArg = arg.accept(this, value);
       if (newArg == null) {
         return null;
       }
-      newArgs.add(newArg);
+      newExpressions.add(newArg);
+    }
+    return newExpressions;
+  }
+
+  private LogicalExpression handleCompareFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
+    List<LogicalExpression> newArgs = generateNewExpressions(functionHolderExpression.args, value);
+    if (newArgs == null) {
+      return null;
     }
 
     String funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
@@ -304,19 +291,6 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
         logger.warn("Unhandled IS function. Function name: {}", funcName);
         return null;
     }
-  }
-
-  private LogicalExpression handleCastFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
-    for (LogicalExpression arg : functionHolderExpression.args) {
-      LogicalExpression newArg = arg.accept(this, value);
-      if (newArg == null) {
-        return null;
-      }
-    }
-
-    String funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
-
-    return null;
   }
 
   private static boolean isCompareFunction(String funcName) {
