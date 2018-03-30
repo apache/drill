@@ -293,7 +293,8 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
   interface Mutator {
     /**
-     * Sets the number of values that is stored in this vector to the given value count.
+     * Sets the number of values that is stored in this vector to the given value count. <b>WARNING!</b> Once the
+     * valueCount is set, the vector should be considered immutable.
      *
      * @param valueCount  value count to set.
      */
