@@ -17,11 +17,16 @@
  */
 package org.apache.drill.test.rowSet;
 
-import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataRetrieval;
-import org.apache.drill.exec.physical.rowSet.model.SchemaInference;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.model.hyper.BaseReaderBuilder;
+import org.apache.drill.exec.physical.rowSet.model.hyper.HyperSchemaInference;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.test.rowSet.RowSet.HyperRowSet;
@@ -45,8 +50,67 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
       TupleMetadata schema = rowSet.schema();
       HyperRowIndex rowIndex = new HyperRowIndex(sv4);
       return new RowSetReaderImpl(schema, rowIndex,
-          buildContainerChildren(rowSet.container(),
-              new MetadataRetrieval(schema)));
+          buildContainerChildren(rowSet.container(), schema));
+    }
+  }
+
+  public static class HyperRowSetBuilderImpl implements HyperRowSetBuilder {
+
+    private final BufferAllocator allocator;
+    private final List<VectorContainer> batches = new ArrayList<>();
+    private int totalRowCount;
+
+    public HyperRowSetBuilderImpl(BufferAllocator allocator) {
+      this.allocator = allocator;
+    }
+
+    @Override
+    public void addBatch(SingleRowSet rowSet) {
+      if (rowSet.rowCount() == 0) {
+        return;
+      }
+      if (rowSet.indirectionType() != SelectionVectorMode.NONE) {
+        throw new IllegalArgumentException("Batches must not have a selection vector.");
+      }
+      batches.add(rowSet.container());
+      totalRowCount += rowSet.rowCount();
+    }
+
+    @Override
+    public void addBatch(VectorContainer container) {
+      if (container.getRecordCount() == 0) {
+        return;
+      }
+      if (container.getSchema().getSelectionVectorMode() != SelectionVectorMode.NONE) {
+        throw new IllegalArgumentException("Batches must not have a selection vector.");
+      }
+      batches.add(container);
+      totalRowCount += container.getRecordCount();
+    }
+
+    @SuppressWarnings("resource")
+    @Override
+    public HyperRowSet build() throws SchemaChangeException {
+      SelectionVector4 sv4 = new SelectionVector4(allocator, totalRowCount);
+      ExpandableHyperContainer hyperContainer = new ExpandableHyperContainer();
+      for (VectorContainer container : batches) {
+        hyperContainer.addBatch(container);
+      }
+
+      // TODO: This has a bug. If the hyperset has two batches with unions,
+      // and the first union contains only VARCHAR, while the second contains
+      // only INT, the combined schema should be (VARCHAR, INT). Same is true
+      // of lists. But, this code looks at only the first container.
+      //
+      // This is only a theoretical bug as Drill does not support unions
+      // completely, but must be fixed if we want complete union support.
+      //
+      // Actually, the problem is more fundamental. The extendable hyper
+      // container, which creates the metadata schema, does not handle the
+      // case either.
+
+      TupleMetadata schema = new HyperSchemaInference().infer(hyperContainer);
+      return new HyperRowSetImpl(schema, hyperContainer, sv4);
     }
   }
 
@@ -56,13 +120,37 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
 
   private final SelectionVector4 sv4;
 
-  public HyperRowSetImpl(VectorContainer container, SelectionVector4 sv4) {
-    super(container, new SchemaInference().infer(container));
+  public HyperRowSetImpl(TupleMetadata schema, VectorContainer container, SelectionVector4 sv4) {
+    super(container, schema);
     this.sv4 = sv4;
   }
 
+  public HyperRowSetImpl(VectorContainer container, SelectionVector4 sv4) throws SchemaChangeException {
+    this(new HyperSchemaInference().infer(container), container, sv4);
+  }
+
+  public static HyperRowSetBuilder builder(BufferAllocator allocator) {
+    return new HyperRowSetBuilderImpl(allocator);
+  }
+
   public static HyperRowSet fromContainer(VectorContainer container, SelectionVector4 sv4) {
-    return new HyperRowSetImpl(container, sv4);
+    try {
+      return new HyperRowSetImpl(container, sv4);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
+  }
+
+  public static HyperRowSet fromRowSets(BufferAllocator allocator, SingleRowSet...rowSets) {
+    HyperRowSetBuilder builder = builder(allocator);
+    for (SingleRowSet rowSet : rowSets) {
+      builder.addBatch(rowSet);
+    }
+    try {
+      return builder.build();
+    } catch (SchemaChangeException e) {
+      throw new IllegalArgumentException("Incompatible schemas", e);
+    }
   }
 
   @Override

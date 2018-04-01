@@ -26,7 +26,8 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.vector.accessor.ScalarElementReader;
+import org.apache.drill.exec.vector.DateUtilities;
+import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.test.SubOperatorTest;
@@ -35,6 +36,8 @@ import org.joda.time.Period;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 /**
  * Verify that simple scalar (non-repeated) column readers
@@ -49,6 +52,70 @@ import org.junit.Test;
 // TODO: Decimal38Sparse
 
 public class TestScalarAccessors extends SubOperatorTest {
+
+  @Test
+  public void testUInt1RW() {
+    BatchSchema batchSchema = new SchemaBuilder()
+        .add("col", MinorType.UINT1)
+        .build();
+    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .addRow(0)
+        .addRow(0x7F)
+        .addRow(0xFF)
+        .build();
+    assertEquals(3, rs.rowCount());
+
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+    assertEquals(ValueType.INTEGER, colReader.valueType());
+
+    assertTrue(reader.next());
+    assertFalse(colReader.isNull());
+    assertEquals(0, colReader.getInt());
+
+    assertTrue(reader.next());
+    assertEquals(0x7F, colReader.getInt());
+    assertEquals(0x7F, colReader.getObject());
+    assertEquals(Integer.toString(0x7F), colReader.getAsString());
+
+    assertTrue(reader.next());
+    assertEquals(0xFF, colReader.getInt());
+
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  @Test
+  public void testUInt2RW() {
+    BatchSchema batchSchema = new SchemaBuilder()
+        .add("col", MinorType.UINT2)
+        .build();
+    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .addRow(0)
+        .addRow(0x7FFF)
+        .addRow(0xFFFF)
+        .build();
+    assertEquals(3, rs.rowCount());
+
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+    assertEquals(ValueType.INTEGER, colReader.valueType());
+
+    assertTrue(reader.next());
+    assertFalse(colReader.isNull());
+    assertEquals(0, colReader.getInt());
+
+    assertTrue(reader.next());
+    assertEquals(0x7FFF, colReader.getInt());
+    assertEquals(0x7FFF, colReader.getObject());
+    assertEquals(Integer.toString(0x7FFF), colReader.getAsString());
+
+    assertTrue(reader.next());
+    assertEquals(0xFFFF, colReader.getInt());
+
+    assertFalse(reader.next());
+    rs.clear();
+  }
 
   @Test
   public void testTinyIntRW() {
@@ -129,23 +196,37 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.INTEGER, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals(0, colReader.getInt(0));
-    assertEquals(20, colReader.getInt(1));
-    assertEquals(30, colReader.getInt(2));
-    assertEquals(0, colReader.getObject(0));
-    assertEquals(20, colReader.getObject(1));
-    assertEquals(30, colReader.getObject(2));
-    assertEquals("0", colReader.getAsString(0));
-    assertEquals("20", colReader.getAsString(1));
-    assertEquals("30", colReader.getAsString(2));
+    assertEquals(3, arrayReader.size());
+    assertTrue(arrayReader.next());
+    assertFalse(colReader.isNull());
+    assertEquals(0, colReader.getInt());
+    assertEquals(0, colReader.getObject());
+    assertEquals("0", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertFalse(colReader.isNull());
+    assertEquals(20, colReader.getInt());
+    assertEquals(20, colReader.getObject());
+    assertEquals("20", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertFalse(colReader.isNull());
+    assertEquals(30, colReader.getInt());
+    assertEquals(30, colReader.getObject());
+    assertEquals("30", colReader.getAsString());
+
+    assertFalse(arrayReader.next());
+
+    assertEquals("[0, 20, 30]", arrayReader.getAsString());
+    assertEquals(Lists.newArrayList(0, 20, 30), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -323,23 +404,35 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.LONG, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals(0, colReader.getLong(0));
-    assertEquals(20, colReader.getLong(1));
-    assertEquals(30, colReader.getLong(2));
-    assertEquals(0L, colReader.getObject(0));
-    assertEquals(20L, colReader.getObject(1));
-    assertEquals(30L, colReader.getObject(2));
-    assertEquals("0", colReader.getAsString(0));
-    assertEquals("20", colReader.getAsString(1));
-    assertEquals("30", colReader.getAsString(2));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertEquals(0, colReader.getLong());
+    assertEquals(0L, colReader.getObject());
+    assertEquals("0", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(20, colReader.getLong());
+    assertEquals(20L, colReader.getObject());
+    assertEquals("20", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(30, colReader.getLong());
+    assertEquals(30L, colReader.getObject());
+    assertEquals("30", colReader.getAsString());
+
+    assertFalse(arrayReader.next());
+
+    assertEquals("[0, 20, 30]", arrayReader.getAsString());
+    assertEquals(Lists.newArrayList(0L, 20L, 30L), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -373,7 +466,7 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertEquals(Float.MAX_VALUE, colReader.getDouble(), 0.000001);
-    assertEquals((double) Float.MAX_VALUE, (double) colReader.getObject(), 0.000001);
+    assertEquals(Float.MAX_VALUE, (double) colReader.getObject(), 0.000001);
 
     assertTrue(reader.next());
     assertEquals(Float.MIN_VALUE, colReader.getDouble(), 0.000001);
@@ -433,23 +526,34 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.DOUBLE, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals(0, colReader.getDouble(0), 0.00001);
-    assertEquals(20.5, colReader.getDouble(1), 0.00001);
-    assertEquals(30.0, colReader.getDouble(2), 0.00001);
-    assertEquals(0, (double) colReader.getObject(0), 0.00001);
-    assertEquals(20.5, (double) colReader.getObject(1), 0.00001);
-    assertEquals(30.0, (double) colReader.getObject(2), 0.00001);
-    assertEquals("0.0", colReader.getAsString(0));
-    assertEquals("20.5", colReader.getAsString(1));
-    assertEquals("30.0", colReader.getAsString(2));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertEquals(0, colReader.getDouble(), 0.00001);
+    assertEquals(0, (double) colReader.getObject(), 0.00001);
+    assertEquals("0.0", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(20.5, colReader.getDouble(), 0.00001);
+    assertEquals(20.5, (double) colReader.getObject(), 0.00001);
+    assertEquals("20.5", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(30.0, colReader.getDouble(), 0.00001);
+    assertEquals(30.0, (double) colReader.getObject(), 0.00001);
+    assertEquals("30.0", colReader.getAsString());
+    assertFalse(arrayReader.next());
+
+    assertEquals("[0.0, 20.5, 30.0]", arrayReader.getAsString());
+    assertEquals(Lists.newArrayList(0.0D, 20.5D, 30D), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -507,15 +611,16 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   @Test
-  public void testStringRW() {
+  public void testVarcharRW() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("col", MinorType.VARCHAR)
         .build();
     SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
         .addRow("")
-        .addRow("abcd")
+        .addRow("fred")
+        .addRow("barney")
         .build();
-    assertEquals(2, rs.rowCount());
+    assertEquals(3, rs.rowCount());
 
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);
@@ -526,16 +631,21 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals("", colReader.getString());
 
     assertTrue(reader.next());
-    assertEquals("abcd", colReader.getString());
-    assertEquals("abcd", colReader.getObject());
-    assertEquals("\"abcd\"", colReader.getAsString());
+    assertEquals("fred", colReader.getString());
+    assertEquals("fred", colReader.getObject());
+    assertEquals("\"fred\"", colReader.getAsString());
+
+    assertTrue(reader.next());
+    assertEquals("barney", colReader.getString());
+    assertEquals("barney", colReader.getObject());
+    assertEquals("\"barney\"", colReader.getAsString());
 
     assertFalse(reader.next());
     rs.clear();
   }
 
   @Test
-  public void testNullableString() {
+  public void testNullableVarchar() {
     BatchSchema batchSchema = new SchemaBuilder()
         .addNullable("col", MinorType.VARCHAR)
         .build();
@@ -568,7 +678,7 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   @Test
-  public void testStringArray() {
+  public void testVarcharArray() {
     BatchSchema batchSchema = new SchemaBuilder()
         .addArray("col", MinorType.VARCHAR)
         .build();
@@ -579,26 +689,69 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.STRING, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals("fred", colReader.getString(0));
-    assertEquals("", colReader.getString(1));
-    assertEquals("wilma", colReader.getString(2));
-    assertEquals("fred", colReader.getObject(0));
-    assertEquals("", colReader.getObject(1));
-    assertEquals("wilma", colReader.getObject(2));
-    assertEquals("\"fred\"", colReader.getAsString(0));
-    assertEquals("\"\"", colReader.getAsString(1));
-    assertEquals("\"wilma\"", colReader.getAsString(2));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertEquals("fred", colReader.getString());
+    assertEquals("fred", colReader.getObject());
+    assertEquals("\"fred\"", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals("", colReader.getString());
+    assertEquals("", colReader.getObject());
+    assertEquals("\"\"", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals("wilma", colReader.getString());
+    assertEquals("wilma", colReader.getObject());
+    assertEquals("\"wilma\"", colReader.getAsString());
+
+    assertFalse(arrayReader.next());
+
+    assertEquals("[\"fred\", \"\", \"wilma\"]", arrayReader.getAsString());
+    assertEquals(Lists.newArrayList("fred", "", "wilma"), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
+  }
+
+  /**
+   * Test the low-level interval-year utilities used by the column accessors.
+   */
+
+  @Test
+  public void testIntervalYearUtils() {
+    {
+      Period expected = Period.months(0);
+      Period actual = DateUtilities.fromIntervalYear(0);
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalYearStringBuilder(expected).toString();
+      assertEquals("0 years 0 months", fmt);
+    }
+
+    {
+      Period expected = Period.years(1).plusMonths(2);
+      Period actual = DateUtilities.fromIntervalYear(DateUtilities.periodToMonths(expected));
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalYearStringBuilder(expected).toString();
+      assertEquals("1 year 2 months", fmt);
+    }
+
+    {
+      Period expected = Period.years(6).plusMonths(1);
+      Period actual = DateUtilities.fromIntervalYear(DateUtilities.periodToMonths(expected));
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalYearStringBuilder(expected).toString();
+      assertEquals("6 years 1 month", fmt);
+    }
   }
 
   @Test
@@ -664,7 +817,6 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertTrue(colReader.isNull());
-    assertNull(colReader.getPeriod());
     assertNull(colReader.getObject());
     assertEquals("null", colReader.getAsString());
 
@@ -692,22 +844,62 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.PERIOD, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals(p1, colReader.getPeriod(0));
-    assertEquals(p2, colReader.getPeriod(1));
-    assertEquals(p3, colReader.getPeriod(2));
-    assertEquals(p2, colReader.getObject(1));
-    assertEquals(p2.toString(), colReader.getAsString(1));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p1, colReader.getPeriod());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p2, colReader.getPeriod());
+    assertEquals(p2, colReader.getObject());
+    assertEquals(p2.toString(), colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p3, colReader.getPeriod());
+
+    assertFalse(arrayReader.next());
 
     assertFalse(reader.next());
     rs.clear();
+  }
+
+  /**
+   * Test the low-level interval-day utilities used by the column accessors.
+   */
+
+  @Test
+  public void testIntervalDayUtils() {
+    {
+      Period expected = Period.days(0);
+      Period actual = DateUtilities.fromIntervalDay(0, 0);
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalDayStringBuilder(expected).toString();
+      assertEquals("0 days 0:00:00", fmt);
+    }
+
+    {
+      Period expected = Period.days(1).plusHours(5).plusMinutes(6).plusSeconds(7);
+      Period actual = DateUtilities.fromIntervalDay(1, DateUtilities.timeToMillis(5, 6, 7, 0));
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalDayStringBuilder(expected).toString();
+      assertEquals("1 day 5:06:07", fmt);
+    }
+
+    {
+      Period expected = Period.days(2).plusHours(12).plusMinutes(23).plusSeconds(34).plusMillis(567);
+      Period actual = DateUtilities.fromIntervalDay(2, DateUtilities.timeToMillis(12, 23, 34, 567));
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalDayStringBuilder(expected).toString();
+      assertEquals("2 days 12:23:34.567", fmt);
+    }
   }
 
   @Test
@@ -774,7 +966,6 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertTrue(colReader.isNull());
-    assertNull(colReader.getPeriod());
     assertNull(colReader.getObject());
     assertEquals("null", colReader.getAsString());
 
@@ -802,22 +993,77 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.PERIOD, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals(p1, colReader.getPeriod(0).normalizedStandard());
-    assertEquals(p2, colReader.getPeriod(1).normalizedStandard());
-    assertEquals(p3.normalizedStandard(), colReader.getPeriod(2).normalizedStandard());
-    assertEquals(p2, ((Period) colReader.getObject(1)).normalizedStandard());
-    assertEquals(p2.toString(), colReader.getAsString(1));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p1, colReader.getPeriod().normalizedStandard());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p2, colReader.getPeriod().normalizedStandard());
+    assertEquals(p2, ((Period) colReader.getObject()).normalizedStandard());
+    assertEquals(p2.toString(), colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p3.normalizedStandard(), colReader.getPeriod().normalizedStandard());
+
+    assertFalse(arrayReader.next());
 
     assertFalse(reader.next());
     rs.clear();
+  }
+
+  /**
+   * Test the low-level interval utilities used by the column accessors.
+   */
+
+  @Test
+  public void testIntervalUtils() {
+    {
+      Period expected = Period.months(0);
+      Period actual = DateUtilities.fromInterval(0, 0, 0);
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalStringBuilder(expected).toString();
+      assertEquals("0 years 0 months 0 days 0:00:00", fmt);
+    }
+
+    {
+      Period expected = Period.years(1).plusMonths(2).plusDays(3)
+          .plusHours(5).plusMinutes(6).plusSeconds(7);
+      Period actual = DateUtilities.fromInterval(DateUtilities.periodToMonths(expected), 3,
+          DateUtilities.periodToMillis(expected));
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalStringBuilder(expected).toString();
+      assertEquals("1 year 2 months 3 days 5:06:07", fmt);
+    }
+
+    {
+      Period expected = Period.years(2).plusMonths(1).plusDays(3)
+          .plusHours(12).plusMinutes(23).plusSeconds(34)
+          .plusMillis(456);
+      Period actual = DateUtilities.fromInterval(DateUtilities.periodToMonths(expected), 3,
+          DateUtilities.periodToMillis(expected));
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalStringBuilder(expected).toString();
+      assertEquals("2 years 1 month 3 days 12:23:34.456", fmt);
+    }
+
+    {
+      Period expected = Period.years(2).plusMonths(3).plusDays(1)
+          .plusHours(12).plusMinutes(23).plusSeconds(34);
+      Period actual = DateUtilities.fromInterval(DateUtilities.periodToMonths(expected), 1,
+          DateUtilities.periodToMillis(expected));
+      assertEquals(expected, actual.normalizedStandard());
+      String fmt = DateUtilities.intervalStringBuilder(expected).toString();
+      assertEquals("2 years 3 months 1 day 12:23:34", fmt);
+    }
   }
 
   @Test
@@ -890,7 +1136,6 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertTrue(colReader.isNull());
-    assertNull(colReader.getPeriod());
     assertNull(colReader.getObject());
     assertEquals("null", colReader.getAsString());
 
@@ -922,19 +1167,28 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.PERIOD, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals(p1, colReader.getPeriod(0).normalizedStandard());
-    assertEquals(p2, colReader.getPeriod(1).normalizedStandard());
-    assertEquals(p3.normalizedStandard(), colReader.getPeriod(2).normalizedStandard());
-    assertEquals(p2, ((Period) colReader.getObject(1)).normalizedStandard());
-    assertEquals(p2.toString(), colReader.getAsString(1));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p1, colReader.getPeriod().normalizedStandard());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p2, colReader.getPeriod().normalizedStandard());
+    assertEquals(p2, ((Period) colReader.getObject()).normalizedStandard());
+    assertEquals(p2.toString(), colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(p3.normalizedStandard(), colReader.getPeriod().normalizedStandard());
+
+    assertFalse(arrayReader.next());
 
     assertFalse(reader.next());
     rs.clear();
@@ -1051,19 +1305,28 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.DECIMAL, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertEquals(0, v1.compareTo(colReader.getDecimal(0)));
-    assertEquals(0, v2.compareTo(colReader.getDecimal(1)));
-    assertEquals(0, v3.compareTo(colReader.getDecimal(2)));
-    assertEquals(0, v2.compareTo((BigDecimal) colReader.getObject(1)));
-    assertEquals(v2.toString(), colReader.getAsString(1));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertEquals(0, v1.compareTo(colReader.getDecimal()));
+
+    assertTrue(arrayReader.next());
+    assertEquals(0, v2.compareTo(colReader.getDecimal()));
+    assertEquals(0, v2.compareTo((BigDecimal) colReader.getObject()));
+    assertEquals(v2.toString(), colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertEquals(0, v3.compareTo(colReader.getDecimal()));
+
+    assertFalse(arrayReader.next());
 
     assertFalse(reader.next());
     rs.clear();
@@ -1246,19 +1509,28 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(2, rs.rowCount());
 
     RowSetReader reader = rs.reader();
-    ScalarElementReader colReader = reader.elements(0);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader colReader = arrayReader.scalar();
     assertEquals(ValueType.BYTES, colReader.valueType());
 
     assertTrue(reader.next());
-    assertEquals(0, colReader.size());
+    assertEquals(0, arrayReader.size());
 
     assertTrue(reader.next());
-    assertEquals(3, colReader.size());
-    assertTrue(Arrays.equals(v1, colReader.getBytes(0)));
-    assertTrue(Arrays.equals(v2, colReader.getBytes(1)));
-    assertTrue(Arrays.equals(v3, colReader.getBytes(2)));
-    assertTrue(Arrays.equals(v2, (byte[]) colReader.getObject(1)));
-    assertEquals("[00, 7f, 80, ff]", colReader.getAsString(1));
+    assertEquals(3, arrayReader.size());
+
+    assertTrue(arrayReader.next());
+    assertTrue(Arrays.equals(v1, colReader.getBytes()));
+
+    assertTrue(arrayReader.next());
+    assertTrue(Arrays.equals(v2, colReader.getBytes()));
+    assertTrue(Arrays.equals(v2, (byte[]) colReader.getObject()));
+    assertEquals("[00, 7f, 80, ff]", colReader.getAsString());
+
+    assertTrue(arrayReader.next());
+    assertTrue(Arrays.equals(v3, colReader.getBytes()));
+
+    assertFalse(arrayReader.next());
 
     assertFalse(reader.next());
     rs.clear();

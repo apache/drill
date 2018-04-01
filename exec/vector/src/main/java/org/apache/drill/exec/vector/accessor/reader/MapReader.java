@@ -20,6 +20,8 @@ package org.apache.drill.exec.vector.accessor.reader;
 import java.util.List;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 
 /**
  * Reader for a Drill Map type. Maps are actually tuples, just like rows.
@@ -27,17 +29,54 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
 public class MapReader extends AbstractTupleReader {
 
+  protected final ColumnMetadata schema;
+
+  /**
+   * Accessor for the map vector. This class does not use the map vector
+   * directory. However, in the case of a map hyper-vector, we need to
+   * tell the vector which batch to use. (For an array, the array does
+   * this work and the map accessor is null.)
+   */
+
+  private final VectorAccessor mapAccessor;
+
   protected MapReader(ColumnMetadata schema, AbstractObjectReader readers[]) {
-    super(schema.mapSchema(), readers);
+    this(schema, null, readers);
   }
 
-  public static TupleObjectReader build(ColumnMetadata schema, AbstractObjectReader readers[]) {
-    return new TupleObjectReader(new MapReader(schema, readers));
+  protected MapReader(ColumnMetadata schema,
+      VectorAccessor mapAccessor, AbstractObjectReader readers[]) {
+    super(readers);
+    this.schema = schema;
+    this.mapAccessor = mapAccessor;
   }
 
-  public static AbstractObjectReader build(ColumnMetadata metadata,
+  public static TupleObjectReader build(ColumnMetadata schema,
+      VectorAccessor mapAccessor,
+      AbstractObjectReader readers[]) {
+    MapReader mapReader = new MapReader(schema, mapAccessor, readers);
+    mapReader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
+    return new TupleObjectReader(mapReader);
+  }
+
+  public static AbstractObjectReader build(ColumnMetadata schema,
+      VectorAccessor mapAccessor,
       List<AbstractObjectReader> readers) {
     AbstractObjectReader readerArray[] = new AbstractObjectReader[readers.size()];
-    return build(metadata, readers.toArray(readerArray));
+    return build(schema, mapAccessor, readers.toArray(readerArray));
   }
+
+  @Override
+  public void bindIndex(ColumnReaderIndex index) {
+    if (mapAccessor != null) {
+      mapAccessor.bind(index);
+    }
+    super.bindIndex(index);
+  }
+
+  @Override
+  public ColumnMetadata schema() { return schema; }
+
+  @Override
+  public TupleMetadata tupleSchema() { return schema.mapSchema(); }
 }

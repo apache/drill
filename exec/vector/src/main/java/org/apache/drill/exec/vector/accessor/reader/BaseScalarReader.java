@@ -17,15 +17,11 @@
  */
 package org.apache.drill.exec.vector.accessor.reader;
 
-import java.math.BigDecimal;
-
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
-import org.apache.drill.exec.vector.accessor.ObjectType;
-import org.apache.drill.exec.vector.accessor.ScalarReader;
-import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
-import org.joda.time.Period;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * Column reader implementation that acts as the basis for the
@@ -34,156 +30,122 @@ import org.joda.time.Period;
  * method(s).
  */
 
-public abstract class BaseScalarReader implements ScalarReader {
+public abstract class BaseScalarReader extends AbstractScalarReader {
 
-  public static class ScalarObjectReader extends AbstractObjectReader {
+  public abstract static class BaseFixedWidthReader extends BaseScalarReader {
 
-    private BaseScalarReader scalarReader;
+    public abstract int width();
+  }
 
-    public ScalarObjectReader(BaseScalarReader scalarReader) {
-      this.scalarReader = scalarReader;
+  public abstract static class BaseVarWidthReader extends BaseScalarReader {
+
+    protected OffsetVectorReader offsetsReader;
+
+    @Override
+    public void bindVector(ColumnMetadata schema, VectorAccessor va) {
+      super.bindVector(schema, va);
+      offsetsReader = new OffsetVectorReader(
+          VectorAccessors.varWidthOffsetVectorAccessor(va));
     }
 
     @Override
     public void bindIndex(ColumnReaderIndex index) {
-      scalarReader.bindIndex(index);
-    }
-
-    @Override
-    public ObjectType type() {
-      return ObjectType.SCALAR;
-    }
-
-    @Override
-    public ScalarReader scalar() {
-      return scalarReader;
-    }
-
-    @Override
-    public Object getObject() {
-      return scalarReader.getObject();
-    }
-
-    @Override
-    public String getAsString() {
-      return scalarReader.getAsString();
+      super.bindIndex(index);
+      offsetsReader.bindIndex(index);
     }
   }
 
-  protected ColumnReaderIndex vectorIndex;
+  /**
+   * Provide access to the DrillBuf for the data vector.
+   */
+
+  public interface BufferAccessor {
+    DrillBuf buffer();
+  }
+
+  private static class SingleVectorBufferAccessor implements BufferAccessor {
+    private final DrillBuf buffer;
+
+    public SingleVectorBufferAccessor(VectorAccessor va) {
+      BaseDataValueVector vector = va.vector();
+      buffer = vector.getBuffer();
+    }
+
+    @Override
+    public DrillBuf buffer() { return buffer; }
+  }
+
+  private static class HyperVectorBufferAccessor implements BufferAccessor {
+    private final VectorAccessor vectorAccessor;
+
+    public HyperVectorBufferAccessor(VectorAccessor va) {
+      vectorAccessor = va;
+    }
+
+    @Override
+    public DrillBuf buffer() {
+      BaseDataValueVector vector = vectorAccessor.vector();
+      return vector.getBuffer();
+    }
+  }
+
+  protected ColumnMetadata schema;
   protected VectorAccessor vectorAccessor;
+  protected BufferAccessor bufferAccessor;
 
-  public static ScalarObjectReader build(ValueVector vector, BaseScalarReader reader) {
-    reader.bindVector(vector);
+  public static ScalarObjectReader buildOptional(ColumnMetadata schema,
+      VectorAccessor va, BaseScalarReader reader) {
+
+    // Reader is bound to the values vector inside the nullable vector.
+
+    reader.bindVector(schema, VectorAccessors.nullableValuesAccessor(va));
+
+    // The nullability of each value depends on the "bits" vector
+    // in the nullable vector.
+
+    reader.bindNullState(new NullStateReaders.NullableIsSetVectorStateReader(va));
+
+    // Wrap the reader in an object reader.
+
     return new ScalarObjectReader(reader);
   }
 
-  public static AbstractObjectReader build(MajorType majorType, VectorAccessor va,
-                                           BaseScalarReader reader) {
-    reader.bindVector(majorType, va);
+  public static ScalarObjectReader buildRequired(ColumnMetadata schema,
+      VectorAccessor va, BaseScalarReader reader) {
+
+    // Reader is bound directly to the required vector.
+
+    reader.bindVector(schema, va);
+
+    // The reader is required, values can't be null.
+
+    reader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
+
+    // Wrap the reader in an object reader.
+
     return new ScalarObjectReader(reader);
   }
 
-  public abstract void bindVector(ValueVector vector);
-
-  protected void bindIndex(ColumnReaderIndex rowIndex) {
-    this.vectorIndex = rowIndex;
-    if (vectorAccessor != null) {
-      vectorAccessor.bind(rowIndex);
-    }
-  }
-
-  public void bindVector(MajorType majorType, VectorAccessor va) {
+  public void bindVector(ColumnMetadata schema, VectorAccessor va) {
+    this.schema = schema;
     vectorAccessor = va;
+    bufferAccessor = bufferAccessor(va);
   }
 
-  @Override
-  public Object getObject() {
-    if (isNull()) {
-      return null;
-    }
-    switch (valueType()) {
-    case BYTES:
-      return getBytes();
-    case DECIMAL:
-      return getDecimal();
-    case DOUBLE:
-      return getDouble();
-    case INTEGER:
-      return getInt();
-    case LONG:
-      return getLong();
-    case PERIOD:
-      return getPeriod();
-    case STRING:
-      return getString();
-    default:
-      throw new IllegalStateException("Unexpected type: " + valueType());
+  protected BufferAccessor bufferAccessor(VectorAccessor va) {
+    if (va.isHyper()) {
+      return new HyperVectorBufferAccessor(va);
+    } else {
+      return new SingleVectorBufferAccessor(va);
     }
   }
 
   @Override
-  public String getAsString() {
-    if (isNull()) {
-      return "null";
-    }
-    switch (valueType()) {
-    case BYTES:
-      return AccessorUtilities.bytesToString(getBytes());
-    case DOUBLE:
-      return Double.toString(getDouble());
-    case INTEGER:
-      return Integer.toString(getInt());
-    case LONG:
-      return Long.toString(getLong());
-    case STRING:
-      return "\"" + getString() + "\"";
-    case DECIMAL:
-      return getDecimal().toPlainString();
-    case PERIOD:
-      return getPeriod().normalizedStandard().toString();
-    default:
-      throw new IllegalArgumentException("Unsupported type " + valueType());
-    }
+  public void bindIndex(ColumnReaderIndex rowIndex) {
+    super.bindIndex(rowIndex);
+    vectorAccessor.bind(rowIndex);
   }
 
   @Override
-  public boolean isNull() {
-    return false;
-  }
-
-  @Override
-  public int getInt() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public long getLong() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public double getDouble() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public String getString() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public byte[] getBytes() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public BigDecimal getDecimal() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Period getPeriod() {
-    throw new UnsupportedOperationException();
-  }
+  public ColumnMetadata schema() { return schema; }
 }

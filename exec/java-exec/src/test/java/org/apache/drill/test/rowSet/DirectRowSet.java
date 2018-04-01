@@ -20,17 +20,17 @@ package org.apache.drill.test.rowSet;
 import com.google.common.collect.Sets;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.model.MetadataProvider.MetadataRetrieval;
-import org.apache.drill.exec.physical.rowSet.model.ReaderIndex;
-import org.apache.drill.exec.physical.rowSet.model.SchemaInference;
 import org.apache.drill.exec.physical.rowSet.model.single.BaseWriterBuilder;
 import org.apache.drill.exec.physical.rowSet.model.single.BuildVectorsFromMetadata;
+import org.apache.drill.exec.physical.rowSet.model.single.DirectRowIndex;
+import org.apache.drill.exec.physical.rowSet.model.single.SingleSchemaInference;
 import org.apache.drill.exec.physical.rowSet.model.single.VectorAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetWriterImpl.WriterIndexImpl;
@@ -43,26 +43,6 @@ import java.util.Set;
  */
 
 public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowSet {
-
-  /**
-   * Reader index that points directly to each row in the row set.
-   * This index starts with pointing to the -1st row, so that the
-   * reader can require a <tt>next()</tt> for every row, including
-   * the first. (This is the JDBC RecordSet convention.)
-   */
-
-  private static class DirectRowIndex extends ReaderIndex {
-
-    public DirectRowIndex(int rowCount) {
-      super(rowCount);
-    }
-
-    @Override
-    public int vectorIndex() { return rowIndex; }
-
-    @Override
-    public int batchIndex() { return 0; }
-  }
 
   public static class RowSetWriterBuilder extends BaseWriterBuilder {
 
@@ -94,7 +74,7 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
   }
 
   public static DirectRowSet fromContainer(VectorContainer container) {
-    return new DirectRowSet(container, new SchemaInference().infer(container));
+    return new DirectRowSet(container, new SingleSchemaInference().infer(container));
   }
 
   public static DirectRowSet fromVectorAccessible(BufferAllocator allocator, VectorAccessible va) {
@@ -150,7 +130,6 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
   public SingleRowSet toIndirect(Set<Integer> skipIndices) {
     return new IndirectRowSet(this, skipIndices);
   }
-
 
   @Override
   public SelectionVector2 getSv2() { return null; }

@@ -433,7 +433,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     assertEquals(5, schema.size());
     assertEquals(4, schema.index("e"));
     assertEquals(4, schema.index("E"));
-    rootWriter.array(4).set("e1", "e2", "e3");
+    rootWriter.array(4).setObject(strArray("e1", "e2", "e3"));
     rootWriter.save();
 
     // Verify. No reason to expect problems, but might as well check.

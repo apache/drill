@@ -25,15 +25,33 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * by name or column index (as defined in the tuple schema.)
  * Also provides two generic methods to get the value as a
  * Java object or as a string.
- * <p>
- * {@see TupleWriter}
+ *
+ * @see {@link TupleWriter}
  */
 
-public interface TupleReader {
-  TupleMetadata schema();
+public interface TupleReader extends ColumnReader {
+  TupleMetadata tupleSchema();
   int columnCount();
 
+  /**
+   * Return a column reader by column index as reported by the
+   * associated metadata.
+   *
+   * @param colIndex column index
+   * @return reader for the column
+   * @throws IndexOutOfRangeException if the index is invalid
+   */
+
   ObjectReader column(int colIndex);
+
+  /**
+   * Return a column reader by name.
+   *
+   * @param colIndex column name
+   * @return reader for the column, or <tt>null</tt> if no such
+   * column exists
+   */
+
   ObjectReader column(String colName);
 
   // Convenience methods
@@ -46,9 +64,4 @@ public interface TupleReader {
   TupleReader tuple(String colName);
   ArrayReader array(int colIndex);
   ArrayReader array(String colName);
-  ScalarElementReader elements(int colIndex);
-  ScalarElementReader elements(String colName);
-
-  Object getObject();
-  String getAsString();
 }
