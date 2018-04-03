@@ -127,6 +127,44 @@ check_before_start()
   fi
 }
 
+check_after_start(){
+    #check if the process is running
+    if [ -f $pid ]; then
+      dbitProc=$(ps -ef | grep `cat $pid` | grep Drillbit)
+      if [ -n "$dbitProc" ]; then
+        # Check and enforce for CGroup
+        if [ -n "$DRILLBIT_CGROUP" ]; then 
+          check_and_enforce_cgroup `cat $pid`
+        fi
+      fi
+    fi
+}
+
+check_and_enforce_cgroup(){
+    dbitPid=$1;
+    #if [ $(`ps -o cgroup` | grep -c $DRILLBIT_CGROUP ) -eq 1 ]; then 
+    if [ -f /cgroup/cpu/${DRILLBIT_CGROUP}/cgroup.procs ]; then 
+      echo $dbitPid > /cgroup/cpu/${DRILLBIT_CGROUP}/cgroup.procs
+      # Verify Enforcement
+      cgroupStatus=`grep -w $pid /cgroup/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
+      if [ -z "$cgroupStatus" ]; then
+        #Ref: https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
+        let cpu_quota=`cat /cgroup/cpu/${DRILLBIT_CGROUP}/cpu.cfs_quota_us`
+        let cpu_period=`cat /cgroup/cpu/${DRILLBIT_CGROUP}/cpu.cfs_period_us`
+        if [ $cpu_period -gt 0 ] && [ $cpu_quota -gt 0 ]; then
+          coresAllowed="(up to "`echo $(( 100 * $cpu_quota / $cpu_period )) | sed 's/..$/.&/'`" cores allowed)"
+        fi
+        echo "WARN: Drillbit's CPU resource usage will be managed under the CGroup : $DRILLBIT_CGROUP "$coresAllowed
+      else
+        echo "ERROR: Failed to add Drillbit to CGroup ( $DRILLBIT_CGROUP ) for resource usage management.  Ensure that the cgroup manages CPU"
+        exit 1
+      fi
+    else
+      echo "ERROR: cgroup $DRILLBIT_CGROUP does not found. Ensure that daemon is running and cgroup exists"
+      exit 1
+    fi
+}
+
 wait_until_done ()
 {
   p=$1
@@ -154,6 +192,7 @@ start_bit ( )
   nohup nice -n $DRILL_NICENESS "$DRILL_HOME/bin/runbit" exec ${args[@]} >> "$logout" 2>&1 &
   echo $! > $pid
   sleep 1
+  check_after_start
 }
 
 stop_bit ( )

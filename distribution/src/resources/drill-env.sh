@@ -86,6 +86,12 @@
 
 #export DRILL_PID_DIR=${DRILL_PID_DIR:-$DRILL_HOME}
 
+# CGroup to which the Drillbit belong when running as a daemon using
+# drillbit.sh start.
+# Unset $DRILLBIT_CGROUP by default.
+
+#export DRILLBIT_CGROUP=${DRILLBIT_CGROUP:-"drillcpu"}
+
 # Custom JVM arguments to pass to the both the Drillbit and sqlline. Typically
 # used to override system properties as shown below. Empty by default.
 
