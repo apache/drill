@@ -1466,8 +1466,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Web Console and REST API Security", 
-                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                            "next_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                            "next_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Using jpam as the PAM Authenticator", 
                             "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
@@ -1487,12 +1487,33 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Multitenant Cluster", 
-                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "next_title": "Configuring Web Console and REST API Security", 
+                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Kerberos Security", 
                             "previous_url": "/docs/configuring-kerberos-security/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
+                            "relative_path": "_docs/configure-drill/securing-drill/091-configuring-drill-to-use-spnego-for-http-authentication.md", 
+                            "title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                            "url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring a Multitenant Cluster", 
+                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                            "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/092-configuring-web-ui-and-rest-api-security.md", 
                             "title": "Configuring Web Console and REST API Security", 
                             "url": "/docs/configuring-web-console-and-rest-api-security/"
                         }
@@ -1784,6 +1805,27 @@
             "title": "Configuring Drill Memory", 
             "url": "/docs/configuring-drill-memory/"
         }, 
+        "Configuring Drill to use SPNEGO for HTTP Authentication": {
+            "breadcrumbs": [
+                {
+                    "title": "Securing Drill", 
+                    "url": "/docs/securing-drill/"
+                }, 
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Web Console and REST API Security", 
+            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+            "parent": "Securing Drill", 
+            "previous_title": "Configuring Kerberos Security", 
+            "previous_url": "/docs/configuring-kerberos-security/", 
+            "relative_path": "_docs/configure-drill/securing-drill/091-configuring-drill-to-use-spnego-for-http-authentication.md", 
+            "title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+            "url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/"
+        }, 
         "Configuring Inbound Impersonation": {
             "breadcrumbs": [
                 {
@@ -1838,8 +1880,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Web Console and REST API Security", 
-            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+            "next_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+            "next_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
             "parent": "Securing Drill", 
             "previous_title": "Using jpam as the PAM Authenticator", 
             "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
@@ -2216,9 +2258,9 @@
             "next_title": "Configuring a Multitenant Cluster", 
             "next_url": "/docs/configuring-a-multitenant-cluster/", 
             "parent": "Securing Drill", 
-            "previous_title": "Configuring Kerberos Security", 
-            "previous_url": "/docs/configuring-kerberos-security/", 
-            "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
+            "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+            "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
+            "relative_path": "_docs/configure-drill/securing-drill/092-configuring-web-ui-and-rest-api-security.md", 
             "title": "Configuring Web Console and REST API Security", 
             "url": "/docs/configuring-web-console-and-rest-api-security/"
         }, 
@@ -12786,8 +12828,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Web Console and REST API Security", 
-                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "next_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                    "next_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Using jpam as the PAM Authenticator", 
                     "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
@@ -12807,12 +12849,33 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Multitenant Cluster", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "next_title": "Configuring Web Console and REST API Security", 
+                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                     "parent": "Securing Drill", 
                     "previous_title": "Configuring Kerberos Security", 
                     "previous_url": "/docs/configuring-kerberos-security/", 
-                    "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
+                    "relative_path": "_docs/configure-drill/securing-drill/091-configuring-drill-to-use-spnego-for-http-authentication.md", 
+                    "title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                    "url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Securing Drill", 
+                            "url": "/docs/securing-drill/"
+                        }, 
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "parent": "Securing Drill", 
+                    "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                    "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
+                    "relative_path": "_docs/configure-drill/securing-drill/092-configuring-web-ui-and-rest-api-security.md", 
                     "title": "Configuring Web Console and REST API Security", 
                     "url": "/docs/configuring-web-console-and-rest-api-security/"
                 }
@@ -15668,8 +15731,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Web Console and REST API Security", 
-                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                            "next_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                            "next_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Using jpam as the PAM Authenticator", 
                             "previous_url": "/docs/using-jpam-as-the-pam-authenticator/", 
@@ -15689,12 +15752,33 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring a Multitenant Cluster", 
-                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "next_title": "Configuring Web Console and REST API Security", 
+                            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                             "parent": "Securing Drill", 
                             "previous_title": "Configuring Kerberos Security", 
                             "previous_url": "/docs/configuring-kerberos-security/", 
-                            "relative_path": "_docs/configure-drill/securing-drill/091-configuring-web-ui-and-rest-api-security.md", 
+                            "relative_path": "_docs/configure-drill/securing-drill/091-configuring-drill-to-use-spnego-for-http-authentication.md", 
+                            "title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                            "url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill", 
+                                    "url": "/docs/securing-drill/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring a Multitenant Cluster", 
+                            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "parent": "Securing Drill", 
+                            "previous_title": "Configuring Drill to use SPNEGO for HTTP Authentication", 
+                            "previous_url": "/docs/configuring-drill-to-use-spnego-for-http-authentication/", 
+                            "relative_path": "_docs/configure-drill/securing-drill/092-configuring-web-ui-and-rest-api-security.md", 
                             "title": "Configuring Web Console and REST API Security", 
                             "url": "/docs/configuring-web-console-and-rest-api-security/"
                         }
