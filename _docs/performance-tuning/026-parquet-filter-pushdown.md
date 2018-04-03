@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2018-03-26 18:30:22 UTC
+date: 2018-04-03 23:37:00 UTC
 parent: "Performance Tuning"
 ---
 
@@ -46,7 +46,7 @@ Run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see t
 ##Support 
 The following table lists the supported and unsupported clauses, operators, data types, function, and scenarios for Parquet filter pushdown:  
 
-**Note:** An asterisk (*) indicates support as of Drill 1.13  
+**Note:** An asterisk (*) indicates support as of Drill 1.13.  
 
 |                        | Supported                                                                                                                                                                                                                                | Not Supported                                                                                      |
 |------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
