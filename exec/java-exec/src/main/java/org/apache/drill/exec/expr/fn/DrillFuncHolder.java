@@ -23,8 +23,10 @@ import java.util.List;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -36,6 +38,9 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.holders.ListHolder;
+import org.apache.drill.exec.expr.holders.MapHolder;
+import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
@@ -80,7 +85,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   @Override
-  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables) {
+  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables, FieldReference fieldReference) {
     return declareWorkspaceVariables(g);
   }
 
@@ -186,12 +191,35 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
         ValueReference parameter = attributes.getParameters()[i];
         HoldingContainer inputVariable = inputVariables[i];
-        if (parameter.isFieldReader() && ! inputVariable.isReader() && ! Types.isComplex(inputVariable.getMajorType()) && inputVariable.getMinorType() != MinorType.UNION) {
+        if (parameter.isFieldReader() && ! inputVariable.isReader()
+            && ! Types.isComplex(inputVariable.getMajorType()) && inputVariable.getMinorType() != MinorType.UNION) {
           JType singularReaderClass = g.getModel()._ref(TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
               inputVariable.getMajorType().getMode()));
           JType fieldReadClass = g.getModel()._ref(FieldReader.class);
           sub.decl(fieldReadClass, parameter.getName(), JExpr._new(singularReaderClass).arg(inputVariable.getHolder()));
-        } else {
+        } else if (!parameter.isFieldReader() && inputVariable.isReader() && Types.isComplex(parameter.getType())) {
+          // For complex data-types (repeated maps/lists) the input to the aggregate will be a FieldReader. However, aggregate
+          // functions like ANY_VALUE, will assume the input to be a RepeatedMapHolder etc. Generate boilerplate code, to map
+          // from FieldReader to respective Holder.
+          if (parameter.getType().getMinorType() == MinorType.MAP) {
+            JType holderClass;
+            if (parameter.getType().getMode() == TypeProtos.DataMode.REPEATED) {
+              holderClass = g.getModel()._ref(RepeatedMapHolder.class);
+              JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
+              sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
+            } else {
+              holderClass = g.getModel()._ref(MapHolder.class);
+              JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
+              sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
+            }
+          } else if (parameter.getType().getMinorType() == MinorType.LIST) {
+            //TODO: Add support for REPEATED LISTs
+            JType holderClass = g.getModel()._ref(ListHolder.class);
+            JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
+            sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
+          }
+        }
+        else {
           sub.decl(inputVariable.getHolder().type(), parameter.getName(), inputVariable.getHolder());
         }
       }

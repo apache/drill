@@ -252,6 +252,14 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   }
 
   @Override
+  public Void visitAnyValueExpression(AnyValueExpression e, StringBuilder sb) throws RuntimeException {
+    sb.append("any(");
+    e.getInput().accept(this, sb);
+    sb.append(")");
+    return null;
+  }
+
+  @Override
   public Void visitCastExpression(CastExpression e, StringBuilder sb) throws RuntimeException {
     MajorType mt = e.getMajorType();
 

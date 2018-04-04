@@ -85,6 +85,14 @@ public class FunctionCallFactory {
     return new ConvertExpression(function, conversionType, expr, ep);
   }
 
+  public static LogicalExpression createAnyValue(ExpressionPosition ep, LogicalExpression expr) {
+    return new AnyValueExpression(expr, ep);
+  }
+
+  public static LogicalExpression createAnyValue(String functionName, List<LogicalExpression> args) {
+    return createExpression(functionName, args);
+  }
+
   public static LogicalExpression createExpression(String functionName, List<LogicalExpression> args){
     return createExpression(functionName, ExpressionPosition.UNKNOWN, args);
   }

@@ -32,7 +32,7 @@ import com.sun.codemodel.JVar;
 
 public abstract class AbstractFuncHolder implements FuncHolder {
 
-  public abstract JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables);
+  public abstract JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables, FieldReference fieldReference);
 
   public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[] workspaceJVars) {
     // default implementation is add no code

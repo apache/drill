@@ -130,7 +130,7 @@ public class HiveFuncHolder extends AbstractFuncHolder {
    * @return workspace variables
    */
   @Override
-  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables){
+  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables, FieldReference fieldReference){
     JVar[] workspaceJVars = new JVar[5];
 
     workspaceJVars[0] = g.declareClassField("returnOI", g.getModel()._ref(ObjectInspector.class));
