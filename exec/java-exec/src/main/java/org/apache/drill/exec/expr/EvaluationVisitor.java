@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -181,7 +182,7 @@ public class EvaluationVisitor {
 
       AbstractFuncHolder holder = (AbstractFuncHolder) holderExpr.getHolder();
 
-      JVar[] workspaceVars = holder.renderStart(generator, null);
+      JVar[] workspaceVars = holder.renderStart(generator, null, holderExpr.getFieldReference());
 
       if (holder.isNested()) {
         generator.getMappingSet().enterChild();
@@ -456,8 +457,7 @@ public class EvaluationVisitor {
         generator.getEvalBlock().add(eval);
 
       } else {
-        JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
-        JExpression expr = vector.invoke("getReader");
+        JExpression expr = vv1.invoke("getReader");
         PathSegment seg = e.getReadPath();
 
         JVar isNull = null;
@@ -710,6 +710,17 @@ public class EvaluationVisitor {
       newArgs.add(e.getInput()); // input_expr
 
       FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
+      return fc.accept(this, value);
+    }
+
+    @Override
+    public HoldingContainer visitAnyValueExpression(AnyValueExpression e, ClassGenerator<?> value)
+        throws RuntimeException {
+
+      List<LogicalExpression> newArgs = Lists.newArrayList();
+      newArgs.add(e.getInput()); // input_expr
+
+      FunctionCall fc = new FunctionCall(AnyValueExpression.ANY_VALUE, newArgs, e.getPosition());
       return fc.accept(this, value);
     }
 

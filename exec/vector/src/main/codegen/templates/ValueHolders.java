@@ -49,16 +49,17 @@ public final class ${className} implements ValueHolder {
     
   /** The first index (inclusive) into the Vector. **/
   public int start;
-    
+
   /** The last index (exclusive) into the Vector. **/
   public int end;
-    
+
   /** The Vector holding the actual values. **/
   public ${minor.class}Vector vector;
-    
-  <#else>
+
+  public FieldReader reader;
+<#else>
   public static final int WIDTH = ${type.width};
-    
+
   <#if mode.name == "Optional">public int isSet;</#if>
   <#assign fields = minor.fields!type.fields />
   <#list fields as field>
