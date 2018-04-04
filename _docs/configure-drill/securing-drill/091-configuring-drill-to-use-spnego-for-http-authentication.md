@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill to use SPNEGO for HTTP Authentication"
-date: 2018-04-03 17:47:38 UTC
+date: 2018-04-04 23:22:53 UTC
 parent: "Securing Drill"
 ---  
 
@@ -25,15 +25,15 @@ SPNEGO authentication for Drill requires the following:
 
 
 - Drill 1.13 installed on each node.  
-- Drill provides the required Kerberos (JDBC) plugin as part of the  Drill package. To use the plugin, you must have a working Kerberos infrastructure, which Drill does not provide.  
-- You must be working in a Linux-based or Windows Active Directory (AD) Kerberos environment with secure clusters and have a Drill server configured for Kerberos. See [Enabling Authentication]({{site.baseurl}}/docs/configuring-kerberos-authentication/#enabling-authentication-and-encryption).  
+- To use SPNEGO, you must have a working Kerberos infrastructure, which Drill does not provide.  
+- You must be working in a Linux-based or Windows Active Directory (AD) Kerberos environment with secure clusters and have a Drill server configured for Kerberos.   
 - Kerberos principal and keytab on each Drillbit (web server) that will use SPNEGO for authentication.  
 - Kerberos Ticket Granting Ticket on the client machine for the user accessing the Drillbit (web server).  
 - Drill web server configured for SPNEGO.  
 
 ##Configure SPNEGO on the Web Server and Web Client  
 
-The following sections provide the steps that an administrator can follow to configure SPNEGO on the web server (Drillbit). An administrator or a user can follow the steps for configuring the Drill client (web browser or client tool, such as curl).  
+The following sections provide the steps that an administrator can follow to configure SPNEGO on the web server (Drillbit). An administrator or a user can follow the steps for configuring the web browser or client tool, such as curl.  
 
 ###Configuring SPNEGO on the Drillbit (Web Server)  
 To configure SPNEGO on the web server, complete the following steps:  
@@ -77,17 +77,21 @@ To configure SPNEGO on the web server, complete the following steps:
                     }
               }  
 
-3-Configure the mapping from a Kerberos principal to a user account used by Drill. By default, the short name, which contains only the primary portion of the principal, is used as the user account known to Drill. This user account name is used to determine if the authenticated user has administrative privileges.  
+3-(Optional) Configure the mapping from a Kerberos principal to a user account used by Drill.   
 
 
-- Drill uses a Hadoop Kerberos name and rules to transform the client Kerberos principal to the principal Drill uses internally as the client’s identity. By default, this mapping rule extracts the first portion from the provided principal. For example, if the principal format is <Name1>/<Name2>@realm, the default rule extracts only Name1 from the principal and stores Name1 as the client’s identity on server side.  
-- Administrators can configure custom rules by setting the `drill.exec.security.auth.auth_to_local` property in the `drill-override.conf` file.   
+- Drill uses a Hadoop Kerberos name and rules to transform the client Kerberos principal to the principal Drill uses internally as the client’s identity. By default, this mapping rule extracts the first portion from the provided principal. For example, if the principal format is `<Name1>/<Name2>@realm`, the default rule extracts only Name1 from the principal and stores Name1 as the client’s identity on server side. Drill uses the short name, for example Name1, as the user account known to Drill. This user account name is used to determine if the authenticated user has administrative privileges.  
+- Administrators can configure custom rules by setting the `drill.exec.security.auth.auth_to_local` property in the `drill-override.conf` file.  
 
-##Configuring SPNEGO on the Drill Client (Web Client)  
 
-An administrator or user can configure SPNEGO on the client (web browser or client tools, such as curl). To configure SPNEGO on the client, a Kerberos Ticket Granting Ticket must exist for the user accessing the web server. The Kerberos ticket must have been created using `kinit`. The Kerberos ticket translates into a token for SPNEGO. If a user is authenticated through Kerberos, the user is granted a token for SPNEGO.
+See [Mapping from Kerberos Principal to OS user account](https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Mapping_from_Kerberos_principal_to_OS_user_account "Mapping from Kerberos Principal") in the [Hadoop in Secure Mode](https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html "Secure Mode Hadoop") documentation for details about how the rule works.
+   
 
-The client uses the web server name (in the server-side principal) to access the Drill Web Console. Use the same web server name that is used in the server-side principal to access the Drill Web Console. For example, if the server principal is `"HTTP/example.QA.LAB@QA.LAB”`, the client should use `http://example.QA.LAB:8047` as the Drill Web Console URL.
+##Configuring SPNEGO on the Client  
+
+An administrator or user can configure SPNEGO on the client (web browser or client tools, such as curl). To configure SPNEGO on the client, a Kerberos Ticket Granting Ticket must exist for the user accessing the web server. The Kerberos Ticket Granting Ticket generated on the client side is used by the web client to get a service ticket from the KDC. This service ticket is used to generate a SPNEGO token, which is presented to the web server for authentication.
+
+The client should use the same web server hostname (as configured in the server-side principal) to access the Drill Web Console. If the server hostname differs, SPNEGO authentication will fail. For example, if the server principal is `"HTTP/example.QA.LAB@QA.LAB”`, the client should use `http://example.QA.LAB:8047` as the Drill Web Console URL.
 
 The following sections provide instructions for configuring the supported client-side browsers: 
 
@@ -111,9 +115,9 @@ For MacOS or Linux, add the `--auth-server-whitelist` parameter to the `google-c
 No configuration is required for Safari. Safari automatically authenticates using SPNEGO when requested by the server.  
 
 ###REST API
-You can use CURL commands to log in to SPNEGO, and use SPNEGO over REST.
+You can use CURL commands to authenticate using SPNEGO and access secure web resources over REST.
  
-Issue the following `curl` command to log in to SPNEGO, and save the authenticated session cookie to a file, such as `cookie.txt`, as shown:
+Issue the following `curl` command to log in using SPNEGO, and save the authenticated session cookie to a file, such as `cookie.txt`, as shown:
  
        curl -v --negotiate -c cookie.txt -u : http://<hostname>:8047/spnegoLogin
  
@@ -129,7 +133,8 @@ If a user selects FORM, he/she must enter their username and password to access 
 
 If the user selects SPNEGO, the user is automatically logged in if they are an authenticated Kerberos user. 
 
-If accessing a protected page directly, the user is redirected to the authentication log in page.
+If accessing a protected page directly, the user is redirected to the authentication log in page. If the client fails to authenticate using SPNEGO, an error page displays with an option to use FORM authentication, assuming FORM authentication is configured on the server side.
+
 
                            	
  
