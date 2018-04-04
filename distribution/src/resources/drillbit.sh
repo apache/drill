@@ -128,40 +128,38 @@ check_before_start()
 }
 
 check_after_start(){
-    #check if the process is running
-    if [ -f $pid ]; then
-      dbitProc=$(ps -ef | grep `cat $pid` | grep Drillbit)
-      if [ -n "$dbitProc" ]; then
-        # Check and enforce for CGroup
-        if [ -n "$DRILLBIT_CGROUP" ]; then 
-          check_and_enforce_cgroup `cat $pid`
-        fi
-      fi
+    dbitPid=$1;
+    # Check and enforce for CGroup
+    if [ -n "$DRILLBIT_CGROUP" ]; then
+      check_and_enforce_cgroup $dbitPid
     fi
 }
 
 check_and_enforce_cgroup(){
     dbitPid=$1;
-    #if [ $(`ps -o cgroup` | grep -c $DRILLBIT_CGROUP ) -eq 1 ]; then 
-    if [ -f /cgroup/cpu/${DRILLBIT_CGROUP}/cgroup.procs ]; then 
-      echo $dbitPid > /cgroup/cpu/${DRILLBIT_CGROUP}/cgroup.procs
+    kill -0 $dbitPid
+    if [ $? -gt 0 ]; then 
+      echo "ERROR: Failed to add Drillbit to CGroup ( $DRILLBIT_CGROUP ) for 'cpu'. Ensure that the Drillbit ( pid=$dbitPid ) started up." >&2
+      exit 1
+    fi
+    SYS_CGROUP_DIR=${SYS_CGROUP_DIR:-"/sys/fs/cgroup"}
+    if [ -f $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs ]; then
+      echo $dbitPid > $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs
       # Verify Enforcement
-      cgroupStatus=`grep -w $pid /cgroup/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
+      cgroupStatus=`grep -w $pid $SYS_CGROUP_DIR/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
       if [ -z "$cgroupStatus" ]; then
         #Ref: https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
-        let cpu_quota=`cat /cgroup/cpu/${DRILLBIT_CGROUP}/cpu.cfs_quota_us`
-        let cpu_period=`cat /cgroup/cpu/${DRILLBIT_CGROUP}/cpu.cfs_period_us`
+        cpu_quota=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_quota_us`
+        cpu_period=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_period_us`
         if [ $cpu_period -gt 0 ] && [ $cpu_quota -gt 0 ]; then
-          coresAllowed="(up to "`echo $(( 100 * $cpu_quota / $cpu_period )) | sed 's/..$/.&/'`" cores allowed)"
+          coresAllowed=`echo $(( 100 * $cpu_quota / $cpu_period )) | sed 's/..$/.&/'`
+          echo "INFO: CGroup (drillcpu) will limit Drill to $coresAllowed cpu(s)"
         fi
-        echo "WARN: Drillbit's CPU resource usage will be managed under the CGroup : $DRILLBIT_CGROUP "$coresAllowed
       else
-        echo "ERROR: Failed to add Drillbit to CGroup ( $DRILLBIT_CGROUP ) for resource usage management.  Ensure that the cgroup manages CPU"
-        exit 1
+        echo "ERROR: Failed to add Drillbit to CGroup ( $DRILLBIT_CGROUP ) for 'cpu'. Ensure that the cgroup manages 'cpu'" >&2
       fi
     else
-      echo "ERROR: cgroup $DRILLBIT_CGROUP does not found. Ensure that daemon is running and cgroup exists"
-      exit 1
+      echo "ERROR: CGroup $DRILLBIT_CGROUP not found. Ensure that daemon is running, SYS_CGROUP_DIR is correctly set (currently, $SYS_CGROUP_DIR ), and that the CGroup exists" >&2
     fi
 }
 
@@ -190,9 +188,11 @@ start_bit ( )
   echo "`date` Starting $command on `hostname`" >> "$DRILLBIT_LOG_PATH"
   echo "`ulimit -a`" >> "$DRILLBIT_LOG_PATH" 2>&1
   nohup nice -n $DRILL_NICENESS "$DRILL_HOME/bin/runbit" exec ${args[@]} >> "$logout" 2>&1 &
+  procId=$!
+  echo $procId > $pid # Yeah, $pid is a file, $procId is the pid...
   echo $! > $pid
   sleep 1
-  check_after_start
+  check_after_start $procId
 }
 
 stop_bit ( )

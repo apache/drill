@@ -86,10 +86,14 @@
 
 #export DRILL_PID_DIR=${DRILL_PID_DIR:-$DRILL_HOME}
 
-# CGroup to which the Drillbit belong when running as a daemon using
-# drillbit.sh start.
-# Unset $DRILLBIT_CGROUP by default.
+# Default (Standard) CGroup Location: /sys/fs/cgroup
+# Specify the cgroup location if it is different from the default
+#export SYS_CGROUP_DIR=${SYS_CGROUP_DIR:-"/sys/fs/cgroup"}
 
+# CGroup to which the Drillbit belongs when running as a daemon using drillbit.sh start .
+# Drill will use CGroup for CPU enforcement only.
+
+# Unset $DRILLBIT_CGROUP by default
 #export DRILLBIT_CGROUP=${DRILLBIT_CGROUP:-"drillcpu"}
 
 # Custom JVM arguments to pass to the both the Drillbit and sqlline. Typically
