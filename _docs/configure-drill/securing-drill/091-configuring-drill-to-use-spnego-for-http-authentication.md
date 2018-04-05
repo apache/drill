@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill to use SPNEGO for HTTP Authentication"
-date: 2018-04-04 23:22:53 UTC
+date: 2018-04-05 01:05:13 UTC
 parent: "Securing Drill"
 ---  
 
@@ -77,14 +77,9 @@ To configure SPNEGO on the web server, complete the following steps:
                     }
               }  
 
-3-(Optional) Configure the mapping from a Kerberos principal to a user account used by Drill.   
+3-(Optional) To configure the mapping from a Kerberos principal to a user account used by Drill, update the `drill.exec.security.auth.auth_to_local` property in the `drill-override.conf` file with custom rules, as described in [Mapping from Kerberos Principal to OS user account](https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Mapping_from_Kerberos_principal_to_OS_user_account "Mapping from Kerberos Principal").  
 
-
-- Drill uses a Hadoop Kerberos name and rules to transform the client Kerberos principal to the principal Drill uses internally as the client’s identity. By default, this mapping rule extracts the first portion from the provided principal. For example, if the principal format is `<Name1>/<Name2>@realm`, the default rule extracts only Name1 from the principal and stores Name1 as the client’s identity on server side. Drill uses the short name, for example Name1, as the user account known to Drill. This user account name is used to determine if the authenticated user has administrative privileges.  
-- Administrators can configure custom rules by setting the `drill.exec.security.auth.auth_to_local` property in the `drill-override.conf` file.  
-
-
-See [Mapping from Kerberos Principal to OS user account](https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Mapping_from_Kerberos_principal_to_OS_user_account "Mapping from Kerberos Principal") in the [Hadoop in Secure Mode](https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html "Secure Mode Hadoop") documentation for details about how the rule works.
+**Note:** Drill uses a Hadoop Kerberos name and rules to transform the client Kerberos principal to the principal Drill uses internally as the client’s identity. By default, this mapping rule extracts the first portion from the provided principal. For example, if the principal format is <Name1>/<Name2>@realm, the default rule extracts only Name1 from the principal and stores Name1 as the client’s identity on server side. Drill uses the short name, for example Name1, as the user account known to Drill. This user account name is used to determine if the authenticated user has administrative privileges.
    
 
 ##Configuring SPNEGO on the Client  
