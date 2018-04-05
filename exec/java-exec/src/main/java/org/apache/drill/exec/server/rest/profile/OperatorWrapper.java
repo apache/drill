@@ -39,7 +39,8 @@ import com.google.common.base.Preconditions;
  * Wrapper class for profiles of ALL operator instances of the same operator type within a major fragment.
  */
 public class OperatorWrapper {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorWrapper.class);
+  @SuppressWarnings("unused")
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorWrapper.class);
 
   private static final String HTML_ATTRIB_SPILLS = "spills";
   private static final String HTML_ATTRIB_CLASS = "class";
@@ -47,7 +48,7 @@ public class OperatorWrapper {
   private static final String HTML_ATTRIB_TITLE = "title";
   private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("#.##");
   private static final String UNKNOWN_OPERATOR = "UNKNOWN_OPERATOR";
-  //-ve value to indicate absence of metric
+  //Negative valued constant used for denoting invalid index to indicate absence of metric
   private static final int NO_SPILL_METRIC_INDEX = Integer.MIN_VALUE;
   private final int major;
   private final List<ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String>> opsAndHosts; // [(operatorProfile --> minorFragment number,host), ...]
@@ -230,13 +231,13 @@ public class OperatorWrapper {
     if (hasSpilledToDisk) {
       avgSpillMap = new HashMap<>();
       //Average SpillCycle
-      float avgSpillCycle = (float) spillCycleSum/size;
-      avgSpillMap.put(HTML_ATTRIB_TITLE, DECIMAL_FORMATTER.format(avgSpillCycle) + " Spills on average");
+      double avgSpillCycle = spillCycleSum/size;
+      avgSpillMap.put(HTML_ATTRIB_TITLE, DECIMAL_FORMATTER.format(avgSpillCycle) + " spills on average");
       avgSpillMap.put(HTML_ATTRIB_STYLE, "cursor:help;" + spillCycleMax);
       avgSpillMap.put(HTML_ATTRIB_CLASS, "spill-tag"); //JScript will inject Icon
       avgSpillMap.put(HTML_ATTRIB_SPILLS, DECIMAL_FORMATTER.format(avgSpillCycle)); //JScript will inject Count
       maxSpillMap = new HashMap<>();
-      maxSpillMap.put(HTML_ATTRIB_TITLE, "Most # Spills: " + spillCycleMax);
+      maxSpillMap.put(HTML_ATTRIB_TITLE, "Most # spills: " + spillCycleMax);
       maxSpillMap.put(HTML_ATTRIB_STYLE, "cursor:help;" + spillCycleMax);
       maxSpillMap.put(HTML_ATTRIB_CLASS, "spill-tag"); //JScript will inject Icon
       maxSpillMap.put(HTML_ATTRIB_SPILLS, String.valueOf(spillCycleMax)); //JScript will inject Count
@@ -252,7 +253,7 @@ public class OperatorWrapper {
    * @return index of spill metric
    */
   private int getSpillCycleMetricIndex(CoreOperatorType operatorType) {
-    String metricName = null;
+    String metricName;
 
     switch (operatorType) {
     case EXTERNAL_SORT:
