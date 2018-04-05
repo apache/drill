@@ -132,9 +132,12 @@ public class MapUtility {
           break;
         case VARDECIMAL:
           if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).varDecimal());
+            fieldReader.copyAsValue(
+                mapWriter.list(MappifyUtility.fieldValue)
+                    .varDecimal(valueMajorType.getScale(), valueMajorType.getPrecision()));
           } else {
-            fieldReader.copyAsValue(mapWriter.varDecimal(MappifyUtility.fieldValue));
+            fieldReader.copyAsValue(
+                mapWriter.varDecimal(MappifyUtility.fieldValue, valueMajorType.getScale(), valueMajorType.getPrecision()));
           }
           break;
         case DATE:

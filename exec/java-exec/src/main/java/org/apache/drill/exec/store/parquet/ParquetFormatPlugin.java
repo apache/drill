@@ -153,6 +153,12 @@ public class ParquetFormatPlugin implements FormatPlugin{
     options.put(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING,
         context.getOptions().getOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING).bool_val.toString());
 
+    options.put(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS,
+        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS).string_val);
+
+    options.put(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS,
+        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS).bool_val.toString());
+
     RecordWriter recordWriter = new ParquetRecordWriter(context, writer);
     recordWriter.init(options);
 

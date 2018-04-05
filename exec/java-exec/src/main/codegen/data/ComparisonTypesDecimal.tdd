@@ -13,11 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# TODO: the assumption that VarDecimal takes 6 bytes might not always apply
 {
   { decimalTypes: [
-      {name: "VarDecimal", storage: "6"},
+      {name: "VarDecimal"},
       {name: "Decimal28Sparse", storage: "5"},
       {name: "Decimal38Sparse", storage: "6"},
       {name: "Decimal28Dense", storage: "4"},

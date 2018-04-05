@@ -87,22 +87,23 @@ public class GetSetVectorHelper {
         eval.assign(out.getHolder().ref("start"), JExpr.cast(model._ref(int.class), se));
         eval.assign(out.getHolder().ref("end"), JExpr.cast(model._ref(int.class), se.shr(JExpr.lit(32))));
         eval.assign(out.getHolder().ref("scale"), vector.invoke("getField").invoke("getScale"));
+        eval.assign(out.getHolder().ref("precision"), vector.invoke("getField").invoke("getPrecision"));
         return;
       }
-      case INTERVAL:{
+      case INTERVAL: {
         JVar start = eval.decl(model.INT, "start", JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
         JVar data = eval.decl(model.ref(DrillBuf.class), "data", vector.invoke("getBuffer"));
         eval.assign(out.getHolder().ref("months"), data.invoke("getInt").arg(start));
         eval.assign(out.getHolder().ref("days"), data.invoke("getInt").arg(start.plus(JExpr.lit(4))));
         eval.assign(out.getHolder().ref("milliseconds"), data.invoke("getInt").arg(start.plus(JExpr.lit(8))));
         return;
-        }
+      }
       case INTERVALDAY: {
         JVar start = eval.decl(model.INT, "start", JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
         eval.assign(out.getHolder().ref("days"), vector.invoke("getBuffer").invoke("getInt").arg(start));
         eval.assign(out.getHolder().ref("milliseconds"), vector.invoke("getBuffer").invoke("getInt").arg(start.plus(JExpr.lit(4))));
         return;
-        }
+      }
       case VAR16CHAR:
       case VARBINARY:
       case VARCHAR: {
@@ -111,7 +112,7 @@ public class GetSetVectorHelper {
          eval.assign(out.getHolder().ref("start"), JExpr.cast(model._ref(int.class), se));
          eval.assign(out.getHolder().ref("end"), JExpr.cast(model._ref(int.class), se.shr(JExpr.lit(32))));
         return;
-        }
+      }
       }
     }
 
@@ -149,37 +150,36 @@ public class GetSetVectorHelper {
       case BIT:
       case DECIMAL9:
       case DECIMAL18:
-        return setMethod //
+        return setMethod
             .arg(in.getValue());
       case DECIMAL28DENSE:
       case DECIMAL28SPARSE:
       case DECIMAL38DENSE:
       case DECIMAL38SPARSE:
-        return setMethod //
-            .arg(in.f("start")) //
+        return setMethod
+            .arg(in.f("start"))
             .arg(in.f("buffer"));
       case INTERVAL:{
-        return setMethod //
-            .arg(in.f("months")) //
-            .arg(in.f("days")) //
+        return setMethod
+            .arg(in.f("months"))
+            .arg(in.f("days"))
             .arg(in.f("milliseconds"));
       }
       case INTERVALDAY: {
-        return setMethod //
-            .arg(in.f("days")) //
+        return setMethod
+            .arg(in.f("days"))
             .arg(in.f("milliseconds"));
       }
       case VAR16CHAR:
       case VARBINARY:
       case VARCHAR:
       case VARDECIMAL:
-        return setMethod //
-            .arg(in.f("start")) //
-            .arg(in.f("end")) //
+        return setMethod
+            .arg(in.f("start"))
+            .arg(in.f("end"))
             .arg(in.f("buffer"));
       }
     }
-
 
     return setMethod.arg(in.getHolder());
 

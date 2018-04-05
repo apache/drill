@@ -409,7 +409,9 @@ public class ScanBatch implements CloseableRecordBatch {
 
       // Check if the field exists.
       ValueVector v = fieldVectorMap.get(field.getName());
-      if (v == null || v.getClass() != clazz) {
+      // for the cases when fields have a different scale or precision,
+      // the new vector should be used to handle the value correctly
+      if (v == null || !v.getField().getType().equals(field.getType())) {
         // Field does not exist--add it to the map and the output container.
         v = TypeHelper.getNewVector(field, allocator, callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {

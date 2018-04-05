@@ -482,7 +482,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       vAccessor.get(index, holder);
       holder.isSet = bAccessor.get(index);
 
-      <#if minor.class.startsWith("Decimal")>
+      <#if minor.class.contains("Decimal")>
       holder.scale = getField().getScale();
       holder.precision = getField().getPrecision();
       </#if>
@@ -694,17 +694,29 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     }
 
     </#if>
-    <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
+    <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "VarDecimal">
     public void set(int index, BigDecimal value) {
+      <#if type.major == "VarLen">
+      if (index > lastSet + 1) {
+        fillEmpties(index);
+      }
+      </#if>
       bits.getMutator().set(index, 1);
       values.getMutator().set(index, value);
       setCount++;
+      <#if type.major == "VarLen">lastSet = index;</#if>
     }
 
     public void setSafe(int index, BigDecimal value) {
+      <#if type.major == "VarLen">
+      if (index > lastSet + 1) {
+        fillEmpties(index);
+      }
+      </#if>
       bits.getMutator().setSafe(index, 1);
       values.getMutator().setSafe(index, value);
       setCount++;
+      <#if type.major == "VarLen">lastSet = index;</#if>
     }
 
     </#if>

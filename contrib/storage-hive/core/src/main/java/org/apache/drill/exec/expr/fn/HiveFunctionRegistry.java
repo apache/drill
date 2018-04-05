@@ -32,7 +32,6 @@ import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -267,9 +266,9 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
             .build(logger);
       }
 
-      return TypeInferenceUtils.createCalciteTypeWithNullability(
+      return TypeInferenceUtils.convertToCalciteType(
           opBinding.getTypeFactory(),
-          TypeInferenceUtils.getCalciteTypeFromDrillType(hiveFuncHolder.getReturnType().getMinorType()),
+          hiveFuncHolder.getReturnType(),
           hiveFuncHolder.getReturnType().getMode() != TypeProtos.DataMode.REQUIRED);
     }
   }

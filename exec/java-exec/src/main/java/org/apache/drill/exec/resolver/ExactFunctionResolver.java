@@ -27,7 +27,6 @@ import java.util.List;
 
 public class ExactFunctionResolver implements FunctionResolver {
 
-
   /*
    * This function resolves the input call to a func holder only if all
    * the input argument types match exactly with the func holder arguments. This is used when we
@@ -37,17 +36,17 @@ public class ExactFunctionResolver implements FunctionResolver {
   @Override
   public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
 
-    int currcost;
+    int currCost;
+
+    final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
+    for (LogicalExpression expression : call.args) {
+      argumentTypes.add(expression.getMajorType());
+    }
 
     for (DrillFuncHolder h : methods) {
-      final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
-      for (LogicalExpression expression : call.args) {
-        argumentTypes.add(expression.getMajorType());
-      }
-      currcost = TypeCastRules.getCost(argumentTypes, h);
-
+      currCost = TypeCastRules.getCost(argumentTypes, h);
       // Return if we found a function that has an exact match with the input arguments
-      if (currcost  == 0){
+      if (currCost == 0) {
         return h;
       }
     }

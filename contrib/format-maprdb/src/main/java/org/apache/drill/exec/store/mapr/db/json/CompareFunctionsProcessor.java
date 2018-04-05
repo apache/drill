@@ -31,12 +31,12 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.joda.time.LocalTime;
 import org.ojai.Value;
 import org.ojai.types.ODate;
 import org.ojai.types.OTime;
-import org.ojai.types.OTimestamp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -173,6 +173,14 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       return true;
     }
 
+    // MaprDB does not support decimals completely, therefore double value is used.
+    // See com.mapr.db.impl.ConditionImpl.is(FieldPath path, QueryCondition.Op op, BigDecimal value) method
+    if (valueArg instanceof VarDecimalExpression) {
+      this.value = KeyValueBuilder.initFrom(((VarDecimalExpression) valueArg).getBigDecimal().doubleValue());
+      this.path = path;
+      return true;
+    }
+
     if (valueArg instanceof TimeStampExpression) {
       // disable pushdown of TimeStampExpression type until bug 22824 is fixed.
       //
@@ -196,6 +204,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         .add(LongExpression.class)
         .add(QuotedString.class)
         .add(TimeExpression.class)
+        .add(VarDecimalExpression.class)
         .build();
   }
 

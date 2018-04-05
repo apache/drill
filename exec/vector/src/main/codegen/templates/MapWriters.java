@@ -197,7 +197,8 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   <#assign vectName = capName />
   <#assign vectName = "Nullable${capName}" />
 
-  <#if minor.class?starts_with("Decimal") >
+  <#if minor.class?contains("Decimal") >
+  @Override
   public ${minor.class}Writer ${lowerName}(String name) {
     // returns existing writer
     final FieldWriter writer = fields.get(name.toLowerCase());
@@ -205,6 +206,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
     return writer;
   }
 
+  @Override
   public ${minor.class}Writer ${lowerName}(String name, int scale, int precision) {
     final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.OPTIONAL, scale, precision);
   <#else>

@@ -42,7 +42,7 @@ public class ResolverTypePrecedence {
      * tinyint could be promoted into int; but int could NOT be promoted into tinyint (due to possible precision loss).
      */
     int i = 0;
-    precedenceMap = new HashMap<MinorType, Integer>();
+    precedenceMap = new HashMap<>();
     precedenceMap.put(MinorType.NULL, i += 2);       // NULL is legal to implicitly be promoted to any other type
     precedenceMap.put(MinorType.FIXEDBINARY, i += 2); // Fixed-length is promoted to var length
     precedenceMap.put(MinorType.VARBINARY, i += 2);
@@ -107,12 +107,6 @@ public class ResolverTypePrecedence {
     rule.add(MinorType.UINT2);
     rule.add(MinorType.UINT4);
     rule.add(MinorType.UINT8);
-    rule.add(MinorType.DECIMAL9);
-    rule.add(MinorType.DECIMAL18);
-    rule.add(MinorType.DECIMAL28SPARSE);
-    rule.add(MinorType.DECIMAL28DENSE);
-    rule.add(MinorType.DECIMAL38SPARSE);
-    rule.add(MinorType.DECIMAL38DENSE);
     rule.add(MinorType.VARDECIMAL);
     rule.add(MinorType.MONEY);
     rule.add(MinorType.FLOAT4);
@@ -140,6 +134,34 @@ public class ResolverTypePrecedence {
     rule.add(MinorType.VARCHAR);
     secondaryImplicitCastRules.put(MinorType.VARBINARY, rule);
 
-  }
+    rule = new HashSet<>();
 
+    // Be able to implicitly cast to VARDECIMAL
+    rule.add(MinorType.FLOAT8);
+    secondaryImplicitCastRules.put(MinorType.VARDECIMAL, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL9
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL9, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL18
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL18, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL28SPARSE
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL28SPARSE, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to DECIMAL38SPARSE
+    rule.add(MinorType.VARDECIMAL);
+    secondaryImplicitCastRules.put(MinorType.DECIMAL38SPARSE, rule);
+  }
 }

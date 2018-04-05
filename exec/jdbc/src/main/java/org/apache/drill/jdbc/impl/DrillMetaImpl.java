@@ -19,6 +19,7 @@ package org.apache.drill.jdbc.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -132,6 +133,7 @@ class DrillMetaImpl extends MetaImpl {
         .put(Double.TYPE,  of(Types.DOUBLE, "DOUBLE"))
         .put(Double.class, of(Types.DOUBLE, "DOUBLE"))
         .put(String.class, of(Types.VARCHAR, "CHARACTER VARYING"))
+        .put(BigDecimal.class, of(Types.DECIMAL, "DECIMAL"))
         .put(java.sql.Date.class, of(Types.DATE, "DATE"))
         .put(Time.class, of(Types.TIME, "TIME"))
         .put(Timestamp.class, of(Types.TIMESTAMP, "TIMESTAMP"))

@@ -183,7 +183,9 @@
       javaType: "int",
       boxedType: "DrillBuf",
       minor: [
-        { class: "VarDecimal", friendlyType: "BigDecimal", fields: [{name: "start", type: "int"}, {name: "end", type: "int"}, {name: "buffer", type: "DrillBuf"}, {name: "scale", type: "int", include: false}] }
+        { class: "VarDecimal", friendlyType: "BigDecimal", fields: [{name: "start", type: "int"},
+            {name: "end", type: "int"}, {name: "buffer", type: "DrillBuf"},
+            {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
       ]
     },
     {

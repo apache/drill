@@ -98,10 +98,7 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
       return false;
     }
 
-    if (!ifExpr.elseExpression.accept(this, errors)) {
-      return false;
-    }
-    return true;
+    return ifExpr.elseExpression.accept(this, errors);
   }
 
   @Override
@@ -167,6 +164,11 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   @Override
   public Boolean visitDecimal38Constant(Decimal38Expression decExpr, ErrorCollector errors) {
     return false;
+  }
+
+  @Override
+  public Boolean visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, ErrorCollector errors) {
+    return true;
   }
 
   @Override

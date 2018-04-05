@@ -114,6 +114,7 @@ public class TestFillEmpties extends SubOperatorTest {
       case DECIMAL28SPARSE:
       case DECIMAL9:
       case DECIMAL38SPARSE:
+      case VARDECIMAL:
         doFillEmptiesTest(type, mode, 9, 2);
         break;
       default:

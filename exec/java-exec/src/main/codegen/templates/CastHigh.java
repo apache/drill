@@ -42,26 +42,30 @@ public class CastHighFunctions {
   <#list casthigh.types as type>
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "casthigh", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "casthigh",
+                    scope = FunctionTemplate.FunctionScope.SIMPLE,
+                    <#if type.from.contains("Decimal")>
+                    returnType = FunctionTemplate.ReturnType.DECIMAL_AGGREGATE,
+                    </#if>
+                    nulls = NullHandling.NULL_IF_NULL)
   public static class CastHigh${type.from} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     <#if type.from.contains("Decimal")>
-      @Output ${type.from}Holder out;
+    @Output ${type.from}Holder out;
     <#else>
-      @Output ${type.to}Holder out;
+    @Output ${type.to}Holder out;
     </#if>
 
     public void setup() {}
 
     public void eval() {
-      <#if type.value >
-        out.value = (double) in.value;
+      <#if type.value>
+      out.value = (double) in.value;
       <#else>
-        out = in;
+      out = in;
       </#if>
     }
   }
 </#list>
 }
-

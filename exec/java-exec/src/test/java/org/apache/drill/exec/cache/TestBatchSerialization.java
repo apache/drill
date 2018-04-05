@@ -169,6 +169,7 @@ public class TestBatchSerialization extends DrillTest {
     testType(MinorType.DECIMAL18);
     testType(MinorType.DECIMAL28SPARSE);
     testType(MinorType.DECIMAL38SPARSE);
+    testType(MinorType.VARDECIMAL);
 //  testType(MinorType.DECIMAL28DENSE); No writer
 //  testType(MinorType.DECIMAL38DENSE); No writer
     testType(MinorType.DATE);

@@ -409,4 +409,30 @@ public class TestNestedLoopJoin extends JoinTestBase {
       setSessionOption(ExecConstants.SLICE_TARGET, 100000);
     }
   }
+
+  @Test
+  public void testNlJoinWithStringsInCondition() throws Exception {
+    try {
+      test(DISABLE_NLJ_SCALAR);
+      test(DISABLE_JOIN_OPTIMIZATION);
+
+      final String query =
+          "select v.employee_id\n" +
+          "from cp.`employee.json` v\n" +
+          "left outer join cp.`employee.json` s\n" +
+          "on v.employee_id <> s.employee_id\n" +
+          "and (v.position_id <= '-1' or s.department_id > '5000')\n" +
+          "order by v.employee_id limit 1";
+
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("employee_id")
+          .baselineValues(1L)
+          .go();
+    } finally {
+      resetJoinOptions();
+      test(RESET_JOIN_OPTIMIZATION);
+    }
+  }
 }

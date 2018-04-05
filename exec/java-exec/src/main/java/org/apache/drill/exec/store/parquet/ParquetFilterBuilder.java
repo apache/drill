@@ -39,10 +39,12 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.expr.stat.ParquetBooleanPredicates;
 import org.apache.drill.exec.expr.stat.ParquetComparisonPredicates;
 import org.apache.drill.exec.expr.stat.ParquetIsPredicates;
 import org.apache.drill.exec.ops.UdfUtilities;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,6 +112,12 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
   }
 
   @Override
+  public LogicalExpression visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, Set<LogicalExpression> value)
+      throws RuntimeException {
+    return decExpr;
+  }
+
+  @Override
   public LogicalExpression visitDateConstant(ValueExpressions.DateExpression dateExpr, Set<LogicalExpression> value) throws RuntimeException {
     return dateExpr;
   }
@@ -169,6 +177,11 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       return ValueExpressions.getFloat4(((Float4Holder) holder).value);
     case FLOAT8:
       return ValueExpressions.getFloat8(((Float8Holder) holder).value);
+    case VARDECIMAL:
+      VarDecimalHolder decimalHolder = (VarDecimalHolder) holder;
+      return ValueExpressions.getVarDecimal(
+          DecimalUtility.getBigDecimalFromDrillBuf(decimalHolder.buffer,
+              decimalHolder.start, decimalHolder.end - decimalHolder.start, decimalHolder.scale));
     case DATE:
       return ValueExpressions.getDate(((DateHolder) holder).value);
     case TIMESTAMP:

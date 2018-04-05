@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr.fn.interpreter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -240,6 +241,12 @@ public class InterpreterEvaluator {
           return ValueHolderHelper.getDecimal38Holder(buffer, decExpr.getBigDecimal().toString());
         }
       });
+    }
+
+    @Override
+    public ValueHolder visitVarDecimalConstant(final ValueExpressions.VarDecimalExpression decExpr, Integer value) throws RuntimeException {
+      return getConstantValueHolder(decExpr.getBigDecimal().toString(), decExpr.getMajorType().getMinorType(),
+          buffer -> ValueHolderHelper.getVarDecimalHolder(Objects.requireNonNull(buffer), decExpr.getBigDecimal().toString()));
     }
 
     @Override

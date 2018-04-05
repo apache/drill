@@ -17,10 +17,14 @@
  */
 package org.apache.drill.exec.fn.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
@@ -39,6 +43,7 @@ import org.junit.experimental.categories.Category;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -65,8 +70,8 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .sqlQuery("select count(t.x.y)  as cnt1, count(`integer`) as cnt2 from cp.`jsoninput/input2.json` t")
         .ordered()
         .baselineColumns("cnt1", "cnt2")
-        .baselineValues(3l, 4l)
-        .build().run();
+        .baselineValues(3L, 4L)
+        .go();
   }
 
   @Test
@@ -75,18 +80,23 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .sqlQuery("select count(distinct `bool_val`) as cnt from `sys`.`options`")
         .ordered()
         .baselineColumns("cnt")
-        .baselineValues(2l)
-        .build().run();
+        .baselineValues(2L)
+        .go();
   }
 
   @Test
   public void testMaxWithZeroInput() throws Exception {
-    testBuilder()
-        .sqlQuery("select max(employee_id * 0.0) as max_val from cp.`employee.json`")
-        .unOrdered()
-        .baselineColumns("max_val")
-        .baselineValues(0.0d)
-        .go();
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
+      testBuilder()
+          .sqlQuery("select max(employee_id * 0.0) as max_val from cp.`employee.json`")
+          .unOrdered()
+          .baselineColumns("max_val")
+          .baselineValues(0.0)
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
   }
 
   @Ignore
@@ -142,8 +152,8 @@ public class TestAggregateFunctions extends BaseTestQuery {
     .ordered()
     .optionSettingQueriesForTestQuery("alter system set `planner.slice_target` = 1000")
     .baselineColumns("cnt")
-    .baselineValues(100l)
-    .build().run();
+    .baselineValues(100L)
+    .go();
   }
 
   @Test // DRILL-2168
@@ -209,14 +219,14 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .sqlQuery("select count(a) col1, avg(b) col2 from cp.`jsoninput/nullable3.json`")
         .unOrdered()
         .baselineColumns("col1", "col2")
-        .baselineValues(2l, 3.0d)
+        .baselineValues(2L, 3.0d)
         .go();
 
     testBuilder()
         .sqlQuery("select count(a) col1, avg(a) col2 from cp.`jsoninput/nullable3.json`")
         .unOrdered()
         .baselineColumns("col1", "col2")
-        .baselineValues(2l, 1.0d)
+        .baselineValues(2L, 1.0d)
         .go();
   }
 
@@ -241,6 +251,211 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testVarSampDecimal() throws Exception {
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select var_samp(cast(employee_id as decimal(28, 20))) as dec20,\n" +
+                "var_samp(cast(employee_id as decimal(28, 0))) as dec6,\n" +
+                "var_samp(cast(employee_id as integer)) as d\n" +
+                "from cp.`employee.json`")
+          .unOrdered()
+          .baselineColumns("dec20", "dec6", "d")
+          .baselineValues(new BigDecimal("111266.99999699895713760532"),
+              new BigDecimal("111266.999997"),
+              111266.99999699896)
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
+  }
+
+  @Test
+  public void testVarPopDecimal() throws Exception {
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select var_pop(cast(employee_id as decimal(28, 20))) as dec20,\n" +
+              "var_pop(cast(employee_id as decimal(28, 0))) as dec6,\n" +
+              "var_pop(cast(employee_id as integer)) as d\n" +
+              "from cp.`employee.json`")
+          .unOrdered()
+          .baselineColumns("dec20", "dec6", "d")
+          .baselineValues(new BigDecimal("111170.66493206649050804895"),
+              new BigDecimal("111170.664932"),
+              111170.66493206649)
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
+  }
+
+  @Test
+  public void testStddevSampDecimal() throws Exception {
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select stddev_samp(cast(employee_id as decimal(28, 20))) as dec20,\n" +
+              "stddev_samp(cast(employee_id as decimal(28, 0))) as dec6,\n" +
+              "stddev_samp(cast(employee_id as integer)) as d\n" +
+              "from cp.`employee.json`")
+          .unOrdered()
+          .baselineColumns("dec20", "dec6", "d")
+          .baselineValues(new BigDecimal("333.56708470261114349632"),
+              new BigDecimal("333.567085"),
+              333.56708470261117) // last number differs because of double precision.
+          // Was taken sqrt of 111266.99999699895713760531784795216338 and decimal result is correct
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
+  }
+
+  @Test
+  public void testStddevPopDecimal() throws Exception {
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select stddev_pop(cast(employee_id as decimal(28, 20))) as dec20,\n" +
+              "stddev_pop(cast(employee_id as decimal(28, 0))) as dec6,\n" +
+              "stddev_pop(cast(employee_id as integer)) as d\n" +
+              "from cp.`employee.json`")
+          .unOrdered()
+          .baselineColumns("dec20", "dec6", "d")
+          .baselineValues(new BigDecimal("333.42265209800381903633"),
+              new BigDecimal("333.422652"),
+              333.4226520980038)
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
+  }
+
+  @Test
+  public void testSumDecimal() throws Exception {
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select sum(cast(employee_id as decimal(9, 0))) as colDecS0,\n" +
+              "sum(cast(employee_id as decimal(12, 3))) as colDecS3,\n" +
+              "sum(cast(employee_id as integer)) as colInt\n" +
+              "from cp.`employee.json`")
+          .unOrdered()
+          .baselineColumns("colDecS0", "colDecS3", "colInt")
+          .baselineValues(BigDecimal.valueOf(668743), new BigDecimal("668743.000"), 668743L)
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
+  }
+
+  @Test
+  public void testAvgDecimal() throws Exception {
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select avg(cast(employee_id as decimal(28, 20))) as colDec20,\n" +
+              "avg(cast(employee_id as decimal(28, 0))) as colDec6,\n" +
+              "avg(cast(employee_id as integer)) as colInt\n" +
+              "from cp.`employee.json`")
+          .unOrdered()
+          .baselineColumns("colDec20", "colDec6", "colInt")
+          .baselineValues(new BigDecimal("578.99826839826839826840"),
+              new BigDecimal("578.998268"),
+              578.9982683982684)
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
+  }
+
+  @Test
+  public void testSumAvgDecimalLimit0() throws Exception {
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema =
+        ImmutableList.of(
+            Pair.of(SchemaPath.getSimplePath("sum_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 3, 38)),
+            Pair.of(SchemaPath.getSimplePath("avg_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+            Pair.of(SchemaPath.getSimplePath("stddev_pop_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+            Pair.of(SchemaPath.getSimplePath("stddev_samp_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+            Pair.of(SchemaPath.getSimplePath("var_pop_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+            Pair.of(SchemaPath.getSimplePath("var_samp_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+            Pair.of(SchemaPath.getSimplePath("max_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 3, 9)),
+            Pair.of(SchemaPath.getSimplePath("min_col"),
+                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 3, 9)));
+
+    String query =
+        "select\n" +
+            "sum(cast(employee_id as decimal(9, 3))) sum_col,\n" +
+            "avg(cast(employee_id as decimal(9, 3))) avg_col,\n" +
+            "stddev_pop(cast(employee_id as decimal(9, 3))) stddev_pop_col,\n" +
+            "stddev_samp(cast(employee_id as decimal(9, 3))) stddev_samp_col,\n" +
+            "var_pop(cast(employee_id as decimal(9, 3))) var_pop_col,\n" +
+            "var_samp(cast(employee_id as decimal(9, 3))) var_samp_col,\n" +
+            "max(cast(employee_id as decimal(9, 3))) max_col,\n" +
+            "min(cast(employee_id as decimal(9, 3))) min_col\n" +
+            "from cp.`employee.json` limit 0";
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      alterSession(ExecConstants.EARLY_LIMIT0_OPT_KEY, true);
+
+      testBuilder()
+          .sqlQuery(query)
+          .schemaBaseLine(expectedSchema)
+          .go();
+
+      alterSession(ExecConstants.EARLY_LIMIT0_OPT_KEY, false);
+
+      testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .go();
+
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+      resetSessionOption(ExecConstants.EARLY_LIMIT0_OPT_KEY);
+    }
+  }
+
+  @Test // DRILL-6221
+  public void testAggGroupByWithNullDecimal() throws Exception {
+    String fileName = "table.json";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"a\": 1, \"b\": 0}");
+      writer.write("{\"b\": 2}");
+    }
+
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select sum(cast(a as decimal(9,0))) as s,\n" +
+              "avg(cast(a as decimal(9,0))) as a,\n" +
+              "var_samp(cast(a as decimal(9,0))) as varSamp,\n" +
+              "var_pop(cast(a as decimal(9,0))) as varPop,\n" +
+              "stddev_pop(cast(a as decimal(9,0))) as stddevPop,\n" +
+              "stddev_samp(cast(a as decimal(9,0))) as stddevSamp," +
+              "max(cast(a as decimal(9,0))) as mx," +
+            "min(cast(a as decimal(9,0))) as mn from dfs.`%s` t group by a", fileName)
+          .unOrdered()
+          .baselineColumns("s", "a", "varSamp", "varPop", "stddevPop", "stddevSamp", "mx", "mn")
+          .baselineValues(BigDecimal.valueOf(1), new BigDecimal("1.000000"), new BigDecimal("0.000000"),
+              new BigDecimal("0.000000"), new BigDecimal("0.000000"), new BigDecimal("0.000000"),
+              BigDecimal.valueOf(1), BigDecimal.valueOf(1))
+          .baselineValues(null, null, null, null, null, null, null, null)
+          .go();
+
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
+  }
+
+  @Test
   // test aggregates when input is empty and data type is optional
   public void countEmptyNullableInput() throws Exception {
     String query = "select " +
@@ -251,7 +466,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("col1", "col2", "col3")
-        .baselineValues(0l, null, null)
+        .baselineValues(0L, null, null)
         .go();
   }
 

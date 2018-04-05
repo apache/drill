@@ -15,11 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.apache.drill.common.types.MinorType;
-import org.apache.parquet.format.ConvertedType;
-import org.apache.parquet.schema.DecimalMetadata;
-import org.apache.parquet.schema.OriginalType;
-import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/parquet/ParquetTypeHelper.java" />
@@ -29,6 +24,7 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.DecimalMetadata;
@@ -85,7 +81,8 @@ public class ParquetTypeHelper {
             minor.class == "Decimal28Dense" ||
             minor.class == "Decimal38Dense" ||
             minor.class == "Decimal28Sparse" ||
-            minor.class == "Decimal38Sparse">
+            minor.class == "Decimal38Sparse" ||
+            minor.class == "VarDecimal">
                     typeMap.put(MinorType.${minor.class?upper_case}, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY);
     <#elseif
             minor.class == "VarChar" ||
@@ -106,8 +103,8 @@ public class ParquetTypeHelper {
 
     <#list vv.types as type>
     <#list type.minor as minor>
-            <#if minor.class.startsWith("Decimal")>
-            originalTypeMap.put(MinorType.${minor.class?upper_case},OriginalType.DECIMAL);
+            <#if minor.class.contains("Decimal")>
+            originalTypeMap.put(MinorType.${minor.class?upper_case}, OriginalType.DECIMAL);
             </#if>
     </#list>
     </#list>
@@ -157,9 +154,25 @@ public class ParquetTypeHelper {
       case DECIMAL28SPARSE:
         return 12;
       case DECIMAL38SPARSE:
+      case VARDECIMAL:
         return 16;
       default:
         return 0;
+    }
+  }
+
+  public static int getMaxPrecisionForPrimitiveType(PrimitiveTypeName type) {
+    switch(type) {
+      case INT32:
+        return 9;
+      case INT64:
+        return 18;
+      case FIXED_LEN_BYTE_ARRAY:
+        return DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+      default:
+        throw new UnsupportedOperationException(String.format(
+          "Specified PrimitiveTypeName %s cannot be used to determine max precision",
+          type));
     }
   }
 

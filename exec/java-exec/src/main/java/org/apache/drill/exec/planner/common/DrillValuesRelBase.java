@@ -47,7 +47,6 @@ import static org.apache.drill.exec.planner.logical.DrillOptiq.isLiteralNull;
  */
 public abstract class DrillValuesRelBase extends Values implements DrillRelNode {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillValuesRelBase.class);
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   protected final JSONOptions content;
@@ -169,12 +168,13 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         return;
 
       case DECIMAL:
+        // Converting exact decimal into double since values in the list may have different scales
+        // so the resulting scale wouldn't be calculated correctly
         if (isLiteralNull(literal)) {
           out.writeDoubleNull();
         } else {
           out.writeDouble(((BigDecimal) literal.getValue()).doubleValue());
         }
-        logger.warn("Converting exact decimal into approximate decimal. Should be fixed once full decimal support is implemented.");
         return;
 
       case VARCHAR:

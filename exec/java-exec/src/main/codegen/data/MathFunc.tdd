@@ -199,9 +199,7 @@ logBaseMathFunction : [
       {input: "UInt1"},
       {input: "UInt2"},
       {input: "UInt4"},
-      {input: "UInt8"},
-      {input: "Decimal9"},
-      {input: "Decimal18"}
+      {input: "UInt8"}
     ]
    }
 ],
@@ -216,9 +214,7 @@ extendedUnaryMathFunctions : [
       {input: "UInt1"},
       {input: "UInt2"},
       {input: "UInt4"},
-      {input: "UInt8"},
-      {input: "Decimal9"},
-      {input: "Decimal18"}
+      {input: "UInt8"}
     ]
    },
 
@@ -232,9 +228,7 @@ extendedUnaryMathFunctions : [
       {input: "UInt1"},
       {input: "UInt2"},
       {input: "UInt4"},
-      {input: "UInt8"},
-      {input: "Decimal9"},
-      {input: "Decimal18"}
+      {input: "UInt8"}
     ]
    },
 
@@ -248,9 +242,7 @@ extendedUnaryMathFunctions : [
       {input: "UInt1"},
       {input: "UInt2"},
       {input: "UInt4"},
-      {input: "UInt8"},
-      {input: "Decimal9"},
-      {input: "Decimal18"}
+      {input: "UInt8"}
     ]
    },
 
@@ -278,9 +270,7 @@ extendedUnaryMathFunctions : [
       {input: "UInt1"},
       {input: "UInt2"},
       {input: "UInt4"},
-      {input: "UInt8"},
-      {input: "Decimal9"},
-      {input: "Decimal18"}
+      {input: "UInt8"}
     ]
    },
 
@@ -294,9 +284,7 @@ extendedUnaryMathFunctions : [
       {input: "UInt1"},
       {input: "UInt2"},
       {input: "UInt4"},
-      {input: "UInt8"},
-      {input: "Decimal9"},
-      {input: "Decimal18"}
+      {input: "UInt8"}
     ]
    }
 ],

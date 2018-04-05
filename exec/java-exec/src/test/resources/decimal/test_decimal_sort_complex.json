@@ -20,7 +20,7 @@
         "@id" : 2,
         "exprs" : [ {
           "ref" : "DEC",
-          "expr" : " (cast(B as decimal38sparse(38, 12)))"
+          "expr" : " (cast(B as vardecimal(38, 12)))"
         }
         ],
         "child" : 1

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner;
 
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.SchemaPath;
@@ -30,11 +32,9 @@ import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.parquet.AbstractParquetGroupScan;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
-import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableDateVector;
-import org.apache.drill.exec.vector.NullableDecimal18Vector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
@@ -48,6 +48,7 @@ import org.apache.drill.exec.vector.NullableUInt2Vector;
 import org.apache.drill.exec.vector.NullableUInt4Vector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
@@ -311,32 +312,21 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
         varBinaryVector.getMutator().setSafe(index, bytes, 0, bytes.length);
         return;
       }
-      case DECIMAL18: {
-        NullableDecimal18Vector decimalVector = (NullableDecimal18Vector) v;
+      case VARDECIMAL: {
+        NullableVarDecimalVector decimalVector = (NullableVarDecimalVector) v;
         Object s = groupScan.getPartitionValue(path, column, Object.class);
         byte[] bytes;
         if (s == null) {
           decimalVector.getMutator().setNull(index);
           return;
         } else if (s instanceof Integer) {
-          long value = DecimalUtility.getBigDecimalFromPrimitiveTypes(
-              (Integer) s,
-              majorType.getScale(),
-              majorType.getPrecision()).longValue();
-          decimalVector.getMutator().setSafe(index, value);
-          return;
+          bytes = Ints.toByteArray((int) s);
         } else if (s instanceof Long) {
-          long value = DecimalUtility.getBigDecimalFromPrimitiveTypes(
-              (Long) s,
-              majorType.getScale(),
-              majorType.getPrecision()).longValue();
-          decimalVector.getMutator().setSafe(index, value);
-          return;
+          bytes = Longs.toByteArray((long) s);
         } else {
           bytes = getBytes(type, s);
         }
-        long value = DecimalUtility.getBigDecimalFromByteArray(bytes, 0, bytes.length, majorType.getScale()).longValue();
-        decimalVector.getMutator().setSafe(index, value);
+        decimalVector.getMutator().setSafe(index, bytes, 0, bytes.length);
         return;
       }
       case DATE: {

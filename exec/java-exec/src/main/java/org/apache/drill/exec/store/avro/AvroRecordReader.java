@@ -19,6 +19,8 @@ package org.apache.drill.exec.store.avro;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
@@ -26,24 +28,28 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.mapred.FsInput;
 import org.apache.avro.util.Utf8;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
@@ -56,6 +62,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 
 import io.netty.buffer.DrillBuf;
+import org.joda.time.DateTimeConstants;
 
 /**
  * A RecordReader implementation for Avro data files.
@@ -64,12 +71,13 @@ import io.netty.buffer.DrillBuf;
  */
 public class AvroRecordReader extends AbstractRecordReader {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AvroRecordReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AvroRecordReader.class);
 
   private final Path hadoop;
   private final long start;
   private final long end;
   private final FieldSelection fieldSelection;
+  private final OptionManager optionManager;
   private DrillBuf buffer;
   private VectorContainerWriter writer;
 
@@ -98,6 +106,7 @@ public class AvroRecordReader extends AbstractRecordReader {
     this.queryUserName = fragmentContext.getQueryUserName();
     setColumns(projectedColumns);
     this.fieldSelection = FieldSelection.getFieldSelection(projectedColumns);
+    optionManager = fragmentContext.getOptions();
   }
 
   private DataFileReader<GenericContainer> getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
@@ -233,7 +242,6 @@ public class AvroRecordReader extends AbstractRecordReader {
         writer.end();
         break;
       case FIXED:
-        throw new UnsupportedOperationException("Unimplemented type: " + type.toString());
       case ENUM:  // Enum symbols are strings
       case NULL:  // Treat null type as a primitive
       default:
@@ -245,21 +253,24 @@ public class AvroRecordReader extends AbstractRecordReader {
           }
         }
 
-        processPrimitive(value, schema.getType(), fieldName, writer);
+        processPrimitive(value, schema, fieldName, writer);
         break;
     }
 
   }
 
-  private void processPrimitive(final Object value, final Schema.Type type, final String fieldName,
+  private void processPrimitive(final Object value, final Schema schema, final String fieldName,
                                 final MapOrListWriterImpl writer) {
+    LogicalType logicalType = schema.getLogicalType();
+    String logicalTypeName = logicalType != null ? logicalType.getName() : "";
+
     if (value == null) {
       return;
     }
 
-    switch (type) {
+    switch (schema.getType()) {
       case STRING:
-        byte[] binary = null;
+        byte[] binary;
         final int length;
         if (value instanceof Utf8) {
           binary = ((Utf8) value).getBytes();
@@ -273,10 +284,34 @@ public class AvroRecordReader extends AbstractRecordReader {
         writer.varChar(fieldName).writeVarChar(0, length, buffer);
         break;
       case INT:
-        writer.integer(fieldName).writeInt((Integer) value);
+        switch (logicalTypeName) {
+          case "date":
+            writer.date(fieldName).writeDate((int) value * (long) DateTimeConstants.MILLIS_PER_DAY);
+            break;
+          case "time-millis":
+            writer.time(fieldName).writeTime((Integer) value);
+            break;
+          default:
+            writer.integer(fieldName).writeInt((Integer) value);
+        }
         break;
       case LONG:
-        writer.bigInt(fieldName).writeBigInt((Long) value);
+        switch (logicalTypeName) {
+          case "date":
+            writer.date(fieldName).writeDate((Long) value);
+            break;
+          case "time-micros":
+            writer.time(fieldName).writeTime((int) ((long) value / 1000));
+            break;
+          case "timestamp-millis":
+            writer.timeStamp(fieldName).writeTimeStamp((Long) value);
+            break;
+          case "timestamp-micros":
+            writer.timeStamp(fieldName).writeTimeStamp((long) value / 1000);
+            break;
+          default:
+            writer.bigInt(fieldName).writeBigInt((Long) value);
+        }
         break;
       case FLOAT:
         writer.float4(fieldName).writeFloat4((Float) value);
@@ -292,7 +327,16 @@ public class AvroRecordReader extends AbstractRecordReader {
         length = buf.remaining();
         ensure(length);
         buffer.setBytes(0, buf);
-        writer.binary(fieldName).writeVarBinary(0, length, buffer);
+        switch (logicalTypeName) {
+          case "decimal":
+            ParquetReaderUtility.checkDecimalTypeEnabled(optionManager);
+            LogicalTypes.Decimal decimalType = (LogicalTypes.Decimal) logicalType;
+            writer.varDecimal(fieldName, decimalType.getScale(), decimalType.getPrecision())
+                .writeVarDecimal(0, length, buffer, decimalType.getScale(), decimalType.getPrecision());
+            break;
+          default:
+            writer.binary(fieldName).writeVarBinary(0, length, buffer);
+        }
         break;
       case NULL:
         // Nothing to do for null type
@@ -301,17 +345,29 @@ public class AvroRecordReader extends AbstractRecordReader {
         final String symbol = value.toString();
         final byte[] b;
         try {
-          b = symbol.getBytes("UTF-8");
+          b = symbol.getBytes(Charsets.UTF_8.name());
         } catch (UnsupportedEncodingException e) {
           throw new DrillRuntimeException("Unable to read enum value for field: " + fieldName, e);
         }
         ensure(b.length);
         buffer.setBytes(0, b);
         writer.varChar(fieldName).writeVarChar(0, b.length, buffer);
-
+        break;
+      case FIXED:
+        GenericFixed genericFixed = (GenericFixed) value;
+        switch (logicalTypeName) {
+          case "decimal":
+            ParquetReaderUtility.checkDecimalTypeEnabled(optionManager);
+            LogicalTypes.Decimal decimalType = (LogicalTypes.Decimal) logicalType;
+            writer.varDecimal(fieldName, decimalType.getScale(), decimalType.getPrecision())
+                .writeVarDecimal(new BigDecimal(new BigInteger(genericFixed.bytes()), decimalType.getScale()));
+            break;
+          default:
+            throw new UnsupportedOperationException("Unimplemented type: " + schema.getType().toString());
+        }
         break;
       default:
-        throw new DrillRuntimeException("Unhandled Avro type: " + type.toString());
+        throw new DrillRuntimeException("Unhandled Avro type: " + schema.getType().toString());
     }
   }
 

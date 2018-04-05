@@ -117,6 +117,10 @@
               <pattern>org.apache.parquet.</pattern>
               <shadedPattern>hive.org.apache.parquet.</shadedPattern>
             </relocation>
+            <relocation>
+              <pattern>org.apache.avro.</pattern>
+              <shadedPattern>hive.org.apache.avro.</shadedPattern>
+            </relocation>
           </relocations>
           <filters>
             <filter>

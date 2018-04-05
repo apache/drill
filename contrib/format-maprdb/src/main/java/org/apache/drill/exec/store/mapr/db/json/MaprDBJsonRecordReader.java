@@ -304,7 +304,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
           writeDouble(writer, fieldName, reader);
           break;
         case DECIMAL:
-          throw unsupportedError("Decimal type is currently not supported.");
+          writeDecimal(writer, fieldName, reader);
         case DATE:
           writeDate(writer, fieldName, reader);
           break;
@@ -362,6 +362,15 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       writeString(writer, fieldName, String.valueOf(reader.getDouble()));
     } else {
       writer.float8(fieldName).writeFloat8(reader.getDouble());
+    }
+  }
+
+  private void writeDecimal(MapOrListWriterImpl writer, String fieldName, DBDocumentReaderBase reader) {
+    if (allTextMode) {
+      writeString(writer, fieldName, String.valueOf(reader.getDecimal()));
+    } else {
+      writer.varDecimal(fieldName, reader.getDecimalScale(), reader.getDecimalPrecision())
+          .writeVarDecimal(reader.getDecimal());
     }
   }
 

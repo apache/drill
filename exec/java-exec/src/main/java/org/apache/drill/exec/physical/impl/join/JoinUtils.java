@@ -36,6 +36,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
+import org.apache.drill.exec.util.DecimalUtility;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -119,8 +120,11 @@ public class JoinUtils {
    * @return true if implicit cast is allowed false otherwise
    */
   private static boolean allowImplicitCast(TypeProtos.MinorType input1, TypeProtos.MinorType input2) {
-    // allow implicit cast if both the input types are numeric
-    if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)) {
+    // allow implicit cast if both the input types are numeric and any of them is non-decimal
+    // or both of them are decimal
+    if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)
+        && ((!DecimalUtility.isDecimalType(input1) && !DecimalUtility.isDecimalType(input2))
+          || DecimalUtility.isDecimalType(input1) && DecimalUtility.isDecimalType(input2))) {
       return true;
     }
 
@@ -166,8 +170,9 @@ public class JoinUtils {
 
         // currently we only support implicit casts if the input types are numeric or varchar/varbinary
         if (!allowImplicitCast(rightType, leftType)) {
-          throw new DrillRuntimeException(String.format("Join only supports implicit casts between " +
-              "1. Numeric data\n 2. Varchar, Varbinary data 3. Date, Timestamp data " +
+          throw new DrillRuntimeException(String.format("Join only supports implicit casts between\n" +
+              "1. Numeric data (none of types is decimal or both of them are decimal)\n" +
+              "2. Varchar, Varbinary data\n3. Date, Timestamp data\n" +
               "Left type: %s, Right type: %s. Add explicit casts to avoid this error", leftType, rightType));
         }
 

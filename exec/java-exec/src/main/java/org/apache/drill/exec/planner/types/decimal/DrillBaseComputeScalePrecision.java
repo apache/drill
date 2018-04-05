@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.util;
+package org.apache.drill.exec.planner.types.decimal;
+
+import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
 
 public abstract class DrillBaseComputeScalePrecision {
+  protected final static int MAX_NUMERIC_PRECISION = DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+
   protected int outputScale = 0;
   protected int outputPrecision = 0;
 
@@ -33,5 +37,16 @@ public abstract class DrillBaseComputeScalePrecision {
 
   public int getOutputPrecision() {
     return outputPrecision;
+  }
+
+  /**
+   * Cuts down the fractional part if the current precision
+   * exceeds the maximum precision range.
+   */
+  protected void checkPrecisionRange() {
+    if (outputPrecision > MAX_NUMERIC_PRECISION) {
+      outputScale = outputScale - (outputPrecision - MAX_NUMERIC_PRECISION);
+      outputPrecision = MAX_NUMERIC_PRECISION;
+    }
   }
 }

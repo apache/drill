@@ -15,8 +15,7 @@
 # limitations under the License.
 
  {
-   numeric: ["Int", "BigInt", "TinyInt", "SmallInt", "UInt1", "UInt2", "UInt4", "UInt8", "Float4", "Float8", "VarDecimal",
-             "Decimal9", "Decimal18", "Decimal28Dense", "Decimal28Sparse", "Decimal38Dense", "Decimal38Sparse"],
+   numeric: ["Int", "BigInt", "TinyInt", "SmallInt", "UInt1", "UInt2", "UInt4", "UInt8", "Float4", "Float8", "VarDecimal"],
 
   numericFunctions: [
   {className: "IsNumeric", funcName: "isnumeric", aliasName: "", outputType: "Int", types: [

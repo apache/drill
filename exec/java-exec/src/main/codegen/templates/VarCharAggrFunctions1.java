@@ -35,6 +35,7 @@ package org.apache.drill.exec.expr.fn.impl.gaggr;
 import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.ReturnType;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
@@ -56,7 +57,11 @@ public class ${aggrtype.className}VarBytesFunctions {
 <#list aggrtype.types as type>
 <#if type.major == "VarBytes">
 
-@FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+@FunctionTemplate(name = "${aggrtype.funcName}",
+                  <#if type.inputType.contains("VarChar")>
+                  returnType = ReturnType.SAME_IN_OUT_LENGTH,
+                  </#if>
+                  scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;

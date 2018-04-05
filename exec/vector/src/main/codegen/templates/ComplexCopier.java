@@ -97,9 +97,12 @@ public class ComplexCopier {
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign fields = minor.fields!type.fields />
     <#assign uncappedName = name?uncap_first/>
-    <#if !minor.class?starts_with("Decimal")>
+    <#if !minor.class?contains("Decimal")>
     case ${name?upper_case}:
       return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>(name);
+    <#elseif minor.class?contains("VarDecimal")>
+    case ${name?upper_case}:
+      return (FieldWriter) writer.${uncappedName}(name, reader.getType().getScale(), reader.getType().getPrecision());
     </#if>
     </#list></#list>
     case MAP:
@@ -116,9 +119,12 @@ public class ComplexCopier {
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign fields = minor.fields!type.fields />
     <#assign uncappedName = name?uncap_first/>
-    <#if !minor.class?starts_with("Decimal")>
+    <#if !minor.class?contains("Decimal")>
     case ${name?upper_case}:
-    return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>();
+      return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>();
+    <#elseif minor.class?contains("VarDecimal")>
+    case ${name?upper_case}:
+      return (FieldWriter) writer.${uncappedName}(reader.getType().getScale(), reader.getType().getPrecision());
     </#if>
     </#list></#list>
     case MAP:

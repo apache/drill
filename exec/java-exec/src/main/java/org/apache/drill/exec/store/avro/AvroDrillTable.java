@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.avro;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.file.DataFileReader;
@@ -95,6 +96,8 @@ public class AvroDrillTable extends DrillTable {
 
   private RelDataType getNullableRelDataTypeFromAvroType(
       RelDataTypeFactory typeFactory, Schema fieldSchema) {
+    LogicalType logicalType = fieldSchema.getLogicalType();
+    String logicalTypeName = logicalType != null ? logicalType.getName() : "";
     RelDataType relDataType = null;
     switch (fieldSchema.getType()) {
     case ARRAY:
@@ -105,22 +108,57 @@ public class AvroDrillTable extends DrillTable {
       relDataType = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
       break;
     case BYTES:
-      relDataType = typeFactory.createSqlType(SqlTypeName.BINARY);
+      switch (logicalTypeName) {
+        case "decimal":
+          relDataType = typeFactory.createSqlType(SqlTypeName.DECIMAL);
+          break;
+        default:
+          relDataType = typeFactory.createSqlType(SqlTypeName.BINARY);
+      }
       break;
     case DOUBLE:
       relDataType = typeFactory.createSqlType(SqlTypeName.DOUBLE);
       break;
     case FIXED:
-      logger.error("{} type not supported", fieldSchema.getType());
-      throw UserException.unsupportedError().message("FIXED type not supported yet").build(logger);
+      switch (logicalTypeName) {
+        case "decimal":
+          relDataType = typeFactory.createSqlType(SqlTypeName.DECIMAL);
+          break;
+        default:
+          logger.error("{} type not supported", fieldSchema.getType());
+          throw UserException.unsupportedError().message("FIXED type not supported yet").build(logger);
+      }
+      break;
     case FLOAT:
       relDataType = typeFactory.createSqlType(SqlTypeName.FLOAT);
       break;
     case INT:
-      relDataType = typeFactory.createSqlType(SqlTypeName.INTEGER);
+      switch (logicalTypeName) {
+        case "date":
+          relDataType = typeFactory.createSqlType(SqlTypeName.DATE);
+          break;
+        case "time-millis":
+          relDataType = typeFactory.createSqlType(SqlTypeName.TIME);
+          break;
+        default:
+          relDataType = typeFactory.createSqlType(SqlTypeName.INTEGER);
+      }
       break;
     case LONG:
-      relDataType = typeFactory.createSqlType(SqlTypeName.BIGINT);
+      switch (logicalTypeName) {
+        case "date":
+          relDataType = typeFactory.createSqlType(SqlTypeName.DATE);
+          break;
+        case "time-micros":
+          relDataType = typeFactory.createSqlType(SqlTypeName.TIME);
+          break;
+        case "timestamp-millis":
+        case "timestamp-micros":
+          relDataType = typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
+          break;
+        default:
+          relDataType = typeFactory.createSqlType(SqlTypeName.BIGINT);
+      }
       break;
     case MAP:
       RelDataType valueType = getNullableRelDataTypeFromAvroType(typeFactory, fieldSchema.getValueType());

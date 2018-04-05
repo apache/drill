@@ -201,6 +201,8 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                     return new ValueVectorDecimal28Sparse(b,f.getValueCount(), f.getScale());
                 case common::DECIMAL38SPARSE:
                     return new ValueVectorDecimal38Sparse(b,f.getValueCount(), f.getScale());
+                case common::VARDECIMAL:
+                    return new ValueVectorVarDecimal(b, f.getValueCount(), f.getScale());
                 case common::DATE:
                     return new ValueVectorTyped<DateHolder, int64_t>(b,f.getValueCount());
                 case common::TIMESTAMP:
@@ -251,6 +253,8 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                     return new NullableValueVectorDecimal28Sparse(b,f.getValueCount(), f.getScale());
                 case common::DECIMAL38SPARSE:
                     return new NullableValueVectorDecimal38Sparse(b,f.getValueCount(), f.getScale());
+                case common::VARDECIMAL:
+                    return new NullableValueVectorVarDecimal(b, f.getValueCount(), f.getScale());
                 case common::DATE:
                     return new NullableValueVectorTyped<DateHolder,
                            ValueVectorTyped<DateHolder, int64_t> >(b,f.getValueCount());

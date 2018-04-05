@@ -156,10 +156,24 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
+
+  <#if minor.class?contains("Decimal") >
+  @Override
+  public ${capName}Writer ${lowerName}() {
+    // returns existing writer
+    assert mode == Mode.IN_${upperName};
+    return writer;
+  }
+
+  @Override
+  public ${capName}Writer ${lowerName}(int scale, int precision) {
+    final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.REPEATED, scale, precision);
+  <#else>
   private static final MajorType ${upperName}_TYPE = Types.repeated(MinorType.${upperName});
 
   @Override
   public ${capName}Writer ${lowerName}() {
+  </#if>
     switch (mode) {
     case INIT:
       final int vectorCount = container.size();
@@ -181,14 +195,14 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
          .build(logger);
     }
   }
-  
+
   </#list></#list>
   @Override
   public MaterializedField getField() {
     return container.getField();
   }
   <#if mode == "Repeated">
-  
+
   @Override
   public void startList() {
     final RepeatedListVector list = (RepeatedListVector) container;

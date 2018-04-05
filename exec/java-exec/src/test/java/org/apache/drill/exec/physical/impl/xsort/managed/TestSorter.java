@@ -493,10 +493,11 @@ public class TestSorter extends DrillTest {
 //      tester1.test(MinorType.UINT4); DRILL-5329
       tester.test(MinorType.BIGINT);
 //      tester1.test(MinorType.UINT8); DRILL-5329
-      tester.test(MinorType.FLOAT4);
-      tester.test(MinorType.FLOAT8);
-      tester.test(MinorType.DECIMAL9);
-      tester.test(MinorType.DECIMAL18);
+    tester.test(MinorType.FLOAT4);
+    tester.test(MinorType.FLOAT8);
+    tester.test(MinorType.VARDECIMAL);
+//      tester1.test(MinorType.DECIMAL9);
+//      tester1.test(MinorType.DECIMAL18);
 //      tester1.test(MinorType.DECIMAL28SPARSE); DRILL-5329
 //      tester1.test(MinorType.DECIMAL38SPARSE); DRILL-5329
 //    tester1.test(MinorType.DECIMAL28DENSE); No writer

@@ -75,12 +75,20 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
 
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign fields = minor.fields!type.fields />
-  <#if !minor.class?starts_with("Decimal") >
+  <#if minor.class?contains("VarDecimal")>
+  @Override
+  public void write${minor.class}(BigDecimal value) {
+    getWriter(MinorType.${name?upper_case}).write${minor.class}(value);
+  }
+  </#if>
+
   @Override
   public void write(${name}Holder holder) {
     getWriter(MinorType.${name?upper_case}).write(holder);
   }
 
+  <#-- This condition was added to cover previous decimal functionality for new VarDecimal type -->
+  <#if !minor.class?contains("Decimal") || minor.class?contains("VarDecimal")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
     getWriter(MinorType.${name?upper_case}).write${minor.class}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
   }
@@ -116,7 +124,19 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
-  <#if !minor.class?starts_with("Decimal") >
+  <#if minor.class?contains("Decimal")>
+
+  @Override
+  public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+    return getWriter(MinorType.MAP).${lowerName}(name, scale, precision);
+  }
+
+  @Override
+  public ${capName}Writer ${lowerName}(int scale, int precision) {
+    return getWriter(MinorType.LIST).${lowerName}(scale, precision);
+  }
+
+  <#else>
 
   @Override
   public ${capName}Writer ${lowerName}(String name) {

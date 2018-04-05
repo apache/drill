@@ -486,7 +486,7 @@ public class ParquetReaderUtility {
     if (originalType != null) {
       switch (originalType) {
         case DECIMAL:
-          return Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL18, TypeProtos.DataMode.OPTIONAL, scale, precision);
+          return Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, scale, precision);
         case DATE:
           return Types.optional(TypeProtos.MinorType.DATE);
         case TIME_MILLIS:

@@ -65,6 +65,12 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
     fail("${name}");
   }
 
+  <#if minor.class?contains("Decimal") >
+  public void write${minor.class}(BigDecimal value) {
+    fail("${name}");
+  }
+  </#if>
+
   </#list></#list>
 
   public void writeNull() {
@@ -111,8 +117,15 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
   <#assign upperName = minor.class?upper_case />
   <#assign capName = minor.class?cap_first />
-  <#if minor.class?starts_with("Decimal") >
+  <#if minor.class?contains("Decimal") >
+  @Override
   public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+    fail("${capName}");
+    return null;
+  }
+
+  @Override
+  public ${capName}Writer ${lowerName}(int scale, int precision) {
     fail("${capName}");
     return null;
   }

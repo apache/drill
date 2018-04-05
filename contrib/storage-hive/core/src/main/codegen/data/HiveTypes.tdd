@@ -104,7 +104,7 @@
       hiveType: "DECIMAL",
       hiveOI: "HiveDecimalObjectInspector",
       javaType: "org.apache.hadoop.hive.common.type.HiveDecimal",
-      drillType: "Decimal38Sparse",
+      drillType: "VarDecimal",
       needOIForDrillType: true
     },
     {

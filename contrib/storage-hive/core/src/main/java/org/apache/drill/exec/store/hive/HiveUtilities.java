@@ -50,6 +50,7 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
@@ -80,6 +81,7 @@ import org.joda.time.DateTimeZone;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
@@ -293,6 +295,15 @@ public class HiveUtilities {
         }
         break;
       }
+      case VARDECIMAL: {
+        final BigDecimal value = ((HiveDecimal) val).bigDecimalValue()
+            .setScale(vector.getField().getScale(), RoundingMode.HALF_UP);
+        final NullableVarDecimalVector v = ((NullableVarDecimalVector) vector);
+        for (int i = start; i < end; i++) {
+          v.getMutator().setSafe(i, value);
+        }
+        break;
+      }
     }
   }
 
@@ -346,8 +357,7 @@ public class HiveUtilities {
               .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
               .build(logger);
         }
-        DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
-        return DecimalUtility.getDecimalDataType(decimalTypeInfo.precision());
+        return MinorType.VARDECIMAL;
       }
       case DOUBLE:
         return TypeProtos.MinorType.FLOAT8;

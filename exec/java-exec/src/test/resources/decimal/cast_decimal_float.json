@@ -19,8 +19,8 @@
       "pop" : "project",
       "@id" : 2,
       "exprs" : [
-        { "ref" : "DEC9_COL", "expr": "(cast(DEC9 as decimal9(9, 4)))" },
-        { "ref" : "DEC38_COL", "expr": "(cast(DEC18 as decimal38sparse(38, 4)))" }
+        { "ref" : "DEC9_COL", "expr": "(cast(DEC9 as vardecimal(9, 4)))" },
+        { "ref" : "DEC38_COL", "expr": "(cast(DEC18 as vardecimal(38, 4)))" }
       ],
 
       "child" : 1

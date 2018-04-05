@@ -301,6 +301,11 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
         result = getByteValueOrThrow( innerAccessor.getDouble( rowOffset ),
                                       "Java double / SQL DOUBLE PRECISION" );
         break;
+      case VARDECIMAL:
+        result = getByteValueOrThrow(
+            innerAccessor.getBigDecimal(rowOffset).byteValue(),
+            "Java BigDecimal / SQL DECIMAL PRECISION");
+        break;
 
       // 3. Not-yet-converted and unconvertible types:
       default:
@@ -365,6 +370,11 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
         result = getShortValueOrThrow( innerAccessor.getDouble( rowOffset ),
                                        "Java double / SQL DOUBLE PRECISION" );
         break;
+      case VARDECIMAL:
+        result = getShortValueOrThrow(
+            innerAccessor.getBigDecimal(rowOffset).shortValue(),
+            "Java BigDecimal / SQL DECIMAL PRECISION");
+        break;
 
       // 3. Not-yet-converted and unconvertible types:
       default:
@@ -428,6 +438,11 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
         result = getIntValueOrThrow( innerAccessor.getDouble( rowOffset ),
                                      "Java double / SQL DOUBLE PRECISION" );
         break;
+      case VARDECIMAL:
+        result = getIntValueOrThrow(
+            innerAccessor.getBigDecimal(rowOffset).intValue(),
+            "Java BigDecimal / SQL DECIMAL PRECISION");
+        break;
 
       // 3. Not-yet-converted and unconvertible types:
       default:
@@ -481,6 +496,11 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
         result = getLongValueOrThrow( innerAccessor.getDouble( rowOffset ),
                                       "Java double / SQL DOUBLE PRECISION" );
         break;
+      case VARDECIMAL:
+        result = getLongValueOrThrow(
+            innerAccessor.getBigDecimal(rowOffset).longValue(),
+            "Java BigDecimal / SQL DECIMAL PRECISION");
+        break;
 
       // 3. Not-yet-converted and unconvertible types:
       default:
@@ -490,6 +510,14 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
     return result;
   }
 
+  private static float getFloatValueOrThrow(double value, String typeLabel)
+      throws SQLConversionOverflowException {
+    if (Float.MIN_VALUE <= value && value <= Float.MAX_VALUE) {
+      return (float) value;
+    } else {
+      throw newOverflowException("getFloat(...)", typeLabel, value);
+    }
+  }
 
   ////////////////////////////////////////
   // - getFloat:
@@ -516,14 +544,13 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
         result = innerAccessor.getLong( rowOffset );
         break;
       case FLOAT8:
-        final double value = innerAccessor.getDouble( rowOffset );
-        if ( Float.MIN_VALUE <= value && value <= Float.MAX_VALUE ) {
-          result = (float) value;
-        } else {
-          throw newOverflowException( "getFloat(...)",
-                                      "Java double / SQL DOUBLE PRECISION",
-                                      value );
-        }
+        result = getFloatValueOrThrow(innerAccessor.getDouble(rowOffset),
+            "Java double / SQL DOUBLE PRECISION");
+        break;
+      case VARDECIMAL:
+        result = getFloatValueOrThrow(
+            innerAccessor.getBigDecimal(rowOffset).floatValue(),
+            "Java BigDecimal / SQL DECIMAL PRECISION");
         break;
 
       // 3. Not-yet-converted and unconvertible types:
@@ -560,6 +587,9 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
         break;
       case FLOAT4:
         result = innerAccessor.getFloat( rowOffset );
+        break;
+      case VARDECIMAL:
+        result = innerAccessor.getBigDecimal(rowOffset).doubleValue();
         break;
 
       // 3. Not-yet-converted and unconvertible types:

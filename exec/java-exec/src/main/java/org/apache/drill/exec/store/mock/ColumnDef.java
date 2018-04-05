@@ -96,6 +96,8 @@ public class ColumnDef {
       break;
     case DECIMAL38SPARSE:
       break;
+    case VARDECIMAL:
+      break;
     case DECIMAL9:
       break;
     case FIXED16CHAR:

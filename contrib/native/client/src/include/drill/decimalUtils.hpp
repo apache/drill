@@ -41,6 +41,7 @@ struct DecimalValue
 
 // These functions need not be exported. They are used by the templates that return the DecimalValue class.
 DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t startIndex, int nDecimalDigits, int scale, bool truncateScale);
+DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t length, int scale);
 DecimalValue getDecimalValueFromDense(SlicedByteBuf& data, size_t startIndex, int nDecimalDigits, int scale, int maxPrecision, int width);
 
 inline DecimalValue getDecimalValueFromIntermediate(SlicedByteBuf& data, size_t startIndex, int nDecimalDigits, int scale)

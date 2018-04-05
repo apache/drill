@@ -38,6 +38,9 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.specific.SpecificRecord;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.Text;
@@ -715,5 +718,28 @@ public class AvroTestUtil {
     }
 
     return record;
+  }
+
+  /**
+   * Creates Avro table with specified schema and specified data
+   * @param schema table schema
+   * @param data table data
+   * @param <D> record type
+   * @return file with newly created Avro table.
+   * @throws IOException if an error is appeared during creation or filling the file.
+   */
+  public static <D extends SpecificRecord> File write(Schema schema, D... data) throws IOException {
+    File file = File.createTempFile("avro-primitive-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
+
+    DatumWriter writer = SpecificData.get().createDatumWriter(schema);
+
+    try (DataFileWriter<D> fileWriter = new DataFileWriter<>(writer)) {
+      fileWriter.create(schema, file);
+      for (D datum : data) {
+        fileWriter.append(datum);
+      }
+    }
+
+    return file;
   }
 }
