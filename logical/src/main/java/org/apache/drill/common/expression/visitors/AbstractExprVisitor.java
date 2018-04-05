@@ -44,6 +44,7 @@ import org.apache.drill.common.expression.ValueExpressions.ParameterExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 
 public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> implements ExprVisitor<T, VAL, EXCEP> {
 
@@ -105,6 +106,11 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
 
   @Override
   public T visitDecimal38Constant(Decimal38Expression decExpr, VAL value) throws EXCEP {
+    return visitUnknown(decExpr, value);
+  }
+
+  @Override
+  public T visitVarDecimalConstant(VarDecimalExpression decExpr, VAL value) throws EXCEP {
     return visitUnknown(decExpr, value);
   }
 

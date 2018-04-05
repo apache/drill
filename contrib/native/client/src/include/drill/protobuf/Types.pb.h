@@ -74,11 +74,12 @@ enum MinorType {
   INTERVALDAY = 39,
   LIST = 40,
   GENERIC_OBJECT = 41,
-  UNION = 42
+  UNION = 42,
+  VARDECIMAL = 43
 };
 bool MinorType_IsValid(int value);
 const MinorType MinorType_MIN = LATE;
-const MinorType MinorType_MAX = UNION;
+const MinorType MinorType_MAX = VARDECIMAL;
 const int MinorType_ARRAYSIZE = MinorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* MinorType_descriptor();

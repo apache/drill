@@ -318,6 +318,7 @@ public class Types {
       case DECIMAL28SPARSE:
       case DECIMAL38DENSE:
       case DECIMAL38SPARSE:
+      case VARDECIMAL:
       case MONEY:           return 2 + precision; // precision of the column plus a sign and a decimal point
 
       case VARCHAR:
@@ -575,7 +576,7 @@ public class Types {
     case "double":
       return MinorType.FLOAT8;
     case "decimal":
-      return MinorType.DECIMAL38SPARSE;
+      return MinorType.VARDECIMAL;
     case "symbol":
     case "char":
     case "utf8":
@@ -638,13 +639,9 @@ public class Types {
       case FLOAT8:
         return "double";
       case VARDECIMAL:
-        return "decimal";
       case DECIMAL9:
-        return "decimal";
       case DECIMAL18:
-        return "decimal";
       case DECIMAL28SPARSE:
-        return "decimal";
       case DECIMAL38SPARSE:
         return "decimal";
       case VARCHAR:

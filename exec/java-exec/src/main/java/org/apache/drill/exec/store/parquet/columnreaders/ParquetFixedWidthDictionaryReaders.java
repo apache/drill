@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.vector.Decimal18Vector;
-import org.apache.drill.exec.vector.Decimal9Vector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
@@ -29,6 +29,7 @@ import org.apache.drill.exec.vector.TimeVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.UInt8Vector;
 import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -37,6 +38,8 @@ import org.apache.parquet.io.api.Binary;
 import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
 
 public class ParquetFixedWidthDictionaryReaders {
+
+  private static final double BITS_COUNT_IN_BYTE_DOUBLE_VALUE = 8.0;
 
   static class DictionaryIntReader extends FixedByteAlignedReader<IntVector> {
     DictionaryIntReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
@@ -86,7 +89,7 @@ public class ParquetFixedWidthDictionaryReaders {
         // and we will go into the else condition below. The readField method of the parent class requires the
         // writer index to be set correctly.
         readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-        readLength = (int) Math.ceil(readLengthInBits / 8.0);
+        readLength = (int) Math.ceil(readLengthInBits / BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
         int writerIndex = valueVec.getBuffer().writerIndex();
         valueVec.getBuffer().setIndex(0, writerIndex + (int) readLength);
       } else {
@@ -109,7 +112,7 @@ public class ParquetFixedWidthDictionaryReaders {
       recordsReadInThisIteration = Math.min(pageReader.currentPageCount
           - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
       readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-      readLength = (int) Math.ceil(readLengthInBits / 8.0);
+      readLength = (int) Math.ceil(readLengthInBits / BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
 
       if (usingDictionary) {
         VarBinaryVector.Mutator mutator =  valueVec.getMutator();
@@ -133,28 +136,6 @@ public class ParquetFixedWidthDictionaryReaders {
       int byteLength = dataTypeLengthInBits / 8;
       for (int i = 0; i < recordsToReadInThisPass; i++) {
         valueVec.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
-      }
-    }
-  }
-
-  static class DictionaryDecimal9Reader extends FixedByteAlignedReader<Decimal9Vector> {
-    DictionaryDecimal9Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                        ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, Decimal9Vector v,
-                        SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-    }
-
-    // this method is called by its superclass during a read loop
-    @Override
-    protected void readField(long recordsToReadInThisPass) {
-
-      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
-        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
-
-      if (usingDictionary) {
-        for (int i = 0; i < recordsReadInThisIteration; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
-        }
       }
     }
   }
@@ -204,7 +185,7 @@ public class ParquetFixedWidthDictionaryReaders {
         // and we will go into the else condition below. The readField method of the parent class requires the
         // writer index to be set correctly.
         readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-        readLength = (int) Math.ceil(readLengthInBits / 8.0);
+        readLength = (int) Math.ceil(readLengthInBits / BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
         int writerIndex = valueVec.getBuffer().writerIndex();
         valueVec.getBuffer().setIndex(0, writerIndex + (int)readLength);
       } else {
@@ -239,7 +220,7 @@ public class ParquetFixedWidthDictionaryReaders {
         // and we will go into the else condition below. The readField method of the parent class requires the
         // writer index to be set correctly.
         readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-        readLength = (int) Math.ceil(readLengthInBits / 8.0);
+        readLength = (int) Math.ceil(readLengthInBits / BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
         int writerIndex = valueVec.getBuffer().writerIndex();
         valueVec.getBuffer().setIndex(0, writerIndex + (int) readLength);
       } else {
@@ -248,27 +229,61 @@ public class ParquetFixedWidthDictionaryReaders {
     }
   }
 
-  static class DictionaryDecimal18Reader extends FixedByteAlignedReader<Decimal18Vector> {
-    DictionaryDecimal18Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                           ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, Decimal18Vector v,
-                           SchemaElement schemaElement) throws ExecutionSetupException {
+  static class DictionaryVarDecimalReader extends FixedByteAlignedReader<VarDecimalVector> {
+
+    DictionaryVarDecimalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+        ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarDecimalVector v,
+        SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
+      recordsReadInThisIteration =
+          Math.min(pageReader.currentPageCount - pageReader.valuesRead,
+              recordsToReadInThisPass - valuesReadInCurrentPass);
 
-      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
-        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
-
-      for (int i = 0; i < recordsReadInThisIteration; i++){
-        try {
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
-        } catch ( Exception ex) {
-          throw ex;
-        }
+      switch (columnDescriptor.getType()) {
+        case INT32:
+          if (usingDictionary) {
+            for (int i = 0; i < recordsReadInThisIteration; i++) {
+              byte[] bytes = Ints.toByteArray(pageReader.dictionaryValueReader.readInteger());
+              setValueBytes(i, bytes);
+            }
+            setWriteIndex();
+          } else {
+            super.readField(recordsToReadInThisPass);
+          }
+          break;
+        case INT64:
+          if (usingDictionary) {
+            for (int i = 0; i < recordsReadInThisIteration; i++) {
+              byte[] bytes = Longs.toByteArray(pageReader.dictionaryValueReader.readLong());
+              setValueBytes(i, bytes);
+            }
+            setWriteIndex();
+          } else {
+            super.readField(recordsToReadInThisPass);
+          }
+          break;
       }
+    }
+
+    /**
+     * Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+     * and we will go into the else condition below. The readField method of the parent class requires the
+     * writer index to be set correctly.
+     */
+    private void setWriteIndex() {
+      readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+      readLength = (int) Math.ceil(readLengthInBits / BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
+      int writerIndex = valueVec.getBuffer().writerIndex();
+      valueVec.getBuffer().setIndex(0, writerIndex + (int) readLength);
+    }
+
+    private void setValueBytes(int i, byte[] bytes) {
+      valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, bytes, 0, bytes.length);
     }
   }
 

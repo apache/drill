@@ -18,17 +18,28 @@
 package org.apache.drill.exec.store.avro;
 
 import com.google.common.collect.Lists;
+import mockit.integration.junit4.JMockit;
+import org.apache.avro.specific.TestRecordWithLogicalTypes;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.util.JsonStringHashMap;
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -46,11 +57,13 @@ import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionNestedA
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionNestedSchema_withNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_WithNonNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_WithNullValues;
+import static org.apache.drill.exec.store.avro.AvroTestUtil.write;
 import static org.apache.drill.test.TestBuilder.listOf;
 
 /**
  * Unit tests for Avro record reader.
  */
+@RunWith(JMockit.class)
 public class AvroFormatTest extends BaseTestQuery {
 
   // XXX
@@ -290,6 +303,65 @@ public class AvroFormatTest extends BaseTestQuery {
           .go();
     } finally {
       FileUtils.deleteQuietly(new File(testWriter.getFilePath()));
+    }
+  }
+
+  @Test
+  public void testAvroTableWithLogicalTypesDecimal() throws Exception {
+    ExecTest.mockUtcDateTimeZone();
+    DateTime date = DateUtility.getDateTimeFormatter().parseDateTime("2018-02-03");
+    DateTime time = DateUtility.getTimeFormatter().parseDateTime("19:25:03");
+    DateTime timestamp = DateUtility.getDateTimeFormatter().parseDateTime("2018-02-03 19:25:03");
+    BigDecimal bigDecimal = new BigDecimal("123.45");
+
+    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
+        true,
+        34,
+        35L,
+        3.14F,
+        3019.34,
+        "abc",
+        timestamp.toLocalDate(),
+        timestamp.toLocalTime(),
+        timestamp,
+        bigDecimal
+    );
+
+    File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
+
+    final String query = "select * from dfs.`%s`";
+
+    testBuilder()
+        .sqlQuery(query, data.getName())
+        .unOrdered()
+        .baselineColumns("b", "i32", "i64", "f32", "f64", "s", "d", "t", "ts", "dec")
+        .baselineValues(true, 34, 35L, 3.14F, 3019.34, "abc", date, time, timestamp, bigDecimal)
+        .go();
+  }
+
+  @Test
+  public void testAvroWithDisabledDecimalType() throws Exception {
+    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
+        true,
+        34,
+        35L,
+        3.14F,
+        3019.34,
+        "abc",
+        LocalDate.now(),
+        LocalTime.now(),
+        DateTime.now(),
+        new BigDecimal("123.45")
+    );
+
+    File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
+    final String query = String.format("select * from dfs.`%s`", data.getName());
+
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
+      errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 

@@ -121,6 +121,11 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
       "outgoing" /* write container */,
       EMIT_LEFT_CONSTANT, EMIT_LEFT);
 
+  private static final MappingSet SETUP_LEFT_MAPPING = new MappingSet("leftIndex" /* read index */, "outIndex" /* write index */,
+      "leftBatch" /* read container */,
+      "outgoing" /* write container */,
+      ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+
   protected NestedLoopJoinBatch(NestedLoopJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context, left, right);
     Preconditions.checkNotNull(left);
@@ -220,7 +225,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
    */
   private NestedLoopJoin setupWorker() throws IOException, ClassTransformationException, SchemaChangeException {
     final CodeGenerator<NestedLoopJoin> nLJCodeGenerator = CodeGenerator.get(
-        NestedLoopJoin.TEMPLATE_DEFINITION, context.getOptions());
+        SETUP_LEFT_MAPPING, NestedLoopJoin.TEMPLATE_DEFINITION, context.getOptions());
     nLJCodeGenerator.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
     // nLJCodeGenerator.saveCodeForDebugging(true);

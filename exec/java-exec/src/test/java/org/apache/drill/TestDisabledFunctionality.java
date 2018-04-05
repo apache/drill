@@ -18,6 +18,7 @@
 package org.apache.drill;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
@@ -307,14 +308,24 @@ public class TestDisabledFunctionality extends BaseTestQuery {
 
   @Test // DRILL-2848
   public void testDisableDecimalCasts() throws Exception {
-    final String query = "select cast('1.2' as decimal(9, 2)) from cp.`employee.json` limit 1";
-    errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
+      final String query = "select cast('1.2' as decimal(9, 2)) from cp.`employee.json` limit 1";
+      errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
   }
 
   @Test // DRILL-2848
   public void testDisableDecimalFromParquet() throws Exception {
-    final String query = "select * from cp.`parquet/decimal_dictionary.parquet`";
-    errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
+      final String query = "select * from cp.`parquet/decimal_dictionary.parquet`";
+      errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
   }
 
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802

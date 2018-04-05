@@ -23,6 +23,8 @@ import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.BitSets;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -91,8 +93,13 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
       // For avg, stddev_pop, stddev_samp, var_pop and var_samp, the ReduceAggregatesRule is supposed
       // to convert them to use sum and count. Here, we make the cost of the original functions high
       // enough such that the planner does not choose them and instead chooses the rewritten functions.
-      if (name.equals("AVG") || name.equals("STDDEV_POP") || name.equals("STDDEV_SAMP")
-          || name.equals("VAR_POP") || name.equals("VAR_SAMP")) {
+      // Except when AVG, STDDEV_POP, STDDEV_SAMP, VAR_POP and VAR_SAMP are used with DECIMAL type.
+      if ((name.equals(SqlKind.AVG.name())
+            || name.equals(SqlKind.STDDEV_POP.name())
+            || name.equals(SqlKind.STDDEV_SAMP.name())
+            || name.equals(SqlKind.VAR_POP.name())
+            || name.equals(SqlKind.VAR_SAMP.name()))
+          && aggCall.getType().getSqlTypeName() != SqlTypeName.DECIMAL) {
         return planner.getCostFactory().makeHugeCost();
       }
     }
@@ -108,14 +115,13 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
 
     // for count(1).
     if (args.isEmpty()) {
-      args.add(new ValueExpressions.LongExpression(1l));
+      args.add(new ValueExpressions.LongExpression(1L));
     }
-    LogicalExpression expr = FunctionCallFactory.createExpression(call.getAggregation().getName().toLowerCase(), ExpressionPosition.UNKNOWN, args);
-    return expr;
+    return FunctionCallFactory.createExpression(call.getAggregation().getName().toLowerCase(), ExpressionPosition.UNKNOWN, args);
   }
 
-  public static DrillAggregateRel convert(GroupingAggregate groupBy, ConversionContext value)
-      throws InvalidRelException {
+  @SuppressWarnings("unused")
+  public static DrillAggregateRel convert(GroupingAggregate groupBy, ConversionContext value) {
     throw new UnsupportedOperationException();
   }
 

@@ -31,20 +31,18 @@ import org.apache.drill.common.types.TypeProtos;
  * This class is generated using freemarker and the ${.template_name} template.
  */
 @SuppressWarnings("unused")
-public class NullReader extends AbstractBaseReader implements FieldReader{
+public class NullReader extends AbstractBaseReader implements FieldReader {
   
   public static final NullReader INSTANCE = new NullReader();
   public static final NullReader EMPTY_LIST_INSTANCE = new NullReader(Types.repeated(TypeProtos.MinorType.NULL));
   public static final NullReader EMPTY_MAP_INSTANCE = new NullReader(Types.required(TypeProtos.MinorType.MAP));
   private MajorType type;
   
-  private NullReader(){
-    super();
+  private NullReader() {
     type = Types.NULL;
   }
 
-  private NullReader(MajorType type){
-    super();
+  private NullReader(MajorType type) {
     this.type = type;
   }
 
@@ -60,63 +58,67 @@ public class NullReader extends AbstractBaseReader implements FieldReader{
   public void copyAsValue(UnionWriter writer) {}
 
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
-  public void read(${name}Holder holder){
+  public void read(${name}Holder holder) {
     throw new UnsupportedOperationException("NullReader cannot write into non-nullable holder");
   }
 
-  public void read(Nullable${name}Holder holder){
+  public void read(Nullable${name}Holder holder) {
     holder.isSet = 0;
   }
 
-  public void read(int arrayIndex, ${name}Holder holder){
+  public void read(int arrayIndex, ${name}Holder holder) {
     throw new ArrayIndexOutOfBoundsException();
   }
   
-  public void copyAsValue(${minor.class}Writer writer){}
-  public void copyAsField(String name, ${minor.class}Writer writer){}
+  public void copyAsValue(${minor.class}Writer writer) {}
+  <#if minor.class == "VarDecimal">
+  public void copyAsField(String name, ${minor.class}Writer writer, int scale, int precision) {}
+  <#else>
+  public void copyAsField(String name, ${minor.class}Writer writer) {}
+  </#if>
 
-  public void read(int arrayIndex, Nullable${name}Holder holder){
+  public void read(int arrayIndex, Nullable${name}Holder holder) {
     throw new ArrayIndexOutOfBoundsException();
   }
   </#list></#list>
   
-  public int size(){
+  public int size() {
     return 0;
   }
   
-  public boolean isSet(){
+  public boolean isSet() {
     return false;
   }
   
-  public boolean next(){
+  public boolean next() {
     return false;
   }
   
-  public RepeatedMapReader map(){
+  public RepeatedMapReader map() {
     return this;
   }
   
-  public RepeatedListReader list(){
+  public RepeatedListReader list() {
     return this;
   }
   
-  public MapReader map(String name){
+  public MapReader map(String name) {
     return this;
   }
   
-  public ListReader list(String name){
+  public ListReader list(String name) {
     return this;
   }
   
-  public FieldReader reader(String name){
+  public FieldReader reader(String name) {
     return this;
   }
   
-  public FieldReader reader(){
+  public FieldReader reader() {
     return this;
   }
   
-  private void fail(String name){
+  private void fail(String name) {
     throw new IllegalArgumentException(String.format("You tried to read a %s type when you are using a ValueReader of type %s.", name, this.getClass().getSimpleName()));
   }
   
@@ -126,11 +128,11 @@ public class NullReader extends AbstractBaseReader implements FieldReader{
   <#assign safeType=friendlyType />
   <#if safeType=="byte[]"><#assign safeType="ByteArray" /></#if>
   
-  public ${friendlyType} read${safeType}(int arrayIndex){
+  public ${friendlyType} read${safeType}(int arrayIndex) {
     return null;
   }
   
-  public ${friendlyType} read${safeType}(){
+  public ${friendlyType} read${safeType}() {
     return null;
   }
   </#list>

@@ -404,20 +404,14 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
       }
     }
 
-    <#if (fields?size > 1) && !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
-    <#if minor.class == "VarDecimal">
-    public void addSafe(int arrayIndex, <#list fields as field><#if field.name == "scale"><#break></#if>${field.type} ${field.name}<#if field_has_next && fields[field_index+1].name != "scale" >, </#if></#list>) {
-      int nextOffset = offsets.getAccessor().get(arrayIndex+1);
-      values.getMutator().setSafe(nextOffset, <#list fields as field><#if field.name == "scale"><#break></#if>${field.name}<#if field_has_next && fields[field_index+1].name != "scale">, </#if></#list>);
-      offsets.getMutator().setSafe(arrayIndex+1, nextOffset+1);
-    }
-    <#else>
-    public void addSafe(int rowIndex, <#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
+    <#if (fields?size > 1) && !(minor.class == "Decimal9" || minor.class == "Decimal18"
+        || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense"
+        || minor.class == "Decimal38Dense") || minor.class == "VarDecimal">
+    public void addSafe(int rowIndex<#list fields as field><#if field.include!true>, ${field.type} ${field.name}</#if></#list>) {
       final int nextOffset = offsets.getAccessor().get(rowIndex+1);
-      values.getMutator().setSafe(nextOffset, <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-      offsets.getMutator().setSafe(rowIndex+1, nextOffset+1);
+      values.getMutator().setSafe(nextOffset<#list fields as field><#if field.include!true>, ${field.name}</#if></#list>);
+      offsets.getMutator().setSafe(rowIndex + 1, nextOffset + 1);
     }
-    </#if>
 
     </#if>
     <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">

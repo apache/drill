@@ -129,19 +129,24 @@ public class ${name}Accessor extends AbstractSqlAccessor {
     <#case "VarDecimal">
 
     @Override
-    public String getString(int index){
-<#if mode=="Nullable">
-        if(ac.isNull(index)){
-          return null;
-        }
-</#if>
-        try {
-          BigDecimal bd=getBigDecimal(index);
-          return bd.toString();
-        } catch (Throwable t) {
-          // TODO: we cannot throw the exception, so return its string representation, for now.  This should be handled better.
-          return t.toString();
-        }
+    public String getString(int index) {
+      <#if mode == "Nullable">
+      if (ac.isNull(index)) {
+        return null;
+      }
+      </#if>
+      BigDecimal bd = getBigDecimal(index);
+      return bd.toString();
+    }
+
+    @Override
+    public BigDecimal getBigDecimal(int index) {
+    <#if mode == "Nullable">
+      if (ac.isNull(index)) {
+        return null;
+      }
+    </#if>
+      return ac.getObject(index);
     }
       <#break>
 

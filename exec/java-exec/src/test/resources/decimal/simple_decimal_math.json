@@ -19,7 +19,7 @@
     "pop" : "project",
     "@id" : 2,
     "exprs" : [
-    { "ref" : "DECIMAL_18", "expr": "log((cast(DEC18 as decimal18(18, 9))))" }
+    { "ref" : "DECIMAL_18", "expr": "log((cast(DEC18 as vardecimal(18, 9))))" }
     ],
 
     "child" : 1

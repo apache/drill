@@ -30,9 +30,6 @@ import org.apache.calcite.rel.logical.LogicalMinus;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos;
@@ -62,7 +59,6 @@ public class FindLimit0Visitor extends RelShuttleImpl {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FindLimit0Visitor.class);
 
   // Some types are excluded in this set:
-  // + DECIMAL type is not fully supported in general.
   // + VARBINARY is not fully tested.
   // + MAP, ARRAY are currently not exposed to the planner.
   // + TINYINT, SMALLINT are defined in the Drill type system but have been turned off for now.
@@ -77,7 +73,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
               SqlTypeName.INTERVAL_MONTH, SqlTypeName.INTERVAL_DAY, SqlTypeName.INTERVAL_DAY_HOUR,
               SqlTypeName.INTERVAL_DAY_MINUTE, SqlTypeName.INTERVAL_DAY_SECOND, SqlTypeName.INTERVAL_HOUR,
               SqlTypeName.INTERVAL_HOUR_MINUTE, SqlTypeName.INTERVAL_HOUR_SECOND, SqlTypeName.INTERVAL_MINUTE,
-              SqlTypeName.INTERVAL_MINUTE_SECOND, SqlTypeName.INTERVAL_SECOND, SqlTypeName.CHAR)
+              SqlTypeName.INTERVAL_MINUTE_SECOND, SqlTypeName.INTERVAL_SECOND, SqlTypeName.CHAR, SqlTypeName.DECIMAL)
           .build();
 
   /**
@@ -101,7 +97,10 @@ public class FindLimit0Visitor extends RelShuttleImpl {
             .setMode(field.getType().isNullable() ? TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED)
             .setMinorType(TypeInferenceUtils.getDrillTypeFromCalciteType(sqlTypeName));
 
-        if (TypeInferenceUtils.isScalarStringType(sqlTypeName)) {
+        if (sqlTypeName == SqlTypeName.DECIMAL) {
+          builder.setScale(field.getType().getScale());
+          builder.setPrecision(field.getType().getPrecision());
+        } else if (TypeInferenceUtils.isScalarStringType(sqlTypeName)) {
           builder.setPrecision(field.getType().getPrecision());
         }
 

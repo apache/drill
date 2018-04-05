@@ -45,6 +45,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.store.EventBasedRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
@@ -114,9 +115,10 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private OperatorContext oContext;
   private List<String> partitionColumns;
   private boolean hasPartitions;
+  private PrimitiveTypeName logicalTypeForDecimals;
+  private boolean usePrimitiveTypesForDecimals;
 
-  public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException{
-    super();
+  public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException {
     this.oContext = context.newOperatorContext(writer);
     this.codecFactory = CodecFactory.createDirectCodecFactory(writer.getFormatPlugin().getFsConf(),
         new ParquetDirectByteBufferAllocator(oContext.getAllocator()), pageSize);
@@ -158,8 +160,24 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
       throw new UnsupportedOperationException(String.format("Unknown compression type: %s", codecName));
     }
 
+    String logicalTypeNameForDecimals = writerOptions.get(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS).toLowerCase();
+    switch (logicalTypeNameForDecimals) {
+      case "fixed_len_byte_array":
+        logicalTypeForDecimals = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
+        break;
+      case "binary":
+        logicalTypeForDecimals = PrimitiveTypeName.BINARY;
+        break;
+      default:
+        throw new UnsupportedOperationException(
+            String.format(
+                "Unsupported logical type for decimals: %s\n" +
+                "Supported types: ['fixed_len_byte_array', 'binary']", codecName));
+    }
+
     enableDictionary = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
     useSingleFSBlock = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK));
+    usePrimitiveTypesForDecimals = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS));
 
     if (useSingleFSBlock) {
       // Round up blockSize to multiple of 64K.
@@ -228,14 +246,27 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     setUp(schema, consumer);
   }
 
-  private PrimitiveType getPrimitiveType(MaterializedField field) {
+  protected PrimitiveType getPrimitiveType(MaterializedField field) {
     MinorType minorType = field.getType().getMinorType();
     String name = field.getName();
+    int length = ParquetTypeHelper.getLengthForMinorType(minorType);
     PrimitiveTypeName primitiveTypeName = ParquetTypeHelper.getPrimitiveTypeNameForMinorType(minorType);
+    if (DecimalUtility.isDecimalType(minorType)) {
+      primitiveTypeName = logicalTypeForDecimals;
+      if (usePrimitiveTypesForDecimals) {
+        if (field.getPrecision() <= ParquetTypeHelper.getMaxPrecisionForPrimitiveType(PrimitiveTypeName.INT32)) {
+          primitiveTypeName = PrimitiveTypeName.INT32;
+        } else if (field.getPrecision() <= ParquetTypeHelper.getMaxPrecisionForPrimitiveType(PrimitiveTypeName.INT64)) {
+          primitiveTypeName = PrimitiveTypeName.INT64;
+        }
+      }
+
+      length = DecimalUtility.getMaxBytesSizeForPrecision(field.getPrecision());
+    }
+
     Repetition repetition = ParquetTypeHelper.getRepetitionForDataMode(field.getDataMode());
     OriginalType originalType = ParquetTypeHelper.getOriginalTypeForMinorType(minorType);
     DecimalMetadata decimalMetadata = ParquetTypeHelper.getDecimalMetadataForField(field);
-    int length = ParquetTypeHelper.getLengthForMinorType(minorType);
     return new PrimitiveType(repetition, primitiveTypeName, length, name, originalType, decimalMetadata, null);
   }
 

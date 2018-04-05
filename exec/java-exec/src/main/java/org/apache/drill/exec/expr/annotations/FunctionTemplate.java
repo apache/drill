@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.annotations;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.FunctionAttributes;
-import org.apache.drill.exec.expr.fn.FunctionInitializer;
 import org.apache.drill.exec.expr.fn.output.ConcatReturnTypeInference;
 import org.apache.drill.exec.expr.fn.output.DecimalReturnTypeInference;
 import org.apache.drill.exec.expr.fn.output.DefaultReturnTypeInference;
@@ -89,7 +88,7 @@ public @interface FunctionTemplate {
   boolean isNiladic() default false;
   boolean checkPrecisionRange() default false;
 
-  public enum NullHandling {
+  enum NullHandling {
     /**
      * Method handles nulls.
      */
@@ -108,7 +107,7 @@ public @interface FunctionTemplate {
    * Function scope is used to indicate function output rows relation:
    * simple / scalar (1 -> 1) or aggregate (n -> 1).
    */
-  public enum FunctionScope {
+  enum FunctionScope {
     SIMPLE,
     POINT_AGGREGATE,
     HOLISTIC_AGGREGATE,
@@ -119,7 +118,7 @@ public @interface FunctionTemplate {
    * Return type enum is used to indicate which return type calculation logic
    * should be used for functions.
    */
-  public enum ReturnType {
+  enum ReturnType {
     DEFAULT(DefaultReturnTypeInference.INSTANCE),
 
     STRING_CAST(StringCastReturnTypeInference.INSTANCE),
@@ -129,6 +128,7 @@ public @interface FunctionTemplate {
 
     DECIMAL_AGGREGATE(DecimalReturnTypeInference.DecimalAggReturnTypeInference.INSTANCE),
     DECIMAL_SUM_AGGREGATE(DecimalReturnTypeInference.DecimalSumAggReturnTypeInference.INSTANCE),
+    DECIMAL_AVG_AGGREGATE(DecimalReturnTypeInference.DecimalAvgAggReturnTypeInference.INSTANCE),
     DECIMAL_MAX_SCALE(DecimalReturnTypeInference.DecimalMaxScaleReturnTypeInference.INSTANCE),
     DECIMAL_SUM_SCALE(DecimalReturnTypeInference.DecimalSumScaleReturnTypeInference.INSTANCE),
     DECIMAL_CAST(DecimalReturnTypeInference.DecimalCastReturnTypeInference.INSTANCE),
@@ -150,7 +150,7 @@ public @interface FunctionTemplate {
 
   }
 
-  public enum FunctionCostCategory {
+  enum FunctionCostCategory {
     SIMPLE(1), MEDIUM(20), COMPLEX(50);
 
     private final int value;

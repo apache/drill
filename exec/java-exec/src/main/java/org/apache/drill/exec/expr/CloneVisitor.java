@@ -44,6 +44,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
@@ -127,6 +128,11 @@ public class CloneVisitor extends AbstractExprVisitor<LogicalExpression,Void,Run
 
   @Override
   public LogicalExpression visitDecimal38Constant(Decimal38Expression decExpr, Void value) throws RuntimeException {
+    return visitUnknown(decExpr, value);
+  }
+
+  @Override
+  public LogicalExpression visitVarDecimalConstant(VarDecimalExpression decExpr, Void value) throws RuntimeException {
     return visitUnknown(decExpr, value);
   }
 

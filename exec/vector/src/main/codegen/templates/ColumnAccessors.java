@@ -28,6 +28,8 @@
       return ValueType.INTEGER;
   <#elseif drillType == "VarChar" || drillType == "Var16Char">
       return ValueType.STRING;
+  <#elseif drillType == "VarDecimal">
+    return ValueType.DECIMAL;
   <#else>
       return ValueType.${label?upper_case};
   </#if>
@@ -65,6 +67,7 @@
 package org.apache.drill.exec.vector.accessor;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.vector.DateUtilities;
@@ -141,12 +144,10 @@ public class ColumnAccessors {
 
     private static final int VALUE_WIDTH = ${drillType}Vector.VALUE_WIDTH;
 
-      <#if decimal>
-    private MajorType type;
-
-      </#if>
     </#if>
     <#if decimal>
+    private MajorType type;
+
     @Override
     public void bindVector(ColumnMetadata schema, VectorAccessor va) {
       super.bindVector(schema, va);
@@ -234,6 +235,14 @@ public class ColumnAccessors {
     public String getString() {
       return new String(getBytes(${indexVar}), Charsets.UTF_16);
     }
+  <#elseif drillType == "VarDecimal">
+
+    @Override
+    public BigDecimal getDecimal() {
+      byte[] bytes = getBytes();
+      BigInteger unscaledValue = bytes.length == 0 ? BigInteger.ZERO : new BigInteger(bytes);
+      return new BigDecimal(unscaledValue, type.getScale());
+    }
   </#if>
   }
 
@@ -269,20 +278,10 @@ public class ColumnAccessors {
       </#if>
       <@getType drillType label />
       <#if ! varWidth>
-
     </#if>
+
     @Override
-    <#if drillType = "VarDecimal">
-    public final void setDecimal(final BigDecimal bd) {
-      byte[] barr = bd.unscaledValue().toByteArray();
-      int len = barr.length;
-      setBytes(barr, len);
-    }
-
-    public final void setBytes(final byte[] value, int len) {
-    <#else>
     public final void set${label}(final ${accessorType} value${putArgs}) {
-    </#if>
       <#-- Must compute the write offset first; can't be inline because the
            writeOffset() function has a side effect of possibly changing the buffer
            address (bufAddr). -->
@@ -346,6 +345,15 @@ public class ColumnAccessors {
     public final void setString(String value) {
       final byte bytes[] = value.getBytes(Charsets.UTF_16);
       setBytes(bytes, bytes.length);
+    }
+
+    <#elseif drillType = "VarDecimal">
+
+    @Override
+    public final void setDecimal(final BigDecimal bd) {
+      byte[] barr = bd.unscaledValue().toByteArray();
+      int len = barr.length;
+      setBytes(barr, len);
     }
     </#if>
   }

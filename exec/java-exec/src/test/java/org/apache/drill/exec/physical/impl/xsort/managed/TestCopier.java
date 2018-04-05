@@ -55,7 +55,7 @@ import org.junit.experimental.categories.Category;
 public class TestCopier extends SubOperatorTest {
 
   @Test
-  public void testEmptyInput() throws Exception {
+  public void testEmptyInput() {
     BatchSchema schema = SortTestUtilities.nonNullSchema();
     List<BatchGroup> batches = new ArrayList<>();
     Sort popConfig = SortTestUtilities.makeCopierConfig(Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED);
@@ -323,8 +323,7 @@ public class TestCopier extends SubOperatorTest {
     runTypeTest(fixture, MinorType.BIGINT);
     runTypeTest(fixture, MinorType.FLOAT4);
     runTypeTest(fixture, MinorType.FLOAT8);
-    runTypeTest(fixture, MinorType.DECIMAL9);
-    runTypeTest(fixture, MinorType.DECIMAL18);
+    runTypeTest(fixture, MinorType.VARDECIMAL);
     runTypeTest(fixture, MinorType.VARCHAR);
     runTypeTest(fixture, MinorType.VARBINARY);
     runTypeTest(fixture, MinorType.DATE);

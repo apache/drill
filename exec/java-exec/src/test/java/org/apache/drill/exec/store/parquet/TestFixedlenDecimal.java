@@ -20,16 +20,23 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({UnlikelyTest.class})
 public class TestFixedlenDecimal extends BaseTestQuery {
-  // enable decimal data type
+
+
   @BeforeClass
-  public static void enableDecimalDataType() throws Exception {
-    test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  public static void enableDecimalDataType() {
+    setSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+  }
+
+  @AfterClass
+  public static void disableDecimalDataType() {
+    resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
   }
 
   private static final String DATAFILE = "cp.`parquet/fixedlenDecimal.parquet`";
@@ -41,8 +48,7 @@ public class TestFixedlenDecimal extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c")
         .baselineValues(1L)
-        .build()
-        .run();
+        .go();
   }
 
   @Test
@@ -52,8 +58,7 @@ public class TestFixedlenDecimal extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c")
         .baselineValues(106L)
-        .build()
-        .run();
+        .go();
   }
 
   @Test
@@ -63,8 +68,7 @@ public class TestFixedlenDecimal extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c")
         .baselineValues(80L)
-        .build()
-        .run();
+        .go();
   }
 
   @Test
@@ -74,7 +78,6 @@ public class TestFixedlenDecimal extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c")
         .baselineValues(80L)
-        .build()
-        .run();
+        .go();
   }
 }

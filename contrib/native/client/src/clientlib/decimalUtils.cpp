@@ -95,6 +95,21 @@ DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t startIndex, 
     return val;
 }
 
+DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t length, int scale) {
+
+    cpp_int decimalDigits;
+    // casts the first unsigned byte to signed to determine the sign of the value
+    decimalDigits = decimalDigits | cpp_int(static_cast<int8_t>(data.getByte(0))) << (length - 1) * 8;
+    for (int pos = length - 1; pos > 0; pos--) {
+        decimalDigits = decimalDigits | cpp_int(data.getByte(pos)) << (length - pos - 1) * 8;
+    }
+
+    DecimalValue val;
+    val.m_unscaledValue = decimalDigits;
+    val.m_scale = scale;
+    return val;
+}
+
 DecimalValue getDecimalValueFromDense(SlicedByteBuf& data, size_t startIndex, int nDecimalDigits, int scale, int maxPrecision, int width)
 {
     /* This method converts the dense representation to

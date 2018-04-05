@@ -62,6 +62,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ConditionalExprOptimizer;
@@ -210,7 +211,11 @@ public class ExpressionTreeMaterializer {
       return fromExpr;
     }
 
-    if (!Types.isFixedWidthType(toType) && !Types.isUnion(toType)) {
+    if (CoreDecimalUtility.isDecimalType(toType)) {
+      // Add the scale and precision to the arguments of the implicit cast
+      castArgs.add(new ValueExpressions.IntExpression(toType.getPrecision(), null));
+      castArgs.add(new ValueExpressions.IntExpression(toType.getScale(), null));
+    } else if (!Types.isFixedWidthType(toType) && !Types.isUnion(toType)) {
 
       /* We are implicitly casting to VARCHAR so we don't have a max length,
        * using an arbitrary value. We trim down the size of the stored bytes
@@ -218,11 +223,7 @@ public class ExpressionTreeMaterializer {
        */
       castArgs.add(new ValueExpressions.LongExpression(Types.MAX_VARCHAR_LENGTH, null));
     }
-    else if (CoreDecimalUtility.isDecimalType(toType)) {
-      // Add the scale and precision to the arguments of the implicit cast
-      castArgs.add(new ValueExpressions.LongExpression(toType.getPrecision(), null));
-      castArgs.add(new ValueExpressions.LongExpression(toType.getScale(), null));
-    }
+
     FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
     FunctionResolver resolver;
     if (exactResolver) {
@@ -381,14 +382,8 @@ public class ExpressionTreeMaterializer {
     }
 
     private int computePrecision(LogicalExpression currentArg) {
-        int precision = currentArg.getMajorType().getPrecision();
-        if (currentArg.getMajorType().getMinorType() == MinorType.INT) {
-            precision = DecimalUtility.MAX_DIGITS_INT;
-        }
-        else if (currentArg.getMajorType().getMinorType() == MinorType.BIGINT) {
-            precision = DecimalUtility.MAX_DIGITS_BIGINT;
-        }
-        return precision;
+      int precision = currentArg.getMajorType().getPrecision();
+      return DecimalUtility.getDefaultPrecision(currentArg.getMajorType().getMinorType(), precision);
     }
 
     @Override
@@ -444,7 +439,19 @@ public class ExpressionTreeMaterializer {
           }
         }
 
-        return matchedFuncHolder.getExpr(call.getName(), argsWithCast, call.getPosition());
+        FunctionHolderExpression funcExpr = matchedFuncHolder.getExpr(call.getName(), argsWithCast, call.getPosition());
+        MajorType funcExprMajorType = funcExpr.getMajorType();
+        if (DecimalUtility.isObsoleteDecimalType(funcExprMajorType.getMinorType())) {
+          MajorType majorType =
+              MajorType.newBuilder()
+                  .setMinorType(MinorType.VARDECIMAL)
+                  .setMode(funcExprMajorType.getMode())
+                  .setScale(funcExprMajorType.getScale())
+                  .setPrecision(funcExprMajorType.getPrecision())
+                  .build();
+          return addCastExpression(funcExpr, majorType, functionLookupContext, errorCollector);
+        }
+        return funcExpr;
       }
 
       // as no drill func is found, search for a non-Drill function.
@@ -813,6 +820,11 @@ public class ExpressionTreeMaterializer {
     }
 
     @Override
+    public LogicalExpression visitVarDecimalConstant(VarDecimalExpression decExpr, FunctionLookupContext functionLookupContext) {
+      return decExpr;
+    }
+
+    @Override
     public LogicalExpression visitDoubleConstant(DoubleExpression dExpr, FunctionLookupContext functionLookupContext) {
       return dExpr;
     }
@@ -868,12 +880,11 @@ public class ExpressionTreeMaterializer {
         List<LogicalExpression> newArgs = Lists.newArrayList();
         newArgs.add(input);  //input_expr
 
-        //VarLen type
-        if (!Types.isFixedWidthType(type)) {
+        if (CoreDecimalUtility.isDecimalType(type)) {
+          newArgs.add(new ValueExpressions.IntExpression(type.getPrecision(), null));
+          newArgs.add(new ValueExpressions.IntExpression(type.getScale(), null));
+        } else if (!Types.isFixedWidthType(type)) { //VarLen type
           newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
-        }  if (CoreDecimalUtility.isDecimalType(type)) {
-            newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
-            newArgs.add(new ValueExpressions.LongExpression(type.getScale(), null));
         }
 
         FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
@@ -912,17 +923,8 @@ public class ExpressionTreeMaterializer {
       case DECIMAL28SPARSE:
       case DECIMAL38DENSE:
       case DECIMAL38SPARSE:
-        if (to.getScale() == from.getScale() && to.getPrecision() == from.getPrecision()) {
-          return true;
-        }
-        return false;
-
       case VARDECIMAL:
-          // for VARDECIMAL, precision does not matter (it's variable precision, to fit the number), but scale matters
-          if (to.getScale() == from.getScale()) {
-              return true;
-          }
-          return false;
+        return to.getScale() == from.getScale() && to.getPrecision() == from.getPrecision();
 
       case FIXED16CHAR:
       case FIXEDBINARY:

@@ -136,10 +136,9 @@ public class VectorContainer implements VectorAccessible {
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
     final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getName()));
     final ValueVector vector;
-    final Class<?> clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
     if (id != null) {
       vector = getValueAccessorById(id.getFieldIds()).getValueVector();
-      if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(vector.getClass())) {
+      if (id.getFieldIds().length == 1 && !vector.getField().getType().equals(field.getType())) {
         final ValueVector newVector = TypeHelper.getNewVector(field, this.getAllocator(), callBack);
         replace(vector, newVector);
         return (T) newVector;

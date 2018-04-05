@@ -100,12 +100,12 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     }
 
     @Override
-    public String getPrimitiveJavaObject(Object o){
+    public String getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
       }
-      final NullableVarCharHolder h = (NullableVarCharHolder)o;
+      final NullableVarCharHolder h = (NullableVarCharHolder) o;
     <#else>
       final VarCharHolder h = (VarCharHolder)o;
     </#if>
@@ -118,9 +118,9 @@ public class Drill${entry.drillType}${entry.hiveOI} {
       if (o == null) {
         return null;
       }
-      final NullableVarBinaryHolder h = (NullableVarBinaryHolder)o;
+      final NullableVarBinaryHolder h = (NullableVarBinaryHolder) o;
     <#else>
-      final VarBinaryHolder h = (VarBinaryHolder)o;
+      final VarBinaryHolder h = (VarBinaryHolder) o;
     </#if>
       final byte[] buf = new byte[h.end-h.start];
       h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
@@ -133,9 +133,9 @@ public class Drill${entry.drillType}${entry.hiveOI} {
       if (o == null) {
         return null;
       }
-      final NullableVarBinaryHolder h = (NullableVarBinaryHolder)o;
+      final NullableVarBinaryHolder h = (NullableVarBinaryHolder) o;
     <#else>
-      final VarBinaryHolder h = (VarBinaryHolder)o;
+      final VarBinaryHolder h = (VarBinaryHolder) o;
     </#if>
       final byte[] buf = new byte[h.end-h.start];
       h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
@@ -174,18 +174,18 @@ public class Drill${entry.drillType}${entry.hiveOI} {
       return Boolean.valueOf(((BitHolder)o).value != 0);
     </#if>
     }
-<#elseif entry.drillType == "Decimal38Sparse">
+<#elseif entry.drillType == "VarDecimal">
     @Override
-    public HiveDecimal getPrimitiveJavaObject(Object o){
+    public HiveDecimal getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
       }
-      final NullableDecimal38SparseHolder h = (NullableDecimal38SparseHolder) o;
+      final NullableVarDecimalHolder h = (NullableVarDecimalHolder) o;
     <#else>
-      final Decimal38SparseHolder h = (Decimal38SparseHolder) o;
+      final VarDecimalHolder h = (VarDecimalHolder) o;
     </#if>
-      return HiveDecimal.create(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
+      return HiveDecimal.create(DecimalUtility.getBigDecimalFromDrillBuf(h.buffer, h.start, h.end - h.start, h.scale));
     }
 
     @Override
@@ -194,17 +194,17 @@ public class Drill${entry.drillType}${entry.hiveOI} {
       if (o == null) {
         return null;
       }
-      final NullableDecimal38SparseHolder h = (NullableDecimal38SparseHolder) o;
+      final NullableVarDecimalHolder h = (NullableVarDecimalHolder) o;
     <#else>
-      final Decimal38SparseHolder h = (Decimal38SparseHolder) o;
+      final VarDecimalHolder h = (VarDecimalHolder) o;
     </#if>
       return new HiveDecimalWritable(
-          HiveDecimal.create(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale)));
+          HiveDecimal.create(DecimalUtility.getBigDecimalFromDrillBuf(h.buffer, h.start, h.end - h.start, h.scale)));
     }
 
 <#elseif entry.drillType == "TimeStamp">
     @Override
-    public java.sql.Timestamp getPrimitiveJavaObject(Object o){
+    public java.sql.Timestamp getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -237,7 +237,7 @@ public class Drill${entry.drillType}${entry.hiveOI} {
 
 <#elseif entry.drillType == "Date">
     @Override
-    public java.sql.Date getPrimitiveJavaObject(Object o){
+    public java.sql.Date getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -270,11 +270,11 @@ public class Drill${entry.drillType}${entry.hiveOI} {
 
 <#else>
     @Override
-    public ${entry.javaType} get(Object o){
+    public ${entry.javaType} get(Object o) {
     <#if mode == "Optional">
-      return ((Nullable${entry.drillType}Holder)o).value;
+      return ((Nullable${entry.drillType}Holder) o).value;
     <#else>
-      return ((${entry.drillType}Holder)o).value;
+      return ((${entry.drillType}Holder) o).value;
     </#if>
     }
 
@@ -295,9 +295,9 @@ public class Drill${entry.drillType}${entry.hiveOI} {
       if (o == null) {
         return null;
       }
-      return new ${entry.javaType?cap_first}(((Nullable${entry.drillType}Holder)o).value);
+      return new ${entry.javaType?cap_first}(((Nullable${entry.drillType}Holder) o).value);
     <#else>
-      return new ${entry.javaType?cap_first}(((${entry.drillType}Holder)o).value);
+      return new ${entry.javaType?cap_first}(((${entry.drillType}Holder) o).value);
     </#if>
     }
 </#if>
@@ -310,7 +310,7 @@ public class Drill${entry.drillType}${entry.hiveOI} {
       }
       final Nullable${entry.drillType}Holder h = (Nullable${entry.drillType}Holder) o;
     <#else>
-      final ${entry.drillType}Holder h = (${entry.drillType}Holder)o;
+      final ${entry.drillType}Holder h = (${entry.drillType}Holder) o;
     </#if>
       return new ${entry.javaType?cap_first}Writable(h.value);
     }

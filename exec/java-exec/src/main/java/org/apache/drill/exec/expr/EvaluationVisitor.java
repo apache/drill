@@ -53,6 +53,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -657,8 +658,10 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec28", holderType);
       JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
+      JExpression buffer = generator.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer");
       setup.assign(var,
-          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal28Holder").arg(stringLiteral));
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal28Holder")
+              .arg(buffer).arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -670,8 +673,25 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec38", holderType);
       JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
+      JExpression buffer = generator.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer");
       setup.assign(var,
-          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal38Holder")
+              .arg(buffer).arg(stringLiteral));
+      return new HoldingContainer(majorType, var, null, null);
+    }
+
+    @Override
+    public HoldingContainer visitVarDecimalConstant(VarDecimalExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
+      MajorType majorType = e.getMajorType();
+      JBlock setup = generator.getBlock(BlockType.SETUP);
+      JType holderType = generator.getHolderType(majorType);
+      JVar var = generator.declareClassField("varDec", holderType);
+      JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
+      JExpression buffer = generator.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer");
+      setup.assign(var,
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarDecimalHolder")
+              .arg(buffer).arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -997,6 +1017,16 @@ public class EvaluationVisitor {
     }
 
     @Override
+    public HoldingContainer visitVarDecimalConstant(VarDecimalExpression decExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(decExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitVarDecimalConstant(decExpr, generator);
+        put(decExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
     public HoldingContainer visitDoubleConstant(DoubleExpression dExpr, ClassGenerator<?> generator) throws RuntimeException {
       HoldingContainer hc = getPrevious(dExpr, generator.getMappingSet());
       if (hc == null) {
@@ -1217,6 +1247,20 @@ public class EvaluationVisitor {
         return super.visitDecimal38Constant(e, generator).setConstant(true);
       } else {
         return super.visitDecimal38Constant(e, generator);
+      }
+    }
+
+    @Override
+    public HoldingContainer visitVarDecimalConstant(VarDecimalExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitVarDecimalConstant(e, generator);
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitVarDecimalConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitVarDecimalConstant(e, generator);
       }
     }
 

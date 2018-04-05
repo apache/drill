@@ -17,14 +17,12 @@
  */
 package org.apache.drill.exec.expr;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
-import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -44,10 +42,8 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-
-import java.util.List;
 
 public class HashVisitor extends AbstractExprVisitor<Integer,Void,RuntimeException> {
   @Override
@@ -174,6 +170,11 @@ public class HashVisitor extends AbstractExprVisitor<Integer,Void,RuntimeExcepti
   @Override
   public Integer visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
     return compute(e, 25);
+  }
+
+  @Override
+  public Integer visitVarDecimalConstant(VarDecimalExpression decExpr, Void value) throws RuntimeException {
+    return compute(decExpr, 26);
   }
 
   private int compute(LogicalExpression e, int seed) {

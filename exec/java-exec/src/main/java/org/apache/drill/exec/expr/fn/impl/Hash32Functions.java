@@ -25,22 +25,14 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
-import org.apache.drill.exec.expr.holders.Decimal18Holder;
-import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.expr.holders.NullableVarDecimalHolder;
-import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.NullableDateHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal18Holder;
-import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal9Holder;
 import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
 import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
@@ -55,8 +47,7 @@ import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-import java.math.BigDecimal;
-
+@SuppressWarnings("unused")
 public class Hash32Functions {
 
   @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
@@ -373,66 +364,6 @@ public class Hash32Functions {
   }
 
   @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class Decimal9Hash implements DrillSimpleFunc {
-    @Param  Decimal9Holder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class NullableDecimal9Hash implements DrillSimpleFunc {
-    @Param  NullableDecimal9Holder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      if (in.isSet == 0) {
-        out.value = 0;
-      } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
-      }
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class Decimal18Hash implements DrillSimpleFunc {
-    @Param  Decimal18Holder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class NullableDecimal18Hash implements DrillSimpleFunc {
-    @Param  NullableDecimal18Holder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      if (in.isSet == 0) {
-        out.value = 0;
-      } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
-      }
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class VarDecimalHash implements DrillSimpleFunc {
     @Param  VarDecimalHolder in;
     @Output IntHolder out;
@@ -441,28 +372,8 @@ public class Hash32Functions {
     }
 
     public void eval() {
-      java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer,
-              in.start, in.end - in.start, in.scale);
-      out.value = hashBigDecimal(bd, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, 0);
     }
-  }
-
-  public static int hashBigDecimal(BigDecimal bd, int seed) {
-    java.math.BigInteger bi = bd.unscaledValue();
-    byte[] barr = bi.toByteArray();
-    int shiftCount = 0;
-    int xor = 0;
-    for (int i = 0; i < barr.length; ++i) {
-      byte b = barr[i];
-      int ival = (int) b;
-      ival <<= shiftCount;
-      ++shiftCount;
-      if (shiftCount > 3) {
-        shiftCount = 0;
-      }
-      xor = xor ^ ival;
-    }
-    return org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(xor, seed);
   }
 
   @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
@@ -477,87 +388,7 @@ public class Hash32Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer,
-                in.start, in.end - in.start, in.scale);
-        out.value = hashBigDecimal(bd, 0);
-      }
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class Decimal28Hash implements DrillSimpleFunc {
-    @Param  Decimal28SparseHolder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-
-      int xor = 0;
-      for (int i = 0; i < in.nDecimalDigits; i++) {
-        xor = xor ^ Decimal28SparseHolder.getInteger(i, in.start, in.buffer);
-      }
-      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(xor, 0);
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class NullableDecimal28Hash implements DrillSimpleFunc {
-    @Param  NullableDecimal28SparseHolder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      if (in.isSet == 0) {
-        out.value = 0;
-      } else {
-        int xor = 0;
-        for (int i = 0; i < in.nDecimalDigits; i++) {
-          xor = xor ^ NullableDecimal28SparseHolder.getInteger(i, in.start, in.buffer);
-        }
-        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(xor, 0);
-      }
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class Decimal38Hash implements DrillSimpleFunc {
-    @Param  Decimal38SparseHolder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-
-      int xor = 0;
-      for (int i = 0; i < in.nDecimalDigits; i++) {
-        xor = xor ^ Decimal38SparseHolder.getInteger(i, in.start, in.buffer);
-      }
-      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(xor, 0);
-    }
-  }
-
-  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class NullableDecimal38Hash implements DrillSimpleFunc {
-    @Param  NullableDecimal38SparseHolder in;
-    @Output IntHolder out;
-
-    public void setup() {
-    }
-
-    public void eval() {
-      if (in.isSet == 0) {
-        out.value = 0;
-      } else {
-        int xor = 0;
-        for (int i = 0; i < in.nDecimalDigits; i++) {
-          xor = xor ^ NullableDecimal38SparseHolder.getInteger(i, in.start, in.buffer);
-        }
-        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(xor, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.start, in.end, in.buffer, 0);
       }
     }
   }

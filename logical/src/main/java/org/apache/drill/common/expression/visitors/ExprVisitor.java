@@ -44,6 +44,7 @@ import org.apache.drill.common.expression.ValueExpressions.ParameterExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 
 public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
@@ -63,6 +64,7 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   T visitDecimal18Constant(Decimal18Expression decExpr, VAL value) throws EXCEP;
   T visitDecimal28Constant(Decimal28Expression decExpr, VAL value) throws EXCEP;
   T visitDecimal38Constant(Decimal38Expression decExpr, VAL value) throws EXCEP;
+  T visitVarDecimalConstant(VarDecimalExpression decExpr, VAL value) throws EXCEP;
   T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
   T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
   T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;

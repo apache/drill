@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 import static org.apache.drill.test.TestBuilder.mapOf;
@@ -202,10 +204,10 @@ public class TestParquetComplex extends BaseTestQuery {
 
   @Test //DRILL-5971
   public void testComplexLogicalIntTypes() throws Exception {
-    String query = String.format("select t.complextype as complextype,  " +
+    String query = "select t.complextype as complextype,  " +
             "t.uint_64 as uint_64, t.uint_32 as uint_32, t.uint_16 as uint_16, t.uint_8 as uint_8,  " +
             "t.int_64 as int_64, t.int_32 as int_32, t.int_16 as int_16, t.int_8 as int_8  " +
-            "from cp.`store/parquet/complex/logical_int_complex.parquet` t" );
+            "from cp.`store/parquet/complex/logical_int_complex.parquet` t";
     String[] columns = {"complextype", "uint_64", "uint_32", "uint_16", "uint_8", "int_64", "int_32", "int_16", "int_8" };
     testBuilder()
         .sqlQuery(query)
@@ -225,7 +227,7 @@ public class TestParquetComplex extends BaseTestQuery {
     byte[] bytesOnes = new byte[12];
     byte[] bytesZeros = new byte[12];
     Arrays.fill(bytesOnes, (byte) 1);
-    String query = String.format(
+    String query =
         " select " +
         " t.rowKey as rowKey, " +
         " t.StringTypes._UTF8 as _UTF8, " +
@@ -247,8 +249,7 @@ public class TestParquetComplex extends BaseTestQuery {
         " t.NumericTypes.Int96._INT96_RAW as _INT96_RAW " +
         " from " +
         " cp.`store/parquet/complex/parquet_logical_types_complex.parquet` t " +
-        " order by t.rowKey "
-    );
+        " order by t.rowKey ";
     String[] columns = {
         "rowKey " ,
         "_UTF8" ,
@@ -300,7 +301,7 @@ public class TestParquetComplex extends BaseTestQuery {
     byte[] bytesOnes = new byte[12];
     byte[] bytesZeros = new byte[12];
     Arrays.fill(bytesOnes, (byte) 1);
-    String query = String.format(
+    String query =
         " select " +
             " t.rowKey as rowKey, " +
             " t.StringTypes._UTF8 as _UTF8, " +
@@ -322,8 +323,7 @@ public class TestParquetComplex extends BaseTestQuery {
             " t.NumericTypes.Int96._INT96_RAW as _INT96_RAW " +
             " from " +
             " cp.`store/parquet/complex/parquet_logical_types_complex_nullable.parquet` t " +
-            " order by t.rowKey "
-    );
+            " order by t.rowKey ";
     String[] columns = {
         "rowKey " ,
         "_UTF8" ,
@@ -370,4 +370,29 @@ public class TestParquetComplex extends BaseTestQuery {
         .build().run();
   }
 
+  @Test
+  public void testReadRepeatedDecimals() throws Exception {
+
+    JsonStringArrayList<BigDecimal> ints = new JsonStringArrayList<>();
+    ints.add(new BigDecimal("999999.999"));
+    ints.add(new BigDecimal("-999999.999"));
+    ints.add(new BigDecimal("0.000"));
+
+    JsonStringArrayList<BigDecimal> longs = new JsonStringArrayList<>();
+    longs.add(new BigDecimal("999999999.999999999"));
+    longs.add(new BigDecimal("-999999999.999999999"));
+    longs.add(new BigDecimal("0.000000000"));
+
+    JsonStringArrayList<BigDecimal> fixedLen = new JsonStringArrayList<>();
+    fixedLen.add(new BigDecimal("999999999999.999999"));
+    fixedLen.add(new BigDecimal("-999999999999.999999"));
+    fixedLen.add(new BigDecimal("0.000000"));
+
+    testBuilder()
+        .sqlQuery("select * from cp.`parquet/repeatedIntLondFixedLenBinaryDecimal.parquet`")
+        .unOrdered()
+        .baselineColumns("decimal_int32", "decimal_int64", "decimal_fixedLen", "decimal_binary")
+        .baselineValues(ints, longs, fixedLen, fixedLen)
+        .go();
+  }
 }

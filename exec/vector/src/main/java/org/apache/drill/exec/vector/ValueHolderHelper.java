@@ -37,6 +37,7 @@ import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
 
@@ -199,5 +200,23 @@ public class ValueHolderHelper {
         .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
 
       return dch;
+  }
+
+  public static VarDecimalHolder getVarDecimalHolder(DrillBuf buf, String decimal) {
+    VarDecimalHolder dch = new VarDecimalHolder();
+
+    BigDecimal bigDecimal = new BigDecimal(decimal);
+
+    byte[] bytes = bigDecimal.unscaledValue().toByteArray();
+    int length = bytes.length;
+
+    dch.scale = bigDecimal.scale();
+    dch.precision = bigDecimal.precision();
+    dch.start = 0;
+    dch.end = length;
+    dch.buffer = buf.reallocIfNeeded(length);
+    dch.buffer.setBytes(0, bytes);
+
+    return dch;
   }
 }

@@ -91,6 +91,7 @@ public class PreparedStatementProvider {
       .put(MinorType.DECIMAL18, BigDecimal.class.getName())
       .put(MinorType.DECIMAL28SPARSE, BigDecimal.class.getName())
       .put(MinorType.DECIMAL38SPARSE, BigDecimal.class.getName())
+      .put(MinorType.VARDECIMAL, BigDecimal.class.getName())
       .put(MinorType.TIME, Time.class.getName())
       .put(MinorType.TIMESTAMP, Timestamp.class.getName())
       .put(MinorType.VARBINARY, byte[].class.getName())

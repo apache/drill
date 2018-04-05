@@ -24,15 +24,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestColumnReaderFactory extends BaseTestQuery {
-  // enable decimal data type
+
   @BeforeClass
-  public static void enableDecimalDataType() throws Exception {
-    test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  public static void enableDecimalDataType() {
+    alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
   }
 
   @AfterClass
-  public static void disableDecimalDataType() throws Exception {
-    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  public static void disableDecimalDataType() {
+    resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
   }
 
   /**

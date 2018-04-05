@@ -346,7 +346,8 @@ template <int DECIMAL_DIGITS, int WIDTH_IN_BYTES, bool IS_SPARSE, int MAX_PRECIS
                     strncpy(buf, str.c_str(), nChars);
                 } else {
                     size_t idxDecimalMark = str.length() - m_scale;
-                    const std::string& decStr= str.substr(0, idxDecimalMark) + "." + str.substr(idxDecimalMark, m_scale);
+                    const std::string& decStr =
+                            (idxDecimalMark == 0 ? "0" : str.substr(0, idxDecimalMark)) + "." + str.substr(idxDecimalMark, m_scale);
                     strncpy(buf, decStr.c_str(), nChars);
                 }
                 return;
@@ -734,6 +735,49 @@ class DECLSPEC_DRILL_CLIENT ValueVectorVarChar:public ValueVectorVarWidth{
         }
 };
 
+class DECLSPEC_DRILL_CLIENT ValueVectorVarDecimal:public ValueVectorVarWidth{
+    public:
+        ValueVectorVarDecimal(SlicedByteBuf *b, size_t rowCount, size_t scale):
+            ValueVectorVarWidth(b, rowCount),
+            m_scale(scale)
+        {
+        }
+        DecimalValue get(size_t index) const {
+            size_t length = getSize(index);
+            ByteBuf_t buff = getRaw(index);
+            SlicedByteBuf intermediateData(&buff[0], 0, length);
+            return getDecimalValueFromByteBuf(intermediateData, length, this->m_scale);
+        }
+
+        void getValueAt(size_t index, char* buf, size_t nChars) const {
+            const DecimalValue& val = this->get(index);
+            std::string str = boost::lexical_cast<std::string>(val.m_unscaledValue);
+            if (str[0] == '-') {
+                str = str.substr(1);
+                while (str.length() < m_scale) {
+                    str = "0" + str;
+                }
+                str = "-" + str;
+            } else {
+                while (str.length() < m_scale) {
+                    str = "0" + str;
+                }
+            }
+            if (m_scale == 0) {
+                strncpy(buf, str.c_str(), nChars);
+            } else {
+                size_t idxDecimalMark = str.length() - m_scale;
+                const std::string& decStr =
+                        (idxDecimalMark == 0 ? "0" : str.substr(0, idxDecimalMark)) + "." + str.substr(idxDecimalMark, m_scale);
+                strncpy(buf, decStr.c_str(), nChars);
+            }
+            return;
+        }
+
+    private:
+        int32_t m_scale;
+};
+
 class DECLSPEC_DRILL_CLIENT ValueVectorVarBinary:public ValueVectorVarWidth{
     public:
         ValueVectorVarBinary(SlicedByteBuf *b, size_t rowCount):ValueVectorVarWidth(b, rowCount){
@@ -764,10 +808,11 @@ typedef ValueVectorDecimal<6, 24, true, 38>  ValueVectorDecimal38Sparse;
 
 typedef NullableValueVectorTyped<int32_t, ValueVectorDecimal9> NullableValueVectorDecimal9;
 typedef NullableValueVectorTyped<int64_t, ValueVectorDecimal18> NullableValueVectorDecimal18;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal28Dense> NullableValueVectorDecimal28Dense;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal38Dense> NullableValueVectorDecimal38Dense;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal28Sparse> NullableValueVectorDecimal28Sparse;
-typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal38Sparse> NullableValueVectorDecimal38Sparse;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal28Dense> NullableValueVectorDecimal28Dense;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal38Dense> NullableValueVectorDecimal38Dense;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal28Sparse> NullableValueVectorDecimal28Sparse;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorDecimal38Sparse> NullableValueVectorDecimal38Sparse;
+typedef NullableValueVectorTyped<DecimalValue, ValueVectorVarDecimal> NullableValueVectorVarDecimal;
 
 typedef ValueVectorTyped<DateHolder, int64_t> ValueVectorDate;
 typedef ValueVectorTyped<DateTimeHolder, int64_t> ValueVectorTimestamp;

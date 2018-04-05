@@ -17,12 +17,15 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.math.BigDecimal;
 
 /**
  * DRILL-4906
@@ -142,5 +145,20 @@ public class TestCaseNullableTypes extends BaseTestQuery {
       .baselineColumns("res")
       .baselineValues(date)
       .go();
+  }
+
+  @Test
+  public void testCaseNullableTypesDecimal() throws Exception {
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      testBuilder()
+          .sqlQuery("select (case when (false) then null else cast(0.1 as decimal(2, 1)) end) res1")
+          .ordered()
+          .baselineColumns("res1")
+          .baselineValues(new BigDecimal("0.1"))
+          .go();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
   }
 }

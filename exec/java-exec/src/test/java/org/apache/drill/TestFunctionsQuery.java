@@ -42,8 +42,8 @@ public class TestFunctionsQuery extends BaseTestQuery {
   }
 
   @AfterClass
-  public static void disableDecimalDataType() throws Exception {
-    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  public static void disableDecimalDataType() {
+    resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
   }
 
   @Test
@@ -402,7 +402,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("DEC38_1", "DEC38_2", "DEC38_3")
-        .baselineValues(new BigDecimal("1000000000000000000000000000.00000"), new BigDecimal("1000000000000000000"), new BigDecimal("1000000000.000000000000000000"))
+        .baselineValues(new BigDecimal("1000000000000000000000000000.00000"), new BigDecimal("1.0000000000000000E+18"), new BigDecimal("1000000000.000000000000000000"))
         .go();
   }
 
@@ -429,7 +429,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
     String query = "select cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 4)) as DEC18_DEC9_1, " +
         "cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 2)) as DEC18_DEC9_2, " +
         "cast((cast('-12345.6789' as decimal(18, 4))) as decimal(9, 0)) as DEC18_DEC9_3, " +
-        "cast((cast('999999999.6789' as decimal(38, 4))) as decimal(9, 0)) as DEC38_DEC19_1, " +
+        "cast((cast('99999999.6789' as decimal(38, 4))) as decimal(9, 0)) as DEC38_DEC19_1, " +
         "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 2)) as DEC38_DEC18_1, " +
         "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 0)) as DEC38_DEC18_2, " +
         "cast((cast('100000000999999999.6789' as decimal(38, 4))) as decimal(28, 0)) as DEC38_DEC28_1 " +
@@ -438,24 +438,25 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("DEC18_DEC9_1", "DEC18_DEC9_2", "DEC18_DEC9_3", "DEC38_DEC19_1", "DEC38_DEC18_1", "DEC38_DEC18_2", "DEC38_DEC28_1")
-        .baselineValues(new BigDecimal("12345.6789"), new BigDecimal("12345.68"), new BigDecimal("-12346"), new BigDecimal("1000000000"),
+        .baselineValues(new BigDecimal("12345.6789"), new BigDecimal("12345.68"), new BigDecimal("-12346"), new BigDecimal("100000000"),
             new BigDecimal("-999999999999999.68"), new BigDecimal("-1000000000000000"), new BigDecimal("100000001000000000"))
         .go();
   }
 
   @Test
   public void testTruncateWithParamFunction() throws Exception {
-    String query = "SELECT " +
-        "trunc(1234.4567, 2) as T_1, " +
-        "trunc(-1234.4567, 2) as T_2, " +
-        "trunc(1234.4567, -2) as T_3, " +
-        "trunc(-1234.4567, -2) as T_4, " +
-        "trunc(1234, 4) as T_5, " +
-        "trunc(-1234, 4) as T_6, " +
-        "trunc(1234, -4) as T_7, " +
-        "trunc(-1234, -4) as T_8, " +
-        "trunc(8124674407369523212, 0) as T_9, " +
-        "trunc(81246744073695.395, 1) as T_10 " +
+    String query =
+        "SELECT\n" +
+            "trunc(cast('1234.4567' as double), 2) as T_1,\n" +
+            "trunc(cast('-1234.4567' as double), 2) as T_2,\n" +
+            "trunc(cast('1234.4567' as double), -2) as T_3,\n" +
+            "trunc(cast('-1234.4567' as double), -2) as T_4,\n" +
+            "trunc(cast('1234' as double), 4) as T_5,\n" +
+            "trunc(cast('-1234' as double), 4) as T_6,\n" +
+            "trunc(cast('1234' as double), -4) as T_7,\n" +
+            "trunc(cast('-1234' as double), -4) as T_8,\n" +
+            "trunc(cast('8124674407369523212' as double), 0) as T_9,\n" +
+            "trunc(cast('81246744073695.395' as double), 1) as T_10\n" +
         "FROM cp.`tpch/region.parquet` limit 1";
 
     testBuilder()
@@ -469,17 +470,18 @@ public class TestFunctionsQuery extends BaseTestQuery {
 
   @Test
   public void testRoundWithParamFunction() throws Exception {
-    String query = "SELECT " +
-        "round(1234.4567, 2) as T_1, " +
-        "round(-1234.4567, 2) as T_2, " +
-        "round(1234.4567, -2) as T_3, " +
-        "round(-1234.4567, -2) as T_4, " +
-        "round(1234, 4) as T_5, " +
-        "round(-1234, 4) as T_6, " +
-        "round(1234, -4) as T_7, " +
-        "round(-1234, -4) as T_8, " +
-        "round(8124674407369523212, -4) as T_9, " +
-        "round(81246744073695.395, 1) as T_10 " +
+    String query =
+        "SELECT\n" +
+            "round(cast('1234.4567' as double), 2) as T_1,\n" +
+            "round(cast('-1234.4567' as double), 2) as T_2,\n" +
+            "round(cast('1234.4567' as double), -2) as T_3,\n" +
+            "round(cast('-1234.4567' as double), -2) as T_4,\n" +
+            "round(cast('1234' as double), 4) as T_5,\n" +
+            "round(cast('-1234' as double), 4) as T_6,\n" +
+            "round(cast('1234' as double), -4) as T_7,\n" +
+            "round(cast('-1234' as double), -4) as T_8,\n" +
+            "round(cast('8124674407369523212' as double), -4) as T_9,\n" +
+            "round(cast('81246744073695.395' as double), 1) as T_10\n" +
         "FROM cp.`tpch/region.parquet` limit 1";
 
     testBuilder()
@@ -494,19 +496,20 @@ public class TestFunctionsQuery extends BaseTestQuery {
 
   @Test
   public void testRoundWithOneParam() throws Exception {
-    String query = "select " +
-        "round(8124674407369523212) round_bigint," +
-        "round(9999999) round_int, " +
-        "round(cast('23.45' as float)) round_float_1, " +
-        "round(cast('23.55' as float)) round_float_2, " +
-        "round(8124674407369.2345) round_double_1, " +
-        "round(8124674407369.589) round_double_2 " +
-        " from cp.`tpch/region.parquet` limit 1";
+    String query =
+        "select\n" +
+            "round(8124674407369523212) round_bigint,\n" +
+            "round(9999999) round_int,\n" +
+            "round(cast('23.45' as float)) round_float_1,\n" +
+            "round(cast('23.55' as float)) round_float_2,\n" +
+            "round(cast('8124674407369.2345' as double)) round_double_1,\n" +
+            "round(cast('8124674407369.589' as double)) round_double_2\n" +
+        "from cp.`tpch/region.parquet` limit 1";
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("round_bigint", "round_int", "round_float_1", "round_float_2", "round_double_1", "round_double_2")
-        .baselineValues(8124674407369523212l, 9999999, 23.0f, 24.0f, 8124674407369.0d, 8124674407370.0d)
+        .baselineValues(8124674407369523212L, 9999999, 23.0f, 24.0f, 8124674407369.0d, 8124674407370.0d)
         .go();
   }
 
@@ -729,14 +732,14 @@ public class TestFunctionsQuery extends BaseTestQuery {
 
   @Test
   public void testNegative() throws Exception {
-    String query = "select  negative(cast(2 as bigint)) as NEG " +
+    String query = "select  negative(cast(2 as bigint)) as NEG\n" +
         "from cp.`employee.json` where employee_id = 1";
 
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("NEG")
-        .baselineValues(-2l)
+        .baselineValues(-2L)
         .go();
   }
 
@@ -755,11 +758,11 @@ public class TestFunctionsQuery extends BaseTestQuery {
 
   @Test
   public void testToTimeStamp() throws Exception {
-    String query = "select to_timestamp(cast('800120400.12312' as decimal(38, 5))) as DEC38_TS, to_timestamp(200120400) as INT_TS " +
+    String query = "select to_timestamp(cast('800120400.12312' as decimal(38, 5))) as DEC38_TS, to_timestamp(200120400) as INT_TS\n" +
         "from cp.`employee.json` where employee_id < 2";
 
-    DateTime result1 = new DateTime(800120400123l);
-    DateTime result2 = new DateTime(200120400000l);
+    DateTime result1 = new DateTime(800120400123L);
+    DateTime result2 = new DateTime(200120400000L);
 
     testBuilder()
         .sqlQuery(query)
@@ -883,7 +886,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .sqlQuery("select `integer` i, `float` f from cp.`jsoninput/input1.json` where `float` = '1.2'")
         .unOrdered()
         .baselineColumns("i", "f")
-        .baselineValues(2001l, 1.2d)
+        .baselineValues(2001L, 1.2d)
         .go();
   }
 

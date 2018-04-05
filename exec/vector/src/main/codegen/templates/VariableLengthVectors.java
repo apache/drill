@@ -464,6 +464,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       holder.start = oAccessor.get(index);
       holder.end = oAccessor.get(index + 1);
       holder.buffer = data;
+      <#if minor.class.contains("Decimal")>
+      holder.scale = field.getScale();
+      holder.precision = field.getPrecision();
+      </#if>
     }
 
     public void get(int index, Nullable${minor.class}Holder holder){
@@ -471,6 +475,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       holder.start = oAccessor.get(index);
       holder.end = oAccessor.get(index + 1);
       holder.buffer = data;
+      <#if minor.class.contains("Decimal")>
+      holder.scale = field.getScale();
+      holder.precision = field.getPrecision();
+      </#if>
     }
 
     <#switch minor.class>
@@ -478,7 +486,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     @Override
     public ${friendlyType} getObject(int index) {
       byte[] b = get(index);
-      BigInteger bi = b.length == 0 ? new BigInteger("0") : new BigInteger(b);
+      BigInteger bi = b.length == 0 ? BigInteger.ZERO : new BigInteger(b);
       BigDecimal bd = new BigDecimal(bi, getField().getScale());
       return bd;
     }
@@ -671,6 +679,18 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       holder.buffer.getBytes(start, data, outputStart, len);
       offsetVector.getMutator().setSafe(index + 1, outputStart + len);
     }
+
+    <#if minor.class == "VarDecimal">
+    public void set(int index, BigDecimal value) {
+      byte[] bytes = value.unscaledValue().toByteArray();
+      set(index, bytes, 0, bytes.length);
+    }
+
+    public void setSafe(int index, BigDecimal value) {
+      byte[] bytes = value.unscaledValue().toByteArray();
+      setSafe(index, bytes, 0, bytes.length);
+    }
+    </#if>
 
     public void setSafe(int index, ${minor.class}Holder holder) {
       final int start = holder.start;

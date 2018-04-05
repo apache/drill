@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -558,6 +559,19 @@ public class SqlConverter {
     public RexNode makeCast(RelDataType type, RexNode exp, boolean matchNullability) {
       if (matchNullability) {
         return makeAbstractCast(type, exp);
+      }
+      // for the case when BigDecimal literal has a scale or precision
+      // that differs from the value from specified RelDataType, cast cannot be removed
+      // TODO: remove this code when CALCITE-1468 is fixed
+      if (type.getSqlTypeName() == SqlTypeName.DECIMAL && exp instanceof RexLiteral) {
+        RexLiteral literal = (RexLiteral) exp;
+        Comparable value = literal.getValueAs(Comparable.class);
+        if (value instanceof BigDecimal) {
+          BigDecimal bigDecimal = (BigDecimal) value;
+          if (bigDecimal.scale() != type.getScale() || bigDecimal.precision() != type.getPrecision()) {
+            return makeAbstractCast(type, exp);
+          }
+        }
       }
       return super.makeCast(type, exp, false);
     }

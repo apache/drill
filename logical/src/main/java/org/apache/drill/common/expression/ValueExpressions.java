@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 
@@ -107,6 +108,10 @@ public class ValueExpressions {
 
   public static LogicalExpression getDecimal38(BigDecimal i) {
       return new Decimal38Expression(i, ExpressionPosition.UNKNOWN);
+  }
+
+  public static LogicalExpression getVarDecimal(BigDecimal i) {
+    return new VarDecimalExpression(i, ExpressionPosition.UNKNOWN);
   }
 
   public static LogicalExpression getNumericExpression(String sign, String s, ExpressionPosition ep) {
@@ -366,8 +371,6 @@ public class ValueExpressions {
 
   }
 
-  // TODO: is a class also needed for VARDECIMAL?
-
   public static class Decimal38Expression extends LogicalExpressionBase {
 
     private BigDecimal bigDecimal;
@@ -393,11 +396,45 @@ public class ValueExpressions {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
   }
 
+  public static class VarDecimalExpression extends LogicalExpressionBase {
+
+    private BigDecimal bigDecimal;
+
+    public VarDecimalExpression(BigDecimal input, ExpressionPosition pos) {
+      super(pos);
+      this.bigDecimal = input;
+    }
+
+    public BigDecimal getBigDecimal() {
+      return bigDecimal;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return MajorType
+          .newBuilder()
+          .setMinorType(MinorType.VARDECIMAL)
+          .setScale(bigDecimal.scale())
+          .setPrecision(bigDecimal.precision())
+          .setMode(DataMode.REQUIRED)
+          .build();
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitVarDecimalConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Collections.emptyIterator();
+    }
+  }
 
   public static class DoubleExpression extends LogicalExpressionBase {
     private double d;

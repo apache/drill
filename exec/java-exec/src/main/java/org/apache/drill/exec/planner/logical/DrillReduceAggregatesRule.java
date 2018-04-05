@@ -238,6 +238,20 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       return reduceSum(oldAggRel, oldCall, newCalls, aggCallMapping);
     }
     if (sqlAggFunction instanceof SqlAvgAggFunction) {
+      // for DECIMAL data types does not produce rewriting of complex calls,
+      // since SUM returns value with 38 precision and further handling of the value
+      // causes the loss of the scale
+      if (oldCall.getType().getSqlTypeName() == SqlTypeName.DECIMAL) {
+        return oldAggRel.getCluster().getRexBuilder().addAggCall(
+            oldCall,
+            oldAggRel.getGroupCount(),
+            oldAggRel.indicator,
+            newCalls,
+            aggCallMapping,
+            ImmutableList.of(getFieldType(
+                oldAggRel.getInput(),
+                oldCall.getArgList().get(0))));
+      }
       final SqlKind subtype = sqlAggFunction.getKind();
       switch (subtype) {
       case AVG:
@@ -253,7 +267,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldAggRel, oldCall, true, true, newCalls, aggCallMapping,
             inputExprs);
       case STDDEV_SAMP:
-        // replace original STDDEV_POP(x) with
+        // replace original STDDEV_SAMP(x) with
         //   SQRT(
         //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
         //     / CASE COUNT(x) WHEN 1 THEN NULL ELSE COUNT(x) - 1 END)
@@ -268,7 +282,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldAggRel, oldCall, true, false, newCalls, aggCallMapping,
             inputExprs);
       case VAR_SAMP:
-        // replace original VAR_POP(x) with
+        // replace original VAR_SAMP(x) with
         //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
         //     / CASE COUNT(x) WHEN 1 THEN NULL ELSE COUNT(x) - 1 END
         return reduceStddev(

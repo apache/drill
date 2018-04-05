@@ -243,6 +243,16 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR = new BooleanValidator(
       PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
 
+  public static final String PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS
+      = "store.parquet.writer.use_primitive_types_for_decimals";
+  public static final OptionValidator PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS_VALIDATOR = new BooleanValidator(
+    PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+
+  public static final String PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS
+      = "store.parquet.writer.logical_type_for_decimals";
+  public static final OptionValidator PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS_VALIDATOR
+      = new EnumeratedStringValidator(PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, "fixed_len_byte_array", "binary");
+
   public static final String PARQUET_VECTOR_FILL_THRESHOLD = "store.parquet.vector_fill_threshold";
   public static final OptionValidator PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR = new PositiveLongValidator(PARQUET_VECTOR_FILL_THRESHOLD, 99l);
   public static final String PARQUET_VECTOR_FILL_CHECK_THRESHOLD = "store.parquet.vector_fill_check_threshold";

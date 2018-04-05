@@ -35,6 +35,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.joda.time.Period;
@@ -217,6 +218,12 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   }
 
   @Override
+  public Void visitVarDecimalConstant(VarDecimalExpression decExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(decExpr.getBigDecimal().toString());
+    return null;
+  }
+
+  @Override
   public Void visitDoubleConstant(DoubleExpression dExpr, StringBuilder sb) throws RuntimeException {
     sb.append(dExpr.getDouble());
     return null;
@@ -292,7 +299,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     case DECIMAL28SPARSE:
     case DECIMAL38DENSE:
     case DECIMAL38SPARSE:
-    case VARDECIMAL:  // TODO: precision might not be appropriate for VARDECIMAL, as it is "one-size-fits-all"
+    case VARDECIMAL:
       // add scale and precision
       sb.append("(");
       sb.append(mt.getPrecision());

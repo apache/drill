@@ -15,26 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.util;
+package org.apache.drill.exec.planner.types.decimal;
 
-public class DecimalScalePrecisionAddFunction extends DrillBaseComputeScalePrecision {
+import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
 
-  public DecimalScalePrecisionAddFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
+public class DecimalScalePrecisionModFunction extends DrillBaseComputeScalePrecision {
+
+  public DecimalScalePrecisionModFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
     super(leftPrecision, leftScale, rightPrecision, rightScale);
   }
 
   @Override
   public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
+
     // compute the output scale and precision here
     outputScale = Math.max(leftScale, rightScale);
-    int maxResultIntegerDigits = Math.max((leftPrecision - leftScale), (rightPrecision - rightScale)) + 1;
+    int leftIntegerDigits = leftPrecision - leftScale;
 
-    outputPrecision = (outputScale + maxResultIntegerDigits);
+    outputPrecision = DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
 
-    // If we are beyond the maximum precision range, cut down the fractional part
-    if (outputPrecision > 38) {
-      outputPrecision = 38;
-      outputScale = (outputPrecision - maxResultIntegerDigits >= 0) ? (outputPrecision - maxResultIntegerDigits) : 0;
+    if (outputScale + leftIntegerDigits > outputPrecision) {
+      outputScale = outputPrecision - leftIntegerDigits;
     }
+
+    // Output precision should atleast be greater or equal to the input precision
+    outputPrecision = Math.max(outputPrecision, Math.max(leftPrecision, rightPrecision));
   }
 }

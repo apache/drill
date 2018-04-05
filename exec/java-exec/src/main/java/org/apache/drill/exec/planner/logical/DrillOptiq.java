@@ -61,6 +61,8 @@ import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
+import static org.apache.drill.exec.planner.physical.PlannerSettings.ENABLE_DECIMAL_DATA_TYPE;
+
 /**
  * Utilities for Drill's planner.
  */
@@ -314,20 +316,13 @@ public class DrillOptiq {
         int precision = call.getType().getPrecision();
         int scale = call.getType().getScale();
 
-        // TODO: this may eventually need changes for VARDECIMAL
-
-        if (precision <= 9) {
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
-        } else if (precision <= 18) {
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setPrecision(precision).setScale(scale).build();
-        } else if (precision <= 28) {
-          // Inject a cast to SPARSE before casting to the dense type.
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setPrecision(precision).setScale(scale).build();
-        } else if (precision <= 38) {
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setPrecision(precision).setScale(scale).build();
-        } else {
-          throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
-        }
+        castType =
+            TypeProtos.MajorType
+                .newBuilder()
+                .setMinorType(MinorType.VARDECIMAL)
+                .setPrecision(precision)
+                .setScale(scale)
+                .build();
         break;
 
         case "INTERVAL_YEAR":
@@ -545,24 +540,21 @@ public class DrillOptiq {
         return ValueExpressions.getInt(a);
 
       case DECIMAL:
-        /* TODO: Enable using Decimal literals once we have more functions implemented for Decimal
-         * For now continue using Double instead of decimals
-
-        int precision = ((BigDecimal) literal.getValue()).precision();
-        if (precision <= 9) {
-            return ValueExpressions.getDecimal9((BigDecimal)literal.getValue());
-        } else if (precision <= 18) {
-            return ValueExpressions.getDecimal18((BigDecimal)literal.getValue());
-        } else if (precision <= 28) {
-            return ValueExpressions.getDecimal28((BigDecimal)literal.getValue());
-        } else if (precision <= 38) {
-            return ValueExpressions.getDecimal38((BigDecimal)literal.getValue());
-        } */
-        if (isLiteralNull(literal)) {
-          return createNullExpr(MinorType.FLOAT8);
+        if (context.getPlannerSettings().getOptions()
+            .getBoolean(ENABLE_DECIMAL_DATA_TYPE.getOptionName())) {
+          if (isLiteralNull(literal)) {
+            return new TypedNullConstant(
+                Types.withScaleAndPrecision(
+                    MinorType.VARDECIMAL,
+                    TypeProtos.DataMode.OPTIONAL,
+                    literal.getType().getScale(),
+                    literal.getType().getPrecision()));
+          }
+          return ValueExpressions.getVarDecimal((BigDecimal) literal.getValue());
         }
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
-        logger.warn("Converting exact decimal into approximate decimal.  Should be fixed once decimal is implemented.");
+        logger.warn("Converting exact decimal into approximate decimal.\n" +
+            "Please enable decimal data types using `planner.enable_decimal_data_type`.");
         return ValueExpressions.getFloat8(dbl);
       case VARCHAR:
         if (isLiteralNull(literal)) {

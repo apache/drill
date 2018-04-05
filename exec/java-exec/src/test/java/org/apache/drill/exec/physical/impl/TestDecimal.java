@@ -20,10 +20,10 @@ package org.apache.drill.exec.physical.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
@@ -32,6 +32,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
@@ -41,8 +42,7 @@ import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class})
-public class TestDecimal extends PopUnitTestBase{
-    DrillConfig c = DrillConfig.create();
+public class TestDecimal extends PopUnitTestBase {
 
     @Test
     public void testSimpleDecimal() throws Exception {
@@ -314,4 +314,24 @@ public class TestDecimal extends PopUnitTestBase{
     }
   }
 
+  @Test
+  public void testGetMaxBytesSizeForPrecision() {
+    for (int i = 0; i < 10_000; i++) {
+      assertEquals(String.format("Bytes size does not match for precision %s", i),
+          getMaxBytesSizeForPrecisionFromBigInteger(i),
+          DecimalUtility.getMaxBytesSizeForPrecision(i));
+    }
+  }
+
+  private static int getMaxBytesSizeForPrecisionFromBigInteger(int precision) {
+    if (precision == 0) {
+      return 0;
+    }
+
+    StringBuilder sb = new StringBuilder("-");
+    for (int i = 0; i < precision; i++) {
+      sb.append(9);
+    }
+    return new BigInteger(sb.toString()).toByteArray().length;
+  }
 }

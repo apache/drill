@@ -53,7 +53,7 @@ package org.apache.drill.exec.vector.complex.writer;
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
     <#assign upperName = minor.class?upper_case />
     <#assign capName = minor.class?cap_first />
-    <#if minor.class?starts_with("Decimal") >
+    <#if minor.class?contains("Decimal") >
     ${capName}Writer ${lowerName}(String name, int scale, int precision);
     </#if>
     ${capName}Writer ${lowerName}(String name);
@@ -78,6 +78,9 @@ package org.apache.drill.exec.vector.complex.writer;
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
     <#assign upperName = minor.class?upper_case />
     <#assign capName = minor.class?cap_first />
+    <#if minor.class?contains("Decimal") >
+    ${capName}Writer ${lowerName}(int scale, int precision);
+    </#if>
     ${capName}Writer ${lowerName}();
     </#list></#list>
   }
@@ -112,6 +115,7 @@ package org.apache.drill.exec.vector.complex.writer;
     VarCharWriter varChar(String name);
     Var16CharWriter var16Char(String name);
     VarDecimalWriter varDecimal(String name);
+    VarDecimalWriter varDecimal(String name, int scale, int precision);
     TinyIntWriter tinyInt(String name);
     SmallIntWriter smallInt(String name);
     IntWriter integer(String name);

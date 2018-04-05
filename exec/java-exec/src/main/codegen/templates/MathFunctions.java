@@ -227,12 +227,7 @@ public static class ${func.className}${type.input} implements DrillSimpleFunc {
   }
 
   public void eval() {
-	  <#if type.input?matches("^Decimal[1-9]*")>
-	  double dblval = new java.math.BigDecimal(in.value).setScale(in.scale).doubleValue();
-	  out.value = ${func.javaFunc}(dblval);
-	  <#else>
 	  out.value = ${func.javaFunc}(in.value);
-	  </#if>
   }
 }
 
@@ -257,12 +252,7 @@ public static class ${func.className}${type.input} implements DrillSimpleFunc {
   }
 
   public void eval() {
-	  <#if type.input?matches("^Decimal[1-9]*")>
-	  double dblval = new java.math.BigDecimal(val.value).setScale(val.scale).doubleValue();
-	  out.value = ${func.javaFunc}(dblval)/ ${func.javaFunc}(base.value);
-	  <#else>
 	  out.value = ${func.javaFunc}(val.value)/ ${func.javaFunc}(base.value);
-	  </#if>
   }
 }
 </#list>

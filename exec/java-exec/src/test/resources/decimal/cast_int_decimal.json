@@ -29,10 +29,10 @@
       "pop" : "project",
       "@id" : 4,
       "exprs" : [
-        {"ref": "DEC9_INT", "expr" : "cast(INT_COL as decimal9(9, 0))"},
-        {"ref": "DEC38_INT", "expr" : "cast(INT_COL as decimal38sparse(38, 0))"},
-        {"ref": "DEC9_BIGINT", "expr" : "cast(BIGINT_COL as decimal9(9, 0))"},
-        {"ref": "DEC38_BIGINT", "expr" : "cast(BIGINT_COL as decimal38sparse(38, 0))"}
+        {"ref": "DEC9_INT", "expr" : "cast(INT_COL as vardecimal(9, 0))"},
+        {"ref": "DEC38_INT", "expr" : "cast(INT_COL as vardecimal(38, 0))"},
+        {"ref": "DEC9_BIGINT", "expr" : "cast(BIGINT_COL as vardecimal(9, 0))"},
+        {"ref": "DEC38_BIGINT", "expr" : "cast(BIGINT_COL as vardecimal(38, 0))"}
       ],
 
       "child" : 2

@@ -19,6 +19,7 @@ package org.apache.drill.exec;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.categories.UnlikelyTest;
@@ -128,26 +129,53 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   /**
    * Test with query against an empty file. Select clause has three expressions.
-   * 1.0 + 100.0 as constant expression, is resolved to required FLOAT8
+   * 1.0 + 100.0 as constant expression, is resolved to required FLOAT8/VARDECIMAL
    * cast(100 as varchar(100) is resolved to required varchar(100)
    * cast(columns as varchar(100)) is resolved to nullable varchar(100).
    */
   @Test
   public void testQueryConstExprEmptyJson() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
-        .add("key", TypeProtos.MinorType.FLOAT8)
-        .add("name", TypeProtos.MinorType.VARCHAR, 100)
-        .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100)
-        .build();
+    try {
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
+      BatchSchema expectedSchema = new SchemaBuilder()
+          .add("key", TypeProtos.MinorType.FLOAT8)
+          .add("name", TypeProtos.MinorType.VARCHAR, 100)
+          .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100)
+          .build();
 
-    testBuilder()
-        .sqlQuery("select 1.0 + 100.0 as key, "
-          + " cast(100 as varchar(100)) as name, "
-          + " cast(columns as varchar(100)) as name2 "
-          + " from cp.`%s` ", SINGLE_EMPTY_JSON)
-        .schemaBaseLine(expectedSchema)
-        .build()
-        .run();
+      testBuilder()
+          .sqlQuery("select 1.0 + 100.0 as key, "
+            + " cast(100 as varchar(100)) as name, "
+            + " cast(columns as varchar(100)) as name2 "
+            + " from cp.`%s` ", SINGLE_EMPTY_JSON)
+          .schemaBaseLine(expectedSchema)
+          .build()
+          .run();
+
+      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      expectedSchema = new SchemaBuilder()
+          .add("key",
+              TypeProtos.MajorType.newBuilder()
+                  .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+                  .setMode(TypeProtos.DataMode.REQUIRED)
+                  .setPrecision(5)
+                  .setScale(1)
+                  .build())
+          .add("name", TypeProtos.MinorType.VARCHAR, 100)
+          .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100)
+          .build();
+
+      testBuilder()
+          .sqlQuery("select 1.0 + 100.0 as key, "
+            + " cast(100 as varchar(100)) as name, "
+            + " cast(columns as varchar(100)) as name2 "
+            + " from cp.`%s` ", SINGLE_EMPTY_JSON)
+          .schemaBaseLine(expectedSchema)
+          .build()
+          .run();
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    }
   }
 
   /**

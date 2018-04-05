@@ -20,9 +20,9 @@
         "@id" : 2,
         "exprs" : [ {
           "ref" : "DE",
-          "expr" : " (cast(B as decimal38sparse(28, 9))) "
+          "expr" : " (cast(B as vardecimal(28, 9))) "
         },
-        {"ref" : "DE1", "expr": " cast(A as decimal18(15, 6))" }
+        {"ref" : "DE1", "expr": " cast(A as vardecimal(15, 6))" }
         ],
 
         "child" : 1

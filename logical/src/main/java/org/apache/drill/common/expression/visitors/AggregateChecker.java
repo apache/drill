@@ -46,6 +46,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 
 public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollector, RuntimeException>{
 
@@ -147,6 +148,11 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitDecimal38Constant(Decimal38Expression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitVarDecimalConstant(VarDecimalExpression decExpr, ErrorCollector errors) {
     return false;
   }
 

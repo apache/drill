@@ -227,7 +227,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
 
         selectedColumnObjInspectors.add(fieldOI);
         selectedColumnTypes.add(typeInfo);
-        selectedColumnFieldConverters.add(HiveFieldConverter.create(typeInfo, fragmentContext));
+        selectedColumnFieldConverters.add(HiveFieldConverter.create(typeInfo));
       }
 
       for(int i=0; i<selectedColumnNames.size(); ++i){

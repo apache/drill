@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.pojo;
 
 import io.netty.buffer.DrillBuf;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 
 import com.google.common.base.Charsets;
+import org.apache.drill.exec.vector.VarDecimalVector;
 
 public class PojoWriters {
 
@@ -63,6 +65,8 @@ public class PojoWriters {
       return new EnumWriter(fieldName, buffer);
     } else if (type == String.class) {
       return new StringWriter(fieldName, buffer);
+    } else if (type == BigDecimal.class) {
+      return new DecimalWriter(fieldName);
     } else if (type == Timestamp.class) {
       return new NTimeStampWriter(fieldName);
       // primitives
@@ -138,6 +142,24 @@ public class PojoWriters {
     @Override
     public void writeField(Object value, int outboundIndex) {
       vector.getMutator().setSafe(outboundIndex, (double) value);
+    }
+
+  }
+
+  /**
+   * Pojo writer for decimal. If null is encountered does not write it.
+   */
+  public static class DecimalWriter extends AbstractPojoWriter<VarDecimalVector> {
+
+    public DecimalWriter(String fieldName) {
+      super(fieldName, Types.optional(MinorType.VARDECIMAL));
+    }
+
+    @Override
+    public void writeField(Object value, int outboundIndex) {
+      if (value != null) {
+        vector.getMutator().setSafe(outboundIndex, (BigDecimal) value);
+      }
     }
 
   }

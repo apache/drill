@@ -43,6 +43,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 
 import java.util.List;
@@ -228,7 +229,21 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!decExpr.getMajorType().equals(((Decimal38Expression) value).getMajorType())) {
       return false;
     }
-    return false;
+    return true;
+  }
+
+  @Override
+  public Boolean visitVarDecimalConstant(VarDecimalExpression decExpr, LogicalExpression value) throws RuntimeException {
+    if (!(value instanceof VarDecimalExpression)) {
+      return false;
+    }
+    if (!decExpr.getMajorType().equals(value.getMajorType())) {
+      return false;
+    }
+    if (!decExpr.getBigDecimal().equals(((VarDecimalExpression) value).getBigDecimal())) {
+      return false;
+    }
+    return true;
   }
 
   @Override

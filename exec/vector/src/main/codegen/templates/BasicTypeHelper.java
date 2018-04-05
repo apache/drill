@@ -395,7 +395,9 @@ public class BasicTypeHelper {
     MajorType type1 = v1.getField().getType();
     MajorType type2 = v2.getField().getType();
 
-    if (type1.getMinorType() != type2.getMinorType()) {
+    if (type1.getMinorType() != type2.getMinorType()
+        || type1.getScale() != type1.getScale()
+        || type1.getPrecision() != type1.getPrecision()) {
       return false;
     }
 
@@ -539,11 +541,19 @@ public class BasicTypeHelper {
     }
     <#list vv.types as type>
     <#list type.minor as minor>
+    <#if minor.class.contains("Decimal")>
+      else if (holder instanceof ${minor.class}Holder) {
+        return  getType((${minor.class}Holder) holder);
+      } else if (holder instanceof Nullable${minor.class}Holder) {
+        return  getType((Nullable${minor.class}Holder) holder);
+      }
+    <#else>
       else if (holder instanceof ${minor.class}Holder) {
         return ((${minor.class}Holder) holder).TYPE;
       } else if (holder instanceof Nullable${minor.class}Holder) {
       return ((Nullable${minor.class}Holder) holder).TYPE;
       }
+    </#if>
     </#list>
     </#list>
     else if (holder instanceof UntypedNullHolder) {
@@ -552,5 +562,32 @@ public class BasicTypeHelper {
     throw new UnsupportedOperationException("ValueHolder is not supported for 'getValueHolderType' method.");
 
   }
+
+  <#list vv.types as type>
+  <#list type.minor as minor>
+  <#if minor.class.contains("Decimal")>
+  <#list ["Nullable", "", "Repeated"] as dataMode>
+  public static MajorType getType(${dataMode}${minor.class}Holder holder) {
+    return MajorType.newBuilder()
+        .setMinorType(MinorType.${minor.class?upper_case})
+      <#if dataMode == "Nullable">
+        .setMode(DataMode.OPTIONAL)
+        .setScale(holder.scale)
+        .setPrecision(holder.precision)
+      <#elseif dataMode == "Repeated">
+        .setMode(DataMode.REPEATED)
+        .setScale(holder.vector.getField().getScale())
+        .setPrecision(holder.vector.getField().getPrecision())
+      <#else>
+        .setMode(DataMode.REQUIRED)
+        .setScale(holder.scale)
+        .setPrecision(holder.precision)
+      </#if>
+        .build();
+  }
+  </#list>
+  </#if>
+  </#list>
+  </#list>
 
 }

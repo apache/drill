@@ -17,20 +17,23 @@
  */
 package org.apache.drill.exec.util;
 
+import com.google.common.math.BigIntegerMath;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.CoreDecimalUtility;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 
-public class DecimalUtility extends CoreDecimalUtility{
+public class DecimalUtility extends CoreDecimalUtility {
 
   public final static int MAX_DIGITS = 9;
   public final static int MAX_DIGITS_INT = 10;
@@ -152,18 +155,18 @@ public class DecimalUtility extends CoreDecimalUtility{
     return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, false);
   }
 
-    public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
+  public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
 
-        // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
-        return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
-    }
+    // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
+    return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
+  }
 
-    public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
-      byte[] value = new byte[length];
-      bytebuf.getBytes(start, value, 0, length);
-      BigInteger unscaledValue = new BigInteger(value);
-      return new BigDecimal(unscaledValue, scale);
-    }
+  public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
+    byte[] value = new byte[length];
+    bytebuf.getBytes(start, value, 0, length);
+    BigInteger unscaledValue = new BigInteger(value);
+    return new BigDecimal(unscaledValue, scale);
+  }
 
   public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int start, int length, int scale) {
     byte[] value = new byte[length];
@@ -355,29 +358,27 @@ public class DecimalUtility extends CoreDecimalUtility{
         scale -= MAX_DIGITS;
     }
 
-        // Set the negative sign
-        if (sign == true) {
-            data.setInt(startIndex, data.getInt(startIndex) | 0x80000000);
-        }
-
+    // Set the negative sign
+    if (sign) {
+      data.setInt(startIndex, data.getInt(startIndex) | 0x80000000);
     }
+  }
 
-    /**
-     * Converts from an input BigDecimal into varying width "VarDecimal" representation.
-     * The object that manages the "data" is assumed to already have the proper scale set,
-     * matching that of input.scale().
-     * @param input input decimal number to be stored
-     * @param data destination buffer to store the byte array representation of input
-     * @param startIndex starting index in data to hold the bytes
-     * @return startIndex + length of bytes stored (i.e., the next startIndex in the data buffer)
-     */
-    public static int getVarDecimalFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex) {
-        byte[] bytes = input.unscaledValue().toByteArray();
-        int len = bytes.length;
-        data.setBytes(startIndex, bytes);
-        //System.out.println("getVarDecimal start " + startIndex + " len " + len + " value " + input);
-        return startIndex + len;
-    }
+  /**
+   * Converts from an input BigDecimal into varying width "VarDecimal" representation.
+   * The object that manages the "data" is assumed to already have the proper scale set,
+   * matching that of input.scale().
+   * @param input      input decimal number to be stored
+   * @param data       destination buffer to store the byte array representation of input
+   * @param startIndex starting index in data to hold the bytes
+   * @return startIndex + length of bytes stored (i.e., the next startIndex in the data buffer)
+   */
+  public static int getVarDecimalFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex) {
+    byte[] bytes = input.unscaledValue().toByteArray();
+    int len = bytes.length;
+    data.setBytes(startIndex, bytes);
+    return startIndex + len;
+  }
 
   public static long getDecimal18FromBigDecimal(BigDecimal input, int scale, int precision) {
     // Truncate or pad to set the input to the correct scale
@@ -451,31 +452,52 @@ public class DecimalUtility extends CoreDecimalUtility{
     buffer.setInt(start + (index * 4), value);
   }
 
-    /**
-     * Compares two VarDecimal values, still stored in their respective Drill buffers
-     * @param left left value Drill buffer
-     * @param leftStart start offset of left value
-     * @param leftEnd end offset of left value
-     * @param leftScale scale of left value
-     * @param right right value Drill buffer
-     * @param rightStart start offset of right value
-     * @param rightEnd end offset of right value
-     * @param rightScale scale of right value
-     * @param absCompare comparison of absolute values is done iff this is true
-     * @return 1 if left > right, 0 if left = right, -1 if left < right.  two values that are numerically equal, but with different
-     * scales (e.g., 2.00 and 2), are considered equal.
-     */
-    public static int compareVarLenBytes(DrillBuf left, int leftStart, int leftEnd, int leftScale, DrillBuf right, int rightStart, int rightEnd, int rightScale, boolean absCompare) {
-        java.math.BigDecimal bdLeft = getBigDecimalFromDrillBuf(left, leftStart, leftEnd - leftStart, leftScale);
-        java.math.BigDecimal bdRight = getBigDecimalFromDrillBuf(right, rightStart, rightEnd - rightStart, rightScale);
-        if (absCompare) {
-            bdLeft = bdLeft.abs();
-            bdRight = bdRight.abs();
-        }
-        return bdLeft.compareTo(bdRight);
-    }
+  /**
+   * Compares two VarDecimal values, still stored in their respective Drill buffers
+   *
+   * @param left       left value Drill buffer
+   * @param leftStart  start offset of left value
+   * @param leftEnd    end offset of left value
+   * @param leftScale  scale of left value
+   * @param right      right value Drill buffer
+   * @param rightStart start offset of right value
+   * @param rightEnd   end offset of right value
+   * @param rightScale scale of right value
+   * @param absCompare comparison of absolute values is done iff this is true
+   * @return 1 if left > right, 0 if left = right, -1 if left < right.  two values that are numerically equal, but with different
+   * scales (e.g., 2.00 and 2), are considered equal.
+   */
+  public static int compareVarLenBytes(DrillBuf left, int leftStart, int leftEnd, int leftScale, DrillBuf right, int rightStart, int rightEnd, int rightScale, boolean absCompare) {
+    byte[] rightBytes = new byte[rightEnd - rightStart];
+    right.getBytes(rightStart, rightBytes, 0, rightEnd - rightStart);
 
-    public static int compareSparseBytes(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
+    return compareVarLenBytes(left, leftStart, leftEnd, leftScale, rightBytes, rightScale, absCompare);
+  }
+
+  /**
+   * Compares two VarDecimal values, still stored in Drill buffer and byte array
+   *
+   * @param left       left value Drill buffer
+   * @param leftStart  start offset of left value
+   * @param leftEnd    end offset of left value
+   * @param leftScale  scale of left value
+   * @param right      right value byte array
+   * @param rightScale scale of right value
+   * @param absCompare comparison of absolute values is done iff this is true
+   * @return 1 if left > right, 0 if left = right, -1 if left < right.  two values that are numerically equal, but with different
+   * scales (e.g., 2.00 and 2), are considered equal.
+   */
+  public static int compareVarLenBytes(DrillBuf left, int leftStart, int leftEnd, int leftScale, byte right[], int rightScale, boolean absCompare) {
+    java.math.BigDecimal bdLeft = getBigDecimalFromDrillBuf(left, leftStart, leftEnd - leftStart, leftScale);
+    java.math.BigDecimal bdRight = new BigDecimal(new BigInteger(right), rightScale);
+    if (absCompare) {
+      bdLeft = bdLeft.abs();
+      bdRight = bdRight.abs();
+    }
+    return bdLeft.compareTo(bdRight);
+  }
+
+  public static int compareSparseBytes(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
 
     int invert = 1;
 
@@ -782,5 +804,73 @@ public class DecimalUtility extends CoreDecimalUtility{
     }
     return cmp * invert;
   }
-}
 
+  /**
+   * Returns max length of byte array, required to store value with specified precision.
+   *
+   * @param precision the precision of value
+   *
+   * @return max length of byte array
+   */
+  public static int getMaxBytesSizeForPrecision(int precision) {
+    if (precision == 0) {
+      return 0;
+    }
+    if (precision < 300) { // normal case, use exact heuristic formula
+      return (int) Math.ceil((Math.log(Math.pow(10, precision) - 1) / Math.log(2) + 1) / Byte.SIZE);
+    } else {
+      // for values greater than 304 Math.pow(10, precision) returns Infinity, therefore 1 is neglected in Math.log()
+      return (int) Math.ceil((precision * Math.log(10) / Math.log(2) + 1) / Byte.SIZE);
+    }
+  }
+
+  /**
+   * Calculates and returns square root for specified BigDecimal
+   * with specified number of digits alter decimal point.
+   *
+   * @param in    BigDecimal which square root should be calculated
+   * @param scale number of digits alter decimal point in the result value.
+   * @return square root for specified BigDecimal
+   */
+  public static BigDecimal sqrt(BigDecimal in, int scale) {
+    // unscaled BigInteger value from specified BigDecimal with doubled number of digits after decimal point
+    // was used to calculate sqrt using Guava's BigIntegerMath.
+    BigInteger valueWithDoubleMaxPrecision =
+        in.multiply(BigDecimal.TEN.pow(scale * 2)).setScale(0, RoundingMode.HALF_UP).unscaledValue();
+    return new BigDecimal(
+        BigIntegerMath.sqrt(valueWithDoubleMaxPrecision, RoundingMode.HALF_UP), scale);
+  }
+
+  /**
+   * Checks that specified decimal minorType is obsolete.
+   *
+   * @param minorType type to check
+   * @return true if specified decimal minorType is obsolete.
+   */
+  public static boolean isObsoleteDecimalType(TypeProtos.MinorType minorType) {
+    return minorType == TypeProtos.MinorType.DECIMAL9 ||
+        minorType == TypeProtos.MinorType.DECIMAL18 ||
+        minorType == TypeProtos.MinorType.DECIMAL28SPARSE ||
+        minorType == TypeProtos.MinorType.DECIMAL38SPARSE;
+  }
+
+  /**
+   * Returns default precision for specified {@link TypeProtos.MinorType}
+   * or returns specified defaultPrecision if {@link TypeProtos.MinorType} isn't
+   * {@link TypeProtos.MinorType#INT} or {@link TypeProtos.MinorType#BIGINT}.
+   *
+   * @param minorType        type wich precision should be received
+   * @param defaultPrecision default value for precision
+   * @return default precision for specified {@link TypeProtos.MinorType}
+   */
+  public static int getDefaultPrecision(TypeProtos.MinorType minorType, int defaultPrecision) {
+    switch (minorType) {
+      case INT:
+        return MAX_DIGITS_INT;
+      case BIGINT:
+        return MAX_DIGITS_BIGINT;
+      default:
+        return defaultPrecision;
+    }
+  }
+}

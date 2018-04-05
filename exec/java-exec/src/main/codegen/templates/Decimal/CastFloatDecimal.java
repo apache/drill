@@ -20,8 +20,8 @@
 
 <#list cast.types as type>
 
-<#-- Cast function template for conversion from Float to Decimal9, Decimal18, Decimal28, Decimal38 -->
-<#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex" || type.major == "FloatDecimalSimple" || type.major == "DoubleDecimalSimple">
+<#-- Cast function template for conversion from Float to VarDecimal -->
+<#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
 
@@ -52,59 +52,38 @@ import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}",
-    scope = FunctionTemplate.FunctionScope.SIMPLE,
-    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
-    nulls = NullHandling.NULL_IF_NULL)
+                  scope = FunctionTemplate.FunctionScope.SIMPLE,
+                  returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+                  nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
+  @Param ${type.from}Holder in;
+  @Inject DrillBuf buffer;
+  @Param IntHolder precision;
+  @Param IntHolder scale;
+  @Output ${type.to}Holder out;
 
-@Param ${type.from}Holder in;
-<#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
-@Inject DrillBuf buffer;
-</#if>
-@Param BigIntHolder precision;
-@Param BigIntHolder scale;
-@Output ${type.to}Holder out;
+  public void setup() {
+  }
 
-    public void setup() {
-        <#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
-        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE);
-        buffer = buffer.reallocIfNeeded(size);
-        </#if>
-    }
+  public void eval() {
+    out.scale = scale.value;
+    out.precision = precision.value;
 
-    public void eval() {
+    out.start = 0;
+    java.math.BigDecimal bd =
+        new java.math.BigDecimal(
+            String.valueOf(in.value),
+            new java.math.MathContext(
+                precision.value,
+                java.math.RoundingMode.HALF_UP))
+        .setScale(scale.value, java.math.RoundingMode.HALF_UP);
 
-        out.scale = (int) scale.value;
-
-        <#if !type.to.endsWith("VarDecimal")>
-        out.precision = (int) precision.value;
-        </#if>
-
-        <#if type.to.endsWith("VarDecimal")>
-        // TODO: the entire set of logic, above, appears to be using BigDecimal constructors completely wrong!!!!
-        // for the time being, this new logic is added for VarDecimal only.
-        double d = in.value;
-        for (int i = 0; i < out.scale; ++i) {  // loop to compute unscaled value
-            d *= 10.0;
-        }
-        long lval = (long)(d >= 0.0 ? d + 0.5 : d - 0.5);  // round off unscaled integer, from float8 to nearest integer
-        java.math.BigInteger bi = new java.math.BigInteger(Long.toString(lval));
-        java.math.BigDecimal bd = new java.math.BigDecimal(bi, out.scale);
-        int len = org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
-        out.end = out.start + len;
-        <#elseif type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
-        out.start = 0;
-        out.buffer = buffer;
-
-       // Assign the integer part of the decimal to the output holder
-        org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
-
-        <#elseif type.to.endsWith("Decimal9")>
-        out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal9FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
-        <#elseif type.to.endsWith("Decimal18")>
-        out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal18FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
-        </#if>
-    }
+    byte[] bytes = bd.unscaledValue().toByteArray();
+    int len = bytes.length;
+    out.buffer = buffer.reallocIfNeeded(len);
+    out.buffer.setBytes(out.start, bytes);
+    out.end = out.start + len;
+  }
 }
 </#if>
 </#list>

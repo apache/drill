@@ -17,10 +17,8 @@
  */
 <@pp.dropOutputFile />
 
-<#-- Template for converting between similar types of decimal. Decimal28Dense -> Decimal38Dense & Decimal28Sparse -> Decimal38Sparse -->
-
 <#list cast.types as type>
-<#if type.major == "DecimalSimilar">
+<#if type.major == "VarDecimalToDecimal">
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
 
@@ -47,51 +45,48 @@ import java.nio.ByteBuffer;
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
-
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}",
-    scope = FunctionTemplate.FunctionScope.SIMPLE,
-    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
-    nulls = NullHandling.NULL_IF_NULL)
-public class Cast${type.from}${type.to} implements DrillSimpleFunc{
+                  scope = FunctionTemplate.FunctionScope.SIMPLE,
+                  returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+                  nulls = NullHandling.NULL_IF_NULL)
+public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
-    @Param ${type.from}Holder in;
-    @Inject DrillBuf buffer;
-    @Param BigIntHolder precision;
-    @Param BigIntHolder scale;
-    @Output ${type.to}Holder out;
+  @Param ${type.from}Holder in;
+  <#if type.to.endsWith("Sparse") || type.to.endsWith("Dense")>
+  @Inject DrillBuf buffer;
+  </#if>
+  @Param IntHolder precision;
+  @Param IntHolder scale;
+  @Output ${type.to}Holder out;
 
-    public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
-        buffer = buffer.reallocIfNeeded(size);
-    }
+  public void setup() {
+  <#if type.to.endsWith("Sparse") || type.to.endsWith("Dense")>
+    int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE);
+    buffer = buffer.reallocIfNeeded(size);
+  </#if>
+  }
 
-    public void eval() {
+  public void eval() {
+    out.scale = scale.value;
+    out.precision = precision.value;
+    java.math.BigDecimal bd =
+        org.apache.drill.exec.util.DecimalUtility
+            .getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale)
+                .setScale(scale.value, java.math.RoundingMode.HALF_UP)
+                .round(new java.math.MathContext(precision.value, java.math.RoundingMode.HALF_UP));
 
-        out.buffer = buffer;
-        out.start = 0;
-        out.scale = (int) scale.value;
-        out.precision = (int) precision.value;
-        boolean sign = (in.getSign(in.start, in.buffer));
-
-        // Re initialize the buffer everytime
-        for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0, out.start, out.buffer);
-        }
-
-        int inputIdx = in.nDecimalDigits - 1;
-        int outputIdx = out.nDecimalDigits - 1;
-
-        for (; inputIdx >= 0; inputIdx--, outputIdx--) {
-            out.setInteger(outputIdx, in.getInteger(inputIdx, in.start, in.buffer), out.start, out.buffer);
-        }
-
-        // round up or down the scale
-        if (in.scale != out.scale) {
-          org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
-        }
-        out.setSign(sign, out.start, out.buffer);
-    }
+  <#if type.to.endsWith("Decimal9")>
+    out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal9FromBigDecimal(bd, out.scale, out.precision);
+  <#elseif type.to.endsWith("Decimal18")>
+    out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal18FromBigDecimal(bd, out.scale, out.precision);
+  <#elseif type.to.endsWith("Sparse")>
+    out.start = 0;
+    out.buffer = buffer;
+    org.apache.drill.exec.util.DecimalUtility
+        .getSparseFromBigDecimal(bd, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+  </#if>
+  }
 }
-</#if> <#-- type.major -->
+</#if>
 </#list>
