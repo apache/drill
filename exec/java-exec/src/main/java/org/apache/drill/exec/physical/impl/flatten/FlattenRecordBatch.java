@@ -191,7 +191,8 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
   public IterOutcome innerNext() {
     if (hasRemainder) {
       handleRemainder();
-      return IterOutcome.OK;
+      // Check if we are supposed to return EMIT outcome and have consumed entire batch
+      return getFinalOutcome(hasRemainder);
     }
     return super.innerNext();
   }
@@ -261,7 +262,10 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     }
 
     flattenMemoryManager.updateOutgoingStats(outputRecords);
-    return IterOutcome.OK;
+
+    // Get the final outcome based on hasRemainder since that will determine if all the incoming records were
+    // consumed in current output batch or not
+    return getFinalOutcome(hasRemainder);
   }
 
   private void handleRemainder() {

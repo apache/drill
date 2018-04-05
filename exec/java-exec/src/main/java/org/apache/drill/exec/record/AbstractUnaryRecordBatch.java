@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.record;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -39,6 +38,7 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
 
   protected boolean outOfMemory = false;
   protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
+  private IterOutcome lastKnownOutcome;
 
   public AbstractUnaryRecordBatch(T popConfig, FragmentContext context) throws OutOfMemoryException {
     super(popConfig, context, false);
@@ -68,9 +68,16 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
         }
       } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
     }
-    if ((state == BatchState.FIRST) && upstream == IterOutcome.OK) {
-      upstream = IterOutcome.OK_NEW_SCHEMA;
+    if (state == BatchState.FIRST) {
+      if (upstream == IterOutcome.OK) {
+        upstream = IterOutcome.OK_NEW_SCHEMA;
+      } else if (upstream == IterOutcome.EMIT) {
+        throw new IllegalStateException("Received first batch with unexpected EMIT IterOutcome");
+      }
     }
+
+    // update the last outcome seen
+    lastKnownOutcome = upstream;
     switch (upstream) {
       case NONE:
         if (state == BatchState.FIRST) {
@@ -104,6 +111,7 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
         }
         // fall through.
       case OK:
+      case EMIT:
         assert state != BatchState.FIRST : "First batch should be OK_NEW_SCHEMA";
         container.zeroVectors();
         IterOutcome out = doWork();
@@ -164,4 +172,15 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
     return IterOutcome.NONE;
   }
 
+  protected IterOutcome getLastKnownOutcome() {
+    return lastKnownOutcome;
+  }
+
+  /**
+   * Set's the outcome received with current input batch in processing
+   * @param outcome
+   */
+  protected void setLastKnownOutcome(IterOutcome outcome) {
+    lastKnownOutcome = outcome;
+  }
 }
