@@ -71,6 +71,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+
 public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectRecordBatch.class);
   private Projector projector;
@@ -129,7 +131,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     recordCount = 0;
     if (hasRemainder) {
       handleRemainder();
-      return IterOutcome.OK;
+      // Check if we are supposed to return EMIT outcome and have consumed entire batch
+      return getFinalOutcome(hasRemainder);
     }
     return super.innerNext();
   }
@@ -151,7 +154,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       if (complexWriters != null) {
         IterOutcome next = null;
         while (incomingRecordCount == 0) {
+          if (getLastKnownOutcome() == EMIT) {
+            throw new UnsupportedOperationException("Currently functions producing complex types as output is not " +
+              "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
+              "function in the projection list of outermost query.");
+          }
+
           next = next(incoming);
+          setLastKnownOutcome(next);
           if (next == IterOutcome.OUT_OF_MEMORY) {
             outOfMemory = true;
             return next;
@@ -166,28 +176,34 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
             // Only need to add the schema for the complex exprs because others should already have
             // been setup during setupNewSchema
             for (FieldReference fieldReference : complexFieldReferencesList) {
-              MaterializedField field = MaterializedField.create(fieldReference.getAsNamePart().getName(), UntypedNullHolder.TYPE);
+              MaterializedField field = MaterializedField.create(fieldReference.getAsNamePart().getName(),
+                UntypedNullHolder.TYPE);
               container.add(new UntypedNullVector(field, container.getAllocator()));
             }
             container.buildSchema(SelectionVectorMode.NONE);
             wasNone = true;
             return IterOutcome.OK_NEW_SCHEMA;
-          } else if (next != IterOutcome.OK && next != IterOutcome.OK_NEW_SCHEMA) {
+          } else if (next != IterOutcome.OK && next != IterOutcome.OK_NEW_SCHEMA && next != EMIT) {
             return next;
+          } else if (next == IterOutcome.OK_NEW_SCHEMA) {
+            try {
+              setupNewSchema();
+            } catch (final SchemaChangeException e) {
+              throw new RuntimeException(e);
+            }
           }
           incomingRecordCount = incoming.getRecordCount();
         }
-        if (next == IterOutcome.OK_NEW_SCHEMA) {
-          try {
-            setupNewSchema();
-          } catch (final SchemaChangeException e) {
-            throw new RuntimeException(e);
-          }
-        }
       }
     }
-    first = false;
 
+    if (complexWriters != null && getLastKnownOutcome() == EMIT) {
+      throw new UnsupportedOperationException("Currently functions producing complex types as output is not " +
+        "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
+        "function in the projection list of outermost query.");
+    }
+
+    first = false;
     container.zeroVectors();
 
     if (!doAlloc(incomingRecordCount)) {
@@ -214,7 +230,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       container.buildSchema(SelectionVectorMode.NONE);
     }
 
-    return IterOutcome.OK;
+    // Get the final outcome based on hasRemainder since that will determine if all the incoming records were
+    // consumed in current output batch or not
+    return getFinalOutcome(hasRemainder);
   }
 
   private void handleRemainder() {
@@ -310,11 +328,18 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
     }
     this.allocationVectors = Lists.newArrayList();
+
     if (complexWriters != null) {
       container.clear();
     } else {
+      // Not clearing the container here is fine since Project output schema is not determined solely based on incoming
+      // batch. It is defined by the expressions it has to evaluate.
+      //
+      // If there is a case where only the type of ValueVector already present in container is changed then addOrGet
+      // method takes care of it by replacing the vectors.
       container.zeroVectors();
     }
+
     final List<NamedExpression> exprs = getExpressionList();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
@@ -357,7 +382,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               }
 
               final FieldReference ref = new FieldReference(name);
-              final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref.getAsNamePart().getName(), vvIn.getField().getType()), callBack);
+              final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref.getAsNamePart().getName(),
+                vvIn.getField().getType()), callBack);
               final TransferPair tp = vvIn.makeTransferPair(vvOut);
               transfers.add(tp);
             }
@@ -436,8 +462,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         Preconditions.checkNotNull(incomingBatch);
 
         final FieldReference ref = getRef(namedExpression);
-        final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref.getLastSegment().getNameSegment().getPath(),
-                                                                              vectorRead.getMajorType()), callBack);
+        final ValueVector vvOut =
+          container.addOrGet(MaterializedField.create(ref.getLastSegment().getNameSegment().getPath(),
+            vectorRead.getMajorType()), callBack);
         final TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
         transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
@@ -456,7 +483,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         cg.addExpr(expr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
         if (complexFieldReferencesList == null) {
           complexFieldReferencesList = Lists.newArrayList();
+        } else {
+          complexFieldReferencesList.clear();
         }
+
         // save the field reference for later for getting schema when input is empty
         complexFieldReferencesList.add(namedExpression.getRef());
       } else {
@@ -813,5 +843,4 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     wasNone = true;
     return IterOutcome.OK_NEW_SCHEMA;
   }
-
 }

@@ -140,6 +140,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
     case OK:
     case OK_NEW_SCHEMA:
     case NONE:
+    case EMIT:
       return;
     default:
       throw new IllegalStateException(
@@ -240,6 +241,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
           validateBatch();
           break;
         case OK:
+        case EMIT:
           // OK is allowed as long as OK_NEW_SCHEMA was seen, except if terminated
           // (checked above).
           if (validationState != ValidationState.HAVE_SCHEMA) {

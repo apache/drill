@@ -41,6 +41,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   private int currentContainerIndex;
   private int currentOutcomeIndex;
   private boolean isDone;
+  private boolean limitWithUnnest;
 
   // All the below resources are owned by caller
   private final List<VectorContainer> allTestContainers;
@@ -98,9 +99,11 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   @Override
   public void kill(boolean sendUpstream) {
-    isDone = true;
-    container.clear();
-    container.setRecordCount(0);
+    if (!limitWithUnnest) {
+      isDone = true;
+      container.clear();
+      container.setRecordCount(0);
+    }
   }
 
   @Override
@@ -181,5 +184,9 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   public boolean isCompleted() {
     return isDone;
+  }
+
+  public void useUnnestKillHandlingForLimit(boolean limitWithUnnest) {
+    this.limitWithUnnest = limitWithUnnest;
   }
 }

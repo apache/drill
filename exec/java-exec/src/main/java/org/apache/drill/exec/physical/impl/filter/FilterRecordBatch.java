@@ -81,7 +81,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
       throw new UnsupportedOperationException(e);
     }
 
-    return IterOutcome.OK;
+    return getFinalOutcome(false);
   }
 
   @Override
@@ -168,6 +168,9 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
     final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getOptions());
+    // Uncomment below lines to enable saving generated code file for debugging
+    // cg.getCodeGenerator().plainJavaCapable(true);
+    // cg.getCodeGenerator().saveCodeForDebugging(true);
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector,
             context.getFunctionRegistry(), false, unionTypeEnabled);

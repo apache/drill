@@ -122,7 +122,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     if (incomingHasSv2) {
       sv = wrap.getSv2();
     }
-    return IterOutcome.OK;
+    return getFinalOutcome(false);
   }
 
   @Override
