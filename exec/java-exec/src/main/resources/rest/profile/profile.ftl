@@ -372,6 +372,16 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   </div> <br>
 
     <script>
+    //Inject Spilled Tags
+    $(window).on('load', function () {
+      var spillLabel = document.getElementsByClassName("spill-tag");
+      var i;
+      for (i = 0; i < spillLabel.length; i++) {
+        var content = spillLabel[i].innerHTML;
+        spillLabel[i].innerHTML = "<span class=\"glyphicon glyphicon-download-alt\">&nbsp;</span>"+content;
+      }
+    });
+
     //Configuration for Query Viewer in Profile
     ace.require("ace/ext/language_tools");
     var viewer = ace.edit("query-text");
@@ -400,9 +410,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       enableSnippets: false,
       enableLiveAutocompletion: false
     });
-  </script>
 
-  <script>
     //Configuration for Query Editor in Profile
     ace.require("ace/ext/language_tools");
     var editor = ace.edit("query-editor");
