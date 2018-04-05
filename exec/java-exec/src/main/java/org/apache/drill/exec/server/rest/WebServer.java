@@ -158,7 +158,13 @@ public class WebServer implements AutoCloseable {
     final int selectors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_SELECTORS);
     final QueuedThreadPool threadPool = new QueuedThreadPool(2, 2, 60000);
     embeddedJetty = new Server(threadPool);
-    embeddedJetty.setHandler(createServletContextHandler(authEnabled));
+    ServletContextHandler webServerContext = createServletContextHandler(authEnabled);
+    //Allow for Other Drillbits to make REST calls
+    FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
+    filterHolder.setInitParameter("allowedOrigins", "*");
+    webServerContext.addFilter(filterHolder, "/*", null);
+    embeddedJetty.setHandler(webServerContext);
+
     ServerConnector connector = createConnector(port, acceptors, selectors);
     threadPool.setMaxThreads(1 + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
     embeddedJetty.addConnector(connector);
