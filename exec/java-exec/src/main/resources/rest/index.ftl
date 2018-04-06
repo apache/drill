@@ -60,12 +60,18 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>Address</th>
+              <th title="Drillbits in Cluster" style="cursor: help;">Address <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
+              <th title="Heap Memory in use (as percent of Total Heap)" style="cursor: help;">Heap Memory Usage <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
+              <th title="Direct Memory ACTIVELY in use (as percent of Peak Usage so far).&#013;The percentage is an estimate of the total because the Netty library directly negotiates with the OS for memory" style="cursor: help;">Direct Memory Usage <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
+              <th title="Average load on the system in the last 1 minute" style="cursor: help;">Avg Sys Load <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
               <th>User Port</th>
               <th>Control Port</th>
               <th>Data Port</th>
               <th>Version</th>
               <th>Status</th>
+              <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) >
+              <th>Shutdown</th>
+              </#if>
             </tr>
           </thead>
           <tbody>
@@ -75,9 +81,16 @@
                 <td>${i}</td>
                 <td id="address" >${drillbit.getAddress()}<#if drillbit.isCurrent()>
                     <span class="label label-info" id="current">Current</span>
+                    <#else>
+                    <!-- HTTPS / HTTP ? -->
+                    <a href="http://${drillbit.getAddress()}:${drillbit.getHttpPort()}" target="dbit_${drillbit.getAddress()}" title="Open in new window"><span class="glyphicon glyphicon-new-window"/></a>
                   </#if>
                 </td>
-                <td id="port" >${drillbit.getUserPort()}</td>
+                <td id="httpPort" style="display:none">${drillbit.getHttpPort()}</td>
+                <td class="heap">0GB (0%)</td>
+                <td class="direct">0GB (0%)</td>
+                <td class="avgload"><span class="label label-info" id="NA">Unknown</span></td>
+                <td id="port">${drillbit.getUserPort()}</td>
                 <td>${drillbit.getControlPort()}</td>
                 <td>${drillbit.getDataPort()}</td>
                 <td>
@@ -87,9 +100,14 @@
                   </span>
                 </td>
                 <td id="status" >${drillbit.getState()}</td>
+                <!-- #if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) -->
                 <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && drillbit.isCurrent() >
                   <td>
-                      <button type="button" id="shutdown" onClick="shutdown($(this));"> SHUTDOWN </button>
+                      <button type="button" id="shutdown" onClick="shutdown($(this));"><span class="glyphicon glyphicon-off"></span> SHUTDOWN </button>
+                  </td>
+                <#elseif (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && !drillbit.isCurrent() >
+                  <td>
+                      <button type="button" id="shutdown" onClick="remoteShutdown($(this), '${drillbit.getAddress()}:${drillbit.getHttpPort()}');"><span class="glyphicon glyphicon-off"></span> SHUTDOWN </button>
                   </td>
                 </#if>
                 <td id="queriesCount">  </td>
@@ -110,11 +128,15 @@
             <tbody>
                 <tr>
                   <td>Client to Bit Encryption</td>
-                  <td class="list-value">${model.isUserEncryptionEnabled()?string("Enabled", "Disabled")}</td>
+                  <td class="list-value">${model.isUserEncryptionEnabled()?string("Enabled", "Disabled")}
+                    <#if model.isBitEncryptionEnabled()><span class="glyphicon glyphicon-lock"/></#if>
+                  </td>
                 </tr>
                 <tr>
                   <td>Bit to Bit Encryption</td>
-                  <td class="list-value">${model.isBitEncryptionEnabled()?string("Enabled", "Disabled")}</td>
+                  <td class="list-value">${model.isBitEncryptionEnabled()?string("Enabled", "Disabled")}
+                    <#if model.isBitEncryptionEnabled()><span class="glyphicon glyphicon-lock"/></#if>
+                  </td>
                 </tr>
             </tbody>
           </table>
@@ -200,6 +222,8 @@
       var port = getPortNum();
       var timeout;
       var size = $("#size").html();
+      reloadMetrics();
+      setInterval(reloadMetrics, refreshTime);
 
       function getPortNum() {
           var port = $.ajax({
@@ -255,6 +279,7 @@
             else {
                 if (status_map[key] == "ONLINE") {
                     $("#row-"+i).find("#status").text(status_map[key]);
+                    $("#row-"+i).find("#shutdown").prop('disabled',false).css('opacity',1.0);
                 }
                 else {
                     if ($("#row-"+i).find("#current").html() == "Current") {
@@ -268,7 +293,7 @@
       function fillQueryCount(row_id) {
           var requestPath = "/queriesCount";
           var url = getRequestUrl(requestPath);
-	   var result = $.ajax({
+       var result = $.ajax({
                         type: 'GET',
                         url: url,
                         complete: function(data) {
@@ -278,7 +303,7 @@
                               }
                         });
       }
-       <#if model.shouldShowAdminInfo() || !model.isAuthEnabled()>
+       <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) >
           function shutdown(button) {
               if (confirm("Are you sure you want to shutdown Drillbit running on " + location.host + " node?")) {
                   var requestPath = "/gracefulShutdown";
@@ -297,14 +322,94 @@
                   });
               }
           }
-      </#if>
+
+          function remoteShutdown(button,host) {
+              var url = location.protocol + "//" + host + "/gracefulShutdown";
+              var result = $.ajax({
+                    type: 'POST',
+                    url: url,
+                    contentType : 'text/plain',
+                    complete: function(data) {
+                        alert(data.responseJSON["response"]);
+                        button.prop('disabled',true).css('opacity',0.5);
+                    }
+              });
+          }
+          </#if>
       function getRequestUrl(requestPath) {
             var protocol = location.protocol;
             var host = location.host;
             var url = protocol + "//" + host + requestPath;
             return url;
       }
-    </script>
+
+      //Iterates through all the nodes for update
+      function reloadMetrics() {
+          for (i = 1; i <= size; i++) {
+              var address = $("#row-"+i).find("#address").contents().get(0).nodeValue.trim();
+              var httpPort = $("#row-"+i).find("#httpPort").contents().get(0).nodeValue.trim();
+              updateMetricsHtml(address, httpPort, i);
+          }
+      }
+
+      //Update memory
+      //TODO: HTTPS?
+      function updateMetricsHtml(drillbit,webport,idx) {
+        var result = $.ajax({
+          type: 'GET',
+          url: location.protocol+"//"+drillbit+":"+webport+"/status/metrics",
+          dataType: "json",
+          error: function(data) {
+            resetMetricsHtml(idx);
+          }, 
+          complete: function(data) {
+            if (typeof data.responseJSON == 'undefined') {
+                resetMetricsHtml(idx);
+                return;
+            }
+            var metrics = data.responseJSON['gauges'];
+            //Memory
+            var usedHeap = metrics['heap.used'].value;
+            var maxHeap  = metrics['heap.max'].value;
+            var usedDirect = metrics['drill.allocator.root.used'].value;
+            var peakDirect = metrics['drill.allocator.root.peak'].value;
+            var heapUsage    = computeMemUsage(usedHeap,maxHeap);
+            var directUsage  = computeMemUsage(usedDirect,peakDirect);
+            var rowElem = document.getElementById("row-"+idx);
+            var heapElem = rowElem.getElementsByClassName("heap")[0];
+            heapElem.innerHTML = heapUsage;
+            var directElem = rowElem.getElementsByClassName("direct")[0];
+            directElem.innerHTML = directUsage;
+            //AvgSysLoad
+            var avgSysLoad = metrics['os.load.avg'].value;
+            var sysLoadElem = rowElem.getElementsByClassName("avgload")[0];
+            sysLoadElem.innerHTML = avgSysLoad;
+            }
+          });
+      }
+
+      function resetMetricsHtml(idx) {
+        $.each(["heap","direct","avgload"], function(i, key) {
+          var resetElem = document.getElementById("row-"+idx).getElementsByClassName(key)[0];
+          resetElem.innerHTML = "Not Available";
+        });
+    };
+
+      //Compute Usage
+      function computeMemUsage(used, max) {
+        var percent = 0;
+        if ( max > 0) {
+          var percent = Math.round((100 * used / max), 2);
+        }
+        var usage   =  bytesInGB(used, 2) + "GB (" + Math.max(0, percent) + "% of "+ bytesInGB(max, 2) +"GB)";
+        return usage;
+      }
+
+      function bytesInGB(byteVal, decimal) {
+      var scale = Math.pow(10,decimal);
+        return Math.round(scale * byteVal / 1073741824)/scale;
+      }
+  </script>
 </#macro>
 
 <@page_html/>

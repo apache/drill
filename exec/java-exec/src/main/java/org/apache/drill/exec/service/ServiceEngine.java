@@ -42,6 +42,7 @@ import org.apache.drill.exec.rpc.control.ControllerImpl;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.work.WorkManager;
 
 import com.google.common.base.Stopwatch;
@@ -54,6 +55,7 @@ public class ServiceEngine implements AutoCloseable {
   private final DataConnectionCreator dataPool;
 
   private final String hostName;
+  private final int httpPort;
   private final int intialUserPort;
   private final boolean allowPortHunting;
   private final boolean isDistributedMode;
@@ -64,7 +66,7 @@ public class ServiceEngine implements AutoCloseable {
 
   private int userPort;
 
-  public ServiceEngine(final WorkManager manager, final BootStrapContext context,
+  public ServiceEngine(final WorkManager manager, final BootStrapContext context, final WebServer webServer,
                        final boolean allowPortHunting, final boolean isDistributedMode)
       throws DrillbitStartupException {
     userAllocator = newAllocator(context, "rpc:user", "drill.exec.rpc.user.server.memory.reservation",
@@ -81,6 +83,7 @@ public class ServiceEngine implements AutoCloseable {
     dataPool = new DataConnectionCreator(context, dataAllocator, manager.getWorkBus(), manager.getBee());
 
     hostName = context.getHostName();
+    httpPort = context.getConfig().getInt(ExecConstants.HTTP_PORT);
     intialUserPort = context.getConfig().getInt(ExecConstants.INITIAL_USER_PORT);
     this.allowPortHunting = allowPortHunting;
     this.isDistributedMode = isDistributedMode;
@@ -102,12 +105,17 @@ public class ServiceEngine implements AutoCloseable {
     DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()
         .setAddress(hostName)
         .setUserPort(userPort)
+        .setHttpPort(httpPort)
         .setVersion(DrillVersionInfo.getVersion())
         .setState(State.STARTUP)
         .build();
 
     partialEndpoint = controller.start(partialEndpoint, allowPortHunting);
     return dataPool.start(partialEndpoint, allowPortHunting);
+  }
+
+  public int getHttpPort() {
+    return httpPort;
   }
 
   public int getUserPort() {

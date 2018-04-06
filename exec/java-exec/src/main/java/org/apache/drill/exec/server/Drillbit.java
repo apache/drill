@@ -157,7 +157,7 @@ public class Drillbit implements AutoCloseable {
       profileStoreProvider = storeProvider;
     }
 
-    engine = new ServiceEngine(manager, context, allowPortHunting, isDistributedMode);
+    engine = new ServiceEngine(manager, context, webServer, allowPortHunting, isDistributedMode);
 
     stateManager = new DrillbitStateManager(DrillbitState.STARTUP);
     logger.info("Construction completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
