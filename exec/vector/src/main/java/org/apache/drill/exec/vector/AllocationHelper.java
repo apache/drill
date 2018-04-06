@@ -22,8 +22,10 @@ import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
 
 public class AllocationHelper {
 
+  public static final int STD_REPETITION_FACTOR = 5;
+
   public static void allocate(ValueVector vector, int valueCount, int bytesPerValue) {
-    allocate(vector, valueCount, bytesPerValue, 5);
+    allocate(vector, valueCount, bytesPerValue, STD_REPETITION_FACTOR);
   }
 
   public static void allocatePrecomputedChildCount(ValueVector vector, int valueCount, int bytesPerValue, int childValCount) {
