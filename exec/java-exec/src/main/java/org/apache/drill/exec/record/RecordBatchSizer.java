@@ -41,6 +41,7 @@ import org.apache.drill.exec.vector.VariableWidthVector;
 
 import com.google.common.collect.Sets;
 import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
+import static org.apache.drill.exec.vector.AllocationHelper.STD_REPETITION_FACTOR;
 
 /**
  * Given a record batch or vector container, determines the actual memory
@@ -50,12 +51,11 @@ import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
 public class RecordBatchSizer {
   private static final int OFFSET_VECTOR_WIDTH = UInt4Vector.VALUE_WIDTH;
   private static final int BIT_VECTOR_WIDTH = UInt1Vector.VALUE_WIDTH;
-  private static final int STD_REPETITION_FACTOR = 10;
 
   /**
    * Column size information.
    */
-  public static class ColumnSize {
+  public class ColumnSize {
     public final String prefix;
     public final MaterializedField metadata;
 
@@ -221,6 +221,15 @@ public class RecordBatchSizer {
     }
 
     /**
+     * This returns actual entry size if rowCount > 0 or standard size otherwise.
+     * Use this for the cases when you might get empty batches with schema
+     * and you still need to do memory calculations based on just schema.
+     */
+    public int getAllocSizePerEntry() {
+      return rowCount() == 0 ? getStdNetSizePerEntry() : getNetSizePerEntry();
+    }
+
+    /**
      * This is the total data size for the column, including children for map
      * columns. Does not include any overhead of metadata vectors.
      */
@@ -277,18 +286,29 @@ public class RecordBatchSizer {
     /**
      * This is the average per entry width, used for vector allocation.
      */
-    public int getEntryWidth() {
+    private int getEntryWidthForAlloc() {
       int width = 0;
       if (isVariableWidth) {
-        width = getNetSizePerEntry() - OFFSET_VECTOR_WIDTH;
+        width = getAllocSizePerEntry() - OFFSET_VECTOR_WIDTH;
 
         // Subtract out the bits (is-set) vector width
-        if (metadata.getDataMode() == DataMode.OPTIONAL) {
+        if (isOptional) {
           width -= BIT_VECTOR_WIDTH;
+        }
+
+        if (isRepeated && rowCount() == 0) {
+          return (safeDivide(width, STD_REPETITION_FACTOR));
         }
       }
 
-      return (safeDivide(width, cardinality));
+      return (safeDivide(width, getEntryCardinalityForAlloc()));
+    }
+
+    /**
+     * This is the average per entry cardinality, used for vector allocation.
+     */
+    private float getEntryCardinalityForAlloc() {
+      return getCardinality() == 0 ? (isRepeated ? STD_REPETITION_FACTOR : 1) :getCardinality();
     }
 
     public ColumnSize(ValueVector v, String prefix) {
@@ -297,7 +317,7 @@ public class RecordBatchSizer {
       metadata = v.getField();
       isVariableWidth = (v instanceof VariableWidthVector || v instanceof RepeatedVariableWidthVectorLike);
       elementCount = valueCount;
-      cardinality = 1;
+      cardinality = valueCount == 0 ? 0 : 1;
       totalNetSize = v.getPayloadByteCount(valueCount);
 
       // Special case. For union and list vectors, it is very complex
@@ -384,7 +404,7 @@ public class RecordBatchSizer {
     private void allocateMap(AbstractMapVector map, int recordCount) {
       if (map instanceof RepeatedMapVector) {
         ((RepeatedMapVector) map).allocateOffsetsNew(recordCount);
-          recordCount *= getCardinality();
+          recordCount *= getEntryCardinalityForAlloc();
         }
 
       for (ValueVector vector : map) {
@@ -394,7 +414,7 @@ public class RecordBatchSizer {
 
     private void allocateRepeatedList(RepeatedListVector vector, int recordCount) {
       vector.allocateOffsetsNew(recordCount);
-      recordCount *= getCardinality();
+      recordCount *= getEntryCardinalityForAlloc();
       ColumnSize child = children.get(vector.getField().getName());
       if (vector.getDataVector() != null) {
         child.allocateVector(vector.getDataVector(), recordCount);
@@ -412,7 +432,7 @@ public class RecordBatchSizer {
         return;
       }
 
-      AllocationHelper.allocate(vector, recordCount, getEntryWidth(), getCardinality());
+      AllocationHelper.allocate(vector, recordCount, getEntryWidthForAlloc(), getEntryCardinalityForAlloc());
     }
 
     @Override
@@ -498,10 +518,6 @@ public class RecordBatchSizer {
 
   }
 
-  public static ColumnSize getColumn(ValueVector v, String prefix) {
-    return new ColumnSize(v, prefix);
-  }
-
   public ColumnSize getColumn(String name) {
     return columnSizes.get(name);
   }
@@ -536,6 +552,11 @@ public class RecordBatchSizer {
    */
   private int netRowWidth;
   private int netRowWidthCap50;
+
+  /**
+   * actual row size if input is not empty. Otherwise, standard size.
+   */
+  private int rowAllocSize;
   private boolean hasSv2;
   private int sv2Size;
   private int avgDensity;
@@ -597,6 +618,7 @@ public class RecordBatchSizer {
         nullableCount++;
       }
       netRowWidth += colSize.getNetSizePerEntry();
+      rowAllocSize += colSize.getAllocSizePerEntry();
     }
 
     for (BufferLedger ledger : ledgers) {
@@ -618,7 +640,6 @@ public class RecordBatchSizer {
 
   private void computeEstimates() {
     grossRowWidth = safeDivide(accountedMemorySize, rowCount);
-    netRowWidth = safeDivide(netBatchSize, rowCount);
     avgDensity = safeDivide(netBatchSize * 100L, accountedMemorySize);
   }
 
@@ -718,6 +739,7 @@ public class RecordBatchSizer {
   public int stdRowWidth() { return stdRowWidth; }
   public int grossRowWidth() { return grossRowWidth; }
   public int netRowWidth() { return netRowWidth; }
+  public int getRowAllocSize() { return rowAllocSize; }
   public Map<String, ColumnSize> columns() { return columnSizes; }
 
   /**
