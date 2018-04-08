@@ -19,10 +19,12 @@ package org.apache.drill.exec.store.kafka;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -35,7 +37,6 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.kafka.KafkaSubScan.KafkaSubScanSpec;
 import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.CompleteWork;
@@ -72,9 +73,10 @@ public class KafkaGroupScan extends AbstractGroupScan {
   private final KafkaScanSpec kafkaScanSpec;
 
   private List<SchemaPath> columns;
-  private List<PartitionScanWork> partitionWorkList;
   private ListMultimap<Integer, PartitionScanWork> assignments;
   private List<EndpointAffinity> affinities;
+
+  private Map<TopicPartition, PartitionScanWork> partitionWorkMap;
 
   @JsonCreator
   public KafkaGroupScan(@JsonProperty("userName") String userName,
@@ -112,34 +114,18 @@ public class KafkaGroupScan extends AbstractGroupScan {
     this.kafkaStoragePlugin = that.kafkaStoragePlugin;
     this.columns = that.columns;
     this.kafkaScanSpec = that.kafkaScanSpec;
-    this.partitionWorkList = that.partitionWorkList;
     this.assignments = that.assignments;
+    this.partitionWorkMap = that.partitionWorkMap;
   }
 
-  private static class PartitionScanWork implements CompleteWork {
+  public static class PartitionScanWork implements CompleteWork {
 
-    private final EndpointByteMapImpl byteMap = new EndpointByteMapImpl();
+    private final EndpointByteMapImpl byteMap;
+    private final KafkaPartitionScanSpec partitionScanSpec;
 
-    private final TopicPartition topicPartition;
-    private final long beginOffset;
-    private final long latestOffset;
-
-    public PartitionScanWork(TopicPartition topicPartition, long beginOffset, long latestOffset) {
-      this.topicPartition = topicPartition;
-      this.beginOffset = beginOffset;
-      this.latestOffset = latestOffset;
-    }
-
-    public TopicPartition getTopicPartition() {
-      return topicPartition;
-    }
-
-    public long getBeginOffset() {
-      return beginOffset;
-    }
-
-    public long getLatestOffset() {
-      return latestOffset;
+    public PartitionScanWork(EndpointByteMap byteMap, KafkaPartitionScanSpec partitionScanSpec) {
+      this.byteMap = (EndpointByteMapImpl)byteMap;
+      this.partitionScanSpec = partitionScanSpec;
     }
 
     @Override
@@ -149,7 +135,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
     @Override
     public long getTotalBytes() {
-      return (latestOffset - beginOffset) * MSG_SIZE;
+      return (partitionScanSpec.getEndOffset() - partitionScanSpec.getStartOffset()) * MSG_SIZE;
     }
 
     @Override
@@ -157,6 +143,9 @@ public class KafkaGroupScan extends AbstractGroupScan {
       return byteMap;
     }
 
+    public KafkaPartitionScanSpec getPartitionScanSpec() {
+      return partitionScanSpec;
+    }
   }
 
   /**
@@ -164,7 +153,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
    * corresponding topicPartition
    */
   private void init() {
-    partitionWorkList = Lists.newArrayList();
+    partitionWorkMap = Maps.newHashMap();
     Collection<DrillbitEndpoint> endpoints = kafkaStoragePlugin.getContext().getBits();
     Map<String, DrillbitEndpoint> endpointMap = Maps.newHashMap();
     for (DrillbitEndpoint endpoint : endpoints) {
@@ -211,12 +200,13 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
     // computes work for each end point
     for (PartitionInfo partitionInfo : topicPartitions) {
-      TopicPartition topicPartition = new TopicPartition(topicName, partitionInfo.partition());
+      TopicPartition topicPartition = new TopicPartition(partitionInfo.topic(), partitionInfo.partition());
       long lastCommittedOffset = startOffsetsMap.get(topicPartition);
       long latestOffset = endOffsetsMap.get(topicPartition);
       logger.debug("Latest offset of {} is {}", topicPartition, latestOffset);
       logger.debug("Last committed offset of {} is {}", topicPartition, lastCommittedOffset);
-      PartitionScanWork work = new PartitionScanWork(topicPartition, lastCommittedOffset, latestOffset);
+      KafkaPartitionScanSpec partitionScanSpec = new KafkaPartitionScanSpec(topicPartition.topic(), topicPartition.partition(), lastCommittedOffset, latestOffset);
+      PartitionScanWork work = new PartitionScanWork(new EndpointByteMapImpl(), partitionScanSpec);
       Node[] inSyncReplicas = partitionInfo.inSyncReplicas();
       for (Node isr : inSyncReplicas) {
         String host = isr.host();
@@ -225,23 +215,22 @@ public class KafkaGroupScan extends AbstractGroupScan {
           work.getByteMap().add(ep, work.getTotalBytes());
         }
       }
-      partitionWorkList.add(work);
+      partitionWorkMap.put(topicPartition, work);
     }
   }
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    assignments = AssignmentCreator.getMappings(incomingEndpoints, partitionWorkList);
+    assignments = AssignmentCreator.getMappings(incomingEndpoints, Lists.newArrayList(partitionWorkMap.values()));
   }
 
   @Override
   public KafkaSubScan getSpecificScan(int minorFragmentId) {
     List<PartitionScanWork> workList = assignments.get(minorFragmentId);
-    List<KafkaSubScanSpec> scanSpecList = Lists.newArrayList();
+    List<KafkaPartitionScanSpec> scanSpecList = Lists.newArrayList();
 
     for (PartitionScanWork work : workList) {
-      scanSpecList.add(new KafkaSubScanSpec(work.getTopicPartition().topic(), work.getTopicPartition().partition(),
-          work.getBeginOffset(), work.getLatestOffset()));
+      scanSpecList.add(work.partitionScanSpec);
     }
 
     return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, scanSpecList);
@@ -249,14 +238,14 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
   @Override
   public int getMaxParallelizationWidth() {
-    return partitionWorkList.size();
+    return partitionWorkMap.values().size();
   }
 
   @Override
   public ScanStats getScanStats() {
     long messageCount = 0;
-    for (PartitionScanWork work : partitionWorkList) {
-      messageCount += (work.getLatestOffset() - work.getBeginOffset());
+    for (PartitionScanWork work : partitionWorkMap.values()) {
+      messageCount += (work.getPartitionScanSpec().getEndOffset() - work.getPartitionScanSpec().getStartOffset());
     }
     return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, messageCount, 1, messageCount * MSG_SIZE);
   }
@@ -275,7 +264,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     if (affinities == null) {
-      affinities = AffinityCreator.getAffinityMap(partitionWorkList);
+      affinities = AffinityCreator.getAffinityMap(Lists.newArrayList(partitionWorkMap.values()));
     }
     return affinities;
   }
@@ -290,6 +279,23 @@ public class KafkaGroupScan extends AbstractGroupScan {
   public GroupScan clone(List<SchemaPath> columns) {
     KafkaGroupScan clone = new KafkaGroupScan(this);
     clone.columns = columns;
+    return clone;
+  }
+
+  public GroupScan cloneWithNewSpec(List<KafkaPartitionScanSpec> partitionScanSpecList) {
+    KafkaGroupScan clone = new KafkaGroupScan(this);
+    HashSet<TopicPartition> partitionsInSpec = Sets.newHashSet();
+
+    for(KafkaPartitionScanSpec scanSpec : partitionScanSpecList) {
+      TopicPartition tp = new TopicPartition(scanSpec.getTopicName(), scanSpec.getPartitionId());
+      partitionsInSpec.add(tp);
+
+      PartitionScanWork newScanWork = new PartitionScanWork(partitionWorkMap.get(tp).getByteMap(), scanSpec);
+      clone.partitionWorkMap.put(tp, newScanWork);
+    }
+
+    //Remove unnecessary partitions from partitionWorkMap
+    clone.partitionWorkMap.keySet().removeIf(tp -> !partitionsInSpec.contains(tp));
     return clone;
   }
 
@@ -318,4 +324,12 @@ public class KafkaGroupScan extends AbstractGroupScan {
     return String.format("KafkaGroupScan [KafkaScanSpec=%s, columns=%s]", kafkaScanSpec, columns);
   }
 
+  @JsonIgnore
+  public List<KafkaPartitionScanSpec> getPartitionScanSpecList() {
+    List<KafkaPartitionScanSpec> partitionScanSpecList = Lists.newArrayList();
+    for (PartitionScanWork work : partitionWorkMap.values()) {
+      partitionScanSpecList.add(work.partitionScanSpec.clone());
+    }
+    return partitionScanSpecList;
+  }
 }

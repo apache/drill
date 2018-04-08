@@ -31,7 +31,6 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.kafka.KafkaSubScan.KafkaSubScanSpec;
 import org.apache.drill.exec.store.kafka.decoders.MessageReader;
 import org.apache.drill.exec.store.kafka.decoders.MessageReaderFactory;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
@@ -52,7 +51,7 @@ public class KafkaRecordReader extends AbstractRecordReader {
 
   private final boolean unionEnabled;
   private final KafkaStoragePlugin plugin;
-  private final KafkaSubScanSpec subScanSpec;
+  private final KafkaPartitionScanSpec subScanSpec;
   private final long kafkaPollTimeOut;
 
   private long currentOffset;
@@ -62,7 +61,7 @@ public class KafkaRecordReader extends AbstractRecordReader {
   private final boolean readNumbersAsDouble;
   private final String kafkaMsgReader;
 
-  public KafkaRecordReader(KafkaSubScan.KafkaSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
+  public KafkaRecordReader(KafkaPartitionScanSpec subScanSpec, List<SchemaPath> projectedColumns,
       FragmentContext context, KafkaStoragePlugin plugin) {
     setColumns(projectedColumns);
     final OptionManager optionManager = context.getOptions();

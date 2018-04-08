@@ -25,7 +25,6 @@ import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
-import org.apache.drill.exec.store.kafka.KafkaSubScan.KafkaSubScanSpec;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -40,7 +39,7 @@ import org.junit.experimental.categories.Category;
 public class MessageIteratorTest extends KafkaTestBase {
 
   private KafkaConsumer<byte[], byte[]> kafkaConsumer;
-  private KafkaSubScanSpec subScanSpec;
+  private KafkaPartitionScanSpec subScanSpec;
 
   @Before
   public void setUp() {
@@ -49,7 +48,7 @@ public class MessageIteratorTest extends KafkaTestBase {
     consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
     consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "4");
     kafkaConsumer = new KafkaConsumer<>(consumerProps);
-    subScanSpec = new KafkaSubScanSpec(TestQueryConstants.JSON_TOPIC, 0, 0, TestKafkaSuit.NUM_JSON_MSG);
+    subScanSpec = new KafkaPartitionScanSpec(TestQueryConstants.JSON_TOPIC, 0, 0, TestKafkaSuit.NUM_JSON_MSG);
   }
 
   @After
