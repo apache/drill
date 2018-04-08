@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.store.kafka.KafkaSubScan.KafkaSubScanSpec;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -46,7 +45,7 @@ public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>>
   private final long kafkaPollTimeOut;
   private final long endOffset;
 
-  public MessageIterator(final KafkaConsumer<byte[], byte[]> kafkaConsumer, final KafkaSubScanSpec subScanSpec,
+  public MessageIterator(final KafkaConsumer<byte[], byte[]> kafkaConsumer, final KafkaPartitionScanSpec subScanSpec,
       final long kafkaPollTimeOut) {
     this.kafkaConsumer = kafkaConsumer;
     this.kafkaPollTimeOut = kafkaPollTimeOut;
