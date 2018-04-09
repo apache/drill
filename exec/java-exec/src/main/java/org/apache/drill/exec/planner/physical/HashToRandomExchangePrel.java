@@ -44,9 +44,7 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.drill.exec.server.options.OptionManager;
 
-
 public class HashToRandomExchangePrel extends ExchangePrel {
-
 
   private final List<DistributionField> fields;
 
@@ -145,8 +143,8 @@ public class HashToRandomExchangePrel extends ExchangePrel {
                                     new HashPrelUtil.RexNodeBasedHashExpressionCreatorHelper(rexBuilder);
 
       final List<RexNode> distFieldRefs = Lists.newArrayListWithExpectedSize(distFields.size());
-      for (int i=0; i<distFields.size(); i++) {
-        final int fieldId = distFields.get(i).getFieldId();
+      for (DistributionField distField : distFields) {
+        final int fieldId = distField.getFieldId();
         distFieldRefs.add(rexBuilder.makeInputRef(childRowTypeFields.get(fieldId).getType(), fieldId));
       }
 
@@ -162,7 +160,8 @@ public class HashToRandomExchangePrel extends ExchangePrel {
       final RexNode distSeed = rexBuilder.makeBigintLiteral(BigDecimal.valueOf(HashPrelUtil.DIST_SEED)); // distribution seed
       updatedExpr.add(HashPrelUtil.createHashBasedPartitionExpression(distFieldRefs, distSeed, hashHelper));
 
-      RelDataType rowType = RexUtil.createStructType(getCluster().getTypeFactory(), updatedExpr, outputFieldNames);
+      RelDataType rowType = RexUtil.createStructType(getCluster().getTypeFactory(),
+          updatedExpr, outputFieldNames, null);
 
       ProjectPrel addColumnprojectPrel = new ProjectPrel(child.getCluster(), child.getTraitSet(), child, updatedExpr, rowType);
 
@@ -180,7 +179,8 @@ public class HashToRandomExchangePrel extends ExchangePrel {
 
     if (isMuxEnabled) {
       // remove earlier inserted Project Operator - since it creates issues down the road in HashJoin
-      RelDataType removeRowType = RexUtil.createStructType(newPrel.getCluster().getTypeFactory(), removeUpdatedExpr, childFields);
+      RelDataType removeRowType = RexUtil.createStructType(newPrel.getCluster().getTypeFactory(),
+          removeUpdatedExpr, childFields, null);
 
       ProjectPrel removeColumnProjectPrel = new ProjectPrel(newPrel.getCluster(), newPrel.getTraitSet(),
                                                             newPrel, removeUpdatedExpr, removeRowType);

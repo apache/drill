@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
 
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.util.BitSets;
 
 import org.apache.calcite.util.ImmutableBitSet;
@@ -27,7 +28,6 @@ import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -210,12 +210,12 @@ public class StreamAggPrule extends AggPruleBase {
   }
 
 
-  private RelCollation getCollation(DrillAggregateRel rel){
+  private RelCollation getCollation(DrillAggregateRel rel) {
 
     List<RelFieldCollation> fields = Lists.newArrayList();
     for (int group : BitSets.toIter(rel.getGroupSet())) {
       fields.add(new RelFieldCollation(group));
     }
-    return RelCollationImpl.of(fields);
+    return RelCollations.of(fields);
   }
 }

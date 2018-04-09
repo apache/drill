@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.IntHolder;
@@ -55,8 +56,9 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
   private final double joinRowFactor;
 
   public DrillJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType){
-    super(cluster, traits, left, right, condition, joinType, Collections.<String> emptySet());
+      JoinRelType joinType) {
+    super(cluster, traits, left, right, condition,
+        CorrelationId.setOf(Collections.<String> emptySet()), joinType);
     this.joinRowFactor = PrelUtil.getPlannerSettings(cluster.getPlanner()).getRowCountEstimateFactor();
   }
 

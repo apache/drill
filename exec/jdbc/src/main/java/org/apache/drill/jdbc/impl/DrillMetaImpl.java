@@ -1096,6 +1096,7 @@ class DrillMetaImpl extends MetaImpl {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, PrepareCallback callback) {
     final Signature signature = newSignature(sql);
     try {
@@ -1133,6 +1134,7 @@ class DrillMetaImpl extends MetaImpl {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public ExecuteResult execute(StatementHandle statementHandle,
         List<TypedValue> list, long l) throws NoSuchStatementException {
     return new ExecuteResult(Collections.singletonList(

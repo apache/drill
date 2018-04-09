@@ -52,7 +52,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
   public JdbcPrel(RelOptCluster cluster, RelTraitSet traitSet, JdbcIntermediatePrel prel) {
     super(cluster, traitSet);
     final RelNode input = prel.getInput();
-    rows = input.getRows();
+    rows = input.estimateRowCount(cluster.getMetadataQuery());
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
 
     // generate sql for tree.

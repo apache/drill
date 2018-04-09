@@ -39,7 +39,7 @@ public class DrillReduceExpressionsRule {
   private static class DrillReduceFilterRule extends ReduceExpressionsRule.FilterReduceExpressionsRule {
 
     DrillReduceFilterRule() {
-      super(Filter.class, DrillRelFactories.LOGICAL_BUILDER);
+      super(Filter.class, true, DrillRelFactories.LOGICAL_BUILDER);
     }
 
     /**
@@ -58,7 +58,7 @@ public class DrillReduceExpressionsRule {
   private static class DrillReduceCalcRule extends ReduceExpressionsRule.CalcReduceExpressionsRule {
 
     DrillReduceCalcRule() {
-      super(Calc.class, DrillRelFactories.LOGICAL_BUILDER);
+      super(Calc.class, true, DrillRelFactories.LOGICAL_BUILDER);
     }
 
     /**
