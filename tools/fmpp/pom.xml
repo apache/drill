@@ -57,6 +57,10 @@
           <artifactId>commons-logging-api</artifactId>
           <groupId>commons-logging</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>bsh</artifactId>
+          <groupId>org.beanshell</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
