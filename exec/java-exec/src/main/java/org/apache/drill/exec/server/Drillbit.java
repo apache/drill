@@ -157,7 +157,7 @@ public class Drillbit implements AutoCloseable {
       profileStoreProvider = storeProvider;
     }
 
-    engine = new ServiceEngine(manager, context, webServer, allowPortHunting, isDistributedMode);
+    engine = new ServiceEngine(manager, context, allowPortHunting, isDistributedMode);
 
     stateManager = new DrillbitStateManager(DrillbitState.STARTUP);
     logger.info("Construction completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
@@ -180,7 +180,7 @@ public class Drillbit implements AutoCloseable {
     if (profileStoreProvider != storeProvider) {
       profileStoreProvider.start();
     }
-    final DrillbitEndpoint md = engine.start();
+    DrillbitEndpoint md = engine.start();
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider, profileStoreProvider);
     @SuppressWarnings("resource")
     final DrillbitContext drillbitContext = manager.getContext();
@@ -189,9 +189,11 @@ public class Drillbit implements AutoCloseable {
     drillbitContext.getOptionManager().init();
     javaPropertiesToSystemOptions();
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
-    registrationHandle = coord.register(md);
     webServer.start();
-
+    //Discovering HTTP port (in case of port hunting)
+    int httpPort = webServer.getPort();
+    // Registering Drillbit with cluster coordinator
+    registrationHandle = coord.register(md.toBuilder().setHttpPort(httpPort).build());
     // Must start the RM after the above since it needs to read system options.
 
     drillbitContext.startRM();

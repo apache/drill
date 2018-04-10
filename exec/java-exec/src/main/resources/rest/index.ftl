@@ -82,14 +82,13 @@
                 <td id="address" >${drillbit.getAddress()}<#if drillbit.isCurrent()>
                     <span class="label label-info" id="current">Current</span>
                     <#else>
-                    <!-- HTTPS / HTTP ? -->
-                    <a href="http://${drillbit.getAddress()}:${drillbit.getHttpPort()}" target="dbit_${drillbit.getAddress()}" title="Open in new window"><span class="glyphicon glyphicon-new-window"/></a>
+                    <a onclick="popOutRemoteDbitUI('${drillbit.getAddress()}','${drillbit.getHttpPort()}');" style="cursor:pointer;color:blue" title="Open in new window"><span class="glyphicon glyphicon-new-window"/></a>
                   </#if>
                 </td>
                 <td id="httpPort" style="display:none">${drillbit.getHttpPort()}</td>
-                <td class="heap">0GB (0%)</td>
-                <td class="direct">0GB (0%)</td>
-                <td class="avgload"><span class="label label-info" id="NA">Unknown</span></td>
+                <td class="heap">Not Available</td>
+                <td class="direct">Not Available</td>
+                <td class="avgload"><span class="label label-info" id="NA">Not Available</span></td>
                 <td id="port">${drillbit.getUserPort()}</td>
                 <td>${drillbit.getControlPort()}</td>
                 <td>${drillbit.getDataPort()}</td>
@@ -216,6 +215,7 @@
       </div>
   </div>
    <script charset="utf-8">
+      var updateRemoteInfo = <#if (model.isAuthEnabled())>false<#else>true</#if>;
       var refreshTime = 10000;
       var refresh = getRefreshTime();
       var portNum = 0;
@@ -316,7 +316,7 @@
                                    alert(errorThrown);
                                },
                                success: function(data) {
-			           alert(data["response"]);
+                                   alert(data["response"]);
                                    button.prop('disabled',true).css('opacity',0.5);
                                }
                   });
@@ -336,6 +336,13 @@
               });
           }
           </#if>
+
+      function popOutRemoteDbitUI(dbitHost, dbitPort) {
+            var dbitWebUIUrl = location.protocol+'//'+ dbitHost+':'+dbitPort;
+            var tgtWindow = 'dbit_'+dbitHost;
+            window.open(dbitWebUIUrl, tgtWindow);
+      }
+
       function getRequestUrl(requestPath) {
             var protocol = location.protocol;
             var host = location.host;
@@ -353,8 +360,15 @@
       }
 
       //Update memory
-      //TODO: HTTPS?
       function updateMetricsHtml(drillbit,webport,idx) {
+        /* NOTE: For remote drillbits:
+           If Authentication or SSL is enabled; we'll assume we don't have valid certificates
+        */
+        var remoteHost = location.protocol+"//"+drillbit+":"+webport;
+        if ( !updateRemoteInfo || (location.protocol == "https" && remoteHost != location.host) ) {
+          return;
+        }
+        //
         var result = $.ajax({
           type: 'GET',
           url: location.protocol+"//"+drillbit+":"+webport+"/status/metrics",
