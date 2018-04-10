@@ -93,7 +93,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     // All columns appear, including non-projected ones.
 
-    TupleMetadata actualSchema = rootWriter.schema();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(4, actualSchema.size());
     assertEquals("a", actualSchema.column(0).getName());
     assertEquals("b", actualSchema.column(1).getName());
@@ -167,7 +167,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     // Verify the projected columns
 
-    TupleMetadata actualSchema = rootWriter.schema();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
     ColumnMetadata m1Md = actualSchema.metadata("m1");
     assertTrue(m1Md.isMap());
     assertTrue(m1Md.isProjected());
@@ -211,6 +211,52 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
       .addRow(mapValue( 1,  2), mapValue( 4))
       .addRow(mapValue(11, 12), mapValue(14))
+      .build();
+    new RowSetComparison(expected)
+        .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
+    rsLoader.close();
+  }
+
+  @Test
+  public void testMapProjectionMemberAndMap() {
+    List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m1.b");
+    TupleMetadata schema = new SchemaBuilder()
+        .addMap("m1")
+          .add("a", MinorType.INT)
+          .add("b", MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetOptions options = new OptionBuilder()
+        .setProjection(selection)
+        .setSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    // Verify the projected columns
+
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
+    ColumnMetadata m1Md = actualSchema.metadata("m1");
+    assertTrue(m1Md.isMap());
+    assertTrue(m1Md.isProjected());
+    assertEquals(2, m1Md.mapSchema().size());
+    assertTrue(m1Md.mapSchema().metadata("a").isProjected());
+    assertTrue(m1Md.mapSchema().metadata("b").isProjected());
+
+    // Write a couple of rows.
+
+    rsLoader.startBatch();
+    rootWriter.start();
+    rootWriter
+      .addSingleCol(mapValue( 1,  2))
+      .addSingleCol(mapValue(11, 12));
+
+    // Verify. The whole map appears in the result set because the
+    // project list included the whole map as well as a map member.
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+      .addSingleCol(mapValue( 1,  2))
+      .addSingleCol(mapValue(11, 12))
       .build();
     new RowSetComparison(expected)
         .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));

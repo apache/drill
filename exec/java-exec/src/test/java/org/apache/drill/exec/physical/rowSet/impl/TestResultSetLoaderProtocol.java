@@ -28,6 +28,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
@@ -41,8 +42,8 @@ import org.apache.drill.exec.vector.accessor.TupleWriter.UndefinedColumnExceptio
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
@@ -80,6 +81,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     assertEquals(0, rsLoader.writer().rowCount());
     assertEquals(0, rsLoader.batchCount());
     assertEquals(0, rsLoader.totalRowCount());
+    assertTrue(rsLoader.isProjectionEmpty());
 
     // Failures due to wrong state (Start)
 
@@ -93,11 +95,12 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     // Can define schema before starting the first batch.
 
     RowSetLoader rootWriter = rsLoader.writer();
-    TupleMetadata schema = rootWriter.schema();
+    TupleMetadata schema = rootWriter.tupleSchema();
     assertEquals(0, schema.size());
 
     MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REQUIRED);
     rootWriter.addColumn(fieldA);
+    assertFalse(rsLoader.isProjectionEmpty());
 
     assertEquals(1, schema.size());
     assertTrue(fieldA.isEquivalent(schema.column(0)));
@@ -175,8 +178,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(100, null)
         .addRow(200, 210)
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     // Between batches: batch-based operations fail
 
@@ -229,8 +231,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(300, 310)
         .addRow(400, 410)
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     // Next batch. Schema has changed.
 
@@ -253,8 +254,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(500, 510, 520)
         .addRow(600, 610, 620)
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     rsLoader.close();
 
@@ -312,7 +312,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
   public void testCaseInsensitiveSchema() {
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator());
     RowSetLoader rootWriter = rsLoader.writer();
-    TupleMetadata schema = rootWriter.schema();
+    TupleMetadata schema = rootWriter.tupleSchema();
     assertEquals(0, rsLoader.schemaVersion());
 
     // No columns defined in schema
@@ -365,14 +365,14 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     try {
       rootWriter.addColumn(colSchema);
       fail();
-    } catch(IllegalArgumentException e) {
+    } catch(UserException e) {
       // Expected
     }
     try {
       MaterializedField testCol = SchemaBuilder.columnSchema("A", MinorType.VARCHAR, DataMode.REQUIRED);
       rootWriter.addColumn(testCol);
       fail();
-    } catch (IllegalArgumentException e) {
+    } catch (UserException e) {
       // Expected
       assertTrue(e.getMessage().contains("Duplicate"));
     }
@@ -385,6 +385,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
 
     MaterializedField col2 = SchemaBuilder.columnSchema("b", MinorType.VARCHAR, DataMode.REQUIRED);
     rootWriter.addColumn(col2);
+    assertEquals(2, rsLoader.schemaVersion());
     assertTrue(col2.isEquivalent(schema.column(1)));
     ColumnMetadata col2Metadata = schema.metadata(1);
     assertSame(col2Metadata, schema.metadata("b"));
@@ -404,6 +405,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
 
     MaterializedField col3 = SchemaBuilder.columnSchema("c", MinorType.VARCHAR, DataMode.REQUIRED);
     rootWriter.addColumn(col3);
+    assertEquals(3, rsLoader.schemaVersion());
     assertTrue(col3.isEquivalent(schema.column(2)));
     ColumnMetadata col3Metadata = schema.metadata(2);
     assertSame(col3Metadata, schema.metadata("c"));
@@ -415,6 +417,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
 
     MaterializedField col4 = SchemaBuilder.columnSchema("d", MinorType.VARCHAR, DataMode.OPTIONAL);
     rootWriter.addColumn(col4);
+    assertEquals(4, rsLoader.schemaVersion());
     assertTrue(col4.isEquivalent(schema.column(3)));
     ColumnMetadata col4Metadata = schema.metadata(3);
     assertSame(col4Metadata, schema.metadata("d"));
@@ -426,6 +429,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
 
     MaterializedField col5 = SchemaBuilder.columnSchema("e", MinorType.VARCHAR, DataMode.REPEATED);
     rootWriter.addColumn(col5);
+    assertEquals(5, rsLoader.schemaVersion());
     assertTrue(col5.isEquivalent(schema.column(4)));
     ColumnMetadata col5Metadata = schema.metadata(4);
     assertSame(col5Metadata, schema.metadata("e"));
@@ -444,8 +448,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow("foo", "second", "",    null,  strArray())
         .addRow("bar", "",       "c.2", "d.2", strArray("e1", "e2", "e3"))
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     // Handy way to test that close works to abort an in-flight batch
     // and clean up.
@@ -487,7 +490,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(30, 300, "wilma")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 

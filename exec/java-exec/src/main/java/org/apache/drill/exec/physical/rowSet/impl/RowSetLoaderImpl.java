@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
@@ -51,6 +52,16 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
       throw new IllegalStateException("Batch is full.");
     }
     setObject(values);
+    save();
+    return this;
+  }
+
+  @Override
+  public RowSetLoader addSingleCol(Object value) {
+    if (! start()) {
+      throw new IllegalStateException("Batch is full.");
+    }
+    set(0, value);
     save();
     return this;
   }
@@ -91,8 +102,14 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
   }
 
   @Override
-  public boolean isFull( ) { return rsLoader.isFull(); }
+  public boolean isFull() { return rsLoader.isFull(); }
 
   @Override
   public int rowCount() { return rsLoader.rowCount(); }
+
+  @Override
+  public ColumnMetadata schema() {
+    // No column for the row tuple
+    return null;
+  }
 }
