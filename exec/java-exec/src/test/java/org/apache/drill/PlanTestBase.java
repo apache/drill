@@ -80,26 +80,45 @@ public class PlanTestBase extends BaseTestQuery {
    *                     planning process throws an exception
    */
   public static void testPlanMatchingPatterns(String query, String[] expectedPatterns, String[] excludedPatterns)
-      throws Exception {
+    throws Exception {
+    testPlanMatchingPatterns(query, stringsToPatterns(expectedPatterns), stringsToPatterns(excludedPatterns));
+  }
+
+  public static void testPlanMatchingPatterns(String query, Pattern[] expectedPatterns, Pattern[] excludedPatterns)
+    throws Exception {
     final String plan = getPlanInString("EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query), OPTIQ_FORMAT);
 
     // Check and make sure all expected patterns are in the plan
     if (expectedPatterns != null) {
-      for (final String s : expectedPatterns) {
-        final Pattern p = Pattern.compile(s);
-        final Matcher m = p.matcher(plan);
-        assertTrue(EXPECTED_NOT_FOUND + s +"\n" + plan, m.find());
+      for (final Pattern expectedPattern: expectedPatterns) {
+        final Matcher m = expectedPattern.matcher(plan);
+        assertTrue(EXPECTED_NOT_FOUND + expectedPattern.pattern() +"\n" + plan, m.find());
       }
     }
 
     // Check and make sure all excluded patterns are not in the plan
     if (excludedPatterns != null) {
-      for (final String s : excludedPatterns) {
-        final Pattern p = Pattern.compile(s);
-        final Matcher m = p.matcher(plan);
-        assertFalse(UNEXPECTED_FOUND + s +"\n" + plan, m.find());
+      for (final Pattern excludedPattern: excludedPatterns) {
+        final Matcher m = excludedPattern.matcher(plan);
+        assertFalse(UNEXPECTED_FOUND + excludedPattern.pattern() +"\n" + plan, m.find());
       }
     }
+  }
+
+  private static Pattern[] stringsToPatterns(String[] strings)
+  {
+    if (strings == null) {
+      return null;
+    }
+
+    final Pattern[] patterns = new Pattern[strings.length];
+
+    for (int index = 0; index < strings.length; index++) {
+      final String string = strings[index];
+      patterns[index] = Pattern.compile(string);
+    }
+
+    return patterns;
   }
 
   /**
@@ -279,6 +298,19 @@ public class PlanTestBase extends BaseTestQuery {
     for (final String substr : expectedSubstrs) {
       assertTrue(planStr.contains(substr));
     }
+  }
+
+
+  /**
+   * Creates physical plan for the given query and then executes this plan.
+   * This method is useful for testing serialization / deserialization issues.
+   *
+   * @param query query string
+   */
+  public static void testPhysicalPlanExecutionBasedOnQuery(String query) throws Exception {
+    query = "EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query);
+    String plan = getPlanInString(query, JSON_FORMAT);
+    testPhysical(plan);
   }
 
   /*

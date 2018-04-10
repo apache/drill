@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -49,9 +48,6 @@ import com.google.common.base.Preconditions;
 public class HBaseSubScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSubScan.class);
 
-  @JsonProperty
-  public final HBaseStoragePluginConfig storage;
-  @JsonIgnore
   private final HBaseStoragePlugin hbaseStoragePlugin;
   private final List<HBaseSubScanSpec> regionScanSpecList;
   private final List<SchemaPath> columns;
@@ -59,34 +55,36 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @JsonCreator
   public HBaseSubScan(@JacksonInject StoragePluginRegistry registry,
                       @JsonProperty("userName") String userName,
-                      @JsonProperty("storage") StoragePluginConfig storage,
+                      @JsonProperty("hbaseStoragePluginConfig") HBaseStoragePluginConfig hbaseStoragePluginConfig,
                       @JsonProperty("regionScanSpecList") LinkedList<HBaseSubScanSpec> regionScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
-    super(userName);
-    hbaseStoragePlugin = (HBaseStoragePlugin) registry.getPlugin(storage);
-    this.regionScanSpecList = regionScanSpecList;
-    this.storage = (HBaseStoragePluginConfig) storage;
-    this.columns = columns;
+    this(userName,
+        (HBaseStoragePlugin) registry.getPlugin(hbaseStoragePluginConfig),
+        regionScanSpecList,
+        columns);
   }
 
-  public HBaseSubScan(String userName, HBaseStoragePlugin plugin, HBaseStoragePluginConfig config,
-      List<HBaseSubScanSpec> regionInfoList, List<SchemaPath> columns) {
+  public HBaseSubScan(String userName,
+                      HBaseStoragePlugin hbaseStoragePlugin,
+                      List<HBaseSubScanSpec> regionInfoList,
+                      List<SchemaPath> columns) {
     super(userName);
-    hbaseStoragePlugin = plugin;
-    storage = config;
+    this.hbaseStoragePlugin = hbaseStoragePlugin;
     this.regionScanSpecList = regionInfoList;
     this.columns = columns;
   }
 
+  @JsonProperty
+  public HBaseStoragePluginConfig getHbaseStoragePluginConfig() {
+    return hbaseStoragePlugin.getConfig();
+  }
+
+  @JsonProperty
   public List<HBaseSubScanSpec> getRegionScanSpecList() {
     return regionScanSpecList;
   }
 
-  @JsonIgnore
-  public HBaseStoragePluginConfig getStorageConfig() {
-    return storage;
-  }
-
+  @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
   }
@@ -109,7 +107,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new HBaseSubScan(getUserName(), hbaseStoragePlugin, storage, regionScanSpecList, columns);
+    return new HBaseSubScan(getUserName(), hbaseStoragePlugin, regionScanSpecList, columns);
   }
 
   @Override

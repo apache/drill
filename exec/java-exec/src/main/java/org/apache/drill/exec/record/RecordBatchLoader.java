@@ -61,6 +61,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     this.allocator = Preconditions.checkNotNull(allocator);
   }
 
+  public BufferAllocator allocator() { return allocator; }
+
   /**
    * Load a record batch from a single buffer.
    *
@@ -88,7 +90,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
 
     // Set up to recognize previous fields that no longer exist.
     final Map<String, ValueVector> oldFields = CaseInsensitiveMap.newHashMap();
-    for(final VectorWrapper<?> wrapper : container) {
+    for (final VectorWrapper<?> wrapper : container) {
       final ValueVector vector = wrapper.getValueVector();
       oldFields.put(vector.getField().getName(), vector);
     }
@@ -97,7 +99,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     try {
       final List<SerializedField> fields = def.getFieldList();
       int bufOffset = 0;
-      for(final SerializedField field : fields) {
+      for (final SerializedField field : fields) {
         final MaterializedField fieldDef = MaterializedField.create(field);
         ValueVector vector = oldFields.remove(fieldDef.getName());
 
@@ -105,7 +107,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
           // Field did not exist previously--is schema change.
           schemaChanged = true;
           vector = TypeHelper.getNewVector(fieldDef, allocator);
-        } else if (!vector.getField().getType().equals(fieldDef.getType())) {
+        } else if (! vector.getField().getType().equals(fieldDef.getType())) {
           // Field had different type before--is schema change.
           // clear previous vector
           vector.clear();
@@ -125,7 +127,9 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
         }
 
         // Load the vector.
-        if (field.getValueCount() == 0) {
+        if (buf == null) {
+          // Schema only
+        } else if (field.getValueCount() == 0) {
           AllocationHelper.allocate(vector, 0, 0, 0);
         } else {
           vector.load(field, buf.slice(bufOffset, field.getBufferLength()));
@@ -151,9 +155,9 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       }
       throw cause;
     } finally {
-      if (!oldFields.isEmpty()) {
+      if (! oldFields.isEmpty()) {
         schemaChanged = true;
-        for (final ValueVector vector:oldFields.values()) {
+        for (final ValueVector vector : oldFields.values()) {
           vector.clear();
         }
       }
@@ -199,6 +203,17 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
 
       if (! currentChild.getType().equals(newChild.getMajorType())) {
         return false;
+      }
+
+      // Perform schema diff for child column(s)
+      if (currentChild.getChildren().size() != newChild.getChildCount()) {
+        return false;
+      }
+
+      if (!currentChild.getChildren().isEmpty()) {
+        if (!isSameSchema(currentChild.getChildren(), newChild.getChildList())) {
+          return false;
+        }
       }
     }
 
@@ -269,5 +284,4 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     container.clear();
     resetRecordCount();
   }
-
 }

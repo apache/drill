@@ -18,10 +18,9 @@
 package org.apache.drill.exec.expr;
 
 import static org.junit.Assert.assertEquals;
-import mockit.Expectations;
-import mockit.Injectable;
-import mockit.NonStrict;
-import mockit.NonStrictExpectations;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
@@ -42,7 +41,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 public class ExpressionTest extends ExecTest {
@@ -52,67 +50,60 @@ public class ExpressionTest extends ExecTest {
   private final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
 
   @Test
-  public void testBasicExpression(@Injectable RecordBatch batch) throws Exception {
-    System.out.println(getExpressionCode("if(true) then 1 else 0 end", batch));
+  public void testBasicExpression() throws Exception {
+    System.out.println(getExpressionCode("if(true) then 1 else 0 end"));
   }
 
   @Test
-  public void testExprParseUpperExponent(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("multiply(`$f0`, 1.0E-4)", batch);
+  public void testExprParseUpperExponent() throws Exception {
+    getExpressionCode("multiply(`$f0`, 1.0E-4)");
   }
 
   @Test
-  public void testExprParseLowerExponent(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("multiply(`$f0`, 1.0e-4)", batch);
+  public void testExprParseLowerExponent() throws Exception {
+    getExpressionCode("multiply(`$f0`, 1.0e-4)");
   }
 
   @Test
-  public void testSpecial(final @Injectable RecordBatch batch, @Injectable ValueVector vector) throws Exception {
+  public void testSpecial() throws Exception {
+    final RecordBatch batch = mock(RecordBatch.class);
+    final VectorWrapper wrapper = mock(VectorWrapper.class);
     final TypeProtos.MajorType type = Types.optional(MinorType.INT);
     final TypedFieldId tfid = new TypedFieldId(type, false, 0);
 
-    new NonStrictExpectations() {
-      @NonStrict VectorWrapper<?> wrapper;
-      {
-        batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
-        result = tfid;
-        batch.getValueAccessorById(IntVector.class, tfid.getFieldIds());
-        result = wrapper;
-        wrapper.getValueVector();
-        result = new IntVector(MaterializedField.create("result", type), RootAllocatorFactory.newRoot(c));
-      }
+    when(wrapper.getValueVector()).thenReturn(new IntVector(MaterializedField.create("result", type), RootAllocatorFactory.newRoot(c)));
 
-    };
+    when(batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN))).thenReturn(tfid);
+    when(batch.getValueAccessorById(IntVector.class, tfid.getFieldIds())).thenReturn(wrapper);
+
     System.out.println(getExpressionCode("1 + 1", batch));
   }
 
   @Test
-  public void testSchemaExpression(final @Injectable RecordBatch batch) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.BIGINT), false, 0);
+  public void testSchemaExpression() throws Exception {
+    final RecordBatch batch = mock(RecordBatch.class);
+    when(batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN)))
+      .thenReturn(new TypedFieldId(Types.optional(MinorType.BIGINT), false, 0));
 
-    new Expectations() {
-      {
-        batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
-        result = tfid;
-        // batch.getValueVectorById(tfid); result = new Fixed4(null, null);
-      }
-
-    };
     System.out.println(getExpressionCode("1 + alpha", batch));
-
   }
 
   @Test(expected = ExpressionParsingException.class)
-  public void testExprParseError(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("less than(1, 2)", batch);
+  public void testExprParseError() throws Exception {
+    getExpressionCode("less than(1, 2)");
   }
 
   @Test
-  public void testExprParseNoError(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("equal(1, 2)", batch);
+  public void testExprParseNoError() throws Exception {
+    getExpressionCode("equal(1, 2)");
   }
 
   // HELPER METHODS //
+
+  private String getExpressionCode(String expression) throws Exception {
+    final RecordBatch batch = mock(RecordBatch.class);
+    return getExpressionCode(expression, batch);
+  }
 
   private String getExpressionCode(String expression, RecordBatch batch) throws Exception {
     final LogicalExpression expr = parseExpr(expression);

@@ -102,14 +102,14 @@ public class TestProjectPushDown extends PlanTestBase {
 
   @Test
   public void testTPCH1() throws Exception {
-    String expectedColNames = " \"columns\" : [ \"`l_returnflag`\", \"`l_linestatus`\", \"`l_shipdate`\", \"`l_quantity`\", \"`l_extendedprice`\", \"`l_discount`\", \"`l_tax`\" ]";
+    String expectedColNames = " \"columns\" : [ \"`l_shipdate`\", \"`l_returnflag`\", \"`l_linestatus`\", \"`l_quantity`\", \"`l_extendedprice`\", \"`l_discount`\", \"`l_tax`\" ]";
     testPhysicalPlanFromFile("queries/tpch/01.sql", expectedColNames);
   }
 
   @Test
   public void testTPCH3() throws Exception {
     String expectedColNames1 = "\"columns\" : [ \"`c_mktsegment`\", \"`c_custkey`\" ]";
-    String expectedColNames2 = " \"columns\" : [ \"`o_orderdate`\", \"`o_shippriority`\", \"`o_custkey`\", \"`o_orderkey`\" ";
+    String expectedColNames2 = " \"columns\" : [ \"`o_custkey`\", \"`o_orderkey`\", \"`o_orderdate`\", \"`o_shippriority`\" ]";
     String expectedColNames3 = "\"columns\" : [ \"`l_orderkey`\", \"`l_shipdate`\", \"`l_extendedprice`\", \"`l_discount`\" ]";
     testPhysicalPlanFromFile("queries/tpch/03.sql", expectedColNames1, expectedColNames2, expectedColNames3);
   }
@@ -285,6 +285,17 @@ public class TestProjectPushDown extends PlanTestBase {
     testPushDown(new PushDownTestInstance(sql,
         new String[]{firstExpected, secondExpected, thirdExpected}, table,table,table));
     }
+  }
+
+  @Test
+  public void testProjectPushdownPastJoinWithJoinPushExpressions() throws Exception {
+    final String query = "SELECT L.L_QUANTITY FROM cp.`tpch/lineitem.parquet` L, cp.`tpch/orders.parquet` O" +
+        " WHERE cast(L.L_ORDERKEY as int) = cast(O.O_ORDERKEY as int)";
+    final String[] expectedPatterns = {
+        ".*HashJoin.*", "Project.*\\(L_QUANTITY.*CAST\\(\\$0\\)\\:INTEGER.*", "Project.*CAST\\(\\$0\\)\\:INTEGER.*"};
+    // L_ORDERKEY, O_ORDERKEY should not be present in the projects below the join
+    final String[] excludedPatterns = {".*Project\\(L_ORDERKEY=.*", ".*Project\\(O_ORDERKEY=.*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPatterns, excludedPatterns);
   }
 
   protected void testPushDown(PushDownTestInstance test) throws Exception {

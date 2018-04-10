@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,6 +38,10 @@ import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.ColumnMetaData.StructType;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.MetaImpl;
+import org.apache.calcite.avatica.MissingResultsException;
+import org.apache.calcite.avatica.NoSuchStatementException;
+import org.apache.calcite.avatica.QueryState;
+import org.apache.calcite.avatica.remote.TypedValue;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.client.ServerMethod;
@@ -92,8 +96,8 @@ class DrillMetaImpl extends MetaImpl {
         sql,
         Collections.<AvaticaParameter> emptyList(),
         Collections.<String, Object>emptyMap(),
-        null // CursorFactory set to null, as SQL requests use DrillCursor
-        );
+        null, // CursorFactory set to null, as SQL requests use DrillCursor
+        Meta.StatementType.SELECT);
   }
 
   private MetaResultSet s(String s) {
@@ -322,7 +326,7 @@ class DrillMetaImpl extends MetaImpl {
         StructType fieldMetaData = drillFieldMetaData(clazz);
         Meta.Signature signature = Meta.Signature.create(
             fieldMetaData.columns, "",
-            Collections.<AvaticaParameter>emptyList(), CursorFactory.record(clazz));
+            Collections.<AvaticaParameter>emptyList(), CursorFactory.record(clazz), Meta.StatementType.SELECT);
 
         AvaticaStatement statement = connection.createStatement();
         return MetaResultSet.create(connection.id, statement.getId(), true,
@@ -419,8 +423,11 @@ class DrillMetaImpl extends MetaImpl {
    * Implements {@link DatabaseMetaData#getTables}.
    */
   @Override
-  public MetaResultSet getTables(String catalog, final Pat schemaPattern, final Pat tableNamePattern,
-      final List<String> typeList) {
+  public MetaResultSet getTables(ConnectionHandle ch,
+                                 String catalog,
+                                 Pat schemaPattern,
+                                 Pat tableNamePattern,
+                                 List<String> typeList) {
     if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_TABLES)) {
       return clientGetTables(catalog, schemaPattern, tableNamePattern, typeList);
     }
@@ -962,8 +969,7 @@ class DrillMetaImpl extends MetaImpl {
    * Implements {@link DatabaseMetaData#getColumns}.
    */
   @Override
-  public MetaResultSet getColumns(String catalog, Pat schemaPattern,
-                              Pat tableNamePattern, Pat columnNamePattern) {
+  public MetaResultSet getColumns(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
     if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_COLUMNS)) {
       return clientGetColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
     }
@@ -1022,7 +1028,7 @@ class DrillMetaImpl extends MetaImpl {
    * Implements {@link DatabaseMetaData#getSchemas}.
    */
   @Override
-  public MetaResultSet getSchemas(String catalog, Pat schemaPattern) {
+  public MetaResultSet getSchemas(ConnectionHandle ch, String catalog, Pat schemaPattern) {
     if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_SCHEMAS)) {
       return clientGetSchemas(catalog, schemaPattern);
     }
@@ -1069,7 +1075,7 @@ class DrillMetaImpl extends MetaImpl {
    * Implements {@link DatabaseMetaData#getCatalogs}.
    */
   @Override
-  public MetaResultSet getCatalogs() {
+  public MetaResultSet getCatalogs(ConnectionHandle ch) {
     if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_CATALOGS)) {
       return clientGetCatalogs();
     }
@@ -1106,7 +1112,58 @@ class DrillMetaImpl extends MetaImpl {
   }
 
   @Override
+  public ExecuteResult prepareAndExecute(final StatementHandle handle, final String sql, final long maxRowCount,
+        int maxRowsInFirstFrame, final PrepareCallback callback) throws NoSuchStatementException {
+    return prepareAndExecute(handle, sql, maxRowCount, callback);
+  }
+
+  @Override
+  public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle statementHandle, List<String> list) throws NoSuchStatementException {
+    throw new UnsupportedOperationException(this.getClass().getSimpleName());
+  }
+
+  @Override
+  public ExecuteBatchResult executeBatch(StatementHandle statementHandle, List<List<TypedValue>> list) throws NoSuchStatementException {
+    throw new UnsupportedOperationException(this.getClass().getSimpleName());
+  }
+
+  @Override
+  public Frame fetch(StatementHandle statementHandle, long l, int i) throws NoSuchStatementException, MissingResultsException {
+    throw new UnsupportedOperationException(this.getClass().getSimpleName());
+  }
+
+  @Override
+  public ExecuteResult execute(StatementHandle statementHandle,
+        List<TypedValue> list, long l) throws NoSuchStatementException {
+    return new ExecuteResult(Collections.singletonList(
+        MetaResultSet.create(statementHandle.connectionId, statementHandle.id,
+            true, statementHandle.signature, null)));
+  }
+
+  @Override
+  public ExecuteResult execute(StatementHandle statementHandle,
+      List<TypedValue> list, int i) throws NoSuchStatementException {
+    return execute(statementHandle, list, (long) i);
+  }
+
+  @Override
   public void closeStatement(StatementHandle h) {
     // Nothing
   }
+
+  @Override
+  public boolean syncResults(StatementHandle statementHandle, QueryState queryState, long l) throws NoSuchStatementException {
+    throw new UnsupportedOperationException(this.getClass().getSimpleName());
+  }
+
+  @Override
+  public void commit(ConnectionHandle connectionHandle) {
+    throw new UnsupportedOperationException(this.getClass().getSimpleName());
+  }
+
+  @Override
+  public void rollback(ConnectionHandle connectionHandle) {
+    throw new UnsupportedOperationException(this.getClass().getSimpleName());
+  }
+
 }

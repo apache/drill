@@ -29,15 +29,12 @@
   # List of keywords.
   keywords: [
     "DATABASES",
-    "REPLACE",
     "SCHEMAS",
-    "SHOW",
     "TABLES",
     "USE",
     "FILES",
     "REFRESH",
     "METADATA",
-    "DATABASE",
     "IF",
     "JAR"
   ]
@@ -75,6 +72,26 @@
   implementationFiles: [
     "parserImpls.ftl"
   ]
+
+  # List of methods for parsing extensions to "CREATE [OR REPLACE]" calls.
+  # Each must accept arguments "(SqlParserPos pos, boolean replace)".
+  createStatementParserMethods: [
+  ]
+
+  # List of methods for parsing extensions to "ALTER <scope>" calls.
+  # Each must accept arguments "(SqlParserPos pos, String scope)".
+  alterStatementParserMethods: [
+  ]
+
+  # List of methods for parsing extensions to "DROP" calls.
+  # Each must accept arguments "(SqlParserPos pos)".
+    dropStatementParserMethods: [
+  ]
+
+  # List of keywords from "keywords" section that are not reserved.
+    nonReservedKeywords: [
+  ]
+
   
   includeCompoundIdentifier: false,
   includeBraces: true,

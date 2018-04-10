@@ -38,8 +38,7 @@ public class ParquetToDrillTypeConverter {
   }
 
   private static TypeProtos.MinorType getMinorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
-                                                   ConvertedType convertedType, int precision, int scale,
-      OptionManager options) {
+                                                   ConvertedType convertedType, int precision, OptionManager options) {
 
 
     switch (primitiveTypeName) {
@@ -49,6 +48,7 @@ public class ParquetToDrillTypeConverter {
         }
         switch (convertedType) {
           case UTF8:
+          case ENUM:
             return (TypeProtos.MinorType.VARCHAR);
           case DECIMAL:
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
@@ -61,6 +61,8 @@ public class ParquetToDrillTypeConverter {
           return (TypeProtos.MinorType.BIGINT);
         }
         switch(convertedType) {
+          case INT_64:
+            return TypeProtos.MinorType.BIGINT;
           case UINT_64:
             return TypeProtos.MinorType.UINT8;
           case DECIMAL:
@@ -85,6 +87,7 @@ public class ParquetToDrillTypeConverter {
             return TypeProtos.MinorType.UINT4;
           case INT_8:
           case INT_16:
+          case INT_32:
             return TypeProtos.MinorType.INT;
           case DECIMAL:
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
@@ -135,7 +138,7 @@ public class ParquetToDrillTypeConverter {
   public static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
       TypeProtos.DataMode mode, ConvertedType convertedType, int precision, int scale,
       OptionManager options) {
-    MinorType minorType = getMinorType(primitiveTypeName, length, convertedType, precision, scale, options);
+    MinorType minorType = getMinorType(primitiveTypeName, length, convertedType, precision, options);
     TypeProtos.MajorType.Builder typeBuilder = TypeProtos.MajorType.newBuilder().setMinorType(minorType).setMode(mode);
 
     if (CoreDecimalUtility.isDecimalType(minorType)) {

@@ -203,6 +203,7 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
         if (e instanceof BindException && allowPortHunting) {
           continue;
         }
+
         final UserException bindException =
             UserException
               .resourceError( e )

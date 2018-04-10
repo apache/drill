@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.calcite.prepare.Prepare.CatalogReader;
 
+import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillStoreRelBase;
 import org.apache.calcite.rel.RelNode;
@@ -31,9 +32,9 @@ import org.apache.calcite.plan.RelTraitSet;
 public class DrillStoreRel extends DrillStoreRelBase implements DrillRel{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStoreRel.class);
 
-  protected DrillStoreRel(RelOptCluster cluster, RelTraitSet traits, RelOptTable table, CatalogReader catalogReader,
-      RelNode child, Operation operation, List<String> updateColumnList, boolean flattened) {
-    super(cluster, traits, table, catalogReader, child, operation, updateColumnList, flattened);
+  protected DrillStoreRel(RelOptCluster cluster, RelTraitSet traits, RelOptTable table, CatalogReader catalogReader, RelNode child,
+                          Operation operation, List<String> updateColumnList, List<RexNode> sourceExpressionList, boolean flattened) {
+    super(cluster, traits, table, catalogReader, child, operation, updateColumnList, sourceExpressionList, flattened);
 
   }
 

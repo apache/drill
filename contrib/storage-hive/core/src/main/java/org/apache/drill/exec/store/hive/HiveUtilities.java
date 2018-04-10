@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -32,7 +35,7 @@ import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableBitVector;
@@ -51,13 +54,17 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.common.type.HiveVarchar;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.io.AcidUtils;
+import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.typeinfo.BaseCharTypeInfo;
@@ -70,6 +77,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -80,7 +88,7 @@ import java.util.Properties;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
 public class HiveUtilities {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
 
   /** Partition value is received in string format. Convert it into appropriate object based on the type. */
   public static Object convertPartitionType(TypeInfo typeInfo, String value, final String defaultPartitionValue) {
@@ -104,8 +112,7 @@ public class HiveUtilities {
           return Boolean.parseBoolean(value);
         case DECIMAL: {
           DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) typeInfo;
-          return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value),
-              decimalTypeInfo.precision(), decimalTypeInfo.scale());
+          return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value), decimalTypeInfo);
         }
         case DOUBLE:
           return Double.parseDouble(value);
@@ -288,7 +295,7 @@ public class HiveUtilities {
     }
   }
 
-  public static MajorType getMajorTypeFromHiveTypeInfo(final TypeInfo typeInfo, final OptionManager options) {
+  public static MajorType getMajorTypeFromHiveTypeInfo(final TypeInfo typeInfo, final OptionSet options) {
     switch (typeInfo.getCategory()) {
       case PRIMITIVE: {
         PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) typeInfo;
@@ -325,7 +332,7 @@ public class HiveUtilities {
   }
 
   public static TypeProtos.MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo,
-                                                                           OptionManager options) {
+                                                                           OptionSet options) {
     switch(primitiveTypeInfo.getPrimitiveCategory()) {
       case BINARY:
         return TypeProtos.MinorType.VARBINARY;
@@ -333,7 +340,7 @@ public class HiveUtilities {
         return TypeProtos.MinorType.BIT;
       case DECIMAL: {
 
-        if (options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
+        if (!options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val) {
           throw UserException.unsupportedError()
               .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
               .build(logger);
@@ -397,7 +404,6 @@ public class HiveUtilities {
    *
    * @param job {@link JobConf} instance.
    * @param properties New config properties
-   * @param hiveConf HiveConf of Hive storage plugin
    */
   public static void addConfToJob(final JobConf job, final Properties properties) {
     for (Object obj : properties.keySet()) {
@@ -469,6 +475,98 @@ public class HiveUtilities {
     throw UserException.unsupportedError()
         .message(errMsg.toString())
         .build(logger);
+  }
+
+  /**
+   * Returns property value. If property is absent, return given default value.
+   * If property value is non-numeric will fail.
+   *
+   * @param tableProperties table properties
+   * @param propertyName property name
+   * @param defaultValue default value used in case if property is absent
+   * @return property value
+   * @throws NumberFormatException if property value is not numeric
+   */
+  public static int retrieveIntProperty(Properties tableProperties, String propertyName, int defaultValue) {
+    Object propertyObject = tableProperties.get(propertyName);
+    if (propertyObject == null) {
+      return defaultValue;
+    }
+
+    try {
+      return Integer.valueOf(propertyObject.toString());
+    } catch (NumberFormatException e) {
+      throw new NumberFormatException(String.format("Hive table property %s value '%s' is non-numeric",
+          propertyName, propertyObject.toString()));
+    }
+  }
+
+  /**
+   * Checks if given table has header or footer.
+   * If at least one of them has value more then zero, method will return true.
+   *
+   * @param table table with column cache instance
+   * @return true if table contains header or footer, false otherwise
+   */
+  public static boolean hasHeaderOrFooter(HiveTableWithColumnCache table) {
+    Properties tableProperties = getTableMetadata(table);
+    int skipHeader = retrieveIntProperty(tableProperties, serdeConstants.HEADER_COUNT, -1);
+    int skipFooter = retrieveIntProperty(tableProperties, serdeConstants.FOOTER_COUNT, -1);
+    return skipHeader > 0 || skipFooter > 0;
+  }
+
+  /**
+   * This method checks whether the table is transactional and set necessary properties in {@link JobConf}.
+   * If schema evolution properties aren't set in job conf for the input format, method sets the column names
+   * and types from table/partition properties or storage descriptor.
+   *
+   * @param job the job to update
+   * @param sd storage descriptor
+   */
+  public static void verifyAndAddTransactionalProperties(JobConf job, StorageDescriptor sd) {
+
+    if (AcidUtils.isTablePropertyTransactional(job)) {
+      AcidUtils.setTransactionalTableScan(job, true);
+
+      // No work is needed, if schema evolution is used
+      if (Utilities.isSchemaEvolutionEnabled(job, true) && job.get(IOConstants.SCHEMA_EVOLUTION_COLUMNS) != null &&
+          job.get(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES) != null) {
+        return;
+      }
+
+      String colNames;
+      String colTypes;
+
+      // Try to get get column names and types from table or partition properties. If they are absent there, get columns
+      // data from storage descriptor of the table
+      colNames = job.get(serdeConstants.LIST_COLUMNS);
+      colTypes = job.get(serdeConstants.LIST_COLUMN_TYPES);
+
+      if (colNames == null || colTypes == null) {
+        colNames = Joiner.on(",").join(Lists.transform(sd.getCols(), new Function<FieldSchema, String>()
+        {
+          @Nullable
+          @Override
+          public String apply(@Nullable FieldSchema input)
+          {
+            return input.getName();
+          }
+        }));
+
+        colTypes = Joiner.on(",").join(Lists.transform(sd.getCols(), new Function<FieldSchema, String>()
+        {
+          @Nullable
+          @Override
+          public String apply(@Nullable FieldSchema input)
+          {
+            return input.getType();
+          }
+        }));
+      }
+
+      job.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS, colNames);
+      job.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS_TYPES, colTypes);
+    }
   }
 }
 

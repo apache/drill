@@ -28,6 +28,7 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_COLUMN
 
 import java.util.List;
 
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -37,11 +38,14 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
+import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SqlConverter;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
-import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
+import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.collect.ImmutableList;
@@ -54,7 +58,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.COLUMNS ... */
   @Override
   public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException, ForemanSetupException {
-    SqlDescribeTable node = unwrap(sqlNode, SqlDescribeTable.class);
+    DrillSqlDescribeTable node = unwrap(sqlNode, DrillSqlDescribeTable.class);
 
     try {
       List<SqlNode> selectList =
@@ -132,5 +136,16 @@ public class DescribeTableHandler extends DefaultSqlHandler {
           .message("Error while rewriting DESCRIBE query: %d", ex.getMessage())
           .build(logger);
     }
+  }
+
+  @Override
+  protected Pair<SqlNode, RelDataType> validateNode(SqlNode sqlNode) throws ValidationException,
+      RelConversionException, ForemanSetupException {
+    SqlConverter converter = config.getConverter();
+    // set this to true since INFORMATION_SCHEMA in the root schema, not in the default
+    converter.useRootSchemaAsDefault(true);
+    Pair<SqlNode, RelDataType> sqlNodeRelDataTypePair = super.validateNode(sqlNode);
+    converter.useRootSchemaAsDefault(false);
+    return sqlNodeRelDataTypePair;
   }
 }

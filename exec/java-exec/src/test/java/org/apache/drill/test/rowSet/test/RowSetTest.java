@@ -17,364 +17,513 @@
  */
 package org.apache.drill.test.rowSet.test;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
-import org.apache.drill.exec.vector.accessor.TupleAccessor.TupleSchema;
+import org.apache.drill.exec.vector.accessor.ObjectType;
+import org.apache.drill.exec.vector.accessor.ScalarElementReader;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.TupleReader;
+import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.RowSetSchema;
-import org.apache.drill.test.rowSet.RowSetSchema.FlattenedSchema;
-import org.apache.drill.test.rowSet.RowSetSchema.PhysicalSchema;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
-import com.google.common.base.Splitter;
+/**
+ * Test row sets. Since row sets are a thin wrapper around vectors,
+ * readers and writers, this is also a test of those constructs.
+ * <p>
+ * Tests basic protocol of the writers: <pre><code>
+ * row : tuple
+ * tuple : column *
+ * column : scalar obj | array obj | tuple obj
+ * scalar obj : scalar
+ * array obj : array writer
+ * array writer : element
+ * element : column
+ * tuple obj : tuple</code></pre>
+ */
 
 public class RowSetTest extends SubOperatorTest {
 
   /**
-   * Test a simple physical schema with no maps.
+   * Test the simplest constructs: a row with top-level scalar
+   * columns.
+   * <p>
+   * The focus here is the structure of the readers and writers, along
+   * with the row set loader and verifier that use those constructs.
+   * That is, while this test uses the int vector, this test is not
+   * focused on that vector.
    */
 
-//  @Test
-//  public void testSchema() {
-//    BatchSchema batchSchema = new SchemaBuilder()
-//        .add("c", MinorType.INT)
-//        .add("a", MinorType.INT, DataMode.REPEATED)
-//        .addNullable("b", MinorType.VARCHAR)
-//        .build();
-//
-//    assertEquals("c", batchSchema.getColumn(0).getName());
-//    assertEquals("a", batchSchema.getColumn(1).getName());
-//    assertEquals("b", batchSchema.getColumn(2).getName());
-//
-//    RowSetSchema schema = new RowSetSchema(batchSchema);
-//    TupleSchema access = schema.hierarchicalAccess();
-//    assertEquals(3, access.count());
-//
-//    crossCheck(access, 0, "c", MinorType.INT);
-//    assertEquals(DataMode.REQUIRED, access.column(0).getDataMode());
-//    assertEquals(DataMode.REQUIRED, access.column(0).getType().getMode());
-//    assertTrue(! access.column(0).isNullable());
-//
-//    crossCheck(access, 1, "a", MinorType.INT);
-//    assertEquals(DataMode.REPEATED, access.column(1).getDataMode());
-//    assertEquals(DataMode.REPEATED, access.column(1).getType().getMode());
-//    assertTrue(! access.column(1).isNullable());
-//
-//    crossCheck(access, 2, "b", MinorType.VARCHAR);
-//    assertEquals(MinorType.VARCHAR, access.column(2).getType().getMinorType());
-//    assertEquals(DataMode.OPTIONAL, access.column(2).getDataMode());
-//    assertEquals(DataMode.OPTIONAL, access.column(2).getType().getMode());
-//    assertTrue(access.column(2).isNullable());
-//
-//    // No maps: physical schema is the same as access schema.
-//
-//    PhysicalSchema physical = schema.physical();
-//    assertEquals(3, physical.count());
-//    assertEquals("c", physical.column(0).field().getName());
-//    assertEquals("a", physical.column(1).field().getName());
-//    assertEquals("b", physical.column(2).field().getName());
-//  }
+  @Test
+  public void testScalarStructure() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .buildSchema();
+    ExtendableRowSet rowSet = fixture.rowSet(schema);
+    RowSetWriter writer = rowSet.writer();
+
+    // Required Int
+    // Verify the invariants of the "full" and "simple" access paths
+
+    assertEquals(ObjectType.SCALAR, writer.column("a").type());
+    assertSame(writer.column("a"), writer.column(0));
+    assertSame(writer.scalar("a"), writer.scalar(0));
+    assertSame(writer.column("a").scalar(), writer.scalar("a"));
+    assertSame(writer.column(0).scalar(), writer.scalar(0));
+    assertEquals(ValueType.INTEGER, writer.scalar(0).valueType());
+
+    // Sanity checks
+
+    try {
+      writer.column(0).array();
+      fail();
+    } catch (UnsupportedOperationException e) {
+      // Expected
+    }
+    try {
+      writer.column(0).tuple();
+      fail();
+    } catch (UnsupportedOperationException e) {
+      // Expected
+    }
+
+    // Test the various ways to get at the scalar writer.
+
+    writer.column("a").scalar().setInt(10);
+    writer.save();
+    writer.scalar("a").setInt(20);
+    writer.save();
+    writer.column(0).scalar().setInt(30);
+    writer.save();
+    writer.scalar(0).setInt(40);
+    writer.save();
+
+    // Finish the row set and get a reader.
+
+    SingleRowSet actual = writer.done();
+    RowSetReader reader = actual.reader();
+
+    // Verify invariants
+
+    assertEquals(ObjectType.SCALAR, reader.column(0).type());
+    assertSame(reader.column("a"), reader.column(0));
+    assertSame(reader.scalar("a"), reader.scalar(0));
+    assertSame(reader.column("a").scalar(), reader.scalar("a"));
+    assertSame(reader.column(0).scalar(), reader.scalar(0));
+    assertEquals(ValueType.INTEGER, reader.scalar(0).valueType());
+
+    // Test various accessors: full and simple
+
+    assertTrue(reader.next());
+    assertEquals(10, reader.column("a").scalar().getInt());
+    assertTrue(reader.next());
+    assertEquals(20, reader.scalar("a").getInt());
+    assertTrue(reader.next());
+    assertEquals(30, reader.column(0).scalar().getInt());
+    assertTrue(reader.next());
+    assertEquals(40, reader.scalar(0).getInt());
+    assertFalse(reader.next());
+
+    // Test the above again via the writer and reader
+    // utility classes.
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(10)
+        .addRow(20)
+        .addRow(30)
+        .addRow(40)
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
 
   /**
-   * Validate that the actual column metadata is as expected by
-   * cross-checking: validate that the column at the index and
-   * the column at the column name are both correct.
+   * Test a record with a top level array. The focus here is on the
+   * scalar array structure.
    *
-   * @param schema the schema for the row set
-   * @param index column index
-   * @param fullName expected column name
-   * @param type expected type
-   */
-
-//  public void crossCheck(TupleSchema schema, int index, String fullName, MinorType type) {
-//    String name = null;
-//    for (String part : Splitter.on(".").split(fullName)) {
-//      name = part;
-//    }
-//    assertEquals(name, schema.column(index).getName());
-//    assertEquals(index, schema.columnIndex(fullName));
-//    assertSame(schema.column(index), schema.column(fullName));
-//    assertEquals(type, schema.column(index).getType().getMinorType());
-//  }
-
-  /**
-   * Verify that a nested map schema works as expected.
-   */
-
-//  @Test
-//  public void testMapSchema() {
-//    BatchSchema batchSchema = new SchemaBuilder()
-//        .add("c", MinorType.INT)
-//        .addMap("a")
-//          .addNullable("b", MinorType.VARCHAR)
-//          .add("d", MinorType.INT)
-//          .addMap("e")
-//            .add("f", MinorType.VARCHAR)
-//            .buildMap()
-//          .add("g", MinorType.INT)
-//          .buildMap()
-//        .add("h", MinorType.BIGINT)
-//        .build();
-//
-//    RowSetSchema schema = new RowSetSchema(batchSchema);
-//
-//    // Access schema: flattened with maps removed
-//
-//    FlattenedSchema access = schema.flatAccess();
-//    assertEquals(6, access.count());
-//    crossCheck(access, 0, "c", MinorType.INT);
-//    crossCheck(access, 1, "a.b", MinorType.VARCHAR);
-//    crossCheck(access, 2, "a.d", MinorType.INT);
-//    crossCheck(access, 3, "a.e.f", MinorType.VARCHAR);
-//    crossCheck(access, 4, "a.g", MinorType.INT);
-//    crossCheck(access, 5, "h", MinorType.BIGINT);
-//
-//    // Should have two maps.
-//
-//    assertEquals(2, access.mapCount());
-//    assertEquals("a", access.map(0).getName());
-//    assertEquals("e", access.map(1).getName());
-//    assertEquals(0, access.mapIndex("a"));
-//    assertEquals(1, access.mapIndex("a.e"));
-//
-//    // Verify physical schema: should mirror the schema created above.
-//
-//    PhysicalSchema physical = schema.physical();
-//    assertEquals(3, physical.count());
-//    assertEquals("c", physical.column(0).field().getName());
-//    assertEquals("c", physical.column(0).fullName());
-//    assertFalse(physical.column(0).isMap());
-//    assertNull(physical.column(0).mapSchema());
-//
-//    assertEquals("a", physical.column(1).field().getName());
-//    assertEquals("a", physical.column(1).fullName());
-//    assertTrue(physical.column(1).isMap());
-//    assertNotNull(physical.column(1).mapSchema());
-//
-//    assertEquals("h", physical.column(2).field().getName());
-//    assertEquals("h", physical.column(2).fullName());
-//    assertFalse(physical.column(2).isMap());
-//    assertNull(physical.column(2).mapSchema());
-//
-//    PhysicalSchema aSchema = physical.column(1).mapSchema();
-//    assertEquals(4, aSchema.count());
-//    assertEquals("b", aSchema.column(0).field().getName());
-//    assertEquals("a.b", aSchema.column(0).fullName());
-//    assertEquals("d", aSchema.column(1).field().getName());
-//    assertEquals("e", aSchema.column(2).field().getName());
-//    assertEquals("g", aSchema.column(3).field().getName());
-//
-//    PhysicalSchema eSchema = aSchema.column(2).mapSchema();
-//    assertEquals(1, eSchema.count());
-//    assertEquals("f", eSchema.column(0).field().getName());
-//    assertEquals("a.e.f", eSchema.column(0).fullName());
-//  }
-
-  /**
-   * Verify that simple scalar (non-repeated) column readers
-   * and writers work as expected. This is for tiny ints.
+   * @throws VectorOverflowException should never occur
    */
 
   @Test
-  public void testTinyIntRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
-        .add("col", MinorType.TINYINT)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-        .add(0)
-        .add(Byte.MAX_VALUE)
-        .add(Byte.MIN_VALUE)
-        .build();
-    assertEquals(3, rs.rowCount());
-    RowSetReader reader = rs.reader();
-    assertTrue(reader.next());
-    assertEquals(0, reader.column(0).getInt());
-    assertTrue(reader.next());
-    assertEquals(Byte.MAX_VALUE, reader.column(0).getInt());
-    assertEquals((int) Byte.MAX_VALUE, reader.column(0).getObject());
-    assertTrue(reader.next());
-    assertEquals(Byte.MIN_VALUE, reader.column(0).getInt());
-    assertFalse(reader.next());
-    rs.clear();
-  }
+  public void testScalarArrayStructure() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("a", MinorType.INT)
+        .buildSchema();
+    ExtendableRowSet rowSet = fixture.rowSet(schema);
+    RowSetWriter writer = rowSet.writer();
 
-  @Test
-  public void testSmallIntRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
-        .add("col", MinorType.SMALLINT)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-        .add(0)
-        .add(Short.MAX_VALUE)
-        .add(Short.MIN_VALUE)
-        .build();
-    RowSetReader reader = rs.reader();
-    assertTrue(reader.next());
-    assertEquals(0, reader.column(0).getInt());
-    assertTrue(reader.next());
-    assertEquals(Short.MAX_VALUE, reader.column(0).getInt());
-    assertEquals((int) Short.MAX_VALUE, reader.column(0).getObject());
-    assertTrue(reader.next());
-    assertEquals(Short.MIN_VALUE, reader.column(0).getInt());
-    assertFalse(reader.next());
-    rs.clear();
-  }
+    // Repeated Int
+    // Verify the invariants of the "full" and "simple" access paths
 
-  @Test
-  public void testIntRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
-        .add("col", MinorType.INT)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-        .add(0)
-        .add(Integer.MAX_VALUE)
-        .add(Integer.MIN_VALUE)
-        .build();
-    RowSetReader reader = rs.reader();
-    assertTrue(reader.next());
-    assertEquals(0, reader.column(0).getInt());
-    assertTrue(reader.next());
-    assertEquals(Integer.MAX_VALUE, reader.column(0).getInt());
-    assertEquals(Integer.MAX_VALUE, reader.column(0).getObject());
-    assertTrue(reader.next());
-    assertEquals(Integer.MIN_VALUE, reader.column(0).getInt());
-    assertFalse(reader.next());
-    rs.clear();
-  }
+    assertEquals(ObjectType.ARRAY, writer.column("a").type());
 
-  @Test
-  public void testLongRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
-        .add("col", MinorType.BIGINT)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-        .add(0L)
-        .add(Long.MAX_VALUE)
-        .add(Long.MIN_VALUE)
-        .build();
-    RowSetReader reader = rs.reader();
-    assertTrue(reader.next());
-    assertEquals(0, reader.column(0).getLong());
-    assertTrue(reader.next());
-    assertEquals(Long.MAX_VALUE, reader.column(0).getLong());
-    assertEquals(Long.MAX_VALUE, reader.column(0).getObject());
-    assertTrue(reader.next());
-    assertEquals(Long.MIN_VALUE, reader.column(0).getLong());
-    assertFalse(reader.next());
-    rs.clear();
-  }
+    assertSame(writer.column("a"), writer.column(0));
+    assertSame(writer.array("a"), writer.array(0));
+    assertSame(writer.column("a").array(), writer.array("a"));
+    assertSame(writer.column(0).array(), writer.array(0));
 
-  @Test
-  public void testFloatRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
-        .add("col", MinorType.FLOAT4)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-        .add(0F)
-        .add(Float.MAX_VALUE)
-        .add(Float.MIN_VALUE)
-        .build();
-    RowSetReader reader = rs.reader();
-    assertTrue(reader.next());
-    assertEquals(0, reader.column(0).getDouble(), 0.000001);
-    assertTrue(reader.next());
-    assertEquals((double) Float.MAX_VALUE, reader.column(0).getDouble(), 0.000001);
-    assertEquals((double) Float.MAX_VALUE, (double) reader.column(0).getObject(), 0.000001);
-    assertTrue(reader.next());
-    assertEquals((double) Float.MIN_VALUE, reader.column(0).getDouble(), 0.000001);
-    assertFalse(reader.next());
-    rs.clear();
-  }
+    assertEquals(ObjectType.SCALAR, writer.column("a").array().entry().type());
+    assertEquals(ObjectType.SCALAR, writer.column("a").array().entryType());
+    assertSame(writer.array(0).entry().scalar(), writer.array(0).scalar());
+    assertEquals(ValueType.INTEGER, writer.array(0).scalar().valueType());
 
-  @Test
-  public void testDoubleRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
-        .add("col", MinorType.FLOAT8)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-        .add(0D)
-        .add(Double.MAX_VALUE)
-        .add(Double.MIN_VALUE)
-        .build();
-    RowSetReader reader = rs.reader();
-    assertTrue(reader.next());
-    assertEquals(0, reader.column(0).getDouble(), 0.000001);
-    assertTrue(reader.next());
-    assertEquals(Double.MAX_VALUE, reader.column(0).getDouble(), 0.000001);
-    assertEquals(Double.MAX_VALUE, (double) reader.column(0).getObject(), 0.000001);
-    assertTrue(reader.next());
-    assertEquals(Double.MIN_VALUE, reader.column(0).getDouble(), 0.000001);
-    assertFalse(reader.next());
-    rs.clear();
-  }
+    // Sanity checks
 
-  @Test
-  public void testStringRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
-        .add("col", MinorType.VARCHAR)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-        .add("")
-        .add("abcd")
-        .build();
-    RowSetReader reader = rs.reader();
+    try {
+      writer.column(0).scalar();
+      fail();
+    } catch (UnsupportedOperationException e) {
+      // Expected
+    }
+    try {
+      writer.column(0).tuple();
+      fail();
+    } catch (UnsupportedOperationException e) {
+      // Expected
+    }
+
+    // Write some data
+
+    ScalarWriter intWriter = writer.array("a").scalar();
+    intWriter.setInt(10);
+    intWriter.setInt(11);
+    writer.save();
+    intWriter.setInt(20);
+    intWriter.setInt(21);
+    intWriter.setInt(22);
+    writer.save();
+    intWriter.setInt(30);
+    writer.save();
+    intWriter.setInt(40);
+    intWriter.setInt(41);
+    writer.save();
+
+    // Finish the row set and get a reader.
+
+    SingleRowSet actual = writer.done();
+    RowSetReader reader = actual.reader();
+
+    // Verify the invariants of the "full" and "simple" access paths
+
+    assertEquals(ObjectType.ARRAY, writer.column("a").type());
+
+    assertSame(reader.column("a"), reader.column(0));
+    assertSame(reader.array("a"), reader.array(0));
+    assertSame(reader.column("a").array(), reader.array("a"));
+    assertSame(reader.column(0).array(), reader.array(0));
+
+    assertEquals(ObjectType.SCALAR, reader.column("a").array().entryType());
+    assertEquals(ValueType.INTEGER, reader.array(0).elements().valueType());
+
+    // Read and verify the rows
+
+    ScalarElementReader intReader = reader.array(0).elements();
     assertTrue(reader.next());
-    assertEquals("", reader.column(0).getString());
+    assertEquals(2, intReader.size());
+    assertEquals(10, intReader.getInt(0));
+    assertEquals(11, intReader.getInt(1));
     assertTrue(reader.next());
-    assertEquals("abcd", reader.column(0).getString());
-    assertEquals("abcd", reader.column(0).getObject());
+    assertEquals(3, intReader.size());
+    assertEquals(20, intReader.getInt(0));
+    assertEquals(21, intReader.getInt(1));
+    assertEquals(22, intReader.getInt(2));
+    assertTrue(reader.next());
+    assertEquals(1, intReader.size());
+    assertEquals(30, intReader.getInt(0));
+    assertTrue(reader.next());
+    assertEquals(2, intReader.size());
+    assertEquals(40, intReader.getInt(0));
+    assertEquals(41, intReader.getInt(1));
     assertFalse(reader.next());
-    rs.clear();
+
+    // Test the above again via the writer and reader
+    // utility classes.
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addSingleCol(intArray(10, 11))
+        .addSingleCol(intArray(20, 21, 22))
+        .addSingleCol(intArray(30))
+        .addSingleCol(intArray(40, 41))
+        .build();
+    new RowSetComparison(expected)
+      .verifyAndClearAll(actual);
   }
 
   /**
-   * Test writing to and reading from a row set with nested maps.
-   * Map fields are flattened into a logical schema.
+   * Test a simple map structure at the top level of a row.
+   *
+   * @throws VectorOverflowException should never occur
    */
 
-//  @Test
-//  public void testMap() {
-//    BatchSchema batchSchema = new SchemaBuilder()
-//        .add("a", MinorType.INT)
-//        .addMap("b")
-//          .add("c", MinorType.INT)
-//          .add("d", MinorType.INT)
-//          .buildMap()
-//        .build();
-//    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
-//        .add(10, 20, 30)
-//        .add(40, 50, 60)
-//        .build();
-//    RowSetReader reader = rs.reader();
-//    assertTrue(reader.next());
-//    assertEquals(10, reader.column(0).getInt());
-//    assertEquals(20, reader.column(1).getInt());
-//    assertEquals(30, reader.column(2).getInt());
-//    assertEquals(10, reader.column("a").getInt());
-//    assertEquals(30, reader.column("b.d").getInt());
-//    assertTrue(reader.next());
-//    assertEquals(40, reader.column(0).getInt());
-//    assertEquals(50, reader.column(1).getInt());
-//    assertEquals(60, reader.column(2).getInt());
-//    assertFalse(reader.next());
-//    rs.clear();
-//  }
+  @Test
+  public void testMapStructure() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .addMap("m")
+          .addArray("b", MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ExtendableRowSet rowSet = fixture.rowSet(schema);
+    RowSetWriter writer = rowSet.writer();
+
+    // Map and Int
+    // Test Invariants
+
+    assertEquals(ObjectType.SCALAR, writer.column("a").type());
+    assertEquals(ObjectType.SCALAR, writer.column(0).type());
+    assertEquals(ObjectType.TUPLE, writer.column("m").type());
+    assertEquals(ObjectType.TUPLE, writer.column(1).type());
+    assertSame(writer.column(1).tuple(), writer.tuple(1));
+
+    TupleWriter mapWriter = writer.column(1).tuple();
+    assertEquals(ObjectType.SCALAR, mapWriter.column("b").array().entry().type());
+    assertEquals(ObjectType.SCALAR, mapWriter.column("b").array().entryType());
+
+    ScalarWriter aWriter = writer.column("a").scalar();
+    ScalarWriter bWriter = writer.column("m").tuple().column("b").array().entry().scalar();
+    assertSame(bWriter, writer.tuple(1).array(0).scalar());
+    assertEquals(ValueType.INTEGER, bWriter.valueType());
+
+    // Sanity checks
+
+    try {
+      writer.column(1).scalar();
+      fail();
+    } catch (UnsupportedOperationException e) {
+      // Expected
+    }
+    try {
+      writer.column(1).array();
+      fail();
+    } catch (UnsupportedOperationException e) {
+      // Expected
+    }
+
+    // Write data
+
+    aWriter.setInt(10);
+    bWriter.setInt(11);
+    bWriter.setInt(12);
+    writer.save();
+    aWriter.setInt(20);
+    bWriter.setInt(21);
+    bWriter.setInt(22);
+    writer.save();
+    aWriter.setInt(30);
+    bWriter.setInt(31);
+    bWriter.setInt(32);
+    writer.save();
+
+    // Finish the row set and get a reader.
+
+    SingleRowSet actual = writer.done();
+    RowSetReader reader = actual.reader();
+
+    assertEquals(ObjectType.SCALAR, reader.column("a").type());
+    assertEquals(ObjectType.SCALAR, reader.column(0).type());
+    assertEquals(ObjectType.TUPLE, reader.column("m").type());
+    assertEquals(ObjectType.TUPLE, reader.column(1).type());
+    assertSame(reader.column(1).tuple(), reader.tuple(1));
+
+    ScalarReader aReader = reader.column(0).scalar();
+    TupleReader mReader = reader.column(1).tuple();
+    assertEquals(ObjectType.SCALAR, mReader.column("b").array().entryType());
+    ScalarElementReader bReader = mReader.column(0).elements();
+    assertEquals(ValueType.INTEGER, bReader.valueType());
+
+    assertTrue(reader.next());
+    assertEquals(10, aReader.getInt());
+    assertEquals(11, bReader.getInt(0));
+    assertEquals(12, bReader.getInt(1));
+    assertTrue(reader.next());
+    assertEquals(20, aReader.getInt());
+    assertEquals(21, bReader.getInt(0));
+    assertEquals(22, bReader.getInt(1));
+    assertTrue(reader.next());
+    assertEquals(30, aReader.getInt());
+    assertEquals(31, bReader.getInt(0));
+    assertEquals(32, bReader.getInt(1));
+    assertFalse(reader.next());
+
+    // Verify that the map accessor's value count was set.
+
+    @SuppressWarnings("resource")
+    MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(actual.rowCount(), mapVector.getAccessor().getValueCount());
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(10, objArray(intArray(11, 12)))
+        .addRow(20, objArray(intArray(21, 22)))
+        .addRow(30, objArray(intArray(31, 32)))
+        .build();
+    new RowSetComparison(expected)
+      .verifyAndClearAll(actual);
+  }
+
+  @Test
+  public void testRepeatedMapStructure() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .addMapArray("m")
+          .add("b", MinorType.INT)
+          .add("c", MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ExtendableRowSet rowSet = fixture.rowSet(schema);
+    RowSetWriter writer = rowSet.writer();
+
+    // Map and Int
+    // Pick out components and lightly test. (Assumes structure
+    // tested earlier is still valid, so no need to exhaustively
+    // test again.)
+
+    assertEquals(ObjectType.SCALAR, writer.column("a").type());
+    assertEquals(ObjectType.ARRAY, writer.column("m").type());
+
+    ArrayWriter maWriter = writer.column(1).array();
+    assertEquals(ObjectType.TUPLE, maWriter.entryType());
+
+    TupleWriter mapWriter = maWriter.tuple();
+    assertEquals(ObjectType.SCALAR, mapWriter.column("b").type());
+    assertEquals(ObjectType.SCALAR, mapWriter.column("c").type());
+
+    ScalarWriter aWriter = writer.column("a").scalar();
+    ScalarWriter bWriter = mapWriter.scalar("b");
+    ScalarWriter cWriter = mapWriter.scalar("c");
+    assertEquals(ValueType.INTEGER, aWriter.valueType());
+    assertEquals(ValueType.INTEGER, bWriter.valueType());
+    assertEquals(ValueType.INTEGER, cWriter.valueType());
+
+    // Write data
+
+    aWriter.setInt(10);
+    bWriter.setInt(101);
+    cWriter.setInt(102);
+    maWriter.save(); // Advance to next array position
+    bWriter.setInt(111);
+    cWriter.setInt(112);
+    maWriter.save();
+    writer.save();
+
+    aWriter.setInt(20);
+    bWriter.setInt(201);
+    cWriter.setInt(202);
+    maWriter.save();
+    bWriter.setInt(211);
+    cWriter.setInt(212);
+    maWriter.save();
+    writer.save();
+
+    aWriter.setInt(30);
+    bWriter.setInt(301);
+    cWriter.setInt(302);
+    maWriter.save();
+    bWriter.setInt(311);
+    cWriter.setInt(312);
+    maWriter.save();
+    writer.save();
+
+    // Finish the row set and get a reader.
+
+    SingleRowSet actual = writer.done();
+    RowSetReader reader = actual.reader();
+
+    // Verify reader structure
+
+    assertEquals(ObjectType.SCALAR, reader.column("a").type());
+    assertEquals(ObjectType.ARRAY, reader.column("m").type());
+
+    ArrayReader maReader = reader.column(1).array();
+    assertEquals(ObjectType.TUPLE, maReader.entryType());
+
+    TupleReader mapReader = maReader.tuple();
+    assertEquals(ObjectType.SCALAR, mapReader.column("b").type());
+    assertEquals(ObjectType.SCALAR, mapReader.column("c").type());
+
+    ScalarReader aReader = reader.column("a").scalar();
+    ScalarReader bReader = mapReader.scalar("b");
+    ScalarReader cReader = mapReader.scalar("c");
+    assertEquals(ValueType.INTEGER, aReader.valueType());
+    assertEquals(ValueType.INTEGER, bReader.valueType());
+    assertEquals(ValueType.INTEGER, cReader.valueType());
+
+    // Row 1: use index accessors
+
+    assertTrue(reader.next());
+    assertEquals(10, aReader.getInt());
+    TupleReader ixReader = maReader.tuple(0);
+    assertEquals(101, ixReader.scalar(0).getInt());
+    assertEquals(102, ixReader.scalar(1).getInt());
+    ixReader = maReader.tuple(1);
+    assertEquals(111, ixReader.scalar(0).getInt());
+    assertEquals(112, ixReader.scalar(1).getInt());
+
+    // Row 2: use common accessor with explicit positioning,
+    // but access scalars through the map reader.
+
+    assertTrue(reader.next());
+    assertEquals(20, aReader.getInt());
+    maReader.setPosn(0);
+    assertEquals(201, mapReader.scalar(0).getInt());
+    assertEquals(202, mapReader.scalar(1).getInt());
+    maReader.setPosn(1);
+    assertEquals(211, mapReader.scalar(0).getInt());
+    assertEquals(212, mapReader.scalar(1).getInt());
+
+    // Row 3: use common accessor for scalars
+
+    assertTrue(reader.next());
+    assertEquals(30, aReader.getInt());
+    maReader.setPosn(0);
+    assertEquals(301, bReader.getInt());
+    assertEquals(302, cReader.getInt());
+    maReader.setPosn(1);
+    assertEquals(311, bReader.getInt());
+    assertEquals(312, cReader.getInt());
+
+    assertFalse(reader.next());
+
+    // Verify that the map accessor's value count was set.
+
+    @SuppressWarnings("resource")
+    RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(3, mapVector.getAccessor().getValueCount());
+
+    // Verify the readers and writers again using the testing tools.
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(10, objArray(objArray(101, 102), objArray(111, 112)))
+        .addRow(20, objArray(objArray(201, 202), objArray(211, 212)))
+        .addRow(30, objArray(objArray(301, 302), objArray(311, 312)))
+        .build();
+    new RowSetComparison(expected)
+      .verifyAndClearAll(actual);
+  }
 
   /**
    * Test an array of ints (as an example fixed-width type)
@@ -382,7 +531,7 @@ public class RowSetTest extends SubOperatorTest {
    */
 
   @Test
-  public void TestTopFixedWidthArray() {
+  public void testTopFixedWidthArray() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("c", MinorType.INT)
         .addArray("a", MinorType.INT)
@@ -390,49 +539,131 @@ public class RowSetTest extends SubOperatorTest {
 
     ExtendableRowSet rs1 = fixture.rowSet(batchSchema);
     RowSetWriter writer = rs1.writer();
-    writer.column(0).setInt(10);
-    ArrayWriter array = writer.column(1).array();
+    writer.scalar(0).setInt(10);
+    ScalarWriter array = writer.array(1).scalar();
     array.setInt(100);
     array.setInt(110);
     writer.save();
-    writer.column(0).setInt(20);
-    array = writer.column(1).array();
+    writer.scalar(0).setInt(20);
     array.setInt(200);
     array.setInt(120);
     array.setInt(220);
     writer.save();
-    writer.column(0).setInt(30);
+    writer.scalar(0).setInt(30);
     writer.save();
-    writer.done();
 
-    RowSetReader reader = rs1.reader();
+    SingleRowSet result = writer.done();
+
+    RowSetReader reader = result.reader();
     assertTrue(reader.next());
-    assertEquals(10, reader.column(0).getInt());
-    ArrayReader arrayReader = reader.column(1).array();
+    assertEquals(10, reader.scalar(0).getInt());
+    ScalarElementReader arrayReader = reader.array(1).elements();
     assertEquals(2, arrayReader.size());
     assertEquals(100, arrayReader.getInt(0));
     assertEquals(110, arrayReader.getInt(1));
     assertTrue(reader.next());
-    assertEquals(20, reader.column(0).getInt());
-    arrayReader = reader.column(1).array();
+    assertEquals(20, reader.scalar(0).getInt());
     assertEquals(3, arrayReader.size());
     assertEquals(200, arrayReader.getInt(0));
     assertEquals(120, arrayReader.getInt(1));
     assertEquals(220, arrayReader.getInt(2));
     assertTrue(reader.next());
-    assertEquals(30, reader.column(0).getInt());
-    arrayReader = reader.column(1).array();
+    assertEquals(30, reader.scalar(0).getInt());
     assertEquals(0, arrayReader.size());
     assertFalse(reader.next());
 
     SingleRowSet rs2 = fixture.rowSetBuilder(batchSchema)
-      .add(10, new int[] {100, 110})
-      .add(20, new int[] {200, 120, 220})
-      .add(30, null)
+      .addRow(10, intArray(100, 110))
+      .addRow(20, intArray(200, 120, 220))
+      .addRow(30, null)
       .build();
 
     new RowSetComparison(rs1)
       .verifyAndClearAll(rs2);
   }
 
+  /**
+   * Test filling a row set up to the maximum number of rows.
+   * Values are small enough to prevent filling to the
+   * maximum buffer size.
+   */
+
+  @Test
+  public void testRowBounds() {
+    BatchSchema batchSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .build();
+
+    ExtendableRowSet rs = fixture.rowSet(batchSchema);
+    RowSetWriter writer = rs.writer();
+    int count = 0;
+    while (! writer.isFull()) {
+      writer.scalar(0).setInt(count++);
+      writer.save();
+    }
+    writer.done();
+
+    assertEquals(ValueVector.MAX_ROW_COUNT, count);
+    // The writer index points past the writable area.
+    // But, this is fine, the valid() method says we can't
+    // write at this location.
+    assertEquals(ValueVector.MAX_ROW_COUNT, writer.rowIndex());
+    assertEquals(ValueVector.MAX_ROW_COUNT, rs.rowCount());
+    rs.clear();
+  }
+
+  /**
+   * Test filling a row set up to the maximum vector size.
+   * Values in the first column are small enough to prevent filling to the
+   * maximum buffer size, but values in the second column
+   * will reach maximum buffer size before maximum row size.
+   * The result should be the number of rows that fit, with the
+   * partial last row not counting. (A complete application would
+   * reload the partial row into a new row set.)
+   */
+
+  @Test
+  public void testBufferBounds() {
+    BatchSchema batchSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.VARCHAR)
+        .build();
+
+    String varCharValue;
+    try {
+      byte rawValue[] = new byte[512];
+      Arrays.fill(rawValue, (byte) 'X');
+      varCharValue = new String(rawValue, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new IllegalStateException(e);
+    }
+
+    ExtendableRowSet rs = fixture.rowSet(batchSchema);
+    RowSetWriter writer = rs.writer();
+    int count = 0;
+    try {
+
+      // Test overflow. This is not a typical use case: don't want to
+      // hit overflow without overflow handling. In this case, we throw
+      // away the last row because the row set abstraction does not
+      // implement vector overflow other than throwing an exception.
+
+      for (;;) {
+        writer.scalar(0).setInt(count);
+        writer.scalar(1).setString(varCharValue);
+
+        // Won't get here on overflow.
+        writer.save();
+        count++;
+      }
+    } catch (IndexOutOfBoundsException e) {
+      assertTrue(e.getMessage().contains("Overflow"));
+    }
+    writer.done();
+
+    assertTrue(count < ValueVector.MAX_ROW_COUNT);
+    assertEquals(count, writer.rowIndex());
+    assertEquals(count, rs.rowCount());
+    rs.clear();
+  }
 }

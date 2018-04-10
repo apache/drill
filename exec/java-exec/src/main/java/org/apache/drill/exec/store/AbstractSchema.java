@@ -29,6 +29,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.SchemaVersion;
 import org.apache.calcite.schema.Table;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
@@ -197,13 +198,13 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   @Override
-  public boolean contentsHaveChangedSince(long lastCheck, long now) {
-    return true;
+  public void close() throws Exception {
+    // no-op: default implementation for most implementations.
   }
 
   @Override
-  public void close() throws Exception {
-    // no-op: default implementation for most implementations.
+  public Schema snapshot(SchemaVersion version) {
+    return this;
   }
 
   public void dropTable(String tableName) {

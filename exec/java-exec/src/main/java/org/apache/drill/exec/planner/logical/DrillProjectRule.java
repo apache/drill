@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,16 +32,17 @@ public class DrillProjectRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillProjectRule();
 
   private DrillProjectRule() {
-    super(RelOptHelper.any(LogicalProject.class, Convention.NONE), "DrillProjectRule");
+    super(RelOptHelper.any(LogicalProject.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillProjectRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final Project project = (Project) call.rel(0);
+    final Project project = call.rel(0);
     final RelNode input = project.getInput();
     final RelTraitSet traits = project.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
-    call.transformTo(new DrillProjectRel(project.getCluster(), traits, convertedInput, project.getProjects(), project
-        .getRowType()));
+    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
+    call.transformTo(new DrillProjectRel(
+        project.getCluster(), traits, convertedInput, project.getProjects(), project.getRowType()));
   }
 }

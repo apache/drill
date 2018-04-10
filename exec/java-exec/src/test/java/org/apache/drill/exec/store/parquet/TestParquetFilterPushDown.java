@@ -21,7 +21,7 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.hadoop.conf.Configuration;
@@ -45,14 +45,14 @@ import static org.junit.Assert.assertEquals;
 
 public class TestParquetFilterPushDown extends PlanTestBase {
   private static final String CTAS_TABLE = "order_ctas";
-  private static FragmentContext fragContext;
+  private static FragmentContextImpl fragContext;
 
   private static FileSystem fs;
 
   @BeforeClass
   public static void initFSAndCreateFragContext() throws Exception {
     fs = getLocalFileSystem();
-    fragContext = new FragmentContext(bits[0].getContext(),
+    fragContext = new FragmentContextImpl(bits[0].getContext(),
         BitControl.PlanFragment.getDefaultInstance(), null, bits[0].getContext().getFunctionImplementationRegistry());
 
     dirTestWatcher.copyResourceToRoot(Paths.get("parquetFilterPush"));
@@ -386,6 +386,45 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
     final String query3 = "select o_ordertimestamp from dfs.`parquetFilterPush/tsTbl` where o_ordertimestamp between timestamp '1992-01-01 00:00:00' and timestamp '1992-01-06 10:20:30'";
     testParquetFilterPD(query3, 49, 2, false);
+  }
+
+  @Test
+  public void testBooleanPredicate() throws Exception {
+    // Table blnTbl was created by CTAS in drill 1.12.0 and consist of 4 files withe the next data:
+    //    File 0_0_0.parquet has col_bln column with the next values: true, true, true.
+    //    File 0_0_1.parquet has col_bln column with the next values: false, false, false.
+    //    File 0_0_2.parquet has col_bln column with the next values: true, null, false.
+    //    File 0_0_3.parquet has col_bln column with the next values: null, null, null.
+
+    final String queryIsNull = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is null";
+    testParquetFilterPD(queryIsNull, 4, 2, false);
+
+    final String queryIsNotNull = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is not null";
+    testParquetFilterPD(queryIsNotNull, 8, 3, false);
+
+    final String queryIsTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is true";
+    testParquetFilterPD(queryIsTrue, 4, 2, false);
+
+    final String queryIsNotTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is not true";
+    testParquetFilterPD(queryIsNotTrue, 8, 3, false);
+
+    final String queryIsFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is false";
+    testParquetFilterPD(queryIsFalse, 4, 2, false);
+
+    final String queryIsNotFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln is not false";
+    testParquetFilterPD(queryIsNotFalse, 8, 3, false);
+
+    final String queryEqualTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = true";
+    testParquetFilterPD(queryEqualTrue, 4, 2, false);
+
+    final String queryNotEqualTrue = "select col_bln from dfs.`parquetFilterPush/blnTbl` where not col_bln = true";
+    testParquetFilterPD(queryNotEqualTrue, 4, 2, false);
+
+    final String queryEqualFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = false";
+    testParquetFilterPD(queryEqualFalse, 4, 2, false);
+
+    final String queryNotEqualFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where not col_bln = false";
+    testParquetFilterPD(queryNotEqualFalse, 4, 2, false);
   }
 
   @Test // DRILL-5359

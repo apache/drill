@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -36,7 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 
-public class BasicFormatMatcher extends FormatMatcher{
+public class BasicFormatMatcher extends FormatMatcher {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicFormatMatcher.class);
 
   protected final FormatPlugin plugin;
@@ -75,15 +76,10 @@ public class BasicFormatMatcher extends FormatMatcher{
   @Override
   public DrillTable isReadable(DrillFileSystem fs,
       FileSelection selection, FileSystemPlugin fsPlugin,
-      String storageEngineName, String userName) throws IOException {
+      String storageEngineName, SchemaConfig schemaConfig) throws IOException {
     if (isFileReadable(fs, selection.getFirstPath(fs))) {
-      if (plugin.getName() != null) {
-        NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
-        namedConfig.name = plugin.getName();
-        return new DynamicDrillTable(fsPlugin, storageEngineName, userName, new FormatSelection(namedConfig, selection));
-      } else {
-        return new DynamicDrillTable(fsPlugin, storageEngineName, userName, new FormatSelection(plugin.getConfig(), selection));
-      }
+      return new DynamicDrillTable(fsPlugin, storageEngineName, schemaConfig.getUserName(),
+          new FormatSelection(plugin.getConfig(), selection));
     }
     return null;
   }

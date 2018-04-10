@@ -36,7 +36,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-/*
+/**
  * Base class for MapVectors. Currently used by RepeatedMapVector and MapVector
  */
 public abstract class AbstractMapVector extends AbstractContainerVector {
@@ -47,14 +47,14 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   protected AbstractMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field.clone(), allocator, callBack);
-    MaterializedField clonedField = field.clone();
     // create the hierarchy of the child vectors based on the materialized field
-    for (MaterializedField child : clonedField.getChildren()) {
-      if (!child.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
-        final String fieldName = child.getName();
-        final ValueVector v = BasicTypeHelper.getNewVector(child, allocator, callBack);
-        putVector(fieldName, v);
+    for (MaterializedField child : field.getChildren()) {
+      if (child.getName().equals(BaseRepeatedValueVector.OFFSETS_FIELD.getName())) {
+        continue;
       }
+      final String fieldName = child.getName();
+      final ValueVector v = BasicTypeHelper.getNewVector(child, allocator, callBack);
+      putVector(fieldName, v);
     }
   }
 
@@ -64,7 +64,6 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       valueVector.close();
     }
     vectors.clear();
-
     super.close();
   }
 
@@ -78,13 +77,13 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
     boolean success = false;
     try {
       for (final ValueVector v : vectors.values()) {
-        if (!v.allocateNewSafe()) {
+        if (! v.allocateNewSafe()) {
           return false;
         }
       }
       success = true;
     } finally {
-      if (!success) {
+      if (! success) {
         clear();
       }
     }
@@ -146,7 +145,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   private boolean nullFilled(ValueVector vector) {
     for (int r = 0; r < vector.getAccessor().getValueCount(); r++) {
-      if (!vector.getAccessor().isNull(r)) {
+      if (! vector.getAccessor().isNull(r)) {
         return false;
       }
     }
@@ -178,7 +177,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    *
    * Note that this method does not enforce any vector type check nor throws a schema change exception.
    */
-  protected void putChild(String name, ValueVector vector) {
+  public void putChild(String name, ValueVector vector) {
     putVector(name, vector);
     field.addChild(vector.getField());
   }
@@ -280,6 +279,16 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   }
 
   @Override
+  public int getAllocatedSize() {
+    int size = 0;
+
+    for (final ValueVector v : vectors.values()) {
+      size += v.getAllocatedSize();
+    }
+    return size;
+  }
+
+  @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
     for (final ValueVector v : vectors.values()) {
       v.collectLedgers(ledgers);
@@ -288,11 +297,28 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   @Override
   public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
     int count = 0;
 
     for (final ValueVector v : vectors.values()) {
       count += v.getPayloadByteCount(valueCount);
     }
     return count;
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    AbstractMapVector otherMap = (AbstractMapVector) other;
+    if (vectors.size() != otherMap.vectors.size()) {
+      throw new IllegalStateException("Maps have different column counts");
+    }
+    for (int i = 0; i < vectors.size(); i++) {
+      assert vectors.getByOrdinal(i).getField().isEquivalent(
+          otherMap.vectors.getByOrdinal(i).getField());
+      vectors.getByOrdinal(i).exchange(otherMap.vectors.getByOrdinal(i));
+    }
   }
 }

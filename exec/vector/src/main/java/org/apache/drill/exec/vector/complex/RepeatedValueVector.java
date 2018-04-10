@@ -35,9 +35,8 @@ public interface RepeatedValueVector extends ValueVector, ContainerVectorLike {
 
   /**
    * Returns the underlying offset vector or null if none exists.
-   *
-   * TODO(DRILL-2995): eliminate exposing low-level interfaces.
    */
+
   UInt4Vector getOffsetVector();
 
   /**

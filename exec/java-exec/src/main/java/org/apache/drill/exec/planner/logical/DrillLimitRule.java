@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,7 +32,8 @@ public class DrillLimitRule extends RelOptRule {
   public static DrillLimitRule INSTANCE = new DrillLimitRule();
 
   private DrillLimitRule() {
-    super(RelOptHelper.any(LogicalSort.class, Convention.NONE), "DrillLimitRule");
+    super(RelOptHelper.any(LogicalSort.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillLimitRule");
   }
 
   @Override
@@ -53,8 +54,10 @@ public class DrillLimitRule extends RelOptRule {
       input = incomingSort.copy(incomingTraits, input, incomingSort.getCollation(), null, null);
     }
 
-    RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
-    call.transformTo(new DrillLimitRel(incomingSort.getCluster(), convertedInput.getTraitSet().plus(DrillRel.DRILL_LOGICAL), convertedInput, incomingSort.offset, incomingSort.fetch));
+    RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
+    call.transformTo(new DrillLimitRel(
+        incomingSort.getCluster(), convertedInput.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+        convertedInput, incomingSort.offset, incomingSort.fetch));
   }
 
 }

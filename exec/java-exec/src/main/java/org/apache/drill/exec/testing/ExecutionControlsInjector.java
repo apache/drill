@@ -17,16 +17,17 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 
 /**
  * Injects exceptions and pauses at execution time for testing. Any class that wants to simulate exceptions
  * or inject pauses for testing should have it's own private static instance of an injector (similar to the use
- * of loggers). Injection site either use {@link org.apache.drill.exec.ops.FragmentContext} or
- * {@link org.apache.drill.exec.ops.QueryContext}. See {@link org.apache.drill.exec.testing.TestExceptionInjection} and
- * {@link org.apache.drill.exec.testing.TestPauseInjection} for examples of use.
+ * of loggers). Injection site either use {@link FragmentContextImpl} or
+ * {@link org.apache.drill.exec.ops.QueryContext}.
  * See {@link ControlsInjector} for documentation.
  */
 public class ExecutionControlsInjector implements ControlsInjector {
@@ -58,13 +59,6 @@ public class ExecutionControlsInjector implements ControlsInjector {
   }
 
   @Override
-  public void injectUnchecked(final FragmentContext fragmentContext, final String desc) {
-    if (fragmentContext != null) {
-      injectUnchecked(fragmentContext.getExecutionControls(), desc);
-    }
-  }
-
-  @Override
   public <T extends Throwable> void injectChecked(final ExecutionControls executionControls, final String desc,
                                                   final Class<T> exceptionClass) throws T {
     Preconditions.checkNotNull(executionControls);
@@ -81,7 +75,12 @@ public class ExecutionControlsInjector implements ControlsInjector {
       executionControls.lookupPauseInjection(this, desc);
 
     if (pauseInjection != null) {
-      logger.debug("Pausing at {}", desc);
+      long pauseDuration = pauseInjection.getMsPause();
+      if ( pauseDuration > 0L) {
+        logger.debug("Pausing at {} for {} sec", desc, TimeUnit.MILLISECONDS.toSeconds(pauseDuration) );
+      } else {
+        logger.debug("Pausing at {}", desc);
+      }
       pauseInjection.pause();
       logger.debug("Resuming at {}", desc);
     }

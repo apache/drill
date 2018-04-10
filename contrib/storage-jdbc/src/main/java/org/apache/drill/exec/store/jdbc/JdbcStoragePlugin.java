@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
+import com.google.common.base.Predicates;
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcJoin;
@@ -37,8 +38,6 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
-import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
-import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -52,7 +51,9 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.RuleInstance;
 import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -136,8 +137,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
         builder.add(rule);
       }
 
-      builder.add(FilterSetOpTransposeRule.INSTANCE);
-      builder.add(ProjectRemoveRule.INSTANCE);
+      builder.add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE);
+      builder.add(RuleInstance.PROJECT_REMOVE_RULE);
 
       rules = builder.build();
     }
@@ -199,13 +200,13 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     }
   }
 
-
   private static final JdbcPrule JDBC_PRULE_INSTANCE = new JdbcPrule();
 
   private static class JdbcPrule extends ConverterRule {
 
     private JdbcPrule() {
-      super(JdbcDrel.class, DrillRel.DRILL_LOGICAL, Prel.DRILL_PHYSICAL, "JDBC_PREL_Converter");
+      super(JdbcDrel.class, Predicates.<RelNode>alwaysTrue(), DrillRel.DRILL_LOGICAL,
+          Prel.DRILL_PHYSICAL, DrillRelFactories.LOGICAL_BUILDER, "JDBC_PREL_Converter");
     }
 
     @Override
@@ -222,13 +223,14 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private class JdbcDrelConverterRule extends ConverterRule {
 
     public JdbcDrelConverterRule(DrillJdbcConvention in) {
-      super(RelNode.class, in, DrillRel.DRILL_LOGICAL, "JDBC_DREL_Converter" + in.getName());
+      super(RelNode.class, Predicates.<RelNode>alwaysTrue(), in, DrillRel.DRILL_LOGICAL,
+          DrillRelFactories.LOGICAL_BUILDER, "JDBC_DREL_Converter" + in.getName());
     }
 
     @Override
     public RelNode convert(RelNode in) {
       return new JdbcDrel(in.getCluster(), in.getTraitSet().replace(DrillRel.DRILL_LOGICAL),
-          convert(in, in.getTraitSet().replace(this.getInTrait())));
+          convert(in, in.getTraitSet().replace(this.getInTrait()).simplify()));
     }
 
   }

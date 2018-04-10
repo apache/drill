@@ -52,7 +52,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private final int offset;
   private final BufferLedger ledger;
   private final BufferManager bufManager;
-//  private final ByteBufAllocator alloc;
   private final boolean isEmpty;
   private volatile int length;
   private final HistoricalLog historicalLog = BaseAllocator.DEBUG ?
@@ -72,7 +71,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     this.udle = byteBuf;
     this.isEmpty = isEmpty;
     this.bufManager = manager;
-//    this.alloc = alloc;
     this.addr = byteBuf.memoryAddress() + offset;
     this.ledger = ledger;
     this.length = length;
@@ -106,51 +104,14 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     }
   }
 
+  public long addr() { return addr; }
+
   private long addr(int index) {
     return addr + index;
   }
 
-  private final void checkIndexD(int index, int fieldLength) {
-    ensureAccessible();
-    if (fieldLength < 0) {
-      throw new IllegalArgumentException("length: " + fieldLength + " (expected: >= 0)");
-    }
-    if (index < 0 || index > capacity() - fieldLength) {
-      if (BaseAllocator.DEBUG) {
-        historicalLog.logHistory(logger);
-      }
-      throw new IndexOutOfBoundsException(String.format(
-          "index: %d, length: %d (expected: range(0, %d))", index, fieldLength, capacity()));
-    }
-  }
-
-  /**
-   * Allows a function to determine whether not reading a particular string of bytes is valid.
-   *
-   * Will throw an exception if the memory is not readable for some reason. Only doesn't something in the case that
-   * AssertionUtil.BOUNDS_CHECKING_ENABLED is true.
-   *
-   * @param start
-   *          The starting position of the bytes to be read.
-   * @param end
-   *          The exclusive endpoint of the bytes to be read.
-   */
-  public void checkBytes(int start, int end) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      checkIndexD(start, end - start);
-    }
-  }
-
   private void chk(int index, int width) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      checkIndexD(index, width);
-    }
-  }
-
-  private void ensure(int width) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      ensureWritable(width);
-    }
+    BoundsChecking.lengthCheck(this, index, width);
   }
 
   /**
@@ -581,7 +542,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeShort(int value) {
-    ensure(2);
+    BoundsChecking.ensureWritable(this, 2);
     PlatformDependent.putShort(addr(writerIndex), (short) value);
     writerIndex += 2;
     return this;
@@ -589,7 +550,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeInt(int value) {
-    ensure(4);
+    BoundsChecking.ensureWritable(this, 4);
     PlatformDependent.putInt(addr(writerIndex), value);
     writerIndex += 4;
     return this;
@@ -597,7 +558,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeLong(long value) {
-    ensure(8);
+    BoundsChecking.ensureWritable(this, 8);
     PlatformDependent.putLong(addr(writerIndex), value);
     writerIndex += 8;
     return this;
@@ -605,7 +566,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeChar(int value) {
-    ensure(2);
+    BoundsChecking.ensureWritable(this, 2);
     PlatformDependent.putShort(addr(writerIndex), (short) value);
     writerIndex += 2;
     return this;
@@ -613,7 +574,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeFloat(float value) {
-    ensure(4);
+    BoundsChecking.ensureWritable(this, 4);
     PlatformDependent.putInt(addr(writerIndex), Float.floatToRawIntBits(value));
     writerIndex += 4;
     return this;
@@ -621,7 +582,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf writeDouble(double value) {
-    ensure(8);
+    BoundsChecking.ensureWritable(this, 8);
     PlatformDependent.putLong(addr(writerIndex), Double.doubleToRawLongBits(value));
     writerIndex += 8;
     return this;
@@ -751,25 +712,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     return this;
   }
 
-  // Clone of UDLE's setBytes(), but with bounds checking done as a boolean,
-  // not assertion.
-
-  public boolean setBytesBounded(int index, byte[] src, int srcIndex, int length) {
-    // Must do here because Drill's UDLE is not ref counted.
-    // Done as an assert to avoid production overhead: if this is going
-    // to fail, it will do so spectacularly in tests, due to a programming error.
-    assert refCnt() > 0;
-    return udle.setBytesBounded(index, src, srcIndex, length);
-  }
-
-  // As above, but for direct memory.
-
-  public boolean setBytesBounded(int index, DrillBuf src, int srcIndex, int length) {
-    // See above.
-    assert refCnt() > 0;
-    return udle.setBytesBounded(index, src.udle, srcIndex, length);
-  }
-
   @Override
   public ByteBuf setBytes(int index, byte[] src, int srcIndex, int length) {
     udle.setBytes(index + offset, src, srcIndex, length);
@@ -881,5 +823,4 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       historicalLog.buildHistory(sb, indent + 1, verbosity.includeStackTraces);
     }
   }
-
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -225,5 +225,10 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   public Boolean visitConvertExpression(ConvertExpression e,
       IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
     return e.getInput().accept(this, value);
+  }
+
+  @Override
+  public Boolean visitParameter(ValueExpressions.ParameterExpression e, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    return false;
   }
 }

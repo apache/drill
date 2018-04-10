@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,10 +19,12 @@ package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -39,42 +41,44 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 
 @JsonTypeName("hive-sub-scan")
 public class HiveSubScan extends AbstractBase implements SubScan {
-  protected HiveReadEntry hiveReadEntry;
 
-  @JsonIgnore
-  protected List<InputSplit> inputSplits = Lists.newArrayList();
-  @JsonIgnore
-  protected HiveTableWithColumnCache table;
-  @JsonIgnore
-  protected List<HivePartition> partitions;
-  @JsonIgnore
-  protected HiveStoragePlugin storagePlugin;
-
-  private List<String> splits;
-  private List<String> splitClasses;
-  protected List<SchemaPath> columns;
+  private final HiveReadEntry hiveReadEntry;
+  private final List<List<InputSplit>> inputSplits = new ArrayList<>();
+  private final HiveStoragePlugin hiveStoragePlugin;
+  private final List<List<String>> splits;
+  private final List<String> splitClasses;
+  private final HiveTableWithColumnCache table;
+  private final List<HivePartition> partitions;
+  private final List<SchemaPath> columns;
 
   @JsonCreator
   public HiveSubScan(@JacksonInject StoragePluginRegistry registry,
                      @JsonProperty("userName") String userName,
-                     @JsonProperty("splits") List<String> splits,
+                     @JsonProperty("splits") List<List<String>> splits,
                      @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
                      @JsonProperty("splitClasses") List<String> splitClasses,
                      @JsonProperty("columns") List<SchemaPath> columns,
-                     @JsonProperty("storagePluginName") String pluginName)
+                     @JsonProperty("hiveStoragePluginConfig") HiveStoragePluginConfig hiveStoragePluginConfig)
       throws IOException, ExecutionSetupException, ReflectiveOperationException {
-    this(userName, splits, hiveReadEntry, splitClasses, columns, (HiveStoragePlugin)registry.getPlugin(pluginName));
+    this(userName,
+        splits,
+        hiveReadEntry,
+        splitClasses,
+        columns,
+        (HiveStoragePlugin) registry.getPlugin(hiveStoragePluginConfig));
   }
 
-  public HiveSubScan(final String userName, final List<String> splits, final HiveReadEntry hiveReadEntry,
-      final List<String> splitClasses, final List<SchemaPath> columns, final HiveStoragePlugin plugin)
+  public HiveSubScan(final String userName,
+                     final List<List<String>> splits,
+                     final HiveReadEntry hiveReadEntry,
+                      final List<String> splitClasses,
+                     final List<SchemaPath> columns,
+                     final HiveStoragePlugin hiveStoragePlugin)
     throws IOException, ReflectiveOperationException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
@@ -83,62 +87,61 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     this.splits = splits;
     this.splitClasses = splitClasses;
     this.columns = columns;
-    this.storagePlugin = plugin;
+    this.hiveStoragePlugin = hiveStoragePlugin;
 
     for (int i = 0; i < splits.size(); i++) {
       inputSplits.add(deserializeInputSplit(splits.get(i), splitClasses.get(i)));
     }
   }
 
-  @JsonProperty("storagePluginName")
-  @SuppressWarnings("unused")
-  public String getStoragePluginName() {
-    return storagePlugin.getName();
-  }
-
-  @JsonIgnore
-  public HiveStoragePlugin getStoragePlugin() {
-    return storagePlugin;
-  }
-
-  public List<String> getSplits() {
+  @JsonProperty
+  public List<List<String>> getSplits() {
     return splits;
   }
 
-  public HiveTableWithColumnCache getTable() {
-    return table;
-  }
-
-  public List<HivePartition> getPartitions() {
-    return partitions;
-  }
-
-  public List<String> getSplitClasses() {
-    return splitClasses;
-  }
-
-  public List<SchemaPath> getColumns() {
-    return columns;
-  }
-
-  public List<InputSplit> getInputSplits() {
-    return inputSplits;
-  }
-
+  @JsonProperty
   public HiveReadEntry getHiveReadEntry() {
     return hiveReadEntry;
   }
 
-  public static InputSplit deserializeInputSplit(String base64, String className) throws IOException, ReflectiveOperationException{
-    Constructor<?> constructor = Class.forName(className).getDeclaredConstructor();
-    if (constructor == null) {
-      throw new ReflectiveOperationException("Class " + className + " does not implement a default constructor.");
-    }
-    constructor.setAccessible(true);
-    InputSplit split = (InputSplit) constructor.newInstance();
-    ByteArrayDataInput byteArrayDataInput = ByteStreams.newDataInput(Base64.decodeBase64(base64));
-    split.readFields(byteArrayDataInput);
-    return split;
+  @JsonProperty
+  public List<String> getSplitClasses() {
+    return splitClasses;
+  }
+
+  @JsonProperty
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }
+
+  @JsonProperty
+  public HiveStoragePluginConfig getHiveStoragePluginConfig() {
+    return hiveStoragePlugin.getConfig();
+  }
+
+  @JsonIgnore
+  public HiveTableWithColumnCache getTable() {
+    return table;
+  }
+
+  @JsonIgnore
+  public List<HivePartition> getPartitions() {
+    return partitions;
+  }
+
+  @JsonIgnore
+  public List<List<InputSplit>> getInputSplits() {
+    return inputSplits;
+  }
+
+  @JsonIgnore
+  public HiveStoragePlugin getStoragePlugin() {
+    return hiveStoragePlugin;
+  }
+
+  @JsonIgnore
+  public HiveConf getHiveConf() {
+    return hiveStoragePlugin.getHiveConf();
   }
 
   @Override
@@ -149,7 +152,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     try {
-      return new HiveSubScan(getUserName(), splits, hiveReadEntry, splitClasses, columns, storagePlugin);
+      return new HiveSubScan(getUserName(), splits, hiveReadEntry, splitClasses, columns, hiveStoragePlugin);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -157,7 +160,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return ImmutableSet.<PhysicalOperator>of().iterator();
   }
 
   @Override
@@ -165,8 +168,21 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     return CoreOperatorType.HIVE_SUB_SCAN_VALUE;
   }
 
-  @JsonIgnore
-  public HiveConf getHiveConf() {
-    return storagePlugin.getHiveConf();
+  private static List<InputSplit> deserializeInputSplit(List<String> base64, String className)
+      throws IOException, ReflectiveOperationException{
+    Constructor<?> constructor = Class.forName(className).getDeclaredConstructor();
+    if (constructor == null) {
+      throw new ReflectiveOperationException("Class " + className + " does not implement a default constructor.");
+    }
+    constructor.setAccessible(true);
+    List<InputSplit> splits = new ArrayList<>();
+    for (String str : base64) {
+      InputSplit split = (InputSplit) constructor.newInstance();
+      ByteArrayDataInput byteArrayDataInput = ByteStreams.newDataInput(Base64.decodeBase64(str));
+      split.readFields(byteArrayDataInput);
+      splits.add(split);
+    }
+    return splits;
   }
+
 }

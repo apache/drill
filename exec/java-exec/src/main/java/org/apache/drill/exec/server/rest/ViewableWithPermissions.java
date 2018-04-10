@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -47,8 +47,8 @@ public class ViewableWithPermissions extends Viewable {
    * @param model
    * @return
    */
-  public static Viewable create(final boolean authEnabled, final String templateName, final SecurityContext sc,
-      final Object model) {
+  public static Viewable create(final boolean authEnabled, final String templateName,
+                                final SecurityContext sc, final Object model) {
     return new ViewableWithPermissions(authEnabled, templateName, sc, true, model);
   }
 
@@ -61,13 +61,18 @@ public class ViewableWithPermissions extends Viewable {
     return new ViewableWithPermissions(true, "/rest/login.ftl", null, false, errorMsg);
   }
 
-  private ViewableWithPermissions(final boolean authEnabled, final String templateName, final SecurityContext sc,
-      final boolean showControls, final Object model) throws IllegalArgumentException {
+  public static Viewable createMainLoginPage(Object mainPageModel) {
+    return new ViewableWithPermissions(true, "/rest/mainLogin.ftl", null, false, mainPageModel);
+  }
+
+  private ViewableWithPermissions(final boolean authEnabled, final String templateName,
+                                  final SecurityContext sc, final boolean showControls,
+                                  final Object model) throws IllegalArgumentException {
     super(templateName, createModel(authEnabled, sc, showControls, model));
   }
 
   private static Map<String, Object> createModel(final boolean authEnabled, final SecurityContext sc,
-      final boolean showControls, final Object pageModel) {
+                                                 final boolean showControls, final Object pageModel) {
 
     final boolean isAdmin = !authEnabled /* when auth is disabled every user is an admin user */
         || (showControls && sc.isUserInRole(DrillUserPrincipal.ADMIN_ROLE));
@@ -82,8 +87,8 @@ public class ViewableWithPermissions extends Viewable {
         .put("showLogin", authEnabled && showControls && !isUserLoggedIn)
         .put("showLogout", authEnabled && showControls && isUserLoggedIn)
         .put("loggedInUserName", authEnabled && showControls &&
-            isUserLoggedIn ? sc.getUserPrincipal().getName() : DrillUserPrincipal.ANONYMOUS_USER)
-        .put("showControls", showControls);
+            isUserLoggedIn ? sc.getUserPrincipal().getName()
+                           : DrillUserPrincipal.ANONYMOUS_USER).put("showControls", showControls);
 
     if (pageModel != null) {
       mapBuilder.put("model", pageModel);

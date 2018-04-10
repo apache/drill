@@ -17,7 +17,13 @@
  */
 package org.apache.drill.exec.vector;
 
-public interface NullableVector extends ValueVector{
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.MaterializedField;
+
+public interface NullableVector extends ValueVector {
+
+  MaterializedField bitsField = MaterializedField.create(BITS_VECTOR_NAME, Types.required(MinorType.UINT1));
 
   ValueVector getBitsVector();
   ValueVector getValuesVector();

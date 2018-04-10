@@ -53,6 +53,8 @@ public class PcapDrillTable extends DrillTable {
         return typeFactory.createSqlType(SqlTypeName.BIGINT);
       case INTEGER:
         return typeFactory.createSqlType(SqlTypeName.INTEGER);
+      case BOOLEAN:
+        return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
       case STRING:
         return typeFactory.createSqlType(SqlTypeName.VARCHAR);
       case TIMESTAMP:

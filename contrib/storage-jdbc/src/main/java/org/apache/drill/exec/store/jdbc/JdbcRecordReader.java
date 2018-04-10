@@ -40,7 +40,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -70,17 +69,13 @@ class JdbcRecordReader extends AbstractRecordReader {
   private final DataSource source;
   private ResultSet resultSet;
   private final String storagePluginName;
-  private FragmentContext fragmentContext;
   private Connection connection;
   private Statement statement;
   private final String sql;
   private ImmutableList<ValueVector> vectors;
   private ImmutableList<Copier<?>> copiers;
 
-  private OperatorContext operatorContext;
-
-  public JdbcRecordReader(FragmentContext fragmentContext, DataSource source, String sql, String storagePluginName) {
-    this.fragmentContext = fragmentContext;
+  public JdbcRecordReader(DataSource source, String sql, String storagePluginName) {
     this.source = source;
     this.sql = sql;
     this.storagePluginName = storagePluginName;
@@ -170,8 +165,6 @@ class JdbcRecordReader extends AbstractRecordReader {
   @Override
   public void setup(OperatorContext operatorContext, OutputMutator output) throws ExecutionSetupException {
     try {
-
-      this.operatorContext = operatorContext;
       connection = source.getConnection();
       statement = connection.createStatement();
       resultSet = statement.executeQuery(sql);

@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.easy.text.compliant;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.exec.store.easy.text.compliant.HeaderBuilder.HeaderError;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ public class TestHeaderBuilder extends DrillTest {
     hb.startBatch();
     try {
       hb.finishRecord();
-    } catch (HeaderError e) {
+    } catch (UserException e) {
       assertTrue(e.getMessage().contains("must define at least one header"));
     }
 
@@ -43,7 +43,7 @@ public class TestHeaderBuilder extends DrillTest {
     parse(hb,"");
     try {
       hb.finishRecord();
-    } catch (HeaderError e) {
+    } catch (UserException e) {
       assertTrue(e.getMessage().contains("must define at least one header"));
     }
 

@@ -198,7 +198,7 @@ public class TestBugFixes extends BaseTestQuery {
             + " from cp.`employee.json` emp\n"
             + " group by gender";
     final String[] expectedPlans1 = {
-            ".*Agg\\(group=\\[\\{0\\}\\], agg#0=\\[\\$SUM0\\(\\$2\\)\\], agg#1=\\[\\$SUM0\\(\\$1\\)\\], agg#2=\\[COUNT\\(\\$1\\)\\]\\)",
+            ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[\\$SUM0\\(\\$2\\)\\], agg#1=\\[\\$SUM0\\(\\$1\\)\\], agg#2=\\[COUNT\\(\\$1\\)\\]\\)",
             ".*Agg\\(group=\\[\\{0, 1\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
     final String[] excludedPlans1 = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
     PlanTestBase.testPlanMatchingPatterns(query1, expectedPlans1, excludedPlans1);

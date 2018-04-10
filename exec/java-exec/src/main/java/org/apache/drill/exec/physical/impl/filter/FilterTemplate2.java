@@ -27,9 +27,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
-public abstract class FilterTemplate2 implements Filterer{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterTemplate2.class);
-
+public abstract class FilterTemplate2 implements Filterer {
   private SelectionVector2 outgoingSelectionVector;
   private SelectionVector2 incomingSelectionVector;
   private SelectionVectorMode svMode;

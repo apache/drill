@@ -90,6 +90,21 @@ message DrillPBError{
      * - invalid entries in SQL tree
      */
     VALIDATION = 10;
+    /* Execution exception
+     *  - Internal errors not related to bad code
+     */
+    EXECUTION_ERROR = 11;
+    /* Internal exception
+     *  - Failed assertions
+     *  - Other "this should not happen" cases
+     */
+    INTERNAL_ERROR = 12;
+    /* Unspecified exception
+     *  - Exception caught but cause is unknown
+     * Indicates code that needs revisiting to move error reporting
+     * closer to the cause.
+     */
+    UNSPECIFIED_ERROR = 13;
   }
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;
@@ -113,7 +128,6 @@ message StackTraceElementWrapper {
     optional string method_name = 4;
     optional bool is_native_method = 5;
 }
-
 
 message ParsingError{
   optional int32 start_column = 2;
@@ -167,6 +181,8 @@ message QueryResult {
 	  FAILED = 4;
 	  CANCELLATION_REQUESTED = 5; // cancellation has been requested, and is being processed
 	  ENQUEUED = 6; // query has been enqueued. this is pre-starting.
+	  PREPARING = 7; // query is at preparation stage, foreman is initializing
+	  PLANNING = 8; // query is at planning stage (includes logical or / and physical planning)
 	}
 
 	optional QueryState query_state = 1;
@@ -309,6 +325,8 @@ enum CoreOperatorType {
   NESTED_LOOP_JOIN = 35;
   AVRO_SUB_SCAN = 36;
   PCAP_SUB_SCAN = 37;
+  KAFKA_SUB_SCAN = 38;
+  KUDU_SUB_SCAN = 39;
 }
 
 /* Registry that contains list of jars, each jar contains its name and list of function signatures.

@@ -34,7 +34,6 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.bson.BsonRecordReader;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
@@ -68,11 +67,11 @@ public class MongoRecordReader extends AbstractRecordReader {
   private final Document fields;
 
   private final FragmentContext fragmentContext;
-  private OperatorContext operatorContext;
 
   private final MongoStoragePlugin plugin;
 
   private final boolean enableAllTextMode;
+  private final boolean enableNanInf;
   private final boolean readNumbersAsDouble;
   private boolean unionEnabled;
   private final boolean isBsonRecordReader;
@@ -92,6 +91,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 
     buildFilters(subScanSpec.getFilter(), mergedFilters);
     enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
+    enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val;
     readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE).bool_val;
     isBsonRecordReader = fragmentContext.getOptions().getOption(ExecConstants.MONGO_BSON_RECORD_READER).bool_val;
     logger.debug("BsonRecordReader is enabled? " + isBsonRecordReader);
@@ -110,7 +110,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     } else {
       // Tale all the fields including the _id
       this.fields.remove(DrillMongoConstants.ID);
-      transformed.add(Utilities.STAR_COLUMN);
+      transformed.add(SchemaPath.STAR_COLUMN);
     }
     return transformed;
   }
@@ -144,13 +144,12 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
     MongoClient client = plugin.getClient(addresses);
     MongoDatabase db = client.getDatabase(subScanSpec.getDbName());
-    this.unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    this.unionEnabled = fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
     collection = db.getCollection(subScanSpec.getCollectionName(), BsonDocument.class);
   }
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-    this.operatorContext = context;
     this.writer = new VectorContainerWriter(output, unionEnabled);
     // Default is BsonReader and all text mode will not be honored in
     // BsonRecordReader
@@ -159,8 +158,12 @@ public class MongoRecordReader extends AbstractRecordReader {
           readNumbersAsDouble);
       logger.debug("Initialized BsonRecordReader. ");
     } else {
-      this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()),
-          enableAllTextMode, false, readNumbersAsDouble);
+      this.jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
+          .schemaPathColumns(Lists.newArrayList(getColumns()))
+          .allTextMode(enableAllTextMode)
+          .readNumbersAsDouble(readNumbersAsDouble)
+          .enableNanInf(enableNanInf)
+          .build();
       logger.debug(" Intialized JsonRecordReader. ");
     }
   }

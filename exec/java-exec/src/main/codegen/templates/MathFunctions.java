@@ -67,7 +67,11 @@ public class GMathFunctions{
   public static class ${func.className}${type.input} implements DrillSimpleFunc {
 
     @Param ${type.input}Holder in;
+  <#if func.funcName == 'sqrt'>
+    @Output Float8Holder out;
+  <#else>
     @Output ${type.outputType}Holder out;
+  </#if>
 
     public void setup() {
     }
@@ -76,12 +80,16 @@ public class GMathFunctions{
 
       <#if func.funcName=='trunc'>
       <#if type.roundingRequired ??>
-      java.math.BigDecimal bd = java.math.BigDecimal.valueOf(in.value).setScale(0, java.math.BigDecimal.ROUND_DOWN);
-      out.value = <#if type.extraCast ??>(${type.extraCast})</#if>bd.${type.castType}Value();
+      if (Double.isInfinite(in.value) || Double.isNaN(in.value)){
+        out.value = <#if type.input='Float8'> Double.NaN <#else> Float.NaN </#if>;
+      } else {
+        java.math.BigDecimal bd = java.math.BigDecimal.valueOf(in.value).setScale(0, java.math.BigDecimal.ROUND_DOWN);
+        out.value = <#if type.extraCast ??>(${type.extraCast})</#if>bd.${type.castType}Value();
+      }
       <#else>
-      out.value = (${type.castType}) (in.value);</#if>
+      out.value = <#if func.funcName!='sqrt'>(${type.castType})</#if> (in.value);</#if>
       <#else>
-      out.value = (${type.castType}) ${func.javaFunc}(in.value);
+      out.value =  <#if func.funcName!='sqrt'>(${type.castType})</#if> ${func.javaFunc}(in.value);
       </#if>
     }
   }
@@ -139,8 +147,18 @@ public class GMathFunctions{
     }
 
     public void eval() {
+
+    <#if func.funcName=='trunc' && (type.dataType=='Float4' || type.dataType=='Float8')>
+      if (Double.isInfinite(input1.value) || Double.isNaN(input1.value)){
+        out.value = Double.NaN;
+      } else {
+        java.math.BigDecimal temp = new java.math.BigDecimal(input1.value);
+        out.value = temp.setScale(input2.value, java.math.RoundingMode.${func.mode}).doubleValue();
+      }
+      <#else>
       java.math.BigDecimal temp = new java.math.BigDecimal(input1.value);
       out.value = temp.setScale(input2.value, java.math.RoundingMode.${func.mode}).doubleValue();
+    </#if>
     }
   }
   </#list>

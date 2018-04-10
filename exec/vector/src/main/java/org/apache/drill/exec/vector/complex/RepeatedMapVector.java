@@ -53,7 +53,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractMapVector
-    implements RepeatedValueVector, RepeatedFixedWidthVectorLike {
+    implements RepeatedValueVector {
 
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
 
@@ -63,16 +63,18 @@ public class RepeatedMapVector extends AbstractMapVector
   private final Mutator mutator = new Mutator();
   private final EmptyValuePopulator emptyPopulator;
 
-  public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
-    super(field, allocator, callBack);
-    this.offsets = new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator);
+  public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
+    this(field, new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator), callBack);
+  }
+
+  public RepeatedMapVector(MaterializedField field, UInt4Vector offsets, CallBack callBack) {
+    super(field, offsets.getAllocator(), callBack);
+    this.offsets = offsets;
     this.emptyPopulator = new EmptyValuePopulator(offsets);
   }
 
   @Override
-  public UInt4Vector getOffsetVector() {
-    return offsets;
-  }
+  public UInt4Vector getOffsetVector() { return offsets; }
 
   @Override
   public ValueVector getDataVector() {
@@ -93,11 +95,8 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
-  public RepeatedMapReaderImpl getReader() {
-    return reader;
-  }
+  public RepeatedMapReaderImpl getReader() { return reader; }
 
-  @Override
   public void allocateNew(int groupCount, int innerValueCount) {
     clear();
     try {
@@ -137,13 +136,18 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
+  public int getAllocatedSize() {
+    return offsets.getAllocatedSize() + super.getAllocatedSize();
+  }
+
+  @Override
   public int getBufferSizeFor(final int valueCount) {
     if (valueCount == 0) {
       return 0;
     }
 
     long bufferSize = offsets.getBufferSizeFor(valueCount);
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
+    for (final ValueVector v : this) {
       bufferSize += v.getBufferSizeFor(valueCount);
     }
 
@@ -417,9 +421,8 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public void exchange(ValueVector other) {
-    // Exchange is used for look-ahead writers, but writers manage
-    // map member vectors directly.
-    throw new UnsupportedOperationException("Exchange() not supported for maps");
+    super.exchange(other);
+    offsets.exchange(((RepeatedMapVector) other).offsets);
   }
 
   @Override
@@ -452,13 +455,13 @@ public class RepeatedMapVector extends AbstractMapVector
     assert bufOffset == buffer.writerIndex();
   }
 
-
   @Override
   public SerializedField getMetadata() {
-    SerializedField.Builder builder = getField() //
-        .getAsBuilder() //
-        .setBufferLength(getBufferSize()) //
-        // while we don't need to actually read this on load, we need it to make sure we don't skip deserialization of this vector
+    SerializedField.Builder builder = getField()
+        .getAsBuilder()
+        .setBufferLength(getBufferSize())
+        // while we don't need to actually read this on load, we need it to
+        // make sure we don't skip deserialization of this vector
         .setValueCount(accessor.getValueCount());
     builder.addChild(offsets.getMetadata());
     for (final ValueVector child : getChildren()) {
@@ -605,4 +608,20 @@ public class RepeatedMapVector extends AbstractMapVector
   public void toNullable(ValueVector nullableVector) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
+    int entryCount = offsets.getAccessor().get(valueCount);
+    int count = offsets.getPayloadByteCount(valueCount);
+
+    for (final ValueVector v : getChildren()) {
+      count += v.getPayloadByteCount(entryCount);
+    }
+    return count;
+  }
+
 }

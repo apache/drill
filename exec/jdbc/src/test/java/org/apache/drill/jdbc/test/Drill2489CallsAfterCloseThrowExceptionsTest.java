@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -421,19 +421,15 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
       }
       else if (SQLClientInfoException.class == cause.getClass()
                 && normalClosedExceptionText.equals(cause.getMessage())
-                && (false
-                    || method.getName().equals("setClientInfo")
-                    || method.getName().equals("getClientInfo")
-                    )) {
+                && (method.getName().equals("setClientInfo")
+                    || method.getName().equals("getClientInfo"))) {
         // Special good case--we had to use SQLClientInfoException from those.
         result = true;
       }
       else if (RuntimeException.class == cause.getClass()
                && normalClosedExceptionText.equals(cause.getMessage())
-               && (false
-                   || method.getName().equals("getCatalog")
-                   || method.getName().equals("getSchema")
-                   )) {
+               && (method.getName().equals("getCatalog")
+                  || method.getName().equals("getSchema"))) {
         // Special good-enough case--we had to use RuntimeException for now.
         result = true;
       }
@@ -481,20 +477,18 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
       if (super.isOkaySpecialCaseException(method, cause)) {
         result = true;
       }
-      else if (   method.getName().equals("executeLargeBatch")
+      else if (method.getName().equals("executeLargeBatch")
                || method.getName().equals("executeLargeUpdate")) {
         // TODO: New Java 8 methods not implemented in Avatica.
         result = true;
       }
       else if (RuntimeException.class == cause.getClass()
                && normalClosedExceptionText.equals(cause.getMessage())
-               && (false
-                   || method.getName().equals("getConnection")
+               && (method.getName().equals("getConnection")
                    || method.getName().equals("getFetchDirection")
                    || method.getName().equals("getFetchSize")
                    || method.getName().equals("getMaxRows")
-                   || method.getName().equals("getLargeMaxRows") // TODO: Java 8
-                   )) {
+                   || method.getName().equals("getLargeMaxRows"))) {
         // Special good-enough case--we had to use RuntimeException for now.
         result = true;
       }
@@ -544,27 +538,20 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
         result = true;
       }
       else if (RuntimeException.class == cause.getClass()
-               && normalClosedExceptionText.equals(cause.getMessage())
-               && (false
-                   || method.getName().equals("getConnection")
+               && cause.getMessage().contains(normalClosedExceptionText)
+               && (method.getName().equals("getConnection")
                    || method.getName().equals("getFetchDirection")
                    || method.getName().equals("getFetchSize")
                    || method.getName().equals("getMaxRows")
                    || method.getName().equals("getMetaData")
-                   )) {
+                   || method.getName().equals("clearBatch"))) {
         // Special good-enough case--we had to use RuntimeException for now.
         result = true;
-      }
-      else if (  method.getName().equals("setObject")
-              || method.getName().equals("executeLargeUpdate")
-              || method.getName().equals("executeLargeBatch")
-              || method.getName().equals("getLargeMaxRows")
-              ) {
-        // TODO: Java 8 methods not yet supported by Avatica.
-        result = true;
-      }
-      else {
-        result = false;
+      } else {
+        result = method.getName().equals("setObject")
+          || method.getName().equals("executeLargeUpdate")
+          || method.getName().equals("executeLargeBatch")
+          || method.getName().equals("getLargeMaxRows");
       }
       return result;
     }

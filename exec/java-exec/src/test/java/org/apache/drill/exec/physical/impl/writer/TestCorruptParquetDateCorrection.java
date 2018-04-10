@@ -23,9 +23,11 @@ import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.test.TestBuilder;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.parquet.Metadata;
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -188,34 +190,26 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         .go();
   }
 
-  @Test
-  public void testReadPartitionedOnCorruptedDates_UserDisabledCorrection() throws Exception {
+  // according to SQL spec. '4.4.3.5 Datetime types' year should be less than 9999
+  @Test(expected = UserRemoteException.class)
+  public void testQueryWithCorruptedDates() throws Exception {
     try {
-      for (String selection : new String[]{"*", "date_col"}) {
-        for (Path table : new Path[]{CORRUPTED_PARTITIONED_DATES_1_2_PATH, CORRUPTED_PARTITIONED_DATES_1_4_0_PATH}) {
-          // for sanity, try reading all partitions without a filter
-          TestBuilder builder = testBuilder()
-              .sqlQuery("select %s from table(dfs.`%s` (type => 'parquet', autoCorrectCorruptDates => false))",
-                  selection, table)
-              .unOrdered()
-              .baselineColumns("date_col");
-          addCorruptedDateBaselineValues(builder);
-          builder.go();
+      TestBuilder builder = testBuilder()
+          .sqlQuery("select * from table(dfs.`%s` (type => 'parquet', autoCorrectCorruptDates => false))",
+              CORRUPTED_PARTITIONED_DATES_1_2_PATH)
+          .unOrdered()
+          .baselineColumns("date_col");
+      addCorruptedDateBaselineValues(builder);
+      builder.go();
 
-          String query = format("select %s from table(dfs.`%s` (type => 'parquet', " +
-              "autoCorrectCorruptDates => false)) where date_col = cast('15334-03-17' as date)", selection, table);
-          // verify that pruning is actually taking place
-          testPlanMatchingPatterns(query, new String[]{"numFiles=1"}, null);
+      String query = "select * from table(dfs.`%s` (type => 'parquet', " +
+          "autoCorrectCorruptDates => false)) where date_col = cast('15334-03-17' as date)";
 
-          // read with a filter on the partition column
-          testBuilder()
-              .sqlQuery(query)
-              .unOrdered()
-              .baselineColumns("date_col")
-              .baselineValues(new DateTime(15334, 3, 17, 0, 0))
-              .go();
-        }
-      }
+      test(query, CORRUPTED_PARTITIONED_DATES_1_2_PATH);
+    } catch (UserRemoteException e) {
+      Assert.assertTrue(e.getMessage()
+          .contains("Year out of range"));
+      throw e;
     } finally {
       test("alter session reset all");
     }
@@ -343,32 +337,6 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         .unOrdered()
         .baselineColumns("date_col")
         .baselineValues(new DateTime(1970, 1, 1, 0, 0))
-        .go();
-  }
-
-  @Test
-  public void testReadOldMetadataCacheFileOverrideCorrection() throws Exception {
-    // for sanity, try reading all partitions without a filter
-    TestBuilder builder = testBuilder()
-        .sqlQuery("select date_col from table(dfs.`%s` (type => 'parquet', autoCorrectCorruptDates => false))",
-          PARTITIONED_1_2_FOLDER)
-        .unOrdered()
-        .baselineColumns("date_col");
-    addCorruptedDateBaselineValues(builder);
-    builder.go();
-
-    String query = format("select date_col from table(dfs.`%s` (type => 'parquet', " +
-        "autoCorrectCorruptDates => false)) where date_col = cast('15334-03-17' as date)",
-      PARTITIONED_1_2_FOLDER);
-    // verify that pruning is actually taking place
-    testPlanMatchingPatterns(query, new String[]{"numFiles=1", "usedMetadataFile=true"}, null);
-
-    // read with a filter on the partition column
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("date_col")
-        .baselineValues(new DateTime(15334, 3, 17, 0, 0))
         .go();
   }
 

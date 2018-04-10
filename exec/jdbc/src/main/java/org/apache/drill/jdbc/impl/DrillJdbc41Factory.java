@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,6 +34,7 @@ import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Helper;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.Meta.StatementHandle;
+import org.apache.calcite.avatica.QueryState;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.ServerMethod;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
@@ -170,12 +171,13 @@ public class DrillJdbc41Factory extends DrillFactory {
 
   @Override
   public DrillResultSetImpl newResultSet(AvaticaStatement statement,
+                                         QueryState state,
                                          Meta.Signature signature,
                                          TimeZone timeZone,
                                          Meta.Frame firstFrame) {
     final ResultSetMetaData metaData =
         newResultSetMetaData(statement, signature);
-    return new DrillResultSetImpl(statement, signature, metaData, timeZone, firstFrame);
+    return new DrillResultSetImpl(statement, state, signature, metaData, timeZone, firstFrame);
   }
 
   @Override

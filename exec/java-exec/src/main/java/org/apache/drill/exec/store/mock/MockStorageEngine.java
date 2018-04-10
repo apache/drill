@@ -22,7 +22,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,7 +57,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
 
   public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context, String name) {
     this.configuration = configuration;
-    this.schema = new MockSchema(this);
+    this.schema = new MockSchema(this, name);
   }
 
   @Override
@@ -114,19 +116,30 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   private static class MockSchema extends AbstractSchema {
 
     private MockStorageEngine engine;
+    private final Map<String, Table> tableCache = new WeakHashMap<>();
 
     public MockSchema(MockStorageEngine engine) {
       super(ImmutableList.<String>of(), MockStorageEngineConfig.NAME);
       this.engine = engine;
     }
 
+    public MockSchema(MockStorageEngine engine, String name) {
+      super(ImmutableList.<String>of(), name);
+      this.engine = engine;
+    }
+
     @Override
     public Table getTable(String name) {
-      if (name.toLowerCase().endsWith(".json")) {
-        return getConfigFile(name);
-      } else {
-        return getDirectTable(name);
+      Table table = tableCache.get(name);
+      if (table == null) {
+        if (name.toLowerCase().endsWith(".json")) {
+          table = getConfigFile(name);
+        } else {
+          table = getDirectTable(name);
+        }
+        tableCache.put(name, table);
       }
+      return table;
     }
 
     private Table getConfigFile(String name) {

@@ -18,34 +18,44 @@
 package org.apache.drill.test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.CodeCompiler;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.BaseFragmentContext;
 import org.apache.drill.exec.ops.BaseOperatorContext;
 import org.apache.drill.exec.ops.BufferManager;
 import org.apache.drill.exec.ops.BufferManagerImpl;
-import org.apache.drill.exec.ops.FragmentContextInterface;
-import org.apache.drill.exec.ops.MetricDef;
+import org.apache.drill.exec.ops.ContextInformation;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
+import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionSet;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.store.PartitionExplorer;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.test.ClusterFixtureBuilder.RuntimeOption;
 import org.apache.drill.test.rowSet.DirectRowSet;
@@ -56,7 +66,11 @@ import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.hadoop.security.UserGroupInformation;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * Test fixture for operator and (especially) "sub-operator" tests.
@@ -82,34 +96,46 @@ import com.google.common.util.concurrent.ListenableFuture;
  * <li>Multiple threads of execution.</li>
  * </ul>
  */
-
 public class OperatorFixture extends BaseFixture implements AutoCloseable {
+
+  public OperatorContext operatorContext(PhysicalOperator config) {
+    return new MockOperatorContext(context, allocator(), config);
+  }
 
   /**
    * Builds an operator fixture based on a set of config options and system/session
    * options.
    */
-
-  public static class OperatorFixtureBuilder
+  public static class Builder
   {
-    protected ConfigBuilder configBuilder = new ConfigBuilder();
-    protected List<RuntimeOption> systemOptions;
+    protected List<RuntimeOption> systemOptions = new ArrayList<>();
     protected ExecutionControls controls;
+    private final ConfigBuilder configBuilder = new ConfigBuilder();
+    protected ExecutorService scanExecutor;
+    protected ExecutorService scanDecoderExecutor;
+
+    public Builder()
+    {
+    }
 
     public ConfigBuilder configBuilder() {
       return configBuilder;
     }
 
-    public OperatorFixtureBuilder systemOption(String key, Object value) {
-      if (systemOptions == null) {
-        systemOptions = new ArrayList<>();
-      }
+    public Builder systemOption(String key, Object value) {
       systemOptions.add(new RuntimeOption(key, value));
       return this;
     }
 
-    public OperatorFixtureBuilder setControls(ExecutionControls controls) {
-      this.controls = controls;
+    public Builder setScanExecutor(final ExecutorService scanExecutor)
+    {
+      this.scanExecutor = Preconditions.checkNotNull(scanExecutor);
+      return this;
+    }
+
+    public Builder setScanDecoderExecutor(final ExecutorService scanDecoderExecutor)
+    {
+      this.scanDecoderExecutor = Preconditions.checkNotNull(scanDecoderExecutor);
       return this;
     }
 
@@ -123,41 +149,48 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
    * uses the same code generation mechanism as the full Drill, but
    * provide test-specific versions of various other services.
    */
-
-  public static class TestFragmentContext extends BaseFragmentContext {
-
+  public static class MockFragmentContext extends BaseFragmentContext {
     private final DrillConfig config;
-    private final OptionSet options;
+    private final OptionManager options;
     private final CodeCompiler compiler;
-    private ExecutionControls controls;
     private final BufferManagerImpl bufferManager;
+    private final BufferAllocator allocator;
+    private final ExecutorService scanExecutorService;
+    private final ExecutorService scanDecodeExecutorService;
 
-    public TestFragmentContext(DrillConfig config, OptionSet options, BufferAllocator allocator) {
+    private ExecutorState executorState = new OperatorFixture.MockExecutorState();
+    private ExecutionControls controls;
+
+    public MockFragmentContext(final DrillConfig config,
+                               final OptionManager options,
+                               final BufferAllocator allocator,
+                               final ExecutorService scanExecutorService,
+                               final ExecutorService scanDecodeExecutorService) {
       super(newFunctionRegistry(config, options));
-      this.config = config;
-      this.options = options;
+      this.config = Preconditions.checkNotNull(config);
+      this.options = Preconditions.checkNotNull(options);
+      this.allocator = Preconditions.checkNotNull(allocator);
+      this.scanExecutorService = scanExecutorService;
+      this.scanDecodeExecutorService = scanDecodeExecutorService;
+      this.controls = new ExecutionControls(options);
       compiler = new CodeCompiler(config, options);
       bufferManager = new BufferManagerImpl(allocator);
     }
 
     private static FunctionImplementationRegistry newFunctionRegistry(
-        DrillConfig config, OptionSet options) {
+        DrillConfig config, OptionManager options) {
       ScanResult classpathScan = ClassPathScanner.fromPrescan(config);
       return new FunctionImplementationRegistry(config, classpathScan, options);
     }
 
-    public void setExecutionControls(ExecutionControls controls) {
-      this.controls = controls;
-    }
-
     @Override
-    public OptionSet getOptionSet() {
+    public OptionManager getOptions() {
       return options;
     }
 
     @Override
-    public boolean shouldContinue() {
-      return true;
+    public boolean isImpersonationEnabled() {
+      return false;
     }
 
     @Override
@@ -171,113 +204,162 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
 
     @Override
-    public DrillbitContext getDrillbitContext() {
-      throw new UnsupportedOperationException("Drillbit context not available for operator unit tests");
+    public ExecutorService getScanDecodeExecutor() {
+      return scanDecodeExecutorService;
     }
 
     @Override
-    protected CodeCompiler getCompiler() {
-       return compiler;
+    public ExecutorService getScanExecutor() {
+      return scanExecutorService;
+    }
+
+    @Override
+    public ExecutorService getExecutor() {
+      return null;
+    }
+
+    @Override
+    public ExecutorState getExecutorState() {
+      return executorState;
+    }
+
+    @Override
+    public BufferAllocator getNewChildAllocator(String operatorName, int operatorId,
+                                                long initialReservation, long maximumReservation) {
+      return allocator.newChildAllocator(
+        "op:" + operatorId + ":" + operatorName,
+        initialReservation,
+        maximumReservation);
+    }
+
+    @Override
+    public ExecProtos.FragmentHandle getHandle() {
+      return ExecProtos.FragmentHandle.newBuilder().build();
+    }
+
+    @Override
+    public BufferAllocator getAllocator() {
+      return allocator;
+    }
+
+    @SuppressWarnings("resource")
+    @Override
+    public OperatorContext newOperatorContext(PhysicalOperator popConfig,
+                                              OperatorStats stats) throws OutOfMemoryException {
+      BufferAllocator childAllocator = allocator.newChildAllocator(
+        "test:" + popConfig.getClass().getSimpleName(),
+        popConfig.getInitialAllocation(),
+        popConfig.getMaxAllocation()
+      );
+      return new MockOperatorContext(this, childAllocator, popConfig);
+    }
+
+    @Override
+    public OperatorContext newOperatorContext(PhysicalOperator popConfig)
+      throws OutOfMemoryException {
+      return newOperatorContext(popConfig, null);
+    }
+
+    @Override
+    public String getQueryUserName() {
+      return "fred";
+    }
+    @Override
+    public SchemaPlus getFullRootSchema() {
+      return null;
+    }
+
+    @Override
+    public String getFragIdString() {
+      return null;
+    }
+
+    @Override
+    public CodeCompiler getCompiler() {
+      return compiler;
     }
 
     @Override
     protected BufferManager getBufferManager() {
       return bufferManager;
     }
-  }
-
-  /**
-   * Implements a write-only version of the stats collector for use by operators,
-   * then provides simplified test-time accessors to get the stats values when
-   * validating code in tests.
-   */
-
-  public static class MockStats implements OperatorStatReceiver {
-
-    public Map<Integer, Double> stats = new HashMap<>();
 
     @Override
-    public void addLongStat(MetricDef metric, long value) {
-      setStat(metric, getStat(metric) + value);
+    public void close() {
+      bufferManager.close();
     }
 
     @Override
-    public void addDoubleStat(MetricDef metric, double value) {
-      setStat(metric, getStat(metric) + value);
+    public ContextInformation getContextInformation() {
+      return null;
     }
 
     @Override
-    public void setLongStat(MetricDef metric, long value) {
-      setStat(metric, value);
+    public PartitionExplorer getPartitionExplorer() {
+      return null;
     }
 
     @Override
-    public void setDoubleStat(MetricDef metric, double value) {
-      setStat(metric, value);
+    public ValueHolder getConstantValueHolder(String value, TypeProtos.MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
+      return null;
     }
-
-    public double getStat(MetricDef metric) {
-      return getStat(metric.metricId());
-    }
-
-    private double getStat(int metricId) {
-      Double value = stats.get(metricId);
-      return value == null ? 0 : value;
-    }
-
-    private void setStat(MetricDef metric, double value) {
-      setStat(metric.metricId(), value);
-    }
-
-    private void setStat(int metricId, double value) {
-      stats.put(metricId, value);
-    }
-
-    // Timing stats not supported for test.
-    @Override
-    public void startWait() { }
-
-    @Override
-    public void stopWait() {  }
   }
 
   private final SystemOptionManager options;
-  private final TestFragmentContext context;
-  private final OperatorStatReceiver stats;
+  private final MockFragmentContext context;
+  private LocalPersistentStoreProvider provider;
 
-  protected OperatorFixture(OperatorFixtureBuilder builder) {
+  protected OperatorFixture(Builder builder) {
     config = builder.configBuilder().build();
     allocator = RootAllocatorFactory.newRoot(config);
-    options = new SystemOptionManager(config);
-    try {
-      options.init();
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to initialize the system option manager", e);
-    }
-    if (builder.systemOptions != null) {
-      applySystemOptions(builder.systemOptions);
-    }
-    context = new TestFragmentContext(config, options, allocator);
-    stats = new MockStats();
+    options = createOptionManager();
+    context = new MockFragmentContext(config, options, allocator, builder.scanExecutor, builder.scanDecoderExecutor);
+    applySystemOptions(builder.systemOptions);
    }
 
-  private void applySystemOptions(List<RuntimeOption> systemOptions) {
+   private void applySystemOptions(List<RuntimeOption> systemOptions) {
     for (RuntimeOption option : systemOptions) {
       options.setLocalOption(option.key, option.value);
     }
   }
 
-  public SystemOptionManager options() { return options; }
-  public FragmentContextInterface fragmentExecContext() { return context; }
+  public OptionManager getOptionManager()
+  {
+    return options;
+  }
+
+  private SystemOptionManager createOptionManager()
+  {
+    try {
+      provider = new LocalPersistentStoreProvider(config);
+      provider.start();
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+
+    final SystemOptionManager options = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(config), provider, config);
+
+    try {
+      options.init();
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+
+    return options;
+   }
+
+  public FragmentContext getFragmentContext() { return context; }
 
   @Override
   public void close() throws Exception {
+    provider.close();
+    context.close();
     allocator.close();
     options.close();
   }
 
-  public static OperatorFixtureBuilder builder() {
-    OperatorFixtureBuilder builder = new OperatorFixtureBuilder();
+  public static Builder builder() {
+    Builder builder = new Builder();
     builder.configBuilder()
       // Required to avoid Dynamic UDF calls for missing or
       // ambiguous functions.
@@ -290,46 +372,47 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
   }
 
   public RowSetBuilder rowSetBuilder(BatchSchema schema) {
+    return rowSetBuilder(MetadataUtils.fromFields(schema));
+  }
+
+  public RowSetBuilder rowSetBuilder(TupleMetadata schema) {
     return new RowSetBuilder(allocator, schema);
   }
 
   public ExtendableRowSet rowSet(BatchSchema schema) {
-    return new DirectRowSet(allocator, schema);
+    return DirectRowSet.fromSchema(allocator, schema);
+  }
+
+  public ExtendableRowSet rowSet(TupleMetadata schema) {
+    return DirectRowSet.fromSchema(allocator, schema);
   }
 
   public RowSet wrap(VectorContainer container) {
     switch (container.getSchema().getSelectionVectorMode()) {
     case FOUR_BYTE:
-      return new HyperRowSetImpl(allocator(), container, container.getSelectionVector4());
+      return HyperRowSetImpl.fromContainer(container, container.getSelectionVector4());
     case NONE:
-      return new DirectRowSet(allocator(), container);
+      return DirectRowSet.fromContainer(container);
     case TWO_BYTE:
-      return new IndirectRowSet(allocator(), container);
+      return IndirectRowSet.fromSv2(container, container.getSelectionVector2());
     default:
       throw new IllegalStateException( "Unexpected selection mode" );
     }
   }
 
-  public static class TestOperatorContext extends BaseOperatorContext {
+  public static class MockOperatorContext extends BaseOperatorContext {
+    private final OperatorStats operatorStats;
 
-    private final OperatorStatReceiver stats;
-
-    public TestOperatorContext(FragmentContextInterface fragContext,
-        BufferAllocator allocator,
-        PhysicalOperator config,
-        OperatorStatReceiver stats) {
+    public MockOperatorContext(FragmentContext fragContext,
+                               BufferAllocator allocator,
+                               PhysicalOperator config) {
       super(fragContext, allocator, config);
-      this.stats = stats;
-    }
-
-    @Override
-    public OperatorStatReceiver getStatsWriter() {
-      return stats;
+      this.operatorStats = new OperatorStats(new OpProfileDef(0, 0, 100), allocator);
     }
 
     @Override
     public OperatorStats getStats() {
-      throw new UnsupportedOperationException("getStats() not supported for tests");
+      return operatorStats;
     }
 
     @Override
@@ -339,7 +422,47 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  public OperatorContext operatorContext(PhysicalOperator config) {
-    return new TestOperatorContext(context, allocator(), config, stats);
+  public static class MockExecutorState implements FragmentContext.ExecutorState
+  {
+    @Override
+    public boolean shouldContinue() {
+      return true;
+    }
+
+    @Override
+    public void fail(Throwable t) {
+
+    }
+
+    @Override
+    public boolean isFailed() {
+      return false;
+    }
+
+    @Override
+    public Throwable getFailureCause() {
+      return null;
+    }
+  }
+
+  @SuppressWarnings("resource")
+  public OperatorContext newOperatorContext(PhysicalOperator popConfig) {
+    BufferAllocator childAllocator = allocator.newChildAllocator(
+      "test:" + popConfig.getClass().getSimpleName(),
+      popConfig.getInitialAllocation(),
+      popConfig.getMaxAllocation()
+    );
+
+    return new MockOperatorContext(context, childAllocator, popConfig);
+  }
+
+  public RowSet wrap(VectorContainer container, SelectionVector2 sv2) {
+    if (sv2 == null) {
+      assert container.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE;
+      return DirectRowSet.fromContainer(container);
+    } else {
+      assert container.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE;
+      return IndirectRowSet.fromSv2(container, sv2);
+    }
   }
 }

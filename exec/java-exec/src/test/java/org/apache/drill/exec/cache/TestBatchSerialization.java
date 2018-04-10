@@ -17,32 +17,42 @@
  */
 package org.apache.drill.exec.cache;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.cache.VectorSerializer.Reader;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.test.DirTestWatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.apache.drill.test.rowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class TestBatchSerialization extends DrillTest {
 
+  @ClassRule
+  public static final DirTestWatcher dirTestWatcher = new DirTestWatcher();
   public static OperatorFixture fixture;
 
   @BeforeClass
@@ -73,7 +83,7 @@ public class TestBatchSerialization extends DrillTest {
       if (i % 2 == 0) {
         RowSetUtilities.setFromInt(writer, 0, i);
       } else {
-        writer.column(0).setNull();
+        writer.scalar(0).setNull();
       }
       writer.save();
     }
@@ -116,18 +126,26 @@ public class TestBatchSerialization extends DrillTest {
    */
   private void verifySerialize(SingleRowSet rowSet, SingleRowSet expected) throws IOException {
 
-    File dir = OperatorFixture.getTempDir("serial");
-    File outFile = new File(dir, "serialze.dat");
-    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile))) {
-      VectorSerializer.writer(fixture.allocator(), out)
-        .write(rowSet.container(), rowSet.getSv2());
+    File dir = DirTestWatcher.createTempDir(dirTestWatcher.getDir());
+    FileChannel channel = FileChannel.open(new File(dir, "serialize.dat").toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+    VectorSerializer.Writer writer = VectorSerializer.writer(channel);
+    VectorContainer container = rowSet.container();
+    SelectionVector2 sv2 = rowSet.getSv2();
+    writer.write(container, sv2);
+    container.clear();
+    if (sv2 != null) {
+      sv2.clear();
     }
+    writer.close();
+
+    File outFile = new File(dir, "serialize.dat");
+    assertTrue(outFile.exists());
+    assertTrue(outFile.isFile());
 
     RowSet result;
     try (InputStream in = new BufferedInputStream(new FileInputStream(outFile))) {
-      result = fixture.wrap(
-        VectorSerializer.reader(fixture.allocator(), in)
-          .read());
+      Reader reader = VectorSerializer.reader(fixture.allocator(), in);
+      result = fixture.wrap(reader.read(), reader.sv2());
     }
 
     new RowSetComparison(expected)
@@ -163,17 +181,17 @@ public class TestBatchSerialization extends DrillTest {
 
   private SingleRowSet buildMapSet(BatchSchema schema) {
     return fixture.rowSetBuilder(schema)
-        .add(1, 100, "first")
-        .add(2, 200, "second")
-        .add(3, 300, "third")
+        .addRow(1, objArray(100, "first"))
+        .addRow(2, objArray(200, "second"))
+        .addRow(3, objArray(300, "third"))
         .build();
   }
 
   private SingleRowSet buildArraySet(BatchSchema schema) {
     return fixture.rowSetBuilder(schema)
-        .add(1, new String[] { "first, second, third" } )
-        .add(2, null)
-        .add(3, new String[] { "third, fourth, fifth" } )
+        .addRow(1, strArray("first, second, third"))
+        .addRow(2, null)
+        .addRow(3, strArray("third, fourth, fifth"))
         .build();
   }
 
@@ -190,7 +208,7 @@ public class TestBatchSerialization extends DrillTest {
         .addMap("map")
           .add("key", MinorType.INT)
           .add("value", MinorType.VARCHAR)
-          .buildMap()
+          .resumeSchema()
         .build();
 
     verifySerialize(buildMapSet(schema).toIndirect(),

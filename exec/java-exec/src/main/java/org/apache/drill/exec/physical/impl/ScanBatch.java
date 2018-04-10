@@ -82,21 +82,20 @@ public class ScanBatch implements CloseableRecordBatch {
   private String currentReaderClassName;
   /**
    *
-   * @param subScanConfig
    * @param context
    * @param oContext
    * @param readerList
    * @param implicitColumnList : either an emptylist when all the readers do not have implicit
    *                        columns, or there is a one-to-one mapping between reader and implicitColumns.
    */
-  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
+  public ScanBatch(FragmentContext context,
                    OperatorContext oContext, List<RecordReader> readerList,
                    List<Map<String, String>> implicitColumnList) {
     this.context = context;
     this.readers = readerList.iterator();
     this.implicitColumns = implicitColumnList.iterator();
     if (!readers.hasNext()) {
-      throw UserException.systemError(
+      throw UserException.internalError(
           new ExecutionSetupException("A scan batch must contain at least one reader."))
         .build(logger);
     }
@@ -110,7 +109,7 @@ public class ScanBatch implements CloseableRecordBatch {
       if (!verifyImplcitColumns(readerList.size(), implicitColumnList)) {
         Exception ex = new ExecutionSetupException("Either implicit column list does not have same cardinality as reader list, "
             + "or implicit columns are not same across all the record readers!");
-        throw UserException.systemError(ex)
+        throw UserException.internalError(ex)
             .addContext("Setup failed for", readerList.get(0).getClass().getSimpleName())
             .build(logger);
       }
@@ -126,8 +125,7 @@ public class ScanBatch implements CloseableRecordBatch {
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
                    List<RecordReader> readers)
       throws ExecutionSetupException {
-    this(subScanConfig, context,
-        context.newOperatorContext(subScanConfig),
+    this(context, context.newOperatorContext(subScanConfig),
         readers, Collections.<Map<String, String>> emptyList());
   }
 
@@ -210,11 +208,13 @@ public class ScanBatch implements CloseableRecordBatch {
           logger.error("Close failed for reader " + currentReaderClassName, e2);
         }
       }
-      throw UserException.systemError(e)
+      throw UserException.internalError(e)
           .addContext("Setup failed for", currentReaderClassName)
           .build(logger);
+    } catch (UserException ex) {
+      throw ex;
     } catch (Exception ex) {
-      throw UserException.systemError(ex).build(logger);
+      throw UserException.internalError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
     }
@@ -238,6 +238,9 @@ public class ScanBatch implements CloseableRecordBatch {
       return false;
     }
     currentReader = readers.next();
+    if (readers.hasNext()) {
+      readers.remove();
+    }
     implicitValues = implicitColumns.hasNext() ? implicitColumns.next() : null;
     currentReader.setup(oContext, mutator);
     currentReaderClassName = currentReader.getClass().getSimpleName();
@@ -254,7 +257,7 @@ public class ScanBatch implements CloseableRecordBatch {
       }
     } catch(SchemaChangeException e) {
       // No exception should be thrown here.
-      throw UserException.systemError(e)
+      throw UserException.internalError(e)
         .addContext("Failure while allocating implicit vectors")
         .build(logger);
     }

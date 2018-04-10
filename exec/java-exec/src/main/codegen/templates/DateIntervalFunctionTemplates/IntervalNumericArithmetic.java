@@ -39,7 +39,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
@@ -82,12 +81,12 @@ public class ${intervaltype}${numerictype}Functions {
 
     // Transfer fractional part to days
     fractionalMonths = fractionalMonths - (long) fractionalMonths;
-    fractionalDays += fractionalMonths * org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays;
+    fractionalDays += fractionalMonths * org.apache.drill.exec.vector.DateUtilities.monthToStandardDays;
     ${out}.days = (int) fractionalDays;
 
     // Transfer fractional part to millis
     fractionalDays = fractionalDays - (long) fractionalDays;
-    fractionalMillis += fractionalDays * org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+    fractionalMillis += fractionalDays * org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
 
     ${out}.milliseconds = (int) fractionalMillis;
 </#macro>

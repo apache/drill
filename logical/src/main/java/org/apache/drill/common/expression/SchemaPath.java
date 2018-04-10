@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.antlr.runtime.ANTLRStringStream;
@@ -38,11 +39,28 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 
 public class SchemaPath extends LogicalExpressionBase {
 
+  public static final String DYNAMIC_STAR = "**";
+  public static final SchemaPath STAR_COLUMN = getSimplePath(DYNAMIC_STAR);
+
   private final NameSegment rootSegment;
+
+  public SchemaPath(SchemaPath path) {
+    super(path.getPosition());
+    this.rootSegment = path.rootSegment;
+  }
+
+  public SchemaPath(NameSegment rootSegment) {
+    super(ExpressionPosition.UNKNOWN);
+    this.rootSegment = rootSegment;
+  }
+
+  public SchemaPath(NameSegment rootSegment, ExpressionPosition pos) {
+    super(pos);
+    this.rootSegment = rootSegment;
+  }
 
   public static SchemaPath getSimplePath(String name) {
     return getCompoundPath(name);
@@ -58,7 +76,7 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   public PathSegment getLastSegment() {
-    PathSegment s= rootSegment;
+    PathSegment s = rootSegment;
     while (s.getChild() != null) {
       s = s.getChild();
     }
@@ -70,7 +88,6 @@ public class SchemaPath extends LogicalExpressionBase {
     super(pos);
     this.rootSegment = new NameSegment(simpleName);
   }
-
 
   public NamePart getAsNamePart() {
     return getNamePart(rootSegment);
@@ -157,20 +174,75 @@ public class SchemaPath extends LogicalExpressionBase {
     return true;
   }
 
+  /**
+   * Return whether this name refers to an array. The path must be an array if it
+   * ends with an array index; else it may or may not be an entire array.
+   *
+   * @return true if the path ends with an array index, false otherwise
+   */
 
-  public SchemaPath(SchemaPath path) {
-    super(path.getPosition());
-    this.rootSegment = path.rootSegment;
+  public boolean isArray() {
+    PathSegment seg = rootSegment;
+    while (seg != null) {
+      if (seg.isArray()) {
+        return true;
+      }
+      seg = seg.getChild();
+    }
+    return false;
   }
 
-  public SchemaPath(NameSegment rootSegment) {
-    super(ExpressionPosition.UNKNOWN);
-    this.rootSegment = rootSegment;
+  /**
+   * Determine if this is a one-part name. In general, special columns work only
+   * if they are single-part names.
+   *
+   * @return true if this is a one-part name, false if this is a multi-part
+   * name (with either map member or array index parts.)
+   */
+
+  public boolean isLeaf() {
+    return rootSegment.isLastPath();
   }
 
-  public SchemaPath(NameSegment rootSegment, ExpressionPosition pos) {
-    super(pos);
-    this.rootSegment = rootSegment;
+  /**
+   * Return if this column is the special wildcard ("**") column which means to
+   * project all table columns.
+   *
+   * @return true if the column is "**"
+   */
+
+  public boolean isDynamicStar() {
+    return isLeaf() && nameEquals(DYNAMIC_STAR);
+  }
+
+  /**
+   * Returns if this is a simple column and the name matches the given
+   * name (ignoring case.) This does not check if the name is an entire
+   * match, only the the first (or only) part of the name matches.
+   * Also check {@link #isLeaf()} to check for a single-part name.
+   *
+   * @param name name to match
+   * @return true if this is a single-part column with that name.
+   */
+
+  public boolean nameEquals(String name) {
+    return rootSegment.nameEquals(name);
+  }
+
+  /**
+   * Return the root name: either the entire name (if one part) or
+   * the first part (if multi-part.)
+   * <ul>
+   * <li>a: returns a</li>
+   * <li>a.b: returns a</li>
+   * <li>a[10]: returns a</li>
+   * </ul>
+   *
+   * @return the root (or only) name
+   */
+
+  public String rootName() {
+    return rootSegment.getPath();
   }
 
   @Override
@@ -243,7 +315,7 @@ public class SchemaPath extends LogicalExpressionBase {
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   @Override
@@ -264,6 +336,7 @@ public class SchemaPath extends LogicalExpressionBase {
     return rootSegment.getPath();
   }
 
+  @SuppressWarnings("serial")
   public static class De extends StdDeserializer<SchemaPath> {
 
     public De() {

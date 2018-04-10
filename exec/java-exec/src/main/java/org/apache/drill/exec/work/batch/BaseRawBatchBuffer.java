@@ -35,13 +35,13 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   }
 
   protected interface BufferQueue<T> {
-    public void addOomBatch(RawFragmentBatch batch);
-    public RawFragmentBatch poll() throws IOException;
-    public RawFragmentBatch take() throws IOException, InterruptedException;
-    public boolean checkForOutOfMemory();
-    public int size();
-    public boolean isEmpty();
-    public void add(T obj);
+    void addOomBatch(RawFragmentBatch batch);
+    RawFragmentBatch poll() throws IOException;
+    RawFragmentBatch take() throws IOException, InterruptedException;
+    boolean checkForOutOfMemory();
+    int size();
+    boolean isEmpty();
+    void add(T obj);
   }
 
   protected BufferQueue<T> bufferQueue;
@@ -74,7 +74,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 
     // if this fragment is already canceled or failed, we shouldn't need any or more stuff. We do the null check to
     // ensure that tests run.
-    if (context != null && !context.shouldContinue()) {
+    if (context != null && !context.getExecutorState().shouldContinue()) {
       this.kill(context);
     }
 
@@ -102,14 +102,14 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 //  ## Add assertion that all acks have been sent. TODO
   @Override
   public void close() {
-    if (!isTerminated() && context.shouldContinue()) {
+    if (!isTerminated() && context.getExecutorState().shouldContinue()) {
       final String msg = String.format("Cleanup before finished. %d out of %d strams have finished", completedStreams(), fragmentCount);
       throw  new IllegalStateException(msg);
     }
 
     if (!bufferQueue.isEmpty()) {
-      if (context.shouldContinue()) {
-        context.fail(new IllegalStateException("Batches still in queue during cleanup"));
+      if (context.getExecutorState().shouldContinue()) {
+        context.getExecutorState().fail(new IllegalStateException("Batches still in queue during cleanup"));
         logger.error("{} Batches in queue.", bufferQueue.size());
       }
       clearBufferWithBody();
@@ -133,7 +133,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
         batch = bufferQueue.poll();
         assertAckSent(batch);
       } catch (IOException e) {
-        context.fail(e);
+        context.getExecutorState().fail(e);
         continue;
       }
       if (batch.getBody() != null) {
@@ -172,7 +172,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
     } catch (final InterruptedException e) {
 
       // We expect that the interrupt means the fragment is canceled or failed, so we should kill this buffer
-      if (!context.shouldContinue()) {
+      if (!context.getExecutorState().shouldContinue()) {
         kill(context);
       } else {
         throw new DrillRuntimeException("Interrupted but context.shouldContinue() is true", e);
@@ -184,7 +184,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
       return null;
     }
 
-    if (context.isOverMemoryLimit()) {
+    if (context.getAllocator().isOverLimit()) {
       outOfMemory.set(true);
     }
 

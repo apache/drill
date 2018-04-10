@@ -65,11 +65,20 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
       return false;
     }
 
-    if (leftUpstream == IterOutcome.NONE && rightUpstream == IterOutcome.NONE) {
+    if (checkForEarlyFinish()) {
       state = BatchState.DONE;
       return false;
     }
 
     return true;
+  }
+
+  /*
+   * Checks for the operator specific early terminal condition.
+   * @return true if the further processing can stop.
+   *         false if the further processing is needed.
+   */
+  protected boolean checkForEarlyFinish() {
+    return (leftUpstream == IterOutcome.NONE && rightUpstream == IterOutcome.NONE);
   }
 }

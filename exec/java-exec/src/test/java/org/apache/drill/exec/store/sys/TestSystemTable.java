@@ -69,4 +69,19 @@ public class TestSystemTable extends BaseTestQuery {
   public void memoryTable() throws Exception {
     test("select * from sys.memory");
   }
+
+  @Test
+  public void connectionsTable() throws Exception {
+    test("select * from sys.connections");
+  }
+
+  @Test
+  public void profilesTable() throws Exception {
+    test("select * from sys.profiles");
+  }
+
+  @Test
+  public void profilesJsonTable() throws Exception {
+    test("select * from sys.profiles_json");
+  }
 }

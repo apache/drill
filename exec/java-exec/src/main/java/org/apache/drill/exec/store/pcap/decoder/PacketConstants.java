@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.pcap.decoder;
 @SuppressWarnings("WeakerAccess")
 public final class PacketConstants {
 
-  public static final int PCAP_HEADER_SIZE = 4 * 4;
+  public static final int PCAP_HEADER_SIZE = 4 * 4;   // packet header, not file header
 
   public static final int TIMESTAMP_OFFSET = 0;
   public static final int TIMESTAMP_MICRO_OFFSET = 4;
@@ -65,4 +65,7 @@ public final class PacketConstants {
 
   public static final int PPPoV6_IP_OFFSET = 28;
 
+  public static final int TCP_SEQUENCE_OFFSET = 4;
+  public static final int TCP_ACK_OFFSET = 8;
+  public static final int TCP_FLAG_OFFSET = 12;
 }

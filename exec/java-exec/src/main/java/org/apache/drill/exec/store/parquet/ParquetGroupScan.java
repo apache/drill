@@ -164,9 +164,6 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   ) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName));
     this.columns = columns;
-    if (formatConfig == null) {
-      formatConfig = new ParquetFormatConfig();
-    }
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
@@ -213,18 +210,20 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     this.entries = Lists.newArrayList();
 
-    if (checkForInitializingEntriesWithSelectionRoot()) {
-      // The fully expanded list is already stored as part of the fileSet
-      entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
-    } else {
-      for (String fileName : fileSelection.getFiles()) {
-        entries.add(new ReadEntryWithPath(fileName));
+    if (fileSelection != null) {
+      if (checkForInitializingEntriesWithSelectionRoot()) {
+        // The fully expanded list is already stored as part of the fileSet
+        entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
+      } else {
+        for (String fileName : fileSelection.getFiles()) {
+          entries.add(new ReadEntryWithPath(fileName));
+        }
       }
+
+      this.filter = filter;
+
+      init();
     }
-
-    this.filter = filter;
-
-    init();
   }
 
   /*
@@ -345,6 +344,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return true;
   }
 
+  @JsonIgnore
   @Override
   public Collection<String> getFiles() {
     return fileSet;
@@ -877,7 +877,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     if (fileSet.isEmpty()) {
       // no files were found, most likely we tried to query some empty sub folders
-      throw UserException.validationError().message("The table you tried to query is empty").build(logger);
+      logger.warn("The table is empty but with outdated invalid metadata cache files. Please, delete them.");
+      return null;
     }
 
     List<String> fileNames = Lists.newArrayList(fileSet);

@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl.xsort.managed;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.cache.VectorSerializer;
+import org.apache.drill.exec.cache.VectorSerializer.Writer;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.record.BatchSchema;
@@ -139,13 +139,12 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
 
   public static class SpilledRun extends BatchGroup {
     private InputStream inputStream;
-    private OutputStream outputStream;
     private String path;
     private SpillSet spillSet;
     private BufferAllocator allocator;
     private int spilledBatches;
     private long batchSize;
-    private VectorSerializer.Writer writer;
+    private Writer writer;
     private VectorSerializer.Reader reader;
 
     public SpilledRun(SpillSet spillSet, String path, BufferAllocator allocator) throws IOException {
@@ -153,15 +152,13 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
       this.spillSet = spillSet;
       this.path = path;
       this.allocator = allocator;
-      outputStream = spillSet.openForOutput(path);
-      writer = VectorSerializer.writer(allocator, outputStream);
+      writer = spillSet.writer(path);
     }
 
     public void addBatch(VectorContainer newContainer) throws IOException {
-      Stopwatch watch = Stopwatch.createStarted();
       writer.write(newContainer);
       newContainer.zeroVectors();
-      logger.trace("Wrote {} records in {} us", newContainer.getRecordCount(), watch.elapsed(TimeUnit.MICROSECONDS));
+      logger.trace("Wrote {} records in {} us", newContainer.getRecordCount(), writer.time(TimeUnit.MICROSECONDS));
       spilledBatches++;
 
       // Hold onto the husk of the last added container so that we have a
@@ -249,7 +246,7 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
         ex = e;
       }
       try {
-        closeOutputStream();
+        closeWriter();
       } catch (IOException e) {
         ex = ex == null ? e : ex;
       }
@@ -280,17 +277,12 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
       logger.trace("Summary: Read {} bytes from {}", readLength, path);
     }
 
-    public long closeOutputStream() throws IOException {
-      if (outputStream == null) {
-        return 0;
+    public void closeWriter() throws IOException {
+      if (writer != null) {
+        spillSet.close(writer);
+        logger.trace("Summary: Wrote {} bytes in {} us to {}", writer.getBytesWritten(), writer.time(TimeUnit.MICROSECONDS), path);
+        writer = null;
       }
-      long writeSize = spillSet.getPosition(outputStream);
-      spillSet.tallyWriteBytes(writeSize);
-      outputStream.close();
-      outputStream = null;
-      writer = null;
-      logger.trace("Summary: Wrote {} bytes to {}", writeSize, path);
-      return writeSize;
     }
   }
 

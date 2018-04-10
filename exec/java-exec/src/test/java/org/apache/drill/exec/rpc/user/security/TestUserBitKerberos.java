@@ -56,7 +56,7 @@ public class TestUserBitKerberos extends BaseTestQuery {
   @BeforeClass
   public static void setupTest() throws Exception {
 
-    krbHelper = new KerberosHelper(TestUserBitKerberos.class.getSimpleName());
+    krbHelper = new KerberosHelper(TestUserBitKerberos.class.getSimpleName(), null);
     krbHelper.setupKdc(dirTestWatcher.getTmpDir());
 
     // Create a new DrillConfig which has user authentication enabled and authenticator set to
@@ -71,8 +71,7 @@ public class TestUserBitKerberos extends BaseTestQuery {
       .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
         ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))),
-      false);
+        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));
 
     final Properties connectionProps = new Properties();
     connectionProps.setProperty(DrillProperties.USER, "anonymous");
@@ -176,7 +175,7 @@ public class TestUserBitKerberos extends BaseTestQuery {
 
     // Check unencrypted counters value
     assertTrue(1 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-    assertTrue(2 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
     assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
   }
 

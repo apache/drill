@@ -45,7 +45,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.File;
 
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestPStoreProviders extends TestWithZookeeper {
   @Rule
   public BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();

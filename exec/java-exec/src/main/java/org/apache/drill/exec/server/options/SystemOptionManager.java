@@ -91,6 +91,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(PlannerSettings.NLJOIN_FOR_SCALAR),
       new OptionDefinition(PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR),
       new OptionDefinition(PlannerSettings.MUX_EXCHANGE),
+      new OptionDefinition(PlannerSettings.ORDERED_MUX_EXCHANGE),
       new OptionDefinition(PlannerSettings.DEMUX_EXCHANGE),
       new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER),
       new OptionDefinition(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE),
@@ -140,6 +141,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.PARQUET_PAGEREADER_USE_FADVISE_VALIDATOR),
       new OptionDefinition(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP_VALIDATOR),
       new OptionDefinition(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+      new OptionDefinition(ExecConstants.JSON_WRITER_NAN_INF_NUMBERS_VALIDATOR),
+      new OptionDefinition(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR),
       new OptionDefinition(ExecConstants.ENABLE_UNION_TYPE),
       new OptionDefinition(ExecConstants.TEXT_ESTIMATED_ROW_SIZE),
       new OptionDefinition(ExecConstants.JSON_EXTENDED_TYPES),
@@ -152,6 +155,10 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR),
       new OptionDefinition(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
       new OptionDefinition(ExecConstants.MONGO_BSON_RECORD_READER_VALIDATOR),
+      new OptionDefinition(ExecConstants.KAFKA_READER_ALL_TEXT_MODE_VALIDATOR),
+      new OptionDefinition(ExecConstants.KAFKA_RECORD_READER_VALIDATOR),
+      new OptionDefinition(ExecConstants.KAFKA_POLL_TIMEOUT_VALIDATOR),
+      new OptionDefinition(ExecConstants.KAFKA_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
       new OptionDefinition(ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR),
       new OptionDefinition(ExecConstants.SLICE_TARGET_OPTION),
       new OptionDefinition(ExecConstants.AFFINITY_FACTOR),
@@ -205,7 +212,9 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.PERSISTENT_TABLE_UMASK_VALIDATOR),
       new OptionDefinition(ExecConstants.CPU_LOAD_AVERAGE),
       new OptionDefinition(ExecConstants.ENABLE_VECTOR_VALIDATOR),
-      new OptionDefinition(ExecConstants.ENABLE_ITERATOR_VALIDATOR)
+      new OptionDefinition(ExecConstants.ENABLE_ITERATOR_VALIDATOR),
+      new OptionDefinition(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.FRAG_RUNNER_RPC_TIMEOUT_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, true)),
     };
 
     final CaseInsensitiveMap<OptionDefinition> map = CaseInsensitiveMap.newHashMap();

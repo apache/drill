@@ -30,7 +30,6 @@ import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidat
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
-import org.apache.drill.exec.server.options.TypeValidators.MaxWidthValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
@@ -60,6 +59,8 @@ public final class ExecConstants {
   public static final String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
   public static final String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
+  public static final String FRAG_RUNNER_RPC_TIMEOUT = "drill.exec.rpc.fragrunner.timeout";
+  public static final PositiveLongValidator FRAG_RUNNER_RPC_TIMEOUT_VALIDATOR = new PositiveLongValidator(FRAG_RUNNER_RPC_TIMEOUT, Long.MAX_VALUE);
   public static final String TRACE_DUMP_DIRECTORY = "drill.exec.trace.directory";
   public static final String TRACE_DUMP_FILESYSTEM = "drill.exec.trace.filesystem";
   public static final String TEMP_DIRECTORIES = "drill.exec.tmp.directories";
@@ -76,6 +77,11 @@ public final class ExecConstants {
 
   public static final String SPILL_FILESYSTEM = "drill.exec.spill.fs";
   public static final String SPILL_DIRS = "drill.exec.spill.directories";
+
+  public static final String OUTPUT_BATCH_SIZE = "drill.exec.memory.operator.output_batch_size";
+  // Output Batch Size in Bytes. We have a small lower bound so we can test with unit tests without the
+  // need to produce very large batches that take up lot of memory.
+  public static final LongValidator OUTPUT_BATCH_SIZE_VALIDATOR = new RangeLongValidator(OUTPUT_BATCH_SIZE, 128, 512 * 1024 * 1024);
 
   // External Sort Boot configuration
 
@@ -136,6 +142,8 @@ public final class ExecConstants {
   public static final String HTTP_MAX_PROFILES = "drill.exec.http.max_profiles";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String HTTP_PORT_HUNT = "drill.exec.http.porthunt";
+  public static final String HTTP_JETTY_SERVER_ACCEPTORS = "drill.exec.http.jetty.server.acceptors";
+  public static final String HTTP_JETTY_SERVER_SELECTORS = "drill.exec.http.jetty.server.selectors";
   public static final String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
   public static final String HTTP_CORS_ENABLED = "drill.exec.http.cors.enabled";
   public static final String HTTP_CORS_ALLOWED_ORIGINS = "drill.exec.http.cors.allowedOrigins";
@@ -149,6 +157,9 @@ public final class ExecConstants {
   public static final String HTTP_KEYSTORE_PASSWORD = SSL_KEYSTORE_PASSWORD;
   public static final String HTTP_TRUSTSTORE_PATH = SSL_TRUSTSTORE_PATH;
   public static final String HTTP_TRUSTSTORE_PASSWORD = SSL_TRUSTSTORE_PASSWORD;
+  public static final String HTTP_AUTHENTICATION_MECHANISMS = "drill.exec.http.auth.mechanisms";
+  public static final String HTTP_SPNEGO_PRINCIPAL = "drill.exec.http.auth.spnego.principal";
+  public static final String HTTP_SPNEGO_KEYTAB = "drill.exec.http.auth.spnego.keytab";
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
@@ -249,7 +260,7 @@ public final class ExecConstants {
   public static final String PARQUET_COLUMNREADER_ASYNC = "store.parquet.reader.columnreader.async";
   public static final OptionValidator PARQUET_COLUMNREADER_ASYNC_VALIDATOR = new BooleanValidator(PARQUET_COLUMNREADER_ASYNC);
 
-  // Use a buffering reader for parquet page reader
+  // Use a buffering reader for Parquet page reader
   public static final String PARQUET_PAGEREADER_USE_BUFFERED_READ = "store.parquet.reader.pagereader.bufferedread";
   public static final OptionValidator PARQUET_PAGEREADER_USE_BUFFERED_READ_VALIDATOR = new  BooleanValidator(PARQUET_PAGEREADER_USE_BUFFERED_READ);
 
@@ -275,14 +286,24 @@ public final class ExecConstants {
   public static final DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator("store.text.estimated_row_size_bytes", 1, Long.MAX_VALUE);
 
   /**
+   * Json writer option for writing `NaN` and `Infinity` tokens as numbers (not enclosed with double quotes)
+   */
+  public static final String JSON_WRITER_NAN_INF_NUMBERS = "store.json.writer.allow_nan_inf";
+  public static final BooleanValidator JSON_WRITER_NAN_INF_NUMBERS_VALIDATOR = new BooleanValidator(JSON_WRITER_NAN_INF_NUMBERS);
+  /**
+   * Json reader option that enables parser to read `NaN` and `Infinity` tokens as numbers
+   */
+  public static final String JSON_READER_NAN_INF_NUMBERS = "store.json.reader.allow_nan_inf";
+  public static final BooleanValidator JSON_READER_NAN_INF_NUMBERS_VALIDATOR = new BooleanValidator(JSON_READER_NAN_INF_NUMBERS);
+  /**
    * The column label (for directory levels) in results when querying files in a directory
-   * E.g.  labels: dir0   dir1
+   * E.g.  labels: dir0   dir1<pre>
    *    structure: foo
    *                |-    bar  -  a.parquet
-   *                |-    baz  -  b.parquet
+   *                |-    baz  -  b.parquet</pre>
    */
   public static final String FILESYSTEM_PARTITION_COLUMN_LABEL = "drill.exec.storage.file.partition.column.label";
-  public static final OptionValidator FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR = new StringValidator(FILESYSTEM_PARTITION_COLUMN_LABEL);
+  public static final StringValidator FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR = new StringValidator(FILESYSTEM_PARTITION_COLUMN_LABEL);
 
   /**
    * Implicit file columns
@@ -306,7 +327,20 @@ public final class ExecConstants {
   public static final String MONGO_BSON_RECORD_READER = "store.mongo.bson.record.reader";
   public static final OptionValidator MONGO_BSON_RECORD_READER_VALIDATOR = new BooleanValidator(MONGO_BSON_RECORD_READER);
 
-  public static final BooleanValidator ENABLE_UNION_TYPE = new BooleanValidator("exec.enable_union_type");
+  public static final String ENABLE_UNION_TYPE_KEY = "exec.enable_union_type";
+  public static final BooleanValidator ENABLE_UNION_TYPE = new BooleanValidator(ENABLE_UNION_TYPE_KEY);
+
+  // Kafka plugin related options.
+  public static final String KAFKA_ALL_TEXT_MODE = "store.kafka.all_text_mode";
+  public static final OptionValidator KAFKA_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(KAFKA_ALL_TEXT_MODE);
+  public static final String KAFKA_READER_READ_NUMBERS_AS_DOUBLE = "store.kafka.read_numbers_as_double";
+  public static final OptionValidator KAFKA_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(
+      KAFKA_READER_READ_NUMBERS_AS_DOUBLE);
+  public static final String KAFKA_RECORD_READER = "store.kafka.record.reader";
+  public static final OptionValidator KAFKA_RECORD_READER_VALIDATOR = new StringValidator(KAFKA_RECORD_READER);
+  public static final String KAFKA_POLL_TIMEOUT = "store.kafka.poll.timeout";
+  public static final PositiveLongValidator KAFKA_POLL_TIMEOUT_VALIDATOR = new PositiveLongValidator(KAFKA_POLL_TIMEOUT,
+      Long.MAX_VALUE);
 
   // TODO: We need to add a feature that enables storage plugins to add their own options. Currently we have to declare
   // in core which is not right. Move this option and above two mongo plugin related options once we have the feature.
@@ -421,6 +455,9 @@ public final class ExecConstants {
 
   public static final String AVERAGE_FIELD_WIDTH_KEY = "planner.memory.average_field_width";
   public static final OptionValidator AVERAGE_FIELD_WIDTH = new PositiveLongValidator(AVERAGE_FIELD_WIDTH_KEY, Long.MAX_VALUE);
+
+  // Mux Exchange options.
+  public static final String ORDERED_MUX_EXCHANGE = "planner.enable_ordered_mux_exchange";
 
   // Resource management boot-time options.
 
@@ -590,4 +627,17 @@ public final class ExecConstants {
   public static String bootDefaultFor(String name) {
     return OPTION_DEFAULTS_ROOT + name;
 }
+  /**
+   * Boot-time config option provided to modify duration of the grace period.
+   * Grace period is the amount of time where the drillbit accepts work after
+   * the shutdown request is triggered. The primary use of grace period is to
+   * avoid the race conditions caused by zookeeper delay in updating the state
+   * information of the drillbit that is shutting down. So, it is advisable
+   * to have a grace period that is atleast twice the amount of zookeeper
+   * refresh time.
+   */
+  public static final String GRACE_PERIOD = "drill.exec.grace_period_ms";
+
+  public static final String DRILL_PORT_HUNT = "drill.exec.port_hunt";
+
 }

@@ -178,7 +178,7 @@ public class SpilledRuns {
         newGroup.addBatch(dest);
       }
       context.injectChecked(ExternalSortBatch.INTERRUPTION_WHILE_SPILLING, IOException.class);
-      newGroup.closeOutputStream();
+      newGroup.closeWriter();
       logger.trace("Spilled {} output batches, each of {} bytes, {} records, to {}",
                    merger.getBatchCount(), merger.getEstBatchSize(),
                    spillBatchRowCount, outputFile);

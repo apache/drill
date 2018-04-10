@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,7 +27,10 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexLocalRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexOver;
+import org.apache.calcite.rex.RexPatternFieldRef;
 import org.apache.calcite.rex.RexRangeRef;
+import org.apache.calcite.rex.RexSubQuery;
+import org.apache.calcite.rex.RexTableInputRef;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.rex.RexWindow;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
@@ -114,6 +117,21 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
   @Override
   public Boolean visitFieldAccess(RexFieldAccess paramRexFieldAccess) {
     return paramRexFieldAccess.getReferenceExpr().accept(this);
+  }
+
+  @Override
+  public Boolean visitSubQuery(RexSubQuery subQuery) {
+    return null;
+  }
+
+  @Override
+  public Boolean visitTableInputRef(RexTableInputRef fieldRef) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitPatternFieldRef(RexPatternFieldRef fieldRef) {
+    return false;
   }
 
 }

@@ -17,24 +17,25 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
-import org.apache.drill.exec.util.Utilities;
-import org.apache.hadoop.fs.Path;
-
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.exec.util.Utilities;
+import org.apache.hadoop.fs.Path;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 
 public class ColumnExplorer {
 
@@ -46,23 +47,13 @@ public class ColumnExplorer {
   private final Map<String, ImplicitFileColumns> allImplicitColumns;
   private final Map<String, ImplicitFileColumns> selectedImplicitColumns;
 
-
-  /**
-   * Helper class that encapsulates logic for sorting out columns
-   * between actual table columns, partition columns and implicit file columns.
-   * Also populates map with implicit columns names as keys and their values
-   */
-  public ColumnExplorer(FragmentContext context, List<SchemaPath> columns) {
-    this(context.getOptions(), columns);
-  }
-
   /**
    * Helper class that encapsulates logic for sorting out columns
    * between actual table columns, partition columns and implicit file columns.
    * Also populates map with implicit columns names as keys and their values
    */
   public ColumnExplorer(OptionManager optionManager, List<SchemaPath> columns) {
-    this.partitionDesignator = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    this.partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     this.columns = columns;
     this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
     this.selectedPartitionColumns = Lists.newArrayList();
@@ -74,7 +65,8 @@ public class ColumnExplorer {
   }
 
   /**
-   * Creates case insensitive map with implicit file columns as keys and appropriate ImplicitFileColumns enum as values
+   * Creates case insensitive map with implicit file columns as keys and
+   * appropriate ImplicitFileColumns enum as values
    */
   public static Map<String, ImplicitFileColumns> initImplicitFileColumns(OptionManager optionManager) {
     Map<String, ImplicitFileColumns> map = CaseInsensitiveMap.newHashMap();
@@ -88,14 +80,31 @@ public class ColumnExplorer {
   }
 
   /**
+   * Returns list with implicit column names taken from specified {@link SchemaConfig}.
+   *
+   * @param schemaConfig the source of session options values.
+   * @return list with implicit column names.
+   */
+  public static List<String> getImplicitColumnsNames(SchemaConfig schemaConfig) {
+    List<String> implicitColumns = Lists.newArrayList();
+    for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
+      OptionValue optionValue;
+      if ((optionValue = schemaConfig.getOption(e.name)) != null) {
+        implicitColumns.add(optionValue.string_val);
+      }
+    }
+    return implicitColumns;
+  }
+
+  /**
    * Checks if given column is partition or not.
    *
    * @param optionManager options
    * @param column column
    * @return true if given column is partition, false otherwise
    */
-  public static boolean isPartitionColumn(OptionManager optionManager, SchemaPath column){
-    String partitionDesignator = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+  public static boolean isPartitionColumn(OptionManager optionManager, SchemaPath column) {
+    String partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     String path = column.getRootSegmentPath();
     return isPartitionColumn(partitionDesignator, path);
   }
@@ -111,6 +120,39 @@ public class ColumnExplorer {
     Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
     Matcher matcher = pattern.matcher(path);
     return matcher.matches();
+  }
+
+  /**
+   * Returns list with partition column names.
+   * For the case when table has several levels of nesting, max level is chosen.
+   *
+   * @param selection    the source of file paths
+   * @param schemaConfig the source of session option value for partition column label
+   * @return list with partition column names.
+   */
+  public static List<String> getPartitionColumnNames(FileSelection selection, SchemaConfig schemaConfig) {
+    int partitionsCount = 0;
+    // a depth of table root path
+    int rootDepth = new Path(selection.getSelectionRoot()).depth();
+
+    for (String file : selection.getFiles()) {
+      // Calculates partitions count for the concrete file:
+      // depth of file path - depth of table root path - 1.
+      // The depth of file path includes file itself,
+      // so we should subtract 1 to consider only directories.
+      int currentPartitionsCount = new Path(file).depth() - rootDepth - 1;
+      // max depth of files path should be used to handle all partitions
+      partitionsCount = Math.max(partitionsCount, currentPartitionsCount);
+    }
+
+    String partitionColumnLabel = schemaConfig.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    List<String> partitions = Lists.newArrayList();
+
+    // generates partition column names: dir0, dir1 etc.
+    for (int i = 0; i < partitionsCount; i++) {
+      partitions.add(partitionColumnLabel + i);
+    }
+    return partitions;
   }
 
   /**
@@ -252,11 +294,11 @@ public class ColumnExplorer {
       this.name = name;
     }
 
+    public String optionName() { return name; }
+
     /**
      * Using file path calculates value for each implicit file column
      */
     public abstract String getValue(Path path);
-
   }
-
 }

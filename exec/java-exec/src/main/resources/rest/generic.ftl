@@ -77,7 +77,7 @@
               </#if>
               <li><a href="http://drill.apache.org/docs/">Documentation</a>
               <#if showLogin == true >
-              <li><a href="/login">Log In</a>
+              <li><a href="/mainLogin">Log In</a>
               </#if>
               <#if showLogout == true >
               <li><a id="logout" href="/logout">Log Out (${loggedInUserName})</a>

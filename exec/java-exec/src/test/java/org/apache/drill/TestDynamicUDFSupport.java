@@ -18,9 +18,9 @@
 package org.apache.drill;
 
 import com.google.common.collect.Lists;
-import mockit.Deencapsulation;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.config.CommonConstants;
@@ -118,7 +118,6 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         closeClient();
         FileUtils.cleanDirectory(udfDir);
         dirTestWatcher.clear();
-        setupDefaultTestCluster();
         setup();
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -482,8 +481,8 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         .baselineValues("a")
         .go();
 
-    Path localUdfDirPath = hadoopToJavaPath((org.apache.hadoop.fs.Path) Deencapsulation.getField(
-        getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir"));
+    Path localUdfDirPath = hadoopToJavaPath((org.apache.hadoop.fs.Path)FieldUtils.readField(
+      getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir", true));
 
     assertTrue("Binary should exist in local udf directory",
       localUdfDirPath.resolve(default_binary_name).toFile().exists());
@@ -549,8 +548,8 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     test("create function using jar '%s'", default_binary_name);
     test("select custom_lower('A') from (values(1))");
 
-    Path localUdfDirPath = hadoopToJavaPath((org.apache.hadoop.fs.Path)Deencapsulation.getField(
-      getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir"));
+    Path localUdfDirPath = hadoopToJavaPath((org.apache.hadoop.fs.Path)FieldUtils.readField(
+        getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir", true));
 
     assertTrue("Binary should exist in local udf directory",
       localUdfDirPath.resolve(default_binary_name).toFile().exists());
@@ -897,8 +896,8 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     thread2.join();
 
     verify(functionImplementationRegistry, times(2)).syncWithRemoteRegistry(anyLong());
-    LocalFunctionRegistry localFunctionRegistry = Deencapsulation.getField(
-        functionImplementationRegistry, "localFunctionRegistry");
+    LocalFunctionRegistry localFunctionRegistry = (LocalFunctionRegistry)FieldUtils.readField(
+        functionImplementationRegistry, "localFunctionRegistry", true);
     assertEquals("Sync function registry version should match", 1L, localFunctionRegistry.getVersion());
   }
 
@@ -935,8 +934,8 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     }
 
     verify(functionImplementationRegistry, times(2)).syncWithRemoteRegistry(anyLong());
-    LocalFunctionRegistry localFunctionRegistry = Deencapsulation.getField(
-        functionImplementationRegistry, "localFunctionRegistry");
+    LocalFunctionRegistry localFunctionRegistry = (LocalFunctionRegistry)FieldUtils.readField(
+        functionImplementationRegistry, "localFunctionRegistry", true);
     assertEquals("Sync function registry version should match", 1L, localFunctionRegistry.getVersion());
   }
 
@@ -963,19 +962,19 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     FileUtils.copyFile(src.resolve(name).toFile(), destFile);
   }
 
-  private RemoteFunctionRegistry spyRemoteFunctionRegistry() {
+  private RemoteFunctionRegistry spyRemoteFunctionRegistry() throws IllegalAccessException {
     FunctionImplementationRegistry functionImplementationRegistry =
         getDrillbitContext().getFunctionImplementationRegistry();
     RemoteFunctionRegistry remoteFunctionRegistry = functionImplementationRegistry.getRemoteFunctionRegistry();
     RemoteFunctionRegistry spy = spy(remoteFunctionRegistry);
-    Deencapsulation.setField(functionImplementationRegistry, "remoteFunctionRegistry", spy);
+    FieldUtils.writeField(functionImplementationRegistry, "remoteFunctionRegistry", spy, true);
     return spy;
   }
 
-  private FunctionImplementationRegistry spyFunctionImplementationRegistry() {
+  private FunctionImplementationRegistry spyFunctionImplementationRegistry() throws IllegalAccessException {
     DrillbitContext drillbitContext = getDrillbitContext();
     FunctionImplementationRegistry spy = spy(drillbitContext.getFunctionImplementationRegistry());
-    Deencapsulation.setField(drillbitContext, "functionRegistry", spy);
+    FieldUtils.writeField(drillbitContext, "functionRegistry", spy, true);
     return spy;
   }
 
@@ -1014,5 +1013,4 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
       }
     }
   }
-
 }

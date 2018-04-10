@@ -252,6 +252,14 @@ public class BootStrapContext implements AutoCloseable {
       }
     }
 
+    if (scanExecutor != null) {
+      scanExecutor.shutdown();
+    }
+
+    if (scanDecodeExecutor != null) {
+      scanDecodeExecutor.shutdownNow();
+    }
+
     try {
       AutoCloseables.close(allocator, authProvider);
       shutdown(loop);

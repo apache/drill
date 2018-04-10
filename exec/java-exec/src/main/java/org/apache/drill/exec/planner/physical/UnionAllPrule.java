@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -34,32 +33,31 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait.Distributio
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 public class UnionAllPrule extends Prule {
   public static final RelOptRule INSTANCE = new UnionAllPrule();
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private UnionAllPrule() {
-    super(
-        RelOptHelper.any(DrillUnionRel.class), "Prel.UnionAllPrule");
+    super(RelOptHelper.any(DrillUnionRel.class), "Prel.UnionAllPrule");
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    DrillUnionRel union = (DrillUnionRel) call.rel(0);
+    DrillUnionRel union = call.rel(0);
     return (! union.isDistinct());
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillUnionRel union = (DrillUnionRel) call.rel(0);
+    final DrillUnionRel union = call.rel(0);
     final List<RelNode> inputs = union.getInputs();
     List<RelNode> convertedInputList = Lists.newArrayList();
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     boolean allHashDistributed = true;
 
-    for (int i = 0; i < inputs.size(); i++) {
-      RelNode child = inputs.get(i);
+    for (RelNode child : inputs) {
       List<DistributionField> childDistFields = Lists.newArrayList();
       RelNode convertedChild;
 
@@ -110,7 +108,7 @@ public class UnionAllPrule extends Prule {
       call.transformTo(left);
 
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 

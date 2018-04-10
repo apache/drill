@@ -27,9 +27,11 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 public interface Flattener {
-  public void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;
+  TemplateClassDefinition<Flattener> TEMPLATE_DEFINITION = new TemplateClassDefinition<Flattener>(Flattener.class, FlattenTemplate.class);
 
-  public interface Monitor {
+  void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;
+
+  interface Monitor {
     /**
      * Get the required buffer size for the specified number of records.
      * {@see ValueVector#getBufferSizeFor(int)} for the meaning of this.
@@ -37,14 +39,15 @@ public interface Flattener {
      * @param recordCount the number of records processed so far
      * @return the buffer size the vectors report as being in use
      */
-    public int getBufferSizeFor(int recordCount);
-  };
+    int getBufferSizeFor(int recordCount);
+  }
 
-  public int flattenRecords(int recordCount, int firstOutputIndex, Monitor monitor);
+  int flattenRecords(int recordCount, int firstOutputIndex, Monitor monitor);
 
-  public void setFlattenField(RepeatedValueVector repeatedColumn);
-  public RepeatedValueVector getFlattenField();
-  public void resetGroupIndex();
+  void setFlattenField(RepeatedValueVector repeatedColumn);
+  void setOutputCount(int outputCount);
 
-  public static final TemplateClassDefinition<Flattener> TEMPLATE_DEFINITION = new TemplateClassDefinition<Flattener>(Flattener.class, FlattenTemplate.class);
+  RepeatedValueVector getFlattenField();
+
+  void resetGroupIndex();
 }

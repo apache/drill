@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.FragmentContext.ExecutorState;
+import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
@@ -37,8 +37,6 @@ import com.google.common.collect.Lists;
 
 @Deprecated
 public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRootExec.class);
-
   private final RecordBatch incoming;
   private final ScreenRoot screenRoot;
 
@@ -49,10 +47,11 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
     } else {
       throw new UnsupportedOperationException();
     }
-    incoming.getContext().setExecutorState(new DummyExecutorState());
+
+    screenRoot.getContext().setExecutorState(new DummyExecutorState());
   }
 
-  private class DummyExecutorState implements ExecutorState {
+  private class DummyExecutorState implements FragmentContext.ExecutorState {
     final DeferredException ex = new DeferredException();
 
     @Override
@@ -77,9 +76,8 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
 
   }
 
-
-  public FragmentContext getContext() {
-    return incoming.getContext();
+  public RootFragmentContext getContext() {
+    return screenRoot.getContext();
   }
 
   public SelectionVector2 getSelectionVector2() {

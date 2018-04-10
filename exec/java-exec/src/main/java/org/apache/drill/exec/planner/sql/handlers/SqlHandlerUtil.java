@@ -30,8 +30,9 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.store.AbstractSchema;
 
 import org.apache.calcite.tools.ValidationException;
@@ -86,9 +87,9 @@ public class SqlHandlerUtil {
             .build(logger);
       }
 
-      // CTAS's query field list shouldn't have "*" when table's field list is specified.
+      // CTAS's query field list shouldn't have "**" when table's field list is specified.
       for (String field : validatedRowtype.getFieldNames()) {
-        if (field.equals("*")) {
+        if (SchemaPath.DYNAMIC_STAR.equals(field)) {
           final String tblType = isNewTableView ? "view" : "table";
           throw UserException.validationError()
               .message("%s's query field list has a '*', which is invalid when %s's field list is specified.",
@@ -156,7 +157,7 @@ public class SqlHandlerUtil {
             .message("Partition column %s is not in the SELECT list of CTAS!", col)
             .build(logger);
       } else {
-        if (field.getName().startsWith(StarColumnHelper.STAR_COLUMN)) {
+        if (SchemaPath.DYNAMIC_STAR.equals(field.getName())) {
           colRefStarNames.add(col);
 
           final List<RexNode> operands = Lists.newArrayList();
@@ -190,10 +191,12 @@ public class SqlHandlerUtil {
 
       final List<RexNode> refs =
           new AbstractList<RexNode>() {
+            @Override
             public int size() {
               return originalFieldSize + colRefStarExprs.size();
             }
 
+            @Override
             public RexNode get(int index) {
               if (index < originalFieldSize) {
                 return RexInputRef.of(index, inputRowType.getFieldList());
@@ -203,7 +206,8 @@ public class SqlHandlerUtil {
             }
           };
 
-      return RelOptUtil.createProject(input, refs, names, false);
+      return RelOptUtil.createProject(input, refs, names, false,
+          DrillRelFactories.LOGICAL_BUILDER.create(input.getCluster(), null));
     }
   }
 

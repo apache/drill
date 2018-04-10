@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -26,6 +27,7 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
+import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +58,21 @@ public class HashPrelUtil {
           return new FunctionCall(funcName, inputFiled, ExpressionPosition.UNKNOWN);
         }
       };
+
+  public static class RexNodeBasedHashExpressionCreatorHelper implements HashExpressionCreatorHelper<RexNode> {
+    private final RexBuilder rexBuilder;
+
+    public RexNodeBasedHashExpressionCreatorHelper(RexBuilder rexBuilder) {
+      this.rexBuilder = rexBuilder;
+    }
+
+    @Override
+    public RexNode createCall(String funcName, List<RexNode> inputFields) {
+      final DrillSqlOperator op =
+              new DrillSqlOperator(funcName, inputFields.size(), true, false);
+      return rexBuilder.makeCall(op, inputFields);
+    }
+  }
 
   // The hash32 functions actually use hash64 underneath.  The reason we want to call hash32 is that
   // the hash based operators make use of 4 bytes of hash value, not 8 bytes (for reduced memory use).
@@ -100,7 +117,7 @@ public class HashPrelUtil {
 
     final String functionName = hashAsDouble ? HASH32_DOUBLE_FUNCTION_NAME : HASH32_FUNCTION_NAME;
 
-    T func = helper.createCall(functionName,  ImmutableList.of(inputExprs.get(0), seed ));
+    T func = helper.createCall(functionName,  ImmutableList.of(inputExprs.get(0), seed));
     for (int i = 1; i<inputExprs.size(); i++) {
       func = helper.createCall(functionName, ImmutableList.of(inputExprs.get(i), func));
     }
@@ -109,11 +126,15 @@ public class HashPrelUtil {
   }
 
   /**
-   * Return a hash expression :  hash32(field1, hash32(field2, hash32(field3, 0)));
+   * Creates hash expression for input field and seed.
+   *
+   * @param field field expression
+   * @param seed seed expression
+   * @param hashAsDouble whether to use the hash as double function or regular hash64 function
+   * @return hash expression
    */
-  public static LogicalExpression getHashExpression(List<LogicalExpression> fields, boolean hashAsDouble){
-    final LogicalExpression seed = ValueExpressions.getInt(0); // Hash Table seed
-    return createHashExpression(fields, seed, HASH_HELPER_LOGICALEXPRESSION, hashAsDouble);
+  public static LogicalExpression getHashExpression(LogicalExpression field, LogicalExpression seed, boolean hashAsDouble) {
+    return createHashExpression(ImmutableList.of(field), seed, HASH_HELPER_LOGICALEXPRESSION, hashAsDouble);
   }
 
 

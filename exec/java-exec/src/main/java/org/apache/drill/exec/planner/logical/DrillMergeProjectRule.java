@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,22 +27,25 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.calcite.rel.core.RelFactories.ProjectFactory;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.drill.exec.planner.DrillRelBuilder;
 
 public class DrillMergeProjectRule extends ProjectMergeRule {
 
   private FunctionImplementationRegistry functionRegistry;
   private static DrillMergeProjectRule INSTANCE = null;
 
-  public static DrillMergeProjectRule getInstance(boolean force, ProjectFactory pFactory, FunctionImplementationRegistry functionRegistry) {
+  public static DrillMergeProjectRule getInstance(boolean force, ProjectFactory pFactory,
+      FunctionImplementationRegistry functionRegistry) {
     if (INSTANCE == null) {
       INSTANCE = new DrillMergeProjectRule(force, pFactory, functionRegistry);
     }
     return INSTANCE;
   }
 
-  private DrillMergeProjectRule(boolean force, ProjectFactory pFactory, FunctionImplementationRegistry functionRegistry) {
-    super(force, pFactory);
-   this.functionRegistry = functionRegistry;
+  private DrillMergeProjectRule(boolean force, ProjectFactory pFactory,
+      FunctionImplementationRegistry functionRegistry) {
+    super(force, DrillRelBuilder.proto(pFactory));
+    this.functionRegistry = functionRegistry;
   }
 
   @Override

@@ -76,8 +76,7 @@ public class TestUserBitSSL extends BaseTestQuery {
         .withValue(ExecConstants.SSL_TRUSTSTORE_PASSWORD,
             ConfigValueFactory.fromAnyRef("drill123"))
         .withValue(ExecConstants.SSL_PROTOCOL,
-            ConfigValueFactory.fromAnyRef("TLSv1.2")),
-      false);
+            ConfigValueFactory.fromAnyRef("TLSv1.2")));
 
     initProps = new Properties();
     initProps.setProperty(DrillProperties.ENABLE_TLS, "true");
@@ -92,7 +91,7 @@ public class TestUserBitSSL extends BaseTestQuery {
   @AfterClass
   public static void cleanTest() throws Exception {
     DrillConfig restoreConfig =
-        new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties()), false);
+        new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties()));
     updateTestCluster(1, restoreConfig);
   }
 
@@ -253,7 +252,7 @@ public class TestUserBitSSL extends BaseTestQuery {
           .withValue(ExecConstants.SSL_KEYSTORE_TYPE, ConfigValueFactory.fromAnyRef("JKS"))
           .withValue(ExecConstants.SSL_KEYSTORE_PATH, ConfigValueFactory.fromAnyRef(keyStorePath))
           .withValue(ExecConstants.SSL_KEYSTORE_PASSWORD, ConfigValueFactory.fromAnyRef("test_password"))
-          .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")), false);
+          .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")));
 
       updateTestCluster(1, sslConfig, connectionProps);
 
@@ -298,7 +297,7 @@ public class TestUserBitSSL extends BaseTestQuery {
           .withValue(ExecConstants.SSL_KEYSTORE_TYPE, ConfigValueFactory.fromAnyRef("JKS"))
           .withValue(ExecConstants.SSL_KEYSTORE_PATH, ConfigValueFactory.fromAnyRef(unknownKsPath))
           .withValue(ExecConstants.SSL_KEYSTORE_PASSWORD, ConfigValueFactory.fromAnyRef("drill123"))
-          .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")), false);
+          .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")));
 
       updateTestCluster(1, sslConfig, connectionProps);
 
@@ -326,7 +325,7 @@ public class TestUserBitSSL extends BaseTestQuery {
           .withValue(ExecConstants.SSL_KEYSTORE_TYPE, ConfigValueFactory.fromAnyRef("JKS"))
           .withValue(ExecConstants.SSL_KEYSTORE_PATH, ConfigValueFactory.fromAnyRef(unknownKsPath))
           .withValue(ExecConstants.SSL_KEYSTORE_PASSWORD, ConfigValueFactory.fromAnyRef("drill123"))
-          .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")), false);
+          .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")));
 
       updateTestCluster(1, sslConfig, connectionProps);
 

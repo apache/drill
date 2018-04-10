@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,11 +18,9 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.common.exceptions.UserRemoteException;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
 
 public class TestParquetGroupScan extends BaseTestQuery {
 
@@ -56,65 +54,49 @@ public class TestParquetGroupScan extends BaseTestQuery {
   public void testFix4376() throws Exception {
     prepareTables("4376_1", true);
 
-    testBuilder()
-      .sqlQuery("SELECT COUNT(*) AS `count` FROM dfs.tmp.`4376_1/60*`")
-      .ordered()
-      .baselineColumns("count").baselineValues(1984L)
-      .go();
+    int actualRecordCount = testSql("SELECT * FROM dfs.tmp.`4376_1/60*`");
+    int expectedRecordCount = 1984;
+    assertEquals(String.format("Received unexpected number of rows in output: expected = %d, received = %s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
   @Test
   public void testWildCardEmptyWithCache() throws Exception {
     prepareTables("4376_2", true);
 
-    try {
-      runSQL("SELECT COUNT(*) AS `count` FROM dfs.tmp.`4376_2/604*`");
-      fail("Query should've failed!");
-    } catch (UserRemoteException uex) {
-      final String expectedMsg = "The table you tried to query is empty";
-      assertTrue(String.format("Error message should contain \"%s\" but was instead \"%s\"", expectedMsg,
-        uex.getMessage()), uex.getMessage().contains(expectedMsg));
-    }
+    int actualRecordCount = testSql("SELECT * FROM dfs.tmp.`4376_2/604*`");
+    int expectedRecordCount = 0;
+    assertEquals(String.format("Received unexpected number of rows in output: expected = %d, received = %s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
   @Test
   public void testWildCardEmptyNoCache() throws Exception {
     prepareTables("4376_3", false);
 
-    try {
-      runSQL("SELECT COUNT(*) AS `count` FROM dfs.tmp.`4376_3/604*`");
-      fail("Query should've failed!");
-    } catch (UserRemoteException uex) {
-      final String expectedMsg = "Table 'dfs.tmp.4376_3/604*' not found";
-      assertTrue(String.format("Error message should contain \"%s\" but was instead \"%s\"", expectedMsg,
-        uex.getMessage()), uex.getMessage().contains(expectedMsg));
-    }
+    int actualRecordCount = testSql("SELECT * FROM dfs.tmp.`4376_3/604*`");
+    int expectedRecordCount = 0;
+    assertEquals(String.format("Received unexpected number of rows in output: expected = %d, received = %s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
   @Test
   public void testSelectEmptyWithCache() throws Exception {
     prepareTables("4376_4", true);
 
-    try {
-      runSQL("SELECT COUNT(*) AS `count` FROM dfs.tmp.`4376_4/6041`");
-      fail("Query should've failed!");
-    } catch (UserRemoteException uex) {
-      final String expectedMsg = "The table you tried to query is empty";
-      assertTrue(String.format("Error message should contain \"%s\" but was instead \"%s\"", expectedMsg,
-        uex.getMessage()), uex.getMessage().contains(expectedMsg));
-    }
+    int actualRecordCount = testSql("SELECT * FROM dfs.tmp.`4376_4/6041`");
+    int expectedRecordCount = 0;
+    assertEquals(String.format("Received unexpected number of rows in output: expected = %d, received = %s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
   @Test
   public void testSelectEmptyNoCache() throws Exception {
     prepareTables("4376_5", false);
-    try {
-      runSQL("SELECT COUNT(*) AS `count` FROM dfs.tmp.`4376_5/6041`");
-      fail("Query should've failed!");
-    } catch (UserRemoteException uex) {
-      final String expectedMsg = "Table 'dfs.tmp.4376_5/6041' not found";
-      assertTrue(String.format("Error message should contain \"%s\" but was instead \"%s\"", expectedMsg,
-        uex.getMessage()), uex.getMessage().contains(expectedMsg));
-    }
+
+    int actualRecordCount = testSql("SELECT * FROM dfs.tmp.`4376_5/6041`");
+    int expectedRecordCount = 0;
+    assertEquals(String.format("Received unexpected number of rows in output: expected = %d, received = %s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 }

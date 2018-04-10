@@ -37,7 +37,7 @@ public class JsonWriter {
   private final JsonOutput gen;
 
   public JsonWriter(OutputStream out, boolean pretty, boolean useExtendedOutput) throws IOException{
-    JsonGenerator writer = factory.createJsonGenerator(out);
+    JsonGenerator writer = factory.configure(JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS, false).createJsonGenerator(out);
     if(pretty){
       writer = writer.useDefaultPrettyPrinter();
     }

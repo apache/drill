@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.unit;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import mockit.NonStrictExpectations;
 import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -29,7 +28,6 @@ import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
@@ -44,11 +42,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
 import static org.apache.drill.exec.physical.base.AbstractBase.MAX_ALLOCATION;
@@ -63,9 +60,6 @@ import static org.apache.drill.exec.physical.base.AbstractBase.MAX_ALLOCATION;
  */
 
 public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
-
-  private final ExecutorService scanExecutor =  Executors.newFixedThreadPool(2, new NamedThreadFactory("scan-"));
-
   public static class MiniPlanTestBuilder {
     protected List<Map<String, Object>> baselineRecords;
     protected RecordBatch root;
@@ -158,7 +152,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       }
       Map<String, List<Object>> actualSuperVectors = new TreeMap<String, List<Object>>();
 
-      int actualBatchNum = DrillTestWrapper.addToCombinedVectorResults(batchIterator, expectSchema, actualSuperVectors);
+      int actualBatchNum = DrillTestWrapper.addToCombinedVectorResults(batchIterator, expectSchema, null, null, actualSuperVectors);
       if (expectBatchNum != null) {
         if (expectBatchNum != actualBatchNum) {
           throw new AssertionError(String.format("Expected %s batches from operator tree. But operators return %s batch!", expectBatchNum, actualBatchNum));
@@ -323,7 +317,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
   }
 
   public abstract class ScanPopBuider<T extends ScanPopBuider<?>> extends PopBuilder {
-    List<SchemaPath> columnsToRead = Collections.singletonList(SchemaPath.getSimplePath("*"));
+    List<SchemaPath> columnsToRead = Collections.singletonList(SchemaPath.STAR_COLUMN);
     DrillFileSystem fs = null;
 
     public ScanPopBuider() {
@@ -386,14 +380,12 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
 
     @Override
     public PopBuilder buildAddAsInput() throws Exception {
-      mockOpContext(popConfig, this.initReservation, this.maxAllocation);
       RecordBatch scanBatch = getScanBatch();
       return parent.addInput(scanBatch);
     }
 
     @Override
     public RecordBatch build() throws Exception {
-      mockOpContext(popConfig, this.initReservation, this.maxAllocation);
       return getScanBatch();
     }
 
@@ -406,12 +398,12 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
         readers = getJsonReadersFromInputFiles(fs, inputPaths, fragContext, columnsToRead);
       }
 
-      List<RecordReader> readerList = new ArrayList<>();
+      List<RecordReader> readerList = new LinkedList<>();
       while(readers.hasNext()) {
         readerList.add(readers.next());
       }
 
-      RecordBatch scanBatch = new ScanBatch(null, fragContext, readerList);
+      RecordBatch scanBatch = new ScanBatch(new MockPhysicalOperator(), fragContext, readerList);
       return scanBatch;
     }
   }
@@ -449,7 +441,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
     }
 
     private RecordBatch getScanBatch() throws Exception {
-      List<RecordReader> readers = Lists.newArrayList();
+      List<RecordReader> readers = new LinkedList<>();
 
       for (String path : inputPaths) {
         ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), new Path(path));
@@ -467,7 +459,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
         }
       }
 
-      RecordBatch scanBatch = new ScanBatch(null, fragContext, readers);
+      RecordBatch scanBatch = new ScanBatch(new MockPhysicalOperator(), fragContext, readers);
       return scanBatch;
     }
   } // end of ParquetScanBuilder
@@ -475,12 +467,5 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
   @Override
   protected void mockOpContext(PhysicalOperator popConfig, long initReservation, long maxAllocation) throws Exception {
     super.mockOpContext(popConfig, initReservation, maxAllocation);
-
-    // mock ScanExecutor used by parquet reader.
-    new NonStrictExpectations() {
-      {
-        opContext.getScanExecutor();result = scanExecutor;
-      }
-    };
   }
 }

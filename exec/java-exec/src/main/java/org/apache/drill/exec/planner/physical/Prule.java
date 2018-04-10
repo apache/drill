@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,18 +22,18 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
-public abstract class Prule extends RelOptRule{
+public abstract class Prule extends RelOptRule {
   public Prule(RelOptRuleOperand operand, String description) {
-    super(operand, description);
+    super(operand, DrillRelFactories.LOGICAL_BUILDER, description);
   }
 
   public Prule(RelOptRuleOperand operand) {
-    super(operand);
+    this(operand, null);
   }
 
-
-  public static RelNode convert(RelNode rel, RelTraitSet toTraits){
+  public static RelNode convert(RelNode rel, RelTraitSet toTraits) {
     toTraits = toTraits.simplify();
 
     PlannerSettings settings = PrelUtil.getSettings(rel.getCluster());
@@ -41,11 +41,10 @@ public abstract class Prule extends RelOptRule{
       toTraits = toTraits.replace(DrillDistributionTrait.ANY);
     }
 
-    return RelOptRule.convert(rel, toTraits);
+    return RelOptRule.convert(rel, toTraits.simplify());
   }
 
-  public static boolean isSingleMode(RelOptRuleCall call){
+  public static boolean isSingleMode(RelOptRuleCall call) {
     return PrelUtil.getPlannerSettings(call.getPlanner()).isSingleMode();
   }
-
 }

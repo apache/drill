@@ -20,11 +20,11 @@ package org.apache.drill.exec.vector;
 import java.io.Closeable;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
+import org.apache.drill.exec.memory.AllocationManager;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -32,12 +32,15 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 /**
- * An abstraction that is used to store a sequence of values in an individual column.
+ * An abstraction that is used to store a sequence of values in an individual
+ * column.
  *
- * A {@link ValueVector value vector} stores underlying data in-memory in a columnar fashion that is compact and
- * efficient. The column whose data is stored, is referred by {@link #getField()}.
+ * A {@link ValueVector value vector} stores underlying data in-memory in a
+ * columnar fashion that is compact and efficient. The column whose data is
+ * stored, is referred by {@link #getField()}.
  *
- * A vector when instantiated, relies on a {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
+ * A vector when instantiated, relies on a
+ * {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
  * that vector is allocated before attempting to read or write.
  *
  * There are a few "rules" around vectors:
@@ -45,37 +48,34 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
  * <ul>
  *   <li>Values need to be written in order (e.g. index 0, 1, 2, 5).</li>
  *   <li>Null vectors start with all values as null before writing anything.</li>
- *   <li>For variable width types, the offset vector should be all zeros before writing.</li>
+ *   <li>For variable width types, the offset vector should be all zeros before
+ *   writing.</li>
  *   <li>You must call setValueCount before a vector can be read.</li>
  *   <li>You should never write to a vector once it has been read.</li>
- *   <li>Vectors may not grow larger than the number of bytes specified
- *   in {@link #MAX_BUFFER_SIZE} to prevent memory fragmentation. Use the
+ *   <li>Vectors may not grow larger than the number of bytes specified in
+ *   {@link #MAX_BUFFER_SIZE} to prevent memory fragmentation. Use the
  *   <tt>setBounded()</tt> methods in the mutator to enforce this rule.</li>
  * </ul>
  *
- * Please note that the current implementation doesn't enforce those rules, hence we may find few places that
- * deviate from these rules (e.g. offset vectors in Variable Length and Repeated vector)
+ * Please note that the current implementation doesn't enforce those rules,
+ * hence we may find few places that deviate from these rules (e.g. offset
+ * vectors in Variable Length and Repeated vector)
  *
  * This interface "should" strive to guarantee this order of operation:
  * <blockquote>
- * allocate > mutate > setvaluecount > access > clear (or allocate to start the process over).
+ * allocate > mutate > setvaluecount > access > clear (or allocate
+ * to start the process over).
  * </blockquote>
  */
+
 public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   /**
    * Maximum allowed size of the buffer backing a value vector.
+   * Set to the Netty chunk size to prevent memory fragmentation.
    */
 
-  int MAX_BUFFER_SIZE = VectorUtils.maxSize();
-
-  /**
-   * Debug-time system option that artificially limits vector lengths
-   * for testing. Must be set prior to the first reference to this
-   * class. (Made deliberately difficult to prevent misuse...)
-   */
-
-  String MAX_BUFFER_SIZE_KEY = "drill.max_vector";
+  int MAX_BUFFER_SIZE = AllocationManager.chunkSize();
 
   /**
    * Maximum allowed row count in a vector. Repeated vectors
@@ -84,6 +84,16 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
 
   int MAX_ROW_COUNT = Character.MAX_VALUE + 1;
+  int MIN_ROW_COUNT = 1;
+
+  // Commonly-used internal vector names
+
+  String BITS_VECTOR_NAME = "$bits$";
+  String OFFSETS_VECTOR_NAME = "$offsets$";
+
+  @Deprecated
+  // See DRILL-6216
+  String VALUES_VECTOR_NAME = "$values$";
 
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
@@ -167,8 +177,22 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   /**
    * Returns the number of bytes that is used by this vector instance.
+   * This is a bit of a misnomer. Returns the number of bytes used by
+   * data in this instance.
    */
   int getBufferSize();
+
+  /**
+   * Returns the total size of buffers allocated by this vector. Has
+   * meaning only when vectors are directly allocated and each vector
+   * has its own buffer. Does not have meaning for vectors deserialized
+   * from the network or disk in which multiple vectors share the
+   * same vector.
+   *
+   * @return allocated buffer size, in bytes
+   */
+
+  int getAllocatedSize();
 
   /**
    * Returns the number of bytes that is used by this vector if it holds the given number

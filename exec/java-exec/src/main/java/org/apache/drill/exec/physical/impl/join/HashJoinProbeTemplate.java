@@ -83,7 +83,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   @Override
   public void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
                                  int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable,
-                                 HashJoinHelper hjHelper, JoinRelType joinRelType) {
+                                 HashJoinHelper hjHelper, JoinRelType joinRelType, IterOutcome leftStartState) {
 
     this.probeBatch = probeBatch;
     this.probeSchema = probeBatch.getSchema();
@@ -93,6 +93,14 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     this.hashTable = hashTable;
     this.hjHelper = hjHelper;
     this.outgoingJoinBatch = outgoing;
+
+    if (leftStartState == IterOutcome.NONE) {
+      if (joinRelType == JoinRelType.RIGHT) {
+        probeState = ProbeState.PROJECT_RIGHT;
+      } else {
+        probeState = ProbeState.DONE;
+      }
+    }
 
     doSetup(context, buildBatch, probeBatch, outgoing);
   }
@@ -136,7 +144,9 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
           case OK_NEW_SCHEMA:
             if (probeBatch.getSchema().equals(probeSchema)) {
               doSetup(outgoingJoinBatch.getContext(), buildBatch, probeBatch, outgoingJoinBatch);
-              hashTable.updateBatches();
+              if (hashTable != null) {
+                hashTable.updateBatches();
+              }
             } else {
               throw SchemaChangeException.schemaChanged("Hash join does not support schema changes in probe side.",
                   probeSchema,
@@ -155,7 +165,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
       // Check if we need to drain the next row in the probe side
       if (getNextRecord) {
-        if (hashTable != null) {
+        if (hashTable != null && !hashTable.isEmpty()) {
           probeIndex = hashTable.containsKey(recordsProcessed, true);
         }
 

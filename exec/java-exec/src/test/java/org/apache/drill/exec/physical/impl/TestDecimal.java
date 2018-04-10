@@ -40,7 +40,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestDecimal extends PopUnitTestBase{
     DrillConfig c = DrillConfig.create();
 

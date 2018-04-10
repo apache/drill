@@ -138,6 +138,20 @@ public class Controls {
     }
 
     /**
+     * Adds a time-bound pause injection to the controls builder with the given parameters.
+     *
+     * @param siteClass class where the pause should happen
+     * @param desc      descriptor for the pause site in the site class
+     * @param nSkip     number of times to skip before firing
+     * @param msPause     duration of the pause in millisec
+     * @return this builder
+     */
+    public Builder addTimedPause(final Class<?> siteClass, final String desc, final int nSkip, final long msPause) {
+      injections.add(ControlsInjectionUtil.createTimedPause(siteClass, desc, nSkip, msPause));
+      return this;
+    }
+
+    /**
      * Adds a pause injection to the controls builder with the given parameters. The pause is not skipped i.e. the pause
      * happens when execution reaches the site.
      *
@@ -160,6 +174,21 @@ public class Controls {
     public Builder addPauseOnBit(final Class<?> siteClass, final String desc,
                                  final DrillbitEndpoint endpoint, final int nSkip) {
       injections.add(ControlsInjectionUtil.createPauseOnBit(siteClass, desc, nSkip, endpoint));
+      return this;
+    }
+
+    /**
+     * Adds a time-bound pause injection (for the specified drillbit) to the controls builder with the given parameters.
+     *
+     * @param siteClass class where the pause should happen
+     * @param desc      descriptor for the pause site in the site class
+     * @param nSkip     number of times to skip before firing
+     * @param msPause     duration of the pause in millisec
+     * @return this builder
+     */
+    public Builder addTimedPauseOnBit(final Class<?> siteClass, final String desc,
+                                 final DrillbitEndpoint endpoint, final int nSkip, final long msPause) {
+      injections.add(ControlsInjectionUtil.createTimedPauseOnBit(siteClass, desc, nSkip, endpoint, msPause));
       return this;
     }
 

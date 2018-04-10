@@ -27,7 +27,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.AllocationReservation;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -106,7 +105,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       return;
     }
 
-    if(runningBatches >= Character.MAX_VALUE) {
+    if (runningBatches >= Character.MAX_VALUE) {
       final String errMsg = String.format("Tried to add more than %d number of batches.", (int) Character.MAX_VALUE);
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
@@ -136,10 +135,6 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return batches.isEmpty();
   }
 
-  public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException {
-    build(outputContainer);
-  }
-
   @SuppressWarnings("resource")
   public void build(VectorContainer outputContainer) throws SchemaChangeException {
     outputContainer.clear();
@@ -157,7 +152,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }
-    sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
+    sv4 = new SelectionVector4(svBuffer, recordCount, ValueVector.MAX_ROW_COUNT);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
 
@@ -179,7 +174,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       int recordBatchId = 0;
       for (RecordBatchData d : data) {
         for (int i = 0; i < d.getRecordCount(); i++, index++) {
-          sv4.set(index, recordBatchId, (int) d.getSv2().getIndex(i));
+          sv4.set(index, recordBatchId, d.getSv2().getIndex(i));
         }
         // might as well drop the selection vector since we'll stop using it now.
         d.getSv2().clear();

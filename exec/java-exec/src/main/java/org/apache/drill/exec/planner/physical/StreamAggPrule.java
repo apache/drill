@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,10 +18,10 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.calcite.util.BitSets;
 
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
@@ -37,6 +37,7 @@ import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 public class StreamAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new StreamAggPrule();
@@ -53,10 +54,10 @@ public class StreamAggPrule extends AggPruleBase {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
+    final DrillAggregateRel aggregate = call.rel(0);
     RelNode input = aggregate.getInput();
     final RelCollation collation = getCollation(aggregate);
-    RelTraitSet traits = null;
+    RelTraitSet traits;
 
     if (aggregate.containsDistinctCall()) {
       // currently, don't use StreamingAggregate if any of the logical aggrs contains DISTINCT
@@ -93,13 +94,19 @@ public class StreamAggPrule extends AggPruleBase {
               UnionExchangePrel exch =
                   new UnionExchangePrel(phase1Agg.getCluster(), singleDistTrait, phase1Agg);
 
+              ImmutableBitSet newGroupSet = remapGroupSet(aggregate.getGroupSet());
+              List<ImmutableBitSet> newGroupSets = Lists.newArrayList();
+              for (ImmutableBitSet groupSet : aggregate.getGroupSets()) {
+                newGroupSets.add(remapGroupSet(groupSet));
+              }
+
               return  new StreamAggPrel(
                   aggregate.getCluster(),
                   singleDistTrait,
                   exch,
                   aggregate.indicator,
-                  aggregate.getGroupSet(),
-                  aggregate.getGroupSets(),
+                  newGroupSet,
+                  newGroupSets,
                   phase1Agg.getPhase2AggCalls(),
                   OperatorPhase.PHASE_2of2);
             }
@@ -160,13 +167,19 @@ public class StreamAggPrule extends AggPruleBase {
                       collation,
                       numEndPoints);
 
+              ImmutableBitSet newGroupSet = remapGroupSet(aggregate.getGroupSet());
+              List<ImmutableBitSet> newGroupSets = Lists.newArrayList();
+              for (ImmutableBitSet groupSet : aggregate.getGroupSets()) {
+                newGroupSets.add(remapGroupSet(groupSet));
+              }
+
               return new StreamAggPrel(
                   aggregate.getCluster(),
                   exch.getTraitSet(),
                   exch,
                   aggregate.indicator,
-                  aggregate.getGroupSet(),
-                  aggregate.getGroupSets(),
+                  newGroupSet,
+                  newGroupSets,
                   phase1Agg.getPhase2AggCalls(),
                   OperatorPhase.PHASE_2of2);
             }
@@ -174,7 +187,7 @@ public class StreamAggPrule extends AggPruleBase {
         }
       }
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 

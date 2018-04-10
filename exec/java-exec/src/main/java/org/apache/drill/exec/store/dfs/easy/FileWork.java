@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,11 +17,8 @@
  */
 package org.apache.drill.exec.store.dfs.easy;
 
-
 public interface FileWork {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileWork.class);
-
-  public String getPath();
-  public long getStart();
-  public long getLength();
+  String getPath();
+  long getStart();
+  long getLength();
 }

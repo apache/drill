@@ -311,6 +311,96 @@ public class TestViewSupport extends TestBaseViewSupport {
     }
   }
 
+  @Test // DRILL-5952
+  public void createViewIfNotExistsWhenTableAlreadyExists() throws Exception {
+    final String tableName = generateViewName();
+
+    try {
+      final String tableDef = "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id` LIMIT 2";
+
+      test("CREATE TABLE %s.%s as %s", DFS_TMP_SCHEMA, tableName, tableDef);
+
+      // Try to create the view with same name in same schema with if not exists clause.
+      final String createViewSql = String.format("CREATE VIEW IF NOT EXISTS %s.`%s` AS %s", DFS_TMP_SCHEMA, tableName, tableDef);
+
+      testBuilder()
+        .sqlQuery(createViewSql)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false,
+          String.format("A table or view with given name [%s] already exists in schema [%s]", tableName, DFS_TMP_SCHEMA))
+        .go();
+
+    } finally {
+      FileUtils.deleteQuietly(new File(dirTestWatcher.getDfsTestTmpDir(), tableName));
+    }
+  }
+
+  @Test // DRILL-5952
+  public void createViewIfNotExistsWhenViewAlreadyExists() throws Exception {
+    final String viewName = generateViewName();
+
+    try {
+      final String viewDef1 = "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id` LIMIT 2";
+
+      // Create the view
+      createViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA, null, viewDef1);
+
+      // Try to create the view with same name in same schema with if not exists clause.
+      final String viewDef2 = "SELECT sales_state_province FROM cp.`region.json` ORDER BY `region_id`";
+      final String createViewSql = String.format("CREATE VIEW IF NOT EXISTS %s.`%s` AS %s", DFS_TMP_SCHEMA, viewName, viewDef2);
+
+      testBuilder()
+        .sqlQuery(createViewSql)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false,
+          String.format("A table or view with given name [%s] already exists in schema [%s]", viewName, DFS_TMP_SCHEMA))
+        .go();
+
+      // Make sure the view created returns the data expected.
+      queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName),
+        new String[]{"region_id", "sales_city"},
+        ImmutableList.of(new Object[]{0L, "None"})
+      );
+    } finally {
+      dropViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA);
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateViewIfNotExists() throws Exception {
+    final String viewName = generateViewName();
+
+    try {
+      final String viewDef = "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id` LIMIT 2";
+
+      final String createViewSql = String.format("CREATE VIEW IF NOT EXISTS %s.`%s` AS %s", DFS_TMP_SCHEMA, viewName, viewDef);
+
+      test(createViewSql);
+
+      // Make sure the view created returns the data expected.
+      queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", DFS_TMP_SCHEMA, viewName),
+        new String[]{"region_id", "sales_city"},
+        ImmutableList.of(new Object[]{0L, "None"})
+      );
+    } finally {
+      dropViewHelper(DFS_TMP_SCHEMA, viewName, DFS_TMP_SCHEMA);
+    }
+  }
+
+  @Test // DRILL-5952
+  public void createViewWithBothOrReplaceAndIfNotExists() throws Exception {
+    final String viewName = generateViewName();
+
+    final String viewDef = "SELECT region_id, sales_city FROM cp.`region.json`";
+
+    // Try to create the view with both <or replace> and <if not exists> clause.
+    final String createViewSql = String.format("CREATE OR REPLACE VIEW IF NOT EXISTS %s.`%s` AS %s", DFS_TMP_SCHEMA, viewName, viewDef);
+
+    errorMsgTestHelper(createViewSql, "Create view statement cannot have both <OR REPLACE> and <IF NOT EXISTS> clause");
+  }
+
   @Test // DRILL-2422
   @Category(UnlikelyTest.class)
   public void createViewWhenATableWithSameNameAlreadyExists() throws Exception {
@@ -650,5 +740,15 @@ public class TestViewSupport extends TestBaseViewSupport {
     } finally {
       test("DROP TABLE IF EXISTS %s.%s ", DFS_TMP_SCHEMA, tableName);
     }
+  }
+
+  @Test
+  public void selectFromViewCreatedOnCalcite1_4() throws Exception {
+    testBuilder()
+        .sqlQuery("select store_type from cp.`view/view_from_calcite_1_4.view.drill`")
+        .unOrdered()
+        .baselineColumns("store_type")
+        .baselineValues("HeadQuarters")
+        .go();
   }
 }

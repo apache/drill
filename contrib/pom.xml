@@ -20,7 +20,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.12.0-SNAPSHOT</version>
+    <version>1.13.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill.contrib</groupId>
@@ -37,6 +37,7 @@
     <module>storage-hive</module>
     <module>storage-mongo</module>
     <module>storage-jdbc</module>
+    <module>storage-kafka</module>
     <module>storage-kudu</module>
     <module>storage-opentsdb</module>
     <module>sqlline</module>

@@ -33,9 +33,10 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
@@ -43,6 +44,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -62,7 +64,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private HashPartitionSender operator;
   private PartitionerDecorator partitioner;
 
-  private FragmentContext context;
+  private ExchangeFragmentContext context;
   private boolean ok = true;
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
@@ -72,6 +74,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private final AtomicInteger remaingReceiverCount;
   private volatile boolean done = false;
   private boolean first = true;
+  private boolean closeIncoming;
 
   long minReceiverRecordCount = Long.MAX_VALUE;
   long maxReceiverRecordCount = Long.MIN_VALUE;
@@ -96,12 +99,20 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
   }
 
-  public PartitionSenderRootExec(FragmentContext context,
+  public PartitionSenderRootExec(RootFragmentContext context,
                                  RecordBatch incoming,
                                  HashPartitionSender operator) throws OutOfMemoryException {
+    this(context, incoming, operator, false);
+  }
+
+  public PartitionSenderRootExec(RootFragmentContext context,
+                                 RecordBatch incoming,
+                                 HashPartitionSender operator,
+                                 boolean closeIncoming) throws OutOfMemoryException {
     super(context, context.newOperatorContext(operator, null), operator);
     this.incoming = incoming;
     this.operator = operator;
+    this.closeIncoming = closeIncoming;
     this.context = context;
     outGoingBatchCount = operator.getDestinations().size();
     popConfig = operator;
@@ -163,7 +174,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
         } catch (IOException e) {
           incoming.kill(false);
           logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
-          context.fail(e);
+          context.getExecutorState().fail(e);
         }
         return false;
 
@@ -193,19 +204,19 @@ public class PartitionSenderRootExec extends BaseRootExec {
         } catch (IOException e) {
           incoming.kill(false);
           logger.error("Error while flushing outgoing batches", e);
-          context.fail(e);
+          context.getExecutorState().fail(e);
           return false;
         } catch (SchemaChangeException e) {
           incoming.kill(false);
           logger.error("Error while setting up partitioner", e);
-          context.fail(e);
+          context.getExecutorState().fail(e);
           return false;
         }
       case OK:
         try {
           partitioner.partitionBatch(incoming);
         } catch (IOException e) {
-          context.fail(e);
+          context.getExecutorState().fail(e);
           incoming.kill(false);
           return false;
         }
@@ -340,6 +351,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
     if (partitioner != null) {
       updateAggregateStats();
       partitioner.clear();
+    }
+
+    if (closeIncoming) {
+      ((CloseableRecordBatch) incoming).close();
     }
   }
 

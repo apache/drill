@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.logging.Logger;
-
+import com.google.common.collect.Lists;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
@@ -31,6 +31,9 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+
+import java.util.List;
 
 public class HashAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new HashAggPrule();
@@ -52,7 +55,7 @@ public class HashAggPrule extends AggPruleBase {
       return;
     }
 
-    final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
+    final DrillAggregateRel aggregate = call.rel(0);
     final RelNode input = call.rel(1);
 
     if (aggregate.containsDistinctCall() || aggregate.getGroupCount() == 0) {
@@ -61,7 +64,7 @@ public class HashAggPrule extends AggPruleBase {
       return;
     }
 
-    RelTraitSet traits = null;
+    RelTraitSet traits;
 
     try {
       if (aggregate.getGroupSet().isEmpty()) {
@@ -94,7 +97,7 @@ public class HashAggPrule extends AggPruleBase {
         }
       }
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 
@@ -126,18 +129,22 @@ public class HashAggPrule extends AggPruleBase {
           new HashToRandomExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
               phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)));
 
-      HashAggPrel phase2Agg =  new HashAggPrel(
+      ImmutableBitSet newGroupSet = remapGroupSet(aggregate.getGroupSet());
+      List<ImmutableBitSet> newGroupSets = Lists.newArrayList();
+      for (ImmutableBitSet groupSet : aggregate.getGroupSets()) {
+        newGroupSets.add(remapGroupSet(groupSet));
+      }
+
+      return new HashAggPrel(
           aggregate.getCluster(),
           exch.getTraitSet(),
           exch,
           aggregate.indicator,
-          aggregate.getGroupSet(),
-          aggregate.getGroupSets(),
+          newGroupSet,
+          newGroupSets,
           phase1Agg.getPhase2AggCalls(),
           OperatorPhase.PHASE_2of2);
-      return phase2Agg;
     }
-
   }
 
   private void createTransformRequest(RelOptRuleCall call, DrillAggregateRel aggregate,

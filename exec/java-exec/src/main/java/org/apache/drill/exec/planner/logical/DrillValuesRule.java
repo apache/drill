@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,12 +30,13 @@ public class DrillValuesRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillValuesRule();
 
   private DrillValuesRule() {
-    super(RelOptHelper.any(LogicalValues.class, Convention.NONE), "DrillValuesRule");
+    super(RelOptHelper.any(LogicalValues.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER, "DrillValuesRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final LogicalValues values = (LogicalValues) call.rel(0);
+    final LogicalValues values = call.rel(0);
     final RelTraitSet traits = values.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     call.transformTo(new DrillValuesRel(values.getCluster(), values.getRowType(), values.getTuples(), traits));
   }

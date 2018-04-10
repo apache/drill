@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,26 +20,26 @@ package org.apache.drill.exec.planner.types;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.calcite.rel.type.DynamicRecordType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeFamily;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelDataTypeImpl;
 import org.apache.calcite.rel.type.RelDataTypePrecedenceList;
 import org.apache.calcite.sql.type.SqlTypeExplicitPrecedenceList;
 import org.apache.calcite.sql.type.SqlTypeName;
 
-/* We use an instance of this class as the row type for
+/* We use an instance of this class as the dynamic row type for
  * Drill table. Since we don't know the schema before hand
  * whenever optiq requires us to validate that a field exists
  * we always return true and indicate that the type of that
  * field is 'ANY'
  */
-public class RelDataTypeDrillImpl extends RelDataTypeImpl {
+public class RelDataTypeDrillImpl extends DynamicRecordType {
 
     private final RelDataTypeFactory typeFactory;
-    private final RelDataTypeHolder holder;
+    private final AbstractRelDataTypeHolder holder;
 
-    public RelDataTypeDrillImpl(RelDataTypeHolder holder, RelDataTypeFactory typeFactory) {
+    public RelDataTypeDrillImpl(AbstractRelDataTypeHolder holder, RelDataTypeFactory typeFactory) {
         this.typeFactory = typeFactory;
         this.holder = holder;
         this.holder.setRelDataTypeFactory(typeFactory);

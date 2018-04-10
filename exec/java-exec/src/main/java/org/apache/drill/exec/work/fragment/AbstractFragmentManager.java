@@ -18,6 +18,7 @@
 package org.apache.drill.exec.work.fragment;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -28,8 +29,6 @@ import org.apache.drill.exec.work.batch.IncomingBuffers;
 import java.io.IOException;
 
 public abstract class AbstractFragmentManager implements FragmentManager {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractFragmentManager.class);
-
 
   protected final IncomingBuffers buffers;
 
@@ -37,7 +36,7 @@ public abstract class AbstractFragmentManager implements FragmentManager {
 
   protected final FragmentHandle fragmentHandle;
 
-  protected final FragmentContext fragmentContext;
+  protected final ExecutorFragmentContext fragmentContext;
 
   protected volatile boolean cancel = false;
 

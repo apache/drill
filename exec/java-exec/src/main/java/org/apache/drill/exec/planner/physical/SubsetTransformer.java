@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import com.google.common.collect.Sets;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptRule;
@@ -24,6 +25,8 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.volcano.RelSubset;
+
+import java.util.Set;
 
 public abstract class SubsetTransformer<T extends RelNode, E extends Exception> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SubsetTransformer.class);
@@ -45,23 +48,43 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
 
   }
 
-  boolean go(T n, RelNode candidateSet) throws E {
+  public boolean go(T n, RelNode candidateSet) throws E {
     if ( !(candidateSet instanceof RelSubset) ) {
       return false;
     }
 
     boolean transform = false;
+    Set<RelNode> transformedRels = Sets.newIdentityHashSet();
+    Set<RelTraitSet> traitSets = Sets.newHashSet();
+
+    //1, get all the target traitsets from candidateSet's rel list,
     for (RelNode rel : ((RelSubset)candidateSet).getRelList()) {
       if (isPhysical(rel)) {
-        RelNode newRel = RelOptRule.convert(candidateSet, rel.getTraitSet().plus(Prel.DRILL_PHYSICAL));
-        RelNode out = convertChild(n, newRel);
-        if (out != null) {
-          call.transformTo(out);
-          transform = true;
+        final RelTraitSet relTraitSet = rel.getTraitSet();
+        if ( !traitSets.contains(relTraitSet) ) {
+          traitSets.add(relTraitSet);
+          logger.trace("{}.convertChild get traitSet {}", this.getClass().getSimpleName(), relTraitSet);
         }
       }
     }
 
+    //2, convert the candidateSet to targeted taitSets
+    for (RelTraitSet traitSet: traitSets) {
+      RelNode newRel = RelOptRule.convert(candidateSet, traitSet.simplify());
+      if(transformedRels.contains(newRel)) {
+        continue;
+      }
+      transformedRels.add(newRel);
+
+      logger.trace("{}.convertChild to convert NODE {} ,AND {}", this.getClass().getSimpleName(), n, newRel);
+      RelNode out = convertChild(n, newRel);
+
+      //RelNode out = convertChild(n, rel);
+      if (out != null) {
+        call.transformTo(out);
+        transform = true;
+      }
+    }
 
     return transform;
   }

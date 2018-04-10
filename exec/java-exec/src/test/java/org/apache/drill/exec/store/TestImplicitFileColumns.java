@@ -20,11 +20,11 @@ package org.apache.drill.exec.store;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.Text;
-import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

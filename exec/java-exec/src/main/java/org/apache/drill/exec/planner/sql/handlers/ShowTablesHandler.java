@@ -25,6 +25,7 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_TABLES
 
 import java.util.List;
 
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -34,9 +35,12 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
+import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SqlConverter;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -104,5 +108,16 @@ public class ShowTablesHandler extends DefaultSqlHandler {
 
     return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO),
         fromClause, where, null, null, null, null, null, null);
+  }
+
+  @Override
+  protected Pair<SqlNode, RelDataType> validateNode(SqlNode sqlNode) throws ValidationException,
+      RelConversionException, ForemanSetupException {
+    SqlConverter converter = config.getConverter();
+    // set this to true since INFORMATION_SCHEMA in the root schema, not in the default
+    converter.useRootSchemaAsDefault(true);
+    Pair<SqlNode, RelDataType> sqlNodeRelDataTypePair = super.validateNode(sqlNode);
+    converter.useRootSchemaAsDefault(false);
+    return sqlNodeRelDataTypePair;
   }
 }

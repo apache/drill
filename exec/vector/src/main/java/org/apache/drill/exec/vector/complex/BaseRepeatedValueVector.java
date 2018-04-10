@@ -85,16 +85,11 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     return success;
   }
 
+  @Override
+  public UInt4Vector getOffsetVector() { return offsets; }
 
   @Override
-  public UInt4Vector getOffsetVector() {
-    return offsets;
-  }
-
-  @Override
-  public ValueVector getDataVector() {
-    return vector;
-  }
+  public ValueVector getDataVector() { return vector; }
 
   @Override
   public void setInitialCapacity(int numRecords) {
@@ -124,6 +119,11 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       return 0;
     }
     return offsets.getBufferSize() + vector.getBufferSize();
+  }
+
+  @Override
+  public int getAllocatedSize() {
+    return offsets.getAllocatedSize() + vector.getAllocatedSize();
   }
 
   @Override
@@ -220,6 +220,9 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
 
   @Override
   public int getPayloadByteCount(int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
     int entryCount = offsets.getAccessor().get(valueCount);
     return offsets.getPayloadByteCount(valueCount) + vector.getPayloadByteCount(entryCount);
   }

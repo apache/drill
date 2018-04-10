@@ -43,11 +43,11 @@ class OperatorContextImpl extends BaseOperatorContext implements AutoCloseable {
    */
   private ListeningExecutorService delegatePool;
 
-  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context) throws OutOfMemoryException {
+  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContextImpl context) throws OutOfMemoryException {
     this(popConfig, context, null);
   }
 
-  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats)
+  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContextImpl context, OperatorStats stats)
       throws OutOfMemoryException {
     super(context,
           context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
@@ -75,21 +75,12 @@ class OperatorContextImpl extends BaseOperatorContext implements AutoCloseable {
       return;
     }
     logger.debug("Closing context for {}", popConfig != null ? getName() : null);
-
-    try {
-      super.close();
-    } finally {
-      closed = true;
-    }
+    closed = true;
+    super.close();
   }
 
   @Override
   public OperatorStats getStats() {
-    return stats;
-  }
-
-  @Override
-  public OperatorStatReceiver getStatsWriter() {
     return stats;
   }
 

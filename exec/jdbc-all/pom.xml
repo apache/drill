@@ -20,11 +20,17 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.12.0-SNAPSHOT</version>
+    <version>1.13.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
   <name>JDBC JAR with all dependencies</name>
+
+  <!-- Since we are packaging hadoop dependencies under the namespace with "oadd." prefix by default,
+       "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
+  <properties>
+    <package.namespace.prefix>oadd.</package.namespace.prefix>
+  </properties>
 
   <dependencies>
 
@@ -246,16 +252,13 @@
           <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false -Djava.net.preferIPv4Stack=true
             -Ddrill.exec.sys.store.provider.local.write=false
             -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
-            -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=3072M
+            -XX:MaxDirectMemorySize=3072M
             -XX:+CMSClassUnloadingEnabled -ea</argLine>
           <additionalClasspathElements>
-            <additionalClasspathElements>${settings.localRepository}/junit/junit/4.11/junit-4.11.jar</additionalClasspathElements>
-            <additionalClasspathElements>${settings.localRepository}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar</additionalClasspathElements>
+            <additionalClasspathElements>${settings.localRepository}/junit/junit/${junit.version}/junit-${junit.version}.jar</additionalClasspathElements>
+            <additionalClasspathElements>${settings.localRepository}/org/hamcrest/hamcrest-core/${hamcrest.core.version}/hamcrest-core-${hamcrest.core.version}.jar</additionalClasspathElements>
             <additionalClasspathElements>${project.build.directory}/test-classes/</additionalClasspathElements>
           </additionalClasspathElements>
-          <classpathDependencyExcludes>
-            <classpathDependencyExcludes>*:*</classpathDependencyExcludes>
-          </classpathDependencyExcludes>
 
           <systemPropertyVariables>
             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -266,17 +269,7 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
           <shadedArtifactAttached>false</shadedArtifactAttached>
           <createDependencyReducedPom>true</createDependencyReducedPom>
@@ -506,7 +499,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>30000000</maxsize>
+                  <maxsize>35000000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -538,19 +531,10 @@
   </pluginRepositories>
 
   <profiles>
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <package.namespace.prefix>oadd.</package.namespace.prefix>
-      </properties>
-    </profile>
       <profile>
         <id>mapr</id>
         <properties>
-          <package.namespace.prefix></package.namespace.prefix>
+          <package.namespace.prefix />
         </properties>
 
         <build>
@@ -575,7 +559,7 @@
                           This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                         </message>
-                        <maxsize>29000000</maxsize>
+                        <maxsize>32000000</maxsize>
                         <minsize>15000000</minsize>
                         <files>
                           <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -589,17 +573,7 @@
             </plugin>
 
             <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-shade-plugin</artifactId>
-              <version>2.4.1</version>
-              <executions>
-                <execution>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>shade</goal>
-                  </goals>
-                </execution>
-              </executions>
               <configuration>
                 <shadedArtifactAttached>false</shadedArtifactAttached>
                 <createDependencyReducedPom>true</createDependencyReducedPom>

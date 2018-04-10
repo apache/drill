@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.kudu;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.record.CloseableRecordBatch;
@@ -30,7 +30,7 @@ public class KuduWriterBatchCreator implements BatchCreator<KuduWriter> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduWriterBatchCreator.class);
 
   @Override
-  public CloseableRecordBatch getBatch(FragmentContext context, KuduWriter config, List<RecordBatch> children)
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, KuduWriter config, List<RecordBatch> children)
       throws ExecutionSetupException {
     assert children != null && children.size() == 1;
 

@@ -23,8 +23,8 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -255,8 +255,11 @@ public class TestStarQueries extends BaseTestQuery {
   public void testStarView1() throws Exception {
     test("use dfs.tmp");
     test("create view vt1 as select * from cp.`tpch/region.parquet` r, cp.`tpch/nation.parquet` n where r.r_regionkey = n.n_regionkey");
-    test("select * from vt1");
-    test("drop view vt1");
+    try {
+      test("select * from vt1");
+    } finally {
+      test("drop view vt1");
+    }
   }
 
   @Test  // select star for a SchemaTable.
@@ -271,9 +274,12 @@ public class TestStarQueries extends BaseTestQuery {
         "join (select * from cp.`tpch/nation.parquet`) t2 " +
         "on t1.name = t2.n_name";
 
-    test("alter session set `planner.enable_broadcast_join` = false");
-    test(query);
-    test("alter session set `planner.enable_broadcast_join` = true");
+    try {
+      alterSession("planner.enable_broadcast_join", false);
+      test(query);
+    } finally {
+      resetSessionOption("planner.enable_broadcast_join");
+    }
     test(query);
   }
 

@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.hive;
 
-import mockit.integration.junit4.JMockit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -33,7 +33,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -48,7 +47,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JMockit.class)
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStorage extends HiveTestBase {
   @BeforeClass
@@ -103,7 +101,6 @@ public class TestHiveStorage extends HiveTestBase {
   /**
    * Test to ensure Drill reads the all supported types correctly both normal fields (converted to Nullable types) and
    * partition fields (converted to Required types).
-   * @throws Exception
    */
   @Test
   public void readAllSupportedHiveDataTypes() throws Exception {
@@ -396,6 +393,16 @@ public class TestHiveStorage extends HiveTestBase {
   }
 
   @Test // DRILL-3938
+  public void readFromAlteredPartitionedTableWithEmptyGroupType() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT newcol FROM hive.kv_parquet LIMIT 1")
+        .unOrdered()
+        .baselineColumns("newcol")
+        .baselineValues(new Object[]{null})
+        .go();
+  }
+
+  @Test // DRILL-3938
   public void nativeReaderIsDisabledForAlteredPartitionedTable() throws Exception {
     try {
       test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
@@ -492,33 +499,43 @@ public class TestHiveStorage extends HiveTestBase {
     }
   }
 
-  @Test // DRILL-3688
-  public void testIgnoreSkipHeaderFooterForRcfile() throws Exception {
+  @Test
+  public void testTableWithHeaderOnly() throws Exception {
     testBuilder()
-        .sqlQuery("select count(1) as cnt from hive.skipper.kv_rcfile_large")
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_header_only")
         .unOrdered()
         .baselineColumns("cnt")
-        .baselineValues(5000L)
+        .baselineValues(0L)
         .go();
   }
 
-  @Test // DRILL-3688
-  public void testIgnoreSkipHeaderFooterForParquet() throws Exception {
+  @Test
+  public void testTableWithFooterOnly() throws Exception {
     testBuilder()
-        .sqlQuery("select count(1) as cnt from hive.skipper.kv_parquet_large")
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_footer_only")
         .unOrdered()
         .baselineColumns("cnt")
-        .baselineValues(5000L)
+        .baselineValues(0L)
         .go();
   }
 
-  @Test // DRILL-3688
-  public void testIgnoreSkipHeaderFooterForSequencefile() throws Exception {
+  @Test
+  public void testTableWithHeaderFooterOnly() throws Exception {
     testBuilder()
-        .sqlQuery("select count(1) as cnt from hive.skipper.kv_sequencefile_large")
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_header_footer_only")
         .unOrdered()
         .baselineColumns("cnt")
-        .baselineValues(5000L)
+        .baselineValues(0L)
+        .go();
+  }
+
+  @Test
+  public void testSkipHeaderFooterForPartitionedTable() throws Exception {
+    testBuilder()
+        .sqlQuery("select count(1) as cnt from hive.skipper.kv_text_with_part")
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(4980L)
         .go();
   }
 
@@ -549,6 +566,11 @@ public class TestHiveStorage extends HiveTestBase {
         .sqlQuery("select * from hive.empty_table where b = 'Абвгде谢谢'")
         .expectsEmptyResultSet()
         .go();
+  }
+
+  @Test
+  public void testPhysicalPlanSubmission() throws Exception {
+    PlanTestBase.testPhysicalPlanExecutionBasedOnQuery("select * from hive.kv");
   }
 
   private void verifyColumnsMetadata(List<UserProtos.ResultColumnMetadata> columnsList, Map<String, Integer> expectedResult) {

@@ -17,33 +17,34 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import mockit.Mock;
-import mockit.MockUp;
 import com.google.common.collect.Lists;
-import mockit.integration.junit4.JMockit;
+import org.apache.commons.io.filefilter.FalseFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.exec.store.dfs.MetadataContext;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JMockit.class)
 public class TestParquetMetadataCache extends PlanTestBase {
   private static final String TABLE_NAME_1 = "parquetTable1";
   private static final String TABLE_NAME_2 = "parquetTable2";
@@ -210,21 +211,15 @@ public class TestParquetMetadataCache extends PlanTestBase {
   @Test //DRILL-4511
   @Category(UnlikelyTest.class)
   public void testTableDoesNotExistWithEmptyDirectory() throws Exception {
-    String dirName = "empty_directory";
-    File path = new File(dirTestWatcher.getRootDir(), dirName);
-    path.mkdirs();
+    final String emptyDirName = "empty_directory";
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirName));
 
-    try {
-      path.mkdir();
-      testBuilder()
-          .sqlQuery("refresh table metadata dfs.`%s`", dirName)
-          .unOrdered()
-          .baselineColumns("ok", "summary")
-          .baselineValues(false, String.format("Table %s does not exist.", dirName))
-          .go();
-    } finally {
-      FileUtils.deleteQuietly(path);
-    }
+    testBuilder()
+        .sqlQuery("refresh table metadata dfs.tmp.`%s`", emptyDirName)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("Table %s is empty and doesn't contain any parquet files.", emptyDirName))
+        .go();
   }
 
   @Test //DRILL-4511
@@ -631,14 +626,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
       File rootMetadataFile = FileUtils.getFile(dataDir, Metadata.METADATA_FILENAME);
       assertTrue(String.format("Metadata cache file '%s' isn't deleted", rootMetadataFile.getPath()), rootMetadataFile.delete());
 
-      // mock Metadata tableModified method to avoid occasional metadata files updating
-      new MockUp<Metadata>() {
-        @Mock
-        boolean tableModified(List<String> directories, org.apache.hadoop.fs.Path metaFilePath,
-                              org.apache.hadoop.fs.Path parentDir, MetadataContext metaContext) {
-          return false;
-        }
-      };
+      setTimestampToZero(dataDir);
 
       String query = String.format("select dir0, dir1, o_custkey, o_orderdate from `%s` " + " where dir0=1994 or dir1='Q3'", rootMetaCorruptedTable);
       int expectedRowCount = 60;
@@ -671,14 +659,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
       assertTrue(String.format("Metadata cache file '%s' isn't deleted", secondInnerMetadataFile.getPath()),
           secondInnerMetadataFile.delete());
 
-      // mock Metadata tableModified method to avoid occasional metadata files updating
-      new MockUp<Metadata>() {
-        @Mock
-        boolean tableModified(List<String> directories, org.apache.hadoop.fs.Path metaFilePath,
-                              org.apache.hadoop.fs.Path parentDir, MetadataContext metaContext) {
-          return false;
-        }
-      };
+      setTimestampToZero(dataDir);
 
       String query = String.format("select dir0, dir1, o_custkey, o_orderdate from `%s` " +
           " where dir0=1994 or dir1='Q3'", innerMetaCorruptedTable);
@@ -693,6 +674,14 @@ public class TestParquetMetadataCache extends PlanTestBase {
           new String[] {"cacheFileRoot", "Filter"});
     } finally {
       FileUtils.deleteQuietly(dataDir);
+    }
+  }
+
+  private void setTimestampToZero(File dataDir) throws IOException {
+    Collection<File> dirs = FileUtils.listFilesAndDirs(dataDir, FalseFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+
+    for (File dir: dirs) {
+      Files.setLastModifiedTime(dir.toPath(), FileTime.from(0, TimeUnit.MILLISECONDS));
     }
   }
 
@@ -934,6 +923,42 @@ public class TestParquetMetadataCache extends PlanTestBase {
     } finally {
       test("drop table if exists dfs.tmp.`t7`");
     }
+  }
+
+  @Test
+  public void testEmptyDirectoryWithMetadataFile() throws Exception {
+    final String emptyDirNameWithMetadataFile = "empty_directory";
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile));
+    dirTestWatcher.copyResourceToTestTmp(
+        Paths.get("parquet", "metadata_files_with_old_versions", "v3_1", "metadata_table.requires_replace.txt"),
+        Paths.get(emptyDirNameWithMetadataFile, Metadata.METADATA_FILENAME));
+
+    final BatchSchema expectedSchema = new SchemaBuilder().build();
+
+    testBuilder()
+        .sqlQuery("select * from dfs.tmp.`%s`", emptyDirNameWithMetadataFile)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testEmptyDirectoryWithMetadataDirFile() throws Exception {
+    final String emptyDirNameWithMetadataFile = "empty_directory";
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile));
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile, "t2"));
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(emptyDirNameWithMetadataFile, "t1"));
+    dirTestWatcher.copyResourceToTestTmp(
+            Paths.get("parquet", "metadata_files_with_old_versions", "v3_1", "metadata_directories.requires_replace.txt"),
+            Paths.get(emptyDirNameWithMetadataFile, Metadata.METADATA_DIRECTORIES_FILENAME));
+
+    final BatchSchema expectedSchema = new SchemaBuilder().build();
+
+    testBuilder()
+            .sqlQuery("select * from dfs.tmp.`%s`", emptyDirNameWithMetadataFile)
+            .schemaBaseLine(expectedSchema)
+            .build()
+            .run();
   }
 
   /**

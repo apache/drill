@@ -19,7 +19,7 @@ enum RpcMode {
 }
 
 message RpcHeader{
-	optional RpcMode mode = 1; 
+	optional RpcMode mode = 1;
 	optional int32 coordination_id = 2; // reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
 	optional int32 rpc_type = 3; // a rpc mode specific rpc type.
 }
@@ -29,7 +29,3 @@ message CompleteRpcMessage {
     optional bytes protobuf_body = 2; // required
     optional bytes raw_body = 3; // optional
 }
-
-
-
-

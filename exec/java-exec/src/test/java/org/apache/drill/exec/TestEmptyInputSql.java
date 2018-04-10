@@ -21,22 +21,30 @@ package org.apache.drill.exec;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.test.rowSet.SchemaBuilder;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 @Category(UnlikelyTest.class)
 public class TestEmptyInputSql extends BaseTestQuery {
 
-  public final String SINGLE_EMPTY_JSON = "/scan/emptyInput/emptyJson/empty.json";
-  public final String SINGLE_EMPTY_CSVH = "/scan/emptyInput/emptyCsvH/empty.csvh";
-  public final String SINGLE_EMPTY_CSV = "/scan/emptyInput/emptyCsv/empty.csv";
+  private static final String SINGLE_EMPTY_JSON = "/scan/emptyInput/emptyJson/empty.json";
+  private static final String SINGLE_EMPTY_CSVH = "/scan/emptyInput/emptyCsvH/empty.csvh";
+  private static final String SINGLE_EMPTY_CSV = "/scan/emptyInput/emptyCsv/empty.csv";
+  private static final String EMPTY_DIR_NAME = "empty_directory";
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.makeTestTmpSubDir(Paths.get(EMPTY_DIR_NAME));
+  }
 
   /**
    * Test with query against an empty file. Select clause has regular column reference, and an expression.
@@ -176,5 +184,34 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test
+  public void testEmptyDirectory() throws Exception {
+    final BatchSchema expectedSchema = new SchemaBuilder().build();
+
+    testBuilder()
+        .sqlQuery("select * from dfs.tmp.`%s`", EMPTY_DIR_NAME)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testEmptyDirectoryAndFieldInQuery() throws Exception {
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.INT) // field "key" is absent in schemaless table
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
+
+    testBuilder()
+        .sqlQuery("select key from dfs.tmp.`%s`", EMPTY_DIR_NAME)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+
 
 }

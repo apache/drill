@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -96,13 +96,8 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     catch (SQLException | UnsupportedOperationException e) {
       // Expected.
     }
-    try {
-      connection.createArrayOf("INTEGER", new Object[0]);
-      fail("Test seems to be out of date.  Were arrays implemented?");
-    }
-    catch (SQLException | UnsupportedOperationException e) {
-      // Expected.
-    }
+
+    connection.createArrayOf("INTEGER", new Object[0]);
 
     resultSet = plainStatement.executeQuery("VALUES 'plain Statement query'");
     resultSet.next();
@@ -161,7 +156,9 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
      */
     private static Object getDummyValueForType(Class<?> type) {
       final Object result;
-      if (! type.isPrimitive()) {
+      if (type.equals(String.class)) {
+        result = "";
+      } else if (! type.isPrimitive()) {
         result = null;
       }
       else {

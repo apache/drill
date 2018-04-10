@@ -19,31 +19,28 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 @Category(OperatorTest.class)
-public class TestNestedLoopJoin extends PlanTestBase {
-
-  private static String nlpattern = "NestedLoopJoin";
-
-  private static final String DISABLE_HJ = "alter session set `planner.enable_hashjoin` = false";
-  private static final String ENABLE_HJ = "alter session set `planner.enable_hashjoin` = true";
-  private static final String RESET_HJ = "alter session reset `planner.enable_hashjoin`";
-  private static final String DISABLE_MJ = "alter session set `planner.enable_mergejoin` = false";
-  private static final String ENABLE_MJ = "alter session set `planner.enable_mergejoin` = true";
-  private static final String DISABLE_NLJ_SCALAR = "alter session set `planner.enable_nljoin_for_scalar_only` = false";
-  private static final String ENABLE_NLJ_SCALAR = "alter session set `planner.enable_nljoin_for_scalar_only` = true";
-  private static final String DISABLE_JOIN_OPTIMIZATION = "alter session set `planner.enable_join_optimization` = false";
-  private static final String RESET_JOIN_OPTIMIZATION = "alter session reset `planner.enable_join_optimization`";
+public class TestNestedLoopJoin extends JoinTestBase {
 
   // Test queries used by planning and execution tests
   private static final String testNlJoinExists_1 = "select r_regionkey from cp.`tpch/region.parquet` "
@@ -82,34 +79,35 @@ public class TestNestedLoopJoin extends PlanTestBase {
   @BeforeClass
   public static void setupTestFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "parquet"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("join", "multiple"));
   }
 
   @Test
   public void testNlJoinExists_1_planning() throws Exception {
-    testPlanMatchingPatterns(testNlJoinExists_1, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(testNlJoinExists_1, new String[]{NLJ_PATTERN}, new String[]{});
   }
 
   @Test
   public void testNlJoinNotIn_1_planning() throws Exception {
-    testPlanMatchingPatterns(testNlJoinNotIn_1, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(testNlJoinNotIn_1, new String[]{NLJ_PATTERN}, new String[]{});
   }
 
   @Test
   public void testNlJoinInequality_1() throws Exception {
-    testPlanMatchingPatterns(testNlJoinInequality_1, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(testNlJoinInequality_1, new String[]{NLJ_PATTERN}, new String[]{});
   }
 
   @Test
   public void testNlJoinInequality_2() throws Exception {
     test(DISABLE_NLJ_SCALAR);
-    testPlanMatchingPatterns(testNlJoinInequality_2, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(testNlJoinInequality_2, new String[]{NLJ_PATTERN}, new String[]{});
     test(ENABLE_NLJ_SCALAR);
   }
 
   @Test
   public void testNlJoinInequality_3() throws Exception {
     test(DISABLE_NLJ_SCALAR);
-    testPlanMatchingPatterns(testNlJoinInequality_3, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(testNlJoinInequality_3, new String[]{NLJ_PATTERN}, new String[]{});
     test(ENABLE_NLJ_SCALAR);
   }
 
@@ -118,7 +116,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
     String query = "select total1, total2 from "
         + "(select sum(l_quantity) as total1 from cp.`tpch/lineitem.parquet` where l_suppkey between 100 and 200), "
         + "(select sum(l_quantity) as total2 from cp.`tpch/lineitem.parquet` where l_suppkey between 200 and 300)  ";
-    testPlanMatchingPatterns(query, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(query, new String[]{NLJ_PATTERN}, new String[]{});
   }
 
   @Test // equality join and scalar right input, hj and mj disabled
@@ -128,7 +126,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
         + "                        where n_nationkey < 10)";
     test(DISABLE_HJ);
     test(DISABLE_MJ);
-    testPlanMatchingPatterns(query, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(query, new String[]{NLJ_PATTERN}, new String[]{});
     test(ENABLE_HJ);
     test(ENABLE_MJ);
   }
@@ -141,7 +139,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
     test("alter session set `planner.slice_target` = 1");
     test(DISABLE_HJ);
     test(DISABLE_MJ);
-    testPlanMatchingPatterns(query, new String[]{nlpattern, "BroadcastExchange"}, new String[]{});
+    testPlanMatchingPatterns(query, new String[]{NLJ_PATTERN, "BroadcastExchange"}, new String[]{});
     test(ENABLE_HJ);
     test(ENABLE_MJ);
     test("alter session set `planner.slice_target` = 100000");
@@ -154,7 +152,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
     test(DISABLE_HJ);
     test(DISABLE_MJ);
     test(DISABLE_NLJ_SCALAR);
-    testPlanMatchingPatterns(query, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(query, new String[]{NLJ_PATTERN}, new String[]{});
     test(ENABLE_HJ);
     test(ENABLE_MJ);
     test(ENABLE_NLJ_SCALAR);
@@ -169,7 +167,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
     test(DISABLE_HJ);
     test(DISABLE_MJ);
     test(DISABLE_NLJ_SCALAR);
-    testPlanMatchingPatterns(query, new String[]{nlpattern, "BroadcastExchange"}, new String[]{});
+    testPlanMatchingPatterns(query, new String[]{NLJ_PATTERN, "BroadcastExchange"}, new String[]{});
     test(ENABLE_HJ);
     test(ENABLE_MJ);
     test(ENABLE_NLJ_SCALAR);
@@ -274,7 +272,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
     try {
       test(DISABLE_NLJ_SCALAR);
       String query = String.format(testNlJoinBetween, "INNER");
-      testPlanMatchingPatterns(query, new String[]{nlpattern}, new String[]{});
+      testPlanMatchingPatterns(query, new String[]{NLJ_PATTERN}, new String[]{});
       testBuilder()
           .sqlQuery(query)
           .ordered()
@@ -283,6 +281,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
           .baselineValues(24, 7, 31)
           .build();
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
     }
   }
@@ -292,7 +291,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
     try {
       test(DISABLE_NLJ_SCALAR);
       String query = String.format(testNlJoinBetween, "LEFT");
-      testPlanMatchingPatterns(query, new String[]{nlpattern}, new String[]{});
+      testPlanMatchingPatterns(query, new String[]{NLJ_PATTERN}, new String[]{});
       testBuilder()
           .sqlQuery(query)
           .ordered()
@@ -304,6 +303,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
           .baselineValues(24, 7, 31)
           .build();
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
     }
   }
@@ -318,6 +318,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
           "possibly due to either a cartesian join or an inequality join"));
       throw e;
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
     }
   }
@@ -327,10 +328,86 @@ public class TestNestedLoopJoin extends PlanTestBase {
     try {
       test(DISABLE_NLJ_SCALAR);
       test(DISABLE_JOIN_OPTIMIZATION);
-      testPlanMatchingPatterns(testNlJoinWithLargeRightInput, new String[]{nlpattern}, new String[]{});
+      testPlanMatchingPatterns(testNlJoinWithLargeRightInput, new String[]{NLJ_PATTERN}, new String[]{});
     } finally {
+      test(ENABLE_NLJ_SCALAR);
       test(RESET_HJ);
       test(RESET_JOIN_OPTIMIZATION);
+    }
+  }
+
+  @Test
+  public void testNestedLeftJoinWithEmptyTable() throws Exception {
+    try {
+      enableJoin(false, false, true);
+      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "left outer", new String[] {NLJ_PATTERN, LEFT_JOIN_TYPE}, 1155L);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void testNestedInnerJoinWithEmptyTable() throws Exception {
+    try {
+      enableJoin(false, false, true);
+      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "inner", new String[] {NLJ_PATTERN, INNER_JOIN_TYPE}, 0L);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test(expected = RpcException.class)
+  public void testNestedRightJoinWithEmptyTable() throws Exception {
+    try {
+      enableJoin(false, false, true);
+      testJoinWithEmptyFile(dirTestWatcher.getRootDir(), "right outer", new String[] {NLJ_PATTERN, RIGHT_JOIN_TYPE}, 0L);
+    } catch (RpcException e) {
+      assertTrue("Not expected exception is obtained while performing the query with RIGHT JOIN logical operator " +
+          "by using nested loop join physical operator",
+          e.getMessage().contains("SYSTEM ERROR: CannotPlanException"));
+      throw e;
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  /**
+   * Validates correctness of NestedLoopJoin when right side has multiple batches.
+   * See DRILL-6128 for details
+   * @throws Exception
+   */
+  @Test
+  public void testNLJoinCorrectnessRightMultipleBatches() throws Exception {
+    try {
+      test(DISABLE_NLJ_SCALAR);
+      test(DISABLE_JOIN_OPTIMIZATION);
+      setSessionOption(ExecConstants.SLICE_TARGET, 1);
+      test(DISABLE_HJ);
+      test(DISABLE_MJ);
+
+      final String query = "SELECT l.id_left AS id_left, r.id_right AS id_right FROM dfs.`join/multiple/left` l left " +
+        "join dfs.`join/multiple/right` r on l.id_left = r.id_right";
+
+      Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
+      typeMap.put(TestBuilder.parsePath("id_left"), Types.optional(TypeProtos.MinorType.BIGINT));
+      typeMap.put(TestBuilder.parsePath("id_right"), Types.optional(TypeProtos.MinorType.BIGINT));
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .csvBaselineFile("join/expected/nestedLoopJoinBaseline.csv")
+        .baselineColumns("id_left", "id_right")
+        .baselineTypes(typeMap)
+        .go();
+
+    } catch (Exception e) {
+      fail();
+    } finally {
+      test(ENABLE_NLJ_SCALAR);
+      test(RESET_JOIN_OPTIMIZATION);
+      test(ENABLE_HJ);
+      test(ENABLE_MJ);
+      setSessionOption(ExecConstants.SLICE_TARGET, 100000);
     }
   }
 }

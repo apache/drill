@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.SelfCleaningRunnable;
-import org.apache.drill.common.concurrent.ExtendedLatch;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -38,6 +38,7 @@ import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -46,11 +47,15 @@ import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Manages the running fragments in a Drillbit. Periodically requests run-time stats updates from fragments
@@ -59,12 +64,14 @@ import java.util.concurrent.Executor;
 public class WorkManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkManager.class);
 
+  public static final int EXIT_TIMEOUT_MS = 5000;
+
   /*
    * We use a {@see java.util.concurrent.ConcurrentHashMap} because it promises never to throw a
    * {@see java.util.ConcurrentModificationException}; we need that because the statusThread may
    * iterate over the map while other threads add FragmentExecutors via the {@see #WorkerBee}.
    */
-  private final Map<FragmentHandle, FragmentExecutor> runningFragments = new ConcurrentHashMap<>();
+  private final ConcurrentMap<FragmentHandle, FragmentExecutor> runningFragments = Maps.newConcurrentMap();
 
   private final ConcurrentMap<QueryId, Foreman> queries = Maps.newConcurrentMap();
 
@@ -77,6 +84,8 @@ public class WorkManager implements AutoCloseable {
   private final WorkEventBus workBus;
   private final Executor executor;
   private final StatusThread statusThread;
+  private final Lock isEmptyLock = new ReentrantLock();
+  private final Condition isEmptyCondition = isEmptyLock.newCondition();
 
   /**
    * How often the StatusThread collects statistics about running fragments.
@@ -158,38 +167,79 @@ public class WorkManager implements AutoCloseable {
     return dContext;
   }
 
-  private ExtendedLatch exitLatch = null; // used to wait to exit when things are still running
+  public void waitToExit(final boolean forcefulShutdown) {
+    isEmptyLock.lock();
 
-  /**
-   * Waits until it is safe to exit. Blocks until all currently running fragments have completed.
-   *
-   * <p>This is intended to be used by {@link org.apache.drill.exec.server.Drillbit#close()}.</p>
-   */
-  public void waitToExit() {
-    synchronized(this) {
-      if (queries.isEmpty() && runningFragments.isEmpty()) {
-        return;
+    try {
+      if (forcefulShutdown) {
+        final long startTime = System.currentTimeMillis();
+        final long endTime = startTime + EXIT_TIMEOUT_MS;
+        long currentTime;
+
+        while (!areQueriesAndFragmentsEmpty() && (currentTime = System.currentTimeMillis()) < endTime) {
+          try {
+            if (!isEmptyCondition.await(endTime - currentTime, TimeUnit.MILLISECONDS)) {
+              break;
+            }
+          } catch (InterruptedException e) {
+            logger.error("Interrupted while waiting to exit");
+          }
+        }
+
+        if (!areQueriesAndFragmentsEmpty()) {
+          logger.warn("Timed out after {} millis. Shutting down before all fragments and foremen " +
+            "have completed.", EXIT_TIMEOUT_MS);
+
+          for (QueryId queryId: queries.keySet()) {
+            logger.warn("Query {} is still running.", QueryIdHelper.getQueryId(queryId));
+          }
+
+          for (FragmentHandle fragmentHandle: runningFragments.keySet()) {
+            logger.warn("Fragment {} is still running.", QueryIdHelper.getQueryIdentifier(fragmentHandle));
+          }
+        }
+      } else {
+        while (!areQueriesAndFragmentsEmpty()) {
+          isEmptyCondition.awaitUninterruptibly();
+        }
       }
-
-      exitLatch = new ExtendedLatch();
+    } finally {
+      isEmptyLock.unlock();
     }
+  }
 
-    // Wait for at most 5 seconds or until the latch is released.
-    exitLatch.awaitUninterruptibly(5000);
+  private boolean areQueriesAndFragmentsEmpty() {
+    return queries.isEmpty() && runningFragments.isEmpty();
   }
 
   /**
-   * If it is safe to exit, and the exitLatch is in use, signals it so that waitToExit() will
-   * unblock.
+   * A thread calling the {@link #waitToExit(boolean)} method is notified when a foreman is retired.
    */
   private void indicateIfSafeToExit() {
-    synchronized(this) {
-      if (exitLatch != null) {
-        if (queries.isEmpty() && runningFragments.isEmpty()) {
-          exitLatch.countDown();
-        }
+    isEmptyLock.lock();
+    try {
+      logger.info("Waiting for "+ queries.size() +" queries to complete before shutting down");
+      logger.info("Waiting for "+ runningFragments.size() +" running fragments to complete before shutting down");
+
+      if (!areQueriesAndFragmentsEmpty()) {
+        logger.info("New Fragments or queries are added while drillbit is Shutting down");
+      } else {
+        isEmptyCondition.signal();
       }
+    } finally {
+      isEmptyLock.unlock();
     }
+  }
+  /**
+   *  Get the number of queries that are running on a drillbit.
+   *  Primarily used to monitor the number of running queries after a
+   *  shutdown request is triggered.
+   */
+  public synchronized Map<String, Integer> getRemainingQueries() {
+        Map<String, Integer> queriesInfo = new HashMap<String, Integer>();
+        queriesInfo.put("queriesCount", queries.size());
+        queriesInfo.put("fragmentsCount", runningFragments.size());
+        return queriesInfo;
   }
 
   /**
@@ -211,6 +261,43 @@ public class WorkManager implements AutoCloseable {
       executor.execute(runnable);
     }
 
+    public boolean cancelForeman(final QueryId queryId, DrillUserPrincipal principal) {
+      Preconditions.checkNotNull(queryId);
+
+      final Foreman foreman = queries.get(queryId);
+      if (foreman == null) {
+        return false;
+      }
+
+      final String queryIdString = QueryIdHelper.getQueryId(queryId);
+
+      if (principal != null && !principal.canManageQueryOf(foreman.getQueryContext().getQueryUserName())) {
+        throw UserException.permissionError()
+            .message("Not authorized to cancel the query '%s'", queryIdString)
+            .build(logger);
+      }
+
+      executor.execute(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          final Thread currentThread = Thread.currentThread();
+          final String originalName = currentThread.getName();
+          try {
+            currentThread.setName(queryIdString + ":foreman:cancel");
+            logger.debug("Canceling foreman");
+            foreman.cancel();
+          } catch (Throwable t) {
+            logger.warn("Exception while canceling foreman", t);
+          } finally {
+            currentThread.setName(originalName);
+          }
+        }
+      });
+      return true;
+    }
+
     /**
      * Remove the given Foreman from the running query list.
      *
@@ -227,9 +314,9 @@ public class WorkManager implements AutoCloseable {
 
       final QueryId queryId = foreman.getQueryId();
       final boolean wasRemoved = queries.remove(queryId, foreman);
+
       if (!wasRemoved) {
         logger.warn("Couldn't find retiring Foreman for query " + queryId);
-//        throw new IllegalStateException("Couldn't find retiring Foreman for query " + queryId);
       }
 
       indicateIfSafeToExit();
@@ -277,7 +364,9 @@ public class WorkManager implements AutoCloseable {
         @Override
         protected void cleanup() {
           runningFragments.remove(fragmentHandle);
-          workBus.removeFragmentManager(fragmentHandle);
+          if (!fragmentManager.isCancelled()) {
+            workBus.removeFragmentManager(fragmentHandle, false);
+          }
           indicateIfSafeToExit();
         }
       });

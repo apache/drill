@@ -127,4 +127,9 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
     testPlanMatchingPatterns(query, new String[] {}, new String[] { "Join", "Filter" });
   }
 
+  @Test
+  public void testPhysicalPlanSubmission() throws Exception {
+    testPhysicalPlanExecutionBasedOnQuery("select * from mysql.`drill_mysql_test`.person");
+  }
+
 }

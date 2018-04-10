@@ -20,6 +20,10 @@ package org.apache.drill.exec.planner.logical;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.DrillBuf;
+import org.apache.calcite.rex.RexExecutor;
+import org.apache.calcite.util.DateString;
+import org.apache.calcite.util.TimeString;
+import org.apache.calcite.util.TimestampString;
 import org.apache.calcite.rel.RelNode;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -29,7 +33,6 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -64,13 +67,13 @@ import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -79,7 +82,7 @@ import java.math.BigInteger;
 import java.util.Calendar;
 import java.util.List;
 
-public class DrillConstExecutor implements RelOptPlanner.Executor {
+public class DrillConstExecutor implements RexExecutor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConstExecutor.class);
 
   private final PlannerSettings plannerSettings;
@@ -203,7 +206,7 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
               Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 new DateTime(((NullableDateHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
                 new DateTime(((DateHolder) output).value, DateTimeZone.UTC).toCalendar(null);
-              return rexBuilder.makeLiteral(value,
+              return rexBuilder.makeLiteral(DateString.fromCalendarFields(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()), false);
             }
             case DECIMAL9: {
@@ -282,14 +285,14 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
               Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 new DateTime(((NullableTimeHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
                 new DateTime(((TimeHolder) output).value, DateTimeZone.UTC).toCalendar(null);
-              return rexBuilder.makeLiteral(value,
+              return rexBuilder.makeLiteral(TimeString.fromCalendarFields(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIME, newCall.getType().isNullable()), false);
             }
             case TIMESTAMP: {
               Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 new DateTime(((NullableTimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
                 new DateTime(((TimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null);
-              return rexBuilder.makeLiteral(value,
+              return rexBuilder.makeLiteral(TimestampString.fromCalendarFields(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIMESTAMP, newCall.getType().isNullable()), false);
             }
             case INTERVALYEAR: {
@@ -312,9 +315,9 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
                 milliseconds = intervalDayOut.milliseconds;
               }
               return rexBuilder.makeLiteral(
-                new BigDecimal(days * DateUtility.daysToStandardMillis + milliseconds),
-                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY_TIME, newCall.getType().isNullable()),
-                false);
+                  new BigDecimal(days * (long) DateUtilities.daysToStandardMillis + milliseconds),
+                  TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY,
+                      newCall.getType().isNullable()), false);
             }
             // The list of known unsupported types is used to trigger this behavior of re-using the input expression
             // before the expression is even attempted to be evaluated, this is just here as a last precaution a

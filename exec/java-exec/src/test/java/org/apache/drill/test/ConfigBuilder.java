@@ -21,11 +21,13 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.Map.Entry;
 
+import com.typesafe.config.ConfigValue;
 import org.apache.drill.common.config.DrillConfig;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 
@@ -36,7 +38,7 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 public class ConfigBuilder {
 
   protected String configResource;
-  protected Properties configProps;
+  protected Properties configProps = new Properties();
   protected CaseInsensitiveMap<OptionDefinition> definitions = SystemOptionManager.createDefaultOptionDefinitions();
 
   /**
@@ -45,17 +47,38 @@ public class ConfigBuilder {
    * @return this builder
    * @see {@link #put(String, Object)}
    */
-
   public ConfigBuilder configProps(Properties configProps) {
     if (hasResource()) {
       // Drill provides no constructor for this use case.
       throw new IllegalArgumentException( "Cannot provide both a config resource and config properties.");
     }
+
     if (this.configProps == null) {
-      this.configProps = configProps;
-    } else {
-      this.configProps.putAll(configProps);
+      this.configProps = createDefaultProperties();
     }
+
+    this.configProps.putAll(configProps);
+
+    return this;
+  }
+
+  public ConfigBuilder configProps(DrillConfig drillConfig) {
+    if (hasResource()) {
+      // Drill provides no constructor for this use case.
+      throw new IllegalArgumentException( "Cannot provide both a config resource and config properties.");
+    }
+
+    if (configProps == null) {
+      configProps = createDefaultProperties();
+    }
+
+    for (Entry<String, ConfigValue> entry: drillConfig.entrySet()) {
+      final Object key = entry.getKey();
+      final Object value = entry.getValue().unwrapped();
+
+      configProps.put(key, value);
+    }
+
     return this;
   }
 
@@ -102,11 +125,23 @@ public class ConfigBuilder {
       // Drill provides no constructor for this use case.
       throw new IllegalArgumentException( "Cannot provide both a config resource and config properties.");
     }
+
     if (configProps == null) {
-      configProps = new Properties();
+      configProps = createDefaultProperties();
     }
+
     configProps.put(key, value.toString());
     return this;
+  }
+
+  private static Properties createDefaultProperties()
+  {
+    Properties properties = new Properties();
+    properties.put(ExecConstants.CAST_TO_NULLABLE_NUMERIC, "false");
+    properties.put(ExecConstants.USE_DYNAMIC_UDFS_KEY, "false");
+    properties.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
+
+    return properties;
   }
 
   public ConfigBuilder putDefinition(OptionDefinition definition) {
@@ -157,7 +192,7 @@ public class ConfigBuilder {
         ConfigValueFactory.fromAnyRef(entry.getValue()));
     }
 
-    return new DrillConfig(drillConfig, true);
+    return new DrillConfig(drillConfig);
   }
 
   public boolean hasResource() {

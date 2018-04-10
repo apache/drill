@@ -20,9 +20,7 @@ package org.apache.drill.exec.expr.fn.impl;
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
-import org.apache.drill.exec.memory.BoundsChecking;
-
-import com.google.common.primitives.UnsignedLongs;
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 public final class XXHash extends DrillHash{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XXHash.class);
@@ -166,9 +164,7 @@ public final class XXHash extends DrillHash{
   }
 
   public static long hash64(long start, long end, DrillBuf buffer, long seed){
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      buffer.checkBytes((int)start, (int)end);
-    }
+    rangeCheck(buffer, (int)start, (int)end);
 
     long s = buffer.memoryAddress() + start;
     long e = buffer.memoryAddress() + end;

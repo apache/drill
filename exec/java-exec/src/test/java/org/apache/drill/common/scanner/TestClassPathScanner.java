@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.AnnotationDescriptor;
 import org.apache.drill.common.scanner.persistence.FieldDescriptor;
@@ -40,12 +41,13 @@ import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.fn.impl.testing.GeneratorFunctions.IncreasingBigInt;
 import org.apache.drill.exec.fn.impl.testing.GeneratorFunctions.RandomBigIntGauss;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class})
 public class TestClassPathScanner {
 
   @SafeVarargs
@@ -60,25 +62,6 @@ public class TestClassPathScanner {
   @Test
   public void test() throws Exception {
     ScanResult result = ClassPathScanner.fromPrescan(DrillConfig.create());
-    // if the build has run properly. BuildTimeScan.REGISTRY_FILE was created with a prescan
-//    assertListEqualsUnordered(result.getPrescannedPackages(),
-//      "org.apache.drill.common.logical",
-//      "org.apache.drill.exec.expr",
-//      "org.apache.drill.exec.physical.base",
-//      "org.apache.drill.exec.expr.fn.impl",
-//      "org.apache.drill.exec.physical.impl",
-//      "org.apache.drill.exec.rpc.user.security",
-//      "org.apache.drill.exec.store",
-//      "org.apache.drill.exec.store.mock",
-//      "org.apache.drill.exec.physical.config",
-//      "org.apache.drill.storage"
-//    );
-//    // this is added in the unit test folder that was not scanned so far
-//    assertListEqualsUnordered(result.getScannedPackages(),
-//      "org.apache.drill.exec.testing",
-//      "org.apache.drill.exec.fn.impl.testing",
-//      "org.apache.drill.exec.rpc.user.security.testing"
-//    );
     List<AnnotatedClassDescriptor> functions = result.getAnnotatedClasses();
     Set<String> scanned = new HashSet<>();
     AnnotatedClassDescriptor functionRandomBigIntGauss = null;

@@ -78,6 +78,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
   protected void buildSchema() throws SchemaChangeException {
     if (! prefetchFirstBatchFromBothSides()) {
+      state = BatchState.DONE;
       return;
     }
 
@@ -128,7 +129,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
         }
       }
     } catch (ClassTransformationException | IOException | SchemaChangeException ex) {
-      context.fail(ex);
+      context.getExecutorState().fail(ex);
       killIncoming(false);
       return IterOutcome.STOP;
     }
@@ -167,8 +168,6 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
     final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
-    //    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     int index = 0;
     for(VectorWrapper<?> vw : inputBatch) {

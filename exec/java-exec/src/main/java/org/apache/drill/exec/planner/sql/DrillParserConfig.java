@@ -21,6 +21,8 @@ import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
+import org.apache.calcite.sql.validate.SqlConformance;
+import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 
@@ -57,6 +59,16 @@ public class DrillParserConfig implements SqlParser.Config {
   @Override
   public boolean caseSensitive() {
     return false;
+  }
+
+  @Override
+  public SqlConformance conformance() {
+    return SqlConformanceEnum.DEFAULT;
+  }
+
+  @Override
+  public boolean allowBangEqual() {
+    return conformance().isBangEqualAllowed();
   }
 
   @Override

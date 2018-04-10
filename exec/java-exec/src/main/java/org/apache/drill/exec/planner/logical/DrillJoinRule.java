@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -37,6 +36,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 /**
  * Rule that converts a {@link org.apache.calcite.rel.logical.LogicalJoin} to a {@link DrillJoinRel}, which is implemented by Drill "join" operation.
@@ -46,25 +46,24 @@ public class DrillJoinRule extends RelOptRule {
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   private DrillJoinRule() {
-    super(
-        RelOptHelper.any(LogicalJoin.class, Convention.NONE),
+    super(RelOptHelper.any(LogicalJoin.class, Convention.NONE),
+        DrillRelFactories.LOGICAL_BUILDER,
         "DrillJoinRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final LogicalJoin join = (LogicalJoin) call.rel(0);
+    final LogicalJoin join = call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
     final RelTraitSet traits = join.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
-    final RelNode convertedLeft = convert(left, left.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
-    final RelNode convertedRight = convert(right, right.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
+    final RelNode convertedLeft = convert(left, left.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
+    final RelNode convertedRight = convert(right, right.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
 
     List<Integer> leftKeys = Lists.newArrayList();
     List<Integer> rightKeys = Lists.newArrayList();
     List<Boolean> filterNulls = Lists.newArrayList();
-    int numLeftFields = convertedLeft.getRowType().getFieldCount();
 
     boolean addFilter = false;
     RexNode origJoinCondition = join.getCondition();
@@ -97,7 +96,7 @@ public class DrillJoinRule extends RelOptRule {
         call.transformTo(new DrillFilterRel(join.getCluster(), traits, joinRel, remaining));
       }
     } catch (InvalidRelException e) {
-      tracer.warning(e.toString());
+      tracer.warn(e.toString());
     }
   }
 
@@ -109,8 +108,8 @@ public class DrillJoinRule extends RelOptRule {
     List<RelDataTypeField> rightTypes = convertedRight.getRowType().getFieldList();
 
     for (int i=0; i < leftKeys.size(); i++) {
-      int leftKeyOrdinal = leftKeys.get(i).intValue();
-      int rightKeyOrdinal = rightKeys.get(i).intValue();
+      int leftKeyOrdinal = leftKeys.get(i);
+      int rightKeyOrdinal = rightKeys.get(i);
 
       equijoinList.add(builder.makeCall(
            filterNulls.get(i) ? SqlStdOperatorTable.EQUALS : SqlStdOperatorTable.IS_NOT_DISTINCT_FROM,

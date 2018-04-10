@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl.validate;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
+
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -30,10 +35,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.VectorValidator;
-
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.*;
 
 
 public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
@@ -137,6 +139,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
     switch (batchState) {
     case OK:
     case OK_NEW_SCHEMA:
+    case NONE:
       return;
     default:
       throw new IllegalStateException(

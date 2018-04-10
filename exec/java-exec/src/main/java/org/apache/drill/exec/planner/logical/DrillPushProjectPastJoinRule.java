@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ public class DrillPushProjectPastJoinRule extends ProjectJoinTransposeRule {
   public static final RelOptRule INSTANCE = new DrillPushProjectPastJoinRule(DrillConditions.PRESERVE_ITEM);
 
   protected DrillPushProjectPastJoinRule(PushProjector.ExprCondition preserveExprCondition) {
-    super(preserveExprCondition);
+    super(preserveExprCondition, DrillRelFactories.LOGICAL_BUILDER);
   }
 
 }

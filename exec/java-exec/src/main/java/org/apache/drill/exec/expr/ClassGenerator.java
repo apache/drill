@@ -225,7 +225,7 @@ public class ClassGenerator<T>{
   }
 
   public JLabel getEvalBlockLabel (String prefix) {
-    return getEvalBlock().label(prefix + labelIndex ++);
+    return getEvalBlock().label(prefix + labelIndex++);
   }
 
   /**
@@ -543,12 +543,24 @@ public class ClassGenerator<T>{
   }
 
   public HoldingContainer declare(MajorType t, boolean includeNewInstance) {
+    return declare(t, "out", includeNewInstance);
+  }
+
+  /**
+   * Adds local variable declaration based on given name and type.
+   *
+   * @param t major type
+   * @param name variable name
+   * @param includeNewInstance whether to create new instance
+   * @return holder instance
+   */
+  public HoldingContainer declare(MajorType t, String name, boolean includeNewInstance) {
     JType holderType = getHolderType(t);
     JVar var;
     if (includeNewInstance) {
-      var = getEvalBlock().decl(holderType, "out" + index, JExpr._new(holderType));
+      var = getEvalBlock().decl(holderType, name + index, JExpr._new(holderType));
     } else {
-      var = getEvalBlock().decl(holderType, "out" + index);
+      var = getEvalBlock().decl(holderType, name + index);
     }
     JFieldRef outputSet = null;
     if (t.getMode() == DataMode.OPTIONAL) {

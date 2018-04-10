@@ -42,10 +42,8 @@ import org.junit.experimental.categories.Category;
  * by casting from VarChar, performing basic functions and converting
  * back to VarChar.
  */
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestExtractFunctions extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExtractFunctions.class);
-
   @Test
   public void testFromDate() throws Exception {
     long expectedValues[][] = { {00, 00, 02, 01, 1970}, {00, 00, 28, 12, 2008}, {00, 00, 27, 02, 2000} };

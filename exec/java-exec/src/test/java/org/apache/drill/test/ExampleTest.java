@@ -35,8 +35,8 @@ import org.apache.drill.test.LogFixture.LogFixtureBuilder;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.apache.drill.test.rowSet.file.JsonFileBuilder;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -123,8 +123,8 @@ public class ExampleTest {
         .build();
 
       final RowSet rowSet = new RowSetBuilder(allocator, schema)
-        .add("1", "kiwi")
-        .add("2", "watermelon")
+        .addRow("1", "kiwi")
+        .addRow("2", "watermelon")
         .build();
 
       new JsonFileBuilder(rowSet).build(tableFile);

@@ -33,6 +33,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -45,7 +46,7 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.common.Comparator;
-import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -54,7 +55,8 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.AbstractRecordBatchMemoryManager;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
@@ -102,20 +104,86 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final List<Comparator> comparators;
   private final JoinRelType joinType;
   private JoinWorker worker;
+  private final int outputBatchSize;
 
   private static final String LEFT_INPUT = "LEFT INPUT";
   private static final String RIGHT_INPUT = "RIGHT INPUT";
 
+  private class MergeJoinMemoryManager extends AbstractRecordBatchMemoryManager {
+    private int leftRowWidth;
+    private int rightRowWidth;
+
+    private RecordBatchSizer leftSizer;
+    private RecordBatchSizer rightSizer;
+
+    /**
+     * mergejoin operates on one record at a time from the left and right batches
+     * using RecordIterator abstraction. We have a callback mechanism to get notified
+     * when new batch is loaded in record iterator.
+     * This can get called in the middle of current output batch we are building.
+     * when this gets called, adjust number of output rows for the current batch and
+     * update the value to be used for subsequent batches.
+     */
+    @Override
+    public void update(int inputIndex) {
+      switch(inputIndex) {
+        case 0:
+          leftSizer = new RecordBatchSizer(left);
+          leftRowWidth = leftSizer.netRowWidth();
+          break;
+        case 1:
+          rightSizer = new RecordBatchSizer(right);
+          rightRowWidth = rightSizer.netRowWidth();
+        default:
+          break;
+      }
+
+      final int newOutgoingRowWidth = leftRowWidth + rightRowWidth;
+
+      // If outgoing row width is 0, just return. This is possible for empty batches or
+      // when first set of batches come with OK_NEW_SCHEMA and no data.
+      if (newOutgoingRowWidth == 0) {
+        return;
+      }
+
+      // update the value to be used for next batch(es)
+      setOutputRowCount(outputBatchSize, newOutgoingRowWidth);
+
+      // Adjust for the current batch.
+      // calculate memory used so far based on previous outgoing row width and how many rows we already processed.
+      final long memoryUsed = status.getOutPosition() * getOutgoingRowWidth();
+      // This is the remaining memory.
+      final long remainingMemory = Math.max(outputBatchSize/WORST_CASE_FRAGMENTATION_FACTOR - memoryUsed, 0);
+      // These are number of rows we can fit in remaining memory based on new outgoing row width.
+      final int numOutputRowsRemaining = RecordBatchSizer.safeDivide(remainingMemory, newOutgoingRowWidth);
+
+      status.setTargetOutputRowCount(status.getOutPosition() + numOutputRowsRemaining);
+      setOutgoingRowWidth(newOutgoingRowWidth);
+    }
+
+    @Override
+    public RecordBatchSizer.ColumnSize getColumnSize(String name) {
+      if (leftSizer != null && leftSizer.getColumn(name) != null) {
+        return leftSizer.getColumn(name);
+      }
+      return rightSizer == null ? null : rightSizer.getColumn(name);
+    }
+  }
+
+  private final MergeJoinMemoryManager mergeJoinMemoryManager = new MergeJoinMemoryManager();
+
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context, true);
+
+    outputBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
 
     if (popConfig.getConditions().size() == 0) {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
     }
     this.left = left;
-    this.leftIterator = new RecordIterator(left, this, oContext, 0, false);
+    this.leftIterator = new RecordIterator(left, this, oContext, 0, false, mergeJoinMemoryManager);
     this.right = right;
-    this.rightIterator = new RecordIterator(right, this, oContext, 1);
+    this.rightIterator = new RecordIterator(right, this, oContext, 1, mergeJoinMemoryManager);
     this.joinType = popConfig.getJoinType();
     this.status = new JoinStatus(leftIterator, rightIterator, this);
     this.conditions = popConfig.getConditions();
@@ -171,10 +239,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         case BATCH_RETURNED:
           allocateBatch(false);
           status.resetOutputPos();
+          status.setTargetOutputRowCount(mergeJoinMemoryManager.getOutputRowCount());
           break;
         case SCHEMA_CHANGED:
           allocateBatch(true);
           status.resetOutputPos();
+          status.setTargetOutputRowCount(mergeJoinMemoryManager.getOutputRowCount());
           break;
         case NO_MORE_DATA:
           status.resetOutputPos();
@@ -199,7 +269,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           this.worker = generateNewWorker();
           first = true;
         } catch (ClassTransformationException | IOException | SchemaChangeException e) {
-          context.fail(new SchemaChangeException(e));
+          context.getExecutorState().fail(new SchemaChangeException(e));
           kill(false);
           return IterOutcome.STOP;
         } finally {
@@ -269,11 +339,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     right.kill(sendUpstream);
   }
 
-  private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException{
-
+  private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException {
     final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
     // cg.getCodeGenerator().saveCodeForDebugging(true);
     final ErrorCollector collector = new ErrorCollectorImpl();
 
@@ -434,8 +502,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     } else {
       container.zeroVectors();
     }
+
+    // Allocate memory for the vectors.
+    // This will iteratively allocate memory for all nested columns underneath.
+    int outputRowCount = mergeJoinMemoryManager.getOutputRowCount();
     for (VectorWrapper w : container) {
-      AllocationHelper.allocateNew(w.getValueVector(), Character.MAX_VALUE);
+      RecordBatchSizer.ColumnSize colSize = mergeJoinMemoryManager.getColumnSize(w.getField().getName());
+      colSize.allocateVector(w.getValueVector(), outputRowCount);
     }
 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
@@ -500,5 +573,4 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
     return materializedExpr;
   }
-
 }

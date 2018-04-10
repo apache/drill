@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * A record batch contains a set of field values for a particular range of
@@ -38,7 +39,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 public interface RecordBatch extends VectorAccessible {
 
   /** max batch size, limited by 2-byte length in SV2: 65536 = 2^16 */
-  public static final int MAX_BATCH_SIZE = 65536;
+  int MAX_BATCH_SIZE = ValueVector.MAX_ROW_COUNT;
 
   /**
    * Describes the outcome of incrementing RecordBatch forward by a call to
@@ -101,7 +102,7 @@ public interface RecordBatch extends VectorAccessible {
    *   )
    * </p>
    */
-  public static enum IterOutcome {
+  enum IterOutcome {
     /**
      * Normal completion of batch.
      * <p>
@@ -204,35 +205,29 @@ public interface RecordBatch extends VectorAccessible {
    * Gets the FragmentContext of the current query fragment.  Useful for
    * reporting failure information or other query-level information.
    */
-  public FragmentContext getContext();
+  FragmentContext getContext();
 
   /**
    * Gets the current schema of this record batch.
    * <p>
    *   May be called only when the most recent call to {@link #next}, if any,
-   *   returned {@link #OK_NEW_SCHEMA} or {@link #OK}.
+   *   returned {@link IterOutcome#OK_NEW_SCHEMA} or {@link IterOutcome#OK}.
    * </p>
    * <p>
    *   The schema changes when and only when {@link #next} returns
-   *   {@link #OK_NEW_SCHEMA}.
+   *   {@link IterOutcome#OK_NEW_SCHEMA}.
    * </p>
    */
   @Override
-  public BatchSchema getSchema();
-
-  /**
-   * Gets the number of records that are within this record.
-   */
-  @Override
-  public int getRecordCount();
+  BatchSchema getSchema();
 
   /**
    * Informs child nodes that this query should be terminated.  Child nodes
    * should use the QueryContext to determine what has happened.
    */
-  public void kill(boolean sendUpstream);
+  void kill(boolean sendUpstream);
 
-  public VectorContainer getOutgoingContainer();
+  VectorContainer getOutgoingContainer();
 
   /**
    * Gets the value vector type and ID for the given schema path.  The
@@ -246,10 +241,10 @@ public interface RecordBatch extends VectorAccessible {
    *         TypedFieldId
    */
   @Override
-  public abstract TypedFieldId getValueVectorId(SchemaPath path);
+  TypedFieldId getValueVectorId(SchemaPath path);
 
   @Override
-  public abstract VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids);
+  VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids);
 
   /**
    * Updates the data in each Field reading interface for the next range of
@@ -268,12 +263,11 @@ public interface RecordBatch extends VectorAccessible {
    *
    * @return An IterOutcome describing the result of the iteration.
    */
-  public IterOutcome next();
+  IterOutcome next();
 
   /**
    * Gets a writable version of this batch.  Takes over ownership of existing
    * buffers.
    */
-  public WritableBatch getWritableBatch();
-
+  WritableBatch getWritableBatch();
 }

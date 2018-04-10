@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +35,6 @@ import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -42,6 +42,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.parquet.column.statistics.Statistics;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
@@ -417,8 +418,21 @@ public class Metadata {
    * Get the metadata for a single file
    */
   private ParquetFileMetadata_v3 getParquetFileMetadata_v3(ParquetTableMetadata_v3 parquetTableMetadata,
-      FileStatus file) throws IOException {
-    ParquetMetadata metadata = ParquetFileReader.readFooter(fs.getConf(), file);
+      final FileStatus file) throws IOException, InterruptedException {
+    final ParquetMetadata metadata;
+    final UserGroupInformation processUserUgi = ImpersonationUtil.getProcessUserUGI();
+    try {
+      metadata = processUserUgi.doAs(new PrivilegedExceptionAction<ParquetMetadata>() {
+        public ParquetMetadata run() throws Exception {
+          return ParquetFileReader.readFooter(fs.getConf(), file);
+        }
+      });
+    } catch(Exception e) {
+      logger.error("Exception while reading footer of parquet file [Details - path: {}, owner: {}] as process user {}",
+        file.getPath(), file.getOwner(), processUserUgi.getShortUserName(), e);
+      throw e;
+    }
+
     MessageType schema = metadata.getFileMetaData().getSchema();
 
 //    Map<SchemaPath, OriginalType> originalTypeMap = Maps.newHashMap();
@@ -431,7 +445,7 @@ public class Metadata {
     List<RowGroupMetadata_v3> rowGroupMetadataList = Lists.newArrayList();
 
     ArrayList<SchemaPath> ALL_COLS = new ArrayList<>();
-    ALL_COLS.add(Utilities.STAR_COLUMN);
+    ALL_COLS.add(SchemaPath.STAR_COLUMN);
     boolean autoCorrectCorruptDates = formatConfig.areCorruptDatesAutoCorrected();
     ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS, autoCorrectCorruptDates);
     if (logger.isDebugEnabled()) {

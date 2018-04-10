@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -25,19 +26,19 @@ import java.util.List;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrapper.BatchMerger;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortTestUtilities.CopierTester;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.test.rowSet.SchemaBuilder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.apache.drill.test.rowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -51,25 +52,15 @@ import org.junit.experimental.categories.Category;
  */
 
 @Category(OperatorTest.class)
-public class TestCopier extends DrillTest {
-
-  public static OperatorFixture fixture;
-
-  @BeforeClass
-  public static void setup() {
-    fixture = OperatorFixture.builder().build();
-  }
-
-  @AfterClass
-  public static void tearDown() throws Exception {
-    fixture.close();
-  }
+public class TestCopier extends SubOperatorTest {
 
   @Test
   public void testEmptyInput() throws Exception {
     BatchSchema schema = SortTestUtilities.nonNullSchema();
     List<BatchGroup> batches = new ArrayList<>();
-    PriorityQueueCopierWrapper copier = SortTestUtilities.makeCopier(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED);
+    Sort popConfig = SortTestUtilities.makeCopierConfig(Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED);
+    OperatorContext opContext = fixture.newOperatorContext(popConfig);
+    PriorityQueueCopierWrapper copier = new PriorityQueueCopierWrapper(opContext);
     VectorContainer dest = new VectorContainer();
     try {
       // TODO: Create a vector allocator to pass as last parameter so
@@ -77,11 +68,13 @@ public class TestCopier extends DrillTest {
       // code. Only nuisance is that we don't have the required metadata
       // readily at hand here...
 
-      @SuppressWarnings({ "resource", "unused" })
+      @SuppressWarnings({"resource", "unused"})
       BatchMerger merger = copier.startMerge(schema, batches, dest, 10, null);
       fail();
     } catch (AssertionError e) {
       // Expected
+    } finally {
+      opContext.close();
     }
   }
 
@@ -101,12 +94,12 @@ public class TestCopier extends DrillTest {
     BatchSchema schema = SortTestUtilities.nonNullSchema();
     CopierTester tester = new CopierTester(fixture);
     tester.addInput(fixture.rowSetBuilder(schema)
-          .add(10, "10")
+          .addRow(10, "10")
           .withSv2()
           .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-          .add(10, "10")
+          .addRow(10, "10")
           .build());
     tester.run();
   }
@@ -116,17 +109,17 @@ public class TestCopier extends DrillTest {
     BatchSchema schema = SortTestUtilities.nonNullSchema();
     CopierTester tester = new CopierTester(fixture);
     tester.addInput(fixture.rowSetBuilder(schema)
-          .add(10, "10")
+          .addRow(10, "10")
           .withSv2()
           .build());
     tester.addInput(fixture.rowSetBuilder(schema)
-          .add(20, "20")
+          .addRow(20, "20")
           .withSv2()
           .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-          .add(10, "10")
-          .add(20, "20")
+          .addRow(10, "10")
+          .addRow(20, "20")
           .build());
     tester.run();
   }
@@ -137,7 +130,7 @@ public class TestCopier extends DrillTest {
     int value = first;
     for (int i = 0; i < count; i++, value += step) {
       RowSetUtilities.setFromInt(writer, 0, value);
-      writer.column(1).setString(Integer.toString(value));
+      writer.scalar(1).setString(Integer.toString(value));
       writer.save();
     }
     writer.done();
@@ -188,25 +181,25 @@ public class TestCopier extends DrillTest {
     tester.sortOrder = Ordering.ORDER_ASC;
     tester.nullOrder = Ordering.NULLS_LAST;
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(1, "1")
-        .add(4, "4")
-        .add(null, "null")
+        .addRow(1, "1")
+        .addRow(4, "4")
+        .addRow(null, "null")
         .withSv2()
         .build());
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(2, "2")
-        .add(3, "3")
-        .add(null, "null")
+        .addRow(2, "2")
+        .addRow(3, "3")
+        .addRow(null, "null")
         .withSv2()
         .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-        .add(1, "1")
-        .add(2, "2")
-        .add(3, "3")
-        .add(4, "4")
-        .add(null, "null")
-        .add(null, "null")
+        .addRow(1, "1")
+        .addRow(2, "2")
+        .addRow(3, "3")
+        .addRow(4, "4")
+        .addRow(null, "null")
+        .addRow(null, "null")
         .build());
 
     tester.run();
@@ -220,25 +213,25 @@ public class TestCopier extends DrillTest {
     tester.sortOrder = Ordering.ORDER_ASC;
     tester.nullOrder = Ordering.NULLS_FIRST;
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(null, "null")
-        .add(1, "1")
-        .add(4, "4")
+        .addRow(null, "null")
+        .addRow(1, "1")
+        .addRow(4, "4")
         .withSv2()
         .build());
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(null, "null")
-        .add(2, "2")
-        .add(3, "3")
+        .addRow(null, "null")
+        .addRow(2, "2")
+        .addRow(3, "3")
         .withSv2()
         .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-        .add(null, "null")
-        .add(null, "null")
-        .add(1, "1")
-        .add(2, "2")
-        .add(3, "3")
-        .add(4, "4")
+        .addRow(null, "null")
+        .addRow(null, "null")
+        .addRow(1, "1")
+        .addRow(2, "2")
+        .addRow(3, "3")
+        .addRow(4, "4")
         .build());
 
     tester.run();
@@ -252,25 +245,25 @@ public class TestCopier extends DrillTest {
     tester.sortOrder = Ordering.ORDER_DESC;
     tester.nullOrder = Ordering.NULLS_LAST;
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(4, "4")
-        .add(1, "1")
-        .add(null, "null")
+        .addRow(4, "4")
+        .addRow(1, "1")
+        .addRow(null, "null")
         .withSv2()
         .build());
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(3, "3")
-        .add(2, "2")
-        .add(null, "null")
+        .addRow(3, "3")
+        .addRow(2, "2")
+        .addRow(null, "null")
         .withSv2()
         .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-        .add(4, "4")
-        .add(3, "3")
-        .add(2, "2")
-        .add(1, "1")
-        .add(null, "null")
-        .add(null, "null")
+        .addRow(4, "4")
+        .addRow(3, "3")
+        .addRow(2, "2")
+        .addRow(1, "1")
+        .addRow(null, "null")
+        .addRow(null, "null")
         .build());
 
     tester.run();
@@ -284,25 +277,25 @@ public class TestCopier extends DrillTest {
     tester.sortOrder = Ordering.ORDER_DESC;
     tester.nullOrder = Ordering.NULLS_FIRST;
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(null, "null")
-        .add(4, "4")
-        .add(1, "1")
+        .addRow(null, "null")
+        .addRow(4, "4")
+        .addRow(1, "1")
         .withSv2()
         .build());
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(null, "null")
-        .add(3, "3")
-        .add(2, "2")
+        .addRow(null, "null")
+        .addRow(3, "3")
+        .addRow(2, "2")
         .withSv2()
         .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-        .add(null, "null")
-        .add(null, "null")
-        .add(4, "4")
-        .add(3, "3")
-        .add(2, "2")
-        .add(1, "1")
+        .addRow(null, "null")
+        .addRow(null, "null")
+        .addRow(4, "4")
+        .addRow(3, "3")
+        .addRow(2, "2")
+        .addRow(1, "1")
         .build());
 
     tester.run();
@@ -356,28 +349,28 @@ public class TestCopier extends DrillTest {
           .add("b", MinorType.INT)
           .addMap("m2")
             .add("c", MinorType.INT)
-            .buildMap()
-          .buildMap()
+            .resumeMap()
+          .resumeSchema()
         .build();
 
     CopierTester tester = new CopierTester(fixture);
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(1, 10, 100)
-        .add(5, 50, 500)
+        .addRow(1, objArray(10, objArray(100)))
+        .addRow(5, objArray(50, objArray(500)))
         .withSv2()
         .build());
 
     tester.addInput(fixture.rowSetBuilder(schema)
-        .add(2, 20, 200)
-        .add(6, 60, 600)
+        .addRow(2, objArray(20, objArray(200)))
+        .addRow(6, objArray(60, objArray(600)))
         .withSv2()
         .build());
 
     tester.addOutput(fixture.rowSetBuilder(schema)
-        .add(1, 10, 100)
-        .add(2, 20, 200)
-        .add(5, 50, 500)
-        .add(6, 60, 600)
+        .addRow(1, objArray(10, objArray(100)))
+        .addRow(2, objArray(20, objArray(200)))
+        .addRow(5, objArray(50, objArray(500)))
+        .addRow(6, objArray(60, objArray(600)))
         .build());
 
     tester.run();

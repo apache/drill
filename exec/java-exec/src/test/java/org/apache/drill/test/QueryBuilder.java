@@ -36,6 +36,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -55,7 +56,7 @@ import org.apache.drill.test.BufferingQueryEventListener.QueryEvent;
 import org.apache.drill.test.ClientFixture.StatementParser;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetReader;
 
 import com.google.common.base.Preconditions;
 
@@ -216,6 +217,7 @@ public class QueryBuilder {
   private final ClientFixture client;
   private QueryType queryType;
   private String queryText;
+  private List<PlanFragment> planFragments;
 
   QueryBuilder(ClientFixture client) {
     this.client = client;
@@ -233,6 +235,19 @@ public class QueryBuilder {
 
   public QueryBuilder sql(String query, Object... args) {
     return sql(String.format(query, args));
+  }
+
+  /**
+   * Run a physical plan presented as a list of fragments.
+   *
+   * @param planFragments fragments that make up the plan
+   * @return this builder
+   */
+
+  public QueryBuilder plan(List<PlanFragment> planFragments) {
+    queryType = QueryType.EXECUTION;
+    this.planFragments = planFragments;
+    return this;
   }
 
   /**
@@ -257,6 +272,13 @@ public class QueryBuilder {
   public QueryBuilder physical(String plan) {
     return query(QueryType.PHYSICAL, plan);
   }
+
+  /**
+   * Run a query contained in a resource file.
+   *
+   * @param resource Name of the resource
+   * @return this builder
+   */
 
   public QueryBuilder sqlResource(String resource) {
     sql(ClusterFixture.loadResource(resource));
@@ -300,13 +322,14 @@ public class QueryBuilder {
   }
 
   /**
-   * Run the query and return the first result set as a
+   * Run the query and return the first non-empty batch as a
    * {@link DirectRowSet} object that can be inspected directly
    * by the code using a {@link RowSetReader}.
    * <p>
-   * An enhancement is to provide a way to read a series of result
+   *
+   * @see {@link #rowSetIterator()} for a version that reads a series of
    * batches as row sets.
-   * @return a row set that represents the first batch returned from
+   * @return a row set that represents the first non-empty batch returned from
    * the query
    * @throws RpcException if anything goes wrong
    */
@@ -338,7 +361,7 @@ public class QueryBuilder {
       dataBatch.release();
       VectorContainer container = loader.getContainer();
       container.setRecordCount(loader.getRecordCount());
-      return new DirectRowSet(client.allocator(), container);
+      return DirectRowSet.fromContainer(container);
     } catch (SchemaChangeException e) {
       throw new IllegalStateException(e);
     }
@@ -364,7 +387,7 @@ public class QueryBuilder {
     }
     RowSetReader reader = rowSet.reader();
     reader.next();
-    long value = reader.column(0).getLong();
+    long value = reader.scalar(0).getLong();
     rowSet.clear();
     return value;
   }
@@ -385,7 +408,7 @@ public class QueryBuilder {
     }
     RowSetReader reader = rowSet.reader();
     reader.next();
-    int value = reader.column(0).getInt();
+    int value = reader.scalar(0).getInt();
     rowSet.clear();
     return value;
   }
@@ -407,10 +430,10 @@ public class QueryBuilder {
     RowSetReader reader = rowSet.reader();
     reader.next();
     String value;
-    if (reader.column(0).isNull()) {
+    if (reader.scalar(0).isNull()) {
       value = null;
     } else {
-      value = reader.column(0).getString();
+      value = reader.scalar(0).getString();
     }
     rowSet.clear();
     return value;
@@ -425,8 +448,16 @@ public class QueryBuilder {
 
   public void withListener(UserResultsListener listener) {
     Preconditions.checkNotNull(queryType, "Query not provided.");
-    Preconditions.checkNotNull(queryText, "Query not provided.");
-    client.client().runQuery(queryType, queryText, listener);
+    if (planFragments != null) {
+      try {
+        client.client().runQuery(QueryType.EXECUTION, planFragments, listener);
+      } catch(RpcException e) {
+        throw new IllegalStateException(e);
+      }
+    } else {
+      Preconditions.checkNotNull(queryText, "Query not provided.");
+      client.client().runQuery(queryType, queryText, listener);
+    }
   }
 
   /**
@@ -480,7 +511,6 @@ public class QueryBuilder {
 
   public long print() throws Exception {
     DrillConfig config = client.cluster().config( );
-
 
     boolean verbose = ! config.getBoolean(QueryTestUtil.TEST_QUERY_PRINTING_SILENT) ||
                       DrillTest.verbose();
@@ -558,6 +588,11 @@ public class QueryBuilder {
     long end = System.currentTimeMillis();
     long elapsed = end - start;
     return new QuerySummary(queryId, recordCount, batchCount, elapsed, state);
+  }
+
+  public QueryResultSet resultSet() {
+    BufferingQueryEventListener listener = withEventListener();
+    return new QueryResultSet(listener, client.allocator());
   }
 
   /**

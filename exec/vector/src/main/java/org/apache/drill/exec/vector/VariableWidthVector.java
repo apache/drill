@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,23 @@
  */
 package org.apache.drill.exec.vector;
 
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.MaterializedField;
+
 public interface VariableWidthVector extends ValueVector {
+
+  int DEFAULT_RECORD_BYTE_COUNT = 8;
+  int MIN_BYTE_COUNT = 4096;
+  MaterializedField offsetsField = MaterializedField.create(OFFSETS_VECTOR_NAME, Types.required(MinorType.UINT4));
+
+  interface VariableWidthAccessor extends Accessor {
+    int getValueLength(int index);
+  }
+
+  interface VariableWidthMutator extends Mutator {
+    void setValueLengthSafe(int index, int length);
+  }
 
   /**
    * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
@@ -33,17 +49,13 @@ public interface VariableWidthVector extends ValueVector {
    */
   int getByteCapacity();
 
+  @Override
   VariableWidthMutator getMutator();
 
+  @Override
   VariableWidthAccessor getAccessor();
-
-  interface VariableWidthAccessor extends Accessor {
-    int getValueLength(int index);
-  }
 
   int getCurrentSizeInBytes();
 
-  interface VariableWidthMutator extends Mutator {
-    void setValueLengthSafe(int index, int length);
-  }
+  UInt4Vector getOffsetVector();
 }

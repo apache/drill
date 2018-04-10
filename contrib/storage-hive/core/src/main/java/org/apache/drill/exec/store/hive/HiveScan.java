@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -38,14 +37,13 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider.HiveStats;
-import org.apache.drill.exec.store.hive.HiveMetadataProvider.InputSplitWrapper;
+import org.apache.drill.exec.store.hive.HiveMetadataProvider.LogicalInputSplit;
 import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.mapred.InputSplit;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -54,52 +52,45 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 
 import static org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient.createPartitionWithSpecColumns;
 
 @JsonTypeName("hive-scan")
 public class HiveScan extends AbstractGroupScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveScan.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveScan.class);
 
   private static int HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN = 20;
 
-  @JsonProperty("hive-table")
-  public HiveReadEntry hiveReadEntry;
+  private final HiveStoragePlugin hiveStoragePlugin;
+  private final HiveReadEntry hiveReadEntry;
+  private final HiveMetadataProvider metadataProvider;
 
-  @JsonIgnore
-  public HiveStoragePlugin storagePlugin;
+  private List<List<LogicalInputSplit>> mappings;
+  private List<LogicalInputSplit> inputSplits;
 
-  @JsonProperty("columns")
-  public List<SchemaPath> columns;
-
-  @JsonIgnore
-  protected final HiveMetadataProvider metadataProvider;
-
-  @JsonIgnore
-  private List<List<InputSplitWrapper>> mappings;
-
-  @JsonIgnore
-  protected List<InputSplitWrapper> inputSplits;
+  protected List<SchemaPath> columns;
 
   @JsonCreator
   public HiveScan(@JsonProperty("userName") final String userName,
-                  @JsonProperty("hive-table") final HiveReadEntry hiveReadEntry,
-                  @JsonProperty("storage-plugin") final String storagePluginName,
+                  @JsonProperty("hiveReadEntry") final HiveReadEntry hiveReadEntry,
+                  @JsonProperty("hiveStoragePluginConfig") final HiveStoragePluginConfig hiveStoragePluginConfig,
                   @JsonProperty("columns") final List<SchemaPath> columns,
                   @JacksonInject final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
-    this(userName, hiveReadEntry, (HiveStoragePlugin) pluginRegistry.getPlugin(storagePluginName), columns, null);
+    this(userName,
+        hiveReadEntry,
+        (HiveStoragePlugin) pluginRegistry.getPlugin(hiveStoragePluginConfig),
+        columns,
+        null);
   }
 
-  public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin storagePlugin,
+  public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin hiveStoragePlugin,
       final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider) throws ExecutionSetupException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
-    this.storagePlugin = storagePlugin;
+    this.hiveStoragePlugin = hiveStoragePlugin;
     if (metadataProvider == null) {
-      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, storagePlugin.getHiveConf());
+      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, hiveStoragePlugin.getHiveConf());
     } else {
       this.metadataProvider = metadataProvider;
     }
@@ -109,19 +100,39 @@ public class HiveScan extends AbstractGroupScan {
     super(that);
     this.columns = that.columns;
     this.hiveReadEntry = that.hiveReadEntry;
-    this.storagePlugin = that.storagePlugin;
+    this.hiveStoragePlugin = that.hiveStoragePlugin;
     this.metadataProvider = that.metadataProvider;
   }
 
   public HiveScan clone(final HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
-    return new HiveScan(getUserName(), hiveReadEntry, storagePlugin, columns, metadataProvider);
+    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider);
   }
 
+  @JsonProperty
+  public HiveReadEntry getHiveReadEntry() {
+    return hiveReadEntry;
+  }
+
+  @JsonProperty
+  public HiveStoragePluginConfig getHiveStoragePluginConfig() {
+    return hiveStoragePlugin.getConfig();
+  }
+
+  @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
   }
 
-  protected List<InputSplitWrapper> getInputSplits() {
+  @JsonIgnore
+  public HiveStoragePlugin getStoragePlugin() {
+    return hiveStoragePlugin;
+  }
+
+  protected HiveMetadataProvider getMetadataProvider() {
+    return metadataProvider;
+  }
+
+  private List<LogicalInputSplit> getInputSplits() {
     if (inputSplits == null) {
       inputSplits = metadataProvider.getInputSplits(hiveReadEntry);
     }
@@ -129,50 +140,43 @@ public class HiveScan extends AbstractGroupScan {
     return inputSplits;
   }
 
+
   @Override
   public void applyAssignments(final List<CoordinationProtos.DrillbitEndpoint> endpoints) {
-    mappings = Lists.newArrayList();
+    mappings = new ArrayList<>();
     for (int i = 0; i < endpoints.size(); i++) {
-      mappings.add(new ArrayList<InputSplitWrapper>());
+      mappings.add(new ArrayList<LogicalInputSplit>());
     }
     final int count = endpoints.size();
-    final List<InputSplitWrapper> inputSplits = getInputSplits();
+    final List<LogicalInputSplit> inputSplits = getInputSplits();
     for (int i = 0; i < inputSplits.size(); i++) {
       mappings.get(i % count).add(inputSplits.get(i));
     }
   }
 
-  public static String serializeInputSplit(final InputSplit split) throws IOException {
-    final ByteArrayDataOutput byteArrayOutputStream =  ByteStreams.newDataOutput();
-    split.write(byteArrayOutputStream);
-    final String encoded = Base64.encodeBase64String(byteArrayOutputStream.toByteArray());
-    logger.debug("Encoded split string for split {} : {}", split, encoded);
-    return encoded;
-  }
-
   @Override
   public SubScan getSpecificScan(final int minorFragmentId) throws ExecutionSetupException {
     try {
-      final List<InputSplitWrapper> splits = mappings.get(minorFragmentId);
+      final List<LogicalInputSplit> splits = mappings.get(minorFragmentId);
       List<HivePartitionWrapper> parts = Lists.newArrayList();
-      final List<String> encodedInputSplits = Lists.newArrayList();
+      final List<List<String>> encodedInputSplits = Lists.newArrayList();
       final List<String> splitTypes = Lists.newArrayList();
-      for (final InputSplitWrapper split : splits) {
+      for (final LogicalInputSplit split : splits) {
         final Partition splitPartition = split.getPartition();
         if (splitPartition != null) {
           HiveTableWithColumnCache table = hiveReadEntry.getTable();
           parts.add(createPartitionWithSpecColumns(new HiveTableWithColumnCache(table, new ColumnListsCache(table)), splitPartition));
         }
 
-        encodedInputSplits.add(serializeInputSplit(split.getSplit()));
-        splitTypes.add(split.getSplit().getClass().getName());
+        encodedInputSplits.add(split.serialize());
+        splitTypes.add(split.getType());
       }
       if (parts.size() <= 0) {
         parts = null;
       }
 
       final HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.getTableWrapper(), parts);
-      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, storagePlugin);
+      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -186,20 +190,20 @@ public class HiveScan extends AbstractGroupScan {
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     final Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
-    for (final DrillbitEndpoint endpoint : storagePlugin.getContext().getBits()) {
+    for (final DrillbitEndpoint endpoint : hiveStoragePlugin.getContext().getBits()) {
       endpointMap.put(endpoint.getAddress(), endpoint);
       logger.debug("endpoing address: {}", endpoint.getAddress());
     }
     final Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
     try {
       long totalSize = 0;
-      final List<InputSplitWrapper> inputSplits = getInputSplits();
-      for (final InputSplitWrapper split : inputSplits) {
-        totalSize += Math.max(1, split.getSplit().getLength());
+      final List<LogicalInputSplit> inputSplits = getInputSplits();
+      for (final LogicalInputSplit split : inputSplits) {
+        totalSize += Math.max(1, split.getLength());
       }
-      for (final InputSplitWrapper split : inputSplits) {
-        final float affinity = ((float) Math.max(1, split.getSplit().getLength())) / totalSize;
-        for (final String loc : split.getSplit().getLocations()) {
+      for (final LogicalInputSplit split : inputSplits) {
+        final float affinity = ((float) Math.max(1, split.getLength())) / totalSize;
+        for (final String loc : split.getLocations()) {
           logger.debug("split location: {}", loc);
           final DrillbitEndpoint endpoint = endpointMap.get(loc);
           if (endpoint != null) {
@@ -297,7 +301,7 @@ public class HiveScan extends AbstractGroupScan {
 
   @JsonIgnore
   public HiveConf getHiveConf() {
-    return storagePlugin.getHiveConf();
+    return hiveStoragePlugin.getHiveConf();
   }
 
   @JsonIgnore

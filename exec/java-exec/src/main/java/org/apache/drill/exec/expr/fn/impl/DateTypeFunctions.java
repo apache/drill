@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,8 +65,10 @@ public class DateTypeFunctions {
       @Param NullableVarCharHolder in;
       @Output BitHolder out;
 
+      @Override
       public void setup() { }
 
+      @Override
       public void eval() {
         // for a null input return false
         if (in.isSet == 0) {
@@ -86,8 +88,10 @@ public class DateTypeFunctions {
       @Param VarCharHolder in;
       @Output BitHolder out;
 
+      @Override
       public void setup() { }
 
+      @Override
       public void eval() {
         // for a null input return false
         out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.isReadableAsDate(in.buffer, in.start, in.end) ? 1 : 0;
@@ -106,17 +110,19 @@ public class DateTypeFunctions {
         @Param  BigIntHolder inputMilliSeconds;
         @Output IntervalHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
 
-            out.months       =  (int) ((inputYears.value * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) +
+            out.months       =  (int) ((inputYears.value * org.apache.drill.exec.vector.DateUtilities.yearsToMonths) +
                                        (inputMonths.value));
             out.days         =  (int) inputDays.value;
-            out.milliseconds =  (int) ((inputHours.value * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                                       (inputMinutes.value * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                                       (inputSeconds.value * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
+            out.milliseconds =  (int) ((inputHours.value * org.apache.drill.exec.vector.DateUtilities.hoursToMillis) +
+                                       (inputMinutes.value * org.apache.drill.exec.vector.DateUtilities.minutesToMillis) +
+                                       (inputSeconds.value * org.apache.drill.exec.vector.DateUtilities.secondsToMillis) +
                                        (inputMilliSeconds.value));
         }
     }
@@ -128,12 +134,14 @@ public class DateTypeFunctions {
         @Param  BigIntHolder inputMonths;
         @Output IntervalYearHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
 
-            out.value       = (int) ((inputYears.value * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) +
+            out.value       = (int) ((inputYears.value * org.apache.drill.exec.vector.DateUtilities.yearsToMonths) +
                                       (inputMonths.value));
         }
     }
@@ -148,15 +156,17 @@ public class DateTypeFunctions {
         @Param  BigIntHolder inputMillis;
         @Output IntervalDayHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
 
             out.days  = (int) inputDays.value;
-            out.milliseconds =  (int) ((inputHours.value * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                                       (inputMinutes.value * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                                       (inputSeconds.value * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
+            out.milliseconds =  (int) ((inputHours.value * org.apache.drill.exec.vector.DateUtilities.hoursToMillis) +
+                                       (inputMinutes.value * org.apache.drill.exec.vector.DateUtilities.minutesToMillis) +
+                                       (inputSeconds.value * org.apache.drill.exec.vector.DateUtilities.secondsToMillis) +
                                  (inputMillis.value));
         }
     }
@@ -169,9 +179,11 @@ public class DateTypeFunctions {
         @Param  BigIntHolder inputDays;
         @Output DateHolder   out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
             out.value = ((new org.joda.time.MutableDateTime((int) inputYears.value,
                                                             (int) inputMonths.value,
@@ -196,9 +208,11 @@ public class DateTypeFunctions {
         @Param  BigIntHolder inputMilliSeconds;
         @Output TimeStampHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
             out.value = ((new org.joda.time.MutableDateTime((int)inputYears.value,
                                                             (int)inputMonths.value,
@@ -220,13 +234,15 @@ public class DateTypeFunctions {
         @Param  BigIntHolder inputMilliSeconds;
         @Output TimeHolder   out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
-            out.value = (int) ((inputHours.value * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                               (inputMinutes.value * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                               (inputSeconds.value * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
+            out.value = (int) ((inputHours.value * org.apache.drill.exec.vector.DateUtilities.hoursToMillis) +
+                               (inputMinutes.value * org.apache.drill.exec.vector.DateUtilities.minutesToMillis) +
+                               (inputSeconds.value * org.apache.drill.exec.vector.DateUtilities.secondsToMillis) +
                                 inputMilliSeconds.value);
         }
     }
@@ -237,6 +253,7 @@ public class DateTypeFunctions {
         @Output DateHolder out;
         @Inject ContextInformation contextInfo;
 
+        @Override
         public void setup() {
 
             int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
@@ -246,6 +263,7 @@ public class DateTypeFunctions {
                 withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
         }
 
+        @Override
         public void eval() {
             out.value = queryStartDate;
         }
@@ -257,9 +275,11 @@ public class DateTypeFunctions {
         @Inject DrillBuf buffer;
         @Output VarCharHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
             org.joda.time.DateTime temp = new org.joda.time.DateTime();
             String str = org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStampTZ.print(temp);
@@ -287,10 +307,12 @@ public class DateTypeFunctions {
         @Output TimeStampHolder out;
         @Inject ContextInformation contextInfo;
 
+        @Override
         public void setup() {
             queryStartDate = org.apache.drill.exec.expr.fn.impl.DateTypeFunctions.getQueryStartDate(contextInfo);
         }
 
+        @Override
         public void eval() {
             out.value = queryStartDate;
         }
@@ -305,10 +327,12 @@ public class DateTypeFunctions {
         @Output TimeStampHolder out;
         @Inject ContextInformation contextInfo;
 
+        @Override
         public void setup() {
             queryStartDate = org.apache.drill.exec.expr.fn.impl.DateTypeFunctions.getQueryStartDate(contextInfo);
         }
 
+        @Override
         public void eval() {
             out.value = queryStartDate;
         }
@@ -320,17 +344,19 @@ public class DateTypeFunctions {
         @Output TimeHolder out;
         @Inject ContextInformation contextInfo;
 
+        @Override
         public void setup() {
 
             int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
             org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
-            queryStartTime= (int) ((now.getHourOfDay() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                                   (now.getMinuteOfHour() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                                   (now.getSecondOfMinute() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
-                                   (now.getMillisOfSecond()));
+            queryStartTime= (now.getHourOfDay() * org.apache.drill.exec.vector.DateUtilities.hoursToMillis) +
+                                   (now.getMinuteOfHour() * org.apache.drill.exec.vector.DateUtilities.minutesToMillis) +
+                                   (now.getSecondOfMinute() * org.apache.drill.exec.vector.DateUtilities.secondsToMillis) +
+                                   (now.getMillisOfSecond());
         }
 
+        @Override
         public void eval() {
             out.value = queryStartTime;
         }
@@ -343,9 +369,11 @@ public class DateTypeFunctions {
     @Param TimeHolder right;
     @Output TimeStampHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
             out.value = left.value + right.value;
         }
@@ -358,9 +386,11 @@ public class DateTypeFunctions {
         @Param DateHolder left;
         @Output TimeStampHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
             out.value = left.value + right.value;
         }
@@ -377,9 +407,11 @@ public class DateTypeFunctions {
         @Param DateHolder right;
         @Output BigIntHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
             if (1 == 1) {
                 throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
@@ -387,26 +419,26 @@ public class DateTypeFunctions {
         }
     }
 
-    @SuppressWarnings("unused")
     @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class AgeTimeStampFunction implements DrillSimpleFunc {
         @Param TimeStampHolder left;
         @Param TimeStampHolder right;
         @Output IntervalHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
             long diff = left.value - right.value;
-            long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
+            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         }
     }
 
-    @SuppressWarnings("unused")
     @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class AgeTimeStamp2Function implements DrillSimpleFunc {
         @Param TimeStampHolder right;
@@ -414,6 +446,7 @@ public class DateTypeFunctions {
         @Output IntervalHolder out;
         @Inject ContextInformation contextInfo;
 
+        @Override
         public void setup() {
             int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
@@ -421,35 +454,36 @@ public class DateTypeFunctions {
             queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
         }
 
+        @Override
         public void eval() {
             long diff = queryStartDate - right.value;
-            long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
+            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         }
     }
 
-    @SuppressWarnings("unused")
     @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class AgeDateFunction implements DrillSimpleFunc {
         @Param DateHolder left;
         @Param DateHolder right;
         @Output IntervalHolder out;
 
+        @Override
         public void setup() {
         }
 
+        @Override
         public void eval() {
           long diff = left.value - right.value;
-          long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
-          out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-          out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-          out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+          long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
+          out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+          out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+          out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         }
     }
 
-    @SuppressWarnings("unused")
     @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class AgeDate2Function implements DrillSimpleFunc {
         @Param DateHolder right;
@@ -457,6 +491,7 @@ public class DateTypeFunctions {
         @Output IntervalHolder out;
         @Inject ContextInformation contextInfo;
 
+        @Override
         public void setup() {
             int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
@@ -464,12 +499,13 @@ public class DateTypeFunctions {
             queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
         }
 
+        @Override
         public void eval() {
             long diff = queryStartDate - right.value;
-            long days = diff / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
+            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
+            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         }
     }
 
@@ -484,8 +520,23 @@ public class DateTypeFunctions {
 
         @Override
         public void eval() {
-            out.value = (int) (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+            out.value = (int) (in.value % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
         }
+    }
+
+    @FunctionTemplate(name = "castTIME", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class CastDateToTime implements DrillSimpleFunc {
+      @Param DateHolder in;
+      @Output TimeHolder out;
+
+      @Override
+      public void setup() {
+      }
+
+      @Override
+      public void eval() {
+        out.value = 0;
+      }
     }
 
     @FunctionTemplate(name = "unix_timestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
@@ -520,7 +571,7 @@ public class DateTypeFunctions {
       @Override
       public void eval() {
         String inputDate = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputDateValue.start, inputDateValue.end, inputDateValue.buffer);
-        date = (org.joda.time.DateTime) formatter.parseDateTime(inputDate);
+        date = formatter.parseDateTime(inputDate);
         out.value = date.getMillis() / 1000;
       }
     }
@@ -542,7 +593,7 @@ public class DateTypeFunctions {
       @Override
       public void eval() {
           String inputDate = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputDateValue.start, inputDateValue.end, inputDateValue.buffer);
-          date = (org.joda.time.DateTime) formatter.parseDateTime(inputDate);
+          date = formatter.parseDateTime(inputDate);
           out.value = date.getMillis() / 1000;
       }
     }

@@ -37,7 +37,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Unit testing for {@link TimedRunnable}.
  */
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestTimedRunnable extends DrillTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTimedRunnable.class);
 

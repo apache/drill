@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.slf4j.Logger;
 
 /**
@@ -45,10 +45,6 @@ public final class NoOpControlsInjector implements ControlsInjector {
 
   @Override
   public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
-  }
-
-  @Override
-  public void injectUnchecked(final FragmentContext fragmentContext, final String desc) {
   }
 
   @Override

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
-import org.apache.drill.exec.ops.OperatorStatReceiver;
+import org.apache.drill.exec.ops.OperatorStats;
 
 public class SortMetrics {
 
@@ -38,12 +38,12 @@ public class SortMetrics {
    */
 
   private long minimumBufferSpace;
-  private OperatorStatReceiver stats;
+  private OperatorStats stats;
   private int spillCount;
   private int mergeCount;
   private long writeBytes;
 
-  public SortMetrics(OperatorStatReceiver stats) {
+  public SortMetrics(OperatorStats stats) {
     assert stats != null;
     this.stats = stats;
   }

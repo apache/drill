@@ -202,14 +202,19 @@ public class InfoSchemaFilter {
         // If at least one arg returns FALSE, then the AND function value is FALSE
         // If at least one arg returns INCONCLUSIVE, then the AND function value is INCONCLUSIVE
         // If all args return TRUE, then the AND function value is TRUE
+        Result result = Result.TRUE;
+
         for(ExprNode arg : exprNode.args) {
           Result exprResult = evaluateHelper(recordValues, arg);
-          if (exprResult != Result.TRUE) {
+          if (exprResult == Result.FALSE) {
             return exprResult;
+          }
+          if (exprResult == Result.INCONCLUSIVE) {
+            result = Result.INCONCLUSIVE;
           }
         }
 
-        return Result.TRUE;
+        return result;
       }
 
       case "in": {

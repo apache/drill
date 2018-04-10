@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.xsort.managed;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.options.OptionManager;
 
 public class SortConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
@@ -42,6 +43,7 @@ public class SortConfig {
   public static final int MIN_SPILL_BATCH_SIZE = 256 * 1024;
   public static final int MIN_MERGE_BATCH_SIZE = 256 * 1024;
 
+  public static final int DEFAULT_MERGE_LIMIT = 128;
   public static final int MIN_MERGE_LIMIT = 2;
 
   private final long maxMemory;
@@ -70,8 +72,7 @@ public class SortConfig {
 
   private final int mSortBatchSize;
 
-  public SortConfig(DrillConfig config) {
-
+  public SortConfig(DrillConfig config, OptionManager options) {
     // Optional configured memory limit, typically used only for testing.
 
     maxMemory = config.getBytes(ExecConstants.EXTERNAL_SORT_MAX_MEMORY);
@@ -98,7 +99,13 @@ public class SortConfig {
     // of memory, but no smaller than the minimum size. In any event, an
     // output batch can contain no fewer than a single record.
 
-    mergeBatchSize = (int) Math.max(config.getBytes(ExecConstants.EXTERNAL_SORT_MERGE_BATCH_SIZE), MIN_MERGE_BATCH_SIZE);
+    // get the output batch size from context.
+    // Size of the batch sent downstream from the sort operator during
+    // the merge phase. Default value is 16M.
+    // Don't change defaults unless you know what you are doing,
+    // larger sizes can result in memory fragmentation, smaller sizes
+    // in excessive operator iterator overhead.
+    mergeBatchSize = (int) Math.max(options.getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR), MIN_MERGE_BATCH_SIZE);
 
     // Limit on in-memory batches, primarily for testing.
 

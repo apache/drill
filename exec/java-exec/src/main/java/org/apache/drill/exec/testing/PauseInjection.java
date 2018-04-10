@@ -21,8 +21,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.common.concurrent.ExtendedLatch;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 
 /**
  * Injection for a single pause. Pause indefinitely until signalled. This class is used internally for tracking
@@ -43,15 +45,29 @@ public class PauseInjection extends Injection {
                          @JsonProperty("port") final int port,
                          @JsonProperty("siteClass") final String siteClass,
                          @JsonProperty("desc") final String desc,
-                         @JsonProperty("nSkip") final int nSkip) throws InjectionConfigurationException {
-    super(address, port, siteClass, desc, nSkip, 1);
+                         @JsonProperty("nSkip") final int nSkip,
+                         @JsonProperty("msPause") final long msPause) throws InjectionConfigurationException {
+    //nFire is 1 since we will inject pauses only once
+    super(address, port, siteClass, desc, nSkip, 1, msPause);
   }
 
+  /**
+   * Pause indefinitely, unless a duration exists
+   */
   public void pause() {
     if (!injectNow()) {
       return;
     }
-    latch.awaitUninterruptibly();
+    if (this.getMsPause() > 0L) {
+      try {
+        latch.await(getMsPause(), TimeUnit.MILLISECONDS);
+      } catch (InterruptedException e) {
+        //Unpausing self as this is timed
+        unpause();
+      }
+    } else {
+      latch.awaitUninterruptibly();
+    }
   }
 
   public void interruptiblePause() throws InterruptedException {

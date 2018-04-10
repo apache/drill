@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Function;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -30,13 +31,19 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class DrillCompoundIdentifier extends SqlIdentifier{
+public class DrillCompoundIdentifier extends SqlIdentifier {
 
-  List<IdentifierHolder> ids;
+  private static final Function<String, String> STAR_TO_EMPTY = new Function<String, String>() {
+    public String apply(String s) {
+      return s.equals("*") ? "" : s;
+    }
+  };
 
-  private static List<String> getNames(List<IdentifierHolder> identifiers){
+  private final List<IdentifierHolder> ids;
+
+  private static List<String> getNames(List<IdentifierHolder> identifiers) {
     List<String> names = Lists.newArrayListWithCapacity(identifiers.size());
-    for(IdentifierHolder h : identifiers){
+    for (IdentifierHolder h : identifiers) {
       names.add(h.value);
     }
     return names;
@@ -47,74 +54,69 @@ public class DrillCompoundIdentifier extends SqlIdentifier{
     this.ids = identifiers;
   }
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCompoundIdentifier.class);
-
-  public static Builder newBuilder(){
+  public static Builder newBuilder() {
     return new Builder();
   }
 
   public static class Builder {
     private List<IdentifierHolder> identifiers = Lists.newArrayList();
 
-    public DrillCompoundIdentifier build(){
+    public DrillCompoundIdentifier build() {
       return new DrillCompoundIdentifier(identifiers);
     }
 
-    public void addString(String name, SqlParserPos pos){
+    public void addString(String name, SqlParserPos pos) {
       identifiers.add(new IdentifierHolder(name, pos, false));
     }
 
-    public void addIndex(int index, SqlParserPos pos){
+    public void addIndex(int index, SqlParserPos pos) {
       identifiers.add(new IdentifierHolder(Integer.toString(index), pos, true));
     }
   }
 
-  public SqlNode getAsSqlNode(){
-    if(ids.size() == 1){
+  public SqlNode getAsSqlNode() {
+    if (ids.size() == 1) {
       return new SqlIdentifier(Collections.singletonList(ids.get(0).value), ids.get(0).parserPos);
     }
 
     int startIndex;
     SqlNode node;
 
-    if(ids.get(1).isArray()){
+    if (ids.get(1).isArray()) {
       // handle everything post zero index as item operator.
       startIndex = 1;
-      node = new SqlIdentifier( //
-          ImmutableList.of(ids.get(0).value), //
-          null, //
-          ids.get(0).parserPos, //
+      node = new SqlIdentifier(
+          ImmutableList.of(ids.get(0).value),
+          null,
+          ids.get(0).parserPos,
           ImmutableList.of(ids.get(0).parserPos));
-    }else{
+    } else {
       // handle everything post two index as item operator.
       startIndex = 2;
-      node = new SqlIdentifier( //
-          ImmutableList.of(ids.get(0).value, ids.get(1).value), //
-          null, //
-          ids.get(0).parserPos, //
+      node = new SqlIdentifier(
+          // Replaces star by empty string. See SqlIdentifier#isStar()
+          ImmutableList.of(ids.get(0).value, STAR_TO_EMPTY.apply(ids.get(1).value)), null,
+          ids.get(0).parserPos,
           ImmutableList.of(ids.get(0).parserPos, ids.get(1).parserPos));
-
     }
-    for(int i = startIndex ; i < ids.size(); i++){
+    for (int i = startIndex; i < ids.size(); i++) {
       node = ids.get(i).getNode(node);
     }
 
     return node;
   }
 
-
-  public SqlNode getAsCompoundIdentifier(){
+  public SqlNode getAsCompoundIdentifier() {
     List<String> names = Lists.newArrayListWithCapacity(ids.size());
     List<SqlParserPos> pos = Lists.newArrayListWithCapacity(ids.size());
-    for(int i =0; i < ids.size(); i++){
-      IdentifierHolder holder = ids.get(i);
+    for (IdentifierHolder holder : ids) {
       names.add(holder.value);
       pos.add(holder.parserPos);
     }
     return new SqlIdentifier(names, null, pos.get(0), pos);
   }
 
-  private static class IdentifierHolder{
+  private static class IdentifierHolder {
     String value;
     SqlParserPos parserPos;
     boolean isArray;
@@ -126,18 +128,18 @@ public class DrillCompoundIdentifier extends SqlIdentifier{
       this.parserPos = parserPos;
     }
 
-    public boolean isArray(){
+    public boolean isArray() {
       return isArray;
     }
 
-    public SqlNode getNode(SqlNode node){
+    public SqlNode getNode(SqlNode node) {
       SqlLiteral literal;
-      if(isArray){
+      if (isArray) {
         literal = SqlLiteral.createExactNumeric(value, parserPos);
-      }else{
+      } else {
         literal = SqlLiteral.createCharString(value, parserPos);
       }
-      return new SqlBasicCall(SqlStdOperatorTable.ITEM, new SqlNode[]{ node, literal }, parserPos);
+      return new SqlBasicCall(SqlStdOperatorTable.ITEM, new SqlNode[]{node, literal}, parserPos);
     }
 
   }

@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import java.util.Iterator;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 public class DrillbitIterator implements Iterator<Object> {
@@ -28,9 +28,9 @@ public class DrillbitIterator implements Iterator<Object> {
   private Iterator<DrillbitEndpoint> endpoints;
   private DrillbitEndpoint current;
 
-  public DrillbitIterator(FragmentContext c) {
-    this.endpoints = c.getDrillbitContext().getBits().iterator();
-    this.current = c.getIdentity();
+  public DrillbitIterator(ExecutorFragmentContext c) {
+    this.endpoints = c.getBits().iterator();
+    this.current = c.getEndpoint();
   }
 
   public static class DrillbitInstance {
@@ -40,6 +40,7 @@ public class DrillbitIterator implements Iterator<Object> {
     public int data_port;
     public boolean current;
     public String version;
+    public String state;
   }
 
   @Override
@@ -51,13 +52,26 @@ public class DrillbitIterator implements Iterator<Object> {
   public Object next() {
     DrillbitEndpoint ep = endpoints.next();
     DrillbitInstance i = new DrillbitInstance();
-    i.current = ep.equals(current);
+    i.current = isCurrent(ep);
     i.hostname = ep.getAddress();
     i.user_port = ep.getUserPort();
     i.control_port = ep.getControlPort();
     i.data_port = ep.getDataPort();
     i.version = ep.getVersion();
+    i.state = ep.getState().toString();
     return i;
+  }
+
+  public boolean isCurrent(DrillbitEndpoint ep) {
+
+    String epAddress = ep.getAddress();
+    int epPort = ep.getUserPort();
+    String currentEpAddress = current.getAddress();
+    int currentEpPort = current.getUserPort();
+    if (currentEpAddress.equals(epAddress) && currentEpPort == epPort) {
+      return true;
+    }
+    return false;
   }
 
   @Override

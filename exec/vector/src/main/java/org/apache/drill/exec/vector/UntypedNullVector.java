@@ -27,8 +27,6 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import static org.apache.calcite.sql.parser.impl.SqlParserImplConstants.C;
-
 /** UntypedNullVector is to represent a value vector with {@link org.apache.drill.common.types.MinorType#NULL}
  *  All values in the vector represent two semantic implications: 1) the value is unknown, 2) the type is unknown.
  *  Because of this, we only have to keep track of the number of values in value vector,
@@ -37,7 +35,6 @@ import static org.apache.calcite.sql.parser.impl.SqlParserImplConstants.C;
  *
  */
 public final class UntypedNullVector extends BaseDataValueVector implements FixedWidthVector {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UntypedNullVector.class);
 
   /**
    * Width of each fixed-width value.
@@ -57,14 +54,10 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
   public FieldReader getReader() { throw new UnsupportedOperationException(); }
 
   @Override
-  public int getBufferSizeFor(final int valueCount) {
-    return 0;
-  }
+  public int getBufferSizeFor(final int valueCount) { return 0; }
 
   @Override
-  public int getValueCapacity(){
-    return ValueVector.MAX_ROW_COUNT;
-  }
+  public int getValueCapacity() { return ValueVector.MAX_ROW_COUNT; }
 
   @Override
   public Accessor getAccessor() { return accessor; }
@@ -73,31 +66,29 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
   public Mutator getMutator() { return mutator; }
 
   @Override
-  public void setInitialCapacity(final int valueCount) {
-  }
+  public void setInitialCapacity(final int valueCount) { }
 
   @Override
-  public void allocateNew() {
-  }
+  public void allocateNew() { }
 
   @Override
-  public boolean allocateNewSafe() {
-    return true;
-  }
+  public boolean allocateNewSafe() { return true; }
 
   @Override
-  public void allocateNew(final int valueCount) {
-  }
+  public void allocateNew(final int valueCount) { }
 
   @Override
-  public void reset() {
-  }
+  public void reset() { }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void zeroVector() {
+  public void zeroVector() { }
+
+  @Override
+  public DrillBuf reallocRaw(int newAllocationSize) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -127,19 +118,15 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
     return new TransferImpl((UntypedNullVector) to);
   }
 
-  public void transferTo(UntypedNullVector target){
-  }
+  public void transferTo(UntypedNullVector target) { }
 
-  public void splitAndTransferTo(int startIndex, int length, UntypedNullVector target) {
-  }
+  public void splitAndTransferTo(int startIndex, int length, UntypedNullVector target) { }
 
   @Override
-  public int getPayloadByteCount(int valueCount) {
-    return 0;
-  }
+  public int getPayloadByteCount(int valueCount) { return 0; }
 
   private class TransferImpl implements TransferPair{
-    private UntypedNullVector to;
+    private final UntypedNullVector to;
 
     public TransferImpl(MaterializedField field, BufferAllocator allocator){
       to = new UntypedNullVector(field, allocator);
@@ -150,9 +137,7 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
     }
 
     @Override
-    public UntypedNullVector getTo(){
-      return to;
-    }
+    public UntypedNullVector getTo() { return to; }
 
     @Override
     public void transfer(){
@@ -173,11 +158,9 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
     }
   }
 
-  public void copyFrom(int fromIndex, int thisIndex, UntypedNullVector from){
-  }
+  public void copyFrom(int fromIndex, int thisIndex, UntypedNullVector from) { }
 
-  public void copyFromSafe(int fromIndex, int thisIndex, UntypedNullVector from){
-  }
+  public void copyFromSafe(int fromIndex, int thisIndex, UntypedNullVector from) { }
 
   private void checkBounds(int index) {
     if (index < 0 || index >= valueCount) {
@@ -216,7 +199,6 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
     public void get(int index, UntypedNullHolder holder) {
       checkBounds(index);
     }
-
   }
 
   /**
@@ -224,7 +206,7 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
    * value counts.
    *
    */
-   public final class Mutator extends BaseMutator {
+  public final class Mutator extends BaseMutator {
 
     private Mutator() {}
 
@@ -266,5 +248,4 @@ public final class UntypedNullVector extends BaseDataValueVector implements Fixe
       UntypedNullVector.this.valueCount = valueCount;
     }
   }
-
 }

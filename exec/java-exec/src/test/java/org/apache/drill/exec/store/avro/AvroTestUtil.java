@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -151,6 +152,18 @@ public class AvroTestUtil {
   }
 
   public static AvroTestRecordWriter generateSimplePrimitiveSchema_NoNullValues(int numRecords) throws Exception {
+    return generateSimplePrimitiveSchema_NoNullValues(numRecords, "");
+  }
+
+  /**
+   * Generates Avro table with specified rows number in specified path.
+   *
+   * @param numRecords rows number in the table
+   * @param tablePath  table path
+   * @return AvroTestRecordWriter instance
+   */
+  public static AvroTestRecordWriter generateSimplePrimitiveSchema_NoNullValues(int numRecords, String tablePath)
+      throws Exception {
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
             .fields()
@@ -164,7 +177,8 @@ public class AvroTestUtil {
             .name("h_boolean").type().booleanType().noDefault()
             .endRecord();
 
-    final File file = File.createTempFile("avro-primitive-test", ".avro", BaseTestQuery.dirTestWatcher.getRootDir());
+    final File file = File.createTempFile("avro-primitive-test", ".avro",
+        BaseTestQuery.dirTestWatcher.makeRootSubDir(Paths.get(tablePath)));
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
 
     try {

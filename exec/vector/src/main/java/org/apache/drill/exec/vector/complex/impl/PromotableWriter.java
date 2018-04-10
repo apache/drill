@@ -120,6 +120,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     }
   }
 
+  @Override
   protected FieldWriter getWriter(MinorType type) {
     if (state == State.UNION) {
       return writer;
@@ -144,6 +145,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     return writer.isEmptyMap();
   }
 
+  @Override
   protected FieldWriter getWriter() {
     return getWriter(type);
   }

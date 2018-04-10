@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -29,20 +30,17 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockScanBatchCreator.class);
-
   @Override
-  public ScanBatch getBatch(FragmentContext context, MockSubScanPOP config, List<RecordBatch> children)
+  public ScanBatch getBatch(ExecutorFragmentContext context, MockSubScanPOP config, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     final List<MockScanEntry> entries = config.getReadEntries();
-    final List<RecordReader> readers = Lists.newArrayList();
+    final List<RecordReader> readers = new LinkedList<>();
     for(final MockTableDef.MockScanEntry e : entries) {
       if ( e.isExtended( ) ) {
-        readers.add(new ExtendedMockRecordReader(context, e));
+        readers.add(new ExtendedMockRecordReader(e));
       } else {
         readers.add(new MockRecordReader(context, e));
       }

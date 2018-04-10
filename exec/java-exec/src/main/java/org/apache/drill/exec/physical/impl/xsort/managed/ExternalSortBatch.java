@@ -135,8 +135,7 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
  * into new batches of a size determined by that operator.</li>
  * <li>A series of batches, without a selection vector, if the sort spills to
  * disk. In this case, the downstream operator will still be a selection vector
- * remover, but there is nothing for that operator to remove. Each batch is
- * of the size set by {@link #MAX_MERGED_BATCH_SIZE}.</li>
+ * remover, but there is nothing for that operator to remove.
  * </ul>
  * Note that, even in the in-memory sort case, this operator could do the copying
  * to eliminate the extra selection vector remover. That is left as an exercise
@@ -214,7 +213,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     super(popConfig, context, true);
     this.incoming = incoming;
 
-    SortConfig sortConfig = new SortConfig(context.getConfig());
+    SortConfig sortConfig = new SortConfig(context.getConfig(), context.getOptions());
     SpillSet spillSet = new SpillSet(context.getConfig(), context.getHandle(), popConfig);
     oContext.setInjector(injector);
     PriorityQueueCopierWrapper copierHolder = new PriorityQueueCopierWrapper(oContext);
@@ -375,7 +374,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     // sort may have prematurely exited due to shouldContinue() returning false.
 
-    if (! context.shouldContinue()) {
+    if (!context.getExecutorState().shouldContinue()) {
       sortState = SortState.DONE;
       return IterOutcome.STOP;
     }
@@ -440,8 +439,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   /**
    * Handle a new schema from upstream. The ESB is quite limited in its ability
    * to handle schema changes.
-   *
-   * @param upstream the status code from upstream: either OK or OK_NEW_SCHEMA
    */
 
   private void setupSchema()  {
@@ -482,11 +479,24 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
    * <p>
    * Some Drill code ends up calling close() two or more times. The code
    * here protects itself from these undesirable semantics.
+   * </p>
    */
 
   @Override
   public void close() {
+
+    // Sanity check: if close is called twice, just ignore
+    // the second call.
+
+    if (sortImpl == null) {
+      return;
+    }
+
     RuntimeException ex = null;
+
+    // If we got far enough to have a results iterator, close
+    // that first.
+
     try {
       if (resultsIterator != null) {
         resultsIterator.close();
@@ -495,6 +505,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     } catch (RuntimeException e) {
       ex = (ex == null) ? e : ex;
     }
+
+    // Then close the "guts" of the sort operation.
+
     try {
       if (sortImpl != null) {
         sortImpl.close();
@@ -506,14 +519,22 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     // The call to super.close() clears out the output container.
     // Doing so requires the allocator here, so it must be closed
-    // after the super call.
+    // (when closing the operator context) after the super call.
 
     try {
       super.close();
     } catch (RuntimeException e) {
       ex = (ex == null) ? e : ex;
     }
-    // Note: allocator is closed by the FragmentManager
+
+    // Finally close the operator context (which closes the
+    // child allocator.)
+
+    try {
+      oContext.close();
+    } catch (RuntimeException e) {
+      ex = ex == null ? e : ex;
+    }
     if (ex != null) {
       throw ex;
     }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,11 +24,13 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlMonotonicity;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 
+import org.apache.calcite.util.Litmus;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.List;
@@ -41,6 +43,11 @@ import java.util.List;
  * simply forwards the method calls to the wrapped SqlAggFunction.
  */
 public class DrillCalciteSqlAggFunctionWrapper extends SqlAggFunction implements DrillCalciteSqlWrapper {
+
+  public final static DrillCalciteSqlAggFunctionWrapper SUM =
+      new DrillCalciteSqlAggFunctionWrapper(SqlStdOperatorTable.SUM,
+          SqlStdOperatorTable.SUM.getReturnTypeInference());
+
   private final SqlAggFunction operator;
 
   @Override
@@ -84,7 +91,7 @@ public class DrillCalciteSqlAggFunctionWrapper extends SqlAggFunction implements
   }
 
   @Override
-  public boolean validRexOperands(int count, boolean fail) {
+  public boolean validRexOperands(int count, Litmus litmus) {
     return true;
   }
 

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -72,7 +73,6 @@ import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
  * creates the requested Drillbit and client.
  */
 public class ClusterFixture extends BaseFixture implements AutoCloseable {
-  public static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
   public static final int MAX_WIDTH_PER_NODE = 2;
 
   @SuppressWarnings("serial")
@@ -320,6 +320,23 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     return clients.get(0);
   }
 
+  /**
+   * Create a test client for a specific host and port.
+   *
+   * @param host host, must be one of those created by this
+   * fixture
+   * @param port post, must be one of those created by this
+   * fixture
+   * @return a test client. Client will be closed when this cluster
+   * fixture closes, or can be closed early
+   */
+
+  public ClientFixture client(String host, int port) {
+    return clientBuilder()
+      .property(DrillProperties.DRILLBIT_CONNECTION, String.format("%s:%d", host, port))
+      .build();
+  }
+
   public RestClientFixture restClientFixture() {
     if (restClientFixture == null) {
       restClientFixture = restClientBuilder().build();
@@ -404,6 +421,25 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   /**
+   * Shutdown the drillbit given the name of the drillbit.
+   */
+  public void closeDrillbit(final String drillbitName) throws Exception {
+    Exception ex = null;
+    for (Drillbit bit : drillbits()) {
+      if (bit.equals(bits.get(drillbitName))) {
+        try {
+          bit.close();
+        } catch (Exception e) {
+          ex = ex == null ? e :ex;
+        }
+      }
+    }
+    if (ex != null) {
+      throw ex;
+    }
+  }
+
+  /**
    * Close a resource, suppressing the exception, and keeping
    * only the first exception that may occur. We assume that only
    * the first is useful, any others are probably down-stream effects
@@ -461,7 +497,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     @SuppressWarnings("resource")
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
-    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat);
+    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat, false);
 
     pluginConfig.workspaces.remove(schemaName);
     pluginConfig.workspaces.put(schemaName, newTmpWSConfig);
@@ -480,6 +516,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
          .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE);
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
+    props.setProperty(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getCodegenDir().getAbsolutePath());
     props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
 

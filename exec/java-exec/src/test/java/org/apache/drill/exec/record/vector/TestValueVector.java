@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.record.vector;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
@@ -47,6 +49,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
@@ -56,6 +59,7 @@ import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
@@ -96,6 +100,7 @@ public class TestValueVector extends ExecTest {
   }
 
   @Test(expected = OversizedAllocationException.class)
+  @Category(UnlikelyTest.class)
   public void testFixedVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     @SuppressWarnings("resource")
@@ -122,6 +127,7 @@ public class TestValueVector extends ExecTest {
   }
 
   @Test(expected = OversizedAllocationException.class)
+  @Category(UnlikelyTest.class)
   public void testBitVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     final BitVector vector = new BitVector(field, allocator);
@@ -152,6 +158,7 @@ public class TestValueVector extends ExecTest {
   }
 
   @Test(expected = OversizedAllocationException.class)
+  @Category(UnlikelyTest.class)
   public void testVariableVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     @SuppressWarnings("resource")
@@ -247,6 +254,7 @@ public class TestValueVector extends ExecTest {
     final DrillBuf newBuf = allocator.buffer(size);
     final DrillBuf writeBuf = newBuf;
     for(final DrillBuf buffer : buffers) {
+      @SuppressWarnings("resource")
       final DrillBuf readBuf = (DrillBuf) buffer.slice();
       final int nBytes = readBuf.readableBytes();
       final byte[] bytes = new byte[nBytes];
@@ -262,6 +270,7 @@ public class TestValueVector extends ExecTest {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedIntHolder.TYPE);
 
     // Create a new value vector.
+    @SuppressWarnings("resource")
     final RepeatedIntVector vector1 = new RepeatedIntVector(field, allocator);
 
     // Populate the vector.
@@ -317,6 +326,7 @@ the interface to load has changed
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
 
     // Create a new value vector for 1024 variable length strings.
+    @SuppressWarnings("resource")
     final VarCharVector vector1 = new VarCharVector(field, allocator);
     final VarCharVector.Mutator mutator = vector1.getMutator();
     vector1.allocateNew(1024 * 10, 1024);
@@ -333,7 +343,9 @@ the interface to load has changed
 
     // Combine the backing buffers so we can load them into a new vector.
     final DrillBuf[] buffers1 = vector1.getBuffers(false);
+    @SuppressWarnings("resource")
     final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    @SuppressWarnings("resource")
     final VarCharVector vector2 = new VarCharVector(field, allocator);
     vector2.load(vector1.getMetadata(), buffer1);
 
@@ -356,6 +368,7 @@ the interface to load has changed
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
 
     // Create a new value vector for 1024 nullable variable length strings.
+    @SuppressWarnings("resource")
     final NullableVarCharVector vector1 = new NullableVarCharVector(field, allocator);
     final NullableVarCharVector.Mutator mutator = vector1.getMutator();
     vector1.allocateNew(1024 * 10, 1024);
@@ -390,7 +403,9 @@ the interface to load has changed
 
     // Combine into a single buffer so we can load it into a new vector.
     final DrillBuf[] buffers1 = vector1.getBuffers(false);
+    @SuppressWarnings("resource")
     final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    @SuppressWarnings("resource")
     final NullableVarCharVector vector2 = new NullableVarCharVector(field, allocator);
     vector2.load(vector1.getMetadata(), buffer1);
 
@@ -669,6 +684,7 @@ the interface to load has changed
       }
 
       for (int i = 0; i < valueVectors.length; i++) {
+        @SuppressWarnings("resource")
         final ValueVector vv = valueVectors[i];
         final int vvCapacity = vv.getValueCapacity();
 
@@ -714,6 +730,7 @@ the interface to load has changed
    *
    * @param test test function to execute
    */
+  @SuppressWarnings("resource")
   private void testVectors(VectorVerifier test) throws Exception {
     final MaterializedField[] fields = {
         MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE),
@@ -773,6 +790,7 @@ the interface to load has changed
 
   @Test
   public void testVectorCanLoadEmptyBuffer() throws Exception {
+    @SuppressWarnings("resource")
     final DrillBuf empty = allocator.getEmpty();
 
     testVectors(new VectorVerifier() {
@@ -794,6 +812,7 @@ the interface to load has changed
     });
   }
 
+  @SuppressWarnings("resource")
   @Test
   public void testListVectorShouldNotThrowOversizedAllocationException() throws Exception {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH,
@@ -810,6 +829,45 @@ the interface to load has changed
 
     vectorFrom.clear();
     vector.clear();
+  }
+
+  /**
+   * For VariableLengthVectors when we clear of the vector and then explicitly set the
+   * ValueCount of zero, then it should not fail with IndexOutOfBoundException.
+   * @throws Exception
+   */
+  @Test
+  public void testVarLengthVector_SetCountZeroAfterClear() throws Exception {
+    try {
+      final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+      VariableWidthVector vector = new VarCharVector(field, allocator);
+      vector.allocateNew();
+      vector.clear();
+      assertTrue(vector.getAccessor().getValueCount() == 0);
+      vector.getMutator().setValueCount(0);
+      assertTrue(vector.getAccessor().getValueCount() == 0);
+    } catch (Exception ex) {
+      fail();
+    }
+  }
+
+  /** For VariableLengthVectors when we try to set value count greater than value count for which memory is allocated,
+   * then it should fail with IndexOutOfBoundException.
+   * @throws Exception
+   */
+  @Test
+  public void testVarLengthVector_SetOOBCount() throws Exception {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+    VariableWidthVector vector = new VarCharVector(field, allocator);
+    try {
+      vector.allocateNew(10, 1);
+      vector.getMutator().setValueCount(4);
+      fail();
+    } catch (Exception ex) {
+      assertTrue(ex instanceof IndexOutOfBoundsException);
+    } finally {
+      vector.clear();
+    }
   }
 
 }

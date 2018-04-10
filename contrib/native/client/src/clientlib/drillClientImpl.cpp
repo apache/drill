@@ -520,17 +520,23 @@ bool DrillClientImpl::clientNeedsEncryption(const DrillUserProperties* userPrope
 
 /*
  * Checks if the client has explicitly expressed interest in authenticated connections only.
- * If the USERPROP_PASSWORD or USERPROP_AUTH_MECHANISM connection string properties are
- * non-empty, then it is implied that the client wants authentication.
+ * If the USERPROP_AUTH_MECHANISM connection string properties is non-empty and not equal to PLAIN,
+ * then it is implied that the client wants authentication.
+ *
+ * Explicitly skipping PLAIN to maintain forward compatibility with 1.9 Drillbit and it doesn't matter
+ * if this security check is not there for PLAIN mechanism
  */
 bool DrillClientImpl::clientNeedsAuthentication(const DrillUserProperties* userProperties) {
     bool needsAuthentication = false;
-    if(!userProperties) { return false; }
-    std::string passwd = "";
-    userProperties->getProp(USERPROP_PASSWORD, passwd);
+    if(!userProperties) { return needsAuthentication; }
     std::string authMech = "";
     userProperties->getProp(USERPROP_AUTH_MECHANISM, authMech);
-    return !passwd.empty() || !authMech.empty();
+    boost::algorithm::to_lower(authMech);
+
+    if(!authMech.empty() && SaslAuthenticatorImpl::PLAIN_NAME != authMech) {
+        needsAuthentication = true;
+    }
+    return needsAuthentication;
 }
 
 connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* properties){

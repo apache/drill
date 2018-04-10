@@ -49,10 +49,14 @@ public class KerberosHelper {
 
   private boolean kdcStarted;
 
-  public KerberosHelper(final String testName) {
+  public KerberosHelper(final String testName, String serverShortName) {
     final String realm = "EXAMPLE.COM";
     CLIENT_PRINCIPAL = CLIENT_SHORT_NAME + "@" + realm;
-    final String serverShortName = System.getProperty("user.name");
+
+    if (serverShortName == null) {
+      serverShortName = System.getProperty("user.name");
+    }
+
     SERVER_PRINCIPAL = serverShortName + "/" + HOSTNAME + "@" + realm;
     this.testName = testName;
   }
@@ -127,6 +131,10 @@ public class KerberosHelper {
     kdc.exportPrincipal(principal, keytab);
   }
 
+  /**
+   * Workspace is owned by test using this helper
+   * @throws Exception
+   */
   public void stopKdc() throws Exception {
     if (kdcStarted) {
       logger.info("Stopping KDC on {}", kdcPort);
@@ -137,7 +145,6 @@ public class KerberosHelper {
     deleteIfExists(serverKeytab);
     deleteIfExists(keytabDir);
     deleteIfExists(kdcDir);
-    deleteIfExists(workspace);
   }
 
   private void deleteIfExists(File file) throws IOException {

@@ -17,18 +17,17 @@
 package org.apache.drill.exec.expr.fn;
 
 import com.google.common.collect.Lists;
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.util.JarUtil;
-import org.codehaus.janino.Java;
+import org.codehaus.janino.Java.CompilationUnit;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -45,9 +44,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.spy;
 
-
-@RunWith(JMockit.class)
+@RunWith(MockitoJUnitRunner.class)
 @Category(SqlFunctionTest.class)
 public class FunctionInitializerTest {
 
@@ -92,16 +93,16 @@ public class FunctionInitializerTest {
 
   @Test
   public void testConcurrentFunctionBodyLoad() throws Exception {
-    final FunctionInitializer functionInitializer = new FunctionInitializer(CLASS_NAME, classLoader);
-
+    final FunctionInitializer spyFunctionInitializer = spy(new FunctionInitializer(CLASS_NAME, classLoader));
     final AtomicInteger counter = new AtomicInteger();
-    new MockUp<FunctionInitializer>() {
-      @Mock
-      Java.CompilationUnit convertToCompilationUnit(Invocation inv, Class<?> clazz) {
+
+    doAnswer(new Answer<CompilationUnit>() {
+      @Override
+      public CompilationUnit answer(InvocationOnMock invocation) throws Throwable {
         counter.incrementAndGet();
-        return inv.proceed();
+        return (CompilationUnit) invocation.callRealMethod();
       }
-    };
+    }).when(spyFunctionInitializer).convertToCompilationUnit(any(Class.class));
 
     int threadsNumber = 5;
     ExecutorService executor = Executors.newFixedThreadPool(threadsNumber);
@@ -109,8 +110,8 @@ public class FunctionInitializerTest {
     try {
       List<Future<String>> results = executor.invokeAll(Collections.nCopies(threadsNumber, new Callable<String>() {
         @Override
-        public String call() throws Exception {
-          return functionInitializer.getMethod("eval");
+        public String call() {
+          return spyFunctionInitializer.getMethod("eval");
         }
       }));
 

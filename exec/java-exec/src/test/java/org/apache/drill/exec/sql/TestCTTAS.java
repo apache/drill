@@ -75,7 +75,7 @@ public class TestCTTAS extends BaseTestQuery {
 
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getConfig();
-    pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(tmp2.getAbsolutePath(), true, null));
+    pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(tmp2.getAbsolutePath(), true, null, false));
     pluginRegistry.createOrUpdate(DFS_PLUGIN_NAME, pluginConfig, true);
 
     fs = getLocalFileSystem();
@@ -282,6 +282,21 @@ public class TestCTTAS extends BaseTestQuery {
   }
 
   @Test
+  public void testSelectWithJoinOnTemporaryTables() throws Exception {
+    String temporaryLeftTableName = "temporary_left_table_for_Select_with_join";
+    String temporaryRightTableName = "temporary_right_table_for_Select_with_join";
+    test("create TEMPORARY table %s as select 'A' as c1, 'B' as c2 from (values(1))", temporaryLeftTableName);
+    test("create TEMPORARY table %s as select 'A' as c1, 'C' as c2 from (values(1))", temporaryRightTableName);
+
+    testBuilder()
+        .sqlQuery("select t1.c2 col1, t2.c2 col2 from %s t1 join %s t2 on t1.c1 = t2.c1", temporaryLeftTableName, temporaryRightTableName)
+        .unOrdered()
+        .baselineColumns("col1", "col2")
+        .baselineValues("B", "C")
+        .go();
+  }
+
+  @Test
   public void testTemporaryAndPersistentTablesPriority() throws Exception {
     String name = "temporary_and_persistent_table";
     test("use %s", temp2_schema);
@@ -380,6 +395,66 @@ public class TestCTTAS extends BaseTestQuery {
       assertThat(e.getMessage(), containsString(String.format(
           "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", tableName)));
       throw e;
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTemporaryTableIfNotExistsWhenTableWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTemporaryTableIfNotExistsWhenATableWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE TEMPORARY TABLE %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      ctasQuery =
+        String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s AS SELECT * FROM cp.`employee.json`", newTblName);
+
+      testBuilder()
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTemporaryTableIfNotExistsWhenViewWithSameNameAlreadyExists() throws Exception{
+    final String newTblName = "createTemporaryTableIfNotExistsWhenAViewWithSameNameAlreadyExists";
+
+    try {
+      String ctasQuery = String.format("CREATE VIEW %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      ctasQuery =
+        String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      testBuilder()
+        .sqlQuery(ctasQuery)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+        .go();
+    } finally {
+      test(String.format("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
+    }
+  }
+
+  @Test // DRILL-5952
+  public void testCreateTemporaryTableIfNotExistsWhenTableWithSameNameDoesNotExist() throws Exception{
+    final String newTblName = "createTemporaryTableIfNotExistsWhenATableWithSameNameDoesNotExist";
+
+    try {
+      String ctasQuery = String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
     }
   }
 

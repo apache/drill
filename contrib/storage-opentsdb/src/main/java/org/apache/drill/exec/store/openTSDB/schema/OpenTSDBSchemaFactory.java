@@ -61,7 +61,16 @@ public class OpenTSDBSchemaFactory implements SchemaFactory {
     @Override
     public Table getTable(String name) {
       OpenTSDBScanSpec scanSpec = new OpenTSDBScanSpec(name);
+      try {
         return new DrillOpenTSDBTable(schemaName, plugin, new Schema(plugin.getClient(), name), scanSpec);
+      } catch (Exception e) {
+        // Calcite firstly looks for a table in the default schema, if the table was not found,
+        // it looks in the root schema.
+        // If the table does not exist, a query will fail at validation stage,
+        // so the error should not be thrown here.
+        logger.warn("Failure while loading table '{}' for database '{}'.", name, schemaName, e.getCause());
+        return null;
+      }
     }
 
     @Override

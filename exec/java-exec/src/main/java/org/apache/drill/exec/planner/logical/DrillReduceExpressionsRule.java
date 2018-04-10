@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,17 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.core.Calc;
-import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.core.Filter;
-import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
-import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 
@@ -38,10 +36,10 @@ public class DrillReduceExpressionsRule {
   public static final DrillReduceCalcRule CALC_INSTANCE_DRILL =
       new DrillReduceCalcRule();
 
-  private static class DrillReduceFilterRule extends ReduceExpressionsRule.ReduceFilterRule {
+  private static class DrillReduceFilterRule extends ReduceExpressionsRule.FilterReduceExpressionsRule {
 
     DrillReduceFilterRule() {
-      super("DrillReduceExpressionsRule(Filter)");
+      super(Filter.class, DrillRelFactories.LOGICAL_BUILDER);
     }
 
     /**
@@ -51,16 +49,16 @@ public class DrillReduceExpressionsRule {
      * expose the planning time known schema. Instead we have to insert a limit 0.
      */
     @Override
-    protected RelNode createEmptyRelOrEquivalent(Filter filter) {
+    protected RelNode createEmptyRelOrEquivalent(RelOptRuleCall call, Filter filter) {
       return createEmptyEmptyRelHelper(filter);
     }
 
   }
 
-  private static class DrillReduceCalcRule extends ReduceExpressionsRule.ReduceCalcRule {
+  private static class DrillReduceCalcRule extends ReduceExpressionsRule.CalcReduceExpressionsRule {
 
     DrillReduceCalcRule() {
-      super("DrillReduceExpressionsRule(Calc)");
+      super(Calc.class, DrillRelFactories.LOGICAL_BUILDER);
     }
 
     /**
@@ -70,8 +68,8 @@ public class DrillReduceExpressionsRule {
      * expose the planning time known schema. Instead we have to insert a limit 0.
      */
     @Override
-    protected RelNode createEmptyRelOrEquivalent(Calc calc) {
-      return createEmptyEmptyRelHelper(calc);
+    protected RelNode createEmptyRelOrEquivalent(RelOptRuleCall call, Calc input) {
+      return createEmptyEmptyRelHelper(input);
     }
 
   }

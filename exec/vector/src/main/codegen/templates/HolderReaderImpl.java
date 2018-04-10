@@ -199,7 +199,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
                                                                                  holder.scale);
 
 <#elseif minor.class == "Bit" >
-      return new Boolean(holder.value != 0);
+      return Boolean.valueOf(holder.value != 0);
 <#else>
       ${friendlyType} value = new ${friendlyType}(this.holder.value);
       return value;
@@ -272,7 +272,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
                                                                                  holder.scale);
 
 <#elseif minor.class == "Bit" >
-      return new Boolean(holder.value != 0);
+      return Boolean.valueOf(holder.value != 0);
 <#else>
       ${friendlyType} value = new ${friendlyType}(this.holder.value);
       return value;

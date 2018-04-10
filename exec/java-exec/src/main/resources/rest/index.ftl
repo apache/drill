@@ -46,7 +46,7 @@
 
   <div class="row">
     <div class="col-md-12">
-      <h3>Drillbits <span class="label label-primary">${model.getDrillbits()?size}</span></h3>
+      <h3>Drillbits <span class="label label-primary" id="size" >${model.getDrillbits()?size}</span></h3>
       <div class="table-responsive">
         <table class="table table-hover">
           <thead>
@@ -57,19 +57,19 @@
               <th>Control Port</th>
               <th>Data Port</th>
               <th>Version</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             <#assign i = 1>
             <#list model.getDrillbits() as drillbit>
-              <tr>
+              <tr id="row-${i}">
                 <td>${i}</td>
-                <td>${drillbit.getAddress()}
-                  <#if drillbit.isCurrent()>
-                    <span class="label label-info">Current</span>
+                <td id="address" >${drillbit.getAddress()}<#if drillbit.isCurrent()>
+                    <span class="label label-info" id="current">Current</span>
                   </#if>
                 </td>
-                <td>${drillbit.getUserPort()}</td>
+                <td id="port" >${drillbit.getUserPort()}</td>
                 <td>${drillbit.getControlPort()}</td>
                 <td>${drillbit.getDataPort()}</td>
                 <td>
@@ -78,6 +78,13 @@
                     ${drillbit.getVersion()}
                   </span>
                 </td>
+                <td id="status" >${drillbit.getState()}</td>
+                <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && drillbit.isCurrent() >
+                  <td>
+                      <button type="button" id="shutdown" onClick="shutdown($(this));"> SHUTDOWN </button>
+                  </td>
+                </#if>
+                <td id="queriesCount">  </td>
               </tr>
               <#assign i = i + 1>
             </#list>
@@ -107,7 +114,7 @@
       </div>
   </div>
 
-   <#if model.shouldShowUserInfo()>
+   <#if model.shouldShowAdminInfo()>
        <div class="row">
             <div class="col-md-12">
               <h3>User Info </h3>
@@ -136,7 +143,6 @@
             </div>
         </div>
    </#if>
-
   <#assign queueInfo = model.queueInfo() />
   <div class="row">
       <div class="col-md-12">
@@ -179,6 +185,113 @@
         </div>
       </div>
   </div>
+   <script charset="utf-8">
+      var refreshTime = 10000;
+      var refresh = getRefreshTime();
+      var portNum = 0;
+      var port = getPortNum();
+      var timeout;
+      var size = $("#size").html();
+
+      function getPortNum() {
+          var port = $.ajax({
+                          type: 'GET',
+                          url: '/portNum',
+                          dataType: "json",
+                          complete: function(data) {
+                                portNum = data.responseJSON["port"];
+                                }
+                          });
+      }
+
+      function getRefreshTime() {
+          $.ajax({
+              type: 'GET',
+              url: '/gracePeriod',
+              dataType: "json",
+              complete: function (data) {
+                  var gracePeriod = data.responseJSON["gracePeriod"];
+                  if (gracePeriod > 0) {
+                      refreshTime = gracePeriod / 3;
+                  }
+                  timeout = setTimeout(reloadStatus, refreshTime);
+              }
+          });
+      }
+
+      function reloadStatus () {
+          var result = $.ajax({
+                      type: 'GET',
+                      url: '/state',
+                      dataType: "json",
+                      complete: function(data) {
+                            fillStatus(data,size);
+                            }
+                      });
+          timeout = setTimeout(reloadStatus, refreshTime);
+      }
+
+      function fillStatus(data,size) {
+          var status_map = (data.responseJSON);
+          for (i = 1; i <= size; i++) {
+            var address = $("#row-"+i).find("#address").contents().get(0).nodeValue;
+            address = address.trim();
+            var port = $("#row-"+i).find("#port").html();
+            var key = address+"-"+port;
+
+            if (status_map[key] == null) {
+                $("#row-"+i).find("#status").text("OFFLINE");
+                $("#row-"+i).find("#shutdown").prop('disabled',true).css('opacity',0.5);
+                $("#row-"+i).find("#queriesCount").text("");
+            }
+            else {
+                if (status_map[key] == "ONLINE") {
+                    $("#row-"+i).find("#status").text(status_map[key]);
+                }
+                else {
+                    if ($("#row-"+i).find("#current").html() == "Current") {
+                        fillQueryCount(i);
+                    }
+                    $("#row-"+i).find("#status").text(status_map[key]);
+                }
+            }
+          }
+      }
+      function fillQueryCount(row_id) {
+          var requestPath = "/queriesCount";
+          var url = getRequestUrl(requestPath);
+	   var result = $.ajax({
+                        type: 'GET',
+                        url: url,
+                        complete: function(data) {
+                              queries = data.responseJSON["queriesCount"];
+                              fragments = data.responseJSON["fragmentsCount"];
+                              $("#row-"+row_id).find("#queriesCount").text(queries+" queries and "+fragments+" fragments remaining before shutting down");
+                              }
+                        });
+      }
+       <#if model.shouldShowAdminInfo() || !model.isAuthEnabled()>
+          function shutdown(button) {
+              var requestPath = "/gracefulShutdown";
+              var url = getRequestUrl(requestPath);
+              var result = $.ajax({
+                    type: 'POST',
+                    url: url,
+                    contentType : 'text/plain',
+                    complete: function(data) {
+                        alert(data.responseJSON["response"]);
+                        button.prop('disabled',true).css('opacity',0.5);
+                    }
+              });
+          }
+      </#if>
+      function getRequestUrl(requestPath) {
+            var protocol = location.protocol;
+            var host = location.host;
+            var url = protocol + "//" + host + requestPath;
+            return url;
+      }
+    </script>
 </#macro>
 
 <@page_html/>

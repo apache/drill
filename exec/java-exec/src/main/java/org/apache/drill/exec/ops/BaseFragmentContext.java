@@ -20,7 +20,6 @@ package org.apache.drill.exec.ops;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -32,8 +31,7 @@ import io.netty.buffer.DrillBuf;
  * Common implementation for both the test and production versions
  * of the fragment context.
  */
-
-public abstract class BaseFragmentContext implements FragmentContextInterface {
+public abstract class BaseFragmentContext implements FragmentContext {
 
   private final FunctionImplementationRegistry funcRegistry;
 
@@ -45,8 +43,6 @@ public abstract class BaseFragmentContext implements FragmentContextInterface {
   public FunctionImplementationRegistry getFunctionRegistry() {
     return funcRegistry;
   }
-
-  protected abstract CodeCompiler getCompiler();
 
   @Override
   public <T> T getImplementationClass(final ClassGenerator<T> cg)

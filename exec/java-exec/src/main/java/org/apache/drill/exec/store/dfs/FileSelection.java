@@ -37,7 +37,6 @@ import org.apache.hadoop.fs.Path;
  */
 public class FileSelection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSelection.class);
-  private static final String PATH_SEPARATOR = System.getProperty("file.separator");
   private static final String WILD_CARD = "*";
 
   private List<FileStatus> statuses;
@@ -56,6 +55,11 @@ public class FileSelection {
    * metadata context useful for metadata operations (if any)
    */
   private MetadataContext metaContext = null;
+
+  /**
+   * Indicates whether this selectionRoot is an empty directory
+   */
+  private boolean emptyDirectory;
 
   private enum StatusType {
     NOT_CHECKED,         // initial state
@@ -224,7 +228,7 @@ public class FileSelection {
     int shortest = Integer.MAX_VALUE;
     for (int i = 0; i < total; i++) {
       final Path path = new Path(files.get(i));
-      folders[i] = Path.getPathWithoutSchemeAndAuthority(path).toString().split(PATH_SEPARATOR);
+      folders[i] = Path.getPathWithoutSchemeAndAuthority(path).toString().split(Path.SEPARATOR);
       shortest = Math.min(shortest, folders[i].length);
     }
 
@@ -247,17 +251,21 @@ public class FileSelection {
   private static String buildPath(final String[] path, final int folderIndex) {
     final StringBuilder builder = new StringBuilder();
     for (int i=0; i<folderIndex; i++) {
-      builder.append(path[i]).append(PATH_SEPARATOR);
+      builder.append(path[i]).append(Path.SEPARATOR);
     }
     builder.deleteCharAt(builder.length()-1);
     return builder.toString();
   }
 
-  public static FileSelection create(final DrillFileSystem fs, final String parent, final String path) throws IOException {
+  public static FileSelection create(final DrillFileSystem fs, final String parent, final String path,
+      final boolean allowAccessOutsideWorkspace) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
     boolean hasWildcard = path.contains(WILD_CARD);
 
     final Path combined = new Path(parent, removeLeadingSlash(path));
+    if (!allowAccessOutsideWorkspace) {
+      checkBackPaths(new Path(parent).toUri().getPath(), combined.toUri().getPath(), path);
+    }
     final FileStatus[] statuses = fs.globStatus(combined); // note: this would expand wildcards
     if (statuses == null) {
       return null;
@@ -360,12 +368,31 @@ public class FileSelection {
     }
   }
 
-  private static String removeLeadingSlash(String path) {
-    if (path.charAt(0) == '/') {
+  public static String removeLeadingSlash(String path) {
+    if (!path.isEmpty() && path.charAt(0) == '/') {
       String newPath = path.substring(1);
       return removeLeadingSlash(newPath);
     } else {
       return path;
+    }
+  }
+
+  /**
+   * Check if the path is a valid sub path under the parent after removing backpaths. Throw an exception if
+   * it is not. We pass subpath in as a parameter only for the error message
+   *
+   * @param parent The parent path (the workspace directory).
+   * @param combinedPath The workspace directory and (relative) subpath path combined.
+   * @param subpath For error message only, the subpath
+   */
+  public static void checkBackPaths(String parent, String combinedPath, String subpath) {
+    Preconditions.checkArgument(!parent.isEmpty(), "Invalid root (" + parent + ") in file selection path.");
+    Preconditions.checkArgument(!combinedPath.isEmpty(), "Empty path (" + combinedPath + "( in file selection path.");
+
+    if (!combinedPath.startsWith(parent)) {
+      StringBuilder msg = new StringBuilder();
+      msg.append("Invalid path : ").append(subpath).append(" takes you outside the workspace.");
+      throw new IllegalArgumentException(msg.toString());
     }
   }
 
@@ -401,6 +428,22 @@ public class FileSelection {
   public MetadataContext getMetaContext() {
     return metaContext;
   }
+
+  /**
+   * @return true if this {@link FileSelection#selectionRoot} points to an empty directory, false otherwise
+   */
+  public boolean isEmptyDirectory() {
+    return emptyDirectory;
+  }
+
+  /**
+   * Setting {@link FileSelection#emptyDirectory} as true allows to identify this {@link FileSelection#selectionRoot}
+   * as an empty directory
+   */
+  public void setEmptyDirectoryStatus() {
+    this.emptyDirectory = true;
+  }
+
 
   @Override
   public String toString() {

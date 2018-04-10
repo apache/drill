@@ -32,10 +32,9 @@ import com.carrotsearch.hppc.cursors.IntDoubleCursor;
 import com.carrotsearch.hppc.cursors.IntLongCursor;
 import com.carrotsearch.hppc.procedures.IntDoubleProcedure;
 import com.carrotsearch.hppc.procedures.IntLongProcedure;
+import com.google.common.annotations.VisibleForTesting;
 
-public class OperatorStats implements OperatorStatReceiver {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
-
+public class OperatorStats {
   protected final int operatorId;
   protected final int operatorType;
   private final BufferAllocator allocator;
@@ -60,7 +59,6 @@ public class OperatorStats implements OperatorStatReceiver {
   private long setupMark;
   private long waitMark;
 
-//  private long schemas;
   private int inputCount;
 
   public OperatorStats(OpProfileDef def, BufferAllocator allocator){
@@ -89,7 +87,8 @@ public class OperatorStats implements OperatorStatReceiver {
     }
   }
 
-  private OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator) {
+  @VisibleForTesting
+  public OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator) {
     super();
     this.allocator = allocator;
     this.operatorId = operatorId;
@@ -169,7 +168,6 @@ public class OperatorStats implements OperatorStatReceiver {
     inProcessing = false;
   }
 
-  @Override
   public synchronized void startWait() {
     assert !inWait : assertionError("starting waiting");
     stopProcessing();
@@ -177,7 +175,6 @@ public class OperatorStats implements OperatorStatReceiver {
     waitMark = System.nanoTime();
   }
 
-  @Override
   public synchronized void stopWait() {
     assert inWait : assertionError("stopping waiting");
     startProcessing();
@@ -203,7 +200,6 @@ public class OperatorStats implements OperatorStatReceiver {
         .toString();
   }
 
-
   public OperatorProfile getProfile() {
     final OperatorProfile.Builder b = OperatorProfile //
         .newBuilder() //
@@ -213,14 +209,11 @@ public class OperatorStats implements OperatorStatReceiver {
         .setProcessNanos(processingNanos)
         .setWaitNanos(waitNanos);
 
-    if(allocator != null){
+    if (allocator != null) {
       b.setPeakLocalMemoryAllocated(allocator.getPeakMemoryAllocation());
     }
 
-
-
     addAllMetrics(b);
-
     return b.build();
   }
 
@@ -249,7 +242,6 @@ public class OperatorStats implements OperatorStatReceiver {
     public void apply(int key, long value) {
       builder.addMetric(MetricValue.newBuilder().setMetricId(key).setLongValue(value));
     }
-
   }
 
   public void addLongMetrics(OperatorProfile.Builder builder) {
@@ -278,22 +270,62 @@ public class OperatorStats implements OperatorStatReceiver {
     }
   }
 
-  @Override
+  /**
+   * Set a stat to the specified long value. Creates the stat
+   * if the stat does not yet exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to set
+   */
+
   public void addLongStat(MetricDef metric, long value){
     longMetrics.putOrAdd(metric.metricId(), value, value);
   }
 
-  @Override
+  @VisibleForTesting
+  public long getLongStat(MetricDef metric) {
+    return longMetrics.get(metric.metricId());
+  }
+
+  /**
+   * Add a double value to the existing value. Creates the stat
+   * (with an initial value of zero) if the stat does not yet
+   * exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to add to the existing value
+   */
+
   public void addDoubleStat(MetricDef metric, double value){
     doubleMetrics.putOrAdd(metric.metricId(), value, value);
   }
 
-  @Override
+  @VisibleForTesting
+  public double getDoubleStat(MetricDef metric) {
+    return doubleMetrics.get(metric.metricId());
+  }
+
+  /**
+   * Add a long value to the existing value. Creates the stat
+   * (with an initial value of zero) if the stat does not yet
+   * exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to add to the existing value
+   */
+
   public void setLongStat(MetricDef metric, long value){
     longMetrics.put(metric.metricId(), value);
   }
 
-  @Override
+  /**
+   * Set a stat to the specified double value. Creates the stat
+   * if the stat does not yet exist.
+   *
+   * @param metric the metric to update
+   * @param value the value to set
+   */
+
   public void setDoubleStat(MetricDef metric, double value){
     doubleMetrics.put(metric.metricId(), value);
   }
@@ -313,5 +345,4 @@ public class OperatorStats implements OperatorStatReceiver {
   public long getProcessingNanos() {
     return processingNanos;
   }
-
 }

@@ -32,9 +32,9 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.fun.SqlAvgAggFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -73,7 +73,7 @@ public class TypeInferenceUtils {
       .put(TypeProtos.MinorType.TIMESTAMP, SqlTypeName.TIMESTAMP)
       .put(TypeProtos.MinorType.VARBINARY, SqlTypeName.VARBINARY)
       .put(TypeProtos.MinorType.INTERVALYEAR, SqlTypeName.INTERVAL_YEAR_MONTH)
-      .put(TypeProtos.MinorType.INTERVALDAY, SqlTypeName.INTERVAL_DAY_TIME)
+      .put(TypeProtos.MinorType.INTERVALDAY, SqlTypeName.INTERVAL_DAY)
       .put(TypeProtos.MinorType.MAP, SqlTypeName.MAP)
       .put(TypeProtos.MinorType.LIST, SqlTypeName.ARRAY)
       .put(TypeProtos.MinorType.LATE, SqlTypeName.ANY)
@@ -97,8 +97,19 @@ public class TypeInferenceUtils {
       .put(SqlTypeName.TIME, TypeProtos.MinorType.TIME)
       .put(SqlTypeName.TIMESTAMP, TypeProtos.MinorType.TIMESTAMP)
       .put(SqlTypeName.VARBINARY, TypeProtos.MinorType.VARBINARY)
+      .put(SqlTypeName.INTERVAL_YEAR, TypeProtos.MinorType.INTERVALYEAR)
       .put(SqlTypeName.INTERVAL_YEAR_MONTH, TypeProtos.MinorType.INTERVALYEAR)
-      .put(SqlTypeName.INTERVAL_DAY_TIME, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_MONTH, TypeProtos.MinorType.INTERVALYEAR)
+      .put(SqlTypeName.INTERVAL_DAY, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_DAY_HOUR, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_DAY_MINUTE, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_DAY_SECOND, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_HOUR, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_HOUR_MINUTE, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_HOUR_SECOND, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_MINUTE, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_MINUTE_SECOND, TypeProtos.MinorType.INTERVALDAY)
+      .put(SqlTypeName.INTERVAL_SECOND, TypeProtos.MinorType.INTERVALDAY)
 
       // SqlTypeName.CHAR is the type for Literals in Calcite, Drill treats Literals as VARCHAR also
       .put(SqlTypeName.CHAR, TypeProtos.MinorType.VARCHAR)
@@ -122,21 +133,21 @@ public class TypeInferenceUtils {
 
   private static final ImmutableMap<String, SqlReturnTypeInference> funcNameToInference = ImmutableMap.<String, SqlReturnTypeInference> builder()
       .put("DATE_PART", DrillDatePartSqlReturnTypeInference.INSTANCE)
-      .put("SUM", DrillSumSqlReturnTypeInference.INSTANCE)
-      .put("COUNT", DrillCountSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.SUM.name(), DrillSumSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.COUNT.name(), DrillCountSqlReturnTypeInference.INSTANCE)
       .put("CONCAT", DrillConcatSqlReturnTypeInference.INSTANCE_CONCAT)
       .put("CONCATOPERATOR", DrillConcatSqlReturnTypeInference.INSTANCE_CONCAT_OP)
       .put("LENGTH", DrillLengthSqlReturnTypeInference.INSTANCE)
       .put("LPAD", DrillPadSqlReturnTypeInference.INSTANCE)
       .put("RPAD", DrillPadSqlReturnTypeInference.INSTANCE)
-      .put("LTRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
-      .put("RTRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.LTRIM.name(), DrillTrimSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.RTRIM.name(), DrillTrimSqlReturnTypeInference.INSTANCE)
       .put("BTRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
-      .put("TRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.TRIM.name(), DrillTrimSqlReturnTypeInference.INSTANCE)
       .put("CONVERT_TO", DrillConvertToSqlReturnTypeInference.INSTANCE)
-      .put("EXTRACT", DrillExtractSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.EXTRACT.name(), DrillExtractSqlReturnTypeInference.INSTANCE)
       .put("SQRT", DrillSqrtSqlReturnTypeInference.INSTANCE)
-      .put("CAST", DrillCastSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.CAST.name(), DrillCastSqlReturnTypeInference.INSTANCE)
       .put("FLATTEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("KVGEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("CONVERT_FROM", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
@@ -156,22 +167,22 @@ public class TypeInferenceUtils {
       .put(SqlKind.ROW_NUMBER.name(), DrillRankingSqlReturnTypeInference.INSTANCE_BIGINT)
 
       // NTILE
-      .put("NTILE", DrillNTILESqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.NTILE.name(), DrillNTILESqlReturnTypeInference.INSTANCE)
 
       // LEAD, LAG
-      .put("LEAD", DrillLeadLagSqlReturnTypeInference.INSTANCE)
-      .put("LAG", DrillLeadLagSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.LEAD.name(), DrillLeadLagSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.LAG.name(), DrillLeadLagSqlReturnTypeInference.INSTANCE)
 
       // FIRST_VALUE, LAST_VALUE
-      .put("FIRST_VALUE", DrillSameSqlReturnTypeInference.INSTANCE)
-      .put("LAST_VALUE", DrillSameSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.FIRST_VALUE.name(), DrillSameSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.LAST_VALUE.name(), DrillSameSqlReturnTypeInference.INSTANCE)
 
       // Functions rely on DrillReduceAggregatesRule for expression simplification as opposed to getting evaluated directly
-      .put(SqlAvgAggFunction.Subtype.AVG.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
-      .put(SqlAvgAggFunction.Subtype.STDDEV_POP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
-      .put(SqlAvgAggFunction.Subtype.STDDEV_SAMP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
-      .put(SqlAvgAggFunction.Subtype.VAR_POP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
-      .put(SqlAvgAggFunction.Subtype.VAR_SAMP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.AVG.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.STDDEV_POP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.STDDEV_SAMP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.VAR_POP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.VAR_SAMP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
       .build();
 
   /**
@@ -734,13 +745,13 @@ public class TypeInferenceUtils {
                                                              SqlTypeName sqlTypeName,
                                                              boolean isNullable) {
     RelDataType type;
-    if (sqlTypeName == SqlTypeName.INTERVAL_DAY_TIME) {
+    if (sqlTypeName.getFamily() == SqlTypeFamily.INTERVAL_DAY_TIME) {
       type = typeFactory.createSqlIntervalType(
           new SqlIntervalQualifier(
               TimeUnit.DAY,
               TimeUnit.MINUTE,
               SqlParserPos.ZERO));
-    } else if (sqlTypeName == SqlTypeName.INTERVAL_YEAR_MONTH) {
+    } else if (sqlTypeName.getFamily() == SqlTypeFamily.INTERVAL_YEAR_MONTH) {
       type = typeFactory.createSqlIntervalType(
           new SqlIntervalQualifier(
               TimeUnit.YEAR,

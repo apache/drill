@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,7 +38,7 @@ import org.apache.drill.jdbc.DrillPreparedStatement;
  * <p>
  * This class has sub-classes which implement JDBC 3.0 and JDBC 4.0 APIs; it is
  * instantiated using
- * {@link net.hydromatic.avatica.AvaticaFactory#newPreparedStatement}.
+ * {@link org.apache.calcite.avatica.AvaticaFactory#newPreparedStatement}.
  * </p>
  */
 abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
@@ -62,8 +62,6 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
       ((DrillColumnMetaDataList) signature.columns).updateColumnMetaData(preparedStatementHandle.getColumnsList());
     }
   }
-
-
 
   /**
    * Throws AlreadyClosedSqlException <i>iff</i> this PreparedStatement is closed.
@@ -333,13 +331,17 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   }
 
   @Override
-  public void clearBatch() throws SQLException {
-    throwIfClosed();
+  public void clearBatch() {
+    try {
+      throwIfClosed();
+    } catch (AlreadyClosedSqlException e) {
+      throw new RuntimeException(e);
+    }
     try {
       super.clearBatch();
     }
     catch (UnsupportedOperationException e) {
-      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+      throw new RuntimeException(new SQLFeatureNotSupportedException(e.getMessage(), e));
     }
   }
 

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.vector;
 
-
 public interface FixedWidthVector extends ValueVector {
 
   /**
@@ -27,8 +26,8 @@ public interface FixedWidthVector extends ValueVector {
    */
   void allocateNew(int valueCount);
 
-/**
- * Zero out the underlying buffer backing this vector.
- */
+  /**
+   * Zero out the underlying buffer backing this vector.
+   */
   void zeroVector();
 }

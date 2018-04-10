@@ -72,7 +72,6 @@ import io.netty.buffer.DrillBuf;
 public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MaprDBJsonRecordReader.class);
 
-  public static final SchemaPath ID_PATH = SchemaPath.getSimplePath(ID_KEY);
   private final long MILLISECONDS_IN_A_DAY  = (long)1000 * 60 * 60 * 24;
 
   private Table table;
@@ -117,7 +116,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
     disableCountOptimization = formatPluginConfig.disableCountOptimization();
     setColumns(projectedColumns);
-    unionEnabled = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    unionEnabled = context.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
     readNumbersAsDouble = formatPluginConfig.isReadAllNumbersAsDouble();
     allTextMode = formatPluginConfig.isAllTextMode();
     ignoreSchemaChange = formatPluginConfig.isIgnoreSchemaChange();
@@ -129,13 +128,13 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (disablePushdown) {
-      transformed.add(Utilities.STAR_COLUMN);
+      transformed.add(SchemaPath.STAR_COLUMN);
       includeId = true;
       return transformed;
     }
 
     if (isStarQuery()) {
-      transformed.add(Utilities.STAR_COLUMN);
+      transformed.add(SchemaPath.STAR_COLUMN);
       includeId = true;
       if (isSkipQuery()) {
     	// `SELECT COUNT(*)` query
@@ -518,5 +517,4 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       table.close();
     }
   }
-
 }

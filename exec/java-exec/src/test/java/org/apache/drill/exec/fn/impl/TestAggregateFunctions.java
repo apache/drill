@@ -20,6 +20,7 @@ package org.apache.drill.exec.fn.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
@@ -41,6 +42,9 @@ import java.io.FileWriter;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Category({SqlFunctionTest.class, OperatorTest.class, PlannerTest.class})
 public class TestAggregateFunctions extends BaseTestQuery {
@@ -607,5 +611,16 @@ public class TestAggregateFunctions extends BaseTestQuery {
       .baselineColumns("a", "b", "c", "d", "e")
       .baselineValues(1L, 1L, 1L, 0L, 1L)
       .go();
+  }
+
+  @Test // DRILL-5768
+  public void testGroupByWithoutAggregate() throws Exception {
+    try {
+      test("select * from cp.`tpch/nation.parquet` group by n_regionkey");
+      fail("Exception was not thrown");
+    } catch (UserRemoteException e) {
+      assertTrue("No expected current \"Expression 'tpch/nation.parquet.**' is not being grouped\"",
+          e.getMessage().matches(".*Expression 'tpch/nation\\.parquet\\.\\*\\*' is not being grouped(.*\\n)*"));
+    }
   }
 }

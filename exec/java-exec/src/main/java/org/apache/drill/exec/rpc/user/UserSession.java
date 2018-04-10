@@ -287,6 +287,15 @@ public class UserSession implements AutoCloseable {
     return temporaryTables.get(tableName.toLowerCase());
   }
 
+  public String getOriginalTableNameFromTemporaryTable(String tableName) {
+    for (String originalTableName : temporaryTables.keySet()) {
+      if (temporaryTables.get(originalTableName).equals(tableName)) {
+        return originalTableName;
+      }
+    }
+    return null;
+  }
+
   /**
    * Checks if passed table is temporary, table name is case-insensitive.
    * Before looking for table checks if passed schema is temporary and returns false if not

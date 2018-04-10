@@ -24,8 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 
-import java.util.concurrent.CountDownLatch;
-
 /**
  * See {@link org.apache.drill.exec.testing.CountDownLatchInjection} Degenerates to
  * {@link org.apache.drill.exec.testing.PauseInjection#pause}, if initialized to zero count. In any case, this injection
@@ -42,7 +40,7 @@ public class CountDownLatchInjectionImpl extends Injection implements CountDownL
                                       @JsonProperty("port") final int port,
                                       @JsonProperty("siteClass") final String siteClass,
                                       @JsonProperty("desc") final String desc) throws InjectionConfigurationException {
-    super(address, port, siteClass, desc, 0, 1);
+    super(address, port, siteClass, desc, 0, 1, 0L);
   }
 
   @Override

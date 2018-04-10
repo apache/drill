@@ -146,7 +146,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
         return IterOutcome.NONE;
       }
 
-      boolean drainRight = true;
+      boolean drainRight = rightUpstream != IterOutcome.NONE;
       while (drainRight) {
         rightUpstream = next(RIGHT_INPUT, right);
         switch (rightUpstream) {
@@ -267,22 +267,24 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
 
     int fieldId = 0;
     int outputFieldId = 0;
-    // Set the input and output value vector references corresponding to the left batch
-    for (MaterializedField field : leftSchema) {
-      final TypeProtos.MajorType fieldType = field.getType();
+    if (leftSchema != null) {
+      // Set the input and output value vector references corresponding to the left batch
+      for (MaterializedField field : leftSchema) {
+        final TypeProtos.MajorType fieldType = field.getType();
 
-      // Add the vector to the output container
-      container.addOrGet(field);
+        // Add the vector to the output container
+        container.addOrGet(field);
 
-      JVar inVV = nLJClassGenerator.declareVectorValueSetupAndMember("leftBatch",
-          new TypedFieldId(fieldType, false, fieldId));
-      JVar outVV = nLJClassGenerator.declareVectorValueSetupAndMember("outgoing",
-          new TypedFieldId(fieldType, false, outputFieldId));
+        JVar inVV = nLJClassGenerator.declareVectorValueSetupAndMember("leftBatch",
+            new TypedFieldId(fieldType, false, fieldId));
+        JVar outVV = nLJClassGenerator.declareVectorValueSetupAndMember("outgoing",
+            new TypedFieldId(fieldType, false, outputFieldId));
 
-      nLJClassGenerator.getEvalBlock().add(outVV.invoke("copyFromSafe").arg(leftIndex).arg(outIndex).arg(inVV));
-      nLJClassGenerator.rotateBlock();
-      fieldId++;
-      outputFieldId++;
+        nLJClassGenerator.getEvalBlock().add(outVV.invoke("copyFromSafe").arg(leftIndex).arg(outIndex).arg(inVV));
+        nLJClassGenerator.rotateBlock();
+        fieldId++;
+        outputFieldId++;
+      }
     }
 
     // generate emitRight
@@ -291,32 +293,34 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
     JExpression batchIndex = JExpr.direct("batchIndex");
     JExpression recordIndexWithinBatch = JExpr.direct("recordIndexWithinBatch");
 
-    // Set the input and output value vector references corresponding to the right batch
-    for (MaterializedField field : rightSchema) {
+    if (rightSchema != null) {
+      // Set the input and output value vector references corresponding to the right batch
+      for (MaterializedField field : rightSchema) {
 
-      final TypeProtos.MajorType inputType = field.getType();
-      TypeProtos.MajorType outputType;
-      // if join type is LEFT, make sure right batch output fields data mode is optional
-      if (popConfig.getJoinType() == JoinRelType.LEFT && inputType.getMode() == TypeProtos.DataMode.REQUIRED) {
-        outputType = Types.overrideMode(inputType, TypeProtos.DataMode.OPTIONAL);
-      } else {
-        outputType = inputType;
+        final TypeProtos.MajorType inputType = field.getType();
+        TypeProtos.MajorType outputType;
+        // if join type is LEFT, make sure right batch output fields data mode is optional
+        if (popConfig.getJoinType() == JoinRelType.LEFT && inputType.getMode() == TypeProtos.DataMode.REQUIRED) {
+          outputType = Types.overrideMode(inputType, TypeProtos.DataMode.OPTIONAL);
+        } else {
+          outputType = inputType;
+        }
+
+        MaterializedField newField = MaterializedField.create(field.getName(), outputType);
+        container.addOrGet(newField);
+
+        JVar inVV = nLJClassGenerator.declareVectorValueSetupAndMember("rightContainer",
+            new TypedFieldId(inputType, true, fieldId));
+        JVar outVV = nLJClassGenerator.declareVectorValueSetupAndMember("outgoing",
+            new TypedFieldId(outputType, false, outputFieldId));
+        nLJClassGenerator.getEvalBlock().add(outVV.invoke("copyFromSafe")
+            .arg(recordIndexWithinBatch)
+            .arg(outIndex)
+            .arg(inVV.component(batchIndex)));
+        nLJClassGenerator.rotateBlock();
+        fieldId++;
+        outputFieldId++;
       }
-
-      MaterializedField newField = MaterializedField.create(field.getName(), outputType);
-      container.addOrGet(newField);
-
-      JVar inVV = nLJClassGenerator.declareVectorValueSetupAndMember("rightContainer",
-          new TypedFieldId(inputType, true, fieldId));
-      JVar outVV = nLJClassGenerator.declareVectorValueSetupAndMember("outgoing",
-          new TypedFieldId(outputType, false, outputFieldId));
-      nLJClassGenerator.getEvalBlock().add(outVV.invoke("copyFromSafe")
-          .arg(recordIndexWithinBatch)
-          .arg(outIndex)
-          .arg(inVV.component(batchIndex)));
-      nLJClassGenerator.rotateBlock();
-      fieldId++;
-      outputFieldId++;
     }
 
     return context.getImplementationClass(nLJCodeGenerator);

@@ -72,7 +72,16 @@ public class HBaseSchemaFactory implements SchemaFactory {
     @Override
     public Table getTable(String name) {
       HBaseScanSpec scanSpec = new HBaseScanSpec(name);
-      return new DrillHBaseTable(schemaName, plugin, scanSpec);
+      try {
+        return new DrillHBaseTable(schemaName, plugin, scanSpec);
+      } catch (Exception e) {
+        // Calcite firstly looks for a table in the default schema, if the table was not found,
+        // it looks in the root schema.
+        // If the table does not exist, a query will fail at validation stage,
+        // so the error should not be thrown here.
+        logger.warn("Failure while loading table '{}' for database '{}'.", name, schemaName, e.getCause());
+        return null;
+      }
     }
 
     @Override

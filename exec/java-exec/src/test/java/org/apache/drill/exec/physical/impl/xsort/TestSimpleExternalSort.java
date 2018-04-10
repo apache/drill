@@ -34,6 +34,7 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.categories.SlowTest;
@@ -42,7 +43,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-@Category(SlowTest.class)
+@Category({SlowTest.class})
 public class TestSimpleExternalSort extends DrillTest {
   @Rule
   public final TestRule TIMEOUT = TestTools.getTimeoutRule(160_000);

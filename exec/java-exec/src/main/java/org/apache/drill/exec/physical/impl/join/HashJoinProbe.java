@@ -30,7 +30,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.calcite.rel.core.JoinRelType;
 
 public interface HashJoinProbe {
-  public static TemplateClassDefinition<HashJoinProbe> TEMPLATE_DEFINITION = new TemplateClassDefinition<HashJoinProbe>(HashJoinProbe.class, HashJoinProbeTemplate.class);
+  TemplateClassDefinition<HashJoinProbe> TEMPLATE_DEFINITION = new TemplateClassDefinition<HashJoinProbe>(HashJoinProbe.class, HashJoinProbeTemplate.class);
 
   /* The probe side of the hash join can be in the following two states
    * 1. PROBE_PROJECT: Inner join case, we probe our hash table to see if we have a
@@ -40,15 +40,15 @@ public interface HashJoinProbe {
    *    case we handle it internally by projecting the record if there isn't a match on the build side
    * 3. DONE: Once we have projected all possible records we are done
    */
-  public static enum ProbeState {
+  enum ProbeState {
     PROBE_PROJECT, PROJECT_RIGHT, DONE
   }
 
-  public abstract void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
-                                          int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable, HashJoinHelper hjHelper,
-                                          JoinRelType joinRelType);
-  public abstract void doSetup(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch, RecordBatch outgoing);
-  public abstract int  probeAndProject() throws SchemaChangeException, ClassTransformationException, IOException;
-  public abstract void projectBuildRecord(int buildIndex, int outIndex);
-  public abstract void projectProbeRecord(int probeIndex, int outIndex);
+  void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
+                          int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable, HashJoinHelper hjHelper,
+                          JoinRelType joinRelType, RecordBatch.IterOutcome leftStartState);
+  void doSetup(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch, RecordBatch outgoing);
+  int  probeAndProject() throws SchemaChangeException, ClassTransformationException, IOException;
+  void projectBuildRecord(int buildIndex, int outIndex);
+  void projectProbeRecord(int probeIndex, int outIndex);
 }
