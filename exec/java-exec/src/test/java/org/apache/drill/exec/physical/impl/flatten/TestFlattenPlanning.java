@@ -66,8 +66,11 @@ public class TestFlattenPlanning extends PlanTestBase {
   @Test // DRILL-6099 : push limit past flatten(project)
   public void testLimitPushdownPastFlatten() throws Exception {
     final String query = "select rownum, flatten(complex) comp from cp.`store/json/test_flatten_mappify2.json` limit 1";
-    final String[] expectedPatterns = {".*Limit\\(fetch=\\[1\\]\\).*",".*Flatten.*",".*Limit\\(fetch=\\[1\\]\\).*"};
-    final String[] excludedPatterns = null;
+    //DRILL-6318 : limit should not push past flatten(project)
+    //P.S. Where was an error in this pattern. Even then Limit missing after Flatten it matches to plan
+    //final String[] expectedPatterns = {".*Limit\\(fetch=\\[1\\]\\).*",".*Flatten.*",".*Limit\\(fetch=\\[1\\]\\).*"};
+    final String[] expectedPatterns = {"(?s).*Limit.*Flatten.*Project.*"};
+    final String[] excludedPatterns = {"(?s).*Limit.*Flatten.*Limit.*"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPatterns, excludedPatterns);
   }
 
