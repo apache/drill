@@ -49,7 +49,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
@@ -67,16 +66,15 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import io.netty.buffer.DrillBuf;
-import org.junit.experimental.categories.Category;
 
 @Category(VectorTest.class)
 public class TestValueVector extends ExecTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
 
   private final static String EMPTY_SCHEMA_PATH = "";
 
@@ -103,7 +101,6 @@ public class TestValueVector extends ExecTest {
   @Category(UnlikelyTest.class)
   public void testFixedVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
-    @SuppressWarnings("resource")
     final UInt4Vector vector = new UInt4Vector(field, allocator);
     // edge case 1: buffer size = max value capacity
     final int expectedValueCapacity = BaseValueVector.MAX_ALLOCATION_SIZE / 4;
@@ -161,7 +158,6 @@ public class TestValueVector extends ExecTest {
   @Category(UnlikelyTest.class)
   public void testVariableVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
-    @SuppressWarnings("resource")
     final VarCharVector vector = new VarCharVector(field, allocator);
     // edge case 1: value count = MAX_VALUE_ALLOCATION
     final int expectedAllocationInBytes = BaseValueVector.MAX_ALLOCATION_SIZE;
@@ -254,7 +250,6 @@ public class TestValueVector extends ExecTest {
     final DrillBuf newBuf = allocator.buffer(size);
     final DrillBuf writeBuf = newBuf;
     for(final DrillBuf buffer : buffers) {
-      @SuppressWarnings("resource")
       final DrillBuf readBuf = (DrillBuf) buffer.slice();
       final int nBytes = readBuf.readableBytes();
       final byte[] bytes = new byte[nBytes];
@@ -270,7 +265,6 @@ public class TestValueVector extends ExecTest {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedIntHolder.TYPE);
 
     // Create a new value vector.
-    @SuppressWarnings("resource")
     final RepeatedIntVector vector1 = new RepeatedIntVector(field, allocator);
 
     // Populate the vector.
@@ -326,7 +320,6 @@ the interface to load has changed
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
 
     // Create a new value vector for 1024 variable length strings.
-    @SuppressWarnings("resource")
     final VarCharVector vector1 = new VarCharVector(field, allocator);
     final VarCharVector.Mutator mutator = vector1.getMutator();
     vector1.allocateNew(1024 * 10, 1024);
@@ -343,9 +336,7 @@ the interface to load has changed
 
     // Combine the backing buffers so we can load them into a new vector.
     final DrillBuf[] buffers1 = vector1.getBuffers(false);
-    @SuppressWarnings("resource")
     final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
-    @SuppressWarnings("resource")
     final VarCharVector vector2 = new VarCharVector(field, allocator);
     vector2.load(vector1.getMetadata(), buffer1);
 
@@ -368,7 +359,6 @@ the interface to load has changed
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
 
     // Create a new value vector for 1024 nullable variable length strings.
-    @SuppressWarnings("resource")
     final NullableVarCharVector vector1 = new NullableVarCharVector(field, allocator);
     final NullableVarCharVector.Mutator mutator = vector1.getMutator();
     vector1.allocateNew(1024 * 10, 1024);
@@ -684,7 +674,6 @@ the interface to load has changed
       }
 
       for (int i = 0; i < valueVectors.length; i++) {
-        @SuppressWarnings("resource")
         final ValueVector vv = valueVectors[i];
         final int vvCapacity = vv.getValueCapacity();
 
@@ -730,7 +719,6 @@ the interface to load has changed
    *
    * @param test test function to execute
    */
-  @SuppressWarnings("resource")
   private void testVectors(VectorVerifier test) throws Exception {
     final MaterializedField[] fields = {
         MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE),
@@ -770,7 +758,7 @@ the interface to load has changed
     builder.put(UInt4Vector.class, noChild);
     builder.put(BitVector.class, noChild);
     builder.put(VarCharVector.class, offsetChild);
-    builder.put(NullableVarCharVector.class, new ChildVerifier(UInt1Holder.TYPE, Types.optional(TypeProtos.MinorType.VARCHAR)));
+    builder.put(NullableVarCharVector.class, new ChildVerifier(UInt1Holder.TYPE, Types.required(TypeProtos.MinorType.VARCHAR)));
     builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
     builder.put(MapVector.class, noChild);
     builder.put(RepeatedMapVector.class, offsetChild);
@@ -790,7 +778,6 @@ the interface to load has changed
 
   @Test
   public void testVectorCanLoadEmptyBuffer() throws Exception {
-    @SuppressWarnings("resource")
     final DrillBuf empty = allocator.getEmpty();
 
     testVectors(new VectorVerifier() {

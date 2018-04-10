@@ -315,9 +315,9 @@ public class DrillConstExecutor implements RexExecutor {
                 milliseconds = intervalDayOut.milliseconds;
               }
               return rexBuilder.makeLiteral(
-                  new BigDecimal(days * (long) DateUtilities.daysToStandardMillis + milliseconds),
-                  TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY,
-                      newCall.getType().isNullable()), false);
+                new BigDecimal(days * (long) DateUtilities.daysToStandardMillis + milliseconds),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY,
+                        newCall.getType().isNullable()), false);
             }
             // The list of known unsupported types is used to trigger this behavior of re-using the input expression
             // before the expression is even attempted to be evaluated, this is just here as a last precaution a

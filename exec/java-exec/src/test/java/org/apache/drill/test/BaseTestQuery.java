@@ -284,6 +284,7 @@ public class BaseTestQuery extends ExecTest {
   public static void closeClient() throws Exception {
     if (client != null) {
       client.close();
+      client = null;
     }
 
     if (bits != null) {
@@ -292,13 +293,16 @@ public class BaseTestQuery extends ExecTest {
           bit.close();
         }
       }
+      bits = null;
     }
 
-    if(serviceSet != null) {
+    if (serviceSet != null) {
       serviceSet.close();
+      serviceSet = null;
     }
     if (allocator != null) {
       allocator.close();
+      allocator = null;
     }
   }
 
