@@ -22,6 +22,7 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -299,5 +300,17 @@ public class TestBugFixes extends BaseTestQuery {
       test("ALTER SESSION RESET `planner.enable_nljoin_for_scalar_only`");
       test("ALTER SESSION RESET `planner.slice_target`");
     }
+  }
+
+  @Test
+  public void testDRILL6318() throws Exception {
+    int rows = testSql("SELECT FLATTEN(data) AS d FROM cp.`jsoninput/bug6318.json`");
+    Assert.assertEquals(11, rows);
+
+    rows = testSql("SELECT FLATTEN(data) AS d FROM cp.`jsoninput/bug6318.json` LIMIT 3");
+    Assert.assertEquals(3, rows);
+
+    rows = testSql("SELECT FLATTEN(data) AS d FROM cp.`jsoninput/bug6318.json` LIMIT 3 OFFSET 5");
+    Assert.assertEquals(3, rows);
   }
 }
