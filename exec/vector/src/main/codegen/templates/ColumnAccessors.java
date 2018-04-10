@@ -268,69 +268,58 @@ public class ColumnAccessors {
 
       </#if>
       <@getType drillType label />
-      <#if accessorType == "byte[]">
-        <#assign args = ", int len">
-      <#else>
-        <#assign args = "">
-      </#if>
-      <#if javaType == "char">
-        <#assign putType = "short" />
-        <#assign doCast = true />
-      <#else>
-        <#assign putType = javaType />
-        <#assign doCast = (cast == "set") />
-      </#if>
       <#if ! varWidth>
 
     </#if>
     @Override
-    public final void set${label}(final ${accessorType} value${args}) {
+    public final void set${label}(final ${accessorType} value${putArgs}) {
       <#-- Must compute the write offset first; can't be inline because the
            writeOffset() function has a side effect of possibly changing the buffer
            address (bufAddr). -->
-      <#if varWidth>
-      final int offset = writeIndex(len);
-      <#else>
-      final int writeIndex = writeIndex();
-      <#assign putAddr = "writeIndex * VALUE_WIDTH">
+      <#if ! varWidth>
+      final int writeOffset = prepareWrite();
+      <#assign putOffset = "writeOffset * VALUE_WIDTH">
       </#if>
       <#if varWidth>
+      final int offset = prepareWrite(len);
       drillBuf.setBytes(offset, value, 0, len);
       offsetsWriter.setNextOffset(offset + len);
       <#elseif drillType == "Decimal9">
-      drillBuf.setInt(${putAddr},
+      drillBuf.setInt(${putOffset},
           DecimalUtility.getDecimal9FromBigDecimal(value,
-                type.getScale(), type.getPrecision()));
+              type.getScale(), type.getPrecision()));
       <#elseif drillType == "Decimal18">
-      drillBuf.setLong(${putAddr},
+      drillBuf.setLong(${putOffset},
           DecimalUtility.getDecimal18FromBigDecimal(value,
-                type.getScale(), type.getPrecision()));
+              type.getScale(), type.getPrecision()));
       <#elseif drillType == "Decimal38Sparse">
       <#-- Hard to optimize this case. Just use the available tools. -->
-      DecimalUtility.getSparseFromBigDecimal(value, vector.getBuffer(), writeIndex * VALUE_WIDTH,
-               type.getScale(), type.getPrecision(), 6);
+      DecimalUtility.getSparseFromBigDecimal(value, drillBuf,
+          ${putOffset},
+          type.getScale(), type.getPrecision(), 6);
       <#elseif drillType == "Decimal28Sparse">
       <#-- Hard to optimize this case. Just use the available tools. -->
-      DecimalUtility.getSparseFromBigDecimal(value, vector.getBuffer(), writeIndex * VALUE_WIDTH,
-               type.getScale(), type.getPrecision(), 5);
+      DecimalUtility.getSparseFromBigDecimal(value, drillBuf,
+          ${putOffset},
+          type.getScale(), type.getPrecision(), 5);
       <#elseif drillType == "IntervalYear">
-      drillBuf.setInt(${putAddr},
-                value.getYears() * 12 + value.getMonths());
+      drillBuf.setInt(${putOffset},
+          value.getYears() * 12 + value.getMonths());
       <#elseif drillType == "IntervalDay">
-      final int offset = ${putAddr};
-      drillBuf.setInt(offset,     value.getDays());
-      drillBuf.setInt(offset + 4, DateUtilities.periodToMillis(value));
+      final int offset = ${putOffset};
+      drillBuf.setInt(offset, value.getDays());
+      drillBuf.setInt(offset + ${minor.millisecondsOffset}, DateUtilities.periodToMillis(value));
       <#elseif drillType == "Interval">
-      final int offset = ${putAddr};
-      drillBuf.setInt(offset,     value.getYears() * 12 + value.getMonths());
-      drillBuf.setInt(offset + 4, value.getDays());
-      drillBuf.setInt(offset + 8, DateUtilities.periodToMillis(value));
+      final int offset = ${putOffset};
+      drillBuf.setInt(offset, DateUtilities.periodToMonths(value));
+      drillBuf.setInt(offset + ${minor.daysOffset}, value.getDays());
+      drillBuf.setInt(offset + ${minor.millisecondsOffset}, DateUtilities.periodToMillis(value));
       <#elseif drillType == "Float4">
-      drillBuf.setInt(${putAddr}, Float.floatToRawIntBits((float) value));
+      drillBuf.setInt(${putOffset}, Float.floatToRawIntBits((float) value));
       <#elseif drillType == "Float8">
-      drillBuf.setLong(${putAddr}, Double.doubleToRawLongBits(value));
+      drillBuf.setLong(${putOffset}, Double.doubleToRawLongBits(value));
       <#else>
-      drillBuf.set${putType?cap_first}(${putAddr}, <#if doCast>(${putType}) </#if>value);
+      drillBuf.set${putType?cap_first}(${putOffset}, <#if doCast>(${putType}) </#if>value);
       </#if>
       vectorIndex.nextElement();
     }

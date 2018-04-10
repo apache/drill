@@ -44,43 +44,7 @@ import org.apache.drill.exec.vector.accessor.TupleWriter.TupleWriterListener;
  * {@see ObjectReader}
  */
 
-public interface ObjectWriter {
-
-  /**
-   * Returns the schema of the column associated with this writer.
-   *
-   * @return schema for this writer's column
-   */
-
-  ColumnMetadata schema();
-
-  /**
-   * Bind a listener to the underlying scalar column, or array of scalar
-   * columns. Not valid if the underlying writer is a map or array of maps.
-   *
-   * @param listener
-   *          the column listener to bind
-   */
-
-  void bindListener(ColumnWriterListener listener);
-
-  /**
-   * Bind a listener to the underlying map or map array column. Not valid if the
-   * underlying writer is a scalar or scalar array.
-   *
-   * @param listener
-   *          the tuple listener to bind
-   */
-
-  void bindListener(TupleWriterListener listener);
-
-  /**
-   * Return the object (structure) type of this writer.
-   *
-   * @return type indicating if this is a scalar, tuple or array
-   */
-
-  ObjectType type();
+public interface ObjectWriter extends ColumnWriter {
 
   ScalarWriter scalar();
 
@@ -88,14 +52,5 @@ public interface ObjectWriter {
 
   ArrayWriter array();
 
-  /**
-   * For debugging, set the object to the proper form of Java object as defined
-   * by the underlying writer type.
-   *
-   * @param value
-   *          Java object value to write
-   * @throws VectorOverflowException
-   */
-
-  void set(Object value);
+  VariantWriter variant();
 }

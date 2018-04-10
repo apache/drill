@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import java.math.BigDecimal;
 
-import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.joda.time.Period;
 
@@ -134,15 +134,6 @@ public abstract class BaseScalarWriter extends AbstractScalarWriter {
   public static final int MIN_BUFFER_SIZE = 256;
 
   /**
-   * Indicates the position in the vector to write. Set via an object so that
-   * all writers (within the same subtree) can agree on the write position.
-   * For example, all top-level, simple columns see the same row index.
-   * All columns within a repeated map see the same (inner) index, etc.
-   */
-
-  protected ColumnWriterIndex vectorIndex;
-
-  /**
    * Listener invoked if the vector overflows. If not provided, then the writer
    * does not support vector overflow.
    */
@@ -160,14 +151,6 @@ public abstract class BaseScalarWriter extends AbstractScalarWriter {
   protected int capacity;
 
   @Override
-  public void bindIndex(ColumnWriterIndex vectorIndex) {
-    this.vectorIndex = vectorIndex;
-  }
-
-  @Override
-  public ColumnWriterIndex writerIndex() { return vectorIndex; }
-
-  @Override
   public void bindListener(ColumnWriterListener listener) {
     this.listener = listener;
   }
@@ -176,7 +159,7 @@ public abstract class BaseScalarWriter extends AbstractScalarWriter {
    * All change of buffer comes through this function to allow capturing
    * the buffer address and capacity. Only two ways to set the buffer:
    * by binding to a vector in bindVector(), or by resizing the vector
-   * in writeIndex().
+   * in prepareWrite().
    */
 
   protected abstract void setBuffer();
@@ -220,43 +203,46 @@ public abstract class BaseScalarWriter extends AbstractScalarWriter {
   public abstract void skipNulls();
 
   @Override
+  public boolean nullable() { return false; }
+
+  @Override
   public void setNull() {
-    throw new UnsupportedOperationException("Vector is not nullable");
+    throw UnsupportedConversionError.nullError(schema());
   }
 
   @Override
   public void setInt(int value) {
-    throw new UnsupportedOperationException();
+    throw conversionError("int");
   }
 
   @Override
   public void setLong(long value) {
-    throw new UnsupportedOperationException();
+    throw conversionError("long");
   }
 
   @Override
   public void setDouble(double value) {
-    throw new UnsupportedOperationException();
+    throw conversionError("double");
   }
 
   @Override
   public void setString(String value) {
-    throw new UnsupportedOperationException();
+    throw conversionError("String");
   }
 
   @Override
   public void setBytes(byte[] value, int len) {
-    throw new UnsupportedOperationException();
+    throw conversionError("bytes");
   }
 
   @Override
   public void setDecimal(BigDecimal value) {
-    throw new UnsupportedOperationException();
+    throw conversionError("Decimal");
   }
 
   @Override
   public void setPeriod(Period value) {
-    throw new UnsupportedOperationException();
+    throw conversionError("Period");
   }
 
   @Override

@@ -64,4 +64,6 @@ public interface TupleReader extends ColumnReader {
   TupleReader tuple(String colName);
   ArrayReader array(int colIndex);
   ArrayReader array(String colName);
+  VariantReader variant(int colIndex);
+  VariantReader variant(String colName);
 }

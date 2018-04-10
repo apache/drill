@@ -17,15 +17,17 @@
  */
 package org.apache.drill.exec.vector.accessor.reader;
 
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
+import org.apache.drill.exec.vector.complex.ListVector;
+import org.apache.drill.exec.vector.complex.UnionVector;
 
 /**
  * Collection of vector accessors. A single class handles the single-batch
@@ -268,6 +270,44 @@ public class VectorAccessors {
   }
 
   /**
+   * Vector accessor for ListVector &rarr; bits vector
+   */
+
+  public static class ListBitsHyperVectorStateReader extends BaseHyperVectorAccessor {
+
+    public final VectorAccessor listAccessor;
+
+    public ListBitsHyperVectorStateReader(VectorAccessor listAccessor) {
+      super(Types.required(MinorType.UINT1));
+      this.listAccessor = listAccessor;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends ValueVector> T vector() {
+      ListVector vector = listAccessor.vector();
+      return (T) vector.getBitsVector();
+    }
+  }
+
+  public static class ListMemberHyperVectorAccessor extends BaseHyperVectorAccessor {
+
+    public final VectorAccessor listAccessor;
+
+    public ListMemberHyperVectorAccessor(VectorAccessor listAccessor, MajorType memberType) {
+      super(memberType);
+      this.listAccessor = listAccessor;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends ValueVector> T vector() {
+      ListVector vector = listAccessor.vector();
+      return (T) vector.getDataVector();
+    }
+  }
+
+  /**
    * Vector accessor for AbstractMapVector &rarr; member vector
    */
 
@@ -287,6 +327,52 @@ public class VectorAccessors {
     public <T extends ValueVector> T vector() {
       AbstractMapVector vector = mapAccessor.vector();
       return (T) vector.getChildByOrdinal(index);
+    }
+  }
+
+  /**
+   * Vector accessor for UnionVector &rarr; type vector
+   */
+
+  public static class UnionTypeHyperVectorAccessor extends BaseHyperVectorAccessor {
+
+    private VectorAccessor unionVectorAccessor;
+
+    public UnionTypeHyperVectorAccessor(VectorAccessor va) {
+      super(Types.required(MinorType.UINT1));
+      unionVectorAccessor = va;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends ValueVector> T vector() {
+      UnionVector vector = unionVectorAccessor.vector();
+      return (T) vector.getTypeVector();
+    }
+  }
+
+  /**
+   * Vector accessor for UnionVector &rarr; data vector
+   */
+
+  public static class UnionMemberHyperVectorAccessor extends BaseHyperVectorAccessor {
+
+    private final VectorAccessor unionVectorAccessor;
+    private final MinorType typeKey;
+
+    public UnionMemberHyperVectorAccessor(VectorAccessor va, MajorType type) {
+
+      // There is no materialized field for union members, so make one up.
+
+      super(type);
+      unionVectorAccessor = va;
+      typeKey = type.getMinorType();
+    }
+
+    @Override
+    public <T extends ValueVector> T vector() {
+      UnionVector vector = unionVectorAccessor.vector();
+      return vector.member(typeKey);
     }
   }
 
@@ -337,6 +423,16 @@ public class VectorAccessors {
       return new NullableBitsHyperVectorStateReader(nullableAccessor);
     } else {
       NullableVector vector = nullableAccessor.vector();
+      return new SingleVectorAccessor(
+          vector.getBitsVector());
+    }
+  }
+
+  public static VectorAccessor listBitsAccessor(VectorAccessor nullableAccessor) {
+    if (nullableAccessor.isHyper()) {
+      return new ListBitsHyperVectorStateReader(nullableAccessor);
+    } else {
+      ListVector vector = nullableAccessor.vector();
       return new SingleVectorAccessor(
           vector.getBitsVector());
     }

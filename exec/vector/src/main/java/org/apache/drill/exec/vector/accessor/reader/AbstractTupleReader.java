@@ -27,6 +27,7 @@ import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
+import org.apache.drill.exec.vector.accessor.VariantReader;
 
 /**
  * Reader for a tuple (a row or a map.) Provides access to each
@@ -146,6 +147,16 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
   @Override
   public ArrayReader array(String colName) {
     return column(colName).array();
+  }
+
+  @Override
+  public VariantReader variant(int colIndex) {
+    return column(colIndex).variant();
+  }
+
+  @Override
+  public VariantReader variant(String colName) {
+    return column(colName).variant();
   }
 
   @Override
