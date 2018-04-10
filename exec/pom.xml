@@ -43,7 +43,6 @@
     </profile>
   </profiles>
 
-
   <modules>
     <module>memory</module>
     <module>rpc</module>
@@ -51,4 +50,14 @@
     <module>java-exec</module>
     <module>jdbc</module>
   </modules>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
