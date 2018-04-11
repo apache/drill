@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
@@ -68,6 +69,8 @@ import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
+import org.apache.drill.test.OperatorFixture.MockExecutorState;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -221,6 +224,7 @@ public class TestPartitionSender extends PlanTestBase {
       FragmentContextImpl context = null;
       try {
         context = new FragmentContextImpl(drillbitContext, planFragment, null, registry);
+        context.setExecutorState(new MockExecutorState());
         final int majorFragmentId = planFragment.getHandle().getMajorFragmentId();
         final HashPartitionSender partSender = new HashPartitionSender(majorFragmentId, hashToRandomExchange, hashToRandomExchange.getExpression(), mfEndPoints);
         partionSenderRootExec = new MockPartitionSenderRootExec(context, incoming, partSender);
@@ -285,8 +289,8 @@ public class TestPartitionSender extends PlanTestBase {
         partionSenderRootExec.getStats().startProcessing();
         try {
           partDecor.executeMethodLogic(new InjectExceptionTest());
-          fail("Should throw IOException here");
-        } catch (IOException ioe) {
+          fail("executeMethodLogic should throw an exception.");
+        } catch (ExecutionException e) {
           final OperatorProfile.Builder oPBuilder = OperatorProfile.newBuilder();
           partionSenderRootExec.getStats().addAllMetrics(oPBuilder);
           final List<MetricValue> metrics = oPBuilder.getMetricList();
@@ -298,7 +302,8 @@ public class TestPartitionSender extends PlanTestBase {
               assertEquals(actualThreads, metric.getLongValue());
             }
           }
-          assertEquals(actualThreads-1, ioe.getSuppressed().length);
+          assertTrue(e.getCause() instanceof IOException);
+          assertEquals(actualThreads-1, e.getCause().getSuppressed().length);
         } finally {
           partionSenderRootExec.getStats().stopProcessing();
         }
