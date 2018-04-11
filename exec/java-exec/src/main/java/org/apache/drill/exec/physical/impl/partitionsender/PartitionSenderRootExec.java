@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
@@ -167,10 +168,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
           } else {
             sendEmptyBatch(true);
           }
-        } catch (IOException e) {
+        } catch (ExecutionException e) {
           incoming.kill(false);
           logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
-          context.getExecutorState().fail(e);
+          context.getExecutorState().fail(e.getCause());
         }
         return false;
 
@@ -197,10 +198,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
             first = false;
             sendEmptyBatch(false);
           }
-        } catch (IOException e) {
+        } catch (ExecutionException e) {
           incoming.kill(false);
           logger.error("Error while flushing outgoing batches", e);
-          context.getExecutorState().fail(e);
+          context.getExecutorState().fail(e.getCause());
           return false;
         } catch (SchemaChangeException e) {
           incoming.kill(false);
@@ -211,8 +212,8 @@ public class PartitionSenderRootExec extends BaseRootExec {
       case OK:
         try {
           partitioner.partitionBatch(incoming);
-        } catch (IOException e) {
-          context.getExecutorState().fail(e);
+        } catch (ExecutionException e) {
+          context.getExecutorState().fail(e.getCause());
           incoming.kill(false);
           return false;
         }
