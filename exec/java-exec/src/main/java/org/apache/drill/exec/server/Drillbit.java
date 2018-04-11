@@ -191,11 +191,14 @@ public class Drillbit implements AutoCloseable {
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
     webServer.start();
     //Discovering HTTP port (in case of port hunting)
-    int httpPort = webServer.getPort();
-    // Registering Drillbit with cluster coordinator
-    registrationHandle = coord.register(md.toBuilder().setHttpPort(httpPort).build());
+    if (webServer.isRunning()) {
+      int httpPort = getWebServerPort();
+      registrationHandle = coord.register(md.toBuilder().setHttpPort(httpPort).build());
+    } else {
+      //WebServer is not running
+      registrationHandle = coord.register(md);
+    }
     // Must start the RM after the above since it needs to read system options.
-
     drillbitContext.startRM();
 
     Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));

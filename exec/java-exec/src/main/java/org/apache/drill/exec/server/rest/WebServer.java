@@ -302,10 +302,17 @@ public class WebServer implements AutoCloseable {
   }
 
   public int getPort() {
-    if (embeddedJetty == null || embeddedJetty.getConnectors().length != 1) {
+    if (!isRunning()) {
       throw new UnsupportedOperationException("Http is not enabled");
     }
     return ((ServerConnector)embeddedJetty.getConnectors()[0]).getPort();
+  }
+
+  public boolean isRunning() {
+    if (embeddedJetty == null || embeddedJetty.getConnectors().length != 1) {
+      return false;
+    }
+    return true;
   }
 
   private ServerConnector createConnector(int port, int acceptors, int selectors) throws Exception {
