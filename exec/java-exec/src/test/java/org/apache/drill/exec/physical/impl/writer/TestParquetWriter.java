@@ -49,7 +49,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -787,7 +786,7 @@ public class TestParquetWriter extends BaseTestQuery {
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .ordered()
           .baselineColumns("date_value")
-          .baselineValues(new DateTime(convertToLocalTimestamp("1970-01-01 00:00:01.000")))
+          .baselineValues(convertToLocalTimestamp("1970-01-01 00:00:01.000"))
           .build().run();
     } finally {
       resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
@@ -803,7 +802,7 @@ public class TestParquetWriter extends BaseTestQuery {
                "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .ordered()
           .baselineColumns("run_date")
-          .baselineValues(new DateTime(convertToLocalTimestamp("2017-12-06 16:38:43.988")))
+          .baselineValues(convertToLocalTimestamp("2017-12-06 16:38:43.988"))
           .build().run();
     } finally {
       resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
@@ -861,7 +860,7 @@ public class TestParquetWriter extends BaseTestQuery {
         .sqlQuery("SELECT convert_from(timestamp_field, 'TIMESTAMP_IMPALA')  as timestamp_field "
              + "from cp.`parquet/part1/hive_all_types.parquet` ")
         .baselineColumns("timestamp_field")
-        .baselineValues(new DateTime(convertToLocalTimestamp("2013-07-06 00:01:00")))
+        .baselineValues(convertToLocalTimestamp("2013-07-06 00:01:00"))
         .baselineValues((Object)null)
         .go();
   }
