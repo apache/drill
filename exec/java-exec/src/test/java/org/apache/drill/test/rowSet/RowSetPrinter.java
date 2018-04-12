@@ -41,7 +41,7 @@ public class RowSetPrinter {
   public void print(PrintStream out) {
     SelectionVectorMode selectionMode = rowSet.indirectionType();
     RowSetReader reader = rowSet.reader();
-    int colCount = reader.schema().size();
+    int colCount = reader.tupleSchema().size();
     printSchema(out, selectionMode, reader);
     while (reader.next()) {
       printHeader(out, reader, selectionMode);
@@ -68,12 +68,12 @@ public class RowSetPrinter {
       break;
     }
     out.print(": ");
-    TupleMetadata schema = reader.schema();
+    TupleMetadata schema = reader.tupleSchema();
     printTupleSchema(out, schema);
     out.println();
   }
 
-  private void printTupleSchema(PrintStream out, TupleMetadata schema) {
+  public static void printTupleSchema(PrintStream out, TupleMetadata schema) {
     for (int i = 0; i < schema.size(); i++) {
       if (i > 0) {
         out.print(", ");
@@ -81,26 +81,26 @@ public class RowSetPrinter {
       ColumnMetadata colSchema = schema.metadata(i);
       out.print(colSchema.name());
       if (colSchema.isMap()) {
-        out.print("(");
+        out.print("{");
         printTupleSchema(out, colSchema.mapSchema());
-        out.print(")");
+        out.print("}");
       }
     }
   }
 
   private void printHeader(PrintStream out, RowSetReader reader, SelectionVectorMode selectionMode) {
-    out.print(reader.index());
+    out.print(reader.logicalIndex());
     switch (selectionMode) {
     case FOUR_BYTE:
       out.print(" (");
-      out.print(reader.batchIndex());
+      out.print(reader.hyperVectorIndex());
       out.print(", ");
-      out.print(reader.rowIndex());
+      out.print(reader.offset());
       out.print(")");
       break;
     case TWO_BYTE:
       out.print(" (");
-      out.print(reader.rowIndex());
+      out.print(reader.offset());
       out.print(")");
       break;
     default:

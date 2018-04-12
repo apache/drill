@@ -72,11 +72,14 @@ enum DrillPBError_ErrorType {
   DrillPBError_ErrorType_RESOURCE = 7,
   DrillPBError_ErrorType_SYSTEM = 8,
   DrillPBError_ErrorType_UNSUPPORTED_OPERATION = 9,
-  DrillPBError_ErrorType_VALIDATION = 10
+  DrillPBError_ErrorType_VALIDATION = 10,
+  DrillPBError_ErrorType_EXECUTION_ERROR = 11,
+  DrillPBError_ErrorType_INTERNAL_ERROR = 12,
+  DrillPBError_ErrorType_UNSPECIFIED_ERROR = 13
 };
 bool DrillPBError_ErrorType_IsValid(int value);
 const DrillPBError_ErrorType DrillPBError_ErrorType_ErrorType_MIN = DrillPBError_ErrorType_CONNECTION;
-const DrillPBError_ErrorType DrillPBError_ErrorType_ErrorType_MAX = DrillPBError_ErrorType_VALIDATION;
+const DrillPBError_ErrorType DrillPBError_ErrorType_ErrorType_MAX = DrillPBError_ErrorType_UNSPECIFIED_ERROR;
 const int DrillPBError_ErrorType_ErrorType_ARRAYSIZE = DrillPBError_ErrorType_ErrorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* DrillPBError_ErrorType_descriptor();
@@ -115,11 +118,13 @@ enum QueryResult_QueryState {
   QueryResult_QueryState_CANCELED = 3,
   QueryResult_QueryState_FAILED = 4,
   QueryResult_QueryState_CANCELLATION_REQUESTED = 5,
-  QueryResult_QueryState_ENQUEUED = 6
+  QueryResult_QueryState_ENQUEUED = 6,
+  QueryResult_QueryState_PREPARING = 7,
+  QueryResult_QueryState_PLANNING = 8
 };
 bool QueryResult_QueryState_IsValid(int value);
 const QueryResult_QueryState QueryResult_QueryState_QueryState_MIN = QueryResult_QueryState_STARTING;
-const QueryResult_QueryState QueryResult_QueryState_QueryState_MAX = QueryResult_QueryState_ENQUEUED;
+const QueryResult_QueryState QueryResult_QueryState_QueryState_MAX = QueryResult_QueryState_PLANNING;
 const int QueryResult_QueryState_QueryState_ARRAYSIZE = QueryResult_QueryState_QueryState_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* QueryResult_QueryState_descriptor();
@@ -236,11 +241,13 @@ enum CoreOperatorType {
   WINDOW = 34,
   NESTED_LOOP_JOIN = 35,
   AVRO_SUB_SCAN = 36,
-  PCAP_SUB_SCAN = 37
+  PCAP_SUB_SCAN = 37,
+  KAFKA_SUB_SCAN = 38,
+  KUDU_SUB_SCAN = 39
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = PCAP_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = KUDU_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
@@ -520,6 +527,9 @@ class DrillPBError : public ::google::protobuf::Message {
   static const ErrorType SYSTEM = DrillPBError_ErrorType_SYSTEM;
   static const ErrorType UNSUPPORTED_OPERATION = DrillPBError_ErrorType_UNSUPPORTED_OPERATION;
   static const ErrorType VALIDATION = DrillPBError_ErrorType_VALIDATION;
+  static const ErrorType EXECUTION_ERROR = DrillPBError_ErrorType_EXECUTION_ERROR;
+  static const ErrorType INTERNAL_ERROR = DrillPBError_ErrorType_INTERNAL_ERROR;
+  static const ErrorType UNSPECIFIED_ERROR = DrillPBError_ErrorType_UNSPECIFIED_ERROR;
   static inline bool ErrorType_IsValid(int value) {
     return DrillPBError_ErrorType_IsValid(value);
   }
@@ -1543,6 +1553,8 @@ class QueryResult : public ::google::protobuf::Message {
   static const QueryState FAILED = QueryResult_QueryState_FAILED;
   static const QueryState CANCELLATION_REQUESTED = QueryResult_QueryState_CANCELLATION_REQUESTED;
   static const QueryState ENQUEUED = QueryResult_QueryState_ENQUEUED;
+  static const QueryState PREPARING = QueryResult_QueryState_PREPARING;
+  static const QueryState PLANNING = QueryResult_QueryState_PLANNING;
   static inline bool QueryState_IsValid(int value) {
     return QueryResult_QueryState_IsValid(value);
   }

@@ -25,6 +25,11 @@ import java.util.Collection;
  */
 public class AutoCloseables {
 
+  public interface Closeable extends AutoCloseable {
+    @Override
+    void close();
+  }
+
   public static AutoCloseable all(final Collection<? extends AutoCloseable> autoCloseables) {
     return new AutoCloseable() {
       @Override

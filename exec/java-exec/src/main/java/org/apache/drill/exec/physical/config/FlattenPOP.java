@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.proto.UserBitShared;
 
 import java.util.Iterator;
 import java.util.List;
@@ -67,7 +68,6 @@ public class FlattenPOP extends AbstractSingle {
 
   @Override
   public int getOperatorType() {
-    // TODO - add this operator to the protobuf definition
-    return 0;
+    return UserBitShared.CoreOperatorType.FLATTEN_VALUE;
   }
 }

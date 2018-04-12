@@ -32,7 +32,8 @@ import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl.ResultSetO
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.ScalarElementReader;
+import org.apache.drill.exec.vector.accessor.ArrayReader;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
@@ -308,12 +309,14 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(expectedCount, result.rowCount());
     RowSetReader reader = result.reader();
-    reader.set(expectedCount - 1);
-    ScalarElementReader arrayReader = reader.column(0).elements();
+    reader.setPosn(expectedCount - 1);
+    ArrayReader arrayReader = reader.array(0);
+    ScalarReader strReader = arrayReader.scalar();
     assertEquals(valuesPerArray, arrayReader.size());
     for (int i = 0; i < valuesPerArray; i++) {
+      assertTrue(arrayReader.next());
       String cellValue = strValue + (count - 1) + "." + i;
-      assertEquals(cellValue, arrayReader.getString(i));
+      assertEquals(cellValue, strReader.getString());
     }
     result.clear();
 
@@ -331,11 +334,13 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     assertEquals(1, result.rowCount());
     reader = result.reader();
     reader.next();
-    arrayReader = reader.column(0).elements();
+    arrayReader = reader.array(0);
+    strReader = arrayReader.scalar();
     assertEquals(valuesPerArray, arrayReader.size());
     for (int i = 0; i < valuesPerArray; i++) {
+      assertTrue(arrayReader.next());
       String cellValue = strValue + (count) + "." + i;
-      assertEquals(cellValue, arrayReader.getString(i));
+      assertEquals(cellValue, strReader.getString());
     }
     result.clear();
 
@@ -427,38 +432,48 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(count - 1, result.rowCount());
 
-    RowSetReader reader = result.reader();
-    ScalarElementReader aReader = reader.array("a").elements();
-    ScalarElementReader bReader = reader.array("b").elements();
-    ScalarElementReader cReader = reader.array("c").elements();
-    ScalarElementReader dReader = reader.array("d").elements();
+    {
+      RowSetReader reader = result.reader();
+      ArrayReader aArray = reader.array("a");
+      ScalarReader aReader = aArray.scalar();
+      ArrayReader bArray = reader.array("b");
+      ScalarReader bReader = bArray.scalar();
+      ArrayReader cArray = reader.array("c");
+      ScalarReader cReader = cArray.scalar();
+      ArrayReader dArray = reader.array("d");
+      ScalarReader dReader = dArray.scalar();
 
-    while (reader.next()) {
-      int rowId = reader.rowIndex();
-      assertEquals(aCount, aReader.size());
-      for (int i = 0; i < aCount; i++) {
-        assertEquals(rowId * aCount + i, aReader.getInt(i));
-      }
-      assertEquals(bCount, bReader.size());
-      for (int i = 0; i < bCount; i++) {
-        String cellValue = strValue + (rowId * bCount + i);
-        assertEquals(cellValue, bReader.getString(i));
-      }
-      if (rowId < cCutoff) {
-        assertEquals(cCount, cReader.size());
-        for (int i = 0; i < cCount; i++) {
-          assertEquals(rowId * cCount + i, cReader.getInt(i));
+      while (reader.next()) {
+        int rowId = reader.offset();
+        assertEquals(aCount, aArray.size());
+        for (int i = 0; i < aCount; i++) {
+          assertTrue(aArray.next());
+          assertEquals(rowId * aCount + i, aReader.getInt());
         }
-        assertEquals(dCount, dReader.size());
-        for (int i = 0; i < dCount; i++) {
-          assertEquals(rowId * dCount + i, dReader.getInt(i));
+        assertEquals(bCount, bArray.size());
+        for (int i = 0; i < bCount; i++) {
+          assertTrue(bArray.next());
+          String cellValue = strValue + (rowId * bCount + i);
+          assertEquals(cellValue, bReader.getString());
         }
-      } else {
-        assertEquals(0, cReader.size());
-        assertEquals(0, dReader.size());
+        if (rowId < cCutoff) {
+          assertEquals(cCount, cArray.size());
+          for (int i = 0; i < cCount; i++) {
+            assertTrue(cArray.next());
+            assertEquals(rowId * cCount + i, cReader.getInt());
+          }
+          assertEquals(dCount, dArray.size());
+          for (int i = 0; i < dCount; i++) {
+            assertTrue(dArray.next());
+            assertEquals(rowId * dCount + i, dReader.getInt());
+          }
+        } else {
+          assertEquals(0, cArray.size());
+          assertEquals(0, dArray.size());
+        }
       }
+      result.clear();
     }
-    result.clear();
     int firstCount = count - 1;
 
     // One row is in the batch. Write more, skipping over the
@@ -490,41 +505,51 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     result = fixture.wrap(rsLoader.harvest());
     assertEquals(6, result.rowCount());
 
-    reader = result.reader();
-    aReader = reader.array("a").elements();
-    bReader = reader.array("b").elements();
-    cReader = reader.array("c").elements();
-    dReader = reader.array("d").elements();
+    {
+      RowSetReader reader = result.reader();
+      ArrayReader aArray = reader.array("a");
+      ScalarReader aReader = aArray.scalar();
+      ArrayReader bArray = reader.array("b");
+      ScalarReader bReader = bArray.scalar();
+      ArrayReader cArray = reader.array("c");
+      ScalarReader cReader = cArray.scalar();
+      ArrayReader dArray = reader.array("d");
+      ScalarReader dReader = dArray.scalar();
 
-    int j = 0;
-    while (reader.next()) {
-      int rowId = firstCount + reader.rowIndex();
-      assertEquals(aCount, aReader.size());
-      for (int i = 0; i < aCount; i++) {
-        assertEquals("Index " + i, rowId * aCount + i, aReader.getInt(i));
-      }
-      assertEquals(bCount, bReader.size());
-      for (int i = 0; i < bCount; i++) {
-        String cellValue = strValue + (rowId * bCount + i);
-        assertEquals(cellValue, bReader.getString(i));
-      }
-      if (j > 4) {
-        assertEquals(cCount, cReader.size());
-        for (int i = 0; i < cCount; i++) {
-          assertEquals(rowId * cCount + i, cReader.getInt(i));
+      int j = 0;
+      while (reader.next()) {
+        int rowId = firstCount + reader.offset();
+        assertEquals(aCount, aArray.size());
+        for (int i = 0; i < aCount; i++) {
+          assertTrue(aArray.next());
+          assertEquals("Index " + i, rowId * aCount + i, aReader.getInt());
         }
-      } else {
-        assertEquals(0, cReader.size());
-      }
-      if (j == 0 || j > 4) {
-        assertEquals(dCount, dReader.size());
-        for (int i = 0; i < dCount; i++) {
-          assertEquals(rowId * dCount + i, dReader.getInt(i));
+        assertEquals(bCount, bArray.size());
+        for (int i = 0; i < bCount; i++) {
+          assertTrue(bArray.next());
+          String cellValue = strValue + (rowId * bCount + i);
+          assertEquals(cellValue, bReader.getString());
         }
-      } else {
-        assertEquals(0, dReader.size());
+        if (j > 4) {
+          assertEquals(cCount, cArray.size());
+          for (int i = 0; i < cCount; i++) {
+            assertTrue(cArray.next());
+            assertEquals(rowId * cCount + i, cReader.getInt());
+          }
+        } else {
+          assertEquals(0, cArray.size());
+        }
+        if (j == 0 || j > 4) {
+          assertEquals(dCount, dArray.size());
+          for (int i = 0; i < dCount; i++) {
+            assertTrue(dArray.next());
+            assertEquals(rowId * dCount + i, dReader.getInt());
+          }
+        } else {
+          assertEquals(0, dArray.size());
+        }
+        j++;
       }
-      j++;
     }
     result.clear();
 
@@ -602,17 +627,19 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(rowId - 1, result.rowCount());
     RowSetReader reader = result.reader();
-    ScalarElementReader cReader = reader.array("c").elements();
+    ArrayReader cArray = reader.array("c");
+    ScalarReader cReader = cArray.scalar();
     while (reader.next()) {
-      assertEquals(reader.rowIndex(), reader.scalar("a").getInt());
+      assertEquals(reader.offset(), reader.scalar("a").getInt());
       assertTrue(Arrays.equals(value, reader.scalar("b").getBytes()));
-      if (reader.rowIndex() < blankAfter) {
-        assertEquals(3, cReader.size());
+      if (reader.offset() < blankAfter) {
+        assertEquals(3, cArray.size());
         for (int i = 0; i < 3; i++) {
-          assertEquals(reader.rowIndex() * 3 + i, cReader.getInt(i));
+          assertTrue(cArray.next());
+          assertEquals(reader.offset() * 3 + i, cReader.getInt());
         }
       } else {
-        assertEquals(0, cReader.size());
+        assertEquals(0, cArray.size());
       }
     }
     result.clear();
@@ -655,7 +682,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
     RowSetReader reader = result.reader();
     while (reader.next()) {
-      assertEquals(reader.rowIndex(), reader.scalar(0).getInt());
+      assertEquals(reader.offset(), reader.scalar(0).getInt());
       assertTrue(reader.scalar(1).isNull());
       assertTrue(Arrays.equals(value, reader.scalar(2).getBytes()));
       assertTrue(reader.scalar(3).isNull());

@@ -111,9 +111,15 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return data.capacity();
   }
 
+  /**
+  * Return the number of bytes contained in the current var len byte vector.
+  * TODO: Remove getVarByteLength with it's implementation after all client's are moved to using getCurrentSizeInBytes.
+  * It's kept as is to preserve backward compatibility
+  * @return
+  */
   @Override
   public int getCurrentSizeInBytes() {
-    return offsetVector.getAccessor().get(getAccessor().getValueCount());
+    return getVarByteLength();
   }
 
   /**
@@ -506,6 +512,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   /**
+   * <h4>Overview</h4>
+   * <p>
    * Mutable${minor.class} implements a vector of variable width values.  Elements in the vector
    * are accessed by position from the logical start of the vector.  A fixed width offsetVector
    * is used to convert an element's position to it's offset from the start of the (0-based)
@@ -514,6 +522,46 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
    *   The equivalent Java primitive is '${minor.javaType!type.javaType}'
    *
    * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
+   * </p>
+   * <h4>Contract</h4>
+   * <p>
+   *   <ol>
+   *     <li>
+   *       <b>Supported Writes:</b> {@link VariableWidthVector}s do not support random writes. In contrast {@link org.apache.drill.exec.vector.FixedWidthVector}s do
+   *       allow random writes but special care is needed.
+   *       </li>
+   *     <li>
+   *       <b>Writing Values:</b> All set methods must be called with a consecutive sequence of indices. With a few exceptions:
+   *       <ol>
+   *         <li>You can update the last index you just set.</li>
+   *         <li>You can reset a previous index (call it Idx), but you must assume all the data after Idx is corrupt. Also
+   *         note that the memory consumed by data that came after Idx is not released.</li>
+   *       </ol>
+   *     </li>
+   *     <li>
+   *       <b>Setting Value Count:</b> Vectors aren't explicitly aware of how many values they contain. So you must keep track of the
+   *       number of values you've written to the vector and once you are done writing to the vector you must call {@link Mutator#setValueCount(int)}.
+   *       It is possible to trim the vector by setting the value count to be less than the number of values currently contained in the vector. Note the extra memory consumed in
+   *       the data buffer is not freed when this is done.
+   *     </li>
+   *     <li>
+   *       <b>Memory Allocation:</b> When setting a value at an index you must do one of the following to ensure you do not get an {@link IndexOutOfBoundsException}.
+   *       <ol>
+   *         <li>
+   *           Allocate the exact amount of memory you need when using the {@link Mutator#set(int, byte[])} methods. If you do not
+   *           manually allocate sufficient memory an {@link IndexOutOfBoundsException} can be thrown when the data buffer runs out of space.
+   *         </li>
+   *         <li>
+   *           Or you can use the {@link Mutator#setSafe(int, byte[])} methods, which will automatically grow your data buffer to
+   *           fit your data.
+   *         </li>
+   *       </ol>
+   *     </li>
+   *     <li>
+   *       <b>Immutability:</b> Once a vector has been populated with data and {@link #setValueCount(int)} has been called, it should be considered immutable.
+   *     </li>
+   *   </ol>
+   * </p>
    */
   public final class Mutator extends BaseValueVector.BaseMutator implements VariableWidthVector.VariableWidthMutator {
 
@@ -697,6 +745,25 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       data.setBytes(currentOffset, holder.buffer, holder.start, length);
     }
 
+    /**
+     * <h4>Notes on Usage</h4>
+     * <p>
+     * For {@link VariableWidthVector}s this method can be used in the following cases:
+     * <ul>
+     *   <li>Setting the actual number of elements currently contained in the vector.</li>
+     *   <li>Trimming the vector to have fewer elements than it current does.</li>
+     * </ul>
+     * </p>
+     * <h4>Caveats</h4>
+     * <p>
+     *   It is important to note that for {@link org.apache.drill.exec.vector.FixedWidthVector}s this method can also be used to expand the vector.
+     *   However, {@link VariableWidthVector} do not support this usage and this method will throw an {@link IndexOutOfBoundsException} if you attempt
+     *   to use it in this way. Expansion of valueCounts is not supported mainly because there is no benefit, since you would still have to rely on the setSafe
+     *   methods to appropriatly expand the data buffer and populate the vector anyway (since by definition we do not know the width of elements). See DRILL-6234 for details.
+     * </p>
+     * <h4>Method Documentation</h4>
+     * {@inheritDoc}
+     */
     @Override
     public void setValueCount(int valueCount) {
       final int currentByteCapacity = getByteCapacity();

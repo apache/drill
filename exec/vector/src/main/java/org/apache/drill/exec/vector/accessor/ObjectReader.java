@@ -29,32 +29,8 @@ package org.apache.drill.exec.vector.accessor;
  * {@see ObjectWriter>
  */
 
-public interface ObjectReader {
-
-  /**
-   * The type of this reader.
-   *
-   * @return type of reader
-   */
-
-  ObjectType type();
+public interface ObjectReader extends ColumnReader {
   ScalarReader scalar();
-  ScalarElementReader elements();
   TupleReader tuple();
   ArrayReader array();
-
-  /**
-   * Return the value of the underlying data as a Java object.
-   * Primarily for testing
-   * @return Java object that represents the underlying value
-   */
-
-  Object getObject();
-
-  /**
-   * Return the entire object as a string. Primarily for debugging.
-   * @return string representation of the object
-   */
-
-  String getAsString();
 }

@@ -66,9 +66,9 @@ public class TestUserBitKerberos extends BaseTestQuery {
         ConfigValueFactory.fromAnyRef(true))
       .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
         ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(BootStrapContext.SERVICE_PRINCIPAL,
+      .withValue(ExecConstants.SERVICE_PRINCIPAL,
         ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(BootStrapContext.SERVICE_KEYTAB_LOCATION,
+      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
         ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
       .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
         ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));

@@ -32,23 +32,22 @@ public interface RowSetReader extends TupleReader {
   int rowCount();
 
   boolean next();
-  int index();
-  void set(int index);
+  int logicalIndex();
+  void setPosn(int index);
 
   /**
    * Batch index: 0 for a single batch, batch for the current
    * row is a hyper-batch.
    * @return index of the batch for the current row
    */
-  int batchIndex();
+  int hyperVectorIndex();
 
   /**
    * The index of the underlying row which may be indexed by an
-   * Sv2 or Sv4.
+   * SV2 or SV4.
    *
    * @return
    */
 
-  int rowIndex();
-  boolean valid();
+  int offset();
 }

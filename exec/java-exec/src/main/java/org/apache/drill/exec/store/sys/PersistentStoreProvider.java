@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.sys;
 
 import org.apache.drill.exec.exception.StoreException;
+import org.apache.drill.exec.store.sys.store.VersionedDelegatingStore;
 
 /**
  * A factory used to create {@link PersistentStore store} instances.
@@ -33,7 +34,9 @@ public interface PersistentStoreProvider extends AutoCloseable {
    * @param <V>  store value type
    */
   <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) throws StoreException;
-
+  default <V> VersionedPersistentStore<V> getOrCreateVersionedStore(PersistentStoreConfig<V> config) throws StoreException {
+    return new VersionedDelegatingStore<>(getOrCreateStore(config));
+  }
 
   /**
    * Sets up the provider.

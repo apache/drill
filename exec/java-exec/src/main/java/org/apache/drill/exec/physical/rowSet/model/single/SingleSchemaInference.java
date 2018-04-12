@@ -15,47 +15,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.rowSet.model;
+package org.apache.drill.exec.physical.rowSet.model.single;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
 /**
  * Produce a metadata schema from a vector container. Used when given a
  * record batch without metadata.
  */
 
-public class SchemaInference {
+public class SingleSchemaInference {
 
   public TupleMetadata infer(VectorContainer container) {
     List<ColumnMetadata> columns = new ArrayList<>();
     for (int i = 0; i < container.getNumberOfColumns(); i++) {
-      MaterializedField field = container.getValueVector(i).getField();
-      columns.add(inferVector(field));
+      columns.add(inferVector(container.getValueVector(i).getValueVector()));
     }
     return MetadataUtils.fromColumns(columns);
   }
 
-  private ColumnMetadata inferVector(MaterializedField field) {
-    if (field.getType().getMinorType() == MinorType.MAP) {
-      return MetadataUtils.newMap(field, inferMapSchema(field));
-    } else {
+  private AbstractColumnMetadata inferVector(ValueVector vector) {
+    MaterializedField field = vector.getField();
+    switch (field.getType().getMinorType()) {
+    case MAP:
+      return MetadataUtils.newMap(field, inferMapSchema((AbstractMapVector) vector));
+    default:
       return MetadataUtils.fromField(field);
     }
   }
 
-  private TupleSchema inferMapSchema(MaterializedField field) {
+  private TupleSchema inferMapSchema(AbstractMapVector vector) {
     List<ColumnMetadata> columns = new ArrayList<>();
-    for (MaterializedField child : field.getChildren()) {
-      columns.add(inferVector(child));
+    for (int i = 0; i < vector.getField().getChildren().size(); i++) {
+      columns.add(inferVector(vector.getChildByOrdinal(i)));
     }
     return MetadataUtils.fromColumns(columns);
   }

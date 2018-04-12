@@ -47,7 +47,7 @@ Install Prerequisites
     $> sudo yum install cppunit-devel
 
 3.2) Download Zookeeper from :
-    - http://apache.mirror.quintex.com/zookeeper/zookeeper-3.4.6/
+    - https://archive.apache.org/dist/zookeeper/zookeeper-3.4.6/
     - untar and then follow instructions in ZOOKEEPER_DIR/src/c/README to build and install the client libs
 
 3.3) run autoreconf
@@ -57,7 +57,7 @@ Install Prerequisites
     $> ./configure --enable-debug --with-syncapi --enable-static --enable-shared
     $> make && sudo make install
 
-4) Install boost. The minumim version required is 1.53, which will probably have to be built from source
+4) Install boost. The minimum version required is 1.53, which will probably have to be built from source
 
     # Remove any previous boost
     $> sudo yum -y erase boost
@@ -69,7 +69,9 @@ Install Prerequisites
     #install the binary rpms
     #(Note: the "rpm" utility does not clean up old versions very well.)
     $> sudo yum -y install ~/rpmbuild/RPMS/x86_64/*
-
+OR
+    # Build boost for Drill using instruction from readme.boost.
+    # Uncomment set(Boost_NAMESPACE drill_boost) line in client/CMakeLists.txt
 OR 
     Download and build using boost build. 
     See this link for how to build: http://www.boost.org/doc/libs/1_53_0/more/getting_started/unix-variants.html#prepare-to-use-a-boost-library-binary 
@@ -117,12 +119,12 @@ Build drill client
 Test
 ----
 Run query submitter from the command line
-    $> querySubmitter query='select * from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace user=yourUserName password=yourPassWord
+    $> querySubmitter query='SELECT * FROM cp.`employee.json` LIMIT 20' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace user=yourUserName password=yourPassWord
 
 Valgrind
 --------
 Examples to run Valgrind and see the log in Valkyrie
-    $> valgrind --leak-check=yes --xml=yes --xml-file=qs-vg-log-a.xml querySubmitter query='select LINEITEM from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace
+    $> valgrind --leak-check=yes --xml=yes --xml-file=qs-vg-log-a.xml querySubmitter query='SELECT * FROM cp.`employee.json` LIMIT 20' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace
     $> valkyrie -l qs-vg-log-a.xml
 
 

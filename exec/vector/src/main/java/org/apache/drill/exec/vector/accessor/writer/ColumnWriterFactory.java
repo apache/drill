@@ -28,7 +28,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.ColumnAccessors;
+import org.apache.drill.exec.vector.accessor.ColumnAccessorUtils;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter.ScalarObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter.TupleObjectWriter;
@@ -56,7 +56,7 @@ public class ColumnWriterFactory {
   private static final Class<? extends BaseScalarWriter> requiredWriters[] = new Class[typeCount];
 
   static {
-    ColumnAccessors.defineRequiredWriters(requiredWriters);
+    ColumnAccessorUtils.defineRequiredWriters(requiredWriters);
   }
 
   public static AbstractObjectWriter buildColumnWriter(ColumnMetadata schema, ValueVector vector) {

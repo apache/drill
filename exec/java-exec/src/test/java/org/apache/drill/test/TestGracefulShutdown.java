@@ -62,6 +62,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
       put(ExecConstants.HTTP_PORT_HUNT, true);
       put(ExecConstants.DRILL_PORT_HUNT, true);
       put(ExecConstants.GRACE_PERIOD, 10000);
+      put(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true);
     }
   };
 
@@ -69,6 +70,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
     {
       put(ExecConstants.DRILL_PORT_HUNT, true);
       put(ExecConstants.GRACE_PERIOD, 10000);
+      put(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true);
     }
   };
 
@@ -95,7 +97,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
   public void testOnlineEndPoints() throws  Exception {
 
     String[] drillbits = {"db1" ,"db2","db3", "db4", "db5", "db6"};
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withBits(drillbits).withLocalZk();
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk().withBits(drillbits);
     enableDrillPortHunting(builder);
 
     try ( ClusterFixture cluster = builder.build()) {
@@ -145,7 +147,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
   public void testStateChange() throws  Exception {
 
     String[] drillbits = {"db1" ,"db2", "db3", "db4", "db5", "db6"};
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withBits(drillbits).withLocalZk();
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk().withBits(drillbits);
     enableDrillPortHunting(builder);
 
     try (ClusterFixture cluster = builder.build()) {
@@ -196,7 +198,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
   public void testRestApi() throws Exception {
 
     String[] drillbits = { "db1" ,"db2", "db3" };
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withBits(drillbits).withLocalZk();
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk().withBits(drillbits);
     builder = enableWebServer(builder);
     QueryBuilder.QuerySummaryFuture listener;
     final String sql = "select * from dfs.root.`.`";
@@ -247,7 +249,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
   public void testRestApiShutdown() throws Exception {
 
     String[] drillbits = {"db1" ,"db2", "db3"};
-    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withBits(drillbits).withLocalZk();
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk().withBits(drillbits);
     builder = enableWebServer(builder);
     QueryBuilder.QuerySummaryFuture listener;
     final String sql = "select * from dfs.root.`.`";

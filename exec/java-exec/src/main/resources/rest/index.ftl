@@ -272,17 +272,22 @@
       }
        <#if model.shouldShowAdminInfo() || !model.isAuthEnabled()>
           function shutdown(button) {
-              var requestPath = "/gracefulShutdown";
-              var url = getRequestUrl(requestPath);
-              var result = $.ajax({
-                    type: 'POST',
-                    url: url,
-                    contentType : 'text/plain',
-                    complete: function(data) {
-                        alert(data.responseJSON["response"]);
-                        button.prop('disabled',true).css('opacity',0.5);
-                    }
-              });
+              if (confirm("Are you sure you want to shutdown Drillbit running on " + location.host + " node?")) {
+                  var requestPath = "/gracefulShutdown";
+                  var url = getRequestUrl(requestPath);
+                  var result = $.ajax({
+                               type: 'POST',
+                               url: url,
+                               contentType : 'text/plain',
+                               error: function (request, textStatus, errorThrown) {
+                                   alert(errorThrown);
+                               },
+                               success: function(data) {
+			           alert(data["response"]);
+                                   button.prop('disabled',true).css('opacity',0.5);
+                               }
+                  });
+              }
           }
       </#if>
       function getRequestUrl(requestPath) {
