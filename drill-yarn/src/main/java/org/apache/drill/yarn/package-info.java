@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Hosts Apache Drill under Apache Hadoop YARN. Consists of two main
  * components as required by YARN: a client application which uses YARN to

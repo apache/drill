@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #ifndef _DECIMAL_UTILS_H
 #define _DECIMAL_UTILS_H
 

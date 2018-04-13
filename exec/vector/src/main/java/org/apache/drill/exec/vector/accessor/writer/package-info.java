@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Implementation of the vector writers. The code will make much more sense if
  * we start with a review of Drill’s complex vector data model. Drill has 38+
