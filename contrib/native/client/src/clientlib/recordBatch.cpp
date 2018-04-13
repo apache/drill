@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "drill/common.hpp"
 #include "drill/fieldmeta.hpp"
 #include "drill/recordBatch.hpp"

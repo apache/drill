@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * The "row set model" provides a "dual" of the vector structure used to create,
  * allocate and work with a collection of vectors. The model provides an enhanced

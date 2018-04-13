@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #ifndef RPC_MESSAGE_H
 #define RPC_MESSAGE_H
 

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Interface between the Application Master and ZooKeeper. Classes here manage two
  * registrations: Drillbits and the AM itself.

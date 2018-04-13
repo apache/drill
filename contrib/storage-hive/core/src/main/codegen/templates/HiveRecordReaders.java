@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /*
  * This template is used to generate different Hive record reader classes for different data formats
  * to avoid JIT profile pullusion. These readers are derived from HiveAbstractReader which implements
