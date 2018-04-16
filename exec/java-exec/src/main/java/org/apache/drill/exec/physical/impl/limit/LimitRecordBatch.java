@@ -60,13 +60,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   protected boolean setupNewSchema() throws SchemaChangeException {
     container.zeroVectors();
     transfers.clear();
-
-
-    for(final VectorWrapper<?> v : incoming) {
-      final TransferPair pair = v.getValueVector().makeTransferPair(
-          container.addOrGet(v.getField(), callBack));
-      transfers.add(pair);
-    }
+    container.onSchemaChange(incoming, callBack, transfers);
 
     final BatchSchema.SelectionVectorMode svMode = incoming.getSchema().getSelectionVectorMode();
 

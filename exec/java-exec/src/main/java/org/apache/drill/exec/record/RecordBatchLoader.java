@@ -117,7 +117,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
         // If the field is a map, check if the map schema changed.
 
         } else if (vector.getField().getType().getMinorType() == MinorType.MAP  &&
-                   ! isSameSchema(vector.getField().getChildren(), field.getChildList())) {
+                 ! SchemaUtil.isSameSchema(vector.getField().getChildren(), field.getChildList())) {
 
           // The map schema changed. Discard the old map and create a new one.
 
@@ -164,62 +164,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     }
 
     return schemaChanged;
-  }
-
-  /**
-   * Check if two schemas are the same. The schemas, given as lists, represent the
-   * children of the original and new maps (AKA structures.)
-   *
-   * @param currentChildren current children of a Drill map
-   * @param newChildren new children, in an incoming batch, of the same
-   * Drill map
-   * @return true if the schemas are identical, false if a child is missing
-   * or has changed type or cardinality (AKA "mode").
-   */
-
-  private boolean isSameSchema(Collection<MaterializedField> currentChildren,
-      List<SerializedField> newChildren) {
-    if (currentChildren.size() != newChildren.size()) {
-      return false;
-    }
-
-    // Column order can permute (see DRILL-5828). So, use a map
-    // for matching.
-
-    Map<String, MaterializedField> childMap = CaseInsensitiveMap.newHashMap();
-    for (MaterializedField currentChild : currentChildren) {
-      childMap.put(currentChild.getName(), currentChild);
-    }
-    for (SerializedField newChild : newChildren) {
-      MaterializedField currentChild = childMap.get(newChild.getNamePart().getName());
-
-      // New map member?
-
-      if (currentChild == null) {
-        return false;
-      }
-
-      // Changed data type?
-
-      if (! currentChild.getType().equals(newChild.getMajorType())) {
-        return false;
-      }
-
-      // Perform schema diff for child column(s)
-      if (currentChild.getChildren().size() != newChild.getChildCount()) {
-        return false;
-      }
-
-      if (!currentChild.getChildren().isEmpty()) {
-        if (!isSameSchema(currentChild.getChildren(), newChild.getChildList())) {
-          return false;
-        }
-      }
-    }
-
-    // Everything matches.
-
-    return true;
   }
 
   @Override
