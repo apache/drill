@@ -372,7 +372,11 @@
             //DrillbitLoad
             var dbitLoad = metrics['drillbit.load.avg'].value;
             var dbitLoadElem = rowElem.getElementsByClassName("bitload")[0];
-            dbitLoadElem.innerHTML = parseFloat(Math.round(dbitLoad * 10000)/100).toFixed(2) + "%";
+            if (dbitLoad >= 0) {
+              dbitLoadElem.innerHTML = parseFloat(Math.round(dbitLoad * 10000)/100).toFixed(2) + "%";
+            } else {
+              dbitLoadElem.innerHTML = "Not Available";
+            }
             //AvgSysLoad
             var avgSysLoad = metrics['os.load.avg'].value;
             var sysLoadElem = rowElem.getElementsByClassName("avgload")[0];
