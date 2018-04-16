@@ -1,16 +1,16 @@
 ---
 title: "Hive Storage Plugin"
-date: 2016-01-08
+date: 2018-04-16 23:02:13 UTC
 parent: "Connect a Data Source"
 ---
-Drill 1.1 and later supports Hive 1.0. To access Hive tables
-using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits
-must have the SerDes or InputFormat/OutputFormat `JAR` files in the 
+Prior to Drill 1.13, Drill supported Hive 1.0. Drill 1.13 and later includes version 2.3.2 of the Hive client, which adds support for queries on transactional (ACID) and non-transactional Hive bucketed ORC tables. The updated Hive libraries are backward compatible with earlier versions of the Hive server and metastore.   
+
+To access Hive tables using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits must have the SerDes or InputFormat/OutputFormat `JAR` files in the 
 `<drill_installation_directory>/jars/3rdparty` folder.
 
 You can run Hive queries in the following ways by configuring the Hive storage plugin as described in this document:
 
-* [Connect Drill to the Hive remote metastore]({{site.baseurl}}/docs/hive-storage-plugin/#connect-drill-to-the-hive-remote-metastore-directly)  
+* [Connect Drill to the Hive remote metastore]({{site.baseurl}}/docs/hive-storage-plugin/#connect-drill-to-the-hive-remote-metastore)  
 * [Connect to the Hive embedded metastore]({{site.baseurl}}/docs/hive-storage-plugin/#connect-to-the-hive-embedded-metastore)  
 
 You update the Hive storage plugin by selecting the **Storage tab** on the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console). From the list of disabled storage plugins in the Drill Web Console, click **Update** next to `hive`.  The default Hive storage plugin configuration appears as follows:
