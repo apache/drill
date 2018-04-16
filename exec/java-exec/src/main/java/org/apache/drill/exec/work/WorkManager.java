@@ -85,10 +85,7 @@ public class WorkManager implements AutoCloseable {
   private final Executor executor;
   private final StatusThread statusThread;
   private final Lock isEmptyLock = new ReentrantLock();
-  private final Condition isEmptyCondition = isEmptyLock.newCondition();
-  private boolean isShutdownTriggered = false;
-  private long numOfRunningQueries;
-  private long numOfRunningFragments;
+  private Condition isEmptyCondition;
 
   /**
    * How often the StatusThread collects statistics about running fragments.
@@ -172,11 +169,9 @@ public class WorkManager implements AutoCloseable {
 
   public void waitToExit(final boolean forcefulShutdown) {
     isEmptyLock.lock();
+    isEmptyCondition = isEmptyLock.newCondition();
 
     try {
-      numOfRunningQueries = queries.size();
-      numOfRunningFragments = runningFragments.size();
-      isShutdownTriggered = true;
       if (forcefulShutdown) {
         final long startTime = System.currentTimeMillis();
         final long endTime = startTime + EXIT_TIMEOUT_MS;
@@ -219,25 +214,15 @@ public class WorkManager implements AutoCloseable {
   }
 
   /**
-   * Check if there any new queries or fragments that are added after the shutdown is triggered
-   */
-  private boolean areNewQueriesOrFragmentsAdded() {
-    return runningFragments.size() > numOfRunningFragments || queries.size() > numOfRunningQueries;
-  }
-
-  /**
    * A thread calling the {@link #waitToExit(boolean)} method is notified when a foreman is retired.
    */
   private void indicateIfSafeToExit() {
     isEmptyLock.lock();
     try {
-      if (isShutdownTriggered) {
-        logger.info("Waiting for "+ queries.size() +" queries to complete before shutting down");
-        logger.info("Waiting for "+ runningFragments.size() +" running fragments to complete before shutting down");
+      if (isEmptyCondition != null) {
+        logger.info("Waiting for {} running queries before shutting down.", queries.size());
+        logger.info("Waiting for {} running fragments before shutting down.", runningFragments.size());
 
-        if(areNewQueriesOrFragmentsAdded()) {
-          logger.debug("New Fragments or queries are added while drillbit is Shutting down");
-        }
         if (areQueriesAndFragmentsEmpty()) {
           isEmptyCondition.signal();
         }
