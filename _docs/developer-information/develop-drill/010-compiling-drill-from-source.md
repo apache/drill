@@ -1,6 +1,6 @@
 ---
 title: "Compiling Drill from Source"
-date:  
+date: 2018-04-16 23:12:44 UTC
 parent: "Develop Drill"
 ---
 To develop Drill, you compile Drill from source code and then set up a project
@@ -11,7 +11,7 @@ patch review tool.
 ## Prerequisites
 
   * Maven 3.0.4 or later
-  * Oracle JDK 7 or later
+  * Oracle or OpenJDK 8 
 
 Run the following commands to verify that you have the correct versions of
 Maven and JDK installed:
