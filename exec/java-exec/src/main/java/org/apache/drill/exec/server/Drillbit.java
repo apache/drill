@@ -182,8 +182,7 @@ public class Drillbit implements AutoCloseable {
     }
     DrillbitEndpoint md = engine.start();
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider, profileStoreProvider);
-    @SuppressWarnings("resource")
-    final DrillbitContext drillbitContext = manager.getContext();
+    DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
     drillbitContext.getOptionManager().init();
@@ -193,11 +192,9 @@ public class Drillbit implements AutoCloseable {
     //Discovering HTTP port (in case of port hunting)
     if (webServer.isRunning()) {
       int httpPort = getWebServerPort();
-      registrationHandle = coord.register(md.toBuilder().setHttpPort(httpPort).build());
-    } else {
-      //WebServer is not running
-      registrationHandle = coord.register(md);
+      md = md.toBuilder().setHttpPort(httpPort).build();
     }
+    registrationHandle = coord.register(md);
     // Must start the RM after the above since it needs to read system options.
     drillbitContext.startRM();
 

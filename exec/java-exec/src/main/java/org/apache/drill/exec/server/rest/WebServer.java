@@ -162,7 +162,8 @@ public class WebServer implements AutoCloseable {
     //Allow for Other Drillbits to make REST calls
     FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
     filterHolder.setInitParameter("allowedOrigins", "*");
-    webServerContext.addFilter(filterHolder, "/*", null);
+    //Allowing CORS for metrics only
+    webServerContext.addFilter(filterHolder, "/status/metrics", null);
     embeddedJetty.setHandler(webServerContext);
 
     ServerConnector connector = createConnector(port, acceptors, selectors);
@@ -309,10 +310,7 @@ public class WebServer implements AutoCloseable {
   }
 
   public boolean isRunning() {
-    if (embeddedJetty == null || embeddedJetty.getConnectors().length != 1) {
-      return false;
-    }
-    return true;
+    return (embeddedJetty != null && embeddedJetty.getConnectors().length == 1);
   }
 
   private ServerConnector createConnector(int port, int acceptors, int selectors) throws Exception {

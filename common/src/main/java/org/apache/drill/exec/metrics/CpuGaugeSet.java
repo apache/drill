@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,30 +17,36 @@
  */
 package org.apache.drill.exec.metrics;
 
-import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
+import com.sun.management.OperatingSystemMXBean;
 
 /**
  * Creates a Cpu GaugeSet
  */
-class CpuGaugeSet implements MetricSet {
+@SuppressWarnings("restriction")
+public class CpuGaugeSet implements MetricSet {
 
   private OperatingSystemMXBean osMXBean;
+  private RuntimeMXBean rtMXBean;
 
-  CpuGaugeSet() {};
-  CpuGaugeSet(OperatingSystemMXBean osBean) {
-    this.osMXBean = osBean;
+  public CpuGaugeSet() {
+    this.osMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    this.rtMXBean = ManagementFactory.getRuntimeMXBean();
   }
 
   @Override
   public Map<String, Metric> getMetrics() {
     final Map<String, Metric> metric = new HashMap<>(1);
     metric.put("os.load.avg", new OperatingSystemLoad(osMXBean));
+    metric.put("drillbit.load.avg", new DrillbitProcessLoad(osMXBean));
+    metric.put("drillbit.uptime", new DrillbitUptime(rtMXBean));
     return metric;
   }
 }
@@ -48,6 +54,7 @@ class CpuGaugeSet implements MetricSet {
 /**
  * Creating an AverageSystemLoad Gauge
  */
+@SuppressWarnings("restriction")
 final class OperatingSystemLoad implements Gauge<Double> {
   private OperatingSystemMXBean osMXBean;
   public OperatingSystemLoad(OperatingSystemMXBean osBean) {
@@ -57,6 +64,38 @@ final class OperatingSystemLoad implements Gauge<Double> {
   @Override
   public Double getValue() {
     return osMXBean.getSystemLoadAverage();
+  }
+
+}
+
+/**
+ * Creating an AverageDrillbitLoad Gauge
+ */
+@SuppressWarnings("restriction")
+final class DrillbitProcessLoad implements Gauge<Double> {
+  private OperatingSystemMXBean osMXBean;
+  public DrillbitProcessLoad(OperatingSystemMXBean osBean) {
+    this.osMXBean = osBean;
+  }
+
+  @Override
+  public Double getValue() {
+    return osMXBean.getProcessCpuLoad();
+  }
+
+}
+/**
+ * Creating an DrillbitUptime Gauge
+ */
+final class DrillbitUptime implements Gauge<Long> {
+  private RuntimeMXBean rtMXBean;
+  public DrillbitUptime(RuntimeMXBean osBean) {
+    this.rtMXBean = osBean;
+  }
+
+  @Override
+  public Long getValue() {
+    return rtMXBean.getUptime();
   }
 
 }

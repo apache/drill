@@ -62,13 +62,15 @@
               <th>#</th>
               <th title="Drillbits in Cluster" style="cursor: help;">Address <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
               <th title="Heap Memory in use (as percent of Total Heap)" style="cursor: help;">Heap Memory Usage <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
-              <th title="Direct Memory ACTIVELY in use (as percent of Peak Usage so far).&#013;The percentage is an estimate of the total because the Netty library directly negotiates with the OS for memory" style="cursor: help;">Direct Memory Usage <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
+              <th title="Estimated Direct Memory ACTIVELY in use (as percent of Peak Usage)" style="cursor: help;">Direct Memory Usage <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
+              <th title="Current CPU usage by Drill" style="cursor: help;">CPU Usage<span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
               <th title="Average load on the system in the last 1 minute" style="cursor: help;">Avg Sys Load <span class="glyphicon glyphicon-info-sign" style="font-size:100%"/></th>
               <th>User Port</th>
               <th>Control Port</th>
               <th>Data Port</th>
               <th>Version</th>
               <th>Status</th>
+              <th>Uptime</th>
               <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) >
               <th>Shutdown</th>
               </#if>
@@ -88,6 +90,7 @@
                 <td id="httpPort" style="display:none">${drillbit.getHttpPort()}</td>
                 <td class="heap">Not Available</td>
                 <td class="direct">Not Available</td>
+                <td class="bitload"><span class="label label-info" id="NA">Not Available</span></td>
                 <td class="avgload"><span class="label label-info" id="NA">Not Available</span></td>
                 <td id="port">${drillbit.getUserPort()}</td>
                 <td>${drillbit.getControlPort()}</td>
@@ -99,16 +102,15 @@
                   </span>
                 </td>
                 <td id="status" >${drillbit.getState()}</td>
-                <!-- #if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) -->
-                <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && drillbit.isCurrent() >
+                <td class="uptime" >Not Available</td>
                   <td>
-                      <button type="button" id="shutdown" onClick="shutdown($(this));"><span class="glyphicon glyphicon-off"></span> SHUTDOWN </button>
-                  </td>
-                <#elseif (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && !drillbit.isCurrent() >
-                  <td>
-                      <button type="button" id="shutdown" onClick="remoteShutdown($(this), '${drillbit.getAddress()}:${drillbit.getHttpPort()}');"><span class="glyphicon glyphicon-off"></span> SHUTDOWN </button>
-                  </td>
+                <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && (drillbit.isCurrent() || !model.isUserEncryptionEnabled()) >
+                      <button type="button" id="shutdown" onClick="shutdown($(this), '${drillbit.getAddress()}:${drillbit.getHttpPort()}');">
+                <#else>
+                      <button type="button" id="shutdown" title="Drillbit cannot be shutdown remotely" disabled="true" style="opacity:0.5;cursor:not-allowed;">
                 </#if>
+                      <span class="glyphicon glyphicon-off"></span></button>
+                  </td>
                 <td id="queriesCount">  </td>
               </tr>
               <#assign i = i + 1>
@@ -218,23 +220,10 @@
       var updateRemoteInfo = <#if (model.isAuthEnabled())>false<#else>true</#if>;
       var refreshTime = 10000;
       var refresh = getRefreshTime();
-      var portNum = 0;
-      var port = getPortNum();
       var timeout;
       var size = $("#size").html();
       reloadMetrics();
       setInterval(reloadMetrics, refreshTime);
-
-      function getPortNum() {
-          var port = $.ajax({
-                          type: 'GET',
-                          url: '/portNum',
-                          dataType: "json",
-                          complete: function(data) {
-                                portNum = data.responseJSON["port"];
-                                }
-                          });
-      }
 
       function getRefreshTime() {
           $.ajax({
@@ -304,36 +293,22 @@
                         });
       }
        <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) >
-          function shutdown(button) {
-              if (confirm("Are you sure you want to shutdown Drillbit running on " + location.host + " node?")) {
-                  var requestPath = "/gracefulShutdown";
-                  var url = getRequestUrl(requestPath);
-                  var result = $.ajax({
-                               type: 'POST',
-                               url: url,
-                               contentType : 'text/plain',
-                               error: function (request, textStatus, errorThrown) {
-                                   alert(errorThrown);
-                               },
-                               success: function(data) {
-                                   alert(data["response"]);
-                                   button.prop('disabled',true).css('opacity',0.5);
-                               }
-                  });
-              }
-          }
-
-          function remoteShutdown(button,host) {
+          function shutdown(button,host) {
+          if (confirm("Are you sure you want to shutdown Drillbit running on " + host + " node?")) {
               var url = location.protocol + "//" + host + "/gracefulShutdown";
               var result = $.ajax({
                     type: 'POST',
                     url: url,
                     contentType : 'text/plain',
-                    complete: function(data) {
+                    error: function (request, textStatus, errorThrown) {
+                        alert(errorThrown);
+                    },
+                    success: function(data) {
                         alert(data.responseJSON["response"]);
                         button.prop('disabled',true).css('opacity',0.5);
                     }
               });
+            }
           }
           </#if>
 
@@ -394,16 +369,24 @@
             heapElem.innerHTML = heapUsage;
             var directElem = rowElem.getElementsByClassName("direct")[0];
             directElem.innerHTML = directUsage;
+            //DrillbitLoad
+            var dbitLoad = metrics['drillbit.load.avg'].value;
+            var dbitLoadElem = rowElem.getElementsByClassName("bitload")[0];
+            dbitLoadElem.innerHTML = parseFloat(Math.round(dbitLoad * 10000)/100).toFixed(2) + "%";
             //AvgSysLoad
             var avgSysLoad = metrics['os.load.avg'].value;
             var sysLoadElem = rowElem.getElementsByClassName("avgload")[0];
             sysLoadElem.innerHTML = avgSysLoad;
-            }
-          });
+            //Uptime
+            var uptimeValue = metrics['drillbit.uptime'].value;
+            var uptimeElem = rowElem.getElementsByClassName("uptime")[0];
+            uptimeElem.innerHTML = elapsedTime(uptimeValue);
+          }
+        });
       }
 
       function resetMetricsHtml(idx) {
-        $.each(["heap","direct","avgload"], function(i, key) {
+        $.each(["heap","direct","bitload","avgload","uptime"], function(i, key) {
           var resetElem = document.getElementById("row-"+idx).getElementsByClassName(key)[0];
           resetElem.innerHTML = "Not Available";
         });
@@ -420,9 +403,39 @@
       }
 
       function bytesInGB(byteVal, decimal) {
-      var scale = Math.pow(10,decimal);
+        var scale = Math.pow(10,decimal);
         return Math.round(scale * byteVal / 1073741824)/scale;
       }
+
+      //Calculate Uptime
+      function elapsedTime(valueInMsec) {
+        var elapsedTime = ""; 
+        var d, h, m, s; 
+        s = Math.floor(valueInMsec / 1000);
+        m = Math.floor(s / 60);
+        s = s % 60;
+        h = Math.floor(m / 60);
+        m = m % 60;
+        d = Math.floor(h / 24);
+        h = h % 24;
+        var detailCount = 0;
+        if (!isNaN(d) && d > 0) {
+          elapsedTime = d+"d ";
+          detailCount += 1;
+        }
+        if (!isNaN(h) && h > 0) {
+          elapsedTime = elapsedTime + h+"h ";
+          detailCount += 1;
+        }
+        if (!isNaN(m) && m > 0 && detailCount < 2) {
+          elapsedTime = elapsedTime + m+"m ";
+          detailCount += 1;
+        }
+        if (s > 0 && detailCount < 2) {
+          elapsedTime = elapsedTime + s+"s";
+        }
+        return elapsedTime;
+};
   </script>
 </#macro>
 
