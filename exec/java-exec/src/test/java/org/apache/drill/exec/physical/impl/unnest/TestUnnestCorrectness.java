@@ -615,7 +615,8 @@ import static org.junit.Assert.assertTrue;
    *    ]
    *  }
    *
-   * @see TestResultSetLoaderMapArray TestResultSetLoaderMapArray for similar schema and data
+   * @see org.apache.drill.exec.physical.rowSet.impl.TestResultSetLoaderMapArray TestResultSetLoaderMapArray for
+   * similar schema and data
    * @return TupleMetadata corresponding to the schema
    */
   private TupleMetadata getRepeatedMapSchema() {
