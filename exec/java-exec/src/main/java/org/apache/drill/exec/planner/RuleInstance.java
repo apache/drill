@@ -31,6 +31,7 @@ import org.apache.calcite.rel.rules.FilterMergeRule;
 import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
+import org.apache.calcite.rel.rules.JoinPushTransitivePredicatesRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.rules.ProjectSetOpTransposeRule;
 import org.apache.calcite.rel.rules.ProjectToWindowRule;
@@ -108,4 +109,13 @@ public interface RuleInstance {
 
   AbstractConverter.ExpandConversionRule EXPAND_CONVERSION_RULE =
       new AbstractConverter.ExpandConversionRule(DrillRelFactories.LOGICAL_BUILDER);
+
+  /**
+   * Instance of the rule that infers predicates from on a
+   * {@link org.apache.calcite.rel.core.Join} and creates
+   * {@link org.apache.calcite.rel.core.Filter}s if those predicates can be pushed
+   * to its inputs.
+   */
+  JoinPushTransitivePredicatesRule JOIN_PUSH_TRANSITIVE_PREDICATES_RULE =
+      new JoinPushTransitivePredicatesRule(Join.class, DrillRelFactories.LOGICAL_BUILDER);
 }

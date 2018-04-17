@@ -233,13 +233,19 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
 
     try {
-      final RelNode convertedRelNode;
 
+      // HEP for rules, which are failed at the LOGICAL_PLANNING stage for Volcano planner
       final RelNode setOpTransposeNode = transform(PlannerType.HEP, PlannerPhase.PRE_LOGICAL_PLANNING, relNode);
+
+      // HEP Join Push Transitive Predicates
+      final RelNode transitiveClosureNode =
+          transform(PlannerType.HEP, PlannerPhase.TRANSITIVE_CLOSURE, setOpTransposeNode);
+
       // HEP Directory pruning .
-      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, setOpTransposeNode);
+      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, transitiveClosureNode);
       final RelTraitSet logicalTraits = pruned.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
+      final RelNode convertedRelNode;
       if (!context.getPlannerSettings().isHepOptEnabled()) {
         // hep is disabled, use volcano
         convertedRelNode = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE_AND_JOIN, pruned, logicalTraits);

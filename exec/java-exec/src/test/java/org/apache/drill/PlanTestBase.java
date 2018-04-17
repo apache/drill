@@ -104,6 +104,13 @@ public class PlanTestBase extends BaseTestQuery {
     }
   }
 
+  /**
+   * The same as above, but without excludedPatterns
+   */
+  public static void testPlanMatchingPatterns(String query, String[] expectedPatterns) throws Exception {
+    testPlanMatchingPatterns(query, expectedPatterns, null);
+  }
+
   private static Pattern[] stringsToPatterns(String[] strings)
   {
     if (strings == null) {
