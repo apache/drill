@@ -42,6 +42,7 @@ import com.google.common.base.Preconditions;
 
 public class SchemaPath extends LogicalExpressionBase {
 
+  // AKA "Wildcard": expand all columns
   public static final String DYNAMIC_STAR = "**";
   public static final SchemaPath STAR_COLUMN = getSimplePath(DYNAMIC_STAR);
 
