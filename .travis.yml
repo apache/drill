@@ -22,5 +22,4 @@ cache:
   directories:
   - "$HOME/.m2"
 install: MAVEN_OPTS="-Xms1G -Xmx1G" mvn install --batch-mode -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true
-script: mvn install -Drat.skip=false -Dlicense.skip=false -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill
-.categories.SecurityTest" -DforkCount=1 -DmemoryMb=2560 -DdirectMemoryMb=4608
+script: mvn install -Drat.skip=false -Dlicense.skip=false -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill.categories.SecurityTest" -DforkCount=1 -DmemoryMb=2560 -DdirectMemoryMb=4608
