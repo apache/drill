@@ -206,6 +206,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
       List<AbstractObjectWriter> writers) {
     if (schema.isArray()) {
       return MapWriter.buildMapArray(schema,
+          vector == null ? null :
           ((RepeatedMapVector) vector).getOffsetVector(), writers);
     } else {
       return MapWriter.buildMap(schema, (MapVector) vector, writers);
