@@ -212,6 +212,18 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     vector = v;
   }
 
+  public void setChildVector(ValueVector childVector) {
+
+    // When created, the list uses the default vector of type LATE.
+    // That entry appears as a child vector. Remove it and add the
+    // new type instead.
+
+    assert vector == DEFAULT_DATA_VECTOR;
+    replaceDataVector(childVector);
+    field.addChild(childVector.getField());
+    assert field.getChildren().size() == 1;
+  }
+
   @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
     offsets.collectLedgers(ledgers);

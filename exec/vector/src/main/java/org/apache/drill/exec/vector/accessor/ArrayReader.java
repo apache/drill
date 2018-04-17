@@ -60,6 +60,7 @@ public interface ArrayReader extends ColumnReader {
   ScalarReader scalar();
   TupleReader tuple();
   ArrayReader array();
+  VariantReader variant();
 
   /**
    * Set the array reader to read a given array entry. Not used for

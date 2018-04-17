@@ -89,14 +89,24 @@ public interface VectorState {
    * Clear the vector(s) associated with this state.
    */
 
-  void reset();
+  void close();
 
   /**
    * Underlying vector: the one presented to the consumer of the
    * result set loader.
    */
 
-  ValueVector vector();
+  <T extends ValueVector> T vector();
+
+  /**
+   * Report whether this column is projected (has materialized vectors),
+   * or is unprojected (has no materialized backing.)
+   *
+   * @return true if the column is projected to the output, false if
+   * not
+   */
+
+  boolean isProjected();
 
   void dump(HierarchicalFormatter format);
 }

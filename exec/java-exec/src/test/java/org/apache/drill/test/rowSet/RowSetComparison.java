@@ -26,6 +26,7 @@ import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
+import org.apache.drill.exec.vector.accessor.VariantReader;
 import org.bouncycastle.util.Arrays;
 
 /**
@@ -223,6 +224,9 @@ public class RowSetComparison {
     case TUPLE:
       verifyTuple(label, ec.tuple(), ac.tuple());
       break;
+    case VARIANT:
+      verifyVariant(label, ec.variant(), ac.variant());
+      break;
     default:
       throw new IllegalStateException( "Unexpected type: " + ec.type());
     }
@@ -284,6 +288,31 @@ public class RowSetComparison {
     while (ea.next()) {
       assertTrue(aa.next());
       verifyColumn(label + "[" + i++ + "]", ea.entry(), aa.entry());
+    }
+  }
+
+  private void verifyVariant(String label, VariantReader ev,
+      VariantReader av) {
+    assertEquals(label + " null", ev.isNull(), av.isNull());
+    if (ev.isNull()) {
+      return;
+    }
+    assertEquals(label + " type", ev.dataType(), av.dataType());
+    switch (ev.dataType()) {
+    case LIST:
+      verifyArray(label, ev.array(), av.array());
+      break;
+    case MAP:
+      verifyTuple(label, ev.tuple(), av.tuple());
+      break;
+    case UNION:
+      throw new IllegalStateException("Unions not allowed in unions.");
+    case GENERIC_OBJECT:
+    case LATE:
+    case NULL:
+      throw new UnsupportedOperationException(ev.dataType().toString());
+    default:
+      verifyScalar(label, ev.scalar(), av.scalar());
     }
   }
 

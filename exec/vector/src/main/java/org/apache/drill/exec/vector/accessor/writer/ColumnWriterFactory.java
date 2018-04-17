@@ -19,34 +19,28 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.NullableVector;
-import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessorUtils;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter.ScalarObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter.TupleObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.MapWriter.ArrayMapWriter;
-import org.apache.drill.exec.vector.accessor.writer.MapWriter.DummyArrayMapWriter;
-import org.apache.drill.exec.vector.accessor.writer.MapWriter.DummyMapWriter;
-import org.apache.drill.exec.vector.accessor.writer.MapWriter.SingleMapWriter;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyScalarWriter;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 /**
  * Gather generated writer classes into a set of class tables to allow rapid
  * run-time creation of writers. Builds the writer and its object writer
  * wrapper which binds the vector to the writer.
+ * <p>
+ * Compared to the reader factory, the writer factor is a bit more complex
+ * as it must handle both the projected ("real" writer) and unprojected
+ * ("dummy" writer) cases. Because of the way the various classes interact,
+ * it is cleaner to put the factory methods here rather than in the various
+ * writers, as is done in the case of the readers.
  */
 
 @SuppressWarnings("unchecked")
@@ -75,23 +69,41 @@ public class ColumnWriterFactory {
     case NULL:
     case LIST:
     case MAP:
+    case UNION:
       throw new UnsupportedOperationException(schema.type().toString());
     default:
       switch (schema.mode()) {
       case OPTIONAL:
-        NullableVector nullableVector = (NullableVector) vector;
-        return NullableScalarWriter.build(schema, nullableVector,
-                newWriter(nullableVector.getValuesVector()));
+        return nullableScalarWriter(schema, (NullableVector) vector);
       case REQUIRED:
-        return new ScalarObjectWriter(schema, newWriter(vector));
+        return requiredScalarWriter(schema, vector);
       case REPEATED:
-        RepeatedValueVector repeatedVector = (RepeatedValueVector) vector;
-        return ScalarArrayWriter.build(schema, repeatedVector,
-                newWriter(repeatedVector.getDataVector()));
+        return repeatedScalarWriter(schema, (RepeatedValueVector) vector);
       default:
         throw new UnsupportedOperationException(schema.mode().toString());
       }
     }
+  }
+
+  private static ScalarObjectWriter requiredScalarWriter(
+      ColumnMetadata schema, ValueVector vector) {
+    BaseScalarWriter baseWriter = newWriter(vector);
+    baseWriter.bindSchema(schema);
+    return new ScalarObjectWriter(baseWriter);
+  }
+
+  private static ScalarObjectWriter nullableScalarWriter(
+      ColumnMetadata schema, NullableVector vector) {
+    BaseScalarWriter baseWriter = newWriter(vector.getValuesVector());
+    baseWriter.bindSchema(schema);
+    return NullableScalarWriter.build(schema, vector, baseWriter);
+  }
+
+  private static AbstractObjectWriter repeatedScalarWriter(
+      ColumnMetadata schema, RepeatedValueVector vector) {
+    BaseScalarWriter baseWriter = newWriter(vector.getDataVector());
+    baseWriter.bindSchema(schema);
+    return ScalarArrayWriter.build(schema, vector, baseWriter);
   }
 
   /**
@@ -104,78 +116,25 @@ public class ColumnWriterFactory {
     switch (schema.type()) {
     case GENERIC_OBJECT:
     case LATE:
-    case NULL:
     case LIST:
     case MAP:
+    case UNION:
       throw new UnsupportedOperationException(schema.type().toString());
     default:
-      ScalarObjectWriter scalarWriter = new ScalarObjectWriter(schema,
-          new DummyScalarWriter());
+      ScalarObjectWriter scalarWriter = new ScalarObjectWriter(
+          new DummyScalarWriter(schema));
       switch (schema.mode()) {
       case OPTIONAL:
       case REQUIRED:
         return scalarWriter;
       case REPEATED:
-        return new ArrayObjectWriter(schema,
-            new DummyArrayWriter(
+        return new ArrayObjectWriter(
+            new DummyArrayWriter(schema,
               scalarWriter));
       default:
         throw new UnsupportedOperationException(schema.mode().toString());
       }
     }
-  }
-
-  public static TupleObjectWriter buildMap(ColumnMetadata schema, MapVector vector,
-                                        List<AbstractObjectWriter> writers) {
-    MapWriter mapWriter;
-    if (schema.isProjected()) {
-      mapWriter = new SingleMapWriter(schema, vector, writers);
-    } else {
-      mapWriter = new DummyMapWriter(schema, writers);
-    }
-    return new TupleObjectWriter(schema, mapWriter);
-  }
-
-  public static ArrayObjectWriter buildMapArray(ColumnMetadata schema,
-                                        UInt4Vector offsetVector,
-                                        List<AbstractObjectWriter> writers) {
-    MapWriter mapWriter;
-    if (schema.isProjected()) {
-      mapWriter = new ArrayMapWriter(schema, writers);
-    } else {
-      mapWriter = new DummyArrayMapWriter(schema, writers);
-    }
-    TupleObjectWriter mapArray = new TupleObjectWriter(schema, mapWriter);
-    AbstractArrayWriter arrayWriter;
-    if (schema.isProjected()) {
-      arrayWriter = new ObjectArrayWriter(
-          offsetVector,
-          mapArray);
-    } else  {
-      arrayWriter = new DummyArrayWriter(mapArray);
-    }
-    return new ArrayObjectWriter(schema, arrayWriter);
-  }
-
-  public static AbstractObjectWriter buildMapWriter(ColumnMetadata schema,
-      AbstractMapVector vector,
-      List<AbstractObjectWriter> writers) {
-    assert (vector != null) == schema.isProjected();
-    if (! schema.isArray()) {
-      return buildMap(schema, (MapVector) vector, writers);
-    } else if (vector == null) {
-      return buildMapArray(schema,
-          null, writers);
-    } else {
-      return buildMapArray(schema,
-          ((RepeatedMapVector) vector).getOffsetVector(),
-          writers);
-    }
-  }
-
-  public static AbstractObjectWriter buildMapWriter(ColumnMetadata schema, AbstractMapVector vector) {
-    assert schema.mapSchema().size() == 0;
-    return buildMapWriter(schema, vector, new ArrayList<AbstractObjectWriter>());
   }
 
   public static BaseScalarWriter newWriter(ValueVector vector) {

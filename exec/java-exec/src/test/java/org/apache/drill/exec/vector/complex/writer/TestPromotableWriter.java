@@ -33,6 +33,7 @@ public class TestPromotableWriter {
   public void list() throws Exception {
     BufferAllocator allocator = RootAllocatorFactory.newRoot(DrillConfig.create());
     TestOutputMutator output = new TestOutputMutator(allocator);
+    @SuppressWarnings("resource")
     ComplexWriter rootWriter = new VectorContainerWriter(output, true);
     MapWriter writer = rootWriter.rootAsMap();
 

@@ -23,9 +23,8 @@ import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
 
 /**
@@ -37,33 +36,11 @@ import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
 
 public abstract class SingleVectorState implements VectorState {
 
-  /**
-   * State for a scalar value vector. The vector might be for a simple (non-array)
-   * vector, or might be the payload part of a scalar array (repeated scalar)
-   * vector.
-   */
+  public abstract static class SimpleVectorState extends SingleVectorState {
 
-  public static class ValuesVectorState extends SingleVectorState {
-
-    private final ColumnMetadata schema;
-
-    public ValuesVectorState(ColumnMetadata schema, AbstractScalarWriter writer, ValueVector mainVector) {
+    public SimpleVectorState(WriterPosition writer,
+        ValueVector mainVector) {
       super(writer, mainVector);
-      this.schema = schema;
-    }
-
-    @Override
-    public int allocateVector(ValueVector vector, int cardinality) {
-      if (schema.isVariableWidth()) {
-
-        // Cap the allocated size to the maximum.
-
-        int size = (int) Math.min(ValueVector.MAX_BUFFER_SIZE, (long) cardinality * schema.expectedWidth());
-        ((VariableWidthVector) vector).allocateNew(size, cardinality);
-      } else {
-        ((FixedWidthVector) vector).allocateNew(cardinality);
-      }
-      return vector.getBufferSize();
     }
 
     @Override
@@ -87,6 +64,51 @@ public abstract class SingleVectorState implements VectorState {
   }
 
   /**
+   * State for a scalar value vector. The vector might be for a simple (non-array)
+   * vector, or might be the payload part of a scalar array (repeated scalar)
+   * vector.
+   */
+
+  public static class FixedWidthVectorState extends SimpleVectorState {
+
+     public FixedWidthVectorState(WriterPosition writer, ValueVector mainVector) {
+      super(writer, mainVector);
+    }
+
+    @Override
+    public int allocateVector(ValueVector vector, int cardinality) {
+      ((FixedWidthVector) vector).allocateNew(cardinality);
+      return vector.getAllocatedSize();
+    }
+  }
+
+  /**
+   * State for a scalar value vector. The vector might be for a simple (non-array)
+   * vector, or might be the payload part of a scalar array (repeated scalar)
+   * vector.
+   */
+
+  public static class VariableWidthVectorState extends SimpleVectorState {
+
+    private ColumnMetadata schema;
+
+    public VariableWidthVectorState(ColumnMetadata schema, WriterPosition writer, ValueVector mainVector) {
+      super(writer, mainVector);
+      this.schema = schema;
+    }
+
+    @Override
+    public int allocateVector(ValueVector vector, int cardinality) {
+
+      // Cap the allocated size to the maximum.
+
+      int size = (int) Math.min(ValueVector.MAX_BUFFER_SIZE, (long) cardinality * schema.expectedWidth());
+      ((VariableWidthVector) vector).allocateNew(size, cardinality);
+      return vector.getAllocatedSize();
+    }
+  }
+
+  /**
    * Special case for an offset vector. Offset vectors are managed like any other
    * vector with respect to overflow and allocation. This means that the loader
    * classes avoid the use of the RepeatedVector class methods, instead working
@@ -96,11 +118,22 @@ public abstract class SingleVectorState implements VectorState {
 
   public static class OffsetVectorState extends SingleVectorState {
 
-    private final AbstractObjectWriter childWriter;
+    /**
+     * The child writer used to determine positions on overflow.
+     * The repeated list vector defers creating the child until the
+     * child type is know so this field cannot be final. It will,
+     * however, change value only once: from null to a valid writer.
+     */
 
-    public OffsetVectorState(AbstractScalarWriter writer, ValueVector mainVector,
-        AbstractObjectWriter childWriter) {
+    private WriterPosition childWriter;
+
+    public OffsetVectorState(WriterPosition writer, ValueVector mainVector,
+        WriterPosition childWriter) {
       super(writer, mainVector);
+      this.childWriter = childWriter;
+    }
+
+    public void setChildWriter(WriterPosition childWriter) {
       this.childWriter = childWriter;
     }
 
@@ -120,6 +153,8 @@ public abstract class SingleVectorState implements VectorState {
       if (sourceStartIndex > sourceEndIndex) {
         return;
       }
+
+      assert childWriter != null;
 
       // This is an offset vector. The data to copy is one greater
       // than the row index.
@@ -145,7 +180,7 @@ public abstract class SingleVectorState implements VectorState {
 
       UInt4Vector.Accessor sourceAccessor = ((UInt4Vector) backupVector).getAccessor();
       UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
-      int offset = childWriter.events().writerIndex().rowStartIndex();
+      int offset = childWriter.rowStartIndex();
       int newIndex = 1;
       ResultSetLoaderImpl.logger.trace("Offset vector: copy {} values from {} to {} with offset {}",
           Math.max(0, sourceEndIndex - sourceStartIndex + 1),
@@ -163,17 +198,18 @@ public abstract class SingleVectorState implements VectorState {
     }
   }
 
-  protected final AbstractScalarWriter writer;
+  protected final WriterPosition writer;
   protected final ValueVector mainVector;
   protected ValueVector backupVector;
 
-  public SingleVectorState(AbstractScalarWriter writer, ValueVector mainVector) {
+  public SingleVectorState(WriterPosition writer, ValueVector mainVector) {
     this.writer = writer;
     this.mainVector = mainVector;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public ValueVector vector() { return mainVector; }
+  public <T extends ValueVector> T vector() { return (T) mainVector; }
 
   @Override
   public int allocate(int cardinality) {
@@ -198,7 +234,7 @@ public abstract class SingleVectorState implements VectorState {
   @Override
   public void rollover(int cardinality) {
 
-    int sourceStartIndex = writer.writerIndex().rowStartIndex();
+    int sourceStartIndex = writer.rowStartIndex();
 
     // Remember the last write index for the original vector.
     // This tells us the end of the set of values to move, while the
@@ -255,10 +291,21 @@ public abstract class SingleVectorState implements VectorState {
   }
 
   @Override
-  public void reset() {
+  public void close() {
     mainVector.clear();
     if (backupVector != null) {
       backupVector.clear();
+    }
+  }
+
+  @Override
+  public boolean isProjected() { return true; }
+
+  public static SimpleVectorState vectorState(ColumnMetadata schema, WriterPosition writer, ValueVector mainVector) {
+    if (schema.isVariableWidth()) {
+      return new VariableWidthVectorState(schema, writer, mainVector);
+    } else {
+      return new FixedWidthVectorState(writer, mainVector);
     }
   }
 

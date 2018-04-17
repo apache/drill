@@ -19,11 +19,12 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.ColumnWriter;
+import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.exec.vector.accessor.TupleWriter.TupleWriterListener;
+import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
@@ -36,14 +37,8 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 public abstract class AbstractObjectWriter implements ObjectWriter {
 
-  private ColumnMetadata schema;
-
-  public AbstractObjectWriter(ColumnMetadata schema) {
-    this.schema = schema;
-  }
-
   @Override
-  public ColumnMetadata schema() { return schema; }
+  public ColumnMetadata schema() { return baseWriter().schema(); }
 
   @Override
   public ScalarWriter scalar() {
@@ -60,13 +55,47 @@ public abstract class AbstractObjectWriter implements ObjectWriter {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public VariantWriter variant() {
+    throw new UnsupportedOperationException();
+  }
+
   public abstract WriterEvents events();
 
-  @Override
-  public void bindListener(ColumnWriterListener listener) { }
+  public ColumnWriter baseWriter() {
+    return (ColumnWriter) events();
+  }
 
   @Override
-  public void bindListener(TupleWriterListener listener) { }
+  public ObjectType type() { return baseWriter().type(); }
+
+  @Override
+  public boolean nullable() { return baseWriter().nullable(); }
+
+  @Override
+  public void setNull() {
+    baseWriter().setNull();
+  }
+
+  @Override
+  public void setObject(Object value) {
+    baseWriter().setObject(value);
+  }
 
   public abstract void dump(HierarchicalFormatter format);
+
+  @Override
+  public int rowStartIndex() {
+    return baseWriter().rowStartIndex();
+  }
+
+  @Override
+  public int lastWriteIndex() {
+    return baseWriter().lastWriteIndex();
+  }
+
+  @Override
+  public int writeIndex() {
+    return baseWriter().writeIndex();
+  }
 }

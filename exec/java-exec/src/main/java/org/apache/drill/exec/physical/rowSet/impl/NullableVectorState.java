@@ -17,44 +17,31 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
-import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.ValuesVectorState;
+import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.FixedWidthVectorState;
+import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.SimpleVectorState;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.NullableScalarWriter;
 
 public class NullableVectorState implements VectorState {
 
-  public static class BitsVectorState extends ValuesVectorState {
-
-    public BitsVectorState(ColumnMetadata schema, AbstractScalarWriter writer, ValueVector mainVector) {
-      super(schema, writer, mainVector);
-    }
-
-    @Override
-    public int allocateVector(ValueVector vector, int cardinality) {
-      ((FixedWidthVector) vector).allocateNew(cardinality);
-      return vector.getBufferSize();
-    }
-  }
-
   private final ColumnMetadata schema;
   private final NullableScalarWriter writer;
   private final NullableVector vector;
-  private final ValuesVectorState bitsState;
-  private final ValuesVectorState valuesState;
+  private final SimpleVectorState bitsState;
+  private final SimpleVectorState valuesState;
 
   public NullableVectorState(AbstractObjectWriter writer, NullableVector vector) {
     this.schema = writer.schema();
     this.vector = vector;
 
     this.writer = (NullableScalarWriter) writer.scalar();
-    bitsState = new BitsVectorState(schema, this.writer.bitsWriter(), vector.getBitsVector());
-    valuesState = new ValuesVectorState(schema, this.writer.baseWriter(), vector.getValuesVector());
+    bitsState = new FixedWidthVectorState(this.writer.bitsWriter(), vector.getBitsVector());
+    valuesState = SimpleVectorState.vectorState(this.writer.schema(),
+        this.writer.baseWriter(), vector.getValuesVector());
   }
 
   @Override
@@ -82,13 +69,17 @@ public class NullableVectorState implements VectorState {
   }
 
   @Override
-  public void reset() {
-    bitsState.reset();
-    valuesState.reset();
+  public void close() {
+    bitsState.close();
+    valuesState.close();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public ValueVector vector() { return vector; }
+  public <T extends ValueVector> T vector() { return (T) vector; }
+
+  @Override
+  public boolean isProjected() { return true; }
 
   @Override
   public void dump(HierarchicalFormatter format) {

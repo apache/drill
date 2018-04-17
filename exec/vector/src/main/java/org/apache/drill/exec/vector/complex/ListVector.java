@@ -17,19 +17,21 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import com.google.common.collect.ObjectArrays;
-import io.netty.buffer.DrillBuf;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.AddOrGetResult;
+import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.UInt1Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -41,25 +43,42 @@ import org.apache.drill.exec.vector.complex.impl.UnionListWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
-import java.util.List;
-import java.util.Set;
+import com.google.common.collect.ObjectArrays;
+
+import io.netty.buffer.DrillBuf;
 
 public class ListVector extends BaseRepeatedValueVector {
 
-  private UInt4Vector offsets;
+  public static final String UNION_VECTOR_NAME = "$union$";
+
   private final UInt1Vector bits;
-  private Mutator mutator = new Mutator();
-  private Accessor accessor = new Accessor();
+  private final Mutator mutator = new Mutator();
+  private final Accessor accessor = new Accessor();
   private UnionListWriter writer;
   private UnionListReader reader;
 
   public ListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field, allocator);
+    // Can't do this. See below.
+//    super(field.cloneEmpty(), allocator);
     this.bits = new UInt1Vector(MaterializedField.create(BITS_VECTOR_NAME, Types.required(MinorType.UINT1)), allocator);
-    offsets = getOffsetVector();
     this.field.addChild(getDataVector().getField());
     this.writer = new UnionListWriter(this);
     this.reader = new UnionListReader(this);
+//
+//    // To be consistent with the map vector, create the child if a child is
+//    // given in the field. This is a mess. See DRILL-6046.
+//    But, can't do this because the deserialization mechanism passes in a
+//    field with children filled in, but with no expectation that the vector will
+//    match its schema until this vector itself is loaded. Indeed a mess.
+//
+//    assert field.getChildren().size() <= 1;
+//    for (MaterializedField child : field.getChildren()) {
+//      if (child.getName().equals(DATA_VECTOR_NAME)) {
+//        continue;
+//      }
+//      setChildVector(BasicTypeHelper.getNewVector(child, allocator, callBack));
+//    }
   }
 
   public UnionListWriter getWriter() {
@@ -99,9 +118,9 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
-  public ValueVector getDataVector() {
-    return vector;
-  }
+  public ValueVector getDataVector() { return vector; }
+
+  public ValueVector getBitsVector() { return bits; }
 
   @Override
   public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
@@ -115,7 +134,7 @@ public class ListVector extends BaseRepeatedValueVector {
 
   private class TransferImpl implements TransferPair {
 
-    ListVector to;
+    private final ListVector to;
 
     public TransferImpl(MaterializedField field, BufferAllocator allocator) {
       to = new ListVector(field, allocator, null);
@@ -175,13 +194,13 @@ public class ListVector extends BaseRepeatedValueVector {
      */
     boolean success = false;
     try {
-      if (!offsets.allocateNewSafe()) {
+      if (! offsets.allocateNewSafe()) {
         return false;
       }
       success = vector.allocateNewSafe();
       success = success && bits.allocateNewSafe();
     } finally {
-      if (!success) {
+      if (! success) {
         clear();
       }
     }
@@ -219,8 +238,6 @@ public class ListVector extends BaseRepeatedValueVector {
 
   @Override
   public void clear() {
-    offsets.clear();
-    vector.clear();
     bits.clear();
     lastSet = 0;
     super.clear();
@@ -228,10 +245,13 @@ public class ListVector extends BaseRepeatedValueVector {
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    final DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(false), ObjectArrays.concat(bits.getBuffers(false),
-            vector.getBuffers(false), DrillBuf.class), DrillBuf.class);
+    final DrillBuf[] buffers = ObjectArrays.concat(
+        offsets.getBuffers(false),
+        ObjectArrays.concat(bits.getBuffers(false),
+            vector.getBuffers(false), DrillBuf.class),
+        DrillBuf.class);
     if (clear) {
-      for (DrillBuf buffer:buffers) {
+      for (DrillBuf buffer : buffers) {
         buffer.retain();
       }
       clear();
@@ -250,7 +270,7 @@ public class ListVector extends BaseRepeatedValueVector {
     bits.load(bitMetadata, buffer.slice(offsetLength, bitLength));
 
     final UserBitShared.SerializedField vectorMetadata = metadata.getChild(2);
-    if (getDataVector() == DEFAULT_DATA_VECTOR) {
+    if (isEmptyType()) {
       addOrGetVector(VectorDescriptor.create(vectorMetadata.getMajorType()));
     }
 
@@ -258,12 +278,130 @@ public class ListVector extends BaseRepeatedValueVector {
     vector.load(vectorMetadata, buffer.slice(offsetLength + bitLength, vectorLength));
   }
 
+  public boolean isEmptyType() {
+    return getDataVector() == DEFAULT_DATA_VECTOR;
+  }
+
+  @Override
+  public void setChildVector(ValueVector childVector) {
+
+    // Unlike the repeated list vector, the (plain) list vector
+    // adds the dummy vector as a child type.
+
+    assert field.getChildren().size() == 1;
+    assert field.getChildren().iterator().next().getType().getMinorType() == MinorType.LATE;
+    field.removeChild(vector.getField());
+
+    super.setChildVector(childVector);
+
+    // Initial LATE type vector not added as a subtype initially.
+    // So, no need to remove it, just add the new subtype. Since the
+    // MajorType is immutable, must build a new one and replace the type
+    // in the materialized field. (We replace the type, rather than creating
+    // a new materialized field, to preserve the link to this field from
+    // a parent map, list or union.)
+
+    assert field.getType().getSubTypeCount() == 0;
+    field.replaceType(
+        field.getType().toBuilder()
+          .addSubType(childVector.getField().getType().getMinorType())
+          .build());
+  }
+
+  /**
+   * Promote the list to a union. Called from old-style writers. This implementation
+   * relies on the caller to set the types vector for any existing values.
+   * This method simply clears the existing vector.
+   *
+   * @return the new union vector
+   */
+
   public UnionVector promoteToUnion() {
-    MaterializedField newField = MaterializedField.create(getField().getName(), Types.optional(MinorType.UNION));
-    UnionVector vector = new UnionVector(newField, allocator, null);
+    UnionVector vector = createUnion();
+
+    // Replace the current vector, clearing its data. (This is the
+    // old behavior.
+
     replaceDataVector(vector);
     reader = new UnionListReader(this);
     return vector;
+  }
+
+  /**
+   * Revised form of promote to union that correctly fixes up the list
+   * field metadata to match the new union type.
+   *
+   * @return the new union vector
+   */
+
+  public UnionVector promoteToUnion2() {
+    UnionVector unionVector = createUnion();
+
+    // Replace the current vector, clearing its data. (This is the
+    // old behavior.
+
+    setChildVector(unionVector);
+    return unionVector;
+  }
+
+  /**
+   * Promote to a union, preserving the existing data vector as a member of
+   * the new union. Back-fill the types vector with the proper type value
+   * for existing rows.
+   *
+   * @return the new union vector
+   */
+
+  public UnionVector convertToUnion(int allocValueCount, int valueCount) {
+    assert allocValueCount >= valueCount;
+    UnionVector unionVector = createUnion();
+    unionVector.allocateNew(allocValueCount);
+
+    // Preserve the current vector (and its data) if it is other than
+    // the default. (New behavior used by column writers.)
+
+    if (! isEmptyType()) {
+      unionVector.addType(vector);
+      int prevType = vector.getField().getType().getMinorType().getNumber();
+      UInt1Vector.Mutator typeMutator = unionVector.getTypeVector().getMutator();
+
+      // If the previous vector was nullable, then promote the nullable state
+      // to the type vector by setting either the null marker or the type
+      // marker depending on the original nullable values.
+
+      if (vector instanceof NullableVector) {
+        UInt1Vector.Accessor bitsAccessor =
+            ((UInt1Vector) ((NullableVector) vector).getBitsVector()).getAccessor();
+        for (int i = 0; i < valueCount; i++) {
+          typeMutator.setSafe(i, (bitsAccessor.get(i) == 0)
+              ? UnionVector.NULL_MARKER
+              : prevType);
+        }
+      } else {
+
+        // The value is not nullable. (Perhaps it is a map.)
+        // Note that the original design of lists have a flaw: if the sole member
+        // is a map, then map entries can't be nullable when the only type, but
+        // become nullable when in a union. What a mess...
+
+        for (int i = 0; i < valueCount; i++) {
+          typeMutator.setSafe(i, prevType);
+        }
+      }
+    }
+    vector = unionVector;
+    return unionVector;
+  }
+
+  private UnionVector createUnion() {
+    MaterializedField newField = MaterializedField.create(UNION_VECTOR_NAME, Types.optional(MinorType.UNION));
+    UnionVector unionVector = new UnionVector(newField, allocator, null);
+
+    // For efficiency, should not create a reader that will never be used.
+    // Keeping for backward compatibility.
+
+    reader = new UnionListReader(this);
+    return unionVector;
   }
 
   private int lastSet;

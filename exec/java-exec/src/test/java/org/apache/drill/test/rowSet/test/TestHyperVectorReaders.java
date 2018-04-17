@@ -20,6 +20,7 @@ package org.apache.drill.test.rowSet.test;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.variantArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -358,6 +359,138 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .addRow(2, mapArray(mapValue(21, "second.1"), mapValue(22, "second.2")))
         .addRow(3, mapArray(mapValue(31, "third.1"),  mapValue(32, "third.2"), mapValue(33, "third.3")))
         .addRow(4, mapArray(mapValue(41, "fourth.1")))
+        .build();
+
+    RowSetUtilities.verify(expected, hyperSet);
+  }
+
+  @Test
+  public void testUnion() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .addUnion("u")
+          .addType(MinorType.INT)
+          .addType(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+
+    SingleRowSet rowSet1 = fixture.rowSetBuilder(schema)
+        .addRow(2, 20)
+        .addRow(4, "fourth")
+        .build();
+
+    SingleRowSet rowSet2 = fixture.rowSetBuilder(schema)
+        .addRow(1, "first")
+        .addRow(3, 30)
+        .build();
+
+    // Build the hyper batch
+
+    HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
+    assertEquals(4, hyperSet.rowCount());
+    SelectionVector4 sv4 = hyperSet.getSv4();
+    sv4.set(0, 1, 0);
+    sv4.set(1, 0, 0);
+    sv4.set(2, 1, 1);
+    sv4.set(3, 0, 1);
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(1, "first")
+        .addRow(2, 20)
+        .addRow(3, 30)
+        .addRow(4, "fourth")
+        .build();
+
+    RowSetUtilities.verify(expected, hyperSet);
+  }
+
+  @Test
+  public void testScalarList() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addList("a")
+          .addType(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+
+    schema.metadata("a").variantSchema().becomeSimple();
+
+    SingleRowSet rowSet1 = fixture.rowSetBuilder(schema)
+        .addSingleCol(strArray("sixth", "6.1", "6.2"))
+        .addSingleCol(null)
+        .addSingleCol(strArray("fourth", "4.1"))
+        .build();
+
+    SingleRowSet rowSet2 = fixture.rowSetBuilder(schema)
+        .addSingleCol(strArray("fifth", "51", "5.2"))
+        .addSingleCol(strArray("first", "1.1", "1.2", "1.3"))
+        .addSingleCol(strArray("third", "3.1"))
+        .build();
+
+    // Build the hyper batch
+
+    HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
+    assertEquals(6, hyperSet.rowCount());
+    SelectionVector4 sv4 = hyperSet.getSv4();
+    sv4.set(0, 1, 1);
+    sv4.set(1, 0, 1);
+    sv4.set(2, 1, 2);
+    sv4.set(3, 0, 2);
+    sv4.set(4, 1, 0);
+    sv4.set(5, 0, 0);
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addSingleCol(strArray("first", "1.1", "1.2", "1.3"))
+        .addSingleCol(null)
+        .addSingleCol(strArray("third", "3.1"))
+        .addSingleCol(strArray("fourth", "4.1"))
+        .addSingleCol(strArray("fifth", "51", "5.2"))
+        .addSingleCol(strArray("sixth", "6.1", "6.2"))
+        .build();
+
+    RowSetUtilities.verify(expected, hyperSet);
+  }
+
+  @Test
+  public void testUnionList() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .addList("list")
+          .addType(MinorType.INT)
+          .addType(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+
+    SingleRowSet rowSet1 = fixture.rowSetBuilder(schema)
+        .addRow(6, variantArray("sixth", 61, "6.2"))
+        .addRow(2, variantArray("second", "2.1", 22, "2.3"))
+        .addRow(4, variantArray("fourth", 41))
+        .build();
+
+    SingleRowSet rowSet2 = fixture.rowSetBuilder(schema)
+        .addRow(5, variantArray("fifth", "5.1", 52))
+        .addRow(1, variantArray("first", 11, "1.2", 13))
+        .addRow(3, variantArray("third", 31))
+        .build();
+
+    // Build the hyper batch
+
+    HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
+    assertEquals(6, hyperSet.rowCount());
+    SelectionVector4 sv4 = hyperSet.getSv4();
+    sv4.set(0, 1, 1);
+    sv4.set(1, 0, 1);
+    sv4.set(2, 1, 2);
+    sv4.set(3, 0, 2);
+    sv4.set(4, 1, 0);
+    sv4.set(5, 0, 0);
+
+    SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(1, variantArray("first", 11, "1.2", 13))
+        .addRow(2, variantArray("second", "2.1", 22, "2.3"))
+        .addRow(3, variantArray("third", 31))
+        .addRow(4, variantArray("fourth", 41))
+        .addRow(5, variantArray("fifth", "5.1", 52))
+        .addRow(6, variantArray("sixth", 61, "6.2"))
         .build();
 
     RowSetUtilities.verify(expected, hyperSet);

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.CodeCompiler;
@@ -34,6 +33,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import io.netty.buffer.DrillBuf;
 
@@ -158,6 +159,7 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
 
   DrillBuf replace(DrillBuf old, int newSize);
 
+  @Override
   DrillBuf getManagedBuffer();
 
   DrillBuf getManagedBuffer(int size);
