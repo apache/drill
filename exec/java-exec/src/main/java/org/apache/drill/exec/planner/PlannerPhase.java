@@ -178,6 +178,12 @@ public enum PlannerPhase {
           PlannerPhase.getPhysicalRules(context),
           getStorageRules(context, plugins, this));
     }
+  },
+
+  TRANSITIVE_CLOSURE("Transitive closure") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return getJoinTransitiveClosureRules(context);
+    }
   };
 
   public final String description;
@@ -392,11 +398,29 @@ public enum PlannerPhase {
 
   }
 
-  // Ruleset for join permutation, used only in VolcanoPlanner.
+  /**
+   * RuleSet for join permutation, used only in VolcanoPlanner.
+   * @param optimizerRulesContext shared state used during planning
+   * @return set of planning rules
+   */
   static RuleSet getJoinPermRules(OptimizerRulesContext optimizerRulesContext) {
     return RuleSets.ofList(ImmutableSet.<RelOptRule> builder().add(
         RuleInstance.JOIN_PUSH_THROUGH_JOIN_RULE_RIGHT,
         RuleInstance.JOIN_PUSH_THROUGH_JOIN_RULE_LEFT
+        ).build());
+  }
+
+  /**
+   * RuleSet for join transitive closure, used only in HepPlanner.
+   * @param optimizerRulesContext shared state used during planning
+   * @return set of planning rules
+   */
+  static RuleSet getJoinTransitiveClosureRules(OptimizerRulesContext optimizerRulesContext) {
+    return RuleSets.ofList(ImmutableSet.<RelOptRule> builder().add(
+        DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
+        DrillFilterJoinRules.DRILL_JOIN,
+        RuleInstance.JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,
+        RuleInstance.FILTER_MERGE_RULE
         ).build());
   }
 

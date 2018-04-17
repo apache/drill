@@ -233,12 +233,17 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
 
     try {
-      final RelNode convertedRelNode;
+
+      // HEP Join Push Transitive Predicates
+      final RelNode relNodeWithTransitivePredicates =
+          transform(PlannerType.HEP, PlannerPhase.TRANSITIVE_CLOSURE, relNode);
 
       // HEP Directory pruning .
-      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, relNode);
+      final RelNode pruned =
+          transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, relNodeWithTransitivePredicates);
       final RelTraitSet logicalTraits = pruned.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
+      final RelNode convertedRelNode;
       if (!context.getPlannerSettings().isHepOptEnabled()) {
         // hep is disabled, use volcano
         convertedRelNode = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE_AND_JOIN, pruned, logicalTraits);
