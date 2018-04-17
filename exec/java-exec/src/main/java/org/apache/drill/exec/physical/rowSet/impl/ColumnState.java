@@ -28,8 +28,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
+import org.apache.drill.exec.vector.accessor.writer.MapWriter;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 
 /**
  * Represents the write-time state for a column including the writer and the (optional)
@@ -88,10 +89,10 @@ public abstract class ColumnState {
   public static class MapColumnState extends BaseMapColumnState {
 
     public MapColumnState(ResultSetLoaderImpl resultSetLoader,
-        ColumnMetadata columnSchema,
+        ColumnMetadata columnSchema, MapVector mapVector,
         ProjectionSet projectionSet) {
       super(resultSetLoader,
-          ColumnWriterFactory.buildMap(columnSchema, null,
+          MapWriter.buildMap(columnSchema, mapVector,
               new ArrayList<AbstractObjectWriter>()),
           new NullVectorState(),
           projectionSet);
@@ -115,7 +116,6 @@ public abstract class ColumnState {
           projectionSet);
     }
 
-    @SuppressWarnings("resource")
     public static MapArrayColumnState build(ResultSetLoaderImpl resultSetLoader,
         ColumnMetadata columnSchema,
         ProjectionSet projectionSet) {
@@ -128,7 +128,7 @@ public abstract class ColumnState {
 
       // Create the writer using the offset vector
 
-      AbstractObjectWriter writer = ColumnWriterFactory.buildMapArray(
+      AbstractObjectWriter writer = MapWriter.buildMapArray(
           columnSchema, offsetVector,
           new ArrayList<AbstractObjectWriter>());
 

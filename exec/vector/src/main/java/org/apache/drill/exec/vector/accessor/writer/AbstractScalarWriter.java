@@ -21,8 +21,10 @@ import java.math.BigDecimal;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.joda.time.Period;
 
@@ -39,27 +41,15 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
 
     private AbstractScalarWriter scalarWriter;
 
-    public ScalarObjectWriter(ColumnMetadata schema, AbstractScalarWriter scalarWriter) {
-      super(schema);
+    public ScalarObjectWriter(AbstractScalarWriter scalarWriter) {
       this.scalarWriter = scalarWriter;
     }
-
-    @Override
-    public ObjectType type() { return ObjectType.SCALAR; }
-
-    @Override
-    public void set(Object value) { scalarWriter.setObject(value); }
 
     @Override
     public ScalarWriter scalar() { return scalarWriter; }
 
     @Override
     public WriterEvents events() { return scalarWriter; }
-
-    @Override
-    public void bindListener(ColumnWriterListener listener) {
-      scalarWriter.bindListener(listener);
-    }
 
     @Override
     public void dump(HierarchicalFormatter format) {
@@ -70,6 +60,42 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
       format.endObject();
     }
   }
+
+  protected ColumnMetadata schema;
+
+  /**
+   * Indicates the position in the vector to write. Set via an object so that
+   * all writers (within the same subtree) can agree on the write position.
+   * For example, all top-level, simple columns see the same row index.
+   * All columns within a repeated map see the same (inner) index, etc.
+   */
+
+  protected ColumnWriterIndex vectorIndex;
+
+  @Override
+  public ObjectType type() { return ObjectType.SCALAR; }
+
+  public void bindSchema(ColumnMetadata schema) {
+    this.schema = schema;
+  }
+
+  @Override
+  public void bindIndex(ColumnWriterIndex vectorIndex) {
+    this.vectorIndex = vectorIndex;
+  }
+
+  @Override
+  public int rowStartIndex() {
+    return vectorIndex.rowStartIndex();
+  }
+
+  @Override
+  public int writeIndex() {
+    return vectorIndex.vectorIndex();
+  }
+
+  @Override
+  public ColumnMetadata schema() { return schema; }
 
   public abstract BaseDataValueVector vector();
 
@@ -84,6 +110,10 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
 
   @Override
   public void saveRow() { }
+
+  protected UnsupportedConversionError conversionError(String javaType) {
+    return UnsupportedConversionError.writeError(schema(), javaType);
+  }
 
   @Override
   public void setObject(Object value) {
@@ -111,8 +141,7 @@ public abstract class AbstractScalarWriter implements ScalarWriter, WriterEvents
     } else if (value instanceof Float) {
       setDouble((Float) value);
     } else {
-      throw new IllegalArgumentException("Unsupported type " +
-                value.getClass().getSimpleName());
+      throw conversionError(value.getClass().getSimpleName());
     }
   }
 

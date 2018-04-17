@@ -59,7 +59,6 @@ import org.junit.Test;
 
 public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
-  @SuppressWarnings("resource")
   @Test
   public void testBasics() {
     TupleMetadata schema = new SchemaBuilder()
@@ -77,7 +76,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
     // Verify structure and schema
 
-    TupleMetadata actualSchema = rootWriter.schema();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(2, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isArray());
     assertTrue(actualSchema.metadata(1).isMap());

@@ -36,10 +36,10 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  */
 
 public abstract class BaseVarWidthWriter extends BaseScalarWriter {
-  protected final OffsetVectorWriter offsetsWriter;
+  protected final OffsetVectorWriterImpl offsetsWriter;
 
   public BaseVarWidthWriter(UInt4Vector offsetVector) {
-    offsetsWriter = new OffsetVectorWriter(offsetVector);
+    offsetsWriter = new OffsetVectorWriterImpl(offsetVector);
   }
 
   @Override
@@ -57,7 +57,7 @@ public abstract class BaseVarWidthWriter extends BaseScalarWriter {
   @Override
   public void startRow() { offsetsWriter.startRow(); }
 
-  protected final int writeIndex(final int width) {
+  protected final int prepareWrite(final int width) {
 
     // This is performance critical code; every operation counts.
     // Please be thoughtful when changing the code.

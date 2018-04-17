@@ -222,7 +222,8 @@ public class PerformanceTool {
     public void doTest() {
       try (NullableIntVector vector = new NullableIntVector(rowSchema.column(0), fixture.allocator());) {
         vector.allocateNew(ROW_COUNT);
-        NullableScalarWriter colWriter = new NullableScalarWriter(
+        ColumnMetadata colSchema = MetadataUtils.fromField(vector.getField());
+        NullableScalarWriter colWriter = new NullableScalarWriter(colSchema,
             vector, new IntColumnWriter(vector.getValuesVector()));
         TestWriterIndex index = new TestWriterIndex();
         colWriter.bindIndex(index);

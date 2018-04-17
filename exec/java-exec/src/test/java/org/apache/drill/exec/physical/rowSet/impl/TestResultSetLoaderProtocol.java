@@ -41,8 +41,8 @@ import org.apache.drill.exec.vector.accessor.TupleWriter.UndefinedColumnExceptio
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
@@ -93,7 +93,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     // Can define schema before starting the first batch.
 
     RowSetLoader rootWriter = rsLoader.writer();
-    TupleMetadata schema = rootWriter.schema();
+    TupleMetadata schema = rootWriter.tupleSchema();
     assertEquals(0, schema.size());
 
     MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REQUIRED);
@@ -175,8 +175,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(100, null)
         .addRow(200, 210)
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     // Between batches: batch-based operations fail
 
@@ -229,8 +228,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(300, 310)
         .addRow(400, 410)
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     // Next batch. Schema has changed.
 
@@ -253,8 +251,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(500, 510, 520)
         .addRow(600, 610, 620)
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     rsLoader.close();
 
@@ -312,7 +309,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
   public void testCaseInsensitiveSchema() {
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator());
     RowSetLoader rootWriter = rsLoader.writer();
-    TupleMetadata schema = rootWriter.schema();
+    TupleMetadata schema = rootWriter.tupleSchema();
     assertEquals(0, rsLoader.schemaVersion());
 
     // No columns defined in schema
@@ -444,8 +441,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow("foo", "second", "",    null,  strArray())
         .addRow("bar", "",       "c.2", "d.2", strArray("e1", "e2", "e3"))
         .build();
-    new RowSetComparison(expected)
-        .verifyAndClearAll(result);
+    RowSetUtilities.verify(expected, result);
 
     // Handy way to test that close works to abort an in-flight batch
     // and clean up.
@@ -487,7 +483,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addRow(30, 300, "wilma")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 

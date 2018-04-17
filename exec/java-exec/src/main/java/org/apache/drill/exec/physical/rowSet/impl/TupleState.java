@@ -27,6 +27,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.vector.ValueVector;
@@ -38,6 +39,7 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
+import org.apache.drill.exec.vector.complex.MapVector;
 
 /**
  * Represents the loader state for a tuple: a row or a map. This is "state" in
@@ -103,7 +105,11 @@ public abstract class TupleState implements TupleWriterListener {
         ProjectionSet projectionSet) {
       super(rsLoader, projectionSet);
       this.mapColumnState = mapColumnState;
-      mapColumnState.writer().bindListener(this);
+      if (mapColumnState.schema().isArray()) {
+        mapColumnState.writer().array().tuple().bindListener(this);
+      } else {
+        mapColumnState.writer().tuple().bindListener(this);
+      }
     }
 
     /**
@@ -177,7 +183,7 @@ public abstract class TupleState implements TupleWriterListener {
 
   public List<ColumnState> columns() { return columns; }
 
-  public TupleMetadata schema() { return writer().schema(); }
+  public TupleMetadata schema() { return writer().tupleSchema(); }
 
   public abstract AbstractTupleWriter writer();
 
@@ -198,6 +204,13 @@ public abstract class TupleState implements TupleWriterListener {
     }
 
     return addColumn(columnSchema);
+  }
+
+  @Override
+  public ProjectionType projectionType(String columnName) {
+    return projectionSet.isProjected(columnName) ?
+        ProjectionType.TUPLE :
+        ProjectionType.UNPROJECTED;
   }
 
   /**
@@ -291,8 +304,14 @@ public abstract class TupleState implements TupleWriterListener {
           columnSchema,
           childProjection);
     } else {
+      MapVector vector;
+      if (columnSchema.isProjected()) {
+        vector = new MapVector(columnSchema.schema(), resultSetLoader.allocator(), null);
+      } else {
+        vector = null;
+      }
       return new MapColumnState(resultSetLoader,
-          columnSchema,
+          columnSchema, vector,
           childProjection);
     }
   }

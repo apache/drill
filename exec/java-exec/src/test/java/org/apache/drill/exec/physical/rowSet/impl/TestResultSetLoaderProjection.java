@@ -93,7 +93,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     // All columns appear, including non-projected ones.
 
-    TupleMetadata actualSchema = rootWriter.schema();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(4, actualSchema.size());
     assertEquals("a", actualSchema.column(0).getName());
     assertEquals("b", actualSchema.column(1).getName());
@@ -167,7 +167,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     // Verify the projected columns
 
-    TupleMetadata actualSchema = rootWriter.schema();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
     ColumnMetadata m1Md = actualSchema.metadata("m1");
     assertTrue(m1Md.isMap());
     assertTrue(m1Md.isProjected());

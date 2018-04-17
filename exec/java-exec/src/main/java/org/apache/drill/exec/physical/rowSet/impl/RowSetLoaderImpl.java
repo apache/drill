@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
@@ -95,4 +96,12 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
 
   @Override
   public int rowCount() { return rsLoader.rowCount(); }
+
+  @Override
+  public ColumnMetadata schema() {
+    // The top-level tuple (the data row) is not associated
+    // with a parent column. By contrast, a map tuple is
+    // associated with the column that defines the map.
+    return null;
+  }
 }
