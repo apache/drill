@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 
 <#list ["Single", "Repeated"] as mode>

@@ -336,6 +336,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   }
 
   @Override
+  public BufferAllocator getRootAllocator() {
+    return context.getAllocator();
+  }
+
+  @Override
   public BufferAllocator getNewChildAllocator(final String operatorName,
       final int operatorId,
       final long initialReservation,

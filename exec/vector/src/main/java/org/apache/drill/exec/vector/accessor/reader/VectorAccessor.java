@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.vector.accessor.reader;
 
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 
 public interface VectorAccessor {
+  boolean isHyper();
+  MajorType type();
   void bind(ColumnReaderIndex index);
-  ValueVector vector();
+  <T extends ValueVector> T vector();
 }

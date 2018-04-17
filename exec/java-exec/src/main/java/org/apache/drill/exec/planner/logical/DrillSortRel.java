@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.calcite.rel.RelCollations;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Order;
@@ -27,7 +28,6 @@ import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Sort;
@@ -93,8 +93,9 @@ public class DrillSortRel extends Sort implements DrillRel {
       String fieldName = ExprHelper.getFieldName(o.getExpr());
       int fieldId = fieldMap.get(fieldName);
       RelFieldCollation c = new RelFieldCollation(fieldId, o.getDirection(), o.getNullDirection());
+      collations.add(c);
     }
-    return new DrillSortRel(context.getCluster(), context.getLogicalTraits(), input, RelCollationImpl.of(collations));
+    return new DrillSortRel(context.getCluster(), context.getLogicalTraits(), input, RelCollations.of(collations));
   }
 
 }

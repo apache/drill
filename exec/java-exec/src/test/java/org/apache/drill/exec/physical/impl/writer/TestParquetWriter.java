@@ -39,7 +39,6 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
@@ -780,17 +779,31 @@ public class TestParquetWriter extends BaseTestQuery {
   Test the reading of a binary field as drill timestamp where data is in dictionary _and_ non-dictionary encoded pages
    */
   @Test
-  @Ignore("relies on particular time zone, works for UTC")
   public void testImpalaParquetBinaryAsTimeStamp_DictChange() throws Exception {
     try {
       testBuilder()
-          .sqlQuery("select int96_ts from dfs.`parquet/int96_dict_change` order by int96_ts")
+          .sqlQuery("select min(int96_ts) date_value from dfs.`parquet/int96_dict_change`")
           .optionSettingQueriesForTestQuery(
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .ordered()
-          .csvBaselineFile("testframework/testParquetReader/testInt96DictChange/q1.tsv")
-          .baselineTypes(TypeProtos.MinorType.TIMESTAMP)
-          .baselineColumns("int96_ts")
+          .baselineColumns("date_value")
+          .baselineValues(new DateTime(convertToLocalTimestamp("1970-01-01 00:00:01.000")))
+          .build().run();
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
+  }
+
+  @Test
+  public void testSparkParquetBinaryAsTimeStamp_DictChange() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("select distinct run_date from cp.`parquet/spark-generated-int96-timestamp.snappy.parquet`")
+          .optionSettingQueriesForTestQuery(
+               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .ordered()
+          .baselineColumns("run_date")
+          .baselineValues(new DateTime(convertToLocalTimestamp("2017-12-06 16:38:43.988")))
           .build().run();
     } finally {
       resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
@@ -842,16 +855,15 @@ public class TestParquetWriter extends BaseTestQuery {
   Test the conversion from int96 to impala timestamp with hive data including nulls. Validate against expected values
   */
   @Test
-  @Ignore("relies on particular time zone")
   public void testHiveParquetTimestampAsInt96_basic() throws Exception {
     testBuilder()
-            .unOrdered()
-            .sqlQuery("SELECT cast(convert_from(timestamp_field, 'TIMESTAMP_IMPALA') as varchar(19))  as timestamp_field "
-              + "from cp.`parquet/part1/hive_all_types.parquet` ")
-            .baselineColumns("timestamp_field")
-            .baselineValues("2013-07-05 17:01:00")
-            .baselineValues((Object)null)
-            .go();
+        .unOrdered()
+        .sqlQuery("SELECT convert_from(timestamp_field, 'TIMESTAMP_IMPALA')  as timestamp_field "
+             + "from cp.`parquet/part1/hive_all_types.parquet` ")
+        .baselineColumns("timestamp_field")
+        .baselineValues(new DateTime(convertToLocalTimestamp("2013-07-06 00:01:00")))
+        .baselineValues((Object)null)
+        .go();
   }
 
   @Test

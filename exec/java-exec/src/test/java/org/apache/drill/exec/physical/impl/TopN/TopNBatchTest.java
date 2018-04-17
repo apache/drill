@@ -63,8 +63,6 @@ public class TopNBatchTest extends PopUnitTestBase {
   @Test
   public void priorityQueueOrderingTest() throws Exception {
     Properties properties = new Properties();
-    properties.setProperty(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getDir().getAbsolutePath());
-
     DrillConfig drillConfig = DrillConfig.create(properties);
 
     FieldReference expr = FieldReference.getWithQuotedRef("colA");
@@ -158,9 +156,7 @@ public class TopNBatchTest extends PopUnitTestBase {
    */
   @Test
   public void sortOneKeyAscending() throws Throwable {
-    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-      .configProperty(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getDir().getAbsolutePath())
-      .configProperty(CodeCompiler.ENABLE_SAVE_CODE_FOR_DEBUG_TOPN, true);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       TestBuilder testBuilder = new TestBuilder(new ClusterFixture.FixtureTestServices(client));

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -253,7 +253,7 @@ public class TestSpnegoAuthentication {
 
     // Create client subject using it's principal and keytab
     final Subject clientSubject = JaasKrbUtil.loginUsingKeytab(spnegoHelper.CLIENT_PRINCIPAL,
-            spnegoHelper.clientKeytab.getAbsoluteFile());
+      spnegoHelper.clientKeytab.getAbsoluteFile());
 
     // Generate a SPNEGO token for the peer SERVER_PRINCIPAL from this CLIENT_PRINCIPAL
     final String token = Subject.doAs(clientSubject, new PrivilegedExceptionAction<String>() {
@@ -284,19 +284,19 @@ public class TestSpnegoAuthentication {
 
     // Create a DrillbitContext with service principal and keytab for DrillSpnegoLoginService
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create()
-        .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("spnego")))
-        .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
+      .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
+        ConfigValueFactory.fromIterable(Lists.newArrayList("spnego")))
+      .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
+        ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
+      .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
+        ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
 
 
     final SystemOptionManager optionManager = Mockito.mock(SystemOptionManager.class);
     Mockito.when(optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR))
-        .thenReturn(ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
+      .thenReturn(ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
     Mockito.when(optionManager.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR))
-        .thenReturn(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.DEFAULT_ADMIN_USER_GROUPS);
+      .thenReturn(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.DEFAULT_ADMIN_USER_GROUPS);
 
     final DrillbitContext drillbitContext = Mockito.mock(DrillbitContext.class);
     Mockito.when(drillbitContext.getConfig()).thenReturn(newConfig);
@@ -309,7 +309,7 @@ public class TestSpnegoAuthentication {
 
     // Validate the UserIdentity of authenticated client
     assertTrue(user != null);
-    assertTrue(user.getUserPrincipal().getName().equals(spnegoHelper.CLIENT_PRINCIPAL));
+    assertTrue(user.getUserPrincipal().getName().equals(spnegoHelper.CLIENT_SHORT_NAME));
     assertTrue(user.isUserInRole("authenticated", null));
   }
 

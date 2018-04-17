@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,28 +40,26 @@ public class ProfileJsonIterator extends ProfileIterator {
   private final InstanceSerializer<QueryProfile> profileSerializer;
   private final Iterator<ProfileJson> itr;
 
-  public ProfileJsonIterator(ExecutorFragmentContext context) {
-    super(context);
+  public ProfileJsonIterator(ExecutorFragmentContext context, int maxRecords) {
+    super(context, maxRecords);
     //Holding a serializer (for JSON extract)
-    profileSerializer = profileStoreContext.
-        getProfileStoreConfig().getSerializer();
+    this.profileSerializer = profileStoreContext.getProfileStoreConfig().getSerializer();
+    this.itr = iterateProfileInfoJson();
+  }
 
-    itr = iterateProfileInfoJson();
+  @Override
+  protected Iterator<Entry<String, QueryProfile>> getProfiles(int skip, int take) {
+    return profileStoreContext.getCompletedProfileStore().getRange(skip, take);
   }
 
   //Returns an iterator for authorized profiles
   private Iterator<ProfileJson> iterateProfileInfoJson() {
     try {
       //Transform authorized profiles to iterator for ProfileInfoJson
-      return transformJson(
-          getAuthorizedProfiles(
-            profileStoreContext
-              .getCompletedProfileStore()
-              .getAll(),
-            queryingUsername, isAdmin));
+      return transformJson(getAuthorizedProfiles(queryingUsername, isAdmin));
 
     } catch (Exception e) {
-      logger.error(e.getMessage());
+      logger.debug(e.getMessage(), e);
       return Iterators.singletonIterator(ProfileJson.getDefault());
     }
   }
@@ -80,11 +78,11 @@ public class ProfileJsonIterator extends ProfileIterator {
 
         //Constructing ProfileInfo
         final String queryID = input.getKey();
-        String profileJson = null;
+        String profileJson;
         try {
           profileJson = new String(profileSerializer.serialize(input.getValue()));
         } catch (IOException e) {
-          logger.debug("Failed to serialize profile for: " + queryID);
+          logger.debug("Failed to serialize profile for: " + queryID, e);
           profileJson = "{ 'message' : 'error (unable to serialize profile: "+ queryID +")' }";
         }
 
@@ -112,7 +110,7 @@ public class ProfileJsonIterator extends ProfileIterator {
   }
 
   public static class ProfileJson {
-    private static final String UnknownValue = "N/A";
+    private static final String UNKNOWN_VALUE = "N/A";
 
     private static final ProfileJson DEFAULT = new ProfileJson();
 
@@ -125,14 +123,14 @@ public class ProfileJsonIterator extends ProfileIterator {
     }
 
     private ProfileJson() {
-      this(UnknownValue, UnknownValue);
+      this(UNKNOWN_VALUE, UNKNOWN_VALUE);
     }
 
     /**
      * If unable to get ProfileInfo, use this default instance instead.
      * @return the default instance
      */
-    public static final ProfileJson getDefault() {
+    public static ProfileJson getDefault() {
       return DEFAULT;
     }
   }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.common;
 
 import java.util.AbstractList;
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -88,11 +89,7 @@ public abstract class DrillRelOptUtil {
         List<TypeProtos.MinorType> types = Lists.newArrayListWithCapacity(2);
         types.add(Types.getMinorTypeFromName(type1.getSqlTypeName().getName()));
         types.add(Types.getMinorTypeFromName(type2.getSqlTypeName().getName()));
-        if(TypeCastRules.getLeastRestrictiveType(types) != null) {
-          return true;
-        }
-
-        return false;
+        return TypeCastRules.getLeastRestrictiveType(types) != null;
       }
     }
     return true;
@@ -123,8 +120,11 @@ public abstract class DrillRelOptUtil {
           }
         };
 
-    return RelOptUtil.createProject(rel, refs, fieldNames, false,
-        DrillRelFactories.LOGICAL_BUILDER.create(rel.getCluster(), null));
+    return DrillRelFactories.LOGICAL_BUILDER
+        .create(rel.getCluster(), null)
+        .push(rel)
+        .projectNamed(refs, fieldNames, true)
+        .build();
   }
 
   public static boolean isTrivialProject(Project project, boolean useNamesInIdentityProjCalc) {
@@ -139,11 +139,11 @@ public abstract class DrillRelOptUtil {
    *
    * @param rowType : input rowType
    * @param typeFactory : type factory used to create a new row type.
-   * @return
+   * @return a rowType having all unique field name.
    */
   public static RelDataType uniqifyFieldName(final RelDataType rowType, final RelDataTypeFactory typeFactory) {
     return typeFactory.createStructType(RelOptUtil.getFieldTypeList(rowType),
-        SqlValidatorUtil.uniquify(rowType.getFieldNames()));
+        SqlValidatorUtil.uniquify(rowType.getFieldNames(), SqlValidatorUtil.EXPR_SUGGESTER, true));
   }
 
   /**
@@ -178,22 +178,20 @@ public abstract class DrillRelOptUtil {
   }
 
   /**
-   * Travesal RexNode to find the item/flattern operator. Continue search if RexNode has a
+   * Travesal RexNode to find at least one operator in the given collection. Continue search if RexNode has a
    * RexInputRef which refers to a RexNode in project expressions.
    *
    * @param node : RexNode to search
    * @param projExprs : the list of project expressions. Empty list means there is No project operator underneath.
+   * @param operators collection of operators to find
    * @return : Return null if there is NONE; return the first appearance of item/flatten RexCall.
    */
-  public static RexCall findItemOrFlatten(
-      final RexNode node,
-      final List<RexNode> projExprs) {
+  public static RexCall findOperators(final RexNode node, final List<RexNode> projExprs, final Collection<String> operators) {
     try {
       RexVisitor<Void> visitor =
           new RexVisitorImpl<Void>(true) {
             public Void visitCall(RexCall call) {
-              if ("item".equals(call.getOperator().getName().toLowerCase()) ||
-                  "flatten".equals(call.getOperator().getName().toLowerCase())) {
+              if (operators.contains(call.getOperator().getName().toLowerCase())) {
                 throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
                                               other utility methods in RexUtil.java */
               }
@@ -208,8 +206,7 @@ public abstract class DrillRelOptUtil {
                 RexNode n = projExprs.get(index);
                 if (n instanceof RexCall) {
                   RexCall r = (RexCall) n;
-                  if ("item".equals(r.getOperator().getName().toLowerCase()) ||
-                      "flatten".equals(r.getOperator().getName().toLowerCase())) {
+                  if (operators.contains(r.getOperator().getName().toLowerCase())) {
                     throw new Util.FoundOne(r);
                   }
                 }
@@ -247,9 +244,8 @@ public abstract class DrillRelOptUtil {
    * @param project : The project rel
    * @return : Return true if the rowcount is unknown. Otherwise, false.
    */
-  public static boolean isProjectOutputRowcountUnknown(RelNode project) {
-    assert project instanceof Project : "Rel is NOT an instance of project!";
-    for (RexNode rex : project.getChildExps()) {
+  public static boolean isProjectOutputRowcountUnknown(Project project) {
+    for (RexNode rex : project.getProjects()) {
       if (rex instanceof RexCall) {
         if ("flatten".equals(((RexCall) rex).getOperator().getName().toLowerCase())) {
           return true;
@@ -265,8 +261,7 @@ public abstract class DrillRelOptUtil {
    * @param project : The project rel
    * @return : Return true if the project output schema is unknown. Otherwise, false.
    */
-  public static boolean isProjectOutputSchemaUnknown(RelNode project) {
-    assert project instanceof Project : "Rel is NOT an instance of project!";
+  public static boolean isProjectOutputSchemaUnknown(Project project) {
     try {
       RexVisitor<Void> visitor =
           new RexVisitorImpl<Void>(true) {
@@ -278,7 +273,7 @@ public abstract class DrillRelOptUtil {
               return super.visitCall(call);
             }
           };
-      for (RexNode rex : ((Project) project).getProjects()) {
+      for (RexNode rex : project.getProjects()) {
         rex.accept(visitor);
       }
     } catch (Util.FoundOne e) {

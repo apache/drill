@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #ifndef DRILL_ERROR_H
 #define DRILL_ERROR_H
 

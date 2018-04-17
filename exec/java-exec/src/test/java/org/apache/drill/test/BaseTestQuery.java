@@ -160,7 +160,6 @@ public class BaseTestQuery extends ExecTest {
       props.put(propName, TEST_CONFIGURATIONS.getProperty(propName));
     }
 
-    props.setProperty(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getCodegenDir().getAbsolutePath());
     props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
 

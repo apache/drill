@@ -327,6 +327,9 @@ enum CoreOperatorType {
   PCAP_SUB_SCAN = 37;
   KAFKA_SUB_SCAN = 38;
   KUDU_SUB_SCAN = 39;
+  FLATTEN = 40;
+  LATERAL_JOIN = 41;
+  UNNEST = 42;
 }
 
 /* Registry that contains list of jars, each jar contains its name and list of function signatures.

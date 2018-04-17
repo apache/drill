@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,102 +43,11 @@ import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 /**
  * Test of the basics of the projection mechanism.
  */
 
 public class TestResultSetLoaderProjection extends SubOperatorTest {
-
-  @Test
-  public void testProjectionMap() {
-
-    // Null map means everything is projected
-
-    {
-      ProjectionSet projSet = ProjectionSetImpl.parse(null);
-      assertTrue(projSet instanceof NullProjectionSet);
-      assertTrue(projSet.isProjected("foo"));
-    }
-
-    // Empty list means everything is projected
-
-    {
-      ProjectionSet projSet = ProjectionSetImpl.parse(new ArrayList<SchemaPath>());
-      assertTrue(projSet instanceof NullProjectionSet);
-      assertTrue(projSet.isProjected("foo"));
-    }
-
-    // Simple non-map columns
-
-    {
-      List<SchemaPath> projCols = new ArrayList<>();
-      projCols.add(SchemaPath.getSimplePath("foo"));
-      projCols.add(SchemaPath.getSimplePath("bar"));
-      ProjectionSet projSet = ProjectionSetImpl.parse(projCols);
-      assertTrue(projSet instanceof ProjectionSetImpl);
-      assertTrue(projSet.isProjected("foo"));
-      assertTrue(projSet.isProjected("bar"));
-      assertFalse(projSet.isProjected("mumble"));
-    }
-
-    // Whole-map projection (note, fully projected maps are
-    // identical to projected simple columns at this level of
-    // abstraction.)
-
-    {
-      List<SchemaPath> projCols = new ArrayList<>();
-      projCols.add(SchemaPath.getSimplePath("map"));
-      ProjectionSet projSet = ProjectionSetImpl.parse(projCols);
-      assertTrue(projSet instanceof ProjectionSetImpl);
-      assertTrue(projSet.isProjected("map"));
-      assertFalse(projSet.isProjected("another"));
-      ProjectionSet mapProj = projSet.mapProjection("map");
-      assertNotNull(mapProj);
-      assertTrue(mapProj instanceof NullProjectionSet);
-      assertTrue(mapProj.isProjected("foo"));
-      assertNotNull(projSet.mapProjection("another"));
-      assertFalse(projSet.mapProjection("another").isProjected("anyCol"));
-    }
-
-    // Selected map projection, multiple levels, full projection
-    // at leaf level.
-
-    {
-      List<SchemaPath> projCols = new ArrayList<>();
-      projCols.add(SchemaPath.getCompoundPath("map", "a"));
-      projCols.add(SchemaPath.getCompoundPath("map", "b"));
-      projCols.add(SchemaPath.getCompoundPath("map", "map2", "x"));
-      ProjectionSet projSet = ProjectionSetImpl.parse(projCols);
-      assertTrue(projSet instanceof ProjectionSetImpl);
-      assertTrue(projSet.isProjected("map"));
-
-      // Map: an explicit map at top level
-
-      ProjectionSet mapProj = projSet.mapProjection("map");
-      assertTrue(mapProj instanceof ProjectionSetImpl);
-      assertTrue(mapProj.isProjected("a"));
-      assertTrue(mapProj.isProjected("b"));
-      assertTrue(mapProj.isProjected("map2"));
-      assertFalse(projSet.isProjected("bogus"));
-
-      // Map b: an implied nested map
-
-      ProjectionSet bMapProj = mapProj.mapProjection("b");
-      assertNotNull(bMapProj);
-      assertTrue(bMapProj instanceof NullProjectionSet);
-      assertTrue(bMapProj.isProjected("foo"));
-
-      // Map2, an nested map, has an explicit projection
-
-      ProjectionSet map2Proj = mapProj.mapProjection("map2");
-      assertNotNull(map2Proj);
-      assertTrue(map2Proj instanceof ProjectionSetImpl);
-      assertTrue(map2Proj.isProjected("x"));
-      assertFalse(map2Proj.isProjected("bogus"));
-    }
-  }
 
   /**
    * Test imposing a selection mask between the client and the underlying
@@ -148,10 +56,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
   @Test
   public void testProjectionStatic() {
-    List<SchemaPath> selection = Lists.newArrayList(
-        SchemaPath.getSimplePath("c"),
-        SchemaPath.getSimplePath("b"),
-        SchemaPath.getSimplePath("e"));
+    List<SchemaPath> selection = RowSetTestUtils.projectList("c", "b", "e");
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
@@ -169,10 +74,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
   @Test
   public void testProjectionDynamic() {
-    List<SchemaPath> selection = Lists.newArrayList(
-        SchemaPath.getSimplePath("c"),
-        SchemaPath.getSimplePath("b"),
-        SchemaPath.getSimplePath("e"));
+    List<SchemaPath> selection = RowSetTestUtils.projectList("c", "b", "e");
     ResultSetOptions options = new OptionBuilder()
         .setProjection(selection)
         .build();
@@ -241,9 +143,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
   @Test
   public void testMapProjection() {
-    List<SchemaPath> selection = Lists.newArrayList(
-        SchemaPath.getSimplePath("m1"),
-        SchemaPath.getCompoundPath("m2", "d"));
+    List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m2.d");
     TupleMetadata schema = new SchemaBuilder()
         .addMap("m1")
           .add("a", MinorType.INT)
@@ -293,22 +193,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     rsLoader.startBatch();
     rootWriter.start();
-    rootWriter.tuple("m1").scalar("a").setInt(1);
-    rootWriter.tuple("m1").scalar("b").setInt(2);
-    rootWriter.tuple("m2").scalar("c").setInt(3);
-    rootWriter.tuple("m2").scalar("d").setInt(4);
-    rootWriter.tuple("m3").scalar("e").setInt(5);
-    rootWriter.tuple("m3").scalar("f").setInt(6);
-    rootWriter.save();
-
-    rootWriter.start();
-    rootWriter.tuple("m1").scalar("a").setInt(11);
-    rootWriter.tuple("m1").scalar("b").setInt(12);
-    rootWriter.tuple("m2").scalar("c").setInt(13);
-    rootWriter.tuple("m2").scalar("d").setInt(14);
-    rootWriter.tuple("m3").scalar("e").setInt(15);
-    rootWriter.tuple("m3").scalar("f").setInt(16);
-    rootWriter.save();
+    rootWriter
+      .addRow(mapValue( 1,  2), mapValue( 3,  4), mapValue( 5,  6))
+      .addRow(mapValue(11, 12), mapValue(13, 14), mapValue(15, 16));
 
     // Verify. Only the projected columns appear in the result set.
 
@@ -322,8 +209,8 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .resumeSchema()
       .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-      .addRow(objArray(1, 2), objArray(4))
-      .addRow(objArray(11, 12), objArray(14))
+      .addRow(mapValue( 1,  2), mapValue( 4))
+      .addRow(mapValue(11, 12), mapValue(14))
       .build();
     new RowSetComparison(expected)
         .verifyAndClearAll(fixture.wrap(rsLoader.harvest()));
@@ -338,9 +225,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
   @Test
   public void testMapArrayProjection() {
-    List<SchemaPath> selection = Lists.newArrayList(
-        SchemaPath.getSimplePath("m1"),
-        SchemaPath.getCompoundPath("m2", "d"));
+    List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m2.d");
     TupleMetadata schema = new SchemaBuilder()
         .addMapArray("m1")
           .add("a", MinorType.INT)
@@ -408,9 +293,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
   @Test
   public void testProjectWithOverflow() {
-    List<SchemaPath> selection = Lists.newArrayList(
-        SchemaPath.getSimplePath("small"),
-        SchemaPath.getSimplePath("dummy"));
+    List<SchemaPath> selection = RowSetTestUtils.projectList("small", "dummy");
     TupleMetadata schema = new SchemaBuilder()
         .add("big", MinorType.VARCHAR)
         .add("small", MinorType.VARCHAR)

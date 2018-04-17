@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import java.lang.Override;
 
 import org.apache.drill.common.types.DataMode;
@@ -228,7 +227,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   @Override
   protected SerializedField.Builder getMetadataBuilder() {
     return super.getMetadataBuilder()
-            .setVarByteLength(values.getVarByteLength());
+            .setVarByteLength(values.getCurrentSizeInBytes());
   }
 
   @Override

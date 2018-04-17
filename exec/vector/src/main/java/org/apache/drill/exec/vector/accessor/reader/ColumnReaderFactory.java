@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.vector.accessor.reader;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.ColumnAccessors;
-import org.apache.drill.exec.vector.complex.RepeatedValueVector;
+import org.apache.drill.exec.vector.accessor.ColumnAccessorUtils;
 
 /**
  * Gather generated reader classes into a set of class tables to allow rapid
@@ -35,19 +32,14 @@ public class ColumnReaderFactory {
 
   private static final int typeCount = MinorType.values().length;
   private static final Class<? extends BaseScalarReader> requiredReaders[] = new Class[typeCount];
-  private static final Class<? extends BaseScalarReader> nullableReaders[] = new Class[typeCount];
-  private static final Class<? extends BaseElementReader> elementReaders[] = new Class[typeCount];
 
   static {
-    ColumnAccessors.defineRequiredReaders(requiredReaders);
-    ColumnAccessors.defineNullableReaders(nullableReaders);
-    ColumnAccessors.defineArrayReaders(elementReaders);
+    ColumnAccessorUtils.defineRequiredReaders(requiredReaders);
   }
 
-  public static AbstractObjectReader buildColumnReader(ValueVector vector) {
-    MajorType major = vector.getField().getType();
+  public static BaseScalarReader buildColumnReader(VectorAccessor va) {
+    MajorType major = va.type();
     MinorType type = major.getMinorType();
-    DataMode mode = major.getMode();
 
     switch (type) {
     case GENERIC_OBJECT:
@@ -57,41 +49,7 @@ public class ColumnReaderFactory {
     case MAP:
       throw new UnsupportedOperationException(type.toString());
     default:
-      switch (mode) {
-      case OPTIONAL:
-        return BaseScalarReader.build(vector, newAccessor(type, nullableReaders));
-      case REQUIRED:
-        return BaseScalarReader.build(vector, newAccessor(type, requiredReaders));
-      case REPEATED:
-        return ScalarArrayReader.build((RepeatedValueVector) vector, newAccessor(type, elementReaders));
-      default:
-        throw new UnsupportedOperationException(mode.toString());
-      }
-    }
-  }
-
-  public static AbstractObjectReader buildColumnReader(MajorType majorType, VectorAccessor va) {
-    MinorType type = majorType.getMinorType();
-    DataMode mode = majorType.getMode();
-
-    switch (type) {
-    case GENERIC_OBJECT:
-    case LATE:
-    case NULL:
-    case LIST:
-    case MAP:
-      throw new UnsupportedOperationException(type.toString());
-    default:
-      switch (mode) {
-      case OPTIONAL:
-        return BaseScalarReader.build(majorType, va, newAccessor(type, nullableReaders));
-      case REQUIRED:
-        return BaseScalarReader.build(majorType, va, newAccessor(type, requiredReaders));
-      case REPEATED:
-        return ScalarArrayReader.build(majorType, va, newAccessor(type, elementReaders));
-      default:
-        throw new UnsupportedOperationException(mode.toString());
-      }
+      return newAccessor(type, requiredReaders);
     }
   }
 

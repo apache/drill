@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <boost/bind.hpp>
 #include <drill/drillClient.hpp>
 #include <drill/drillConfig.hpp>

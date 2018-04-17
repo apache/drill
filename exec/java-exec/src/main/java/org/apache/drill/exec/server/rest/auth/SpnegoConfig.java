@@ -6,17 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -34,6 +32,9 @@ public class SpnegoConfig {
 
   private final String keytab;
 
+  // Optional parameter
+  private final String clientNameMapping;
+
   public SpnegoConfig(DrillConfig config) {
 
     keytab = config.hasPath(ExecConstants.HTTP_SPNEGO_KEYTAB) ?
@@ -43,6 +44,11 @@ public class SpnegoConfig {
     principal = config.hasPath(ExecConstants.HTTP_SPNEGO_PRINCIPAL) ?
         config.getString(ExecConstants.HTTP_SPNEGO_PRINCIPAL) :
         null;
+
+    // set optional user name mapping
+    clientNameMapping = config.hasPath(ExecConstants.KERBEROS_NAME_MAPPING) ?
+      config.getString(ExecConstants.KERBEROS_NAME_MAPPING) :
+      null;
   }
 
   //Reads the SPNEGO principal from the config file
@@ -96,12 +102,18 @@ public class SpnegoConfig {
         newConfig.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
             UserGroupInformation.AuthenticationMethod.KERBEROS.toString());
 
+        if (clientNameMapping != null) {
+          newConfig.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTH_TO_LOCAL, clientNameMapping);
+        }
+
         UserGroupInformation.setConfiguration(newConfig);
         ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
 
         // Reset the original configuration for static UGI
         UserGroupInformation.setConfiguration(new Configuration());
       } else {
+        // Let's not overwrite the rules here since it might be possible that CUSTOM security is configured for
+        // JDBC/ODBC with default rules. If Kerberos was enabled then the correct rules must already be set
         ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
       }
     } catch (Exception e) {

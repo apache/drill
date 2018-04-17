@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,7 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,12 +41,21 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetPushDownFilter.class);
+
+  private static final Collection<String> BANNED_OPERATORS;
+
+  static {
+    BANNED_OPERATORS = new ArrayList<>(1);
+    BANNED_OPERATORS.add("flatten");
+  }
 
   public static RelOptRule getFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
     return new ParquetPushDownFilter(
@@ -108,15 +119,15 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       return;
     }
 
-    RexNode condition = null;
+    RexNode condition;
     if (project == null) {
       condition = filter.getCondition();
     } else {
       // get the filter as if it were below the projection.
-      condition = RelOptUtil.pushFilterPastProject(filter.getCondition(), project);
+      condition = RelOptUtil.pushPastProject(filter.getCondition(), project);
     }
 
-    if (condition == null || condition.equals(ValueExpressions.BooleanExpression.TRUE)) {
+    if (condition == null || condition.isAlwaysTrue()) {
       return;
     }
 
@@ -127,7 +138,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
     final List<RexNode> qualifiedPredList = Lists.newArrayList();
 
     for (final RexNode pred : predList) {
-      if (DrillRelOptUtil.findItemOrFlatten(pred, ImmutableList.<RexNode>of()) == null) {
+      if (DrillRelOptUtil.findOperators(pred, ImmutableList.of(), BANNED_OPERATORS) == null) {
         qualifiedPredList.add(pred);
       }
     }
@@ -158,7 +169,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       inputRel = project.copy(project.getTraitSet(), ImmutableList.of(inputRel));
     }
 
-    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.<RelNode>of(inputRel));
+    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.of(inputRel));
 
     call.transformTo(newFilter);
   }

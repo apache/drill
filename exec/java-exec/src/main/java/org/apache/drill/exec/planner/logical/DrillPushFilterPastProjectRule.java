@@ -30,13 +30,23 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class DrillPushFilterPastProjectRule extends RelOptRule {
 
   public final static RelOptRule INSTANCE = new DrillPushFilterPastProjectRule();
 
-  protected DrillPushFilterPastProjectRule() {
+  private static final Collection<String> BANNED_OPERATORS;
+
+  static {
+    BANNED_OPERATORS = new ArrayList<>(2);
+    BANNED_OPERATORS.add("flatten");
+    BANNED_OPERATORS.add("item");
+  }
+
+  private DrillPushFilterPastProjectRule() {
     super(
         operand(
             LogicalFilter.class,
@@ -60,14 +70,14 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
 
 
     for (final RexNode pred : predList) {
-      if (DrillRelOptUtil.findItemOrFlatten(pred, projRel.getProjects()) == null) {
+      if (DrillRelOptUtil.findOperators(pred, projRel.getProjects(), BANNED_OPERATORS) == null) {
         qualifiedPredList.add(pred);
       } else {
         unqualifiedPredList.add(pred);
       }
     }
 
-    final RexNode qualifedPred =RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), qualifiedPredList, true);
+    final RexNode qualifedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), qualifiedPredList, true);
 
     if (qualifedPred == null) {
       return;
@@ -80,12 +90,11 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     Filter newFilterRel = LogicalFilter.create(projRel.getInput(), newCondition);
 
     Project newProjRel =
-        (Project) RelOptUtil.createProject(
-            newFilterRel,
-            Pair.left(projRel.getNamedProjects()),
-            Pair.right(projRel.getNamedProjects()),
-            false,
-            relBuilderFactory.create(projRel.getCluster(), null));
+        (Project) relBuilderFactory
+            .create(newFilterRel.getCluster(), null)
+            .push(newFilterRel)
+            .projectNamed(Pair.left(projRel.getNamedProjects()), Pair.right(projRel.getNamedProjects()), true)
+            .build();
 
     final RexNode unqualifiedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), unqualifiedPredList, true);
 

@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 # included in all the drill scripts with source command
 # should not be executable directly
 # also should not be passed any arguments, since we need original $*
@@ -123,10 +126,10 @@ if [ ! -e "$JAVA" ]; then
   fatal_error "Java not found at JAVA_HOME=$JAVA_HOME."
 fi
 
-# Ensure that Java version is at least 1.7
+# Ensure that Java version is at least 1.8
 "$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6|1\.7" > /dev/null
 if [ $? -eq 0 ]; then
-  fatal_error "Java 1.8 or later is required to run Apache Drill."
+  fatal_error "Java 1.8 is required to run Apache Drill."
 fi
 
 # Check if a file exists and has relevant lines for execution
@@ -214,9 +217,8 @@ fi
 
 export SQLLINE_JAVA_OPTS=${SQLLINE_JAVA_OPTS:-""}
 
-# Class unloading is disabled by default in Java 7
-# http://hg.openjdk.java.net/jdk7u/jdk7u60/hotspot/file/tip/src/share/vm/runtime/globals.hpp#l1622
-export SERVER_GC_OPTS="$SERVER_GC_OPTS -XX:+CMSClassUnloadingEnabled -XX:+UseG1GC"
+
+export SERVER_GC_OPTS="$SERVER_GC_OPTS -XX:+UseG1GC"
 
 # No GC options by default for SQLLine
 export CLIENT_GC_OPTS=${CLIENT_GC_OPTS:-""}
@@ -422,8 +424,7 @@ CP="$CP:$DRILL_HOME/jars/classb/*"
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   # Linux
   # check for Fedora. netty-tcnative has a Fedora variant
-  linuxvariant=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-  if [[ "$linuxvariant" == "Fedora" ]]; then
+  if [[ -f "/etc/fedora-release" ]]; then
     CP="$CP:$DRILL_HOME/jars/3rdparty/fedora/*"
   else
     CP="$CP:$DRILL_HOME/jars/3rdparty/linux/*"

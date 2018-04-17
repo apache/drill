@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -18,6 +19,8 @@ package org.apache.drill.exec.expr.stat;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.LogicalExpressionBase;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.parquet.column.statistics.Statistics;
 
@@ -29,6 +32,7 @@ import java.util.List;
  * IS predicates for parquet filter pushdown.
  */
 public class ParquetIsPredicates {
+
   public static abstract class ParquetIsPredicate extends LogicalExpressionBase implements ParquetFilterPredicate {
     protected final LogicalExpression expr;
 
@@ -54,15 +58,25 @@ public class ParquetIsPredicates {
    * IS NULL predicate.
    */
   public static class IsNullPredicate extends ParquetIsPredicate {
+    private final boolean isArray;
+
     public IsNullPredicate(LogicalExpression expr) {
       super(expr);
+      this.isArray = isArray(expr);
     }
 
     @Override
     public boolean canDrop(RangeExprEvaluator evaluator) {
+
+      // for arrays we are not able to define exact number of nulls
+      // [1,2,3] vs [1,2] -> in second case 3 is absent and thus it's null but statistics shows no nulls
+      if (isArray) {
+        return false;
+      }
+
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -73,6 +87,16 @@ public class ParquetIsPredicates {
         return false;
       }
     }
+
+    private boolean isArray(LogicalExpression expression) {
+      if (expression instanceof TypedFieldExpr) {
+        TypedFieldExpr typedFieldExpr = (TypedFieldExpr) expression;
+        SchemaPath schemaPath = typedFieldExpr.getPath();
+        return schemaPath.isArray();
+      }
+      return false;
+    }
+
   }
 
   /**
@@ -87,8 +111,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -113,8 +136,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -140,8 +162,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -167,8 +188,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 
@@ -193,8 +213,7 @@ public class ParquetIsPredicates {
     public boolean canDrop(RangeExprEvaluator evaluator) {
       Statistics exprStat = expr.accept(evaluator, null);
 
-      if (exprStat == null ||
-          exprStat.isEmpty()) {
+      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
         return false;
       }
 

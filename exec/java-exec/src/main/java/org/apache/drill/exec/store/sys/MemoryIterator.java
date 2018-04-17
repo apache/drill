@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -61,8 +61,8 @@ public class MemoryIterator implements Iterator<Object> {
     BufferPoolMXBean directBean = getDirectBean();
     memoryInfo.jvm_direct_current = directBean.getMemoryUsed();
 
-
-    memoryInfo.direct_current = context.getAllocator().getAllocatedMemory();
+    // We need the memory used by the root allocator for the Drillbit
+    memoryInfo.direct_current = context.getRootAllocator().getAllocatedMemory();
     memoryInfo.direct_max = DrillConfig.getMaxDirectMemory();
     return memoryInfo;
   }

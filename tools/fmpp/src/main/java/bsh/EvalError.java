@@ -15,24 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor.reader;
+package bsh;
 
-import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
-import org.apache.drill.exec.vector.accessor.reader.AbstractArrayReader.BaseElementIndex;
-
-/**
- * Index into the vector of elements for a repeated vector.
- * Keeps track of the current offset in terms of value positions.
- */
-
-public class FixedWidthElementReaderIndex extends BaseElementIndex implements ElementReaderIndex {
-
-  public FixedWidthElementReaderIndex(ColumnReaderIndex base) {
-    super(base);
-  }
-
-  @Override
-  public int vectorIndex(int posn) {
-    return elementIndex(posn);
+public class EvalError extends Exception {
+  private EvalError() {
   }
 }
+

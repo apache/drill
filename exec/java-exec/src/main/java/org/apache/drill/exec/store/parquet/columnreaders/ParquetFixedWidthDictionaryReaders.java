@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -33,6 +33,8 @@ import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.io.api.Binary;
+
+import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
 
 public class ParquetFixedWidthDictionaryReaders {
 
@@ -287,6 +289,31 @@ public class ParquetFixedWidthDictionaryReaders {
       for (int i = 0; i < recordsReadInThisIteration; i++){
         try {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
+        } catch ( Exception ex) {
+          throw ex;
+        }
+      }
+    }
+  }
+
+  static class DictionaryBinaryAsTimeStampReader extends FixedByteAlignedReader<TimeStampVector> {
+    DictionaryBinaryAsTimeStampReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                              ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, TimeStampVector v,
+                              SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+
+      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+              - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+
+      for (int i = 0; i < recordsReadInThisIteration; i++){
+        try {
+          Binary binaryTimeStampValue = pageReader.dictionaryValueReader.readBytes();
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
         } catch ( Exception ex) {
           throw ex;
         }

@@ -1,14 +1,22 @@
-<#-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
-  license agreements. See the NOTICE file distributed with this work for additional
-  information regarding copyright ownership. The ASF licenses this file to
-  You under the Apache License, Version 2.0 (the "License"); you may not use
-  this file except in compliance with the License. You may obtain a copy of
-  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
-  by applicable law or agreed to in writing, software distributed under the
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-  OF ANY KIND, either express or implied. See the License for the specific
-  language governing permissions and limitations under the License. -->
+<#--
 
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <#include "*/generic.ftl">
 <#macro page_head>
 </#macro>
@@ -41,6 +49,11 @@
       Total
       <div class="progress">
         <div id="totalUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
+        </div>
+      </div>
+      Actively Used Direct (Estimate)
+      <div class="progress">
+        <div id="estDirectUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
     </div>
@@ -77,6 +90,15 @@
     var round = function(val, n) {
       return Math.round(val * Math.pow(10, n)) / Math.pow(10, n);
     };
+    var isAllocator = function(metricName) {
+      return (metricName.startsWith("drill.allocator"));
+    };
+    function getGBUsageText(val, perc) {
+      if (isNaN(perc)) {
+        perc = 0;
+      }
+      return round((val / 1073741824), 2) + "GB (" + Math.max(0, perc) + "%)";
+    }
 
     function updateGauges(gauges) {
       $("#gaugesTable").html(function() {
@@ -109,18 +131,23 @@
     };
 
     function updateBars(gauges) {
-      $.each(["heap","non-heap","total"], function(i, key) {
-        var used    = gauges[key + ".used"].value;
-        var max     = gauges[key + ".max"].value;
-        var usage   = round((used / 1073741824), 2) + "GB";
-        var percent = round((used / max), 2);
+      $.each(["heap","non-heap","total","drill.allocator.root"], function(i, key) {
+        var used = gauges[key + ".used"].value;
+        var max;
+        if (isAllocator(key)) {
+          max = gauges[key + ".peak"].value;
+        } else {
+          max = gauges[key + ".max"].value;
+        }
+        var percent = round((100 * used / max), 2);
+        var usage = getGBUsageText(used, percent);
 
-        var styleVal = "width: " + percent + "%;"
-        $("#" + key + "Usage").attr({
+        var styleVal = "width: " + percent + "%;color: #202020;white-space: nowrap"
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").attr({
           "aria-valuenow" : percent,
           "style" : styleVal
         });
-        $("#" + key + "Usage").html(usage);
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").html(usage);
       });
     };
 
@@ -159,7 +186,7 @@
     };
 
     update();
-    setInterval(update, 2000);
+    setInterval(update, 3000);
   </script>
 </#macro>
 

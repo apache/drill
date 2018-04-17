@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Implementation of a row set model for hyper-batches. A hyper batch is
  * one that contains a list of batches. The batch is logically comprised

@@ -43,8 +43,8 @@ public class SystemTableBatchCreator implements BatchCreator<SystemTableScan> {
                             final List<RecordBatch> children)
     throws ExecutionSetupException {
     final SystemTable table = scan.getTable();
-    final Iterator<Object> iterator = table.getIterator(context);
-    final RecordReader reader = new PojoRecordReader(table.getPojoClass(), ImmutableList.copyOf(iterator));
+    final Iterator<Object> iterator = table.getIterator(context, scan.getMaxRecordsToRead());
+    final RecordReader reader = new PojoRecordReader(table.getPojoClass(), ImmutableList.copyOf(iterator), scan.getMaxRecordsToRead());
 
     return new ScanBatch(scan, context, Collections.singletonList(reader));
   }

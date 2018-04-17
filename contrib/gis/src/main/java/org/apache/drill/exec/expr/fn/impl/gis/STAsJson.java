@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /*
  * Wrapper for ESRI ST_AsJson to convert geometry into REST Json.
  * Emulates functionality from spatial-framework-for-hadoop.

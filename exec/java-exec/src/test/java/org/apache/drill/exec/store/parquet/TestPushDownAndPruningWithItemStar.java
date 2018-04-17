@@ -44,7 +44,7 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
   }
 
   @Test
-  public void testPushProjectIntoScan() throws Exception {
+  public void testPushProjectIntoScanWithGroupByClause() throws Exception {
     String query = String.format("select o_orderdate, count(*) from (select * from `%s`.`%s`) group by o_orderdate", DFS_TMP_SCHEMA, TABLE_NAME);
 
     String[] expectedPlan = {"numFiles=3, numRowGroups=3, usedMetadataFile=false, columns=\\[`o_orderdate`\\]"};
@@ -79,7 +79,7 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
   public void testPushProjectIntoScanWithExpressionInFilter() throws Exception {
     String query = String.format("select o_orderdate from (select * from `%s`.`%s`) where o_custkey + o_orderkey < 5", DFS_TMP_SCHEMA, TABLE_NAME);
 
-    String[] expectedPlan = {"numFiles=3, numRowGroups=3, usedMetadataFile=false, columns=\\[`o_custkey`, `o_orderkey`, `o_orderdate`\\]"};
+    String[] expectedPlan = {"numFiles=3, numRowGroups=3, usedMetadataFile=false, columns=\\[`o_orderdate`, `o_custkey`, `o_orderkey`\\]"};
     String[] excludedPlan = {};
 
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
@@ -116,7 +116,7 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
       "where t.user_info.cust_id > 28 and t.user_info.device = 'IOS5' and t.marketing_info.camp_id > 5 and t.marketing_info.keywords[2] is not null";
 
     String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, " +
-      "columns=\\[`user_info`.`cust_id`, `user_info`.`device`, `marketing_info`.`camp_id`, `marketing_info`.`keywords`\\[2\\], `trans_id`\\]"};
+      "columns=\\[`trans_id`, `user_info`.`cust_id`, `user_info`.`device`, `marketing_info`.`camp_id`, `marketing_info`.`keywords`\\[2\\]\\]"};
     String[] excludedPlan = {};
 
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
@@ -131,10 +131,43 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
   }
 
   @Test
+  public void testProjectIntoScanWithNestedStarSubQuery() throws Exception {
+    String query = String.format("select *, o_orderdate from (select * from `%s`.`%s`)", DFS_TMP_SCHEMA, TABLE_NAME);
+
+    String[] expectedPlan = {"numFiles=3, numRowGroups=3, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_orderdate`\\]"};
+    String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .sqlBaselineQuery("select *, o_orderdate from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME)
+        .build();
+  }
+
+  @Test
+  public void testProjectIntoScanWithSeveralNestedStarSubQueries() throws Exception {
+    String subQuery = String.format("select * from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME);
+    String query = String.format("select o_custkey + o_orderkey from (select * from (select * from (%s)))", subQuery);
+
+    String[] expectedPlan = {"numFiles=3, numRowGroups=3, usedMetadataFile=false, columns=\\[`o_custkey`, `o_orderkey`\\]"};
+    String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .sqlBaselineQuery("select o_custkey + o_orderkey from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME)
+        .build();
+  }
+
+  @Test
   public void testDirectoryPruning() throws Exception {
     String query = String.format("select * from (select * from `%s`.`%s`) where dir0 = 't1'", DFS_TMP_SCHEMA, TABLE_NAME);
 
-    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`\\]"};
+    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `dir0`\\]"};
     String[] excludedPlan = {};
 
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
@@ -147,10 +180,45 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
   }
 
   @Test
+  public void testDirectoryPruningWithNestedStarSubQuery() throws Exception {
+    String subQuery = String.format("select * from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME);
+    String query = String.format("select * from (select * from (select * from (%s))) where dir0 = 't1'", subQuery);
+
+    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `dir0`\\]"};
+    String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .sqlBaselineQuery("select * from `%s`.`%s` where dir0 = 't1'", DFS_TMP_SCHEMA, TABLE_NAME)
+        .build();
+  }
+
+    @Test
+    public void testDirectoryPruningWithNestedStarSubQueryAndAdditionalColumns() throws Exception {
+      String subQuery = String.format("select * from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME);
+      String query = String.format("select * from (select * from (select *, `o_orderdate` from (%s))) where dir0 = 't1'", subQuery);
+
+      String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_orderdate`, `dir0`\\]"};
+      String[] excludedPlan = {};
+
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+         .sqlQuery(query)
+         .unOrdered()
+         .sqlBaselineQuery("select * from `%s`.`%s` where dir0 = 't1'", DFS_TMP_SCHEMA, TABLE_NAME)
+         .build();
+    }
+
+
+    @Test
   public void testFilterPushDownSingleCondition() throws Exception {
     String query = String.format("select * from (select * from `%s`.`%s`) where o_orderdate = date '1992-01-01'", DFS_TMP_SCHEMA, TABLE_NAME);
 
-    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`\\]"};
+    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_orderdate`\\]"};
     String[] excludedPlan = {};
 
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
@@ -167,7 +235,7 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
     String query = String.format("select * from (select * from `%s`.`%s`) where o_orderdate = date '1992-01-01' or o_orderdate = date '1992-01-09'",
         DFS_TMP_SCHEMA, TABLE_NAME);
 
-    String[] expectedPlan = {"numFiles=2, numRowGroups=2, usedMetadataFile=false, columns=\\[`\\*\\*`\\]"};
+    String[] expectedPlan = {"numFiles=2, numRowGroups=2, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_orderdate`\\]"};
     String[] excludedPlan = {};
 
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
@@ -177,6 +245,40 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
         .unOrdered()
         .sqlBaselineQuery("select * from `%s`.`%s` where o_orderdate = date '1992-01-01' or o_orderdate = date '1992-01-09'",
             DFS_TMP_SCHEMA, TABLE_NAME)
+        .build();
+  }
+
+  @Test
+  public void testFilterPushDownWithSeveralNestedStarSubQueries() throws Exception {
+    String subQuery = String.format("select * from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME);
+    String query = String.format("select * from (select * from (select * from (%s))) where o_orderdate = date '1992-01-01'", subQuery);
+
+    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_orderdate`\\]"};
+    String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .sqlBaselineQuery("select * from `%s`.`%s` where o_orderdate = date '1992-01-01'", DFS_TMP_SCHEMA, TABLE_NAME)
+        .build();
+  }
+
+  @Test
+  public void testFilterPushDownWithSeveralNestedStarSubQueriesWithAdditionalColumns() throws Exception {
+    String subQuery = String.format("select * from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME);
+    String query = String.format("select * from (select * from (select *, o_custkey from (%s))) where o_orderdate = date '1992-01-01'", subQuery);
+
+    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_custkey`, `o_orderdate`\\]"};
+    String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .sqlBaselineQuery("select *, o_custkey from `%s`.`%s` where o_orderdate = date '1992-01-01'", DFS_TMP_SCHEMA, TABLE_NAME)
         .build();
   }
 

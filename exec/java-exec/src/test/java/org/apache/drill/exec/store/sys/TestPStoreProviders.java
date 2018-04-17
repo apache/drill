@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.sys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +30,7 @@ import org.apache.drill.exec.coord.zk.PathUtils;
 import org.apache.drill.exec.coord.zk.ZookeeperClient;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.PersistedOptionValue;
+import org.apache.drill.exec.store.sys.store.ZookeeperPersistentStore;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -44,6 +44,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
+
+import static org.junit.Assert.assertTrue;
 
 @Category({SlowTest.class})
 public class TestPStoreProviders extends TestWithZookeeper {
@@ -133,8 +135,9 @@ public class TestPStoreProviders extends TestWithZookeeper {
       try (ZookeeperPersistentStoreProvider provider =
         new ZookeeperPersistentStoreProvider(zkHelper.getConfig(), curator)) {
         PersistentStore<PersistedOptionValue> store = provider.getOrCreateStore(storeConfig);
+        assertTrue(store instanceof ZookeeperPersistentStore);
 
-        PersistedOptionValue oldOptionValue = store.get(oldName, null);
+        PersistedOptionValue oldOptionValue = ((ZookeeperPersistentStore<PersistedOptionValue>)store).get(oldName, null);
         PersistedOptionValue expectedValue = new PersistedOptionValue("true");
 
         Assert.assertEquals(expectedValue, oldOptionValue);

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.util.BitSets;
@@ -80,18 +79,9 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
       this.type = type;
     }
 
-    public List<RelDataType> getParameterTypes(RelDataTypeFactory typeFactory) {
-      return ImmutableList.of(type);
-    }
-
     public RelDataType getType() {
       return type;
     }
-
-    public RelDataType getReturnType(RelDataTypeFactory typeFactory) {
-      return type;
-    }
-
   }
 
   public AggPrelBase(RelOptCluster cluster,

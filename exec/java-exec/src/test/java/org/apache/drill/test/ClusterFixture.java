@@ -516,7 +516,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
          .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE);
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
-    props.setProperty(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getCodegenDir().getAbsolutePath());
     props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
 

@@ -40,11 +40,12 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.FlattenPOP;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.AbstractRecordBatchMemoryManager;
+import org.apache.drill.exec.record.RecordBatchMemoryManager;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
@@ -99,7 +100,23 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     }
   }
 
-  private class FlattenMemoryManager extends AbstractRecordBatchMemoryManager {
+  public enum Metric implements MetricDef {
+    INPUT_BATCH_COUNT,
+    AVG_INPUT_BATCH_BYTES,
+    AVG_INPUT_ROW_BYTES,
+    INPUT_RECORD_COUNT,
+    OUTPUT_BATCH_COUNT,
+    AVG_OUTPUT_BATCH_BYTES,
+    AVG_OUTPUT_ROW_BYTES,
+    OUTPUT_RECORD_COUNT;
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
+
+  private class FlattenMemoryManager extends RecordBatchMemoryManager {
 
     @Override
     public void update() {
@@ -129,13 +146,18 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       // Number of rows in outgoing batch
       setOutputRowCount(outputBatchSize, avgOutgoingRowWidth);
 
+      setOutgoingRowWidth(avgOutgoingRowWidth);
+
       // Limit to lower bound of total number of rows possible for this batch
       // i.e. all rows fit within memory budget.
       setOutputRowCount(Math.min(columnSize.getElementCount(), getOutputRowCount()));
 
-      logger.debug("flatten incoming batch sizer : {}, outputBatchSize : {}," +
-        "avgOutgoingRowWidth : {}, outputRowCount : {}", getRecordBatchSizer(), outputBatchSize,
-        avgOutgoingRowWidth, getOutputRowCount());
+      logger.debug("incoming batch size : {}", getRecordBatchSizer());
+
+      logger.debug("output batch size : {}, avg outgoing rowWidth : {}, output rowCount : {}",
+        outputBatchSize, avgOutgoingRowWidth, getOutputRowCount());
+
+      updateIncomingStats();
     }
   }
 
@@ -232,12 +254,16 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       container.buildSchema(SelectionVectorMode.NONE);
     }
 
+    flattenMemoryManager.updateOutgoingStats(outputRecords);
     return IterOutcome.OK;
   }
 
   private void handleRemainder() {
     int remainingRecordCount = flattener.getFlattenField().getAccessor().getInnerValueCount() - remainderIndex;
-    if (!doAlloc(remainingRecordCount)) {
+
+    // remainingRecordCount can be much higher than number of rows we will have in outgoing batch.
+    // Do memory allocation only for number of rows we are going to have in the batch.
+    if (!doAlloc(Math.min(remainingRecordCount, flattenMemoryManager.getOutputRowCount()))) {
       outOfMemory = true;
       return;
     }
@@ -262,6 +288,9 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     if (complexWriters != null) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
+
+    flattenMemoryManager.updateOutgoingStats(projRecords);
+
   }
 
   public void addComplexWriter(ComplexWriter writer) {
@@ -462,5 +491,31 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       exprs.add(new NamedExpression(SchemaPath.getSimplePath(fieldName), new FieldReference(fieldName)));
     }
     return exprs;
+  }
+
+  private void updateStats() {
+    stats.setLongStat(Metric.INPUT_BATCH_COUNT, flattenMemoryManager.getNumIncomingBatches());
+    stats.setLongStat(Metric.AVG_INPUT_BATCH_BYTES, flattenMemoryManager.getAvgInputBatchSize());
+    stats.setLongStat(Metric.AVG_INPUT_ROW_BYTES, flattenMemoryManager.getAvgInputRowWidth());
+    stats.setLongStat(Metric.INPUT_RECORD_COUNT, flattenMemoryManager.getTotalInputRecords());
+    stats.setLongStat(Metric.OUTPUT_BATCH_COUNT, flattenMemoryManager.getNumOutgoingBatches());
+    stats.setLongStat(Metric.AVG_OUTPUT_BATCH_BYTES, flattenMemoryManager.getAvgOutputBatchSize());
+    stats.setLongStat(Metric.AVG_OUTPUT_ROW_BYTES, flattenMemoryManager.getAvgOutputRowWidth());
+    stats.setLongStat(Metric.OUTPUT_RECORD_COUNT, flattenMemoryManager.getTotalOutputRecords());
+
+    logger.debug("input: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+      flattenMemoryManager.getNumIncomingBatches(), flattenMemoryManager.getAvgInputBatchSize(),
+      flattenMemoryManager.getAvgInputRowWidth(), flattenMemoryManager.getTotalInputRecords());
+
+    logger.debug("output: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+      flattenMemoryManager.getNumOutgoingBatches(), flattenMemoryManager.getAvgOutputBatchSize(),
+      flattenMemoryManager.getAvgOutputRowWidth(), flattenMemoryManager.getTotalOutputRecords());
+
+  }
+
+  @Override
+  public void close() {
+    updateStats();
+    super.close();
   }
 }

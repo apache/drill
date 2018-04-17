@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>

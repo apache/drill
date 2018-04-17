@@ -64,7 +64,7 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
 
   protected DrillProjectRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<? extends RexNode> exps,
       RelDataType rowType) {
-    super(cluster, traits, child, exps, rowType, Flags.BOXED);
+    super(cluster, traits, child, exps, rowType);
     assert getConvention() == convention;
     nonSimpleFieldCount = this.getRowType().getFieldCount() - getSimpleFieldCount();
   }
@@ -92,7 +92,7 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
   protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
     List<NamedExpression> expressions = Lists.newArrayList();
 
-    HashMap<String, String> starColPrefixes = new HashMap<String, String>();
+    HashMap<String, String> starColPrefixes = new HashMap<>();
 
     // T1.* will subsume T1.*0, but will not subsume any regular column/expression.
     // Select *, col1, *, col2 : the intermediate will output one set of regular columns expanded from star with prefix,

@@ -1,10 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -41,15 +42,23 @@ public abstract class AbstractPojoRecordReader<T> extends AbstractRecordReader i
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractPojoRecordReader.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(AbstractPojoRecordReader.class);
+  public static final int DEFAULT_RECORDS_PER_BATCH = 4000;
 
+  @JsonProperty private final int recordsPerBatch;
   @JsonProperty protected final List<T> records;
+
   protected List<PojoWriter> writers;
 
   private Iterator<T> currentIterator;
   private OperatorContext operatorContext;
 
   protected AbstractPojoRecordReader(List<T> records) {
+    this(records, DEFAULT_RECORDS_PER_BATCH);
+  }
+
+  protected AbstractPojoRecordReader(List<T> records, int recordsPerBatch) {
     this.records = records;
+    this.recordsPerBatch = Math.min(recordsPerBatch, DEFAULT_RECORDS_PER_BATCH);
   }
 
   @Override
@@ -65,7 +74,7 @@ public abstract class AbstractPojoRecordReader<T> extends AbstractRecordReader i
     injector.injectPause(operatorContext.getExecutionControls(), "read-next", logger);
 
     int recordCount = 0;
-    while (currentIterator.hasNext()) {
+    while (currentIterator.hasNext() && recordCount < recordsPerBatch) {
       if (!allocated) {
         allocate();
         allocated = true;
@@ -88,7 +97,7 @@ public abstract class AbstractPojoRecordReader<T> extends AbstractRecordReader i
   @Override
   public void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException {
     for (final ValueVector v : vectorMap.values()) {
-      AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
+      AllocationHelper.allocate(v, recordsPerBatch, 50, 10);
     }
   }
 

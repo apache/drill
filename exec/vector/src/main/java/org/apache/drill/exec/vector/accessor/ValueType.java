@@ -27,5 +27,60 @@ package org.apache.drill.exec.vector.accessor;
  */
 
 public enum ValueType {
-  INTEGER, LONG, DOUBLE, STRING, BYTES, DECIMAL, PERIOD
+
+  /**
+   * The value is set from an integer: TINYINT,
+   * SMALLINT, INT, UINT1, and UINT2.
+   */
+
+  INTEGER,
+
+  /**
+   * The value set from a long: BIGINT and
+   * UINT4.
+   */
+
+  LONG,
+
+  /**
+   * Type is set from a double: FLOAT4 and FLOAT8.
+   */
+  DOUBLE,
+
+  /**
+   * The value can be set from a string (for convenience).
+   * VARCHAR and VAR16CHAR.
+   */
+
+  STRING,
+
+  /**
+   * The value is set from a byte buffer. VARCHAR (in production
+   * code), VAR16CHAR, VARBINARY.
+   */
+
+  BYTES,
+
+  /**
+   * The value is set from a BigDecimal: any of Drill's decimal
+   * types.
+   */
+
+  DECIMAL,
+
+  /**
+   * The value is set from a Period. Any of Drill's date/time
+   * types. (Note: there is a known bug in which Drill incorrectly
+   * differentiates between local date/times (those without a timezone)
+   * and absolute date/times (those with a timezone.) Caveat emptor.
+   */
+
+  PERIOD,
+
+  /**
+   * The value has no type. This is typically a dummy writer used
+   * for unprojected columns.
+   */
+
+  NULL
 }

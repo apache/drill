@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.ValueVector;
 

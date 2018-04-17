@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -201,7 +201,7 @@ public class TableBuilder {
   }
 
   public void appendBytes(final long l) {
-    appendBytes(l, null);
+    appendBytes(l, null, null, null);
   }
 
   public void appendBytes(final long l, final String link) {
@@ -209,8 +209,18 @@ public class TableBuilder {
   }
 
   public void appendBytes(final long l, final String link, final String tooltip) {
+    appendBytes(l, link, tooltip, null);
+  }
+
+  public void appendBytes(final long l, Map<String, String> attributeMap) {
+    appendBytes(l, null, null, attributeMap);
+  }
+
+  public void appendBytes(final long l, final String link, final String tooltip, Map<String, String> attributeMap) {
     //Embedding dataTable's data-order attribute
-    Map<String, String> attributeMap = new HashMap<String, String>();
+    if (attributeMap == null) {
+      attributeMap = new HashMap<>();
+    }
     attributeMap.put("data-order", String.valueOf(l));
     appendCell(bytePrint(l), link, tooltip, null, attributeMap);
   }

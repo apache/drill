@@ -36,12 +36,13 @@ import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
+import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.zookeeper.CreateMode;
 
 /**
  * Zookeeper based implementation of {@link org.apache.drill.exec.store.sys.PersistentStore}.
  */
-public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> {
+public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> implements VersionedPersistentStore<V> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZookeeperPersistentStore.class);
 
   private final PersistentStoreConfig<V> config;

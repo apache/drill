@@ -26,7 +26,6 @@ import java.util.Set;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
@@ -59,7 +58,7 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
-import org.apache.calcite.sql.validate.SqlConformance;
+import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
@@ -140,7 +139,7 @@ public class SqlConverter {
         session);
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, SqlConformance.DEFAULT);
+    this.validator = new DrillValidator(opTab, catalog, typeFactory, SqlConformanceEnum.DEFAULT);
     validator.setIdentifierExpansion(true);
     cluster = null;
   }
@@ -160,7 +159,7 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, SqlConformance.DEFAULT);
+    this.validator = new DrillValidator(opTab, catalog, typeFactory, SqlConformanceEnum.DEFAULT);
     this.temporarySchema = parent.temporarySchema;
     this.session = parent.session;
     this.drillConfig = parent.drillConfig;
@@ -239,10 +238,9 @@ public class SqlConverter {
   }
 
   private class DrillValidator extends SqlValidatorImpl {
-    private final Set<SqlValidatorScope> identitySet = Sets.newIdentityHashSet();
 
     protected DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
-        RelDataTypeFactory typeFactory, SqlConformance conformance) {
+        RelDataTypeFactory typeFactory, SqlConformanceEnum conformance) {
       super(opTab, catalogReader, typeFactory, conformance);
     }
 
@@ -377,9 +375,10 @@ public class SqlConverter {
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);
     final RelRoot rel2 = rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
-    final RelRoot rel3 = rel2.withRel(RelDecorrelator.decorrelateQuery(rel2.rel));
+    final RelRoot rel3 = rel2.withRel(
+        RelDecorrelator.decorrelateQuery(rel2.rel,
+            sqlToRelConverterConfig.getRelBuilderFactory().create(cluster, null)));
     return rel3;
-
   }
 
   private class Expander implements RelOptTable.ViewExpander {
