@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.physical.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -22,35 +23,33 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import java.util.List;
 
-@JsonTypeName("nested-loop-join")
-public class NestedLoopJoinPOP extends AbstractJoinPop {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinPOP.class);
+@JsonTypeName("lateral-join")
+public class LateralJoinPOP extends AbstractJoinPop {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LateralJoinPOP.class);
 
   @JsonCreator
-  public NestedLoopJoinPOP(
+  public LateralJoinPOP(
       @JsonProperty("left") PhysicalOperator left,
       @JsonProperty("right") PhysicalOperator right,
-      @JsonProperty("joinType") JoinRelType joinType,
-      @JsonProperty("condition") LogicalExpression condition
-  ) {
-    super(left, right, joinType, condition, null);
+      @JsonProperty("joinType") JoinRelType joinType) {
+    super(left, right, joinType, null, null);
   }
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    Preconditions.checkArgument(children.size() == 2, "Nested loop join should have two physical operators");
-    return new NestedLoopJoinPOP(children.get(0), children.get(1), joinType, condition);
+    Preconditions.checkArgument(children.size() == 2,
+      "Lateral join should have two physical operators");
+    return new LateralJoinPOP(children.get(0), children.get(1), joinType);
   }
 
   @Override
   public int getOperatorType() {
-    return CoreOperatorType.NESTED_LOOP_JOIN_VALUE;
+    return CoreOperatorType.LATERAL_JOIN_VALUE;
   }
 }
