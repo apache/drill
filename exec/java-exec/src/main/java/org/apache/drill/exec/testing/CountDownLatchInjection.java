@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.testing;
 
+import org.apache.drill.common.AutoCloseables.Closeable;
+
 /**
  * This class is used internally for tracking injected countdown latches. These latches are specified via
  * {@link org.apache.drill.exec.ExecConstants#DRILLBIT_CONTROL_INJECTIONS} session option.
@@ -25,7 +27,7 @@ package org.apache.drill.exec.testing;
  * with the expected number of countdown and awaits. The child threads count down on the same latch (same site class
  * and same descriptor), and once there are enough, the parent thread continues.
  */
-public interface CountDownLatchInjection {
+public interface CountDownLatchInjection extends Closeable {
 
   /**
    * Initializes the underlying latch
