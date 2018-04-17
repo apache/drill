@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
+import org.apache.drill.exec.vector.accessor.writer.MapWriter;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
 /**
@@ -50,7 +51,7 @@ public abstract class BaseWriterBuilder {
   private AbstractObjectWriter buildVectorWriter(ValueVector vector, VectorDescrip descrip) {
     MajorType type = vector.getField().getType();
     if (type.getMinorType() == MinorType.MAP) {
-      return ColumnWriterFactory.buildMapWriter(descrip.metadata,
+      return MapWriter.buildMapWriter(descrip.metadata,
           (AbstractMapVector) vector,
           buildMap((AbstractMapVector) vector, descrip));
     } else {

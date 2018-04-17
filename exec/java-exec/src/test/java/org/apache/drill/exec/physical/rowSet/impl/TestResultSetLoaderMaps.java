@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.rowSet.impl;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
-import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +44,7 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.Test;
 
@@ -74,7 +74,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     // Verify structure and schema
 
     assertEquals(5, rsLoader.schemaVersion());
-    TupleMetadata actualSchema = rootWriter.schema();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(3, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isMap());
     assertEquals(2, actualSchema.metadata("m").mapSchema().size());
@@ -123,7 +123,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(20, mapValue(210, "barney"), "bam-bam")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -164,7 +164,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(20, mapValue("barney"))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     // Add three columns in the second batch. One before
     // the batch starts, one before the first row, and one after
@@ -201,8 +201,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(40, mapValue("betty", 140, 140_000L, "bam-bam"))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -238,7 +237,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     // Ensure metadata was added
 
-    assertTrue(mapWriter.schema().size() == 1);
+    assertTrue(mapWriter.tupleSchema().size() == 1);
 
     rootWriter
       .addRow(20, mapValue("fred"))
@@ -266,8 +265,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(30, mapValue("barney"))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -318,7 +316,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(30, mapValue())
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     // Now add another column to the map
 
@@ -346,8 +344,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(50, mapValue("barney"))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -377,7 +374,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     RowSetLoader rootWriter = rsLoader.writer();
 
     rsLoader.startBatch();
-    rootWriter.addRow(10, objArray("b1", objArray("c1")));
+    rootWriter.addRow(10, mapValue("b1", mapValue("c1")));
 
     // Validate first batch
 
@@ -387,7 +384,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(10, mapValue("b1", mapValue("c1")))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     // Now add columns in the second batch.
 
@@ -432,8 +429,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(40, mapValue("b4", mapValue("c4", "e4", "g4"), "d4", "e4"))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -471,7 +467,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 //    actual.print();
 //    expected.print();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     // Now add columns in the second batch.
 
@@ -514,8 +510,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(40, mapValue("b4", mapValue("c4", "e4", "g4"), "d4", "e4"))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
-
+    RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
@@ -561,7 +556,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
         .addRow(30, mapValue(intArray(), strArray("d3.1")))
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(actual);
+    RowSetUtilities.verify(expected, actual);
 
     // Add another array after the first row in the second batch.
 

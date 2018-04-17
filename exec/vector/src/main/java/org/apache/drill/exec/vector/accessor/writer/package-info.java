@@ -105,11 +105,18 @@
  * </ul>
  * <p>
  * This data model is similar to; but has important differences from, the prior,
- * generated, readers and writers.
+ * generated, readers and writers. This version is based on the concept of
+ * minimizing the number of writer classes, and leveraging Java primitives to
+ * keep the number of get/set methods to a reasonable size. This version also
+ * automates vector allocation, vector overflow and so on.
  * <p>
  * The object layer is new: it is the simplest way to model the three “object
  * types.” An app using this code would use just the leaf scalar readers and
  * writers.
+ * <p>
+ * Similarly, the {@link ColumnWriter} interface provides a uniform way to
+ * access services common to all writer types, while allowing each JSON-like
+ * writer to provide type-specific ways to access data.
  *
  * <h4>Writer Performance</h4>
  *
@@ -146,6 +153,94 @@
  * vector and works the same for repeated scalars, repeated maps and
  * (eventually) lists and repeated lists.</li>
  * </ul>
+ *
+ * <h4>Possible Improvements</h4>
+ *
+ * The code here works and has extensive unit tests. But, many improvements
+ * are possible:
+ * <ul>
+ * <li>Drill has four "container" vector types (Map, Union, List, Repeated
+ * List), each with its own quirky semantics. The code could be far simpler
+ * if the container semantics were unified.</li>
+ * <li>Similarly, the corresponding writers implement some very awkward
+ * logic to handle union and list containers. But, these vectors are not
+ * fully supported in Drill. This means that the code implements (and tests)
+ * many odd cases which no one may ever use. Better to limit the data types
+ * that Drill supports, implement those well, and deprecate the obscure
+ * cases.</li>
+ * <li>The same schema-parsing logic appears over and over in different
+ * guises. Some parse vectors, some parse batch schemas, others parse the
+ * column metadata (which provides information not available in the
+ * materialized field) and so on. Would be great to find some common way
+ * to do this work, perhaps in the form of a visitor. An earlier version of
+ * this code tried using visitors. But, since each representation has its
+ * own quirks, that approach didn't work out. A first step would be to come
+ * up with a standard schema description which can be used in all cases,
+ * then build a visitor on that.</li>
+ * <li>Many tests exist. But, the careful reader will note that Drill's
+ * vectors define a potentially very complex recursive structure (most
+ * variations of which are never used.) Additional testing should cover
+ * all cases, such as repeated lists that contain unions, or unions that
+ * contain repeated lists of tuples.</li>
+ * <li>Experience with the code may show additional redundancies that can
+ * be removed. Each fresh set of eyes may see things that prior folks
+ * missed.</li>
+ * </ul>
+ *
+ * <h4>Caveats</h4>
+ *
+ * The column accessors are divided into two packages: <tt>vector</tt> and
+ * <tt>java-exec</tt>. It is easy to add functionality in the wrong place,
+ * breaking abstraction and encapsulation. Here are some general guidelines:
+ * <ul>
+ * <li>The core reader and writer logic is implemented in this <tt>vector</tt>
+ * package. This package provides low-level tools to build accessors, but
+ * not the construction logic itself. (That is found in the <tt>java-exec</tt>
+ * layer.)</li>
+ * <li>The vector layer is designed to support both the simple "row set" and
+ * the more complex "result set loader" implementations.</li>
+ * <li>The "row set" layer wraps the accessors in tools that work on one batch
+ * (row set) at a time, without regard for schema versions, schema changes
+ * and the like. The row set layer is primarily for testing: building an input
+ * batch for some operator, and verifying an output batch. It also serves as a
+ * simple test framework for the accessors, without the complexity of other
+ * layers.</li>
+ * <li>The "result set loader" layer handles the complexity of dynamic schema
+ * evolution, schema versioning, vector overflow and projection. It provides
+ * an "industrial strength" version of the accessor mechanism intended for
+ * use in the scan operator (but which can be generalized for other operators.)
+ * </li>
+ * <li>The "listener" pattern is used to allow higher levels to "plug in"
+ * functionality to the accessor layer. This is especially true for schema
+ * evolution: listeners notify the higher layer to add a column, delegating
+ * the actual work to that higher layer.</li>
+ * </ul>
+ *
+ * Given all this, plan carefully where to make any improvement. If your change
+ * violates the dependencies below, perhaps reconsider another way to do the
+ * change.
+ * <code><pre>
+ *                                                  +------------+
+ *                      +-------------------------- | Result Set |
+ *                      v                           |   Loader   |
+ *             +----------------+     +---------+   +------------+
+ *             |    Metadata    | <-- | Row Set |     |
+ *             | Implementation |     |  Tools  |     |
+ *             +----------------+     +---------+     |
+ * java-exec           |                     |        |
+ * ------------------- | ------------------- | ------ | ------------
+ * vector              v                     v        v
+ *               +------------+            +-----------+
+ *               | Metadata   | <--------- |  Column   |
+ *               | Interfaces |            | Accessors |
+ *               +------------+            +-----------+
+ *                                               |
+ *                                               v
+ *                                          +---------+
+ *                                          |  Value  |
+ *                                          | Vectors |
+ *                                          +---------+
+ * </pre></code>
  */
 
 package org.apache.drill.exec.vector.accessor.writer;

@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.vector.accessor.writer.dummy;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
-import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
-import org.apache.drill.exec.vector.accessor.TupleWriter.TupleWriterListener;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
@@ -35,28 +34,35 @@ import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
  */
 public class DummyArrayWriter extends AbstractArrayWriter {
 
-  public DummyArrayWriter(
-      AbstractObjectWriter elementWriter) {
-    super(elementWriter);
+  public static class DummyOffsetVectorWriter extends DummyScalarWriter implements OffsetVectorWriter {
+
+    public DummyOffsetVectorWriter() {
+      super(null);
+    }
+
+    @Override
+    public int rowStartOffset() { return 0; }
+
+    @Override
+    public int nextOffset() { return 0; }
+
+    @Override
+    public void setNextOffset(int vectorIndex) { }
   }
 
-  @Override
-  public int size() { return 0; }
+  public static final DummyOffsetVectorWriter offsetVectorWriter = new DummyOffsetVectorWriter();
+
+  public DummyArrayWriter(
+      ColumnMetadata schema,
+      AbstractObjectWriter elementWriter) {
+    super(schema, elementWriter, offsetVectorWriter);
+  }
 
   @Override
   public void save() { }
 
   @Override
-  public void set(Object... values) { }
-
-  @Override
   public void setObject(Object array) { }
-
-  @Override
-  public void bindIndex(ColumnWriterIndex index) { }
-
-  @Override
-  public ColumnWriterIndex writerIndex() { return null; }
 
   @Override
   public void startWrite() { }
@@ -86,11 +92,5 @@ public class DummyArrayWriter extends AbstractArrayWriter {
   public int lastWriteIndex() { return 0; }
 
   @Override
-  public void bindListener(ColumnWriterListener listener) { }
-
-  @Override
-  public void bindListener(TupleWriterListener listener) { }
-
-  @Override
-  public OffsetVectorWriter offsetWriter() { return null; }
+  public void bindIndex(ColumnWriterIndex index) { }
 }

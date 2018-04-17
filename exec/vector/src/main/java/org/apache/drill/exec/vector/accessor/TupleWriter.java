@@ -19,7 +19,9 @@ package org.apache.drill.exec.vector.accessor;
 
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.accessor.ColumnWriter.TupleListenable;
 
 /**
  * Writer for a tuple. A tuple is composed of columns with a fixed order and
@@ -50,7 +52,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * @see {@link SingleMapWriter}, the class which this class replaces
  */
 
-public interface TupleWriter {
+public interface TupleWriter extends ColumnWriter, TupleListenable {
 
   /**
    * Listener (callback) to handle requests to add a new column to a tuple (row
@@ -59,10 +61,13 @@ public interface TupleWriter {
    * throws an exception.
    */
 
-  public interface TupleWriterListener {
+  interface TupleWriterListener {
+
     ObjectWriter addColumn(TupleWriter tuple, ColumnMetadata column);
 
     ObjectWriter addColumn(TupleWriter tuple, MaterializedField field);
+
+    ProjectionType projectionType(String columnName);
   }
 
   /**
@@ -75,13 +80,26 @@ public interface TupleWriter {
    */
 
   @SuppressWarnings("serial")
-  public static class UndefinedColumnException extends RuntimeException {
+  class UndefinedColumnException extends RuntimeException {
     public UndefinedColumnException(String colName) {
       super("Undefined column: " + colName);
     }
   }
 
-  void bindListener(TupleWriterListener listener);
+
+  /**
+   * Allows a client to "sniff" the projection set to determine if a
+   * field is projected. Some clients can omit steps if they know that
+   * a field is not needed. Others will simply create the column, allowing
+   * the implementation to create a dummy writer if the column is not
+   * projected.
+   *
+   * @param columnName name of an existing or new column
+   * @return whether the column is projected, and, if so, the implied
+   * type of the projected column
+   */
+
+  ProjectionType projectionType(String columnName);
 
   /**
    * Add a column to the tuple (row or map) that backs this writer. Support for
@@ -100,7 +118,7 @@ public interface TupleWriter {
 
   int addColumn(MaterializedField schema);
 
-  TupleMetadata schema();
+  TupleMetadata tupleSchema();
 
   int size();
 
@@ -142,28 +160,4 @@ public interface TupleWriter {
    */
 
   void set(int colIndex, Object value);
-
-  /**
-   * Write a row or map of values, given by Java objects. Object type must match
-   * expected column type.
-   * <p>
-   * Note that a single-column tuple is ambiguous if that column is an array. To
-   * avoid ambiguity, use <tt>set(0, value)</tt> in this case.
-   *
-   * @param values
-   *          variable-length argument list of column values
-   * @return true if the row was written, false if any column caused vector
-   *         overflow.
-   */
-
-  void setTuple(Object... values);
-
-  /**
-   * Set the tuple from an array of objects. Primarily for use in test tools.
-   *
-   * @param value
-   *          the object to set, which must be a generic <tt>Object</tt> array
-   */
-
-  void setObject(Object value);
 }

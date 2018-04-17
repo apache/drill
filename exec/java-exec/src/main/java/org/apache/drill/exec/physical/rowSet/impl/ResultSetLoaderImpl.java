@@ -401,7 +401,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader {
   @Override
   public ResultSetLoader setRow(Object... values) {
     startRow();
-    writer().setTuple(values);
+    writer().setObject(values);
     saveRow();
     return this;
   }

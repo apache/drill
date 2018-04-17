@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.rowSet.impl;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.ValuesVectorState;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter.ColumnWriterListener;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
@@ -38,7 +39,13 @@ public class PrimitiveColumnState extends ColumnState implements ColumnWriterLis
       AbstractObjectWriter colWriter,
       VectorState vectorState) {
     super(resultSetLoader, colWriter, vectorState);
-    writer.bindListener(this);
+    ScalarWriter scalarWriter;
+    if (colWriter.type() == ObjectType.ARRAY) {
+      scalarWriter = writer.array().scalar();
+    } else {
+      scalarWriter = writer.scalar();
+    }
+    ((AbstractScalarWriter) scalarWriter).bindListener(this);
   }
 
   public static PrimitiveColumnState newPrimitive(

@@ -23,6 +23,7 @@ import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
@@ -98,7 +99,7 @@ public abstract class SingleVectorState implements VectorState {
 
     private final AbstractObjectWriter childWriter;
 
-    public OffsetVectorState(AbstractScalarWriter writer, ValueVector mainVector,
+    public OffsetVectorState(WriterPosition writer, ValueVector mainVector,
         AbstractObjectWriter childWriter) {
       super(writer, mainVector);
       this.childWriter = childWriter;
@@ -145,7 +146,7 @@ public abstract class SingleVectorState implements VectorState {
 
       UInt4Vector.Accessor sourceAccessor = ((UInt4Vector) backupVector).getAccessor();
       UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
-      int offset = childWriter.events().writerIndex().rowStartIndex();
+      int offset = childWriter.rowStartIndex();
       int newIndex = 1;
       ResultSetLoaderImpl.logger.trace("Offset vector: copy {} values from {} to {} with offset {}",
           Math.max(0, sourceEndIndex - sourceStartIndex + 1),
@@ -163,11 +164,11 @@ public abstract class SingleVectorState implements VectorState {
     }
   }
 
-  protected final AbstractScalarWriter writer;
+  protected final WriterPosition writer;
   protected final ValueVector mainVector;
   protected ValueVector backupVector;
 
-  public SingleVectorState(AbstractScalarWriter writer, ValueVector mainVector) {
+  public SingleVectorState(WriterPosition writer, ValueVector mainVector) {
     this.writer = writer;
     this.mainVector = mainVector;
   }
@@ -198,7 +199,7 @@ public abstract class SingleVectorState implements VectorState {
   @Override
   public void rollover(int cardinality) {
 
-    int sourceStartIndex = writer.writerIndex().rowStartIndex();
+    int sourceStartIndex = writer.rowStartIndex();
 
     // Remember the last write index for the original vector.
     // This tells us the end of the set of values to move, while the

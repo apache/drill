@@ -46,14 +46,14 @@ public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
      * The current vector buffer, and buffer address, will change in
      * this method when a vector grows or overflows. So, don't use this
      * method in inline calls of the form<br><code>
-     * vector.getBuffer().doSomething(writeIndex());</code></br>
+     * vector.getBuffer().doSomething(prepareWrite());</code></br>
      * The buffer obtained by <tt>getBuffer()</tt> can be different than
-     * the current buffer after <tt>writeIndex()</tt>.
+     * the current buffer after <tt>prepareWrite()</tt>.
      *
      * @return the index at which to write the current value
      */
 
-    protected final int writeIndex() {
+    protected final int prepareWrite() {
 
       // "Fast path" for the normal case of no fills, no overflow.
       // This is the only bounds check we want to do for the entire
@@ -190,6 +190,18 @@ public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
 
   @Override
   public int lastWriteIndex() { return lastWriteIndex; }
+
+  /**
+   * For internal use only to update the write position on those
+   * very rare occasions in which the vector is written to outside
+   * of this writer framework. Not to be called by application code!
+   *
+   * @param index new last write index
+   */
+
+  public void setLastWriteIndex(int index) {
+    lastWriteIndex = index;
+  }
 
   @Override
   public void skipNulls() {

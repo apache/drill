@@ -40,6 +40,38 @@ import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 public interface WriterEvents {
 
   /**
+   * Tracks the write state of a tuple or variant to allow applying the correct
+   * operations to newly-added columns to synchronize them with the rest
+   * of the writers.
+   */
+
+  enum State {
+
+    /**
+     * No write is in progress. Nothing need be done to newly-added
+     * writers.
+     */
+    IDLE,
+
+    /**
+     * <tt>startWrite()</tt> has been called to start a write operation
+     * (start a batch), but <tt>startValue()</tt> has not yet been called
+     * to start a row (or value within an array). <tt>startWrite()</tt> must
+     * be called on newly added columns.
+     */
+
+    IN_WRITE,
+
+    /**
+     * Both <tt>startWrite()</tt> and <tt>startValue()</tt> has been called on
+     * the tuple to prepare for writing values, and both must be called on
+     * newly-added vectors.
+     */
+
+    IN_ROW
+  }
+
+  /**
    * Bind the writer to a writer index.
    *
    * @param index the writer index (top level or nested for
@@ -47,8 +79,6 @@ public interface WriterEvents {
    */
 
   void bindIndex(ColumnWriterIndex index);
-
-  ColumnWriterIndex writerIndex();
 
   /**
    * Start a write (batch) operation. Performs any vector initialization
@@ -113,15 +143,4 @@ public interface WriterEvents {
    */
 
   void postRollover();
-
-  /**
-   * Return the last write position in the vector. This may be the
-   * same as the writer index position (if the vector was written at
-   * that point), or an earlier point. In either case, this value
-   * points to the last valid value in the vector.
-   *
-   * @return index of the last valid value in the vector
-   */
-
-  int lastWriteIndex();
 }

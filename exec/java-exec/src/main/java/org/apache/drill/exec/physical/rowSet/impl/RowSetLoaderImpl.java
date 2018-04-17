@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
@@ -95,4 +96,10 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
 
   @Override
   public int rowCount() { return rsLoader.rowCount(); }
+
+  @Override
+  public ColumnMetadata schema() {
+    // No column for the row tuple
+    return null;
+  }
 }
