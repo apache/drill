@@ -55,6 +55,7 @@ public class PlannerSettings implements Context{
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges");
   public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg");
   public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg");
+  public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn");
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin");
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin");
   public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin");
