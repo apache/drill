@@ -438,6 +438,32 @@ class PageReader {
     clearDictionaryBuffers();
   }
 
+  /**
+   * Enables Parquet column readers to reset the definition level reader to a specific state.
+   * @param skipCount the number of rows to skip (optional)
+   *
+   * @throws IOException An IO related condition
+   */
+  void resetDefinitionLevelReader(int skipCount) throws IOException {
+    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0) {
+      throw new UnsupportedOperationException("Unsupoorted Operation");
+    }
+
+    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.definition_level_encoding);
+    final ByteBuffer pageDataBuffer = pageData.nioBuffer(0, pageData.capacity());
+    final int defStartPos = repetitionLevels != null ? repetitionLevels.getNextOffset() : 0;
+    definitionLevels = dlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
+    parentColumnReader.currDefLevel = -1;
+
+    // Now reinitialize the underlying decoder
+    assert currentPageCount > 0 : "Page count should be strictly upper than zero";
+    definitionLevels.initFromPage(currentPageCount, pageDataBuffer, defStartPos);
+
+    // Skip values if requested by caller
+    for (int idx = 0; idx < skipCount; ++idx) {
+      definitionLevels.skip();
+    }
+  }
 
 
 }

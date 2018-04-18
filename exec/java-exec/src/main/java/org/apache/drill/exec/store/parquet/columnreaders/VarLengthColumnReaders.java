@@ -18,23 +18,22 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import io.netty.buffer.DrillBuf;
-
+import java.io.IOException;
 import java.nio.ByteBuffer;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.VarDecimalVector;
-import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
+import org.apache.drill.exec.vector.VarLenBulkEntry;
+import org.apache.drill.exec.vector.VarLenBulkInput;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
-
-
+import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 
-public class VarLengthColumnReaders {
+public final class VarLengthColumnReaders {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLengthColumnReaders.class);
 
   public static class VarDecimalColumn extends VarLengthValuesColumn<VarDecimalVector> {
@@ -69,6 +68,18 @@ public class VarLengthColumnReaders {
     public int capacity() {
       return varDecimalVector.getBuffer().capacity();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setSafe(VarLenBulkInput<VarLenBulkEntry> bulkInput) {
+      mutator.setSafe(bulkInput);
+  }
+
+    /** {@inheritDoc} */
+    @Override
+    protected VarLenColumnBulkInput<VarDecimalVector> newVLBulkInput(int recordsToRead) throws IOException {
+      return new VarLenColumnBulkInput<VarDecimalVector>(this, recordsToRead, bulkReaderState);
+    }
   }
 
   public static class NullableVarDecimalColumn extends NullableVarLengthValuesColumn<NullableVarDecimalVector> {
@@ -102,20 +113,32 @@ public class VarLengthColumnReaders {
     public int capacity() {
       return nullableVarDecimalVector.getBuffer().capacity();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setSafe(VarLenBulkInput<VarLenBulkEntry> bulkInput) {
+      mutator.setSafe(bulkInput);
   }
 
-  public static class VarCharColumn extends VarLengthValuesColumn<VarCharVector> {
+    /** {@inheritDoc} */
+    @Override
+    protected VarLenColumnBulkInput<NullableVarDecimalVector> newVLBulkInput(int recordsToRead) throws IOException {
+      return new VarLenColumnBulkInput<NullableVarDecimalVector>(this, recordsToRead, bulkReaderState);
+    }
+  }
+
+  public final static class VarCharColumn extends VarLengthValuesColumn<VarCharVector> {
 
     // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
-    protected final VarCharVector.Mutator mutator;
-    protected final VarCharVector varCharVector;
+    private final VarCharVector.Mutator mutator;
+    private final VarCharVector varCharVector;
 
     VarCharColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarCharVector v,
                   SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      varCharVector = v;
-      mutator = v.getMutator();
+      this.varCharVector = v;
+      this.mutator       = v.getMutator();
     }
 
     @Override
@@ -138,9 +161,21 @@ public class VarLengthColumnReaders {
     public int capacity() {
       return varCharVector.getBuffer().capacity();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setSafe(VarLenBulkInput<VarLenBulkEntry> bulkInput) {
+      mutator.setSafe(bulkInput);
   }
 
-  public static class NullableVarCharColumn extends NullableVarLengthValuesColumn<NullableVarCharVector> {
+    /** {@inheritDoc} */
+    @Override
+    protected VarLenColumnBulkInput<VarCharVector> newVLBulkInput(int recordsToRead) throws IOException {
+      return new VarLenColumnBulkInput<VarCharVector>(this, recordsToRead, bulkReaderState);
+    }
+  }
+
+  public final static class NullableVarCharColumn extends NullableVarLengthValuesColumn<NullableVarCharVector> {
 
     // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
     protected final NullableVarCharVector.Mutator mutator;
@@ -150,7 +185,7 @@ public class VarLengthColumnReaders {
                           ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarCharVector v,
                           SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      vector = v;
+      this.vector  = v;
       this.mutator = vector.getMutator();
     }
 
@@ -173,9 +208,21 @@ public class VarLengthColumnReaders {
     public int capacity() {
       return vector.getBuffer().capacity();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setSafe(VarLenBulkInput<VarLenBulkEntry> bulkInput) {
+      mutator.setSafe(bulkInput);
   }
 
-  public static class VarBinaryColumn extends VarLengthValuesColumn<VarBinaryVector> {
+    /** {@inheritDoc} */
+    @Override
+    protected VarLenColumnBulkInput<NullableVarCharVector> newVLBulkInput(int recordsToRead) throws IOException {
+      return new VarLenColumnBulkInput<NullableVarCharVector>(this, recordsToRead, bulkReaderState);
+    }
+  }
+
+  public final static class VarBinaryColumn extends VarLengthValuesColumn<VarBinaryVector> {
 
     // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
     private final VarBinaryVector varBinaryVector;
@@ -185,12 +232,13 @@ public class VarLengthColumnReaders {
                     ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarBinaryVector v,
                     SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      varBinaryVector = v;
-      mutator = v.getMutator();
+
+      this.varBinaryVector = v;
+      this.mutator         = v.getMutator();
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf value, int start, int length) {
+    public final boolean setSafe(int index, DrillBuf value, int start, int length) {
       if (index >= varBinaryVector.getValueCapacity()) {
         return false;
       }
@@ -209,9 +257,21 @@ public class VarLengthColumnReaders {
     public int capacity() {
       return varBinaryVector.getBuffer().capacity();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setSafe(VarLenBulkInput<VarLenBulkEntry> bulkInput) {
+      mutator.setSafe(bulkInput);
   }
 
-  public static class NullableVarBinaryColumn extends NullableVarLengthValuesColumn<NullableVarBinaryVector> {
+    /** {@inheritDoc} */
+    @Override
+    protected VarLenColumnBulkInput<VarBinaryVector> newVLBulkInput(int recordsToRead) throws IOException {
+      return new VarLenColumnBulkInput<VarBinaryVector>(this, recordsToRead, bulkReaderState);
+    }
+  }
+
+  public final static class NullableVarBinaryColumn extends NullableVarLengthValuesColumn<NullableVarBinaryVector> {
 
     // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
     private final NullableVarBinaryVector nullableVarBinaryVector;
@@ -221,8 +281,8 @@ public class VarLengthColumnReaders {
                             ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarBinaryVector v,
                             SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      nullableVarBinaryVector = v;
-      mutator = v.getMutator();
+      this.nullableVarBinaryVector = v;
+      this.mutator                 = v.getMutator();
     }
 
     @Override
@@ -245,6 +305,17 @@ public class VarLengthColumnReaders {
       return nullableVarBinaryVector.getBuffer().capacity();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected void setSafe(VarLenBulkInput<VarLenBulkEntry> bulkInput) {
+      mutator.setSafe(bulkInput);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected VarLenColumnBulkInput<NullableVarBinaryVector> newVLBulkInput(int recordsToRead) throws IOException {
+      return new VarLenColumnBulkInput<NullableVarBinaryVector>(this, recordsToRead, bulkReaderState);
+    }
   }
 
 }
