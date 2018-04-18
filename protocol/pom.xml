@@ -55,6 +55,9 @@
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
+      <properties>
+        <license.skip>false</license.skip>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -151,6 +154,7 @@
             <artifactId>license-maven-plugin</artifactId>
             <executions>
               <execution>
+                <id>proto-format</id>
                 <phase>process-sources</phase>
                 <goals>
                   <goal>format</goal>
