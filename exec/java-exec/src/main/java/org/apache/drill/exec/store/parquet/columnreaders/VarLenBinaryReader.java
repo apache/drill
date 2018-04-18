@@ -34,11 +34,13 @@ public class VarLenBinaryReader {
   final List<VarLengthColumn<? extends ValueVector>> columns;
   final boolean useAsyncTasks;
   private final long targetRecordCount;
+  private final boolean useBulkReader;
 
   public VarLenBinaryReader(ParquetRecordReader parentReader, List<VarLengthColumn<? extends ValueVector>> columns) {
     this.parentReader = parentReader;
     this.columns = columns;
-    useAsyncTasks = parentReader.useAsyncColReader;
+    this.useAsyncTasks = parentReader.useAsyncColReader;
+    this.useBulkReader = parentReader.useBulkReader();
 
     // Can't read any more records than fixed width fields will fit.
     // Note: this calculation is very likely wrong; it is a simplified
@@ -73,15 +75,35 @@ public class VarLenBinaryReader {
     if (targetRecordCount > 0) {
       recordsToReadInThisPass = Math.min(recordsToReadInThisPass, targetRecordCount);
     }
-    long recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
 
-    if(useAsyncTasks) {
-      readRecordsParallel(recordsReadInCurrentPass);
+    long recordsReadInCurrentPass = 0;
+
+    if (!useBulkReader) {
+      recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
+
+      if(useAsyncTasks) {
+        readRecordsParallel(recordsReadInCurrentPass);
+      } else {
+        readRecordsSerial(recordsReadInCurrentPass);
+      }
     } else {
-      readRecordsSerial(recordsReadInCurrentPass);
+      recordsReadInCurrentPass = readRecordsInBulk((int) recordsToReadInThisPass);
     }
 
     parentReader.parquetReaderStats.timeVarColumnRead.addAndGet(timer.elapsed(TimeUnit.NANOSECONDS));
+
+    return recordsReadInCurrentPass;
+  }
+
+  private int readRecordsInBulk(int recordsToReadInThisPass) throws IOException {
+    int recordsReadInCurrentPass = -1;
+
+    for (VarLengthColumn<?> columnReader : columns) {
+      int readColumns = columnReader.readRecordsInBulk(recordsToReadInThisPass);
+      assert (readColumns >= 0 && recordsReadInCurrentPass == readColumns || recordsReadInCurrentPass == -1);
+
+      recordsReadInCurrentPass = readColumns;
+    }
 
     return recordsReadInCurrentPass;
   }

@@ -207,6 +207,10 @@ public abstract class ColumnReader<V extends ValueVector> {
     pageReader.valuesRead += recordsToRead;
   }
 
+  protected int readRecordsInBulk(int recordsToReadInThisPass) throws IOException {
+      throw new UnsupportedOperationException();
+  }
+
   protected boolean processPageData(int recordsToReadInThisPass) throws IOException {
     readValues(recordsToReadInThisPass);
     return true;

@@ -17,8 +17,6 @@
  */
 package io.netty.buffer;
 
-import io.netty.util.internal.PlatformDependent;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,6 +38,13 @@ import org.apache.drill.exec.ops.BufferManager;
 
 import com.google.common.base.Preconditions;
 
+import io.netty.util.internal.PlatformDependent;
+
+/**
+ * Drill data structure for accessing and manipulating data buffers. This class is integrated with the
+ * Drill memory management layer for quota enforcement and buffer sharing.
+ */
+@SuppressWarnings("unused")
 public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
 
@@ -664,7 +669,20 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   @Override
   public ByteBuf getBytes(int index, ByteBuf dst, int dstIndex, int length) {
+    final int BULK_COPY_THR = 16;
+    // Performance profiling indicated that using the "putByte()" method is faster for short
+    // data lengths (less than 16 bytes) than using the "copyMemory()" method.
+    if (length < BULK_COPY_THR && udle.hasMemoryAddress() && dst.hasMemoryAddress()) {
+      if (dst.capacity() < (dstIndex + length)) {
+        throw new IndexOutOfBoundsException();
+      }
+      for (int idx = 0; idx < length; ++idx) {
+        byte value = getByte(index + idx);
+        PlatformDependent.putByte(dst.memoryAddress() + dstIndex + idx, value);
+      }
+    } else {
     udle.getBytes(index + offset, dst, dstIndex, length);
+    }
     return this;
   }
 
@@ -830,10 +848,147 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
    * @param length number of bytes to read
    * @return byte array with the requested bytes
    */
-
   public byte[] unsafeGetMemory(int srcOffset, int length) {
     byte buf[] = new byte[length];
     PlatformDependent.copyMemory(addr + srcOffset, buf, 0, length);
     return buf;
   }
+
+  // --------------------------------------------------------------------------
+  // Helper Methods for code that needs efficient processing on byte arrays;
+  // this should be done only when direct memory cannot be used
+  // --------------------------------------------------------------------------
+
+  /** Number of bytes in a long */
+  public static final int LONG_NUM_BYTES  = 8;
+  /** Number of bytes in an int */
+  public static final int INT_NUM_BYTES   = 4;
+  /** Number of bytes in a short */
+  public static final int SHORT_NUM_BYTES = 2;
+
+  /**
+   * @param data source byte array
+   * @param index index within the byte array
+   * @return short value starting at data+index
+   */
+  public static short getShort(byte[] data, int index) {
+    check(index, SHORT_NUM_BYTES, data.length);
+    return PlatformDependent.getShort(data, index);
+  }
+
+  /**
+   * @param data source byte array
+   * @param index index within the byte array
+   * @return integer value starting at data+index
+   */
+  public static int getInt(byte[] data, int index) {
+    check(index, INT_NUM_BYTES, data.length);
+    return PlatformDependent.getInt(data, index);
+  }
+
+  /**
+   * @param data data source byte array
+   * @param index index within the byte array
+   * @return long value read at data_index
+   */
+  public static long getLong(byte[] data, int index) {
+    check(index, LONG_NUM_BYTES, data.length);
+    return PlatformDependent.getLong(data, index);
+  }
+
+  /**
+   * Read a short at position src+srcIndex and copy it to the dest+destIndex
+   *
+   * @param src source byte array
+   * @param srcIndex source index
+   * @param dest destination byte array
+   * @param destIndex destination index
+   */
+  public static void putShort(byte[] src, int srcIndex, byte[] dest, int destIndex) {
+    check(srcIndex, SHORT_NUM_BYTES, src.length);
+    check(destIndex,SHORT_NUM_BYTES, dest.length);
+
+    short value = PlatformDependent.getShort(src, srcIndex);
+    PlatformDependent.putShort(dest, destIndex, value);
+  }
+
+  /**
+   * Read an integer at position src+srcIndex and copy it to the dest+destIndex
+   *
+   * @param src source byte array
+   * @param srcIndex source index
+   * @param dest destination byte array
+   * @param destIndex destination index
+   */
+  public static void putInt(byte[] src, int srcIndex, byte[] dest, int destIndex) {
+    check(srcIndex, INT_NUM_BYTES, src.length);
+    check(destIndex,INT_NUM_BYTES, dest.length);
+
+    int value = PlatformDependent.getInt(src, srcIndex);
+    PlatformDependent.putInt(dest, destIndex, value);
+  }
+
+  /**
+   * Read a long at position src+srcIndex and copy it to the dest+destIndex
+   *
+   * @param src source byte array
+   * @param srcIndex source index
+   * @param dest destination byte array
+   * @param destIndex destination index
+   */
+  public static void putLong(byte[] src, int srcIndex, byte[] dest, int destIndex) {
+    check(srcIndex, LONG_NUM_BYTES, src.length);
+    check(destIndex,LONG_NUM_BYTES, dest.length);
+
+    long value = PlatformDependent.getLong(src, srcIndex);
+    PlatformDependent.putLong(dest, destIndex, value);
+  }
+
+  /**
+   * Copy a short value to the dest+destIndex
+   *
+   * @param dest destination byte array
+   * @param destIndex destination index
+   * @param value a short value
+   */
+  public static void putShort(byte[] dest, int destIndex, short value) {
+    check(destIndex, SHORT_NUM_BYTES, dest.length);
+    PlatformDependent.putShort(dest, destIndex, value);
+  }
+
+  /**
+   * Copy an integer value to the dest+destIndex
+   *
+   * @param dest destination byte array
+   * @param destIndex destination index
+   * @param value an int value
+   */
+  public static void putInt(byte[] dest, int destIndex, int value) {
+    check(destIndex, INT_NUM_BYTES, dest.length);
+    PlatformDependent.putInt(dest, destIndex, value);
+  }
+
+  /**
+   * Copy a long value to the dest+destIndex
+   *
+   * @param dest destination byte array
+   * @param destIndex destination index
+   * @param value a long value
+   */
+  public static void putLong(byte[] dest, int destIndex, long value) {
+    check(destIndex, LONG_NUM_BYTES, dest.length);
+    PlatformDependent.putLong(dest, destIndex, value);
+  }
+
+  private static void check(int index, int len, int bufferLen) {
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
+      if (index < 0 || len < 0) {
+        throw new IllegalArgumentException(String.format("index: [%d], len: [%d]", index, len));
+      }
+      if ((index + len) > bufferLen) {
+        throw new IndexOutOfBoundsException(String.format("Trying to access more than buffer length; index: [%d], len: [%d], buffer-len: [%d]", index, len, bufferLen));
+      }
+    }
+  }
+
 }

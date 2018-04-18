@@ -27,6 +27,10 @@
 package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
+<#if minor.class == "Int" || minor.class == "UInt4" || minor.class == "UInt1">
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+</#if>
 
 import org.apache.drill.exec.util.DecimalUtility;
 
@@ -385,12 +389,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return false;
     }
     <#if (type.width > 8)>
-    
+
     public ${minor.javaType!type.javaType} get(int index) {
       return data.slice(index * VALUE_WIDTH, VALUE_WIDTH);
     }
     <#if (minor.class == "Interval")>
-    
+
     public void get(int index, ${minor.class}Holder holder) {
       final int offsetIndex = index * VALUE_WIDTH;
       holder.months = data.getInt(offsetIndex);
@@ -419,11 +423,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       final int offsetIndex = index * VALUE_WIDTH;
       final int months = data.getInt(offsetIndex);
       final int days   = data.getInt(offsetIndex + ${minor.daysOffset});
-      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});      
+      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
       return DateUtilities.intervalStringBuilder(months, days, millis);
     }
     <#elseif (minor.class == "IntervalDay")>
-    
+
     public void get(int index, ${minor.class}Holder holder) {
       final int offsetIndex = index * VALUE_WIDTH;
       holder.days = data.getInt(offsetIndex);
@@ -448,7 +452,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public StringBuilder getAsStringBuilder(int index) {
       final int offsetIndex = index * VALUE_WIDTH;
       final int days   = data.getInt(offsetIndex);
-      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});     
+      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
       return DateUtilities.intervalDayStringBuilder(days, millis);
     }
     <#elseif minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense">
@@ -498,12 +502,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
     </#if>
     <#else> <#-- type.width <= 8 -->
-    
+
     public ${minor.javaType!type.javaType} get(int index) {
       return data.get${(minor.javaType!type.javaType)?cap_first}(index * VALUE_WIDTH);
     }
     <#if type.width == 4>
-    
+
     public long getTwoAsLong(int index) {
       return data.getLong(index * VALUE_WIDTH);
     }
@@ -599,7 +603,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      *          value to set
      */
   <#if (type.width > 8)>
-  
+
     public void set(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
       data.setBytes(index * VALUE_WIDTH, value, 0, VALUE_WIDTH);
     }
@@ -611,7 +615,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       data.setBytes(index * VALUE_WIDTH, value, 0, VALUE_WIDTH);
     }
     <#if minor.class == "Interval">
-    
+
     public void set(int index, int months, int days, int milliseconds) {
       final int offsetIndex = index * VALUE_WIDTH;
       data.setInt(offsetIndex, months);
@@ -642,7 +646,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       setSafe(index, holder.months, holder.days, holder.milliseconds);
     }
     <#elseif minor.class == "IntervalDay">
-    
+
     public void set(int index, int days, int milliseconds) {
       final int offsetIndex = index * VALUE_WIDTH;
       data.setInt(offsetIndex, days);
@@ -672,7 +676,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       setSafe(index, holder.days, holder.milliseconds);
     }
     <#elseif minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense">
-    
+
     public void setSafe(int index, int start, DrillBuf buffer) {
       while(index >= getValueCapacity()) {
         reAlloc();
@@ -695,8 +699,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public void setSafe(int index, Nullable${minor.class}Holder holder) {
       setSafe(index, holder.start, holder.buffer);
     }
-      <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
-      
+
+    <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
     public void set(int index, BigDecimal value) {
       DecimalUtility.getSparseFromBigDecimal(value, data, index * VALUE_WIDTH,
           field.getScale(), ${minor.nDecimalDigits});
@@ -708,13 +712,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       }
       set(index, value);
     }
-      </#if>
-      
+
+    </#if>
     public void set(int index, int start, DrillBuf buffer) {
       data.setBytes(index * VALUE_WIDTH, buffer, start, VALUE_WIDTH);
     }
     </#if>
-    
+
     @Override
     public void generateTestData(int count) {
       setValueCount(count);
@@ -728,10 +732,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       }
     }
   <#else> <#-- type.width <= 8 -->
-  
+
     public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
       data.set${(minor.javaType!type.javaType)?cap_first}(index * VALUE_WIDTH, value);
     }
+
+    <#if (type.width == 1)>
+    public void set(int index, byte[] values, int startOff, int len) {
+      data.setBytes(index * VALUE_WIDTH, values, startOff, len);
+    }
+    </#if>
 
     /**
      * Set the value of a required or nullable vector. Grows the vector as needed.
@@ -739,7 +749,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      * a vector.
      * @param index item to write
      */
-
     public void setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
       while(index >= getValueCapacity()) {
         reAlloc();
@@ -796,7 +805,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       }
     }
   </#if> <#-- type.width -->
-  
+
     @Override
     public void setValueCount(int valueCount) {
       final int currentValueCapacity = getValueCapacity();
@@ -813,6 +822,150 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       data.writerIndex(valueCount * VALUE_WIDTH);
     }
   }
+
+  <#if minor.class == "Int" || minor.class == "UInt4" || minor.class == "UInt1">
+  /**
+   * Helper class to buffer container mutation as a means to optimize native memory copy operations.
+   *
+   * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
+   */
+  public static final class BufferedMutator {
+    /** The default buffer size */
+    private static final int DEFAULT_BUFF_SZ = 1024 << 2;
+    /** Byte buffer */
+    private final ByteBuffer buffer;
+
+    /** Tracks the index where to copy future values */
+    private int currentIdx;
+    /** Parent conatiner object */
+    private final ${minor.class}Vector parent;
+
+    /** @see {@link #BufferedMutator(int startIdx, int buffSz, ${minor.class}Vector parent)} */
+    public BufferedMutator(int startIdx, ${minor.class}Vector parent) {
+      this(startIdx, DEFAULT_BUFF_SZ, parent);
+    }
+
+    /**
+     * Buffered mutator to optimize bulk access to the underlying vector container
+     * @param startIdx start idex of the first value to be copied
+     * @param buffSz buffer length to us
+     * @param parent parent container object
+     */
+    public BufferedMutator(int startIdx, int buffSz, ${minor.class}Vector parent) {
+      this.buffer = ByteBuffer.allocate(buffSz);
+
+      // set the buffer to the native byte order
+      buffer.order(ByteOrder.nativeOrder());
+
+      this.currentIdx = startIdx;
+      this.parent = parent;
+    }
+
+    <#if minor.class == "Int" || minor.class == "UInt4">
+    public void setSafe(int value) {
+      if (buffer.remaining() < 4) {
+        flush();
+      }
+
+      int tgtPos = buffer.position();
+      byte[] bufferArray = buffer.array();
+
+      writeInt(value, bufferArray, tgtPos);
+      buffer.position(tgtPos + 4);
+    }
+
+    public void setSafe(int[] values, int numValues) {
+      int remaining = numValues;
+      byte[] bufferArray = buffer.array();
+      int srcPos = 0;
+
+      do {
+        if (buffer.remaining() < 4) {
+            flush();
+        }
+
+        int toCopy = Math.min(remaining, buffer.remaining() / 4);
+        int tgtPos = buffer.position();
+
+        for (int idx = 0; idx < toCopy; idx++, tgtPos += 4, srcPos++) {
+          writeInt(values[srcPos], bufferArray, tgtPos);
+        }
+
+        // Update counters
+        buffer.position(tgtPos);
+        remaining -= toCopy;
+
+      } while (remaining > 0);
+    }
+
+    public static final void writeInt(int val, byte[] buffer, int pos) {
+      DrillBuf.putInt(buffer, pos, val);
+    }
+    </#if> <#-- minor.class -->
+
+    <#if minor.class == "UInt1">
+    public void setSafe(byte value) {
+      if (buffer.remaining() < 1) {
+        flush();
+      }
+      buffer.put(value);
+    }
+
+    public void setSafe(byte[] values, int numValues) {
+      int remaining = numValues;
+      byte[] bufferArray = buffer.array();
+      int srcPos = 0;
+
+      do {
+        if (buffer.remaining() < 1) {
+            flush();
+        }
+
+        int toCopy = Math.min(remaining, buffer.remaining());
+        int tgtPos = buffer.position();
+
+        for (int idx = 0; idx < toCopy; idx++) {
+          bufferArray[tgtPos++] = values[srcPos++];
+        }
+
+        // Update counters
+        buffer.position(tgtPos);
+        remaining -= toCopy;
+
+      } while (remaining > 0);
+    }
+    </#if> <#-- minor.class -->
+
+    /**
+     * @return the backing byte buffer; this is useful when the caller can infer the values to write but
+     *         wants to avoid having to use yet another intermediary byte array; caller is responsible for
+     *         flushing the buffer
+    */
+    public ByteBuffer getByteBuffer() {
+      return buffer;
+    }
+
+    public void flush() {
+      int numElements = buffer.position() / ${minor.class}Vector.VALUE_WIDTH;
+
+      if (numElements == 0) {
+        return; // NOOP
+      }
+
+      while((currentIdx + numElements -1) >= parent.getValueCapacity()) {
+        parent.reAlloc();
+      }
+
+      parent.data.setBytes(currentIdx * ${minor.class}Vector.VALUE_WIDTH, buffer.array(), 0, buffer.position());
+
+      // Update the start index
+      currentIdx += numElements;
+
+      // Reset the byte buffer
+      buffer.clear();
+    }
+  }
+  </#if> <#-- minor.class -->
 }
 </#if> <#-- type.major -->
 </#list>

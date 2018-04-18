@@ -90,6 +90,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   public boolean useFadvise;
   public boolean enforceTotalSize;
   public long readQueueSize;
+  public boolean useBulkReader;
 
   @SuppressWarnings("unused")
   private String name;
@@ -161,6 +162,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       ParquetMetadata footer,
       List<SchemaPath> columns,
       ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) throws ExecutionSetupException {
+
     this.name = path;
     this.hadoopPath = new Path(path);
     this.fileSystem = fs;
@@ -171,20 +173,14 @@ public class ParquetRecordReader extends AbstractRecordReader {
     this.dateCorruptionStatus = dateCorruptionStatus;
     this.fragmentContext = fragmentContext;
     this.numRecordsToRead = numRecordsToRead;
-    useAsyncColReader =
-        fragmentContext.getOptions().getOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC).bool_val;
-    useAsyncPageReader =
-        fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
-    useBufferedReader =
-        fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ).bool_val;
-    bufferedReadSize =
-        fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE).num_val.intValue();
-    useFadvise =
-        fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_USE_FADVISE).bool_val;
-    readQueueSize =
-        fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE).num_val;
-    enforceTotalSize =
-        fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ENFORCETOTALSIZE).bool_val;
+    this.useAsyncColReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC).bool_val;
+    this.useAsyncPageReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
+    this.useBufferedReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ).bool_val;
+    this.bufferedReadSize = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE).num_val.intValue();
+    this.useFadvise = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_USE_FADVISE).bool_val;
+    this.readQueueSize = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE).num_val;
+    this.enforceTotalSize = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ENFORCETOTALSIZE).bool_val;
+    this.useBulkReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_FLAT_READER_BULK).bool_val;
 
     setColumns(columns);
   }
@@ -229,6 +225,13 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
   public FragmentContext getFragmentContext() {
     return fragmentContext;
+  }
+
+  /**
+   * @return true if Parquet reader Bulk processing is enabled; false otherwise
+   */
+  public boolean useBulkReader() {
+    return useBulkReader;
   }
 
   /**
