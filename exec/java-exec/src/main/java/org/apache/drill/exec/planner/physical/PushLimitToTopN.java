@@ -31,6 +31,12 @@ public class PushLimitToTopN  extends Prule{
   }
 
   @Override
+  public boolean matches(RelOptRuleCall call) {
+    return PrelUtil.getPlannerSettings(call.getPlanner()).getOptions()
+      .getOption(PlannerSettings.TOPN.getOptionName()).bool_val;
+  }
+
+  @Override
   public void onMatch(RelOptRuleCall call) {
     final LimitPrel limit = (LimitPrel) call.rel(0);
     final SingleMergeExchangePrel smex = (SingleMergeExchangePrel) call.rel(1);
