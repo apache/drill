@@ -4836,8 +4836,8 @@
             "next_title": "Configure Drill", 
             "next_url": "/docs/configure-drill/", 
             "parent": "Install Drill", 
-            "previous_title": "Starting the Web Console", 
-            "previous_url": "/docs/starting-the-web-console/", 
+            "previous_title": "Stopping Drill", 
+            "previous_url": "/docs/stopping-drill/", 
             "relative_path": "_docs/install/070-identifying-multiple-drill-versions-in-a-cluster.md", 
             "title": "Identifying Multiple Drill Versions in a Cluster", 
             "url": "/docs/identifying-multiple-drill-versions-in-a-cluster/"
@@ -5151,8 +5151,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Identifying Multiple Drill Versions in a Cluster", 
-                    "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
+                    "next_title": "Stopping Drill", 
+                    "next_url": "/docs/stopping-drill/", 
                     "parent": "Install Drill", 
                     "previous_title": "Starting Drill in Distributed Mode", 
                     "previous_url": "/docs/starting-drill-in-distributed-mode/", 
@@ -5168,11 +5168,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configure Drill", 
-                    "next_url": "/docs/configure-drill/", 
+                    "next_title": "Identifying Multiple Drill Versions in a Cluster", 
+                    "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
                     "parent": "Install Drill", 
                     "previous_title": "Starting the Web Console", 
                     "previous_url": "/docs/starting-the-web-console/", 
+                    "relative_path": "_docs/install/061-stopping-drill.md", 
+                    "title": "Stopping Drill", 
+                    "url": "/docs/stopping-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configure Drill", 
+                    "next_url": "/docs/configure-drill/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Stopping Drill", 
+                    "previous_url": "/docs/stopping-drill/", 
                     "relative_path": "_docs/install/070-identifying-multiple-drill-versions-in-a-cluster.md", 
                     "title": "Identifying Multiple Drill Versions in a Cluster", 
                     "url": "/docs/identifying-multiple-drill-versions-in-a-cluster/"
@@ -13040,14 +13057,31 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Identifying Multiple Drill Versions in a Cluster", 
-            "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
+            "next_title": "Stopping Drill", 
+            "next_url": "/docs/stopping-drill/", 
             "parent": "Install Drill", 
             "previous_title": "Starting Drill in Distributed Mode", 
             "previous_url": "/docs/starting-drill-in-distributed-mode/", 
             "relative_path": "_docs/install/060-starting-the-web-ui.md", 
             "title": "Starting the Web Console", 
             "url": "/docs/starting-the-web-console/"
+        }, 
+        "Stopping Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Identifying Multiple Drill Versions in a Cluster", 
+            "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
+            "parent": "Install Drill", 
+            "previous_title": "Starting the Web Console", 
+            "previous_url": "/docs/starting-the-web-console/", 
+            "relative_path": "_docs/install/061-stopping-drill.md", 
+            "title": "Stopping Drill", 
+            "url": "/docs/stopping-drill/"
         }, 
         "Storage Plugin Configuration": {
             "breadcrumbs": [
@@ -15365,8 +15399,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Identifying Multiple Drill Versions in a Cluster", 
-                    "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
+                    "next_title": "Stopping Drill", 
+                    "next_url": "/docs/stopping-drill/", 
                     "parent": "Install Drill", 
                     "previous_title": "Starting Drill in Distributed Mode", 
                     "previous_url": "/docs/starting-drill-in-distributed-mode/", 
@@ -15382,11 +15416,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configure Drill", 
-                    "next_url": "/docs/configure-drill/", 
+                    "next_title": "Identifying Multiple Drill Versions in a Cluster", 
+                    "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
                     "parent": "Install Drill", 
                     "previous_title": "Starting the Web Console", 
                     "previous_url": "/docs/starting-the-web-console/", 
+                    "relative_path": "_docs/install/061-stopping-drill.md", 
+                    "title": "Stopping Drill", 
+                    "url": "/docs/stopping-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configure Drill", 
+                    "next_url": "/docs/configure-drill/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Stopping Drill", 
+                    "previous_url": "/docs/stopping-drill/", 
                     "relative_path": "_docs/install/070-identifying-multiple-drill-versions-in-a-cluster.md", 
                     "title": "Identifying Multiple Drill Versions in a Cluster", 
                     "url": "/docs/identifying-multiple-drill-versions-in-a-cluster/"

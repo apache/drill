@@ -1,6 +1,6 @@
 ---
 title: "Data Sources and File Formats Introduction"
-date: 2018-04-19 01:45:23 UTC
+date: 2018-04-19 23:14:01 UTC
 parent: "Data Sources and File Formats"
 ---
 Drill supports the following key data sources:
@@ -57,7 +57,7 @@ Drill supports queries with JOIN and UNION [ALL] operators on empty directories.
 
 - Queries with stars (*) on an empty directory return an empty result set.  
 - Fields indicated in the SELECT statement are returned as INT-OPTIONAL types.  
-- An empty directory in a query does not change the results; Drill returns results as if the query does not contain the UNION operator.  
+- The empty directory in a query with the UNION operator does not change the results; Drill returns results as if the query does not contain the UNION operator.  
 - You can use an empty directory in complex queries.  
 - Queries with joins return an empty result, except when using outer join clauses, when the outer table for "right join" or derived table for "left join" has data. In that case, Drill returns the data from the table with data.
 

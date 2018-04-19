@@ -1,6 +1,6 @@
 ---
 title: "Using the JDBC Driver"
-date: 2018-04-19 01:45:25 UTC
+date: 2018-04-19 23:14:01 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 This section explains how to install and use the JDBC driver for Apache Drill. To use the JDBC driver, you have to:
@@ -111,7 +111,7 @@ For definitions of other URL components, see [Using the JDBC URL for a Random Dr
 
 The class name for the JDBC driver is [org.apache.drill.jdbc.Driver]({{site.baseurl}}/api/1.2/jdbc/). For details, see the Apache Drill JDBC Driver version 1.2.0 [Javadoc]({{site.baseurl}}/api/1.2/jdbc/).  
 
-As of Drill 1.13, you can use the [setQueryTimeout(int milliseconds)](https://drill.apache.org/api/1.2/jdbc/) method in the interface DrillStatement to limit the amount of time that the JDBC driver allows a query to run before canceling the query.
+As of Drill 1.13, you can use the setQueryTimeout(int milliseconds) method in the interface DrillStatement to limit the amount of time that the JDBC driver allows a query to run before canceling the query. The setQueryTimeout method sets the number of seconds that the JDBC driver waits for a Statement object to execute before canceling it. By default, there is no limit on the amount of time allowed for a running statement to complete. When you configure a limit, an SQLTimeoutException is thrown if a statement exceeds the limit. A JDBC driver must apply this limit to the execute, executeQuery, and executeUpdate methods.
 
 ## Example of Connecting to Drill Programmatically
 

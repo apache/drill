@@ -1,6 +1,6 @@
 ---
 title: "DESCRIBE"
-date: 2018-04-19 01:45:27 UTC
+date: 2018-04-19 23:14:01 UTC
 parent: "SQL Commands"
 ---
 The DESCRIBE command returns information about columns in a table, view, or schema.
@@ -9,7 +9,7 @@ The DESCRIBE command returns information about columns in a table, view, or sche
 
 The DESCRIBE command supports the following syntax:  
 
-       DESCRIBE [workspace.]table_name|view_name [column_name | expression]
+       DESCRIBE [workspace.]table_name|view_name [column_name]
        DESCRIBE SCHEMA|DATABASE <name>[.workspace]
        DESCRIBE (query)
 
