@@ -32,11 +32,13 @@ import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
+import org.apache.calcite.rel.rules.ProjectSetOpTransposeRule;
 import org.apache.calcite.rel.rules.ProjectToWindowRule;
 import org.apache.calcite.rel.rules.ProjectWindowTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SortRemoveRule;
 import org.apache.calcite.rel.rules.UnionToDistinctRule;
+import org.apache.drill.exec.planner.logical.DrillConditions;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
 /**
@@ -88,6 +90,9 @@ public interface RuleInstance {
 
   FilterSetOpTransposeRule FILTER_SET_OP_TRANSPOSE_RULE =
       new FilterSetOpTransposeRule(DrillRelFactories.LOGICAL_BUILDER);
+
+  ProjectSetOpTransposeRule PROJECT_SET_OP_TRANSPOSE_RULE =
+      new ProjectSetOpTransposeRule(DrillConditions.PRESERVE_ITEM, DrillRelFactories.LOGICAL_BUILDER);
 
   ProjectRemoveRule PROJECT_REMOVE_RULE =
       new ProjectRemoveRule(DrillRelFactories.LOGICAL_BUILDER);
