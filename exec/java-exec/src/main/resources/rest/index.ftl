@@ -104,7 +104,7 @@
                 <td id="status" >${drillbit.getState()}</td>
                 <td class="uptime" >Not Available</td>
                   <td>
-                <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) && (drillbit.isCurrent() || !model.isUserEncryptionEnabled()) >
+                <#if ( model.shouldShowAdminInfo() &&  ( drillbit.isCurrent() || ( !model.isAuthEnabled() && location.protocol != "https" ))) >
                       <button type="button" id="shutdown" onClick="shutdown($(this), '${drillbit.getAddress()}:${drillbit.getHttpPort()}');">
                 <#else>
                       <button type="button" id="shutdown" title="Drillbit cannot be shutdown remotely" disabled="true" style="opacity:0.5;cursor:not-allowed;">

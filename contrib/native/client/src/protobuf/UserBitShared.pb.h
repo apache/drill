@@ -243,11 +243,12 @@ enum CoreOperatorType {
   AVRO_SUB_SCAN = 36,
   PCAP_SUB_SCAN = 37,
   KAFKA_SUB_SCAN = 38,
-  KUDU_SUB_SCAN = 39
+  KUDU_SUB_SCAN = 39,
+  FLATTEN = 40
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = KUDU_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = FLATTEN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();

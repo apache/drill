@@ -18,7 +18,6 @@
 package org.apache.drill.exec.metrics;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.JmxReporter;

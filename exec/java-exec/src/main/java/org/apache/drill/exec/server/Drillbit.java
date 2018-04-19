@@ -182,7 +182,8 @@ public class Drillbit implements AutoCloseable {
     }
     DrillbitEndpoint md = engine.start();
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider, profileStoreProvider);
-    DrillbitContext drillbitContext = manager.getContext();
+    @SuppressWarnings("resource")
+    final DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
     drillbitContext.getOptionManager().init();
