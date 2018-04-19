@@ -1,6 +1,6 @@
 ---
 title: "Starting the Web Console"
-date: 2018-04-03 23:37:00 UTC
+date: 2018-04-19 01:45:25 UTC
 parent: Install Drill
 ---
 
@@ -23,7 +23,7 @@ If [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/)
 
 **Note:** As of Drill 1.12, users must enter a username to issue queries through the Query page in the Drill Web Console if user impersonation is enabled and authentication is disabled. To re-run a query from the Profiles page, users must also submit a username. See [REST API]({{site.baseurl}}/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/) for more information.  
 
-**Note:** As of Drill 1.13, an administrator can configure FORM and/or SPNEGO authentication mechanisms. The Drill Web Console provides two possible log in options for a user depending on the configuration. If a user selects FORM, he/she must enter their username and password to access restricted pages in the Drill Web Console. The user is authenticated through PAM. If the user selects SPNEGO, the user is automatically logged in if they are an authenticated Kerberos user. If accessing a protected page directly, the user is redirected to the authentication log in page.
+**Note:** As of Drill 1.13, an administrator can configure FORM and/or SPNEGO authentication mechanisms. The Drill Web Console provides two possible log in options for a user depending on the configuration. If a user selects FORM, s/he must enter their username and password to access restricted pages in the Drill Web Console. The user is authenticated through PAM. If the user selects SPNEGO, the user is automatically logged in if they are an authenticated Kerberos user. If accessing a protected page directly, the user is redirected to the authentication log in page.
 
 If [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) is enabled, Drill prompts you for a user name/password:
 

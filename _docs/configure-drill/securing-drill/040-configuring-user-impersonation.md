@@ -1,6 +1,6 @@
 ---
 title: "Configuring User Impersonation"
-date: 2018-04-05 01:05:13 UTC
+date: 2018-04-19 01:45:22 UTC
 parent: "Securing Drill"
 ---
 Impersonation allows a service to act on behalf of a client while performing the action requested by the client. By default, user impersonation is disabled in Drill. You can configure user impersonation in the <DRILLINSTALL_HOME>/conf/drill-override.conf file.
@@ -27,7 +27,7 @@ The following table lists the clients, storage plugins, and types of queries tha
 | Queries         | When you enable impersonation, the setting   applies to queries on data and metadata. For example, if you issue the SHOW   SCHEMAS command, Drill impersonates the user logged into the client to access   the requested metadata. If you issue a SELECT query on a workspace, Drill   impersonates the user logged in to the client to access the requested data.   Drill applies impersonation to queries issued using the following commands:   SHOW SCHEMAS, SHOW DATABASES, SHOW TABLES, CTAS, SELECT, CREATE VIEW, DROP   VIEW, SHOW FILES. To successfully run the CTAS and CREATE VIEW commands, a   user must have write permissions on the directory where the table or view   will exist. Running these commands creates artifacts on the file system. |               |
 
 ## Impersonation and Views
-You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/docs/create-view) Command.
+You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with view.drill. For example, if you create a view named myview, Drill creates a view file named myview.view.drill and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/docs/create-view) Command.
 
 You can create a view and grant read permissions on the view to give other users access to the data that the view references. When a user queries the view, Drill impersonates the view owner to access the underlying data. If the user tries to access the data directory, Drill returns a permission denied error. A user with read access to a view can create new views from the originating view to further restrict access on data.
 
@@ -46,7 +46,7 @@ Use the `chmod` and `chown` commands with the appropriate octal code to change p
 
     hadoop fs –chmod <octal code> <file_name>
     hadoop fs –chown <user>:<group> <file_name>
-Example: `hadoop fs –chmod 750 employees.drill.view`
+Example: `hadoop fs –chmod 750 employees.view.drill`
 
 ### Modifying SYSTEM|SESSION Level View Permissions
 
@@ -124,9 +124,9 @@ emp_id, emp_name, emp_ssn, emp_salary, emp_addr, emp_phone, emp_mgr
  
 Frank needs to share a subset of this information with Joe who is an HR manager reporting to Frank. To share the employee data, Frank creates a view called emp_mgr_view that accesses a subset of the data. The emp_mgr_view filters out sensitive employee information, such as the employee social security numbers, and only shows data for the employees that report directly to Joe. Frank and Joe both belong to the mgr group. Managers have read permission on Frank’s directory.
  
-rwxr-----     frank:mgr   /user/frank/emp_mgr_view.drill.view
+rwxr-----     frank:mgr   /user/frank/emp_mgr_view.view.drill
  
-The emp_mgr_view.drill.view file contains the following view definition:
+The emp_mgr_view.view.drill file contains the following view definition:
 
 (view definition: SELECT emp_id, emp_name, emp_salary, emp_addr, emp_phone FROM \`/user/frank/employee\` WHERE emp_mgr = 'Joe')
  
@@ -136,9 +136,9 @@ Because Joe has read permissions on the emp_mgr_view, he can create new views fr
  
 Joe needs to share employee contact data with his direct reports, so he creates a special view called emp_team_view to share the employee contact information with his team. Joe creates the view and writes it to his home directory. Joe and his reports belong to a group named joeteam. The joeteam group has read permissions on Joe’s home directory so they can query the view and create new views from it.
  
-rwxr-----     joe:joeteam   /user/joe/emp_team_view.drill.view
+rwxr-----     joe:joeteam   /user/joe/emp_team_view.view.drill
  
-The emp_team_view.drill.view file contains the following view definition:
+The emp_team_view.view.drill file contains the following view definition:
  
 (view definition: SELECT emp_id, emp_name, emp_phone FROM \`/user/frank/emp_mgr_view.drill\`);
  

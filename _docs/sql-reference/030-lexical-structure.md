@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: 2018-02-09 00:16:05 UTC
+date: 2018-04-19 01:45:26 UTC
 parent: "SQL Reference"
 ---
 
@@ -79,6 +79,11 @@ An identifier is a letter followed by any sequence of letters, digits, or the un
 
 * Keywords
 * Identifiers that SQL cannot parse  
+
+**Note:**  The term “user” is a reserved keyword, however if you reference a field/column named “user” in a query and you enclose the term in back ticks (\`user\`), Drill does not treat \`user\` as an identifier. Instead, Drill treats \`user\` as a special function that calls the current user. To work around this issue, use a table alias when referencing the field/column. The table alias informs the parser that this identifier is not a function call, but a regular identifier. For example, assume a table alias “t.” Use t.\`user\` instead of \`user\` as shown:
+
+       SELECT operation, t.`user`, uid FROM `dfs`.`/drill/student` t;
+ 
 
 For example, enclose the SQL keywords date and time in identifier quotes when referring to column names, but not when referring to data types:
 

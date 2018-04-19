@@ -1,16 +1,18 @@
 ---
 title: "DESCRIBE"
-date: 2016-08-04 00:23:09 UTC
+date: 2018-04-19 01:45:27 UTC
 parent: "SQL Commands"
 ---
 The DESCRIBE command returns information about columns in a table, view, or schema.
 
 ## Syntax
 
-The DESCRIBE command supports the following syntax:
+The DESCRIBE command supports the following syntax:  
 
-    DESCRIBE [workspace.]table_name|view_name
-    DESCRIBE SCHEMA|DATABASE <name>[.workspace]
+       DESCRIBE [workspace.]table_name|view_name [column_name | expression]
+       DESCRIBE SCHEMA|DATABASE <name>[.workspace]
+       DESCRIBE (query)
+
 
 
 ##Parameters  
@@ -23,8 +25,18 @@ The unique name of a view.
 *table_name*  
 The unique name of a table.  
 
+*column_name*  
+Optional list of column names in a table or view.  
+
 *schema/database*  
-A configured storage plugin instance with or without a configured workspace. 
+A configured storage plugin instance with or without a configured workspace.  
+
+*query*  
+A SELECT statement that defines the columns and rows in the table or view.  
+
+*expression*  
+An expression formed from one or more columns that exist in the tables or views referenced by the query. 
+ 
 
 
 ## Usage Notes

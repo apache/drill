@@ -1,6 +1,6 @@
 ---
 title: "Using the JDBC Driver"
-date: 2017-05-09 01:40:52 UTC
+date: 2018-04-19 01:45:25 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 This section explains how to install and use the JDBC driver for Apache Drill. To use the JDBC driver, you have to:
@@ -109,7 +109,9 @@ For definitions of other URL components, see [Using the JDBC URL for a Random Dr
 
 ## Using the Drill Driver Class Name
 
-The class name for the JDBC driver is [org.apache.drill.jdbc.Driver]({{site.baseurl}}/api/1.2/jdbc/). For details, see the Apache Drill JDBC Driver version 1.2.0 [Javadoc]({{site.baseurl}}/api/1.2/jdbc/).
+The class name for the JDBC driver is [org.apache.drill.jdbc.Driver]({{site.baseurl}}/api/1.2/jdbc/). For details, see the Apache Drill JDBC Driver version 1.2.0 [Javadoc]({{site.baseurl}}/api/1.2/jdbc/).  
+
+As of Drill 1.13, you can use the [setQueryTimeout(int milliseconds)](https://drill.apache.org/api/1.2/jdbc/) method in the interface DrillStatement to limit the amount of time that the JDBC driver allows a query to run before canceling the query.
 
 ## Example of Connecting to Drill Programmatically
 
