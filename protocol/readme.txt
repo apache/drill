@@ -25,3 +25,12 @@ download it from http://code.google.com/p/protobuf/downloads/list.
 2. In protocol dir, run "mvn process-sources -P proto-compile" or "mvn clean install -P proto-compile".
 
 3. Check in the new/updated files.
+
+---------------------------------------------------------------
+If changes are made to the DrillClient's protobuf, you would need to regenerate the sources for the C++ client as well.
+Steps for regenerating the sources are available https://github.com/apache/drill/blob/master/contrib/native/client/
+
+You can use any of the following platforms specified in the above location to regenerate the protobuf sources:
+readme.linux	: Regenerating on Linux
+readme.macos	: Regenerating on MacOS
+readme.win.txt	: Regenerating on Windows

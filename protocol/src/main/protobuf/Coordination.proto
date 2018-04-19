@@ -18,6 +18,7 @@ message DrillbitEndpoint{
       OFFLINE = 3;
   }
   optional State state = 7;
+  optional int32 http_port = 8;
 }
 
 message DrillServiceInstance{

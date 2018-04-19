@@ -202,6 +202,13 @@ class DrillbitEndpoint : public ::google::protobuf::Message {
   inline ::exec::DrillbitEndpoint_State state() const;
   inline void set_state(::exec::DrillbitEndpoint_State value);
 
+  // optional int32 http_port = 8;
+  inline bool has_http_port() const;
+  inline void clear_http_port();
+  static const int kHttpPortFieldNumber = 8;
+  inline ::google::protobuf::int32 http_port() const;
+  inline void set_http_port(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:exec.DrillbitEndpoint)
  private:
   inline void set_has_address();
@@ -218,6 +225,8 @@ class DrillbitEndpoint : public ::google::protobuf::Message {
   inline void clear_has_version();
   inline void set_has_state();
   inline void clear_has_state();
+  inline void set_has_http_port();
+  inline void clear_has_http_port();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -228,9 +237,10 @@ class DrillbitEndpoint : public ::google::protobuf::Message {
   ::google::protobuf::int32 data_port_;
   int state_;
   ::std::string* version_;
+  ::google::protobuf::int32 http_port_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_Coordination_2eproto();
   friend void protobuf_AssignDesc_Coordination_2eproto();
@@ -742,6 +752,28 @@ inline void DrillbitEndpoint::set_state(::exec::DrillbitEndpoint_State value) {
   assert(::exec::DrillbitEndpoint_State_IsValid(value));
   set_has_state();
   state_ = value;
+}
+
+// optional int32 http_port = 8;
+inline bool DrillbitEndpoint::has_http_port() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void DrillbitEndpoint::set_has_http_port() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void DrillbitEndpoint::clear_has_http_port() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void DrillbitEndpoint::clear_http_port() {
+  http_port_ = 0;
+  clear_has_http_port();
+}
+inline ::google::protobuf::int32 DrillbitEndpoint::http_port() const {
+  return http_port_;
+}
+inline void DrillbitEndpoint::set_http_port(::google::protobuf::int32 value) {
+  set_has_http_port();
+  http_port_ = value;
 }
 
 // -------------------------------------------------------------------
