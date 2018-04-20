@@ -263,7 +263,7 @@ public class CryptoFunctions {
 
   /**
    * aes_encrypt()/ aes_decrypt(): implement encryption and decryption of data using the official AES (Advanced Encryption Standard) algorithm,
-   * previously known as “Rijndael.” AES_ENCRYPT() encrypts the string str using the key string key_str and returns a
+   * previously known as "Rijndael." AES_ENCRYPT() encrypts the string str using the key string key_str and returns a
    * binary string containing the encrypted output.
    * Usage:  SELECT aes_encrypt( 'encrypted_text', 'my_secret_key' ) AS aes FROM (VALUES(1));
    */

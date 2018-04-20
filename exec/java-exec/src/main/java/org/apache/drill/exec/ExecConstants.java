@@ -541,8 +541,8 @@ public final class ExecConstants {
    * Impersonation policy format:
    * [
    *   {
-   *    proxy_principals : { users : [“...”], groups : [“...”] },
-   *    target_principals : { users : [“...”], groups : [“...”] }
+   *    proxy_principals : { users : ["..."], groups : ["..."] },
+   *    target_principals : { users : ["..."], groups : ["..."] }
    *   },
    *   ...
    * ]

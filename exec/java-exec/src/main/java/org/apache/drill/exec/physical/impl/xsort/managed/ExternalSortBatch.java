@@ -109,10 +109,10 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
  * <dt>drill.exec.sort.external.batch_limit</dt>
  * <dd>Maximum number of batches to hold in memory. (Primarily for testing.)</dd>
  * <dt>drill.exec.sort.external.spill.max_count</dt>
- * <dd>Maximum number of batches to add to “first generation” files.
+ * <dd>Maximum number of batches to add to "first generation" files.
  * Defaults to 0 (no limit). (Primarily for testing.)</dd>
  * <dt>drill.exec.sort.external.spill.min_count</dt>
- * <dd>Minimum number of batches to add to “first generation” files.
+ * <dd>Minimum number of batches to add to "first generation" files.
  * Defaults to 0 (no limit). (Primarily for testing.)</dd>
  * <dt>drill.exec.sort.external.merge_limit</dt>
  * <dd>Sets the maximum number of runs to be merged in a single pass (limits
