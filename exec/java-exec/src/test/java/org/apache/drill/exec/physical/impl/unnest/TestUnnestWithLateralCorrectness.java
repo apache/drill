@@ -553,7 +553,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
         new UnnestRecordBatch(unnestPopConfig, fixture.getFragmentContext());
 
     final LateralJoinBatch lateralJoinBatch =
-        new TestingLateralJoinBatch(ljPopConfig, fixture.getFragmentContext(), incomingMockBatch, unnestBatch);
+        new LateralJoinBatch(ljPopConfig, fixture.getFragmentContext(), incomingMockBatch, unnestBatch);
 
     // set pointer to Lateral in unnest
     unnestBatch.setIncoming((LateralContract) lateralJoinBatch);

@@ -193,7 +193,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     }
 
     if (hasRemainder) {
-      return handleRemainder();
+      return doWork();
     }
 
     // We do not need to call next() unlike the other operators.
@@ -285,7 +285,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
 
     //Expected output count is the num of values in the unnest colum array for the current record
     final int childCount =
-        incomingRecordCount == 0 ? 0 : unnest.getUnnestField().getAccessor().getInnerValueCountAt(currentRecord);
+        incomingRecordCount == 0 ? 0 : unnest.getUnnestField().getAccessor().getInnerValueCountAt(currentRecord) - remainderIndex;
 
     // Unnest the data
     final int outputRecords = childCount == 0 ? 0 : unnest.unnestRecords(childCount);
@@ -295,13 +295,14 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     // size for unnest to a low number
     if (outputRecords < childCount) {
       hasRemainder = true;
-      remainderIndex = outputRecords;
-      this.recordCount = remainderIndex;
+      remainderIndex += outputRecords;
       logger.debug("Output spilled into new batch. IterOutcome: OK.");
     } else {
-      this.recordCount = outputRecords;
+      hasRemainder = false;
+      remainderIndex = 0;
       logger.debug("IterOutcome: EMIT.");
     }
+    this.recordCount = outputRecords;
 
     memoryManager.updateOutgoingStats(outputRecords);
     // If the current incoming record has spilled into two batches, we return
@@ -309,29 +310,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     // entire incoming recods has been unnested. If the entire records has been
     // unnested, we return EMIT and any blocking operators in the pipeline will
     // unblock.
-    return hasRemainder ? IterOutcome.OK : IterOutcome.EMIT;
-  }
-
-  private IterOutcome handleRemainder() {
-    Preconditions.checkNotNull(lateral);
-    memoryManager.update();
-    unnest.setOutputCount(memoryManager.getOutputRowCount());
-    final int currentRecord = lateral.getRecordIndex();
-    final int remainingRecordCount =
-        unnest.getUnnestField().getAccessor().getInnerValueCountAt(currentRecord) - remainderIndex;
-    final int outputRecords = unnest.unnestRecords(remainingRecordCount);
-    logger.debug("{} values out of {} were processed.", outputRecords, remainingRecordCount);
-    if (outputRecords < remainingRecordCount) {
-      this.recordCount = outputRecords;
-      this.remainderIndex += outputRecords;
-      logger.debug("Output spilled into new batch. IterOutcome: OK.");
-    } else {
-      this.hasRemainder = false;
-      this.remainderIndex = 0;
-      this.recordCount = remainingRecordCount;
-      logger.debug("IterOutcome: EMIT.");
-    }
-    memoryManager.updateOutgoingStats(outputRecords);
     return hasRemainder ? IterOutcome.OK : IterOutcome.EMIT;
   }
 
@@ -380,6 +358,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     recordCount = 0;
     final List<TransferPair> transfers = Lists.newArrayList();
 
+    //TODO: fixthis once planner changes are done
     final FieldReference fieldReference =
         new FieldReference(SchemaPath.getSimplePath(popConfig.getColumn().toString() + "_flat"));
 

@@ -38,12 +38,30 @@ public interface Unnest {
   void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers,
       LateralContract lateral) throws SchemaChangeException;
 
+  /**
+   * Performs the actual unnest operation.
+   * @param recordCount
+   * @return number of values in output
+   */
   int unnestRecords(int recordCount);
 
+  /**
+   * Set the field to be unnested
+   * @param repeatedColumn
+   */
   void setUnnestField(RepeatedValueVector repeatedColumn);
+
+  /**
+   * Set the maximum number of values allowed in the output.
+   * @param outputCount
+   */
   void setOutputCount(int outputCount);
 
   RepeatedValueVector getUnnestField();
 
+  /**
+   * Reset the index at which the incoming vector is being processed. Called every
+   * time a new batch comes in.
+   */
   void resetGroupIndex();
 }
