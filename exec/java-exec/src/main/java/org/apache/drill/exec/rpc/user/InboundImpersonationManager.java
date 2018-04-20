@@ -44,12 +44,12 @@ import java.util.Set;
  * Impersonation policies format:
  * [
  *   {
- *    proxy_principals : { users : [“...”], groups : [“...”] },
- *    target_principals : { users : [“...”], groups : [“...”] }
+ *    proxy_principals : { users : ["..."], groups : ["..."] },
+ *    target_principals : { users : ["..."], groups : ["..."] }
  *   },
  *   {
- *    proxy_principals : { users : [“...”], groups : [“...”] },
- *    target_principals : { users : [“...”], groups : [“...”] }
+ *    proxy_principals : { users : ["..."], groups : ["..."] },
+ *    target_principals : { users : ["..."], groups : ["..."] }
  *   },
  *   ...
  * ]

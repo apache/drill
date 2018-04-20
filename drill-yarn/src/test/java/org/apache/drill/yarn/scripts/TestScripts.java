@@ -1214,7 +1214,7 @@ public class TestScripts {
    * <li>drill-conf — Wrapper for sqlline, uses drill config to find Drill.
    * Seems this one needs fixing to use a config other than the hard-coded
    * $DRILL_HOME/conf location.</li>
-   * <li>drill-embedded — Starts a drill “embedded” in SqlLine, using a local
+   * <li>drill-embedded — Starts a drill "embedded" in SqlLine, using a local
    * ZK.</li>
    * <li>drill-localhost — Wrapper for sqlline, uses a local ZK.</li>
    * </ul>
