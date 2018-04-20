@@ -37,7 +37,6 @@ public class VariableLengthVectorTest
   {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
       final MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
-      @SuppressWarnings("resource")
       final VarCharVector vector = new VarCharVector(field, allocator);
 
       vector.allocateNew();
@@ -66,7 +65,6 @@ public class VariableLengthVectorTest
   {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
       final MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
-      @SuppressWarnings("resource")
       final VarCharVector vector = new VarCharVector(field, allocator);
 
       vector.allocateNew();
@@ -99,7 +97,6 @@ public class VariableLengthVectorTest
   {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
       final MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
-      @SuppressWarnings("resource")
       final VarCharVector vector = new VarCharVector(field, allocator);
 
       vector.allocateNew();
