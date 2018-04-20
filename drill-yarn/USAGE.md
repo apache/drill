@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Drill's YARN integration launches your Drill cluster through YARN. Drill becomes a long-running application with YARN. When you launch Drill, YARN automatically deploys (“localizes”) Drill software onto each node, avoiding the need to pre-install Drill on each node. Resource management is simplified because YARN is now aware of resources dedicated to Drill.
+Drill's YARN integration launches your Drill cluster through YARN. Drill becomes a long-running application with YARN. When you launch Drill, YARN automatically deploys ("localizes") Drill software onto each node, avoiding the need to pre-install Drill on each node. Resource management is simplified because YARN is now aware of resources dedicated to Drill.
 
 The discussion below assumes that you are familiar with the main YARN concepts: the Resource Manager (RM), Node Manager (NM) and so on.
 
@@ -12,7 +12,7 @@ The discussion also assumes that you already have a working Drill cluster that y
 
 Drill, by design, aggressively uses all available resources to run queries at optimal speed. When running Drill under YARN, you inform YARN of the resources that Drill will consume. These settings are descriptive, not proscriptive. That is, Drill does not limit itself to the YARN settings; instead the YARN settings inform YARN of the resources that Drill will consume so that YARN does not over-allocate those same resources to other tasks.
 
-All YARN distributions provide settings for memory and CPU (called “vcores” by YARN). Some distributions also provide disk settings.
+All YARN distributions provide settings for memory and CPU (called "vcores" by YARN). Some distributions also provide disk settings.
 
 For memory, you first configure Drill’s memory as described below, then you inform YARN of the Drill configuration.
 
@@ -44,13 +44,13 @@ This section walks you through the steps needed to create a basic Drill cluster.
 ​
 ### The Client Machine
 
-YARN works by launching an application using a “client” application. For Drill, this is the Drill-on-YARN client. The client can run on any machine that has both the Drill and Hadoop software. The client machine need not be part of your YARN cluster; any host from which you currently launch YARN jobs can be the client. All the steps that follow are done on the client machine. When running Drill outside of YARN, you must install Drill on every node of your cluster. With YARN, you need install Drill only on the client machine; Drill-on-YARN automatically deploys  (“localizes”) Drill to the worker nodes.
+YARN works by launching an application using a "client" application. For Drill, this is the Drill-on-YARN client. The client can run on any machine that has both the Drill and Hadoop software. The client machine need not be part of your YARN cluster; any host from which you currently launch YARN jobs can be the client. All the steps that follow are done on the client machine. When running Drill outside of YARN, you must install Drill on every node of your cluster. With YARN, you need install Drill only on the client machine; Drill-on-YARN automatically deploys  ("localizes") Drill to the worker nodes.
 
 When running Drill without YARN, many users place their configuration files and custom code within the Drill distribution directory. When running under YARN, all your configuration and custom code resides in the site directory; you should not change anything in the Drill install. (This allows Drill-on-YARN to upload your original Drill install archive without rebuilding it.)
 ​
 ### Create a Master Directory
 
-To localize Drill files, the client tool requires a copy of the original Drill distribution archive and the location of your site directory.  For ease of discussion, we assume all these components reside in a single “master directory” described as `$MASTER_DIR`. On the client machine, do the following to create the master directory:
+To localize Drill files, the client tool requires a copy of the original Drill distribution archive and the location of your site directory.  For ease of discussion, we assume all these components reside in a single "master directory" described as `$MASTER_DIR`. On the client machine, do the following to create the master directory:
 ```
 export MASTER_DIR=/path/to/master/dir
 mkdir $MASTER_DIR
@@ -96,7 +96,7 @@ Your master directory should now contain the original Drill archive along with a
 ​
 ### Create the Site Directory
 
-The site directory contains your site-specific files for Drill. If you are converting an existing Drill install, see the “Site Directory” section later in this guide.
+The site directory contains your site-specific files for Drill. If you are converting an existing Drill install, see the "Site Directory" section later in this guide.
 
 1. Create the site directory within your master directory:
 ```
@@ -188,7 +188,7 @@ Note that in the above, each configuration setting was shown separately. In your
 
 ### Drillbit Cluster Configuration
 
-Drill-on-YARN uses the concept of a “cluster group” of drill-bits to describe the set of drill-bits to launch. A group can be one of three kinds:
+Drill-on-YARN uses the concept of a "cluster group" of drill-bits to describe the set of drill-bits to launch. A group can be one of three kinds:
 
 * Basic: launches drill-bits anywhere in the YARN cluster where a container is available.
 * Labeled: Uses YARN labels to identify the set of nodes that should run Drill.
@@ -232,7 +232,7 @@ Drill copies your archive onto your distributed file system (such as HDFS) in a 
 ```
 Drill can read the connection information from your Hadoop configuration files (`$HADOOP_HOME/etc/hadoop/core-site.xml`). Or you can specify a connection directly in the Drill cluster configuration file using the connection attribute.
 
-Then, choose a DFS file system location. Drill uses “`/user/drill`” by default.
+Then, choose a DFS file system location. Drill uses "`/user/drill`" by default.
 
 ### Hadoop Location
 
@@ -353,7 +353,7 @@ More typically you will decide the set of hosts that are to run Drill. Perhaps y
 
 #### Labeled Hosts
 
-Drill-on-YARN can handle node placement directly without the use of labeled queues. You use the “labeled” pool type. Then, set the drillbit-label-expr property to a YARN label expression that matches the nodes on which Drill should run. You will most often care only about Drillbit placement. Finally, indicate the number of Drillbits to run on the selected nodes.
+Drill-on-YARN can handle node placement directly without the use of labeled queues. You use the "labeled" pool type. Then, set the drillbit-label-expr property to a YARN label expression that matches the nodes on which Drill should run. You will most often care only about Drillbit placement. Finally, indicate the number of Drillbits to run on the selected nodes.
 
 (Need example)
 
@@ -383,7 +383,7 @@ Application Master URL: http://10.250.50.31:8048/
 ```
 The first line confirms which cluster is starting by displaying the cluster name from your configuration file. The next line shows YARN’s application ID and tracks the job status from Accepted to Running. Once the job starts, you’ll see YARN’s job tracking URL along with Drill-on-YARN’s web UI url. Use this URL to visit the web UI described below.
 
-Once the application starts, the Drill-on-YARN writes an “appid” file into your master directory:
+Once the application starts, the Drill-on-YARN writes an "appid" file into your master directory:
 ```
 ls $MASTER_DIR
 …
@@ -426,7 +426,7 @@ You can stop the Drill cluster from the command line:
 ```
 $DRILL_HOME/bin/drill-on-yarn.sh stop
 ```
-Note that this command is “forceful”, it kills any in-flight queries. The output tracks the shutdown and displays the final YARN application status:
+Note that this command is "forceful", it kills any in-flight queries. The output tracks the shutdown and displays the final YARN application status:
 ```
 Stopping Application ID: application_1462842354064_0001
 Stopping...
@@ -485,7 +485,7 @@ Drill Cluster Status: the state of the Drill cluster, one of:
 * LIVE: Normal state: shows that your Drill cluster is running.
 * ENDING: The cluster is in the process of shutting down.
 
-There is no “ENDED” state: once the cluster is shut down, the AM itself exists and the web UI is no longer available.
+There is no "ENDED" state: once the cluster is shut down, the AM itself exists and the web UI is no longer available.
 
 **Target Drillbit Count**: The number of Drillbits to run in the cluster. The actual number may be less if Drillbits have not yet started, or if YARN cannot allocate enough containers.
 
@@ -499,7 +499,7 @@ There is no “ENDED” state: once the cluster is shut down, the AM itself exis
 ​
 ### Configuration Page
 
-The configuration page shows the complete set of configuration values used for the current run. The values come from your own configuration along with Drill-provided defaults. Use this page to diagnose configuration-related issues. Names are shown in fully-expanded form. That is the name “drill.yarn.http.port” refers to the parameter defined as follows in your configuration file:
+The configuration page shows the complete set of configuration values used for the current run. The values come from your own configuration along with Drill-provided defaults. Use this page to diagnose configuration-related issues. Names are shown in fully-expanded form. That is the name "drill.yarn.http.port" refers to the parameter defined as follows in your configuration file:
 ```
 drill.yarn:
   http: {
@@ -518,11 +518,11 @@ The Drillbits page lists all drillbits in all states.
 
 **Host**: The host name or IP address on which the Drillbit runs. If the Drillbit is in normal operating state, this field is also a hyperlink to the Web UI for the drillbit.
 
-**State**: The operating state of the Drillbit. The normal state is “Running.” The drillbit passes through a number of states as YARN allocates a container and launches a process, as the AM waits for the Drillbit to become registered in ZooKeeper, and so on. Similarly, the Drillbit passes through a different set of states during shutdown. Use this value to diagnose problems.
+**State**: The operating state of the Drillbit. The normal state is "Running." The drillbit passes through a number of states as YARN allocates a container and launches a process, as the AM waits for the Drillbit to become registered in ZooKeeper, and so on. Similarly, the Drillbit passes through a different set of states during shutdown. Use this value to diagnose problems.
 
-If the Drillbit is in a live state, then this field shows an “[X]” link that you can use to kill this particular Drillbit. Use this if the Drillbit has startup problems or seems unresponsive. During the shut-down process, the kill link disappears and is replaced with a “(Cancelled)” note.
+If the Drillbit is in a live state, then this field shows an "[X]" link that you can use to kill this particular Drillbit. Use this if the Drillbit has startup problems or seems unresponsive. During the shut-down process, the kill link disappears and is replaced with a "(Cancelled)" note.
 
-**ZK State**: The ZooKeeper handshake state. Normal state is “START_ACK”, meaning that the Drillbit has registered with ZooKeeper. This state is useful when diagnosing problems.
+**ZK State**: The ZooKeeper handshake state. Normal state is "START_ACK", meaning that the Drillbit has registered with ZooKeeper. This state is useful when diagnosing problems.
 
 **Container ID**: The YARN-assigned container ID for the Drillbit task. The ID is a link, it takes you to the YARN Node Manager UI for the Drillbit task.
 
@@ -552,7 +552,7 @@ Drill clusters coordinate using ZooKeeper, so you must assign each cluster a dis
 
 ### Create a New Site Directory
 
-Create a new site directory for your new cluster. Let’s say that your new cluster has the name “second”. Using the same structure as above, create a new site directory under your master directory:
+Create a new site directory for your new cluster. Let’s say that your new cluster has the name "second". Using the same structure as above, create a new site directory under your master directory:
 ```
 export SECOND_SITE=$MASTER_DIR/second
 mkdir $SECOND_SITE
@@ -649,7 +649,7 @@ Drill-on-YARN creates a tighter coupling between Drill and Hadoop than did previ
 
 ### Migrating the `$DRILL_HOME/conf/drill-env.sh` Script
 
-Prior to Drill 1.8, the `drill-env.sh` script contained Drill defaults, distribution-specific settings, and configuration specific to your application (“site”.) In Drill 1.8, the Drill and distribution settings are moved to other locations. The site-specific settings change in format to allow YARN to override them. The following section details the changes you must make if you reuse a `drill-env.sh` file from a prior release. (If you create a new file, you can skip this section.)
+Prior to Drill 1.8, the `drill-env.sh` script contained Drill defaults, distribution-specific settings, and configuration specific to your application ("site".) In Drill 1.8, the Drill and distribution settings are moved to other locations. The site-specific settings change in format to allow YARN to override them. The following section details the changes you must make if you reuse a `drill-env.sh` file from a prior release. (If you create a new file, you can skip this section.)
 
 At the end of this process, your file should contain just two lines for memory settings, plus any additional custom settings you may have added.
 ​
@@ -667,7 +667,7 @@ Replace them with the following two lines.
 export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"8G"}
 export DRILL_HEAP=${DRILL_HEAP:-"4G"}
 ```
-Copy the actual values from the old lines to the new ones (e.g. the “8G” and “4G” values.) Those are the values that Drill when use if you launch it outside of YARN. The new lines ensure that these values are replaced by those set by Drill-on-YARN when running under YARN.
+Copy the actual values from the old lines to the new ones (e.g. the "8G" and "4G" values.) Those are the values that Drill when use if you launch it outside of YARN. The new lines ensure that these values are replaced by those set by Drill-on-YARN when running under YARN.
 
 If you omit this change, then Drill will ignore your memory settings in Drill-on-YARN, resulting in a potential mismatch between the Drill memory settings and the amount of memory requested from YARN.
 
@@ -759,7 +759,7 @@ Revised instructions:
 
 If you are not using Drill-on-YARN, set a new environment variable in `drill-env.sh`:
 ```
-export DRILL_JAVA_LIB_PATH=”<directory>”
+export DRILL_JAVA_LIB_PATH="<directory>"
 ```
 If you install the library yourself, either set `DRILL_JAVA_LIB_PATH` as above, or set the following in `drill-on-yarn.conf`:
 ```
@@ -927,7 +927,7 @@ The first step is to create the master archive of your Drill files. Do the follo
 cd $MASTER_DIR
 tar -czf archive-name.tar.gz $DRILL_HOME
 ```
-Replace “archive-name” with the name you chose above.
+Replace "archive-name" with the name you chose above.
 
 ### Configure Drill-on-YARN to Use the Archive
 
@@ -937,5 +937,5 @@ drill.yarn.drill-install.client-path: "/path/to/archive-name.tar.gz"
 ```
 YARN expects that, when extracting the master directory, that it creates a directory called archive-name that contains the Drill directories conf, jars, and so on. However, if archive-name is different than the name of the $DRILL_HOME directory, simply configure the correct name of the expanded folder:
 ```
-drill.yarn.drill-install.dir-name: “your-dir-name”
+drill.yarn.drill-install.dir-name: "your-dir-name"
 ```
