@@ -91,25 +91,22 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   public NamePart getAsNamePart() {
-    return getNamePart(rootSegment, false);
+    return getNamePart(rootSegment);
   }
 
-  private static NamePart getNamePart(PathSegment s, boolean skipArraySegment) {
+  private static NamePart getNamePart(PathSegment s) {
     if (s == null) {
       return null;
     }
     NamePart.Builder b = NamePart.newBuilder();
     if (s.getChild() != null) {
-      NamePart namePart = getNamePart(s.getChild(), skipArraySegment);
+      NamePart namePart = getNamePart(s.getChild());
       if (namePart != null) {
         b.setChild(namePart);
       }
     }
 
     if (s.isArray()) {
-      if (skipArraySegment) {
-        return null;
-      }
       if (s.getArraySegment().hasIndex()) {
         throw new IllegalStateException("You cannot convert a indexed schema path to a NamePart.  NameParts can only reference Vectors, not individual records or values.");
       }
@@ -138,13 +135,34 @@ public class SchemaPath extends LogicalExpressionBase {
   /**
    * Returns schema path with for arrays without index.
    * Is used to find column statistics in parquet metadata.
-   * Example: a.b.c[0] -> a.b.c
+   * Example: a.b.c[0] -> a.b.c, a[0].b[1] -> a.b
    *
    * @return un-indexed schema path
    */
   public SchemaPath getUnIndexed() {
-    NamePart namePart = getNamePart(rootSegment, true);
-    return create(namePart);
+    NameSegment nameSegment = getUnIndexedNameSegment(rootSegment, null);
+    return new SchemaPath(nameSegment);
+  }
+
+  /**
+   * Traverses path segment to extract named segments, omits all other segments (i.e. array).
+   * Order of named segments appearance will be preserved.
+   *
+   * @param currentSegment current segment
+   * @param resultingSegment resulting segment
+   * @return named segment
+   */
+  private NameSegment getUnIndexedNameSegment(PathSegment currentSegment, NameSegment resultingSegment) {
+    if (!currentSegment.isLastPath()) {
+      resultingSegment = getUnIndexedNameSegment(currentSegment.getChild(), resultingSegment);
+    }
+
+    if (currentSegment.isNamed()) {
+      String path = currentSegment.getNameSegment().getPath();
+      return new NameSegment(path, resultingSegment);
+    }
+
+    return resultingSegment;
   }
 
   /**
