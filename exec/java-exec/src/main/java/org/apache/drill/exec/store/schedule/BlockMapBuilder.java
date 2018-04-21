@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.store.TimedRunnable;
+import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -70,11 +70,11 @@ public class BlockMapBuilder {
 
   public List<CompleteFileWork> generateFileWork(List<FileStatus> files, boolean blockify) throws IOException {
 
-    List<TimedRunnable<List<CompleteFileWork>>> readers = Lists.newArrayList();
+    List<TimedCallable<List<CompleteFileWork>>> readers = Lists.newArrayList();
     for(FileStatus status : files){
       readers.add(new BlockMapReader(status, blockify));
     }
-    List<List<CompleteFileWork>> work = TimedRunnable.run("Get block maps", logger, readers, 16);
+    List<List<CompleteFileWork>> work = TimedCallable.run("Get block maps", logger, readers, 16);
     List<CompleteFileWork> singleList = Lists.newArrayList();
     for(List<CompleteFileWork> innerWorkList : work){
       singleList.addAll(innerWorkList);
@@ -84,7 +84,7 @@ public class BlockMapBuilder {
 
   }
 
-  private class BlockMapReader extends TimedRunnable<List<CompleteFileWork>> {
+  private class BlockMapReader extends TimedCallable<List<CompleteFileWork>> {
     final FileStatus status;
 
     // This variable blockify indicates if a single file can be read by multiple threads
