@@ -19,10 +19,12 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.conf.Configuration;
@@ -38,7 +40,8 @@ import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class FooterGatherer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FooterGatherer.class);
@@ -66,8 +69,8 @@ public class FooterGatherer {
   }
 
   public static List<Footer> getFooters(final Configuration conf, List<FileStatus> statuses, int parallelism) throws IOException {
-    final List<TimedCallable<Footer>> readers = Lists.newArrayList();
-    List<Footer> foundFooters = Lists.newArrayList();
+    final List<TimedCallable<Footer>> readers = new ArrayList<>();
+    final List<Footer> foundFooters = new ArrayList<>();
     for (FileStatus status : statuses) {
 
 
@@ -116,10 +119,9 @@ public class FooterGatherer {
     }
 
     @Override
-    protected IOException convertToIOException(Exception e) {
-      return new IOException("Failure while trying to get footer for file " + status.getPath(), e);
+    public String toString() {
+      return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("path", status.getPath()).toString();
     }
-
   }
 
   /**
