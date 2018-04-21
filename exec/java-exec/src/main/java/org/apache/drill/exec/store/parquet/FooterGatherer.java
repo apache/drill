@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.exec.store.TimedRunnable;
+import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -66,7 +66,7 @@ public class FooterGatherer {
   }
 
   public static List<Footer> getFooters(final Configuration conf, List<FileStatus> statuses, int parallelism) throws IOException {
-    final List<TimedRunnable<Footer>> readers = Lists.newArrayList();
+    final List<TimedCallable<Footer>> readers = Lists.newArrayList();
     List<Footer> foundFooters = Lists.newArrayList();
     for (FileStatus status : statuses) {
 
@@ -92,14 +92,14 @@ public class FooterGatherer {
 
     }
     if(!readers.isEmpty()){
-      foundFooters.addAll(TimedRunnable.run("Fetch Parquet Footers", logger, readers, parallelism));
+      foundFooters.addAll(TimedCallable.run("Fetch Parquet Footers", logger, readers, parallelism));
     }
 
     return foundFooters;
   }
 
 
-  private static class FooterReader extends TimedRunnable<Footer>{
+  private static class FooterReader extends TimedCallable<Footer> {
 
     final Configuration conf;
     final FileStatus status;

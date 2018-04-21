@@ -36,7 +36,7 @@ import com.google.common.collect.Lists;
  * TODO: look at switching to fork join.
  * @param <V> The time value that will be returned when the task is executed.
  */
-public abstract class TimedRunnable<V> implements Runnable {
+public abstract class TimedCallable<V> implements Runnable {
 
   private static long TIMEOUT_PER_RUNNABLE_IN_MSECS = 15000;
 
@@ -111,7 +111,7 @@ public abstract class TimedRunnable<V> implements Runnable {
    * @return The list of outcome objects.
    * @throws IOException All exceptions are coerced to IOException since this was build for storage system tasks initially.
    */
-  public static <V> List<V> run(final String activity, final Logger logger, final List<TimedRunnable<V>> runnables, int parallelism) throws IOException {
+  public static <V> List<V> run(final String activity, final Logger logger, final List<TimedCallable<V>> runnables, int parallelism) throws IOException {
     Stopwatch watch = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     long timedRunnableStart=System.nanoTime();
     if(runnables.size() == 1){
@@ -122,7 +122,7 @@ public abstract class TimedRunnable<V> implements Runnable {
       final ExtendedLatch latch = new ExtendedLatch(runnables.size());
       final ExecutorService threadPool = Executors.newFixedThreadPool(parallelism);
       try{
-        for(TimedRunnable<V> runnable : runnables){
+        for(TimedCallable<V> runnable : runnables){
           threadPool.submit(new LatchedRunnable(latch, runnable));
         }
 
@@ -165,7 +165,7 @@ public abstract class TimedRunnable<V> implements Runnable {
     long latestStart=0;
     long totalStart=0;
     IOException excep = null;
-    for(final TimedRunnable<V> reader : runnables){
+    for(final TimedCallable<V> reader : runnables){
       try{
         values.add(reader.getValue());
         sum += reader.getTimeSpentNanos();

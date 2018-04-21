@@ -35,16 +35,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
- * Unit testing for {@link TimedRunnable}.
+ * Unit testing for {@link TimedCallable}.
  */
 @Category({SlowTest.class})
-public class TestTimedRunnable extends DrillTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTimedRunnable.class);
+public class TestTimedCallable extends DrillTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTimedCallable.class);
 
   @Rule
   public final TestRule TIMEOUT = TestTools.getTimeoutRule(180000); // 3mins
 
-  private static class TestTask extends TimedRunnable {
+  private static class TestTask extends TimedCallable {
     final long sleepTime; // sleep time in ms
 
     public TestTask(final long sleepTime) {
@@ -69,13 +69,13 @@ public class TestTimedRunnable extends DrillTest {
 
   @Test
   public void withoutAnyTasksTriggeringTimeout() throws Exception {
-    List<TimedRunnable<TestTask>> tasks = Lists.newArrayList();
+    List<TimedCallable<TestTask>> tasks = Lists.newArrayList();
 
     for(int i=0; i<100; i++){
       tasks.add(new TestTask(2000));
     }
 
-    TimedRunnable.run("Execution without triggering timeout", logger, tasks, 16);
+    TimedCallable.run("Execution without triggering timeout", logger, tasks, 16);
   }
 
   @Test
@@ -83,7 +83,7 @@ public class TestTimedRunnable extends DrillTest {
     UserException ex = null;
 
     try {
-      List<TimedRunnable<TestTask>> tasks = Lists.newArrayList();
+      List<TimedCallable<TestTask>> tasks = Lists.newArrayList();
 
       for (int i = 0; i < 100; i++) {
         if ((i & (i + 1)) == 0) {
@@ -93,7 +93,7 @@ public class TestTimedRunnable extends DrillTest {
         }
       }
 
-      TimedRunnable.run("Execution with some tasks triggering timeout", logger, tasks, 16);
+      TimedCallable.run("Execution with some tasks triggering timeout", logger, tasks, 16);
     } catch (UserException e) {
       ex = e;
     }
@@ -107,12 +107,12 @@ public class TestTimedRunnable extends DrillTest {
   @Test
   public void withManyTasks() throws Exception {
 
-    List<TimedRunnable<TestTask>> tasks = Lists.newArrayList();
+    List<TimedCallable<TestTask>> tasks = Lists.newArrayList();
 
     for (int i = 0; i < 150000; i++) {
       tasks.add(new TestTask(0));
     }
 
-    TimedRunnable.run("Execution with lots of tasks", logger, tasks, 16);
+    TimedCallable.run("Execution with lots of tasks", logger, tasks, 16);
   }
 }
