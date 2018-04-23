@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.test.BaseTestQuery;
+import java.sql.Date;
+
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -53,9 +55,9 @@ public class TestNewDateFunctions extends BaseTestQuery {
         .sqlQuery("select case when isdate(date1) then cast(date1 as date) else null end res1 from " + dateValues)
         .unOrdered()
         .baselineColumns("res1")
-        .baselineValues(new DateTime(1900, 1, 1, 0, 0))
-        .baselineValues(new DateTime(3500, 1, 1, 0, 0))
-        .baselineValues(new DateTime(2000, 12, 31, 0, 0))
+        .baselineValues(new Date(new DateTime(1900, 1, 1, 0, 0).getMillis()))
+        .baselineValues(new Date(new DateTime(3500, 1, 1, 0, 0).getMillis()))
+        .baselineValues(new Date(new DateTime(2000, 12, 31, 0, 0).getMillis()))
         .baselineValues(new Object[] {null})
         .baselineValues(new Object[] {null})
         .baselineValues(new Object[] {null})

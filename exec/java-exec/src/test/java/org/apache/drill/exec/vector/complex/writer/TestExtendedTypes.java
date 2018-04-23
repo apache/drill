@@ -80,7 +80,7 @@ public class TestExtendedTypes extends BaseTestQuery {
               1, actualRecordCount), 1, actualRecordCount);
       List<QueryDataBatch> resultList = testSqlWithResults(String.format("select * from dfs.`%s`", originalFile));
       String actual = getResultString(resultList, ",");
-      String expected = "drill_timestamp_millies,bin,bin1\n2015-07-07T03:59:43.488,drill,drill\n";
+      String expected = "drill_timestamp_millies,bin,bin1\n2015-07-07 03:59:43.488,drill,drill\n";
       Assert.assertEquals(expected, actual);
     } finally {
       resetSessionOption(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName());

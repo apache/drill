@@ -19,10 +19,10 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -54,7 +54,7 @@ public class ExtendedJsonOutput extends BasicJsonOutput {
   }
 
   @Override
-  public void writeDate(DateTime value) throws IOException {
+  public void writeDate(Date value) throws IOException {
     gen.writeStartObject();
     gen.writeFieldName(ExtendedType.DATE.serialized);
     super.writeDate(value);
@@ -62,7 +62,7 @@ public class ExtendedJsonOutput extends BasicJsonOutput {
   }
 
   @Override
-  public void writeTime(DateTime value) throws IOException {
+  public void writeTime(Time value) throws IOException {
     gen.writeStartObject();
     gen.writeFieldName(ExtendedType.TIME.serialized);
     super.writeTime(value);
@@ -70,7 +70,7 @@ public class ExtendedJsonOutput extends BasicJsonOutput {
   }
 
   @Override
-  public void writeTimestamp(DateTime value) throws IOException {
+  public void writeTimestamp(Timestamp value) throws IOException {
     gen.writeStartObject();
     gen.writeFieldName(ExtendedType.TIMESTAMP.serialized);
     super.writeTimestamp(value);

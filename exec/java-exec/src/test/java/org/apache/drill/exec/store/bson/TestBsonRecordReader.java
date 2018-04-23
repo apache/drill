@@ -79,7 +79,7 @@ public class TestBsonRecordReader extends BaseTestQuery {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(1000l, mapReader.reader("ts").readDateTime().getMillis());
+    assertEquals(1000000l, mapReader.reader("ts").readTimestamp().getTime());
   }
 
   @Test
@@ -202,7 +202,7 @@ public class TestBsonRecordReader extends BaseTestQuery {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(5262729712L, mapReader.reader("dateTimeKey").readDateTime().getMillis());
+    assertEquals(5262729712L, mapReader.reader("dateTimeKey").readTimestamp().getTime());
   }
 
   @Test

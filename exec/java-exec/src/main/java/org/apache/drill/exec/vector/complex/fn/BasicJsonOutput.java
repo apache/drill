@@ -19,12 +19,12 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -210,7 +210,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeDate(FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeDate(reader.readDateTime());
+      writeDate(reader.readDate());
     } else {
       writeDateNull();
     }
@@ -219,7 +219,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeTime(FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeTime(reader.readDateTime());
+      writeTime(reader.readTime());
     } else {
       writeTimeNull();
     }
@@ -228,7 +228,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeTimestamp(FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeTimestamp(reader.readDateTime());
+      writeTimestamp(reader.readTimestamp());
     } else {
       writeTimeNull();
     }
@@ -336,7 +336,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeDate(int index, FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeDate(reader.readDateTime(index));
+      writeDate(reader.readDate(index));
     } else {
       writeDateNull();
     }
@@ -345,7 +345,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeTime(int index, FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeTime(reader.readDateTime(index));
+      writeTime(reader.readTime(index));
     } else {
       writeTimeNull();
     }
@@ -354,7 +354,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeTimestamp(int index, FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeTimestamp(reader.readDateTime(index));
+      writeTimestamp(reader.readTimestamp(index));
     } else {
       writeTimestampNull();
     }
@@ -434,18 +434,18 @@ public class BasicJsonOutput implements JsonOutput {
   }
 
   @Override
-  public void writeDate(DateTime value) throws IOException {
-    gen.writeString(dateFormatter.print(value.withZone(DateTimeZone.UTC)));
+  public void writeDate(Date value) throws IOException {
+    gen.writeString(dateFormatter.print(value.getTime()));
   }
 
   @Override
-  public void writeTime(DateTime value) throws IOException {
-    gen.writeString(timeFormatter.print(value.withZone(DateTimeZone.UTC)));
+  public void writeTime(Time value) throws IOException {
+    gen.writeString(timeFormatter.print(value.getTime()));
   }
 
   @Override
-  public void writeTimestamp(DateTime value) throws IOException {
-    gen.writeString(timestampFormatter.print(value.withZone(DateTimeZone.UTC)));
+  public void writeTimestamp(Timestamp value) throws IOException {
+    gen.writeString(timestampFormatter.print(value.getTime()));
   }
 
   @Override
