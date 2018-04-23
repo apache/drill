@@ -29,8 +29,9 @@
   <module name="TreeWalker">
     <module name="UnusedImports"/>
     <module name="IllegalImport">
-      <!-- For "org.apache.commons.lang.*" classes use the corresponding class from "org.apache.commons.lang3.*" -->
-      <property name="illegalPkgs" value="com.google.hive12,com.beust.jcommander.internal,jersey.repackaged,org.apache.commons.lang"/>
+      <!-- For "org.apache.commons.lang.*" classes use the corresponding class from "org.apache.commons.lang3.*".
+        For com.google.common.* classes use shaded ones from org.apache.drill.shaded.guava.com.google.common.*-->
+      <property name="illegalPkgs" value="com.google.hive12,com.beust.jcommander.internal,jersey.repackaged,org.apache.commons.lang,com.google.common"/>
     </module>
 
     <module name="AvoidStarImport"/>

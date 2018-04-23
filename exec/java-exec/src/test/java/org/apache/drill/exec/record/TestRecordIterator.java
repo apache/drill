@@ -20,6 +20,7 @@ package org.apache.drill.exec.record;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.Lists;
 
@@ -65,7 +66,7 @@ public class TestRecordIterator extends PopUnitTestBase {
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
 
-    final String planStr = Files.toString(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8);
+    final String planStr = Files.asCharSource(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8).read();
 
     final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -107,11 +108,11 @@ public class TestRecordIterator extends PopUnitTestBase {
     assertEquals(11112, totalRecords);
     try {
       iter.mark();
-      assertTrue(false);
+      fail();
     } catch (UnsupportedOperationException e) {}
     try {
       iter.reset();
-      assertTrue(false);
+      fail();
     } catch (UnsupportedOperationException e) {}
   }
 
@@ -121,7 +122,7 @@ public class TestRecordIterator extends PopUnitTestBase {
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final String planStr = Files.toString(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8);
+    final String planStr = Files.asCharSource(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8).read();
 
     final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -135,7 +136,7 @@ public class TestRecordIterator extends PopUnitTestBase {
         OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, null);
-    List<ValueVector> vectors = null;
+    List<ValueVector> vectors;
     // batche sizes
     // 1, 100, 10, 10000, 1, 1000
     // total = 11112

@@ -202,8 +202,8 @@ public class TestAllocators extends DrillTest {
       // Get a few physical operators. Easiest way is to read a physical plan.
       PhysicalPlanReader planReader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(bitContext,
           storageRegistry);
-      PhysicalPlan plan = planReader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile(planFile),
-          Charsets.UTF_8));
+      PhysicalPlan plan = planReader.readPhysicalPlan(Files.asCharSource(DrillFileUtils.getResourceAsFile(planFile),
+          Charsets.UTF_8).read());
       List<PhysicalOperator> physicalOperators = plan.getSortedOperators();
       Iterator<PhysicalOperator> physicalOperatorIterator = physicalOperators.iterator();
 

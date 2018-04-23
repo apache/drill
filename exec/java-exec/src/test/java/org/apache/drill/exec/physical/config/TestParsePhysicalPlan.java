@@ -49,7 +49,7 @@ public class TestParsePhysicalPlan extends ExecTest {
     PhysicalPlanReader reader = new PhysicalPlanReader(c, scanResult, lpp, CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), null);
     ObjectReader r = lpp.getMapper().reader(PhysicalPlan.class);
     ObjectWriter writer = lpp.getMapper().writer();
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8).read());
     plan.unparse(writer);
   }
 }

@@ -55,8 +55,8 @@ public class TestNewAggregateFunctions extends PopUnitTestBase {
       client.connect();
       List<QueryDataBatch> results = client.runQuery(
           QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile(physicalPlan),
-              Charsets.UTF_8).replace("#{TEST_FILE}",
+          Files.asCharSource(DrillFileUtils.getResourceAsFile(physicalPlan),
+              Charsets.UTF_8).read().replace("#{TEST_FILE}",
               inputDataFile));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit

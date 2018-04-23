@@ -51,7 +51,7 @@ public class RunRootExec {
     bit.run();
     DrillbitContext bitContext = bit.getContext();
     PhysicalPlanReader reader = bitContext.getPlanReader();
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(new File(path), Charsets.UTF_8));
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.asCharSource(new File(path), Charsets.UTF_8).read());
     FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
     FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), null, registry);
     SimpleRootExec exec;

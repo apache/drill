@@ -46,8 +46,8 @@ public class TextRecordReaderTest extends PopUnitTestBase {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(
-                      DrillFileUtils.getResourceAsFile("/store/text/test.json"), Charsets.UTF_8)
+              Files.asCharSource(
+                      DrillFileUtils.getResourceAsFile("/store/text/test.json"), Charsets.UTF_8).read()
                       .replace("#{DATA_FILE}", DrillFileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString()));
       int count = 0;
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());

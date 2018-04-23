@@ -68,7 +68,7 @@ public abstract class PopUnitTestBase  extends ExecTest{
 
   public static Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException,
       IOException, ForemanSetupException {
-    return getRootFragmentFromPlanString(reader, Files.toString(DrillFileUtils.getResourceAsFile(file), Charsets.UTF_8));
+    return getRootFragmentFromPlanString(reader, Files.asCharSource(DrillFileUtils.getResourceAsFile(file), Charsets.UTF_8).read());
   }
 
 

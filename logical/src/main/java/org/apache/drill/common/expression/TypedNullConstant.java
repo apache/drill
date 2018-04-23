@@ -17,14 +17,13 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-
-import com.google.common.collect.Iterators;
 
 public class TypedNullConstant extends LogicalExpressionBase {
 
@@ -48,7 +47,7 @@ public class TypedNullConstant extends LogicalExpressionBase {
 
     @Override
     public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
 }

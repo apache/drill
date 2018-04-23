@@ -70,7 +70,7 @@ public class TestHashJoin extends PopUnitTestBase {
 
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(Files.asCharSource(DrillFileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8).read());
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -116,7 +116,7 @@ public class TestHashJoin extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/join/hash_join.json"), Charsets.UTF_8)
+              Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/hash_join.json"), Charsets.UTF_8).read()
                       .replace("#{TEST_FILE_1}", DrillFileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
                       .replace("#{TEST_FILE_2}", DrillFileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
 
@@ -157,7 +157,7 @@ public class TestHashJoin extends PopUnitTestBase {
       bit.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/join/hj_exchanges.json"), Charsets.UTF_8));
+              Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/hj_exchanges.json"), Charsets.UTF_8).read());
 
       int count = 0;
       for (final QueryDataBatch b : results) {
@@ -182,7 +182,7 @@ public class TestHashJoin extends PopUnitTestBase {
       bit.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/join/hj_multi_condition_join.json"), Charsets.UTF_8)
+              Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/hj_multi_condition_join.json"), Charsets.UTF_8).read()
                       .replace("#{TEST_FILE_1}", DrillFileUtils.getResourceAsFile("/build_side_input.json").toURI().toString())
                       .replace("#{TEST_FILE_2}", DrillFileUtils.getResourceAsFile("/probe_side_input.json").toURI().toString()));
 
@@ -226,7 +226,7 @@ public class TestHashJoin extends PopUnitTestBase {
       bit.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/join/hj_exchanges1.json"), Charsets.UTF_8));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/hj_exchanges1.json"), Charsets.UTF_8).read());
 
       int count = 0;
       for (final QueryDataBatch b : results) {
@@ -245,12 +245,12 @@ public class TestHashJoin extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/join/hashJoinExpr.json"), Charsets.UTF_8));
+              Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/hashJoinExpr.json"), Charsets.UTF_8).read());
       int count = 0;
       for (final QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {

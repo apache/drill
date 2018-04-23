@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.util.GuavaUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -261,7 +262,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
             table.getUserName(),
             newFormatSelection));
     final RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(t.getRelOptSchema(), t.getRowType(), newTable,
-        ImmutableList.<String>of());
+        GuavaUtils.convertToUnshadedImmutableList(ImmutableList.of()));
 
     // return an EnumerableTableScan with fileSelection being part of digest of TableScan node.
     return DirPrunedEnumerableTableScan.create(oldScan.getCluster(), newOptTableImpl, newFileSelection.toString());

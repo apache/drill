@@ -77,8 +77,8 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
-              Charsets.UTF_8));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
+              Charsets.UTF_8).read());
       int count = 0;
       List<Integer> partitionRecordCounts = Lists.newArrayList();
       for(QueryDataBatch b : results) {

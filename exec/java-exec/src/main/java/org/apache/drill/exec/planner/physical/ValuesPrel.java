@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -40,11 +39,14 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
  */
 public class ValuesPrel extends DrillValuesRelBase implements Prel {
 
-  public ValuesPrel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits) {
+  public ValuesPrel(RelOptCluster cluster, RelDataType rowType, List<? extends List<RexLiteral>> tuples, RelTraitSet traits) {
     super(cluster, rowType, tuples, traits);
   }
 
-  public ValuesPrel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits, JSONOptions content) {
+  public ValuesPrel(RelOptCluster cluster,
+                    RelDataType rowType,
+                    List<? extends List<RexLiteral>> tuples, RelTraitSet traits,
+                    JSONOptions content) {
     super(cluster, rowType, tuples, traits, content);
   }
 

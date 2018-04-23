@@ -44,14 +44,14 @@ public class TestUnionExchange extends PopUnitTestBase {
 
     try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       bit2.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/sender/union_exchange.json"),
-              Charsets.UTF_8));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/sender/union_exchange.json"),
+              Charsets.UTF_8).read());
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {

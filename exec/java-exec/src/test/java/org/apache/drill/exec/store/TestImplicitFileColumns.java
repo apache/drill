@@ -59,11 +59,11 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   public static void setup() throws Exception {
     File files = dirTestWatcher.makeRootSubDir(FILES);
     mainFile = new File(files, MAIN_FILE);
-    Files.write(MAIN, mainFile, Charsets.UTF_8);
+    Files.asCharSink(mainFile, Charsets.UTF_8).write(MAIN);
     File nestedFolder = new File(files, NESTED);
     nestedFolder.mkdirs();
     nestedFile = new File(nestedFolder, NESTED_FILE);
-    Files.write(NESTED, nestedFile, Charsets.UTF_8);
+    Files.asCharSink(nestedFile, Charsets.UTF_8).write(NESTED);
 
     dirTestWatcher.copyResourceToRoot(JSON_TBL);
     dirTestWatcher.copyResourceToRoot(PARQUET_TBL);

@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec;
 
-import static com.google.common.base.Throwables.propagate;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -107,7 +105,7 @@ public class ZookeeperHelper {
         zkUrl = "localhost:" + zkCluster.getClientPort();
       }
     } catch (IOException | InterruptedException e) {
-      propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

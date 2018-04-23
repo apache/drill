@@ -47,7 +47,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
          DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile("/physical_single_exchange.json"), Charsets.UTF_8));
+      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_single_exchange.json"), Charsets.UTF_8).read());
       int count = 0;
       for(QueryDataBatch b : results){
         count += b.getHeader().getRowCount();
@@ -68,7 +68,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
          DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8));
+      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8).read());
       int count = 0;
       for(QueryDataBatch b : results){
         count += b.getHeader().getRowCount();
@@ -88,7 +88,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
              DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
           bit1.run();
           client.connect();
-          List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, Files.toString(DrillFileUtils.getResourceAsFile("/scan_screen_logical.json"), Charsets.UTF_8));
+          List<QueryDataBatch> results = client.runQuery(QueryType.LOGICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile("/scan_screen_logical.json"), Charsets.UTF_8).read());
           int count = 0;
           for (QueryDataBatch b : results) {
             count += b.getHeader().getRowCount();
@@ -110,7 +110,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
         bit1.run();
         bit2.run();
         client.connect();
-        List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8));
+        List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_single_exchange_double_entry.json"), Charsets.UTF_8).read());
         int count = 0;
       for(QueryDataBatch b : results){
         count += b.getHeader().getRowCount();

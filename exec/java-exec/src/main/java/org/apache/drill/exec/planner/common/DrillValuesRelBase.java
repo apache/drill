@@ -34,6 +34,7 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.util.NlsString;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.util.GuavaUtils;
 import org.apache.drill.exec.vector.complex.fn.ExtendedJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
 import org.joda.time.DateTime;
@@ -44,7 +45,6 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Base class for logical and physical Values implemented in Drill.
@@ -55,7 +55,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
 
   protected final JSONOptions content;
 
-  public DrillValuesRelBase(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits) {
+  public DrillValuesRelBase(RelOptCluster cluster, RelDataType rowType, List<? extends List<RexLiteral>> tuples, RelTraitSet traits) {
     this(cluster, rowType, tuples, traits, convertToJsonOptions(rowType, tuples));
   }
 
@@ -65,10 +65,10 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
    */
   public DrillValuesRelBase(RelOptCluster cluster,
                             RelDataType rowType,
-                            ImmutableList<ImmutableList<RexLiteral>> tuples,
+                            List<? extends List<RexLiteral>> tuples,
                             RelTraitSet traits,
                             JSONOptions content) {
-    super(cluster, rowType, tuples, traits);
+    super(cluster, rowType, GuavaUtils.convertToNestedUnshadedImmutableList(tuples), traits);
     this.content = content;
   }
 
@@ -87,7 +87,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
    * @param tuples list of constant values in a row-expression
    * @return json representation of tuples
    */
-  private static JSONOptions convertToJsonOptions(RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples) {
+  private static JSONOptions convertToJsonOptions(RelDataType rowType, List<? extends List<RexLiteral>> tuples) {
     try {
       return new JSONOptions(convertToJsonNode(rowType, tuples), JsonLocation.NA);
     } catch (IOException e) {
@@ -95,7 +95,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
     }
   }
 
-  private static JsonNode convertToJsonNode(RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples) throws IOException {
+  private static JsonNode convertToJsonNode(RelDataType rowType, List<? extends List<RexLiteral>> tuples) throws IOException {
     TokenBuffer out = new TokenBuffer(MAPPER.getFactory().getCodec(), false);
     JsonOutput json = new ExtendedJsonOutput(out);
     json.writeStartArray();

@@ -42,13 +42,13 @@ public class TestSpoolingBuffer extends BaseTestQuery {
     DrillConfig conf = DrillConfig.create("drill-spool-test-module.conf");
 
     try(Drillbit bit1 = new Drillbit(conf, serviceSet);
-        DrillClient client = new DrillClient(conf, serviceSet.getCoordinator());) {
+        DrillClient client = new DrillClient(conf, serviceSet.getCoordinator())) {
 
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile("/work/batch/multiple_exchange.json"),
-                      Charsets.UTF_8));
+              Files.asCharSource(DrillFileUtils.getResourceAsFile("/work/batch/multiple_exchange.json"),
+                      Charsets.UTF_8).read());
       int count = 0;
       for(QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
