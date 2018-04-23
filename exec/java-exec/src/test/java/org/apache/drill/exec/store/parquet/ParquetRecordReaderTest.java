@@ -109,7 +109,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
   }
 
   public String getPlanForFile(String pathFileName, String parquetFileName) throws IOException {
-    return Files.toString(DrillFileUtils.getResourceAsFile(pathFileName), Charsets.UTF_8)
+    return Files.asCharSource(DrillFileUtils.getResourceAsFile(pathFileName), Charsets.UTF_8).read()
         .replaceFirst("&REPLACED_IN_PARQUET_TEST&", parquetFileName);
   }
 
@@ -127,8 +127,8 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
       }
     }
 
-    final String planText = Files.toString(DrillFileUtils.getResourceAsFile(
-        "parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst(
+    final String planText = Files.asCharSource(DrillFileUtils.getResourceAsFile(
+        "parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).read().replaceFirst(
             "&REPLACED_IN_PARQUET_TEST&", readEntries.toString());
     testParquetFullEngineLocalText(planText, fileName, i, numberRowGroups, recordsPerRowGroup, true);
   }
@@ -180,8 +180,8 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
   @Test
   public void testFixedBinary() throws Exception {
     final String readEntries = "\"tmp/drilltest/fixed_binary.parquet\"";
-    final String planText = Files.toString(DrillFileUtils.getResourceAsFile(
-        "parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8)
+    final String planText = Files.asCharSource(DrillFileUtils.getResourceAsFile(
+        "parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).read()
           .replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
     testParquetFullEngineLocalText(planText, fileName, 1, 1, 1000000, false);
   }
@@ -266,7 +266,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
   public void testParquetFullEngineLocalPath(String planFileName, String filename,
       int numberOfTimesRead /* specified in json plan */,
       int numberOfRowGroups, int recordsPerRowGroup) throws Exception {
-    testParquetFullEngineLocalText(Files.toString(DrillFileUtils.getResourceAsFile(planFileName), Charsets.UTF_8), filename,
+    testParquetFullEngineLocalText(Files.asCharSource(DrillFileUtils.getResourceAsFile(planFileName), Charsets.UTF_8).read(), filename,
         numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup, true);
   }
 
@@ -297,7 +297,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
   public void testParquetFullEngineLocalTextDistributed(String planName, String filename,
       int numberOfTimesRead /* specified in json plan */,
       int numberOfRowGroups, int recordsPerRowGroup) throws Exception {
-    String planText = Files.toString(DrillFileUtils.getResourceAsFile(planName), Charsets.UTF_8);
+    String planText = Files.asCharSource(DrillFileUtils.getResourceAsFile(planName), Charsets.UTF_8).read();
     testFull(QueryType.PHYSICAL, planText, filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup, true);
   }
 
@@ -325,7 +325,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     TestFileGenerator.populateFieldInfoMap(props);
     final ParquetResultListener resultListener =
         new ParquetResultListener(getAllocator(), props, numberOfTimesRead, true);
-    testWithListener(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
+    testWithListener(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile(plan), Charsets.UTF_8).read(), resultListener);
     resultListener.getResults();
   }
 
@@ -669,7 +669,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
 
     final ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, testValues);
     final long C = System.nanoTime();
-    String planText = Files.toString(DrillFileUtils.getResourceAsFile(plan), Charsets.UTF_8);
+    String planText = Files.asCharSource(DrillFileUtils.getResourceAsFile(plan), Charsets.UTF_8).read();
     // substitute in the string for the read entries, allows reuse of the plan file for several tests
     if (readEntries != null) {
       planText = planText.replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);

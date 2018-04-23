@@ -31,7 +31,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 @Category(SecurityTest.class)
 public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
@@ -43,8 +43,8 @@ public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
 
   static {
     try {
-      IMPERSONATION_POLICIES = Files.toString(DrillFileUtils.getResourceAsFile("/inbound_impersonation_policies.json"),
-          Charsets.UTF_8);
+      IMPERSONATION_POLICIES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/inbound_impersonation_policies.json"),
+          Charsets.UTF_8).read();
     } catch (final IOException e) {
       throw new RuntimeException("Cannot load impersonation policies.", e);
     }

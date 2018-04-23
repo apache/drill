@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.config;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,7 +30,6 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Iterators;
 
 public class Values extends AbstractBase implements Leaf {
 
@@ -66,7 +66,7 @@ public class Values extends AbstractBase implements Leaf {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
 }

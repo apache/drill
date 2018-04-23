@@ -41,6 +41,6 @@ public class DrillFileUtils {
   }
 
   public static String getResourceAsString(String fileName) throws IOException {
-    return Files.toString(getResourceAsFile(fileName), Charsets.UTF_8);
+    return Files.asCharSource(getResourceAsFile(fileName), Charsets.UTF_8).read();
   }
 }

@@ -52,7 +52,7 @@ public class TestAggregateFunction extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
-              Files.toString(DrillFileUtils.getResourceAsFile(planPath), Charsets.UTF_8).replace("#{TEST_FILE}", dataPath));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile(planPath), Charsets.UTF_8).read().replace("#{TEST_FILE}", dataPath));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 

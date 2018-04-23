@@ -19,26 +19,26 @@ package org.apache.drill.exec.schema;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class OrderedField extends Field {
-    private final int index;
+  private final int index;
 
-    public OrderedField(RecordSchema parentSchema,
-                        MajorType type,
-                        String prefixFieldName,
-                        int index) {
-        super(parentSchema, type, prefixFieldName);
-        this.index = index;
-    }
+  public OrderedField(RecordSchema parentSchema,
+                      MajorType type,
+                      String prefixFieldName,
+                      int index) {
+    super(parentSchema, type, prefixFieldName);
+    this.index = index;
+  }
 
-    @Override
-    public String getFieldName() {
-        return "[" + index + "]";
-    }
+  @Override
+  public String getFieldName() {
+    return "[" + index + "]";
+  }
 
-    @Override
-    protected Objects.ToStringHelper addAttributesToHelper(Objects.ToStringHelper helper) {
-        return helper;
-    }
+  @Override
+  protected MoreObjects.ToStringHelper addAttributesToHelper(MoreObjects.ToStringHelper helper) {
+    return helper;
+  }
 }

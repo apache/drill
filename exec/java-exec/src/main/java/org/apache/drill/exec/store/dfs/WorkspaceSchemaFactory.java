@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import static com.google.common.collect.Collections2.transform;
-import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.FileNotFoundException;
@@ -34,6 +32,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -479,13 +478,9 @@ public class WorkspaceSchemaFactory {
     }
 
     private Set<String> rawTableNames() {
-      return newHashSet(
-          transform(tables.keySet(), new com.google.common.base.Function<TableInstance, String>() {
-        @Override
-        public String apply(TableInstance input) {
-          return input.sig.name;
-        }
-      }));
+      return tables.keySet().stream()
+          .map(input -> input.sig.name)
+          .collect(Collectors.toSet());
     }
 
     @Override
@@ -501,12 +496,9 @@ public class WorkspaceSchemaFactory {
     @Override
     public List<Function> getFunctions(String name) {
       List<TableSignature> sigs = optionExtractor.getTableSignatures(name);
-      return Lists.transform(sigs, new com.google.common.base.Function<TableSignature, Function>() {
-        @Override
-        public Function apply(TableSignature input) {
-          return new WithOptionsTableMacro(input, WorkspaceSchema.this);
-        }
-      });
+      return sigs.stream()
+          .map(input -> new WithOptionsTableMacro(input, WorkspaceSchema.this))
+          .collect(Collectors.toList());
     }
 
     private View getView(DotDrillFile f) throws IOException {

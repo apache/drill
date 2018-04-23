@@ -17,7 +17,6 @@
  */
 package org.apache.drill.yarn.zk;
 
-import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Collections2.transform;
 
 import java.io.IOException;
@@ -28,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Throwables;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.curator.RetryPolicy;
@@ -185,7 +185,8 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
       discovery.registerService(serviceInstance);
       return new ZKRegistrationHandle(serviceInstance.getId(), data);
     } catch (Exception e) {
-      throw propagate(e);
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -206,7 +207,8 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
           .name(serviceName).build();
       discovery.unregisterService(serviceInstance);
     } catch (Exception e) {
-      propagate(e);
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
   }
 

@@ -55,13 +55,13 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/join/mj_multi_condition.json"),
-              Charsets.UTF_8));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/mj_multi_condition.json"),
+              Charsets.UTF_8).read());
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
@@ -81,11 +81,11 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "INNER"));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).read().replace("${JOIN_TYPE}", "INNER"));
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
@@ -105,12 +105,12 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "LEFT"));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).read().replace("${JOIN_TYPE}", "LEFT"));
       int count = 0;
       for (QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {

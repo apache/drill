@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.trace;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.categories.OperatorTest;
@@ -75,7 +77,7 @@ public class TestTraceOutputDump extends ExecTest {
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));
+    final PhysicalPlan plan = reader.readPhysicalPlan(Files.asCharSource(DrillFileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8).read());
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -113,13 +115,13 @@ public class TestTraceOutputDump extends ExecTest {
     final VectorAccessible container = wrap.get();
 
     /* Assert there are no selection vectors */
-    assertTrue(wrap.getSv2() == null);
+    assertNull(wrap.getSv2());
 
     /* Assert there is only one record */
-    assertTrue(container.getRecordCount() == 1);
+    assertEquals(1, container.getRecordCount());
 
     /* Read the Integer value and ASSERT its Integer.MIN_VALUE */
     final int value = (int) container.iterator().next().getValueVector().getAccessor().getObject(0);
-    assertTrue(value == Integer.MIN_VALUE);
+    assertEquals(value, Integer.MIN_VALUE);
   }
 }

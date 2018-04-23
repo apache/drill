@@ -432,6 +432,15 @@
                <exclude>codegen/**</exclude>
                <exclude>bootstrap-storage-plugins.json</exclude>
                <exclude>org/apache/parquet</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/math</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/graph</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/net</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/primitives</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/reflect</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/util</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/cache</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/collect/Tree*</exclude>
+               <exclude>org/apache/drill/shaded/com/google/common/collect/Standard*</exclude>
                <exclude>com/google/common/math</exclude>
                <exclude>com/google/common/net</exclude>
                <exclude>com/google/common/primitives</exclude>
@@ -498,7 +507,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>36500000</maxsize>
+                  <maxsize>39000000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -558,7 +567,7 @@
                           This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                         </message>
-                        <maxsize>34000000</maxsize>
+                        <maxsize>37000000</maxsize>
                         <minsize>15000000</minsize>
                         <files>
                           <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -738,6 +747,15 @@
                       <exclude>codegen/**</exclude>
                       <exclude>bootstrap-storage-plugins.json</exclude>
                       <exclude>org/apache/parquet</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/math</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/graph</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/net</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/primitives</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/reflect</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/util</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/cache</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/collect/Tree*</exclude>
+                      <exclude>org/apache/drill/shaded/com/google/common/collect/Standard*</exclude>
                       <exclude>com/google/common/math</exclude>
                       <exclude>com/google/common/net</exclude>
                       <exclude>com/google/common/primitives</exclude>

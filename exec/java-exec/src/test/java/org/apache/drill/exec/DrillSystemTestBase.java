@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec;
 
-import static com.google.common.base.Throwables.propagate;
-
 import java.util.List;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -44,7 +42,7 @@ public class DrillSystemTestBase extends TestWithZookeeper {
       }
       this.servers = servers.build();
     } catch (DrillbitStartupException e) {
-      propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

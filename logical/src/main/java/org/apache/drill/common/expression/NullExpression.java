@@ -17,14 +17,13 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-
-import com.google.common.collect.Iterators;
 
 public class NullExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NullExpression.class);
@@ -50,7 +49,7 @@ public class NullExpression implements LogicalExpression{
 
   @Override
   public Iterator<LogicalExpression> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   public int getSelfCost() { return 0; }

@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.calcite.rel.RelNode;
@@ -36,11 +35,11 @@ import org.apache.drill.exec.planner.common.DrillValuesRelBase;
  */
 public class DrillValuesRel extends DrillValuesRelBase implements DrillRel {
 
-  public DrillValuesRel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits) {
+  public DrillValuesRel(RelOptCluster cluster, RelDataType rowType, List<? extends List<RexLiteral>> tuples, RelTraitSet traits) {
     super(cluster, rowType, tuples, traits);
   }
 
-  public DrillValuesRel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits, JSONOptions content) {
+  public DrillValuesRel(RelOptCluster cluster, RelDataType rowType, List<? extends List<RexLiteral>> tuples, RelTraitSet traits, JSONOptions content) {
     super(cluster, rowType, tuples, traits, content);
   }
 
@@ -56,6 +55,5 @@ public class DrillValuesRel extends DrillValuesRelBase implements DrillRel {
           .content(content.asNode())
           .build();
   }
-
 
 }

@@ -52,7 +52,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
     bit.run();
     client.connect();
     final String path = "/physical_test2.json";
-    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile(path), Charsets.UTF_8));
+    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile(path), Charsets.UTF_8).read());
 
     // look at records
     final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
@@ -116,7 +116,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       bit.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
-          Files.toString(DrillFileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8).read()
               .replace("#{TEST_FILE}", DrillFileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
       );
 

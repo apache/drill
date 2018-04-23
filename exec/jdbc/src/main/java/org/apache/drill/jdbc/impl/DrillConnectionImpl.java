@@ -195,7 +195,7 @@ class DrillConnectionImpl extends AvaticaConnection
     try {
       return super.prepareAndExecuteInternal(statement, sql, maxRowCount);
     } catch (RuntimeException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      Throwables.throwIfInstanceOf(e.getCause(), SQLException.class);
       throw e;
     }
   }
