@@ -119,9 +119,9 @@ check_before_start()
 {
   #check that the process is not running
   mkdir -p "$DRILL_PID_DIR"
-  if [ -f $pid ]; then
-    if kill -0 `cat $pid` > /dev/null 2>&1; then
-      echo "$command is already running as process `cat $pid`.  Stop it first."
+  if [ -f $pidFile ]; then
+    if kill -0 `cat $pidFile` > /dev/null 2>&1; then
+      echo "$command is already running as process `cat $pidFile`.  Stop it first."
       exit 1
     fi
   fi
@@ -146,8 +146,8 @@ check_and_enforce_cgroup(){
     if [ -f $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs ]; then
       echo $dbitPid > $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs
       # Verify Enforcement
-      cgroupStatus=`grep -w $pid $SYS_CGROUP_DIR/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
-      if [ -z "$cgroupStatus" ]; then
+      cgroupStatus=`grep -w $dbitPid $SYS_CGROUP_DIR/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
+      if [ -n "$cgroupStatus" ]; then
         #Ref: https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
         cpu_quota=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_quota_us`
         cpu_period=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_period_us`
@@ -189,8 +189,8 @@ start_bit ( )
   echo "`ulimit -a`" >> "$DRILLBIT_LOG_PATH" 2>&1
   nohup nice -n $DRILL_NICENESS "$DRILL_HOME/bin/runbit" exec ${args[@]} >> "$logout" 2>&1 &
   procId=$!
-  echo $procId > $pid # Yeah, $pid is a file, $procId is the pid...
-  echo $! > $pid
+  echo $procId > $pidFile # Yeah, $pidFile is a file, $procId is the pid...
+  echo $! > $pidFile
   sleep 1
   check_after_start $procId
 }
@@ -198,8 +198,8 @@ start_bit ( )
 stop_bit ( )
 {
   kill_drillbit=$1
-  if [ -f $pid ]; then
-    pidToKill=`cat $pid`
+  if [ -f $pidFile ]; then
+    pidToKill=`cat $pidFile`
     # kill -0 == see if the PID exists
     if kill -0 $pidToKill > /dev/null 2>&1; then
       echo "Stopping $command"
@@ -211,15 +211,15 @@ stop_bit ( )
       retval=$?
       echo "No $command to stop because kill -0 of pid $pidToKill failed with status $retval"
     fi
-    rm $pid > /dev/null 2>&1
+    rm $pidFile > /dev/null 2>&1
   else
-    echo "No $command to stop because no pid file $pid"
+    echo "No $command to stop because no pid file $pidFile"
     retval=1
   fi
   return $retval
 }
 
-pid=$DRILL_PID_DIR/drillbit.pid
+pidFile=$DRILL_PID_DIR/drillbit.pid
 logout="${DRILL_LOG_PREFIX}.out"
 
 thiscmd=$0
@@ -271,12 +271,12 @@ case $startStopStatus in
   ;;
 
 (status)
-  if [ -f $pid ]; then
-    TARGET_PID=`cat $pid`
+  if [ -f $pidFile ]; then
+    TARGET_PID=`cat $pidFile`
     if kill -0 $TARGET_PID > /dev/null 2>&1; then
       echo "$command is running."
     else
-      echo "$pid file is present but $command is not running."
+      echo "$pidFile file is present but $command is not running."
       exit 1
     fi
   else
