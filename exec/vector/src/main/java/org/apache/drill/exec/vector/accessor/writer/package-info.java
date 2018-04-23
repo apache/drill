@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Implementation of the vector writers. The code will make much more sense if
  * we start with a review of Drill’s complex vector data model. Drill has 38+
- * data (“minor”) types. Drill also has three cardinalities (“modes”). The
+ * data ("minor") types. Drill also has three cardinalities ("modes"). The
  * result is over 120+ different vector types. Then, when you add maps, repeated
  * maps, lists and repeated lists, you rapidly get an explosion of types that
  * the writer code must handle.
@@ -36,13 +35,13 @@
  * <p>
  * A repeated map, a list, a repeated list and any array (repeated) scalar all
  * are array-like. Nullable and required modes are identical (single values),
- * but a nullable has an additional is-set (“bit”) vector.
+ * but a nullable has an additional is-set ("bit") vector.
  * <p>
  * The writers (and readers) borrow concepts from JSON and relational theory
  * to simplify the problem:
  * <p>
  * <ul>
- * <li>Both the top-level row, and a Drill map are “tuples” and are treated
+ * <li>Both the top-level row, and a Drill map are "tuples" and are treated
  * similarly in the model.</li>
  * <li>All non-map, non-list (that is, scalar) data types are treated
  * uniformly.</li>
@@ -107,8 +106,8 @@
  * This data model is similar to; but has important differences from, the prior,
  * generated, readers and writers.
  * <p>
- * The object layer is new: it is the simplest way to model the three “object
- * types.” An app using this code would use just the leaf scalar readers and
+ * The object layer is new: it is the simplest way to model the three "object
+ * types." An app using this code would use just the leaf scalar readers and
  * writers.
  *
  * <h4>Writer Performance</h4>
@@ -127,7 +126,7 @@
  * size and performs the needed reallocation. To avoid multiple doublings, the
  * writer computes the needed new size and allocates that size directly.</li>
  * <li>Vector reallocation is improved to eliminate zeroing the new half of the
- * buffer, data is left “garbage-filled.”</li>
+ * buffer, data is left "garbage-filled."</li>
  * <li>If the vector would grow beyond 16 MB, then overflow is triggered, via a
  * listener, which causes the buffer to be replaced. The write then
  * continues.</li>
@@ -135,9 +134,9 @@
  * `OffsetVectorWriter`. This writer caches the last write position so that each
  * array write needs a single offset update, rather than the read and write as
  * in previous code.</li>
- * <li>The writers keep track of the “last write position” and perform
- * “fill-empties” work if the new write position is more than one position
- * behind the last write. All types now correctly support “fill-empties”
+ * <li>The writers keep track of the "last write position" and perform
+ * "fill-empties" work if the new write position is more than one position
+ * behind the last write. All types now correctly support "fill-empties"
  * (before, only nullable types did so reliably.)</li>
  * <li>Null handling is done by an additional writer layer that wraps the
  * underlying data writer. This avoids the need for a special nullable writer:

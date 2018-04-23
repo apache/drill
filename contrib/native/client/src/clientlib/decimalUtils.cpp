@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #include <vector>
 #include "drill/recordBatch.hpp"
 #include "drill/decimalUtils.hpp"

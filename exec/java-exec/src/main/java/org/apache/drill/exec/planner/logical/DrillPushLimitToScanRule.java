@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.logical;
 
 import com.google.common.collect.ImmutableList;
@@ -23,12 +22,6 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexVisitor;
-import org.apache.calcite.rex.RexVisitorImpl;
-import org.apache.calcite.util.Util;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
@@ -100,9 +93,10 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
     }
   };
 
-  protected void doOnMatch(RelOptRuleCall call, DrillLimitRel limitRel, DrillScanRel scanRel, DrillProjectRel projectRel){
+  protected void doOnMatch(RelOptRuleCall call, DrillLimitRel limitRel,
+      DrillScanRel scanRel, DrillProjectRel projectRel) {
     try {
-      final int rowCountRequested = (int) limitRel.getRows();
+      final int rowCountRequested = (int) limitRel.estimateRowCount(limitRel.getCluster().getMetadataQuery());
 
       final GroupScan newGroupScan = scanRel.getGroupScan().applyLimit(rowCountRequested);
 
@@ -120,10 +114,10 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
 
       final RelNode newLimit;
       if (projectRel != null) {
-        final RelNode newProject = projectRel.copy(projectRel.getTraitSet(), ImmutableList.of((RelNode)newScanRel));
-        newLimit = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of((RelNode)newProject));
+        final RelNode newProject = projectRel.copy(projectRel.getTraitSet(), ImmutableList.of((RelNode) newScanRel));
+        newLimit = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of(newProject));
       } else {
-        newLimit = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of((RelNode)newScanRel));
+        newLimit = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of((RelNode) newScanRel));
       }
 
       call.transformTo(newLimit);

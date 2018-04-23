@@ -1,6 +1,4 @@
-package org.apache.drill.exec.expr;
-
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +15,7 @@ package org.apache.drill.exec.expr;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.expr;
 
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.UnlikelyTest;

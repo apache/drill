@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.logical.RelOptHelper;
@@ -29,6 +28,12 @@ public class PushLimitToTopN  extends Prule{
 
   private PushLimitToTopN() {
     super(RelOptHelper.some(LimitPrel.class, RelOptHelper.some(SingleMergeExchangePrel.class, RelOptHelper.any(SortPrel.class))), "PushLimitToTopN");
+  }
+
+  @Override
+  public boolean matches(RelOptRuleCall call) {
+    return PrelUtil.getPlannerSettings(call.getPlanner()).getOptions()
+      .getOption(PlannerSettings.TOPN.getOptionName()).bool_val;
   }
 
   @Override

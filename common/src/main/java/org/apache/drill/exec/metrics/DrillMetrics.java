@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -60,6 +60,7 @@ public final class DrillMetrics {
       REGISTRY.registerAll(new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
       REGISTRY.registerAll(new MemoryUsageGaugeSet());
       REGISTRY.registerAll(new ThreadStatesGaugeSet());
+      REGISTRY.registerAll(new CpuGaugeSet());
       register("fd.usage", new FileDescriptorRatioGauge());
     }
 

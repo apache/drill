@@ -198,7 +198,32 @@ public interface RecordBatch extends VectorAccessible {
      *     {@code OUT_OF_MEMORY} to its caller) and call {@code next()} again.
      * </p>
      */
-    OUT_OF_MEMORY
+    OUT_OF_MEMORY,
+
+    /**
+     * Emit record to produce output batches.
+     * <p>
+     *   The call to {@link #next()},
+     *   read zero or more records with no change in schema as compared to last
+     *   time. It is an indication from upstream operator to unblock and
+     *   produce an output batch based on all the records current operator
+     *   possess. The caller should return this outcome to it's downstream
+     *   operators except LateralJoinRecordBatch, which will consume any EMIT
+     *   from right branch but will pass through EMIT from left branch.
+     * </p>
+     * <p>
+     *   Caller should produce one or more output record batch based on all the
+     *   current data and restart fresh for any new input. If there are multiple
+     *   output batches then caller should send EMIT only with last batch and OK
+     *   with all previous batches.
+     *   For example: Hash Join when received EMIT on build side will stop build
+     *   side and call next() on probe side until it sees EMIT. On seeing EMIT
+     *   from probe side, it should perform JOIN and produce output batches.
+     *   Later it should clear all the data on both build and probe side of
+     *   input and again start from build side.
+     * </p>
+     */
+    EMIT,
   }
 
   /**

@@ -6,7 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -117,15 +119,15 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       return;
     }
 
-    RexNode condition = null;
+    RexNode condition;
     if (project == null) {
       condition = filter.getCondition();
     } else {
       // get the filter as if it were below the projection.
-      condition = RelOptUtil.pushFilterPastProject(filter.getCondition(), project);
+      condition = RelOptUtil.pushPastProject(filter.getCondition(), project);
     }
 
-    if (condition == null || condition.equals(ValueExpressions.BooleanExpression.TRUE)) {
+    if (condition == null || condition.isAlwaysTrue()) {
       return;
     }
 
@@ -167,7 +169,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       inputRel = project.copy(project.getTraitSet(), ImmutableList.of(inputRel));
     }
 
-    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.<RelNode>of(inputRel));
+    final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.of(inputRel));
 
     call.transformTo(newFilter);
   }

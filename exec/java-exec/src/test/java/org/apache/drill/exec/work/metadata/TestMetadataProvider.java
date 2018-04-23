@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -248,7 +248,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(117, columns.size());
+    assertEquals(118, columns.size());
     // too many records to verify the output.
   }
 
@@ -261,7 +261,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(5, columns.size());
+    assertEquals(6, columns.size());
 
     verifyColumn("sys", "drillbits", "user_port", columns);
     verifyColumn("sys", "drillbits", "control_port", columns);
@@ -281,7 +281,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(3, columns.size());
+    assertEquals(4, columns.size());
 
     verifyColumn("sys", "drillbits", "user_port", columns);
     verifyColumn("sys", "drillbits", "control_port", columns);
@@ -302,11 +302,12 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(3, columns.size());
+    assertEquals(4, columns.size());
 
     verifyColumn("sys", "drillbits", "user_port", columns);
     verifyColumn("sys", "drillbits", "control_port", columns);
     verifyColumn("sys", "drillbits", "data_port", columns);
+    verifyColumn("sys", "drillbits", "http_port", columns);
   }
 
   /** Helper method to verify schema contents */

@@ -56,6 +56,7 @@ public class RecordBatchData {
         throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
       }
       TransferPair tp = v.getValueVector().getTransferPair(allocator);
+      // Transfer make sure of releasing memory for value vector in source container.
       tp.transfer();
       vectors.add(tp.getTo());
     }

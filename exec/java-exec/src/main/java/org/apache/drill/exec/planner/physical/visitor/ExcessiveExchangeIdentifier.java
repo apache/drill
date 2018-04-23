@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,8 +30,6 @@ import org.apache.calcite.rel.RelNode;
 import com.google.common.collect.Lists;
 
 public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, ExcessiveExchangeIdentifier.MajorFragmentStat, RuntimeException> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExcessiveExchangeIdentifier.class);
-
   private final long targetSliceSize;
 
   public ExcessiveExchangeIdentifier(long targetSliceSize) {
@@ -62,8 +60,8 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   @Override
   public Prel visitScreen(ScreenPrel prel, MajorFragmentStat s) throws RuntimeException {
     s.addScreen(prel);
-    RelNode child = ((Prel)prel.getInput()).accept(this, s);
-    return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList(child));
+    RelNode child = ((Prel) prel.getInput()).accept(this, s);
+    return prel.copy(prel.getTraitSet(), Collections.singletonList(child));
   }
 
   @Override
@@ -102,7 +100,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     private boolean isMultiSubScan = false;
 
     public void add(Prel prel) {
-      maxRows = Math.max(prel.getRows(), maxRows);
+      maxRows = Math.max(prel.estimateRowCount(prel.getCluster().getMetadataQuery()), maxRows);
     }
 
     public void addScreen(ScreenPrel screenPrel) {

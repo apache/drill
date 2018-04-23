@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,53 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.config;
-
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.exec.physical.base.AbstractBase;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-import org.apache.calcite.rel.core.JoinRelType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.drill.common.logical.data.JoinCondition;
+import org.apache.drill.exec.physical.base.AbstractJoinPop;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+
+import java.util.List;
 
 @JsonTypeName("hash-join")
-public class HashJoinPOP extends AbstractBase {
+public class HashJoinPOP extends AbstractJoinPop {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashJoinPOP.class);
 
-
-    private final PhysicalOperator left;
-    private final PhysicalOperator right;
-    private final List<JoinCondition> conditions;
-    private final JoinRelType joinType;
-
     @JsonCreator
-    public HashJoinPOP(
-            @JsonProperty("left") PhysicalOperator left,
-            @JsonProperty("right") PhysicalOperator right,
-            @JsonProperty("conditions") List<JoinCondition> conditions,
-            @JsonProperty("joinType") JoinRelType joinType
-    ) {
-        this.left = left;
-        this.right = right;
-        this.conditions = conditions;
-        Preconditions.checkArgument(joinType != null, "Join type is missing!");
-        this.joinType = joinType;
-    }
-
-    @Override
-    public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
-        return physicalVisitor.visitHashJoin(this, value);
+    public HashJoinPOP(@JsonProperty("left") PhysicalOperator left, @JsonProperty("right") PhysicalOperator right,
+                       @JsonProperty("conditions") List<JoinCondition> conditions,
+                       @JsonProperty("joinType") JoinRelType joinType) {
+        super(left, right, joinType, null, conditions);
+        Preconditions.checkArgument(joinType != null, "Join type is missing for HashJoin Pop");
     }
 
     @Override
@@ -70,41 +48,20 @@ public class HashJoinPOP extends AbstractBase {
         return new HashJoinPOP(children.get(0), children.get(1), conditions, joinType);
     }
 
-    @Override
-    public Iterator<PhysicalOperator> iterator() {
-        return Iterators.forArray(left, right);
-    }
-
-    public PhysicalOperator getLeft() {
-        return left;
-    }
-
-    public PhysicalOperator getRight() {
-        return right;
-    }
-
-    public JoinRelType getJoinType() {
-        return joinType;
-    }
-
-    public List<JoinCondition> getConditions() {
-        return conditions;
-    }
-
-    public HashJoinPOP flipIfRight(){
-        if(joinType == JoinRelType.RIGHT){
+    public HashJoinPOP flipIfRight() {
+        if (joinType == JoinRelType.RIGHT) {
             List<JoinCondition> flippedConditions = Lists.newArrayList();
-            for(JoinCondition c : conditions){
+            for (JoinCondition c : conditions) {
                 flippedConditions.add(c.flip());
             }
             return new HashJoinPOP(right, left, flippedConditions, JoinRelType.LEFT);
-        }else{
+        } else {
             return this;
         }
     }
 
     @Override
     public int getOperatorType() {
-      return CoreOperatorType.HASH_JOIN_VALUE;
+        return CoreOperatorType.HASH_JOIN_VALUE;
     }
 }

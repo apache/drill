@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Holds functionality common to the Drill-on-YARN client and Application Master (AM).
  * Includes configuration, utilities, and wrappers around various YARN data classes.

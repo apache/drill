@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * This package provides a "dummy" set of writers. The dummy writers provide
  * the same API as the "real" writers, but the dummy writers simply discard

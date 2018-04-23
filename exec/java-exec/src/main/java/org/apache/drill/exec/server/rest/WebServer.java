@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -158,7 +158,14 @@ public class WebServer implements AutoCloseable {
     final int selectors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_SELECTORS);
     final QueuedThreadPool threadPool = new QueuedThreadPool(2, 2, 60000);
     embeddedJetty = new Server(threadPool);
-    embeddedJetty.setHandler(createServletContextHandler(authEnabled));
+    ServletContextHandler webServerContext = createServletContextHandler(authEnabled);
+    //Allow for Other Drillbits to make REST calls
+    FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
+    filterHolder.setInitParameter("allowedOrigins", "*");
+    //Allowing CORS for metrics only
+    webServerContext.addFilter(filterHolder, "/status/metrics", null);
+    embeddedJetty.setHandler(webServerContext);
+
     ServerConnector connector = createConnector(port, acceptors, selectors);
     threadPool.setMaxThreads(1 + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
     embeddedJetty.addConnector(connector);
@@ -296,10 +303,14 @@ public class WebServer implements AutoCloseable {
   }
 
   public int getPort() {
-    if (embeddedJetty == null || embeddedJetty.getConnectors().length != 1) {
+    if (!isRunning()) {
       throw new UnsupportedOperationException("Http is not enabled");
     }
     return ((ServerConnector)embeddedJetty.getConnectors()[0]).getPort();
+  }
+
+  public boolean isRunning() {
+    return (embeddedJetty != null && embeddedJetty.getConnectors().length == 1);
   }
 
   private ServerConnector createConnector(int port, int acceptors, int selectors) throws Exception {

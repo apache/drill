@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
-  license agreements. See the NOTICE file distributed with this work for additional
-  information regarding copyright ownership. The ASF licenses this file to
-  You under the Apache License, Version 2.0 (the "License"); you may not use
-  this file except in compliance with the License. You may obtain a copy of
-  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
-  by applicable law or agreed to in writing, software distributed under the
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-  OF ANY KIND, either express or implied. See the License for the specific
-  language governing permissions and limitations under the License. -->
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -36,8 +45,8 @@
     <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
-    <calcite.version>1.15.0-drill-r0</calcite.version>
-    <avatica.version>1.10.0</avatica.version>
+    <calcite.version>1.16.0-drill-r0</calcite.version>
+    <avatica.version>1.11.0</avatica.version>
     <janino.version>2.7.6</janino.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
     <jackson.version>2.7.9</jackson.version>
@@ -67,6 +76,8 @@
     <memoryMb>4096</memoryMb>
     <directMemoryMb>4096</directMemoryMb>
     <additionalparam>-Xdoclint:none</additionalparam>
+    <rat.skip>true</rat.skip>
+    <license.skip>true</license.skip>
   </properties>
 
   <scm>
@@ -192,11 +203,9 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-        <version>0.12</version>
         <executions>
           <execution>
             <id>rat-checks</id>
-            <phase>validate</phase>
             <goals>
               <goal>check</goal>
             </goals>
@@ -255,7 +264,15 @@
           </excludes>
         </configuration>
       </plugin>
-
+      <!--
+        DRILL-6320: The license-maven-plugin does a better job of checking headers than
+        the apache-rat-plugin. However, it is standard to include the apache-rat-plugin
+        in apache projects so both are used.
+      -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -355,7 +372,7 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>[3.0.4,4)</version>
+                  <version>[3.3.1,4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
                   <version>[1.8,1.9)</version>
@@ -380,6 +397,7 @@
                     <exclude>log4j:log4j</exclude>
                     <exclude>jdk.tools:jdk.tools</exclude>
                     <exclude>org.json:json</exclude>
+                    <exclude>org.beanshell:bsh</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -429,15 +447,103 @@
           </gitDescribe>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>3.0</version>
+        <configuration>
+          <aggregate>true</aggregate>
+          <header>${maven.multiModuleProjectDirectory}/header</header>
+          <excludes>
+            <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/resources/parquet/**/*</exclude>
+            <exclude>**/*.g</exclude>
+            <exclude>**/*.woff2</exclude>
+            <exclude>**/*.ks</exclude>
+            <exclude>**/*.pcap</exclude>
+            <exclude>**/*.props</exclude>
+            <exclude>**/*.conf</exclude>
+            <exclude>**/*.log</exclude>
+            <exclude>**/*.css</exclude>
+            <exclude>**/*.js</exclude>
+            <exclude>**/*.md</exclude>
+            <exclude>**/*.eps</exclude>
+            <exclude>**/*.json</exclude>
+            <exclude>**/*.seq</exclude>
+            <exclude>**/*.parquet</exclude>
+            <exclude>**/*.sql</exclude>
+            <exclude>**/git.properties</exclude>
+            <exclude>**/*.csv</exclude>
+            <exclude>**/*.csvh</exclude>
+            <exclude>**/*.csvh-test</exclude>
+            <exclude>**/*.tsv</exclude>
+            <exclude>**/*.txt</exclude>
+            <exclude>**/*.ssv</exclude>
+            <exclude>**/drill-*.conf</exclude>
+            <exclude>**/.buildpath</exclude>
+            <exclude>**/*.proto</exclude>
+            <exclude>**/*.fmpp</exclude>
+            <exclude>**/target/**</exclude>
+            <exclude>**/*.iml</exclude>
+            <exclude>**/.idea/**</exclude>
+            <exclude>**/*.tdd</exclude>
+            <exclude>**/*.project</exclude>
+            <exclude>**/TAGS</exclude>
+            <exclude>**/*.checkstyle</exclude>
+            <exclude>**/.classpath</exclude>
+            <exclude>**/.settings/**</exclude>
+            <exclude>.*/**</exclude>
+            <exclude>**/*.patch</exclude>
+            <exclude>**/*.pb.cc</exclude>
+            <exclude>**/*.pb.h</exclude>
+            <exclude>**/*.linux</exclude>
+            <exclude>**/client/*build*/**</exclude>
+            <exclude>**/client/tags</exclude>
+            <exclude>**/cmake_install.cmake</exclude>
+            <exclude>**/ssl/*.csr</exclude>
+            <exclude>**/ssl/*.pem</exclude>
+            <exclude>**/ssl/*.p12</exclude>
+            <exclude>**/*.tbl</exclude>
+            <exclude>**/*.httpd</exclude>
+            <exclude>**/*.autotools</exclude>
+            <exclude>**/*.cproject</exclude>
+            <exclude>**/*.drill</exclude>
+            <exclude>**/*.plist</exclude>
+            <exclude>**/LICENSE</exclude>
+            <exclude>**/NOTICE</exclude>
+            <exclude>KEYS</exclude>
+            <exclude>header</exclude>
+            <!-- TODO DRILL-4336: try to avoid the need to add this -->
+            <exclude>dependency-reduced-pom.xml</exclude>
+          </excludes>
+          <mapping>
+            <java>SLASHSTAR_STYLE</java>
+            <cpp>SLASHSTAR_STYLE</cpp>
+            <hpp>SLASHSTAR_STYLE</hpp>
+            <in>SLASHSTAR_STYLE</in>
+            <ipp>SLASHSTAR_STYLE</ipp>
+            <sasl>SLASHSTAR_STYLE</sasl>
+            <ssl>SLASHSTAR_STYLE</ssl>
+            <txt>SLASHSTAR_STYLE</txt>
+            <macos>SLASHSTAR_STYLE</macos>
+            <linux>SLASHSTAR_STYLE</linux>
+            <boost>SLASHSTAR_STYLE</boost>
+            <cmake>SCRIPT_STYLE</cmake>
+          </mapping>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
 
       <plugins>
-        <plugin>
-          <groupId>org.apache.rat</groupId>
-          <artifactId>apache-rat-plugin</artifactId>
-          <version>0.11</version>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
