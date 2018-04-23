@@ -99,7 +99,9 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
 
   @Override
   public ColumnMetadata schema() {
-    // No column for the row tuple
+    // The top-level tuple (the data row) is not associated
+    // with a parent column. By contrast, a map tuple is
+    // associated with the column that defines the map.
     return null;
   }
 }
