@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -103,8 +104,11 @@ public class IncomingBuffers implements AutoCloseable {
             Arrays.toString(collectorMap.values().toArray())));
       }
 
+      // Use the Data Collector's buffer allocator if set, otherwise the fragment's one
+      BufferAllocator ownerAllocator = collector.getAllocator();
+
       synchronized (collector) {
-        final RawFragmentBatch newRawFragmentBatch = incomingBatch.newRawFragmentBatch(context.getAllocator());
+        final RawFragmentBatch newRawFragmentBatch = incomingBatch.newRawFragmentBatch(ownerAllocator);
         boolean decrementedToZero = collector
             .batchArrived(incomingBatch.getHeader().getSendingMinorFragmentId(), newRawFragmentBatch);
         newRawFragmentBatch.release();
@@ -125,8 +129,8 @@ public class IncomingBuffers implements AutoCloseable {
     return rem;
   }
 
-  public RawBatchBuffer[] getBuffers(int senderMajorFragmentId) {
-    return collectorMap.get(senderMajorFragmentId).getBuffers();
+  public DataCollector getCollector(int senderMajorFragmentId) {
+    return collectorMap.get(senderMajorFragmentId);
   }
 
   public boolean isDone() {
