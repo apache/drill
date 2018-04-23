@@ -58,6 +58,10 @@
 #     The amount of Java heap memory set in the
 #     drill.yarn.drillbit.heap setting. Same override rules as
 #     DRILL_MAX_DIRECT_MEMORY.
+# DRILLBIT_CGROUP
+#     Optional name of CGroup for managing a Drillbit's resources
+# SYS_CGROUP_DIR
+#     Option to specify the cgroup location if it is different from the default
 # DRILL_JAVA_OPTS
 #     The standard JVM options needed to launch Drill. Must be set in
 #     drill-env.sh.
@@ -109,6 +113,36 @@
 # ENABLE_GC_LOG
 #     Enables Java GC logging. Passed from the drill.yarn.drillbit.log-gc
 #     garbage collection option.
+
+### Function to enforce CGroup (Refer local drillbit.sh)
+check_and_enforce_cgroup(){
+    dbitPid=$1;
+    kill -0 $dbitPid
+    if [ $? -gt 0 ]; then 
+      echo "ERROR: Failed to add Drillbit to CGroup ( $DRILLBIT_CGROUP ) for 'cpu'. Ensure that the Drillbit ( pid=$dbitPid ) started up." >&2
+      exit 1
+    fi
+    SYS_CGROUP_DIR=${SYS_CGROUP_DIR:-"/sys/fs/cgroup"}
+    if [ -f $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs ]; then
+      echo $dbitPid > $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs
+      # Verify Enforcement
+      cgroupStatus=`grep -w $pid $SYS_CGROUP_DIR/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
+      if [ -z "$cgroupStatus" ]; then
+        #Ref: https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
+        cpu_quota=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_quota_us`
+        cpu_period=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_period_us`
+        if [ $cpu_period -gt 0 ] && [ $cpu_quota -gt 0 ]; then
+          coresAllowed=`echo $(( 100 * $cpu_quota / $cpu_period )) | sed 's/..$/.&/'`
+          echo "INFO: CGroup (drillcpu) will limit Drill to $coresAllowed cpu(s)"
+        fi
+      else
+        echo "ERROR: Failed to add Drillbit to CGroup ( $DRILLBIT_CGROUP ) for 'cpu'. Ensure that the cgroup manages 'cpu'" >&2
+      fi
+    else
+      echo "ERROR: CGroup $DRILLBIT_CGROUP not found. Ensure that daemon is running, SYS_CGROUP_DIR is correctly set (currently, $SYS_CGROUP_DIR ), and that the CGroup exists" >&2
+    fi
+}
+
 
 if [ -n "$DRILL_DEBUG" ]; then
   echo
@@ -175,4 +209,11 @@ fi
 echo "`date` Starting drillbit on `hostname` under YARN, logging to $DRILLBIT_LOG_PATH"
 echo "`ulimit -a`" >> "$DRILLBIT_LOG_PATH" 2>&1
 
-"$DRILL_HOME/bin/runbit" exec
+# Run in background
+"$DRILL_HOME/bin/runbit" exec &
+procId=$!
+sleep 1
+check_and_enforce_cgroup $procId
+
+# Wait for process to complete
+wait
