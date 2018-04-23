@@ -102,15 +102,15 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
   public void testForInAndNotOperators() throws Exception {
     String query = String.format("SELECT * FROM %s t1 JOIN %s t2 " +
             "ON t1.`year` = t2.`year` JOIN %s t3 ON t1.`period` = t3.`period` " +
-            "WHERE t2.`year` NOT IN (1987, 1988) AND t3.`period` IN (1)",
+            "WHERE t2.`year` NOT IN (1987, 1988) AND t3.`period` IN (1, 2)",
         FIRST_TABLE_NAME, SECOND_TABLE_NAME, THIRD_TABLE_NAME);
 
 
     int actualRowCount = testSql(query);
-    int expectedRowCount = 24;
+    int expectedRowCount = 72;
     assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
 
-    final String[] expectedPlan = {"first.*numRowGroups=3", "second.*numRowGroups=2", "third.*numRowGroups=3"};
+    final String[] expectedPlan = {"first.*numRowGroups=6", "second.*numRowGroups=3", "third.*numRowGroups=4"};
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
@@ -122,10 +122,10 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
         FIRST_TABLE_NAME, SECOND_TABLE_NAME, THIRD_TABLE_NAME);
 
     int actualRowCount = testSql(query);
-    int expectedRowCount = 60;
+    int expectedRowCount = 96;
     assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
 
-    final String[] expectedPlan = {"first.*numRowGroups=7", "second.*numRowGroups=4", "third.*numRowGroups=6"};
+    final String[] expectedPlan = {"first.*numRowGroups=7", "second.*numRowGroups=5", "third.*numRowGroups=6"};
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
@@ -137,14 +137,44 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
         FIRST_TABLE_NAME, SECOND_TABLE_NAME, THIRD_TABLE_NAME);
 
     int actualRowCount = testSql(query);
-    int expectedRowCount = 24;
+    int expectedRowCount = 36;
     assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
 
-    final String[] expectedPlan = {"first.*numRowGroups=3", "second.*numRowGroups=2", "third.*numRowGroups=3"};
+    final String[] expectedPlan = {"first.*numRowGroups=3", "second.*numRowGroups=3", "third.*numRowGroups=3"};
+    testPlanMatchingPatterns(query, expectedPlan);
+  }
+
+
+  @Test
+  public void testForSubQuery() throws Exception {
+    String query = String.format("SELECT * FROM %s t1 JOIN " +
+            "(SELECT `year`, `month` FROM %s WHERE `year` = 1987 AND `month` = 5) t2 " +
+            "ON t1.`year` = t2.`year` AND t1.`month` = t2.`month`",
+        FIRST_TABLE_NAME, SECOND_TABLE_NAME);
+
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 4;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan = {"first.*numRowGroups=2", "second.*numRowGroups=1"};
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
   @Test
+  public void testForWithStatement() throws Exception {
+    String query = String.format("WITH `first_date` AS (SELECT `year`, `month` FROM %s WHERE `year` = 1987 and `month` = 5) " +
+            "SELECT t2.`year`, t2.`month` FROM %s t2 JOIN `first_date` ON t2.`year` = `first_date`.`year` AND t2.`month` = `first_date`.`month`",
+        FIRST_TABLE_NAME, SECOND_TABLE_NAME);
+
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 4;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan = {"first.*numRowGroups=2", "second.*numRowGroups=1"};
+    testPlanMatchingPatterns(query, expectedPlan);
+  }
+
+  @Test // TODO: CALCITE-1048
   @Ignore // For now plan has "first.*numRowGroups=7". Replacing left join to inner should be made earlier.
   public void testForTwoExists() throws Exception {
     String query = String.format("SELECT * from %s t1 " +
@@ -160,7 +190,7 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
-  @Test
+  @Test // TODO: CALCITE-1048
   @Ignore // For now plan has "first.*numRowGroups=16"
   public void testForFilterInHaving() throws Exception {
     String query = String.format("SELECT t1.`year`, t2.`year`, t1.`period`, t3.`period` FROM %s t1 " +
@@ -178,8 +208,8 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
-  @Test
-  @Ignore // For now plan has "first.*numRowGroups=16", "second.*numRowGroups=6"
+  @Test // TODO: CALCITE-2241
+  @Ignore // For now plan has "first.*numRowGroups=16", "second.*numRowGroups=7"
   public void testForOrOperator() throws Exception {
     String query = String.format("SELECT * FROM %s t1 " +
             "JOIN %s t2 ON t1.`month` = t2.`month` " +
@@ -193,5 +223,54 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     final String[] expectedPlan = {"first.*numRowGroups=4", "second.*numRowGroups=2"};
     testPlanMatchingPatterns(query, expectedPlan);
   }
+
+  @Test // TODO: CALCITE-2275
+  @Ignore // For now plan has "first.*numRowGroups=14""
+  public void testForInAndNotOperatorsInJoinCondition() throws Exception {
+    String query = String.format("SELECT * FROM %s t1 JOIN %s t2 " +
+            "ON t1.`year` = t2.`year` AND t2.`year` NOT IN (1987, 1988) JOIN %s t3 ON t1.`period` = t3.`period` " +
+            "WHERE t3.`period` IN (1, 2)",
+        FIRST_TABLE_NAME, SECOND_TABLE_NAME, THIRD_TABLE_NAME);
+
+
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 72;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan = {"first.*numRowGroups=6", "second.*numRowGroups=3", "third.*numRowGroups=4"};
+    testPlanMatchingPatterns(query, expectedPlan);
+  }
+
+  @Test // TODO: CALCITE-2274
+  @Ignore // For now plan has "first.*numRowGroups=16""
+  public void testForSubQueryAndDynamicStar() throws Exception {
+    String query = String.format("SELECT * FROM %s t1 JOIN " +
+            "(SELECT * FROM %s WHERE `year` = 1987 AND `month` = 5) t2 ON t1.`year` = t2.`year` AND t1.`month` = t2.`month`",
+        FIRST_TABLE_NAME, SECOND_TABLE_NAME);
+
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 4;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan = {"first.*numRowGroups=2", "second.*numRowGroups=1"};
+    testPlanMatchingPatterns(query, expectedPlan);
+  }
+
+  @Test // TODO: CALCITE-2274
+  @Ignore // For now plan has "second.*numRowGroups=7"
+  public void testForWithStatementAndDynamicStar() throws Exception {
+    String query = String.format("WITH `first_date` AS (SELECT * FROM %s t1 WHERE t1.`year` = 1987 and t1.`month` = 5) " +
+            "SELECT * FROM %s t2 JOIN `first_date` ON t2.`year` = `first_date`.`year` AND t2.`month` = `first_date`.`month`",
+        FIRST_TABLE_NAME, SECOND_TABLE_NAME);
+
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 4;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan = {"first.*numRowGroups=2", "second.*numRowGroups=1"};
+    testPlanMatchingPatterns(query, expectedPlan);
+  }
+
+
 }
 
