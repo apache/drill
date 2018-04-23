@@ -42,7 +42,7 @@ public class MergingReceiverCreator implements BatchCreator<MergingReceiverPOP> 
     IncomingBuffers bufHolder = context.getBuffers();
 
     assert bufHolder != null : "IncomingBuffers must be defined for any place a receiver is declared.";
-    RawBatchBuffer[] buffers = bufHolder.getBuffers(receiver.getOppositeMajorFragmentId());
+    RawBatchBuffer[] buffers = bufHolder.getCollector(receiver.getOppositeMajorFragmentId()).getBuffers();
 
     return new MergingRecordBatch(context, receiver, buffers);
   }
