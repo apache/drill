@@ -235,30 +235,30 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     try {
       final RelNode convertedRelNode;
 
+      final RelNode setOpTransposeNode = transform(PlannerType.HEP, PlannerPhase.PRE_LOGICAL_PLANNING, relNode);
       // HEP Directory pruning .
-      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, relNode);
+      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, setOpTransposeNode);
       final RelTraitSet logicalTraits = pruned.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-      final RelNode intermediateNode = transform(PlannerType.HEP, PlannerPhase.PRE_LOGICAL_PLANNING, pruned);
 
       if (!context.getPlannerSettings().isHepOptEnabled()) {
         // hep is disabled, use volcano
         convertedRelNode = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE_AND_JOIN, pruned, logicalTraits);
 
       } else {
-        final RelNode intermediateNode3;
+        final RelNode intermediateNode2;
         if (context.getPlannerSettings().isHepPartitionPruningEnabled()) {
 
           // hep is enabled and hep pruning is enabled.
-          final RelNode intermediateNode2 = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL, intermediateNode, logicalTraits);
-          intermediateNode3 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.PARTITION_PRUNING, intermediateNode2);
+          final RelNode intermediateNode = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL, pruned, logicalTraits);
+          intermediateNode2 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.PARTITION_PRUNING, intermediateNode);
 
         } else {
           // Only hep is enabled
-          intermediateNode3 = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE, pruned, logicalTraits);
+          intermediateNode2 = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE, pruned, logicalTraits);
         }
 
         // Do Join Planning.
-        convertedRelNode = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.JOIN_PLANNING, intermediateNode3);
+        convertedRelNode = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.JOIN_PLANNING, intermediateNode2);
       }
 
       // Convert SUM to $SUM0

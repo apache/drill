@@ -1288,4 +1288,33 @@ public class TestUnionAll extends BaseTestQuery {
         .run();
   }
 
+  @Test // DRILL-3855
+  public void testEmptyResultAfterProjectPushDownOverUnionAll() throws Exception {
+    String query = "select n_nationkey from " +
+        "(select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` " +
+        "union all select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`) " +
+        "where n_nationkey > 4";
+
+    // Validate the plan
+    final String[] expectedPlan = {"Project.*\n" +
+        ".*UnionAll.*\n" +
+            ".*SelectionVectorRemover.*\n" +
+                ".*Filter.*\n" +
+                    ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
+            ".*SelectionVectorRemover.*\n" +
+                ".*Filter.*\n" +
+                    ".*Scan.*columns=\\[`r_regionkey`\\]"};
+
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, null);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .csvBaselineFile("testframework/testUnionAllQueries/testEmptyResultAfterProjectPushDownOverUnionAll.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("n_nationkey")
+        .build()
+        .run();
+  }
+
 }
