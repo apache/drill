@@ -126,8 +126,8 @@ check_and_enforce_cgroup(){
     if [ -f $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs ]; then
       echo $dbitPid > $SYS_CGROUP_DIR/cpu/$DRILLBIT_CGROUP/cgroup.procs
       # Verify Enforcement
-      cgroupStatus=`grep -w $pid $SYS_CGROUP_DIR/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
-      if [ -z "$cgroupStatus" ]; then
+      cgroupStatus=`grep -w $dbitPid $SYS_CGROUP_DIR/cpu/${DRILLBIT_CGROUP}/cgroup.procs`
+      if [ -n "$cgroupStatus" ]; then
         #Ref: https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
         cpu_quota=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_quota_us`
         cpu_period=`cat ${SYS_CGROUP_DIR}/cpu/${DRILLBIT_CGROUP}/cpu.cfs_period_us`
