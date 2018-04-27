@@ -21,6 +21,8 @@ import java.math.BigDecimal;
 
 import org.joda.time.Period;
 
+import org.apache.drill.exec.vector.accessor.ColumnWriter.ScalarListenable;
+
 /**
  * Represents a scalar value: a required column, a nullable column,
  * or one element within an array of scalars.
@@ -42,7 +44,7 @@ import org.joda.time.Period;
  * {@see ScalarElementReader}
  */
 
-public interface ScalarWriter {
+public interface ScalarWriter extends ColumnWriter, ScalarListenable {
 
   /**
    * Listener (callback) for vector overflow events. To be optionally
@@ -78,8 +80,6 @@ public interface ScalarWriter {
     boolean canExpand(ScalarWriter writer, int delta);
   }
 
-  void bindListener(ColumnWriterListener listener);
-
   /**
    * Describe the type of the value. This is a compression of the
    * value vector type: it describes which method will return the
@@ -89,7 +89,6 @@ public interface ScalarWriter {
    */
 
   ValueType valueType();
-  void setNull();
   void setInt(int value);
   void setLong(long value);
   void setDouble(double value);
@@ -97,6 +96,4 @@ public interface ScalarWriter {
   void setBytes(byte[] value, int len);
   void setDecimal(BigDecimal value);
   void setPeriod(Period value);
-
-  void setObject(Object value);
 }

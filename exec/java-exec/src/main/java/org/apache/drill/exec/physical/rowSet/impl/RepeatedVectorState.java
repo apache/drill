@@ -56,7 +56,8 @@ public class RepeatedVectorState implements VectorState {
     // Create the offsets state with the offset vector portion of the repeated
     // vector, and the offset writer portion of the array writer.
 
-    offsetsState = new OffsetVectorState(arrayWriter.offsetWriter(),
+    offsetsState = new OffsetVectorState(
+        arrayWriter.offsetWriter(),
         vector.getOffsetVector(),
         (AbstractObjectWriter) arrayWriter.entry());
   }

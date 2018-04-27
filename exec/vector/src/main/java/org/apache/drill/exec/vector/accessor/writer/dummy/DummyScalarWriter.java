@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.accessor.writer.dummy;
 
 import java.math.BigDecimal;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
@@ -33,11 +34,18 @@ import org.joda.time.Period;
 
 public class DummyScalarWriter extends AbstractScalarWriter {
 
+  public DummyScalarWriter(ColumnMetadata schema) {
+   this.schema = schema;
+  }
+
   @Override
   public void bindListener(ColumnWriterListener listener) { }
 
   @Override
-  public ValueType valueType() { return null; }
+  public ValueType valueType() { return ValueType.NULL; }
+
+  @Override
+  public boolean nullable() { return true; }
 
   @Override
   public void setNull() { }
@@ -67,9 +75,6 @@ public class DummyScalarWriter extends AbstractScalarWriter {
   public void bindIndex(ColumnWriterIndex index) { }
 
   @Override
-  public ColumnWriterIndex writerIndex() { return null; }
-
-  @Override
   public void restartRow() { }
 
   @Override
@@ -86,4 +91,7 @@ public class DummyScalarWriter extends AbstractScalarWriter {
 
   @Override
   public BaseDataValueVector vector() { return null; }
+
+  @Override
+  public int rowStartIndex() { return 0; }
 }

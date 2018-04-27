@@ -69,7 +69,7 @@ public class RowSetUtilities {
 
   public static void setFromInt(RowSetWriter rowWriter, int index, int value) {
     ScalarWriter writer = rowWriter.scalar(index);
-    MaterializedField field = rowWriter.schema().column(index);
+    MaterializedField field = rowWriter.tupleSchema().column(index);
     writer.setObject(testDataFromInt(writer.valueType(), field.getType(), value));
   }
 
