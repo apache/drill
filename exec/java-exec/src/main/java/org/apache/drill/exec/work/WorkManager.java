@@ -85,7 +85,7 @@ public class WorkManager implements AutoCloseable {
   private final Executor executor;
   private final StatusThread statusThread;
   private final Lock isEmptyLock = new ReentrantLock();
-  private final Condition isEmptyCondition = isEmptyLock.newCondition();
+  private Condition isEmptyCondition;
 
   /**
    * How often the StatusThread collects statistics about running fragments.
@@ -169,6 +169,7 @@ public class WorkManager implements AutoCloseable {
 
   public void waitToExit(final boolean forcefulShutdown) {
     isEmptyLock.lock();
+    isEmptyCondition = isEmptyLock.newCondition();
 
     try {
       if (forcefulShutdown) {
@@ -218,13 +219,13 @@ public class WorkManager implements AutoCloseable {
   private void indicateIfSafeToExit() {
     isEmptyLock.lock();
     try {
-      logger.info("Waiting for "+ queries.size() +" queries to complete before shutting down");
-      logger.info("Waiting for "+ runningFragments.size() +" running fragments to complete before shutting down");
+      if (isEmptyCondition != null) {
+        logger.info("Waiting for {} running queries before shutting down.", queries.size());
+        logger.info("Waiting for {} running fragments before shutting down.", runningFragments.size());
 
-      if (!areQueriesAndFragmentsEmpty()) {
-        logger.info("New Fragments or queries are added while drillbit is Shutting down");
-      } else {
-        isEmptyCondition.signal();
+        if (areQueriesAndFragmentsEmpty()) {
+          isEmptyCondition.signal();
+        }
       }
     } finally {
       isEmptyLock.unlock();
