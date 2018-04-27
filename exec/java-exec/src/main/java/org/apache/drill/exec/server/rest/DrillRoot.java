@@ -88,7 +88,7 @@ public class DrillRoot {
     Collection<DrillbitInfo> drillbits = getClusterInfoJSON().getDrillbits();
     Map<String, String> drillStatusMap = new HashMap<String, String>();
     for (DrillbitInfo drillbit : drillbits) {
-      drillStatusMap.put(drillbit.getAddress() + "-" + drillbit.getUserPort(), drillbit.getState());
+      drillStatusMap.put(drillbit.getAddress() + "-" + drillbit.getHttpPort(), drillbit.getState());
     }
     return setResponse(drillStatusMap);
   }
@@ -239,6 +239,7 @@ public class DrillRoot {
   private Response shutdown(String resp) throws Exception {
     Map<String, String> shutdownInfo = new HashMap<String, String>();
     new Thread(new Runnable() {
+        @Override
         public void run() {
           try {
             drillbit.close();

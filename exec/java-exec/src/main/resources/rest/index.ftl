@@ -54,9 +54,11 @@
 
   <div class="row">
     <div class="col-md-12">
-      <h3>Drillbits <span class="label label-primary" id="size" >${model.getDrillbits()?size}</span></h3>
+      <h3><span id="sizeLabel">Drillbits <span class="label label-primary" id="size">${model.getDrillbits()?size}</span>
+          <button type="button" class="btn btn-warning" id='reloadBtn' style="display:none;font-size:50%" title='New Drillbits detected! Click to Refresh' onclick='location.reload();'>
+          <span class="glyphicon glyphicon-refresh"></span></button></h3>
       <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover" id="bitTable">
           <thead>
             <tr>
               <th>#</th>
@@ -103,14 +105,14 @@
                 </td>
                 <td id="status" >${drillbit.getState()}</td>
                 <td class="uptime" >Not Available</td>
-                  <td>
-                <#if ( model.shouldShowAdminInfo() &&  ( drillbit.isCurrent() || ( !model.isAuthEnabled() && location.protocol != "https" ))) >
-                      <button type="button" id="shutdown" onClick="shutdown($(this), '${drillbit.getAddress()}:${drillbit.getHttpPort()}');">
-                <#else>
+                <td>
+                  <#if ( model.shouldShowAdminInfo() || !model.isAuthEnabled() || drillbit.isCurrent() ) >
+                      <button type="button" id="shutdown" onClick="shutdown($(this));" disabled="true" style="opacity:0.5;cursor:not-allowed;">
+                  <#else>
                       <button type="button" id="shutdown" title="Drillbit cannot be shutdown remotely" disabled="true" style="opacity:0.5;cursor:not-allowed;">
-                </#if>
+                  </#if>
                       <span class="glyphicon glyphicon-off"></span></button>
-                  </td>
+                </td>
                 <td id="queriesCount">  </td>
               </tr>
               <#assign i = i + 1>
@@ -219,6 +221,7 @@
    <script charset="utf-8">
       var updateRemoteInfo = <#if (model.isAuthEnabled())>false<#else>true</#if>;
       var refreshTime = 10000;
+      var nAText = "Not Available";
       var refresh = getRefreshTime();
       var timeout;
       var size = $("#size").html();
@@ -252,33 +255,129 @@
           timeout = setTimeout(reloadStatus, refreshTime);
       }
 
-      function fillStatus(data,size) {
-          var status_map = (data.responseJSON);
-          for (i = 1; i <= size; i++) {
-            var address = $("#row-"+i).find("#address").contents().get(0).nodeValue;
-            address = address.trim();
-            var port = $("#row-"+i).find("#port").html();
-            var key = address+"-"+port;
+      function fillStatus(dataResponse,size) {
+          var status_map = (dataResponse.responseJSON);
+          //In case localhost has gone down (i.e. we don't know status from ZK)
+          if (typeof status_map == 'undefined') {
+            //Query other nodes for state details
+            for (j = 1; j <= size; j++) {
+              if ($("#row-"+j).find("#current").html() == "Current") {
+                continue; //Skip LocalHost
+              }
+              var address = $("#row-"+j).find("#address").contents().get(0).nodeValue.trim();
+              var restPort = $("#row-"+j).find("#httpPort").contents().get(0).nodeValue.trim();
+              var altStateUrl = location.protocol + "//" + address+":"+restPort + "/state";
+              var goatResponse = $.getJSON(altStateUrl)
+                    .done(function(stateDataJson) {
+                        //Update Status & Buttons for alternate stateData
+                        if (typeof status_map == 'undefined') {
+                          status_map = (stateDataJson); //Update
+                          updateStatusAndShutdown(stateDataJson);
+                        }
+                      });
+              //Don't loop any more
+              if (typeof status_map != 'undefined') {
+                break;
+              }
+            }
+          } else {
+            updateStatusAndShutdown(status_map);
+          }
+      }
 
-            if (status_map[key] == null) {
+      function updateStatusAndShutdown(status_map) {
+        let bitMap = {};
+        if (typeof status_map != 'undefined') {
+            for (var k in status_map) {
+              bitMap[k] = status_map[k];
+            }
+        }
+        for (i = 1; i <= size; i++) {
+            let key = "";
+            if ($("#row-"+i).find("#stateKey").length > 0) { //Check if newBit that has no stateKey
+              key = $("#row-"+i).find("#stateKey").textContent;
+            } else {
+              let address = $("#row-"+i).find("#address").contents().get(0).nodeValue.trim();
+              let port = $("#row-"+i).find("#httpPort").html();
+              key = address+"-"+port;
+            }
+
+            if (typeof status_map == 'undefined') {
+                $("#row-"+i).find("#status").text(nAText);
+                $("#row-"+i).find("#shutdown").prop('disabled',true).css('opacity',0.5);
+                $("#row-"+i).find("#queriesCount").text("");
+            } else if (status_map[key] == null) {
                 $("#row-"+i).find("#status").text("OFFLINE");
                 $("#row-"+i).find("#shutdown").prop('disabled',true).css('opacity',0.5);
                 $("#row-"+i).find("#queriesCount").text("");
-            }
-            else {
+            } else {
                 if (status_map[key] == "ONLINE") {
                     $("#row-"+i).find("#status").text(status_map[key]);
-                    $("#row-"+i).find("#shutdown").prop('disabled',false).css('opacity',1.0);
-                }
-                else {
+                    <#if ( model.shouldShowAdminInfo() || !model.isAuthEnabled() ) >
+                    if ( location.protocol != "https" || ($("#row-"+i).find("#current").html() == "Current") ) {
+                      $("#row-"+i).find("#shutdown").prop('disabled',false).css('opacity',1.0).css('cursor','pointer');
+                    }
+                    </#if>
+                } else {
                     if ($("#row-"+i).find("#current").html() == "Current") {
                         fillQueryCount(i);
                     }
                     $("#row-"+i).find("#status").text(status_map[key]);
                 }
+                //Removing accounted key
+                delete bitMap[key];
             }
-          }
+        }
+        //If bitMap is not empty, then new bits have been discovered!
+        listNewDrillbits(bitMap, status_map);
       }
+
+      //Add new Bits for listing
+      function listNewDrillbits(newBits, status_map) {
+        let newBitList = Object.keys(newBits);
+        let tableRef = document.getElementById('bitTable').getElementsByTagName('tbody')[0];
+        let bitId = size;
+        for (i = 0; i < newBitList.length; i++) {
+           var displayNodeName = newBitList[i].substring(0, newBitList[i].lastIndexOf("-"));
+           var newBitHttpPort = newBitList[i].substring(newBitList[i].lastIndexOf("-")+1);
+           var newBitElemId = "neo-"+newBitList[i];
+           var newBitElem = document.getElementsByName(newBitElemId);
+           if ( newBitElem.length == 0 ) {
+                 bitId++;
+               var bitState = status_map[newBitList[i]];
+               //Injecting new row for previously unseen Drillbit
+               $('#bitTable').find('tbody')
+                 .append("<tr id='row-" + bitId + "' class='newbit' title='Recommend page refresh for more info'>"
+                 + "<td>"+bitId+"</td>"
+                 + "<td id='address' name='"+newBitElemId+"'>"+displayNodeName+" <span class='label label-primary' id='size' >new</span></td>"
+                 + "<div id='stateKey' hidden='true'>"+newBitList[i]+"</div>"
+                 + "<td id='httpPort' style='display:none'>"+newBitHttpPort+"</td>"
+                 + "<td class='heap'>"+nAText+"</td>"
+                 + "<td class='direct'>"+nAText+"</td>"
+                 + "<td class='bitload'>"+nAText+"</td>"
+                 + "<td  class='avgload'>"+nAText+"</td>"
+                 + "<td uiElem='userPort'>--</td>"
+                 + "<td uiElem='ctrlPort'>--</td>"
+                 + "<td uiElem='dataPort'>--</td>"
+                 + "<td uiElem='version'>"+nAText+"</td>"
+                 + "<td id='status'>"+bitState+"</td>"
+                 + "<td class='uptime'>"+nAText+"</td>"
+                 + "<td>"
+                   + "<button type='button' id='shutdown' onclick='shutdown($(this));' disabled='true' style='opacity:0.5;cursor:not-allowed;'>"
+                   + "<span class='glyphicon glyphicon-off'></span></button></td>"
+                 + "<td uiElem='queriesCount' />"
+                 + "</tr>");
+           }
+        }
+        //Update Drillbits count on top
+        if (newBitList.length > 0) {
+          //Setting Drillbit Count & Display Refresh Icon
+          $('#size').text(bitId);
+          $('#reloadBtn').css('display', 'inline');
+          size = bitId;
+        }
+      }
+
       function fillQueryCount(row_id) {
           var requestPath = "/queriesCount";
           var url = getRequestUrl(requestPath);
@@ -293,8 +392,13 @@
                         });
       }
        <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) >
-          function shutdown(button,host) {
-          if (confirm("Are you sure you want to shutdown Drillbit running on " + host + " node?")) {
+        function shutdown(shutdownBtn) {
+            let rowElem = $(shutdownBtn).parent().parent();
+            let hostAddr = $(rowElem).find('#address').contents().get(0).nodeValue.trim();
+            let hostPort = $(rowElem).find('#httpPort').html();
+            let host = hostAddr+":"+hostPort
+
+            if (confirm("Are you sure you want to shutdown Drillbit running on " + host + " node?")) {
               var url = location.protocol + "//" + host + "/gracefulShutdown";
               var result = $.ajax({
                     type: 'POST',
@@ -305,12 +409,12 @@
                     },
                     success: function(data) {
                         alert(data.responseJSON["response"]);
-                        button.prop('disabled',true).css('opacity',0.5);
+                        shutdownBtn.prop('disabled',true).css('opacity',0.5);
                     }
               });
             }
-          }
-          </#if>
+        }
+        </#if>
 
       function popOutRemoteDbitUI(dbitHost, dbitPort) {
             var dbitWebUIUrl = location.protocol+'//'+ dbitHost+':'+dbitPort;
@@ -328,9 +432,11 @@
       //Iterates through all the nodes for update
       function reloadMetrics() {
           for (i = 1; i <= size; i++) {
-              var address = $("#row-"+i).find("#address").contents().get(0).nodeValue.trim();
-              var httpPort = $("#row-"+i).find("#httpPort").contents().get(0).nodeValue.trim();
-              updateMetricsHtml(address, httpPort, i);
+              if ( $("#row-"+i).find("#stateKey").length == 0 ) {
+                var address = $("#row-"+i).find("#address").contents().get(0).nodeValue.trim();
+                var httpPort = $("#row-"+i).find("#httpPort").contents().get(0).nodeValue.trim();
+                updateMetricsHtml(address, httpPort, i);
+              }
           }
       }
 
@@ -350,7 +456,7 @@
           dataType: "json",
           error: function(data) {
             resetMetricsHtml(idx);
-          }, 
+          },
           complete: function(data) {
             if (typeof data.responseJSON == 'undefined') {
                 resetMetricsHtml(idx);
@@ -375,7 +481,7 @@
             if (dbitLoad >= 0) {
               dbitLoadElem.innerHTML = parseFloat(Math.round(dbitLoad * 10000)/100).toFixed(2) + "%";
             } else {
-              dbitLoadElem.innerHTML = "Not Available";
+              dbitLoadElem.innerHTML = nAText;
             }
             //AvgSysLoad
             var avgSysLoad = metrics['os.load.avg'].value;
@@ -392,7 +498,7 @@
       function resetMetricsHtml(idx) {
         $.each(["heap","direct","bitload","avgload","uptime"], function(i, key) {
           var resetElem = document.getElementById("row-"+idx).getElementsByClassName(key)[0];
-          resetElem.innerHTML = "Not Available";
+          resetElem.innerHTML = nAText;
         });
     };
 
@@ -413,8 +519,8 @@
 
       //Calculate Uptime
       function elapsedTime(valueInMsec) {
-        var elapsedTime = ""; 
-        var d, h, m, s; 
+        var elapsedTime = "";
+        var d, h, m, s;
         s = Math.floor(valueInMsec / 1000);
         m = Math.floor(s / 60);
         s = s % 60;
