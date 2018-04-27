@@ -163,6 +163,34 @@ public class TypeCastRules {
     rule.add(MinorType.VARBINARY);
     rules.put(MinorType.BIGINT, rule);
 
+    /** UINT4 cast able from **/
+    rule = new HashSet<>();
+    rule.add(MinorType.TINYINT);
+    rule.add(MinorType.SMALLINT);
+    rule.add(MinorType.INT);
+    rule.add(MinorType.BIGINT);
+    rule.add(MinorType.UINT1);
+    rule.add(MinorType.UINT2);
+    rule.add(MinorType.UINT4);
+    rule.add(MinorType.UINT8);
+    rule.add(MinorType.DECIMAL9);
+    rule.add(MinorType.DECIMAL18);
+    rule.add(MinorType.DECIMAL28SPARSE);
+    rule.add(MinorType.DECIMAL28DENSE);
+    rule.add(MinorType.DECIMAL38SPARSE);
+    rule.add(MinorType.DECIMAL38DENSE);
+    rule.add(MinorType.MONEY);
+    rule.add(MinorType.FLOAT4);
+    rule.add(MinorType.FLOAT8);
+    rule.add(MinorType.BIT);
+    rule.add(MinorType.FIXEDCHAR);
+    rule.add(MinorType.FIXED16CHAR);
+    rule.add(MinorType.FIXEDBINARY);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.VAR16CHAR);
+    rule.add(MinorType.VARBINARY);
+    rules.put(MinorType.UINT4, rule);
+
     /** UINT8 cast able from **/
     rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
