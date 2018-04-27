@@ -46,6 +46,10 @@ for (( i=0; i < ${#args[@]}; i++ )); do
   -f) FILE=${args[i+1]}
       let i=$i+1
       ;;
+  --jvm)
+      DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS ${args[i+1]}"
+      let i=$i+1
+      ;;
    *) SLARGS+=("${args[i]}");;
   esac
 done
