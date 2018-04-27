@@ -211,6 +211,12 @@ public class Drillbit implements AutoCloseable {
     exitLatch.awaitUninterruptibly(gracePeriod);
   }
 
+  private void updateState(State state) {
+    if ( registrationHandle != null) {
+      coord.update(registrationHandle, state);
+    }
+  }
+
   /*
 
    */
@@ -228,14 +234,14 @@ public class Drillbit implements AutoCloseable {
     }
     final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Shutdown begun.");
-    registrationHandle = coord.update(registrationHandle, State.QUIESCENT);
+    updateState(State.QUIESCENT);
     stateManager.setState(DrillbitState.GRACE);
     waitForGracePeriod();
     stateManager.setState(DrillbitState.DRAINING);
     // wait for all the in-flight queries to finish
     manager.waitToExit(forcefulShutdown);
     //safe to exit
-    registrationHandle = coord.update(registrationHandle, State.OFFLINE);
+    updateState(State.OFFLINE);
     stateManager.setState(DrillbitState.OFFLINE);
     if(quiescentMode == true) {
       return;
