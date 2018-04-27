@@ -62,6 +62,10 @@
           <groupId>org.apache.calcite</groupId>
           <artifactId>calcite-druid</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.github.joshelser</groupId>
+          <artifactId>dropwizard-metrics-hadoop-metrics2-reporter</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <!--Once newer hive-exec version leverages parquet-column 1.9.0, this dependency can be deleted -->
