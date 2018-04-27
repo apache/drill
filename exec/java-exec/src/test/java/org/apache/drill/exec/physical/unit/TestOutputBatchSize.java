@@ -1166,13 +1166,13 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     assertNotNull(column);
 
     /**
-     * stdDataSize:8*10*10, stdNetSize:8*10*10 + 4*10 + 4*10 + 4,
+     * stdDataSize:8*5*5, stdNetSize:8*5*5 + 4*5 + 4*5 + 4,
      * dataSizePerEntry:8*8, netSizePerEntry:8*8 + 4*2 + 4,
      * totalDataSize:8*8*10, totalNetSize:netSizePerEntry*10, valueCount:10,
      * elementCount:10, estElementCountPerArray:1, isVariableWidth:false
      */
-    assertEquals(800, column.getStdDataSizePerEntry());
-    assertEquals(884, column.getStdNetSizePerEntry());
+    assertEquals(200, column.getStdDataSizePerEntry());
+    assertEquals(244, column.getStdNetSizePerEntry());
     assertEquals(64, column.getDataSizePerEntry());
     assertEquals(76, column.getNetSizePerEntry());
     assertEquals(640, column.getTotalDataSize());
@@ -1309,13 +1309,13 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     assertNotNull(column);
 
     /**
-     * stdDataSize:8*10*10*10, stdNetSize:8*10*10*10 + 8*10*10 + 8*10 + 4,
+     * stdDataSize:8*5*5*5, stdNetSize:8*5*5*5 + 8*5*5 + 8*5 + 4,
      * dataSizePerEntry:16*8, netSizePerEntry:16*8 + 16*4 + 4*2 + 4*2,
      * totalDataSize:16*8*10, totalNetSize:netSizePerEntry*10, valueCount:10,
      * elementCount:10, estElementCountPerArray:1, isVariableWidth:false
      */
-    assertEquals(8000, column.getStdDataSizePerEntry());
-    assertEquals(8884, column.getStdNetSizePerEntry());
+    assertEquals(1000, column.getStdDataSizePerEntry());
+    assertEquals(1244, column.getStdNetSizePerEntry());
     assertEquals(128, column.getDataSizePerEntry());
     assertEquals(156, column.getNetSizePerEntry());
     assertEquals(1280, column.getTotalDataSize());

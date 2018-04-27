@@ -108,9 +108,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       final MaterializedField field = incoming.getSchema().getColumn(typedFieldId.getFieldIds()[0]);
 
       // Get column size of unnest column.
-      RecordBatchSizer.ColumnSize columnSize = RecordBatchSizer
-          .getColumn(incoming.getValueAccessorById(field.getValueClass(), typedFieldId.getFieldIds()).getValueVector(),
-              field.getName());
+      RecordBatchSizer.ColumnSize columnSize = getRecordBatchSizer().getColumn(field.getName());
 
       // Average rowWidth of single element in the unnest list.
       // subtract the offset vector size from column data size.

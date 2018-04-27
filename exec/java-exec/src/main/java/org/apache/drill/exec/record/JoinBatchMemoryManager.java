@@ -47,12 +47,12 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
     switch (inputIndex) {
       case LEFT_INDEX:
         setRecordBatchSizer(inputIndex, new RecordBatchSizer(leftIncoming));
-        leftRowWidth = getRecordBatchSizer(inputIndex).netRowWidth();
+        leftRowWidth = getRecordBatchSizer(inputIndex).getRowAllocSize();
         logger.debug("left incoming batch size : {}", getRecordBatchSizer(inputIndex));
         break;
       case RIGHT_INDEX:
         setRecordBatchSizer(inputIndex, new RecordBatchSizer(rightIncoming));
-        rightRowWidth = getRecordBatchSizer(inputIndex).netRowWidth();
+        rightRowWidth = getRecordBatchSizer(inputIndex).getRowAllocSize();
         logger.debug("right incoming batch size : {}", getRecordBatchSizer(inputIndex));
       default:
         break;
