@@ -76,11 +76,6 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
-  public IterOutcome innerNext() {
-    return super.innerNext();
-  }
-
-  @Override
   protected IterOutcome doWork() {
     try {
       copier.copyRecords(0, incoming.getRecordCount());
@@ -99,7 +94,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
     logger.debug("doWork(): {} records copied out of {}, incoming schema {} ",
       container.getRecordCount(), container.getRecordCount(), incoming.getSchema());
-    return IterOutcome.OK;
+    return getFinalOutcome(false);
   }
 
   @Override
