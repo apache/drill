@@ -178,6 +178,12 @@ public enum PlannerPhase {
           PlannerPhase.getPhysicalRules(context),
           getStorageRules(context, plugins, this));
     }
+  },
+
+  PRE_LOGICAL_PLANNING("Planning with Hep planner only for rules, which are failed for Volcano planner") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.getSetOpTransposeRules();
+    }
   };
 
   public final String description;
@@ -258,8 +264,8 @@ public enum PlannerPhase {
        Filter push-down related rules
        */
       DrillPushFilterPastProjectRule.INSTANCE,
-      // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
-      //FilterSetOpTransposeRule.INSTANCE,
+      // Due to infinite loop in planning (DRILL-3257/CALCITE-1271), temporarily use this rule in Hep planner
+      // RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE,
       DrillFilterAggregateTransposeRule.INSTANCE,
 
       RuleInstance.FILTER_MERGE_RULE,
@@ -276,8 +282,8 @@ public enum PlannerPhase {
       DrillPushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastJoinRule.INSTANCE,
 
-      // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
-      //DrillProjectSetOpTransposeRule.INSTANCE,
+      // Due to infinite loop in planning (DRILL-3257/CALCITE-1271), temporarily use this rule in Hep planner
+      // RuleInstance.PROJECT_SET_OP_TRANSPOSE_RULE,
       RuleInstance.PROJECT_WINDOW_TRANSPOSE_RULE,
       DrillPushProjectIntoScanRule.INSTANCE,
 
@@ -488,6 +494,21 @@ public enum PlannerPhase {
              DrillFilterItemStarReWriterRule.FILTER_ON_SCAN,
              DrillFilterItemStarReWriterRule.FILTER_PROJECT_SCAN
        ).build();
+  }
+
+
+  /**
+   *  Get an immutable list of rules to transpose SetOp(Union) operator with other operators.<p>
+   *  Note: Used by Hep planner only (failed for Volcano planner - CALCITE-1271)
+   *
+   * @return SetOp(Union) transpose rules
+  **/
+  private static RuleSet getSetOpTransposeRules() {
+    return RuleSets.ofList(ImmutableSet.<RelOptRule>builder()
+        .add(
+            RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE,
+            RuleInstance.PROJECT_SET_OP_TRANSPOSE_RULE
+        ).build());
   }
 
 
