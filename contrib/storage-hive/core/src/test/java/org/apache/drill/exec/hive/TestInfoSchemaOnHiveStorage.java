@@ -46,9 +46,10 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("hive.default", "kv")
         .baselineValues("hive.default", "kv_parquet")
         .baselineValues("hive.default", "kv_sh")
-        .baselineValues("hive.default", "countstar_parquet")
         .baselineValues("hive.default", "simple_json")
         .baselineValues("hive.default", "partition_with_few_schemas")
+        .baselineValues("hive.default", "kv_native")
+        .baselineValues("hive.default", "kv_native_ext")
         .go();
 
     testBuilder()
@@ -249,9 +250,10 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("DRILL", "hive.default", "partition_pruning_test", "TABLE")
         .baselineValues("DRILL", "hive.default", "partition_with_few_schemas", "TABLE")
         .baselineValues("DRILL", "hive.default", "kv_parquet", "TABLE")
-        .baselineValues("DRILL", "hive.default", "countstar_parquet", "TABLE")
         .baselineValues("DRILL", "hive.default", "kv_sh", "TABLE")
         .baselineValues("DRILL", "hive.default", "simple_json", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv_native", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv_native_ext", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_text_small", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_text_large", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_header", "TABLE")

@@ -24,6 +24,8 @@ import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.store.parquet.metadata.Metadata;
+import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Assert;

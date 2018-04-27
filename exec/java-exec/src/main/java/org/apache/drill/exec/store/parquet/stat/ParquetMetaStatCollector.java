@@ -21,8 +21,7 @@ import com.google.common.base.Stopwatch;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.store.parquet.Metadata;
-import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.parquet.column.statistics.BinaryStatistics;
 import org.apache.parquet.column.statistics.BooleanStatistics;
 import org.apache.parquet.column.statistics.DoubleStatistics;
@@ -40,15 +39,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class ParquetMetaStatCollector implements  ColumnStatCollector{
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ColumnTypeMetadata_v3;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetTableMetadata_v3;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ColumnMetadata;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetTableMetadataBase;
+
+public class ParquetMetaStatCollector implements  ColumnStatCollector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetMetaStatCollector.class);
 
-  private final Metadata.ParquetTableMetadataBase parquetTableMetadata;
-  private final List<? extends Metadata.ColumnMetadata> columnMetadataList;
+  private final ParquetTableMetadataBase parquetTableMetadata;
+  private final List<? extends ColumnMetadata> columnMetadataList;
   private final Map<String, String> implicitColValues;
 
-  public ParquetMetaStatCollector(Metadata.ParquetTableMetadataBase parquetTableMetadata,
-      List<? extends Metadata.ColumnMetadata> columnMetadataList, Map<String, String> implicitColValues) {
+  public ParquetMetaStatCollector(ParquetTableMetadataBase parquetTableMetadata,
+      List<? extends ColumnMetadata> columnMetadataList, Map<String, String> implicitColValues) {
     this.parquetTableMetadata = parquetTableMetadata;
     this.columnMetadataList = columnMetadataList;
 
@@ -69,15 +73,15 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
 
   @Override
   public Map<SchemaPath, ColumnStatistics> collectColStat(Set<SchemaPath> fields) {
-    Stopwatch timer = Stopwatch.createStarted();
+    Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
 
     // map from column to ColumnMetadata
-    final Map<SchemaPath, Metadata.ColumnMetadata> columnMetadataMap = new HashMap<>();
+    final Map<SchemaPath, ColumnMetadata> columnMetadataMap = new HashMap<>();
 
     // map from column name to column statistics.
     final Map<SchemaPath, ColumnStatistics> statMap = new HashMap<>();
 
-    for (final Metadata.ColumnMetadata columnMetadata : columnMetadataList) {
+    for (final ColumnMetadata columnMetadata : columnMetadataList) {
       SchemaPath schemaPath = SchemaPath.getCompoundPath(columnMetadata.getName());
       columnMetadataMap.put(schemaPath, columnMetadata);
     }
@@ -86,7 +90,7 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
       final PrimitiveType.PrimitiveTypeName primitiveType;
       final OriginalType originalType;
 
-      final Metadata.ColumnMetadata columnMetadata = columnMetadataMap.get(field.getUnIndexed());
+      final ColumnMetadata columnMetadata = columnMetadataMap.get(field.getUnIndexed());
 
       if (columnMetadata != null) {
         final Object min = columnMetadata.getMinValue();
@@ -98,8 +102,8 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
         int precision = 0;
         int scale = 0;
         // ColumnTypeMetadata_v3 stores information about scale and precision
-        if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v3) {
-          Metadata.ColumnTypeMetadata_v3 columnTypeInfo = ((Metadata.ParquetTableMetadata_v3) parquetTableMetadata)
+        if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
+          ColumnTypeMetadata_v3 columnTypeInfo = ((ParquetTableMetadata_v3) parquetTableMetadata)
                                                                           .getColumnTypeInfo(columnMetadata.getName());
           scale = columnTypeInfo.scale;
           precision = columnTypeInfo.precision;
@@ -119,8 +123,9 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
       }
     }
 
-    if (logger.isDebugEnabled()) {
+    if (timer != null) {
       logger.debug("Took {} ms to column statistics for row group", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
     }
 
     return statMap;
@@ -145,7 +150,7 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
     Statistics stat = Statistics.getStatsBasedOnType(primitiveType);
     Statistics convertedStat = stat;
 
-    TypeProtos.MajorType type = ParquetGroupScan.getType(primitiveType, originalType, scale, precision);
+    TypeProtos.MajorType type = ParquetReaderUtility.getType(primitiveType, originalType, scale, precision);
 
     if (numNull != null) {
       stat.setNumNulls(numNull);

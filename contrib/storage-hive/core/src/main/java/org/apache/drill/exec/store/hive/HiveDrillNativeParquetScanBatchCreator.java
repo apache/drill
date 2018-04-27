@@ -15,27 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet;
+package org.apache.drill.exec.store.hive;
 
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.parquet.AbstractParquetScanBatchCreator;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class ParquetScanBatchCreator extends AbstractParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan> {
+public class HiveDrillNativeParquetScanBatchCreator extends AbstractParquetScanBatchCreator implements BatchCreator<HiveDrillNativeParquetRowGroupScan> {
 
   @Override
-  public ScanBatch getBatch(ExecutorFragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children) throws ExecutionSetupException {
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, HiveDrillNativeParquetRowGroupScan rowGroupScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     OperatorContext oContext = context.newOperatorContext(rowGroupScan);
     return getBatch(context, rowGroupScan, oContext);
@@ -43,31 +45,32 @@ public class ParquetScanBatchCreator extends AbstractParquetScanBatchCreator imp
 
   @Override
   protected AbstractDrillFileSystemManager getDrillFileSystemCreator(OperatorContext operatorContext, OptionManager optionManager) {
-    return new ParquetDrillFileSystemManager(operatorContext, optionManager.getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val);
+    return new HiveDrillNativeParquetDrillFileSystemManager(operatorContext);
   }
 
-
   /**
-   * Creates file system only if it was not created before, otherwise returns already created instance.
+   * Caches file system per path and returns file system from cache if it exists there.
+   * Creates only non-tracking file systems.
    */
-  private class ParquetDrillFileSystemManager extends AbstractDrillFileSystemManager {
+  private class HiveDrillNativeParquetDrillFileSystemManager extends AbstractDrillFileSystemManager {
 
-    private final boolean useAsyncPageReader;
-    private DrillFileSystem fs;
+    private final Map<String, DrillFileSystem> fileSystems;
 
-    ParquetDrillFileSystemManager(OperatorContext operatorContext, boolean useAsyncPageReader) {
+    HiveDrillNativeParquetDrillFileSystemManager(OperatorContext operatorContext) {
       super(operatorContext);
-      this.useAsyncPageReader = useAsyncPageReader;
+      this.fileSystems = new HashMap<>();
     }
 
     @Override
     protected DrillFileSystem get(Configuration config, String path) throws ExecutionSetupException {
+      DrillFileSystem fs = fileSystems.get(path);
       if (fs == null) {
         try {
-          fs =  useAsyncPageReader ? operatorContext.newNonTrackingFileSystem(config) : operatorContext.newFileSystem(config);
+          fs = operatorContext.newNonTrackingFileSystem(config);
         } catch (IOException e) {
-          throw new ExecutionSetupException(String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
+          throw new ExecutionSetupException(String.format("Failed to create non-tracking DrillFileSystem: %s", e.getMessage()), e);
         }
+        fileSystems.put(path, fs);
       }
       return fs;
     }

@@ -120,25 +120,6 @@ public class TestHivePartitionPruning extends HiveTestBase {
     assertFalse(plan.contains("Filter"));
   }
 
-  @Test
-  public void pruneDataTypeSupportNativeReaders() throws Exception {
-    try {
-      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
-      final String query = "EXPLAIN PLAN FOR " +
-          "SELECT * FROM hive.readtest_parquet WHERE tinyint_part = 64";
-
-      final String plan = getPlanInString(query, OPTIQ_FORMAT);
-
-      // Check and make sure that Filter is not present in the plan
-      assertFalse(plan.contains("Filter"));
-
-      // Make sure the plan contains the Hive scan utilizing native parquet reader
-      assertTrue(plan.contains("groupscan=[HiveDrillNativeParquetScan"));
-    } finally {
-      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
-    }
-  }
-
   @Test // DRILL-3579
   public void selectFromPartitionedTableWithNullPartitions() throws Exception {
     final String query = "SELECT count(*) nullCount FROM hive.partition_pruning_test " +

@@ -21,7 +21,6 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
@@ -29,31 +28,57 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MetadataContext;
-import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+import org.apache.drill.exec.store.parquet.AbstractParquetGroupScan;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.drill.exec.vector.NullableDateVector;
+import org.apache.drill.exec.vector.NullableDecimal18Vector;
+import org.apache.drill.exec.vector.NullableFloat4Vector;
+import org.apache.drill.exec.vector.NullableFloat8Vector;
+import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.NullableIntervalVector;
+import org.apache.drill.exec.vector.NullableSmallIntVector;
+import org.apache.drill.exec.vector.NullableTimeStampVector;
+import org.apache.drill.exec.vector.NullableTimeVector;
+import org.apache.drill.exec.vector.NullableTinyIntVector;
+import org.apache.drill.exec.vector.NullableUInt1Vector;
+import org.apache.drill.exec.vector.NullableUInt2Vector;
+import org.apache.drill.exec.vector.NullableUInt4Vector;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
+import org.apache.hadoop.fs.Path;
+import org.apache.parquet.io.api.Binary;
+import org.joda.time.DateTimeConstants;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * PartitionDescriptor that describes partitions based on column names instead of directory structure
  */
 public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
-  private final List<SchemaPath> partitionColumns;
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetPartitionDescriptor.class);
+
   private final DrillScanRel scanRel;
+  private final AbstractParquetGroupScan groupScan;
+  private final List<SchemaPath> partitionColumns;
 
   public ParquetPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-    ParquetGroupScan scan = (ParquetGroupScan) scanRel.getGroupScan();
-    this.partitionColumns = scan.getPartitionColumns();
     this.scanRel = scanRel;
+    assert scanRel.getGroupScan() instanceof AbstractParquetGroupScan;
+    this.groupScan = (AbstractParquetGroupScan) scanRel.getGroupScan();
+    this.partitionColumns = groupScan.getPartitionColumns();
   }
 
   @Override
@@ -81,15 +106,6 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return partitionColumns.size();
   }
 
-  private GroupScan createNewGroupScan(List<String> newFiles, String cacheFileRoot,
-      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws IOException {
-    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation(),
-        cacheFileRoot, wasAllPartitionsPruned);
-    newSelection.setMetaContext(metaContext);
-    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
-    return newScan;
-  }
-
   @Override
   public void populatePartitionVectors(ValueVector[] vectors, List<PartitionLocation> partitions,
                                        BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
@@ -97,8 +113,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     for (PartitionLocation partitionLocation: partitions) {
       for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
         SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
-        ((ParquetGroupScan) scanRel.getGroupScan()).populatePruningVector(vectors[partitionColumnIndex], record, column,
-            partitionLocation.getEntirePartitionLocation());
+        populatePruningVector(vectors[partitionColumnIndex], record, column, partitionLocation.getEntirePartitionLocation());
       }
       record++;
     }
@@ -114,7 +129,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings) {
-    return ((ParquetGroupScan) scanRel.getGroupScan()).getTypeForColumn(column);
+    return groupScan.getTypeForColumn(column);
   }
 
   @Override
@@ -124,25 +139,21 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  protected void createPartitionSublists() {
-    Set<String> fileLocations = ((ParquetGroupScan) scanRel.getGroupScan()).getFileSet();
-    List<PartitionLocation> locations = new LinkedList<>();
-    for (String file: fileLocations) {
-      locations.add(new ParquetPartitionLocation(file));
-    }
-    locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
-    sublistsCreated = true;
-  }
-
-  @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot,
-      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception {
-    List<String> newFiles = Lists.newArrayList();
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
+                                   String cacheFileRoot,
+                                   boolean wasAllPartitionsPruned,
+                                   MetadataContext metaContext) throws Exception {
+    List<String> newFiles = new ArrayList<>();
     for (final PartitionLocation location : newPartitionLocation) {
       newFiles.add(location.getEntirePartitionLocation());
     }
 
     final GroupScan newGroupScan = createNewGroupScan(newFiles, cacheFileRoot, wasAllPartitionsPruned, metaContext);
+
+    if (newGroupScan == null) {
+      logger.warn("Unable to create new group scan, returning original table scan.");
+      return scanRel;
+    }
 
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
@@ -154,9 +165,261 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
-      boolean wasAllPartitionsPruned) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, boolean wasAllPartitionsPruned) throws Exception {
     return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned, null);
+  }
+
+  @Override
+  protected void createPartitionSublists() {
+    Set<String> fileLocations = groupScan.getFileSet();
+    List<PartitionLocation> locations = new LinkedList<>();
+    for (String file : fileLocations) {
+      locations.add(new ParquetPartitionLocation(file));
+    }
+    locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
+    sublistsCreated = true;
+  }
+
+  private GroupScan createNewGroupScan(List<String> newFiles,
+                                       String cacheFileRoot,
+                                       boolean wasAllPartitionsPruned,
+                                       MetadataContext metaContext) throws IOException {
+
+    FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation(), cacheFileRoot, wasAllPartitionsPruned);
+    if (newSelection == null) {
+      return null;
+    }
+    newSelection.setMetaContext(metaContext);
+    return groupScan.clone(newSelection);
+  }
+
+  private void populatePruningVector(ValueVector v, int index, SchemaPath column, String file) {
+    String path = Path.getPathWithoutSchemeAndAuthority(new Path(file)).toString();
+    TypeProtos.MajorType majorType = getVectorType(column, null);
+    TypeProtos.MinorType type = majorType.getMinorType();
+    switch (type) {
+      case BIT: {
+        NullableBitVector bitVector = (NullableBitVector) v;
+        Boolean value = groupScan.getPartitionValue(path, column, Boolean.class);
+        if (value == null) {
+          bitVector.getMutator().setNull(index);
+        } else {
+          bitVector.getMutator().setSafe(index, value ? 1 : 0);
+        }
+        return;
+      }
+      case INT: {
+        NullableIntVector intVector = (NullableIntVector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, value);
+        }
+        return;
+      }
+      case SMALLINT: {
+        NullableSmallIntVector smallIntVector = (NullableSmallIntVector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          smallIntVector.getMutator().setNull(index);
+        } else {
+          smallIntVector.getMutator().setSafe(index, value.shortValue());
+        }
+        return;
+      }
+      case TINYINT: {
+        NullableTinyIntVector tinyIntVector = (NullableTinyIntVector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          tinyIntVector.getMutator().setNull(index);
+        } else {
+          tinyIntVector.getMutator().setSafe(index, value.byteValue());
+        }
+        return;
+      }
+      case UINT1: {
+        NullableUInt1Vector intVector = (NullableUInt1Vector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, value.byteValue());
+        }
+        return;
+      }
+      case UINT2: {
+        NullableUInt2Vector intVector = (NullableUInt2Vector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, (char) value.shortValue());
+        }
+        return;
+      }
+      case UINT4: {
+        NullableUInt4Vector intVector = (NullableUInt4Vector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          intVector.getMutator().setNull(index);
+        } else {
+          intVector.getMutator().setSafe(index, value);
+        }
+        return;
+      }
+      case BIGINT: {
+        NullableBigIntVector bigIntVector = (NullableBigIntVector) v;
+        Long value = groupScan.getPartitionValue(path, column, Long.class);
+        if (value == null) {
+          bigIntVector.getMutator().setNull(index);
+        } else {
+          bigIntVector.getMutator().setSafe(index, value);
+        }
+        return;
+      }
+      case FLOAT4: {
+        NullableFloat4Vector float4Vector = (NullableFloat4Vector) v;
+        Float value = groupScan.getPartitionValue(path, column, Float.class);
+        if (value == null) {
+          float4Vector.getMutator().setNull(index);
+        } else {
+          float4Vector.getMutator().setSafe(index, value);
+        }
+        return;
+      }
+      case FLOAT8: {
+        NullableFloat8Vector float8Vector = (NullableFloat8Vector) v;
+        Double value = groupScan.getPartitionValue(path, column, Double.class);
+        if (value == null) {
+          float8Vector.getMutator().setNull(index);
+        } else {
+          float8Vector.getMutator().setSafe(index, value);
+        }
+        return;
+      }
+      case VARBINARY: {
+        NullableVarBinaryVector varBinaryVector = (NullableVarBinaryVector) v;
+        Object s = groupScan.getPartitionValue(path, column, Object.class);
+        byte[] bytes;
+        if (s == null) {
+          varBinaryVector.getMutator().setNull(index);
+          return;
+        } else {
+          bytes = getBytes(type, s);
+        }
+        varBinaryVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+        return;
+      }
+      case DECIMAL18: {
+        NullableDecimal18Vector decimalVector = (NullableDecimal18Vector) v;
+        Object s = groupScan.getPartitionValue(path, column, Object.class);
+        byte[] bytes;
+        if (s == null) {
+          decimalVector.getMutator().setNull(index);
+          return;
+        } else if (s instanceof Integer) {
+          long value = DecimalUtility.getBigDecimalFromPrimitiveTypes(
+              (Integer) s,
+              majorType.getScale(),
+              majorType.getPrecision()).longValue();
+          decimalVector.getMutator().setSafe(index, value);
+          return;
+        } else if (s instanceof Long) {
+          long value = DecimalUtility.getBigDecimalFromPrimitiveTypes(
+              (Long) s,
+              majorType.getScale(),
+              majorType.getPrecision()).longValue();
+          decimalVector.getMutator().setSafe(index, value);
+          return;
+        } else {
+          bytes = getBytes(type, s);
+        }
+        long value = DecimalUtility.getBigDecimalFromByteArray(bytes, 0, bytes.length, majorType.getScale()).longValue();
+        decimalVector.getMutator().setSafe(index, value);
+        return;
+      }
+      case DATE: {
+        NullableDateVector dateVector = (NullableDateVector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          dateVector.getMutator().setNull(index);
+        } else {
+          dateVector.getMutator().setSafe(index, value * (long) DateTimeConstants.MILLIS_PER_DAY);
+        }
+        return;
+      }
+      case TIME: {
+        NullableTimeVector timeVector = (NullableTimeVector) v;
+        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        if (value == null) {
+          timeVector.getMutator().setNull(index);
+        } else {
+          timeVector.getMutator().setSafe(index, value);
+        }
+        return;
+      }
+      case TIMESTAMP: {
+        NullableTimeStampVector timeStampVector = (NullableTimeStampVector) v;
+        Long value = groupScan.getPartitionValue(path, column, Long.class);
+        if (value == null) {
+          timeStampVector.getMutator().setNull(index);
+        } else {
+          timeStampVector.getMutator().setSafe(index, value);
+        }
+        return;
+      }
+      case VARCHAR: {
+        NullableVarCharVector varCharVector = (NullableVarCharVector) v;
+        Object s = groupScan.getPartitionValue(path, column, Object.class);
+        byte[] bytes;
+        if (s == null) {
+          varCharVector.getMutator().setNull(index);
+          return;
+        } else {
+          bytes = getBytes(type, s);
+        }
+        varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+        return;
+      }
+      case INTERVAL: {
+        NullableIntervalVector intervalVector = (NullableIntervalVector) v;
+        Object s = groupScan.getPartitionValue(path, column, Object.class);
+        byte[] bytes;
+        if (s == null) {
+          intervalVector.getMutator().setNull(index);
+          return;
+        } else {
+          bytes = getBytes(type, s);
+        }
+        intervalVector.getMutator().setSafe(index, 1,
+            ParquetReaderUtility.getIntFromLEBytes(bytes, 0),
+            ParquetReaderUtility.getIntFromLEBytes(bytes, 4),
+            ParquetReaderUtility.getIntFromLEBytes(bytes, 8));
+        return;
+      }
+      default:
+        throw new UnsupportedOperationException("Unsupported type: " + type);
+    }
+  }
+
+  /**
+   * Returns the sequence of bytes received from {@code Object source}.
+   *
+   * @param type the column type
+   * @param source the source of the bytes sequence
+   * @return bytes sequence obtained from {@code Object source}
+   */
+  private byte[] getBytes(TypeProtos.MinorType type, Object source) {
+    byte[] bytes;
+    if (source instanceof Binary) {
+      bytes = ((Binary) source).getBytes();
+    } else if (source instanceof byte[]) {
+      bytes = (byte[]) source;
+    } else {
+      throw new UnsupportedOperationException("Unable to create column data for type: " + type);
+    }
+    return bytes;
   }
 
 }
