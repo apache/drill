@@ -230,6 +230,8 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return count;
   }
 
+  @Override
+  public VectorContainer getContainer() { return null; }
 
   @Override public Iterator<VectorWrapper<?>> iterator() {
     return null;

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.record;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -218,7 +217,7 @@ public class VectorContainer implements VectorAccessible {
     * Appends a row taken from a source {@link VectorContainer} to this {@link VectorContainer}.
     * @param srcContainer The {@link VectorContainer} to copy a row from.
     * @param srcIndex The index of the row to copy from the source {@link VectorContainer}.
-    * @return Position where the row was appended
+    * @return Position one above where the row was appended
     */
     public int appendRow(VectorContainer srcContainer, int srcIndex) {
       for (int vectorIndex = 0; vectorIndex < wrappers.size(); vectorIndex++) {
@@ -226,95 +225,8 @@ public class VectorContainer implements VectorAccessible {
         ValueVector srcVector = srcContainer.wrappers.get(vectorIndex).getValueVector();
         destVector.copyEntry(recordCount, srcVector, srcIndex);
       }
-      int pos = recordCount++;
-      initialized = true;
-      return pos;
+      return incRecordCount();
     }
-
-  /**
-   *  This method currently is only used by the Hash Join to return a row composed of build+probe rows
-   *
-   * This works with non-hyper {@link VectorContainer}s which have no selection vectors.
-   * Appends a row taken from two source {@link VectorContainer}s to this {@link VectorContainer}.
-   * @param buildSrcContainer The {@link VectorContainer} to copy the first columns of a row from.
-   * @param buildSrcIndex The index of the row to copy from the build side source {@link VectorContainer}.
-   * @param probeSrcContainer The {@link VectorContainer} to copy the last columns of a row from.
-   * @param probeSrcIndex The index of the row to copy from the probe side source {@link VectorContainer}.
-   * @return Number of records in the container after appending
-   */
-  public int appendRowXXX(VectorContainer buildSrcContainer, int buildSrcIndex, VectorContainer probeSrcContainer, int probeSrcIndex) {
-    if ( buildSrcContainer != null ) {
-      for (int vectorIndex = 0; vectorIndex < buildSrcContainer.wrappers.size(); vectorIndex++) {
-        ValueVector destVector = wrappers.get(vectorIndex).getValueVector();
-        ValueVector srcVector = buildSrcContainer.wrappers.get(vectorIndex).getValueVector();
-        destVector.copyEntry(recordCount, srcVector, buildSrcIndex);
-      }
-    }
-    if ( probeSrcContainer != null ) {
-      int baseIndex = wrappers.size() - probeSrcContainer.wrappers.size();
-      for (int vectorIndex = baseIndex; vectorIndex < wrappers.size(); vectorIndex++) {
-        ValueVector destVector = wrappers.get(vectorIndex).getValueVector();
-        ValueVector srcVector = probeSrcContainer.wrappers.get(vectorIndex).getValueVector();
-        destVector.copyEntry(recordCount, srcVector, probeSrcIndex);
-      }
-    }
-    recordCount++;
-    initialized = true;
-    return recordCount;
-  }
-
-  private int appendBuild(VectorContainer buildSrcContainer, int buildSrcIndex) {
-    // "- 1" to skip the last "hash values" added column
-    int lastIndex = buildSrcContainer.wrappers.size() - 1 ;
-    for (int vectorIndex = 0; vectorIndex < lastIndex; vectorIndex++) {
-      ValueVector destVector = wrappers.get(vectorIndex).getValueVector();
-      ValueVector srcVector = buildSrcContainer.wrappers.get(vectorIndex).getValueVector();
-      destVector.copyEntry(recordCount, srcVector, buildSrcIndex);
-    }
-    return lastIndex;
-  }
-  private void appendProbe(VectorContainer probeSrcContainer, int probeSrcIndex, int baseIndex) {
-      // int baseIndex = wrappers.size() - probeSrcContainer.wrappers.size();
-      for (int vectorIndex = baseIndex; vectorIndex < wrappers.size(); vectorIndex++) {
-        ValueVector destVector = wrappers.get(vectorIndex).getValueVector();
-        ValueVector srcVector = probeSrcContainer.wrappers.get(vectorIndex - baseIndex).getValueVector();
-        destVector.copyEntry(recordCount, srcVector, probeSrcIndex);
-      }
-  }
-  /**
-   *  A special version of appendRow for the HashJoin; uses a composite index for the build side
-   * @param buildSrcContainers The containers list for the right side
-   * @param compositeBuildSrcIndex Composite build index
-   * @param probeSrcContainer The single container for the left/outer side
-   * @param probeSrcIndex Index in the outer container
-   * @return Number of rows in this container (after the append)
-   */
-  public int appendRow(ArrayList<VectorContainer> buildSrcContainers, int compositeBuildSrcIndex, VectorContainer probeSrcContainer, int probeSrcIndex) {
-    int buildBatch = compositeBuildSrcIndex >>> 16;
-    int buildOffset = compositeBuildSrcIndex & 65535;
-    int baseInd = 0;
-    if ( buildSrcContainers != null ) { baseInd = appendBuild(buildSrcContainers.get(buildBatch), buildOffset); }
-    if ( probeSrcContainer != null ) { appendProbe(probeSrcContainer, probeSrcIndex, baseInd); }
-    recordCount++;
-    initialized = true;
-    return recordCount;
-  }
-
-  /**
-   * A customised version of the special appendRow for HashJoin - used for Left
-   * Outer Join when there is no build side match - hence need a base index in
-   * this container's wrappers from where to start appending
-   * @param probeSrcContainer
-   * @param probeSrcIndex
-   * @param baseInd - index of this container's wrapper to start at
-   * @return
-   */
-  public int appendOuterRow(VectorContainer probeSrcContainer, int probeSrcIndex, int baseInd) {
-    appendProbe(probeSrcContainer, probeSrcIndex, baseInd);
-    recordCount++;
-    initialized = true;
-    return recordCount;
-  }
 
   public TypedFieldId add(ValueVector vv) {
     schemaChanged = true;
@@ -457,6 +369,15 @@ public class VectorContainer implements VectorAccessible {
   public void setRecordCount(int recordCount) {
       this.recordCount = recordCount;
       initialized = true;
+  }
+
+  /**
+   * Increment the record count
+   * @return the new record count
+   */
+  public int incRecordCount() {
+    initialized = true;
+    return ++recordCount;
   }
 
   @Override

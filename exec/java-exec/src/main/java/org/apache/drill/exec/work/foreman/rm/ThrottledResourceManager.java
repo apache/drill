@@ -229,7 +229,7 @@ public class ThrottledResourceManager extends AbstractResourceManager {
       @Override
       public Void visitOp(PhysicalOperator op, List<PhysicalOperator> value)
           throws RuntimeException {
-        if (op.isBufferedOperator()) {
+        if (op.isBufferedOperator(null)) {
           value.add(op);
         }
         visitChildren(op, value);

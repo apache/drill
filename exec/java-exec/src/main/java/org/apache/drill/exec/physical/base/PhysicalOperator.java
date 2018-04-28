@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphValue;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -91,9 +92,10 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
   /**
    *
    * @return True iff this operator manages its memory (including disk spilling)
+   * @param queryContext
    */
   @JsonIgnore
-  boolean isBufferedOperator();
+  boolean isBufferedOperator(QueryContext queryContext);
 
   // public void setBufferedOperator(boolean bo);
 

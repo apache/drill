@@ -541,7 +541,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
     // multiply by the max number of rows in a batch to get the final estimated max size
     estMaxBatchSize = Math.max(estRowWidth, estInputRowWidth) * MAX_BATCH_SIZE;
-    // (When there are no aggr functions, use '1' as later code relies on this siisDebze being non-zero)
+    // (When there are no aggr functions, use '1' as later code relies on this size being non-zero)
     estValuesBatchSize = Math.max(estValuesRowWidth, 1) * MAX_BATCH_SIZE;
     estOutgoingAllocSize = estValuesBatchSize; // initially assume same size
 

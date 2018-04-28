@@ -153,4 +153,9 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
   public void close() {
     driver.close();
   }
+
+  @Override
+  public VectorContainer getContainer() {
+    return batchAccessor.getOutgoingContainer();
+  }
 }
