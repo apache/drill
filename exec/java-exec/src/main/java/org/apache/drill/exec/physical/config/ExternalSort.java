@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.config;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.Order.Ordering;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
@@ -63,7 +64,8 @@ public class ExternalSort extends Sort {
   /**
    * The External Sort operator supports spilling
    * @return true
+   * @param queryContext
    */
   @Override
-  public boolean isBufferedOperator() { return true; }
+  public boolean isBufferedOperator(QueryContext queryContext) { return true; }
 }

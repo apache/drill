@@ -6,18 +6,18 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl.join;
 
+import ch.qos.logback.classic.Level;
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
@@ -25,7 +25,7 @@ import org.apache.drill.categories.SlowTest;
 
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
-import org.junit.Ignore;
+import org.apache.drill.test.LogFixture;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -33,10 +33,16 @@ import java.util.List;
 
 @Category({SlowTest.class, OperatorTest.class})
 public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
+
   @SuppressWarnings("unchecked")
   @Test
   // Should spill, including recursive spill
   public void testSimpleHashJoinSpill() {
+    LogFixture.LogFixtureBuilder logBuilder = LogFixture.builder()
+      .toConsole()
+      .logger("org.apache.drill", Level.WARN);
+
+
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
       Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.INNER);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);
@@ -53,6 +59,7 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
       rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }
 
+    LogFixture logs = logBuilder.build();
     opTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))

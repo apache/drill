@@ -68,7 +68,7 @@ public class MemoryAllocationUtilities {
     // look for external sorts
     final List<PhysicalOperator> bufferedOpList = new LinkedList<>();
     for (final PhysicalOperator op : plan.getSortedOperators()) {
-      if (op.isBufferedOperator()) {
+      if (op.isBufferedOperator(queryContext)) {
         bufferedOpList.add(op);
       }
     }

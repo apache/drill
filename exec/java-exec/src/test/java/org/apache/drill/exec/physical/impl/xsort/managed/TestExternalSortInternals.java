@@ -27,8 +27,10 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeAction;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeTask;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.SubOperatorTest;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -36,6 +38,8 @@ import org.junit.experimental.categories.Category;
 public class TestExternalSortInternals extends SubOperatorTest {
 
   private static final int ONE_MEG = 1024 * 1024;
+  @Rule
+  public final BaseDirTestWatcher watcher = new BaseDirTestWatcher();
 
   /**
    * Verify defaults configured in drill-override.conf.
@@ -66,7 +70,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
   @Test
   public void testConfigOverride() {
     // Verify the various HOCON ways of setting memory
-    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    OperatorFixture.Builder builder = new OperatorFixture.Builder(watcher);
     builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MAX_MEMORY, "2000K")
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, 10)
@@ -92,7 +96,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
    */
   @Test
   public void testConfigLimits() {
-    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    OperatorFixture.Builder builder = new OperatorFixture.Builder(watcher);
     builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, SortConfig.MIN_MERGE_LIMIT - 1)
         .put(ExecConstants.EXTERNAL_SORT_SPILL_FILE_SIZE, SortConfig.MIN_SPILL_FILE_SIZE - 1)
@@ -414,7 +418,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
     int batchSizeConstraint = ONE_MEG / 2;
     int mergeSizeConstraint = ONE_MEG;
 
-    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    OperatorFixture.Builder builder = new OperatorFixture.Builder(watcher);
     builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MAX_MEMORY, memConstraint)
         .put(ExecConstants.EXTERNAL_SORT_SPILL_BATCH_SIZE, batchSizeConstraint)
@@ -470,7 +474,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
     // No artificial merge limit
 
     int mergeLimitConstraint = 100;
-    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    OperatorFixture.Builder builder = new OperatorFixture.Builder(watcher);
     builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, mergeLimitConstraint)
         .build();
@@ -599,7 +603,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
   public void testMergeLimit() {
     // Constrain merge width
     int mergeLimitConstraint = 5;
-    OperatorFixture.Builder builder = new OperatorFixture.Builder();
+    OperatorFixture.Builder builder = new OperatorFixture.Builder(watcher);
     builder.configBuilder()
         .put(ExecConstants.EXTERNAL_SORT_MERGE_LIMIT, mergeLimitConstraint)
         .build();

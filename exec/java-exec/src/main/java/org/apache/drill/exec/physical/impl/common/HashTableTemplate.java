@@ -65,6 +65,8 @@ public abstract class HashTableTemplate implements HashTable {
   // Array of batch holders..each batch holder can hold up to BATCH_SIZE entries
   private ArrayList<BatchHolder> batchHolders;
 
+  private int totalBatchHoldersSize; // the size of all batchHolders
+
   // Current size of the hash table in terms of number of buckets
   private int tableSize = 0;
 
@@ -483,6 +485,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     // Create the first batch holder
     batchHolders = new ArrayList<BatchHolder>();
+    totalBatchHoldersSize = 0;
     // First BatchHolder is created when the first put request is received.
 
     try {
@@ -498,6 +501,7 @@ public abstract class HashTableTemplate implements HashTable {
   public void updateInitialCapacity(int initialCapacity) {
     htConfig = htConfig.withInitialCapacity(initialCapacity);
     allocationTracker = new HashTableAllocationTracker(htConfig, BATCH_SIZE);
+    enlargeEmptyHashTableIfNeeded(initialCapacity);
   }
 
   @Override
@@ -543,6 +547,7 @@ public abstract class HashTableTemplate implements HashTable {
       }
       batchHolders.clear();
       batchHolders = null;
+      totalBatchHoldersSize = 0;
     }
     startIndices.clear();
     // currentIdxHolder = null; // keep IndexPointer in case HT is reused
@@ -568,6 +573,7 @@ public abstract class HashTableTemplate implements HashTable {
     if ( batchAdded ) {
       logger.trace("OOM - Removing index {} from the batch holders list",batchHolders.size() - 1);
       BatchHolder bh = batchHolders.remove(batchHolders.size() - 1);
+      totalBatchHoldersSize -= BATCH_SIZE;
       bh.clear();
     }
     freeIndex--;
@@ -677,7 +683,7 @@ public abstract class HashTableTemplate implements HashTable {
     }
     htIdxHolder.value = currentIdx;
     return  addedBatch ? PutStatus.NEW_BATCH_ADDED :
-        ( freeIndex + 1 > batchHolders.size() * BATCH_SIZE ) ?
+        ( freeIndex + 1 > totalBatchHoldersSize /* batchHolders.size() * BATCH_SIZE */ ) ?
         PutStatus.KEY_ADDED_LAST : // the last key in the batch
         PutStatus.KEY_ADDED;     // otherwise
   }
@@ -710,9 +716,9 @@ public abstract class HashTableTemplate implements HashTable {
   // currentIdx; since each BatchHolder can hold up to BATCH_SIZE entries, if the currentIdx exceeds
   // the capacity, we will add a new BatchHolder. Return true if a new batch was added.
   private boolean addBatchIfNeeded(int currentIdx) throws SchemaChangeException {
-    int totalBatchSize = batchHolders.size() * BATCH_SIZE;
+    // int totalBatchSize = batchHolders.size() * BATCH_SIZE;
 
-    if (currentIdx >= totalBatchSize) {
+    if (currentIdx >= totalBatchHoldersSize) {
       BatchHolder bh = newBatchHolder(batchHolders.size(), allocationTracker.getNextBatchHolderSize());
       batchHolders.add(bh);
       bh.setup();
@@ -721,6 +727,8 @@ public abstract class HashTableTemplate implements HashTable {
       }
 
       allocationTracker.commit();
+
+      totalBatchHoldersSize += BATCH_SIZE; // total increased by 1 batch
       return true;
     }
     return false;
@@ -797,6 +805,22 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   /**
+   *  Resize up the Hash Table if needed (to hold newNum entries)
+   */
+  public void enlargeEmptyHashTableIfNeeded(int newNum) {
+    assert numEntries == 0;
+    if ( newNum < threshold )  { return; } // no need to resize
+
+    while ( tableSize * 2 < MAXIMUM_CAPACITY && newNum > threshold ) {
+      tableSize *= 2;
+      threshold = (int) Math.ceil(tableSize * htConfig.getLoadFactor());
+    }
+    startIndices.clear();
+    startIndices = allocMetadataVector(tableSize, EMPTY_SLOT);
+  }
+
+
+  /**
    * Reinit the hash table to its original size, and clear up all its prior batch holder
    *
    */
@@ -806,6 +830,7 @@ public abstract class HashTableTemplate implements HashTable {
     freeIndex = 0; // all batch holders are gone
     // reallocate batch holders, and the hash table to the original size
     batchHolders = new ArrayList<BatchHolder>();
+    totalBatchHoldersSize = 0;
     startIndices = allocMetadataVector(originalTableSize, EMPTY_SLOT);
   }
   public void updateIncoming(VectorContainer newIncoming, RecordBatch newIncomingProbe) {

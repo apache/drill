@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.impl.join;
 
 import com.google.common.base.Preconditions;
@@ -24,12 +23,12 @@ import org.apache.drill.exec.record.RecordBatch;
 import javax.annotation.Nullable;
 import java.util.Set;
 
-public class MechanicalHashJoinMemoryCalculator implements HashJoinMemoryCalculator {
+public class HashJoinMechanicalMemoryCalculator implements HashJoinMemoryCalculator {
   private final int maxNumInMemBatches;
 
   private boolean doMemoryCalc;
 
-  public MechanicalHashJoinMemoryCalculator(int maxNumInMemBatches) {
+  public HashJoinMechanicalMemoryCalculator(int maxNumInMemBatches) {
     this.maxNumInMemBatches = maxNumInMemBatches;
   }
 
