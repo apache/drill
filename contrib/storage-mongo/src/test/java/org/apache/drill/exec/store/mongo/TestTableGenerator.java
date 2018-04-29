@@ -53,7 +53,7 @@ public class TestTableGenerator implements MongoTestConstants {
     logger.info("Started importing file {} into collection {} ", jsonFile,
         collection);
     IMongoImportConfig mongoImportConfig = new MongoImportConfigBuilder()
-        .version(Version.Main.PRODUCTION)
+        .version(Version.Main.V3_4)
         .net(new Net(MONGOS_PORT, Network.localhostIsIPv6())).db(dbName)
         .collection(collection).upsert(upsert).dropCollection(drop)
         .jsonArray(jsonArray).importFile(jsonFile).build();
