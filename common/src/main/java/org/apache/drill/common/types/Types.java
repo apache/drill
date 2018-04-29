@@ -28,9 +28,9 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.util.CoreDecimalUtility;
 
 import com.google.protobuf.TextFormat;
-import org.apache.drill.common.util.CoreDecimalUtility;
 
 public class Types {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
@@ -107,6 +107,10 @@ public class Types {
     if (type.getMode() == DataMode.REPEATED || type.getMinorType() == MinorType.LIST) {
       return "ARRAY";
     }
+    return getBaseSqlTypeName(type);
+  }
+
+  public static String getBaseSqlTypeName(final MajorType type) {
 
     switch (type.getMinorType()) {
 
@@ -172,6 +176,49 @@ public class Types {
       default:
         throw new AssertionError(
             "Unexpected/unhandled MinorType value " + type.getMinorType() );
+    }
+  }
+
+  /**
+   * Extend decimal type with precision and scale.
+   *
+   * @param type major type
+   * @param typeName type converted to a string
+   * @return type name augmented with precision and scale,
+   * if type is a decimal
+   */
+
+  public static String getExtendedSqlTypeName(MajorType type) {
+
+    String typeName = getSqlTypeName(type);
+    switch (type.getMinorType()) {
+    case DECIMAL9:
+    case DECIMAL18:
+    case DECIMAL28SPARSE:
+    case DECIMAL28DENSE:
+    case DECIMAL38SPARSE:
+    case DECIMAL38DENSE:
+    case VARDECIMAL:
+      // Disabled for now. See DRILL-6378
+      if (type.getPrecision() > 0) {
+        typeName += String.format("(%d, %d)",
+            type.getPrecision(), type.getScale());
+      }
+    default:
+    }
+    return typeName;
+  }
+
+  public static String getSqlModeName(final MajorType type) {
+    switch (type.getMode()) {
+    case REQUIRED:
+      return "NOT NULL";
+    case OPTIONAL:
+      return "NULLABLE";
+    case REPEATED:
+      return "ARRAY";
+    default:
+      return "UNKNOWN";
     }
   }
 
