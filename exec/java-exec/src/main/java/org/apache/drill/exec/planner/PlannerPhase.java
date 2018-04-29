@@ -178,6 +178,12 @@ public enum PlannerPhase {
           PlannerPhase.getPhysicalRules(context),
           getStorageRules(context, plugins, this));
     }
+  },
+
+  TRANSITIVE_CLOSURE("Transitive closure") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return getJoinTransitiveClosureRules();
+    }
   };
 
   public final String description;
@@ -393,7 +399,11 @@ public enum PlannerPhase {
 
   }
 
-  // Ruleset for join permutation, used only in VolcanoPlanner.
+  /**
+   * RuleSet for join permutation, used only in VolcanoPlanner.
+   * @param optimizerRulesContext shared state used during planning
+   * @return set of planning rules
+   */
   static RuleSet getJoinPermRules(OptimizerRulesContext optimizerRulesContext) {
     return RuleSets.ofList(ImmutableSet.<RelOptRule> builder().add(
         RuleInstance.JOIN_PUSH_THROUGH_JOIN_RULE_RIGHT,
@@ -488,6 +498,24 @@ public enum PlannerPhase {
              DrillFilterItemStarReWriterRule.FILTER_ON_SCAN,
              DrillFilterItemStarReWriterRule.FILTER_PROJECT_SCAN
        ).build();
+  }
+
+  /**
+   * RuleSet for join transitive closure, used only in HepPlanner.<p>
+   * TODO: {@link RuleInstance#JOIN_PUSH_TRANSITIVE_PREDICATES_RULE} should be copied to #staticRuleSet,
+   * once CALCITE-1048 is solved. This still should be present in {@link #TRANSITIVE_CLOSURE} stage
+   * for applying additional filters before {@link #DIRECTORY_PRUNING}.
+   *
+   * @return set of planning rules
+   */
+  static RuleSet getJoinTransitiveClosureRules() {
+    return RuleSets.ofList(ImmutableSet.<RelOptRule> builder()
+        .add(
+            DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
+            DrillFilterJoinRules.DRILL_JOIN,
+            RuleInstance.JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,
+            RuleInstance.FILTER_MERGE_RULE
+        ).build());
   }
 
 

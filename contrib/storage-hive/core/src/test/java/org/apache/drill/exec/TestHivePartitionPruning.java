@@ -161,6 +161,21 @@ public class TestHivePartitionPruning extends HiveTestBase {
     assertEquals(-1, secondColumnIndex);
   }
 
+  @Test // DRILL-6173
+  public void prunePartitionsBasedOnTransitivePredicates() throws Exception {
+    String query = String.format("SELECT * FROM hive.partition_pruning_test t1 " +
+            "JOIN hive.partition_with_few_schemas t2 ON t1.`d` = t2.`d` AND t1.`e` = t2.`e` " +
+            "WHERE t2.`e` IS NOT NULL AND t1.`d` = 1");
+
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 450;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    final String[] expectedPlan =
+        {"partition_with_few_schemas.*numPartitions=6", "partition_pruning_test.*numPartitions=6"};
+    testPlanMatchingPatterns(query, expectedPlan);
+  }
+
   @AfterClass
   public static void disableDecimalDataType() throws Exception {
     test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
