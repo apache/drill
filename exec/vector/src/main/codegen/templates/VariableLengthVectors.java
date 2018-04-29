@@ -581,15 +581,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       assert index >= 0;
 
       final int currentOffset = offsetVector.getAccessor().get(index);
-      offsetVector.getMutator().setSafe(index + 1, currentOffset + bytes.length);
-      try {
-        data.setBytes(currentOffset, bytes, 0, bytes.length);
-      } catch (IndexOutOfBoundsException e) {
-        while (data.capacity() < currentOffset + bytes.length) {
-          reAlloc();
-        }
-        data.setBytes(currentOffset, bytes, 0, bytes.length);
+      while (data.capacity() < currentOffset + bytes.length) {
+        reAlloc();
       }
+      offsetVector.getMutator().setSafe(index + 1, currentOffset + bytes.length);
+      data.setBytes(currentOffset, bytes, 0, bytes.length);
     }
 
     /**
@@ -611,15 +607,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       assert index >= 0;
 
       final int currentOffset = offsetVector.getAccessor().get(index);
-      offsetVector.getMutator().setSafe(index + 1, currentOffset + length);
-      try {
-        data.setBytes(currentOffset, bytes, start, length);
-      } catch (IndexOutOfBoundsException e) {
-        while (data.capacity() < currentOffset + length) {
-          reAlloc();
-        }
-        data.setBytes(currentOffset, bytes, start, length);
+
+      while (data.capacity() < currentOffset + length) {
+        reAlloc();
       }
+      offsetVector.getMutator().setSafe(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, bytes, start, length);
     }
 
     public void setSafe(int index, byte[] bytes, int start, int length) {
@@ -627,15 +620,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
       final int currentOffset = offsetVector.getAccessor().get(index);
 
-      offsetVector.getMutator().setSafe(index + 1, currentOffset + length);
-      try {
-        data.setBytes(currentOffset, bytes, start, length);
-      } catch (IndexOutOfBoundsException e) {
-        while (data.capacity() < currentOffset + length) {
-          reAlloc();
-        }
-        data.setBytes(currentOffset, bytes, start, length);
+      while (data.capacity() < currentOffset + length) {
+        reAlloc();
       }
+      offsetVector.getMutator().setSafe(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, bytes, start, length);
     }
 
     @Override
@@ -651,15 +640,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       final int len = end - start;
       final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
 
-      offsetVector.getMutator().setSafe(index+1,  outputStart + len);
-      try{
-        buffer.getBytes(start, data, outputStart, len);
-      } catch (IndexOutOfBoundsException e) {
-        while (data.capacity() < outputStart + len) {
-          reAlloc();
-        }
-        buffer.getBytes(start, data, outputStart, len);
+      while (data.capacity() < outputStart + len) {
+        reAlloc();
       }
+      offsetVector.getMutator().setSafe(index + 1, outputStart + len);
+      buffer.getBytes(start, data, outputStart, len);
     }
 
     public void setSafe(int index, Nullable${minor.class}Holder holder) {
@@ -671,15 +656,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
       final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
 
-      try {
-        holder.buffer.getBytes(start, data, outputStart, len);
-      } catch (IndexOutOfBoundsException e) {
-        while (data.capacity() < outputStart + len) {
-          reAlloc();
-        }
-        holder.buffer.getBytes(start, data, outputStart, len);
+      while (data.capacity() < outputStart + len) {
+        reAlloc();
       }
-      offsetVector.getMutator().setSafe(index+1,  outputStart + len);
+      holder.buffer.getBytes(start, data, outputStart, len);
+      offsetVector.getMutator().setSafe(index + 1, outputStart + len);
     }
 
     public void setSafe(int index, ${minor.class}Holder holder) {
@@ -688,15 +669,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       final int len = end - start;
       final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
 
-      try {
-        holder.buffer.getBytes(start, data, outputStart, len);
-      } catch (IndexOutOfBoundsException e) {
-        while(data.capacity() < outputStart + len) {
-          reAlloc();
-        }
-        holder.buffer.getBytes(start, data, outputStart, len);
+      while(data.capacity() < outputStart + len) {
+        reAlloc();
       }
-      offsetVector.getMutator().setSafe( index+1,  outputStart + len);
+      holder.buffer.getBytes(start, data, outputStart, len);
+      offsetVector.getMutator().setSafe(index + 1, outputStart + len);
     }
 
     /**

@@ -29,6 +29,8 @@ import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Reader for an array-valued column. This reader provides access to specific
  * array members via an array index. This class implements all arrays. The
@@ -132,9 +134,7 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
 
     @Override
     public int offset() {
-      if (position < 0 || length <= position) {
-        throw new IndexOutOfBoundsException("Index = " + position + ", length = " + length);
-      }
+      Preconditions.checkElementIndex(position, length);
       return startOffset + position;
     }
 
@@ -154,9 +154,7 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
      */
 
     public void set(int index) {
-      if (index < 0 ||  length < index) {
-        throw new IndexOutOfBoundsException("Index = " + index + ", length = " + length);
-      }
+      Preconditions.checkPositionIndex(index, length);
       position = index;
     }
 

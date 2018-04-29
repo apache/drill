@@ -24,6 +24,8 @@ import java.io.IOException;
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 
+import com.google.common.base.Preconditions;
+
 public class ResourceInputStream extends ByteArrayInputStream implements Seekable, PositionedReadable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResourceInputStream.class);
 
@@ -40,12 +42,10 @@ public class ResourceInputStream extends ByteArrayInputStream implements Seekabl
   }
 
   public int read(long position, byte b[], int off, int len) {
+    Preconditions.checkNotNull(b);
+    Preconditions.checkPositionIndexes(off, off + len, b.length);
+
     int start = (int) position;
-    if (b == null) {
-        throw new NullPointerException();
-    } else if (off < 0 || len < 0 || len > b.length - off) {
-        throw new IndexOutOfBoundsException();
-    }
 
     if (start >= count) {
         return -1;

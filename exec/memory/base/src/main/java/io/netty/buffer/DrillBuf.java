@@ -766,6 +766,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   private final static int LOG_BYTES_PER_ROW = 10;
+  private static final char[] HEX_CHAR = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
   /**
    * Return the buffer's byte contents in the form of a hex dump.
@@ -777,23 +778,20 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
    * @return A hex dump in a String.
    */
   public String toHexString(final int start, final int length) {
-    final int roundedStart = (start / LOG_BYTES_PER_ROW) * LOG_BYTES_PER_ROW;
-
-    final StringBuilder sb = new StringBuilder("buffer byte dump\n");
-    int index = roundedStart;
-    for (int nLogged = 0; nLogged < length; nLogged += LOG_BYTES_PER_ROW) {
-      sb.append(String.format(" [%05d-%05d]", index, index + LOG_BYTES_PER_ROW - 1));
-      for (int i = 0; i < LOG_BYTES_PER_ROW; ++i) {
-        try {
-          final byte b = getByte(index++);
-          sb.append(String.format(" 0x%02x", b));
-        } catch (IndexOutOfBoundsException ioob) {
-          sb.append(" <ioob>");
-        }
+    Preconditions.checkArgument(start >= 0);
+    final StringBuilder sb = new StringBuilder("buffer byte dump");
+    final int end = Math.min(length, this.length - start);
+    for (int i = 0; i < end; i++) {
+      if (i % LOG_BYTES_PER_ROW == 0) {
+        sb.append(String.format("%n [%05d-%05d]", i + start, Math.min(i + LOG_BYTES_PER_ROW - 1, end - 1) + start));
       }
-      sb.append('\n');
+      byte b = _getByte(i + start);
+      sb.append(" 0x").append(HEX_CHAR[b >> 4]).append(HEX_CHAR[b & 0x0F]);
     }
-    return sb.toString();
+    if (length > end) {
+      sb.append(String.format("%n [%05d-%05d] <ioob>", start + end, start + length));
+    }
+    return sb.append(System.lineSeparator()).toString();
   }
 
   /**
