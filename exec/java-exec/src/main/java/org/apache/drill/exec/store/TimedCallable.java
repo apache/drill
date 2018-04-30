@@ -19,7 +19,6 @@ package org.apache.drill.exec.store;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -30,8 +29,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
+import org.apache.drill.common.collections.Collectors;
 import org.apache.drill.common.exceptions.UserException;
 
 import org.slf4j.Logger;
@@ -212,11 +211,7 @@ public abstract class TimedCallable<V> implements Callable<V> {
     final FutureMapper<V> futureMapper = new FutureMapper<>();
     final Statistics<V> statistics = logger.isDebugEnabled() ? new Statistics<>() : null;
     try {
-      return threadPool.invokeAll(tasks, timeout, TimeUnit.MILLISECONDS)
-          .stream()
-          .map(futureMapper)
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
+      return Collectors.toList(threadPool.invokeAll(tasks, timeout, TimeUnit.MILLISECONDS), futureMapper);
     } catch (InterruptedException e) {
       final String errMsg = String.format("Interrupted while waiting for activity '%s' tasks to be done.", activity);
       logger.error(errMsg, e);
