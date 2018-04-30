@@ -87,11 +87,11 @@ public class PrelVisualizerVisitor
 
     }
 
-    public void field(String label, boolean value) {
-      field(label, Boolean.toString(value));
+    public void visitField(String label, boolean value) {
+      visitField(label, Boolean.toString(value));
     }
 
-    private void field(String label, String value) {
+    private void visitField(String label, String value) {
       indent();
       out.append(label)
          .append(" = ")
@@ -99,10 +99,10 @@ public class PrelVisualizerVisitor
          .append("\n");
     }
 
-    public void listField(String label,
+    public void visitField(String label,
         Object[] values) {
       if (values == null) {
-        field(label, "null");
+        visitField(label, "null");
         return;
       }
       StringBuilder buf = new StringBuilder();
@@ -120,7 +120,7 @@ public class PrelVisualizerVisitor
         }
       }
       buf.append("]");
-      field(label, buf.toString());
+      visitField(label, buf.toString());
     }
 
     @Override
@@ -156,8 +156,8 @@ public class PrelVisualizerVisitor
 
   private void visitBasePrel(Prel prel, VisualizationState value) {
     value.startNode(prel);
-    value.listField("encodings", prel.getSupportedEncodings());
-    value.field("needsReorder", prel.needsFinalColumnReordering());
+    value.visitField("encodings", prel.getSupportedEncodings());
+    value.visitField("needsReorder", prel.needsFinalColumnReordering());
   }
 
   private void endNode(Prel prel, VisualizationState value) throws Exception {
