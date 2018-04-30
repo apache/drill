@@ -279,6 +279,7 @@ public enum PlannerPhase {
       DrillFilterAggregateTransposeRule.INSTANCE,
 
       RuleInstance.FILTER_MERGE_RULE,
+      RuleInstance.FILTER_CORRELATE_RULE,
       RuleInstance.AGGREGATE_REMOVE_RULE,
       RuleInstance.PROJECT_REMOVE_RULE,
       RuleInstance.SORT_REMOVE_RULE,
@@ -448,6 +449,7 @@ public enum PlannerPhase {
     ruleList.add(UnionAllPrule.INSTANCE);
     ruleList.add(ValuesPrule.INSTANCE);
     ruleList.add(DirectScanPrule.INSTANCE);
+
     ruleList.add(UnnestPrule.INSTANCE);
     ruleList.add(CorrelatePrule.INSTANCE);
 

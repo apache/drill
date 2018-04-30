@@ -24,7 +24,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 @JsonTypeName("unnest")
-public class Unnest extends SingleInputOperator {
+public class Unnest extends SourceOperator {
 
   private final SchemaPath column;
 
@@ -41,5 +41,4 @@ public class Unnest extends SingleInputOperator {
   public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
     return logicalVisitor.visitUnnest(this, value);
   }
-
 }

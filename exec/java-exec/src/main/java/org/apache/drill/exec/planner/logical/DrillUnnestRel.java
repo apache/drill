@@ -21,8 +21,11 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexNode;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.common.logical.data.Unnest;
 import org.apache.drill.exec.planner.common.DrillUnnestRelBase;
 
 
@@ -37,7 +40,11 @@ public class DrillUnnestRel extends DrillUnnestRelBase implements DrillRel {
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    //TODO: implementation for direct convert from RelNode to logical operator for explainPlan
+    if(getRef() instanceof RexFieldAccess) {
+      final RexFieldAccess fldAccess = (RexFieldAccess)getRef();
+      return new Unnest(SchemaPath.getSimplePath(fldAccess.getField().getName()));
+    }
+
     return null;
   }
 

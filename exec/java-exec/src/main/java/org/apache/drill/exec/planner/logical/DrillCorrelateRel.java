@@ -24,8 +24,11 @@ import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillCorrelateRelBase;
+
+import java.util.List;
 
 
 public class DrillCorrelateRel extends DrillCorrelateRelBase implements DrillRel {
@@ -45,7 +48,13 @@ public class DrillCorrelateRel extends DrillCorrelateRelBase implements DrillRel
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    //TODO: implementation for direct convert from RelNode to logical operator for explainPlan
-    return null;
+    final List<String> fields = getRowType().getFieldNames();
+    assert DrillJoinRel.isUnique(fields);
+    final int leftCount = left.getRowType().getFieldCount();
+
+    final LogicalOperator leftOp = DrillJoinRel.implementInput(implementor, 0, 0, left, this);
+    final LogicalOperator rightOp = DrillJoinRel.implementInput(implementor, 1, leftCount, right, this);
+
+    return new LateralJoin(leftOp, rightOp);
   }
 }

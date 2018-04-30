@@ -266,6 +266,15 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
+    //Disable UNNEST if the configuration disable it
+    if (sqlCall.getKind() == SqlKind.UNNEST) {
+      if (!context.getPlannerSettings().isUnnestLateralEnabled()) {
+        unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
+            "Unnest is not enabled per configuration");
+        throw new UnsupportedOperationException();
+      }
+    }
+
     // Disable Function
     for(String strOperator : disabledOperators) {
       if(sqlCall.getOperator().isName(strOperator)) {
