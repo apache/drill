@@ -103,9 +103,24 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
    * @return
    */
   private LogicalOperator implementInput(DrillImplementor implementor, int i, int offset, RelNode input) {
-    final LogicalOperator inputOp = implementor.visitChild(this, i, input);
+    return implementInput(implementor, i, offset, input, this);
+  }
+
+  /**
+   * Check to make sure that the fields of the inputs are the same as the output field names.
+   * If not, insert a project renaming them.
+   * @param implementor
+   * @param i
+   * @param offset
+   * @param input
+   * @param currentNode the node to be implemented
+   * @return
+   */
+  public static LogicalOperator implementInput(DrillImplementor implementor, int i, int offset,
+                                                RelNode input, DrillRel currentNode) {
+    final LogicalOperator inputOp = implementor.visitChild(currentNode, i, input);
     assert uniqueFieldNames(input.getRowType());
-    final List<String> fields = getRowType().getFieldNames();
+    final List<String> fields = currentNode.getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
     final List<String> outputFields = fields.subList(offset, offset + inputFields.size());
     if (!outputFields.equals(inputFields)) {
@@ -118,7 +133,8 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     }
   }
 
-  private LogicalOperator rename(DrillImplementor implementor, LogicalOperator inputOp, List<String> inputFields, List<String> outputFields) {
+  private static LogicalOperator rename(DrillImplementor implementor, LogicalOperator inputOp,
+                                        List<String> inputFields, List<String> outputFields) {
     Project.Builder builder = Project.builder();
     builder.setInput(inputOp);
     for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {

@@ -24,7 +24,6 @@ import com.google.common.collect.Iterators;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import java.util.Iterator;
-import java.util.List;
 
 @JsonTypeName("lateral-join")
 public class LateralJoin extends LogicalOperatorBase {

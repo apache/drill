@@ -111,11 +111,11 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
     return new HashSet<>(left).removeAll(right);
   }
 
-  protected boolean uniqueFieldNames(RelDataType rowType) {
+  public static boolean uniqueFieldNames(RelDataType rowType) {
     return isUnique(rowType.getFieldNames());
   }
 
-  protected static <T> boolean isUnique(List<T> list) {
+  public static <T> boolean isUnique(List<T> list) {
     return new HashSet<>(list).size() == list.size();
   }
 

@@ -27,6 +27,7 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateRemoveRule;
+import org.apache.calcite.rel.rules.FilterCorrelateRule;
 import org.apache.calcite.rel.rules.FilterMergeRule;
 import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
@@ -61,6 +62,9 @@ public interface RuleInstance {
 
   FilterMergeRule FILTER_MERGE_RULE =
       new FilterMergeRule(DrillRelFactories.LOGICAL_BUILDER);
+
+  FilterCorrelateRule FILTER_CORRELATE_RULE =
+      new FilterCorrelateRule(DrillRelFactories.LOGICAL_BUILDER);
 
   AggregateRemoveRule AGGREGATE_REMOVE_RULE =
       new AggregateRemoveRule(LogicalAggregate.class, DrillRelFactories.LOGICAL_BUILDER);

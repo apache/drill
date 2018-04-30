@@ -31,6 +31,7 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.impl.unnest.UnnestRecordBatch;
 
 import java.util.Iterator;
+import java.util.List;
 
 import static org.apache.drill.exec.proto.UserBitShared.CoreOperatorType.UNNEST_VALUE;
 

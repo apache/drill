@@ -113,6 +113,12 @@ public class PlannerSettings implements Context{
       QUOTING_IDENTIFIERS_KEY, Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
 
   /*
+    "planner.enable_unnest_lateral" is to allow users to choose enable unnest+lateraljoin feature.
+   */
+  public static final String ENABLE_UNNEST_LATERAL_KEY = "planner.enable_unnest_lateral";
+  public static final BooleanValidator ENABLE_UNNEST_LATERAL = new BooleanValidator(ENABLE_UNNEST_LATERAL_KEY);
+
+  /*
      Enables rules that re-write query joins in the most optimal way.
      Though its turned on be default and its value in query optimization is undeniable, user may want turn off such
      optimization to leave join order indicated in sql query unchanged.
@@ -315,6 +321,10 @@ public class PlannerSettings implements Context{
 
   public boolean isJoinOptimizationEnabled() {
     return options.getOption(JOIN_OPTIMIZATION);
+  }
+
+  public boolean isUnnestLateralEnabled() {
+    return options.getOption(ENABLE_UNNEST_LATERAL);
   }
 
   @Override

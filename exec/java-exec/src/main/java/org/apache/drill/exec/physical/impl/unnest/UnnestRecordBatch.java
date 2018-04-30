@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.unnest;
 
 import com.google.common.base.Preconditions;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
@@ -29,9 +28,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.UnnestPOP;
-import org.apache.drill.exec.physical.impl.join.LateralJoinBatch;
-import org.apache.drill.exec.record.AbstractRecordBatch;
-import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.AbstractTableFunctionRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
