@@ -228,13 +228,14 @@
       reloadMetrics();
       setInterval(reloadMetrics, refreshTime);
 
+      //Gets a refresh time for graceful shutdown
       function getRefreshTime() {
           $.ajax({
               type: 'GET',
               url: '/gracePeriod',
               dataType: "json",
               complete: function (data) {
-                  var gracePeriod = data.responseJSON["gracePeriod"];
+                  let gracePeriod = data.responseJSON["gracePeriod"];
                   if (gracePeriod > 0) {
                       refreshTime = gracePeriod / 3;
                   }
@@ -243,8 +244,9 @@
           });
       }
 
+      //Periodic reload of status of Drillbits
       function reloadStatus () {
-          var result = $.ajax({
+          let result = $.ajax({
                       type: 'GET',
                       url: '/state',
                       dataType: "json",
@@ -255,27 +257,35 @@
           timeout = setTimeout(reloadStatus, refreshTime);
       }
 
+      //Fill the Status table for all the listed drillbits
       function fillStatus(dataResponse,size) {
-          var status_map = (dataResponse.responseJSON);
+          let status_map = (dataResponse.responseJSON);
           //In case localhost has gone down (i.e. we don't know status from ZK)
           if (typeof status_map == 'undefined') {
+            let rxUpdateCount = 0;
+            let statusRespList = [];
             //Query other nodes for state details
             for (j = 1; j <= size; j++) {
-              if ($("#row-"+j).find("#current").html() == "Current") {
+              let currentRow = $("#row-"+j);
+              if (currentRow.find("#current").html() == "Current") {
                 continue; //Skip LocalHost
               }
-              var address = $("#row-"+j).find("#address").contents().get(0).nodeValue.trim();
-              var restPort = $("#row-"+j).find("#httpPort").contents().get(0).nodeValue.trim();
-              var altStateUrl = location.protocol + "//" + address+":"+restPort + "/state";
-              var goatResponse = $.getJSON(altStateUrl)
+              let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
+              let restPort = currentRow.find("#httpPort").contents().get(0).nodeValue.trim();
+              let altStateUrl = location.protocol + "//" + address+":"+restPort + "/state";
+              let altResponse = $.getJSON(altStateUrl)
                     .done(function(stateDataJson) {
                         //Update Status & Buttons for alternate stateData
-                        if (typeof status_map == 'undefined') {
-                          status_map = (stateDataJson); //Update
-                          updateStatusAndShutdown(stateDataJson);
+                        if (rxUpdateCount == 0) {
+                          statusRespList.push(stateDataJson); //Capture all stateDataJson incase of race condition
+                          rxUpdateCount++;
+                          if (rxUpdateCount > 0 && typeof status_map == 'undefined') {
+                            status_map = statusRespList.pop(); //Pop only 1
+                            updateStatusAndShutdown(stateDataJson);
+                          }
                         }
                       });
-              //Don't loop any more
+              //Don't loop any more (for small #bits, status_map will never update fast enough)
               if (typeof status_map != 'undefined') {
                 break;
               }
@@ -285,44 +295,41 @@
           }
       }
 
+      //Updates the status map
       function updateStatusAndShutdown(status_map) {
         let bitMap = {};
         if (typeof status_map != 'undefined') {
-            for (var k in status_map) {
+            for (let k in status_map) {
               bitMap[k] = status_map[k];
             }
         }
         for (i = 1; i <= size; i++) {
-            let key = "";
-            if ($("#row-"+i).find("#stateKey").length > 0) { //Check if newBit that has no stateKey
-              key = $("#row-"+i).find("#stateKey").textContent;
-            } else {
-              let address = $("#row-"+i).find("#address").contents().get(0).nodeValue.trim();
-              let port = $("#row-"+i).find("#httpPort").html();
-              key = address+"-"+port;
-            }
+            let currentRow = $("#row-"+i);
+            let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
+            let port = currentRow.find("#httpPort").html();
+            let key = address+"-"+port;
 
             if (typeof status_map == 'undefined') {
-                $("#row-"+i).find("#status").text(nAText);
-                $("#row-"+i).find("#shutdown").prop('disabled',true).css('opacity',0.5);
-                $("#row-"+i).find("#queriesCount").text("");
+                currentRow.find("#status").text(nAText);
+                currentRow.find("#shutdown").prop('disabled',true).css('opacity',0.5);
+                currentRow.find("#queriesCount").text("");
             } else if (status_map[key] == null) {
-                $("#row-"+i).find("#status").text("OFFLINE");
-                $("#row-"+i).find("#shutdown").prop('disabled',true).css('opacity',0.5);
-                $("#row-"+i).find("#queriesCount").text("");
+                currentRow.find("#status").text("OFFLINE");
+                currentRow.find("#shutdown").prop('disabled',true).css('opacity',0.5);
+                currentRow.find("#queriesCount").text("");
             } else {
                 if (status_map[key] == "ONLINE") {
-                    $("#row-"+i).find("#status").text(status_map[key]);
+                    currentRow.find("#status").text(status_map[key]);
                     <#if ( model.shouldShowAdminInfo() || !model.isAuthEnabled() ) >
-                    if ( location.protocol != "https" || ($("#row-"+i).find("#current").html() == "Current") ) {
-                      $("#row-"+i).find("#shutdown").prop('disabled',false).css('opacity',1.0).css('cursor','pointer');
+                    if ( location.protocol != "https" || (currentRow.find("#current").html() == "Current") ) {
+                      currentRow.find("#shutdown").prop('disabled',false).css('opacity',1.0).css('cursor','pointer');
                     }
                     </#if>
                 } else {
-                    if ($("#row-"+i).find("#current").html() == "Current") {
+                    if (currentRow.find("#current").html() == "Current") {
                         fillQueryCount(i);
                     }
-                    $("#row-"+i).find("#status").text(status_map[key]);
+                    currentRow.find("#status").text(status_map[key]);
                 }
                 //Removing accounted key
                 delete bitMap[key];
@@ -338,19 +345,19 @@
         let tableRef = document.getElementById('bitTable').getElementsByTagName('tbody')[0];
         let bitId = size;
         for (i = 0; i < newBitList.length; i++) {
-           var displayNodeName = newBitList[i].substring(0, newBitList[i].lastIndexOf("-"));
-           var newBitHttpPort = newBitList[i].substring(newBitList[i].lastIndexOf("-")+1);
-           var newBitElemId = "neo-"+newBitList[i];
-           var newBitElem = document.getElementsByName(newBitElemId);
+           let splitPt = newBitList[i].lastIndexOf("-");
+           let displayNodeName = newBitList[i].substring(0, splitPt);
+           let newBitHttpPort = newBitList[i].substring(splitPt+1);
+           let newBitElemId = "neo-"+newBitList[i];
+           let newBitElem = document.getElementsByName(newBitElemId);
            if ( newBitElem.length == 0 ) {
                  bitId++;
-               var bitState = status_map[newBitList[i]];
+               let bitState = status_map[newBitList[i]];
                //Injecting new row for previously unseen Drillbit
                $('#bitTable').find('tbody')
                  .append("<tr id='row-" + bitId + "' class='newbit' title='Recommend page refresh for more info'>"
                  + "<td>"+bitId+"</td>"
                  + "<td id='address' name='"+newBitElemId+"'>"+displayNodeName+" <span class='label label-primary' id='size' >new</span></td>"
-                 + "<div id='stateKey' hidden='true'>"+newBitList[i]+"</div>"
                  + "<td id='httpPort' style='display:none'>"+newBitHttpPort+"</td>"
                  + "<td class='heap'>"+nAText+"</td>"
                  + "<td class='direct'>"+nAText+"</td>"
@@ -378,10 +385,11 @@
         }
       }
 
+      //Updates the outstanding queries in flight before shutdown
       function fillQueryCount(row_id) {
-          var requestPath = "/queriesCount";
-          var url = getRequestUrl(requestPath);
-       var result = $.ajax({
+          let requestPath = "/queriesCount";
+          let url = getRequestUrl(requestPath);
+          let result = $.ajax({
                         type: 'GET',
                         url: url,
                         complete: function(data) {
@@ -399,8 +407,8 @@
             let host = hostAddr+":"+hostPort
 
             if (confirm("Are you sure you want to shutdown Drillbit running on " + host + " node?")) {
-              var url = location.protocol + "//" + host + "/gracefulShutdown";
-              var result = $.ajax({
+              let url = location.protocol + "//" + host + "/gracefulShutdown";
+              let result = $.ajax({
                     type: 'POST',
                     url: url,
                     contentType : 'text/plain',
@@ -416,15 +424,17 @@
         }
         </#if>
 
+      //Pops out the WebUI for a remote Drillbit
       function popOutRemoteDbitUI(dbitHost, dbitPort) {
-            var dbitWebUIUrl = location.protocol+'//'+ dbitHost+':'+dbitPort;
-            var tgtWindow = 'dbit_'+dbitHost;
+            let dbitWebUIUrl = location.protocol+'//'+ dbitHost+':'+dbitPort;
+            let tgtWindow = 'dbit_'+dbitHost;
             window.open(dbitWebUIUrl, tgtWindow);
       }
 
+      //Construct the URL with the appropriate protocol and host
       function getRequestUrl(requestPath) {
-            var protocol = location.protocol;
-            var host = location.host;
+            let protocol = location.protocol;
+            let host = location.host;
             var url = protocol + "//" + host + requestPath;
             return url;
       }
@@ -432,11 +442,10 @@
       //Iterates through all the nodes for update
       function reloadMetrics() {
           for (i = 1; i <= size; i++) {
-              if ( $("#row-"+i).find("#stateKey").length == 0 ) {
-                var address = $("#row-"+i).find("#address").contents().get(0).nodeValue.trim();
-                var httpPort = $("#row-"+i).find("#httpPort").contents().get(0).nodeValue.trim();
+                let currentRow = $("#row-"+i);
+                let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
+                let httpPort = currentRow.find("#httpPort").contents().get(0).nodeValue.trim();
                 updateMetricsHtml(address, httpPort, i);
-              }
           }
       }
 
@@ -445,12 +454,12 @@
         /* NOTE: For remote drillbits:
            If Authentication or SSL is enabled; we'll assume we don't have valid certificates
         */
-        var remoteHost = location.protocol+"//"+drillbit+":"+webport;
-        if ( !updateRemoteInfo || (location.protocol == "https" && remoteHost != location.host) ) {
+        let remoteHost = location.protocol+"//"+drillbit+":"+webport;
+        if ( !updateRemoteInfo || (location.protocol == "https") && remoteHost != location.host ) {
           return;
         }
         //
-        var result = $.ajax({
+        let result = $.ajax({
           type: 'GET',
           url: location.protocol+"//"+drillbit+":"+webport+"/status/metrics",
           dataType: "json",
@@ -462,65 +471,67 @@
                 resetMetricsHtml(idx);
                 return;
             }
-            var metrics = data.responseJSON['gauges'];
+            let metrics = data.responseJSON['gauges'];
             //Memory
-            var usedHeap = metrics['heap.used'].value;
-            var maxHeap  = metrics['heap.max'].value;
-            var usedDirect = metrics['drill.allocator.root.used'].value;
-            var peakDirect = metrics['drill.allocator.root.peak'].value;
-            var heapUsage    = computeMemUsage(usedHeap,maxHeap);
-            var directUsage  = computeMemUsage(usedDirect,peakDirect);
-            var rowElem = document.getElementById("row-"+idx);
-            var heapElem = rowElem.getElementsByClassName("heap")[0];
+            let usedHeap = metrics['heap.used'].value;
+            let maxHeap  = metrics['heap.max'].value;
+            let usedDirect = metrics['drill.allocator.root.used'].value;
+            let peakDirect = metrics['drill.allocator.root.peak'].value;
+            let heapUsage    = computeMemUsage(usedHeap,maxHeap);
+            let directUsage  = computeMemUsage(usedDirect,peakDirect);
+            let rowElem = document.getElementById("row-"+idx);
+            let heapElem = rowElem.getElementsByClassName("heap")[0];
             heapElem.innerHTML = heapUsage;
-            var directElem = rowElem.getElementsByClassName("direct")[0];
+            let directElem = rowElem.getElementsByClassName("direct")[0];
             directElem.innerHTML = directUsage;
             //DrillbitLoad
-            var dbitLoad = metrics['drillbit.load.avg'].value;
-            var dbitLoadElem = rowElem.getElementsByClassName("bitload")[0];
+            let dbitLoad = metrics['drillbit.load.avg'].value;
+            let dbitLoadElem = rowElem.getElementsByClassName("bitload")[0];
             if (dbitLoad >= 0) {
               dbitLoadElem.innerHTML = parseFloat(Math.round(dbitLoad * 10000)/100).toFixed(2) + "%";
             } else {
               dbitLoadElem.innerHTML = nAText;
             }
             //AvgSysLoad
-            var avgSysLoad = metrics['os.load.avg'].value;
-            var sysLoadElem = rowElem.getElementsByClassName("avgload")[0];
+            let avgSysLoad = metrics['os.load.avg'].value;
+            let sysLoadElem = rowElem.getElementsByClassName("avgload")[0];
             sysLoadElem.innerHTML = avgSysLoad;
             //Uptime
-            var uptimeValue = metrics['drillbit.uptime'].value;
-            var uptimeElem = rowElem.getElementsByClassName("uptime")[0];
+            let uptimeValue = metrics['drillbit.uptime'].value;
+            let uptimeElem = rowElem.getElementsByClassName("uptime")[0];
             uptimeElem.innerHTML = elapsedTime(uptimeValue);
           }
         });
       }
 
+      //Reset the metrics of a Drillbit in the table
       function resetMetricsHtml(idx) {
         $.each(["heap","direct","bitload","avgload","uptime"], function(i, key) {
-          var resetElem = document.getElementById("row-"+idx).getElementsByClassName(key)[0];
+          let resetElem = document.getElementById("row-"+idx).getElementsByClassName(key)[0];
           resetElem.innerHTML = nAText;
         });
     };
 
       //Compute Usage
       function computeMemUsage(used, max) {
-        var percent = 0;
+        let percent = 0;
         if ( max > 0) {
-          var percent = Math.round((100 * used / max), 2);
+          let percent = Math.round((100 * used / max), 2);
         }
-        var usage   =  bytesInGB(used, 2) + "GB (" + Math.max(0, percent) + "% of "+ bytesInGB(max, 2) +"GB)";
+        let usage   =  bytesInGB(used, 2) + "GB (" + Math.max(0, percent) + "% of "+ bytesInGB(max, 2) +"GB)";
         return usage;
       }
 
+      //Translate bytes into GB with decimal places
       function bytesInGB(byteVal, decimal) {
-        var scale = Math.pow(10,decimal);
+        let scale = Math.pow(10,decimal);
         return Math.round(scale * byteVal / 1073741824)/scale;
       }
 
       //Calculate Uptime
       function elapsedTime(valueInMsec) {
-        var elapsedTime = "";
-        var d, h, m, s;
+        let elapsedTime = "";
+        let d, h, m, s;
         s = Math.floor(valueInMsec / 1000);
         m = Math.floor(s / 60);
         s = s % 60;
@@ -528,7 +539,7 @@
         m = m % 60;
         d = Math.floor(h / 24);
         h = h % 24;
-        var detailCount = 0;
+        let detailCount = 0;
         if (!isNaN(d) && d > 0) {
           elapsedTime = d+"d ";
           detailCount += 1;
