@@ -17,22 +17,25 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import mockit.integration.junit4.JMockit;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.categories.SqlFunctionTest;
-import org.apache.drill.categories.UnlikelyTest;
-import org.joda.time.DateTime;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
@@ -84,7 +87,7 @@ public class TestCastFunctions extends BaseTestQuery {
       .sqlQuery(query)
       .ordered()
       .baselineColumns("col")
-      .baselineValues(new DateTime(1969, 12, 31, 0, 0))
+      .baselineValues(LocalDate.of(1969, 12, 31))
       .build()
       .run();
   }

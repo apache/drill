@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,12 +33,12 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
@@ -44,10 +47,11 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.Text;
+import org.apache.drill.test.DrillTestWrapper.TestServices;
+import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import org.joda.time.DateTimeZone;
 
 public class TestBuilder {
 
@@ -693,4 +697,15 @@ public class TestBuilder {
     long UTCTimestamp = Timestamp.valueOf(value).getTime();
     return new Timestamp(DateTimeZone.getDefault().convertUTCToLocal(UTCTimestamp));
   }
+
+  /**
+   * Helper method for the timestamp values that depend on the local timezone
+   * @param value expected timestamp value in UTC
+   * @return LocalDateTime value for the local timezone
+   */
+  public static LocalDateTime convertToLocalDateTime(String value) {
+    OffsetDateTime utcDateTime = LocalDateTime.parse(value, DateUtility.getDateTimeFormatter()).atOffset(ZoneOffset.UTC);
+    return utcDateTime.atZoneSameInstant(ZoneOffset.systemDefault()).toLocalDateTime();
+  }
+
 }

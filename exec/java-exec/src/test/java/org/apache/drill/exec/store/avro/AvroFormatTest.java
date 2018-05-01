@@ -17,32 +17,6 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import com.google.common.collect.Lists;
-import mockit.integration.junit4.JMockit;
-import org.apache.avro.specific.TestRecordWithLogicalTypes;
-import org.apache.commons.io.FileUtils;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.work.ExecErrorConstants;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.TestBuilder;
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.util.JsonStringHashMap;
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.io.File;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateDoubleNestedSchema_NoNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateLinkedList;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateMapSchemaComplex_withNullValues;
@@ -59,6 +33,34 @@ import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_
 import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_WithNullValues;
 import static org.apache.drill.exec.store.avro.AvroTestUtil.write;
 import static org.apache.drill.test.TestBuilder.listOf;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.avro.specific.TestRecordWithLogicalTypes;
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.util.JsonStringHashMap;
+import org.apache.drill.exec.work.ExecErrorConstants;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import com.google.common.collect.Lists;
+
+import mockit.integration.junit4.JMockit;
 
 /**
  * Unit tests for Avro record reader.
@@ -309,9 +311,12 @@ public class AvroFormatTest extends BaseTestQuery {
   @Test
   public void testAvroTableWithLogicalTypesDecimal() throws Exception {
     ExecTest.mockUtcDateTimeZone();
-    DateTime date = DateUtility.getDateTimeFormatter().parseDateTime("2018-02-03");
-    DateTime time = DateUtility.getTimeFormatter().parseDateTime("19:25:03");
-    DateTime timestamp = DateUtility.getDateTimeFormatter().parseDateTime("2018-02-03 19:25:03");
+    LocalDate date = DateUtility.parseLocalDate("2018-02-03");
+    LocalTime time = DateUtility.parseLocalTime("19:25:03.0");
+    LocalDateTime timestamp = DateUtility.parseLocalDateTime("2018-02-03 19:25:03.0");
+
+    // Avro uses joda package
+    org.joda.time.DateTime jodaDateTime = org.joda.time.DateTime.parse("2018-02-03T19:25:03");
     BigDecimal bigDecimal = new BigDecimal("123.45");
 
     TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
@@ -321,9 +326,9 @@ public class AvroFormatTest extends BaseTestQuery {
         3.14F,
         3019.34,
         "abc",
-        timestamp.toLocalDate(),
-        timestamp.toLocalTime(),
-        timestamp,
+        jodaDateTime.toLocalDate(),
+        jodaDateTime.toLocalTime(),
+        jodaDateTime,
         bigDecimal
     );
 
@@ -348,9 +353,9 @@ public class AvroFormatTest extends BaseTestQuery {
         3.14F,
         3019.34,
         "abc",
-        LocalDate.now(),
-        LocalTime.now(),
-        DateTime.now(),
+        org.joda.time.LocalDate.now(),
+        org.joda.time.LocalTime.now(),
+        org.joda.time.DateTime.now(),
         new BigDecimal("123.45")
     );
 
