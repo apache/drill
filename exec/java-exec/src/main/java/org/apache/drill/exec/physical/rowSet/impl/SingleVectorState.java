@@ -17,16 +17,17 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
-import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
 
 /**
@@ -38,33 +39,11 @@ import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
 
 public abstract class SingleVectorState implements VectorState {
 
-  /**
-   * State for a scalar value vector. The vector might be for a simple (non-array)
-   * vector, or might be the payload part of a scalar array (repeated scalar)
-   * vector.
-   */
+  public abstract static class SimpleVectorState extends SingleVectorState {
 
-  public static class ValuesVectorState extends SingleVectorState {
-
-    private final ColumnMetadata schema;
-
-    public ValuesVectorState(ColumnMetadata schema, AbstractScalarWriter writer, ValueVector mainVector) {
+    public SimpleVectorState(WriterPosition writer,
+        ValueVector mainVector) {
       super(writer, mainVector);
-      this.schema = schema;
-    }
-
-    @Override
-    public int allocateVector(ValueVector vector, int cardinality) {
-      if (schema.isVariableWidth()) {
-
-        // Cap the allocated size to the maximum.
-
-        int size = (int) Math.min(ValueVector.MAX_BUFFER_SIZE, (long) cardinality * schema.expectedWidth());
-        ((VariableWidthVector) vector).allocateNew(size, cardinality);
-      } else {
-        ((FixedWidthVector) vector).allocateNew(cardinality);
-      }
-      return vector.getBufferSize();
     }
 
     @Override
@@ -88,6 +67,51 @@ public abstract class SingleVectorState implements VectorState {
   }
 
   /**
+   * State for a scalar value vector. The vector might be for a simple (non-array)
+   * vector, or might be the payload part of a scalar array (repeated scalar)
+   * vector.
+   */
+
+  public static class FixedWidthVectorState extends SimpleVectorState {
+
+     public FixedWidthVectorState(WriterPosition writer, ValueVector mainVector) {
+      super(writer, mainVector);
+    }
+
+    @Override
+    public int allocateVector(ValueVector vector, int cardinality) {
+      ((FixedWidthVector) vector).allocateNew(cardinality);
+      return vector.getAllocatedSize();
+    }
+  }
+
+  /**
+   * State for a scalar value vector. The vector might be for a simple (non-array)
+   * vector, or might be the payload part of a scalar array (repeated scalar)
+   * vector.
+   */
+
+  public static class VariableWidthVectorState extends SimpleVectorState {
+
+    private final ColumnMetadata schema;
+
+    public VariableWidthVectorState(ColumnMetadata schema, WriterPosition writer, ValueVector mainVector) {
+      super(writer, mainVector);
+      this.schema = schema;
+    }
+
+    @Override
+    public int allocateVector(ValueVector vector, int cardinality) {
+
+      // Cap the allocated size to the maximum.
+
+      final int size = (int) Math.min(ValueVector.MAX_BUFFER_SIZE, (long) cardinality * schema.expectedWidth());
+      ((VariableWidthVector) vector).allocateNew(size, cardinality);
+      return vector.getAllocatedSize();
+    }
+  }
+
+  /**
    * Special case for an offset vector. Offset vectors are managed like any other
    * vector with respect to overflow and allocation. This means that the loader
    * classes avoid the use of the RepeatedVector class methods, instead working
@@ -97,11 +121,22 @@ public abstract class SingleVectorState implements VectorState {
 
   public static class OffsetVectorState extends SingleVectorState {
 
-    private final AbstractObjectWriter childWriter;
+    /**
+     * The child writer used to determine positions on overflow.
+     * The repeated list vector defers creating the child until the
+     * child type is know so this field cannot be final. It will,
+     * however, change value only once: from null to a valid writer.
+     */
+
+    private WriterPosition childWriter;
 
     public OffsetVectorState(WriterPosition writer, ValueVector mainVector,
-        AbstractObjectWriter childWriter) {
+        WriterPosition childWriter) {
       super(writer, mainVector);
+      this.childWriter = childWriter;
+    }
+
+    public void setChildWriter(WriterPosition childWriter) {
       this.childWriter = childWriter;
     }
 
@@ -121,6 +156,8 @@ public abstract class SingleVectorState implements VectorState {
       if (sourceStartIndex > sourceEndIndex) {
         return;
       }
+
+      assert childWriter != null;
 
       // This is an offset vector. The data to copy is one greater
       // than the row index.
@@ -144,9 +181,9 @@ public abstract class SingleVectorState implements VectorState {
       // for the current row. We must subtract that offset from each copied
       // value to adjust the offset for the destination.
 
-      UInt4Vector.Accessor sourceAccessor = ((UInt4Vector) backupVector).getAccessor();
-      UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
-      int offset = childWriter.rowStartIndex();
+      final UInt4Vector.Accessor sourceAccessor = ((UInt4Vector) backupVector).getAccessor();
+      final UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
+      final int offset = childWriter.rowStartIndex();
       int newIndex = 1;
       ResultSetLoaderImpl.logger.trace("Offset vector: copy {} values from {} to {} with offset {}",
           Math.max(0, sourceEndIndex - sourceStartIndex + 1),
@@ -159,6 +196,12 @@ public abstract class SingleVectorState implements VectorState {
       for (int src = sourceStartIndex; src <= sourceEndIndex; src++, newIndex++) {
         destMutator.set(newIndex, sourceAccessor.get(src) - offset);
       }
+
+      // Getting offsets right was a pain. If you modify this code,
+      // you'll likely relive that experience. Enabling the next two
+      // lines will help reveal some of the mystery around offsets and their
+      // confusing off-by-one design.
+
 //      VectorPrinter.printOffsets((UInt4Vector) backupVector, sourceStartIndex - 1, sourceEndIndex - sourceStartIndex + 3);
 //      VectorPrinter.printOffsets((UInt4Vector) mainVector, 0, newIndex);
     }
@@ -173,8 +216,9 @@ public abstract class SingleVectorState implements VectorState {
     this.mainVector = mainVector;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public ValueVector vector() { return mainVector; }
+  public <T extends ValueVector> T vector() { return (T) mainVector; }
 
   @Override
   public int allocate(int cardinality) {
@@ -199,20 +243,21 @@ public abstract class SingleVectorState implements VectorState {
   @Override
   public void rollover(int cardinality) {
 
-    int sourceStartIndex = writer.rowStartIndex();
+    final int sourceStartIndex = writer.rowStartIndex();
 
     // Remember the last write index for the original vector.
     // This tells us the end of the set of values to move, while the
     // sourceStartIndex above tells us the start.
 
-    int sourceEndIndex = writer.lastWriteIndex();
+    final int sourceEndIndex = writer.lastWriteIndex();
 
     // Switch buffers between the backup vector and the writer's output
     // vector. Done this way because writers are bound to vectors and
     // we wish to keep the binding.
 
     if (backupVector == null) {
-      backupVector = TypeHelper.getNewVector(mainVector.getField(), mainVector.getAllocator(), null);
+      backupVector = TypeHelper.getNewVector(mainVector.getField(),
+          parseVectorType(mainVector), mainVector.getAllocator(), null);
     }
     assert cardinality > 0;
     allocateVector(backupVector, cardinality);
@@ -227,6 +272,37 @@ public abstract class SingleVectorState implements VectorState {
     // vector at the position after the copied values. The original vector
     // is saved along with a last write position that is no greater than
     // the retained values.
+  }
+
+  /**
+   * The vector mechanism here relies on the vector metadata. However, if the
+   * main vector is nullable, it will contain a <code>values</code> vector which
+   * is required. But the <code>values</code> vector will carry metadata that
+   * declares it to be nullable. While this is clearly a bug, it is a bug that has
+   * become a "feature" and cannot be changed. This code works around this feature
+   * by parsing out the actual type of the vector.
+   *
+   * @param vector the vector to clone, the type of which may not match the
+   * metadata declared within that vector
+   * @return the actual major type of the vector
+   */
+
+  protected static MajorType parseVectorType(ValueVector vector) {
+    final MajorType purportedType = vector.getField().getType();
+    if (purportedType.getMode() != DataMode.OPTIONAL) {
+      return purportedType;
+    }
+
+    // For nullable vectors, the purported type can be wrong. The "outer"
+    // vector is nullable, but the internal "values" vector is required, though
+    // it carries a nullable type -- that is, the metadata lies.
+
+    if (vector instanceof NullableVector) {
+      return purportedType;
+    }
+    return purportedType.toBuilder()
+        .setMode(DataMode.REQUIRED)
+        .build();
   }
 
   protected abstract void copyOverflow(int sourceStartIndex, int sourceEndIndex);
@@ -256,10 +332,21 @@ public abstract class SingleVectorState implements VectorState {
   }
 
   @Override
-  public void reset() {
+  public void close() {
     mainVector.clear();
     if (backupVector != null) {
       backupVector.clear();
+    }
+  }
+
+  @Override
+  public boolean isProjected() { return true; }
+
+  public static SimpleVectorState vectorState(ColumnMetadata schema, WriterPosition writer, ValueVector mainVector) {
+    if (schema.isVariableWidth()) {
+      return new VariableWidthVectorState(schema, writer, mainVector);
+    } else {
+      return new FixedWidthVectorState(writer, mainVector);
     }
   }
 
