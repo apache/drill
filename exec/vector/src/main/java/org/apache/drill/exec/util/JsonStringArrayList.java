@@ -29,6 +29,7 @@ public class JsonStringArrayList<E> extends ArrayList<E> {
 
   static {
     mapper = new ObjectMapper();
+    mapper.registerModule(SerializationModule.getModule());
   }
 
   @Override
