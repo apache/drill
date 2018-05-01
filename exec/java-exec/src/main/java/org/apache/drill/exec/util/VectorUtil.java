@@ -17,21 +17,23 @@
  */
 package org.apache.drill.exec.util;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 public class VectorUtil {
 
@@ -114,6 +116,8 @@ public class VectorUtil {
           // TODO(DRILL-3882) - remove this once the datetime is not returned in an
           // object needlessly holding a timezone
           rowValues.add(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").print((DateTime) o));
+        } else if (o instanceof LocalDateTime) {
+          rowValues.add(DateUtility.formatTimeStamp.format((LocalDateTime) o));
         } else {
           rowValues.add(o.toString());
         }

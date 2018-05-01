@@ -26,7 +26,6 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
-import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,6 +34,7 @@ import org.junit.experimental.categories.Category;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 
 /**
  * Tests for compatibility reading old parquet files after date corruption
@@ -144,7 +144,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
             .sqlQuery(query)
             .unOrdered()
             .baselineColumns("date_col")
-            .baselineValues(new DateTime(1970, 1, 1, 0, 0))
+            .baselineValues(LocalDate.of(1970, 1, 1))
             .go();
       }
     } finally {
@@ -158,8 +158,8 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         .sqlQuery("select date_col from dfs.`%s` where length(varchar_col) = 12", VARCHAR_PARTITIONED)
         .baselineColumns("date_col")
         .unOrdered()
-        .baselineValues(new DateTime(2039, 4, 9, 0, 0))
-        .baselineValues(new DateTime(1999, 1, 8, 0, 0))
+        .baselineValues(LocalDate.of(2039, 4, 9))
+        .baselineValues(LocalDate.of(1999, 1, 8))
         .go();
   }
 
@@ -169,7 +169,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         .sqlQuery("select date_col from dfs.`%s` where date_col = '1999-04-08'", DATE_PARTITIONED)
         .baselineColumns("date_col")
         .unOrdered()
-        .baselineValues(new DateTime(1999, 4, 8, 0, 0))
+        .baselineValues(LocalDate.of(1999, 4, 8))
         .go();
 
     String query = format("select date_col from dfs.`%s` where date_col > '1999-04-08'", DATE_PARTITIONED);
@@ -183,10 +183,10 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
             EXCEPTION_WHILE_PARSING_CREATED_BY_META)
         .baselineColumns("date_col")
         .unOrdered()
-        .baselineValues(new DateTime(1996, 1, 29, 0, 0))
-        .baselineValues(new DateTime(1996, 3, 1, 0, 0))
-        .baselineValues(new DateTime(1996, 3, 2, 0, 0))
-        .baselineValues(new DateTime(1997, 3, 1, 0, 0))
+        .baselineValues(LocalDate.of(1996, 1, 29))
+        .baselineValues(LocalDate.of(1996, 3, 1))
+        .baselineValues(LocalDate.of(1996, 3, 2))
+        .baselineValues(LocalDate.of(1997, 3, 1))
         .go();
   }
 
@@ -238,7 +238,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
               .sqlQuery(query)
               .unOrdered()
               .baselineColumns("date_col")
-              .baselineValues(new DateTime(1970, 1, 1, 0, 0))
+              .baselineValues(LocalDate.of(1970, 1, 1))
               .go();
         }
       }
@@ -265,12 +265,12 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
             PARQUET_DATE_FILE_WITH_NULL_FILLED_COLS)
         .unOrdered()
         .baselineColumns("null_dates_1", "null_dates_2", "non_existent_field", "date_col")
-        .baselineValues(null, null, null, new DateTime(1970, 1, 1, 0, 0))
-        .baselineValues(null, null, null, new DateTime(1970, 1, 2, 0, 0))
-        .baselineValues(null, null, null, new DateTime(1969, 12, 31, 0, 0))
-        .baselineValues(null, null, null, new DateTime(1969, 12, 30, 0, 0))
-        .baselineValues(null, null, null, new DateTime(1900, 1, 1, 0, 0))
-        .baselineValues(null, null, null, new DateTime(2015, 1, 1, 0, 0))
+        .baselineValues(null, null, null, LocalDate.of(1970, 1, 1))
+        .baselineValues(null, null, null, LocalDate.of(1970, 1, 2))
+        .baselineValues(null, null, null, LocalDate.of(1969, 12, 31))
+        .baselineValues(null, null, null, LocalDate.of(1969, 12, 30))
+        .baselineValues(null, null, null, LocalDate.of(1900, 1, 1))
+        .baselineValues(null, null, null, LocalDate.of(2015, 1, 1))
         .go();
   }
 
@@ -336,7 +336,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("date_col")
-        .baselineValues(new DateTime(1970, 1, 1, 0, 0))
+        .baselineValues(LocalDate.of(1970, 1, 1))
         .go();
   }
 
@@ -365,9 +365,9 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("date_col")
-        .baselineValues(new DateTime(1970, 1, 1, 0, 0))
-        .baselineValues(new DateTime(1970, 1, 1, 0, 0))
-        .baselineValues(new DateTime(1970, 1, 1, 0, 0))
+        .baselineValues(LocalDate.of(1970, 1, 1))
+        .baselineValues(LocalDate.of(1970, 1, 1))
+        .baselineValues(LocalDate.of(1970, 1, 1))
         .go();
   }
 
@@ -377,7 +377,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         .sqlQuery("select i_rec_end_date from dfs.`%s` limit 1", CORRECT_DATES_1_6_0_PATH)
         .baselineColumns("i_rec_end_date")
         .unOrdered()
-        .baselineValues(new DateTime(2000, 10, 26, 0, 0))
+        .baselineValues(LocalDate.of(2000, 10, 26))
         .go();
   }
 
@@ -403,12 +403,12 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
   private void addDateBaselineValues(TestBuilder builder) {
     builder
-        .baselineValues(new DateTime(1970, 1, 1, 0, 0))
-        .baselineValues(new DateTime(1970, 1, 2, 0, 0))
-        .baselineValues(new DateTime(1969, 12, 31, 0, 0))
-        .baselineValues(new DateTime(1969, 12, 30, 0, 0))
-        .baselineValues(new DateTime(1900, 1, 1, 0, 0))
-        .baselineValues(new DateTime(2015, 1, 1, 0, 0));
+        .baselineValues(LocalDate.of(1970, 1, 1))
+        .baselineValues(LocalDate.of(1970, 1, 2))
+        .baselineValues(LocalDate.of(1969, 12, 31))
+        .baselineValues(LocalDate.of(1969, 12, 30))
+        .baselineValues(LocalDate.of(1900, 1, 1))
+        .baselineValues(LocalDate.of(2015, 1, 1));
   }
 
   /**
@@ -416,12 +416,12 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
    */
   private void addCorruptedDateBaselineValues(TestBuilder builder) {
     builder
-        .baselineValues(new DateTime(15334, 3, 17, 0, 0))
-        .baselineValues(new DateTime(15334, 3, 18, 0, 0))
-        .baselineValues(new DateTime(15334, 3, 15, 0, 0))
-        .baselineValues(new DateTime(15334, 3, 16, 0, 0))
-        .baselineValues(new DateTime(15264, 3, 16, 0, 0))
-        .baselineValues(new DateTime(15379, 3, 17, 0, 0));
+        .baselineValues(LocalDate.of(15334, 3, 17))
+        .baselineValues(LocalDate.of(15334, 3, 18))
+        .baselineValues(LocalDate.of(15334, 3, 15))
+        .baselineValues(LocalDate.of(15334, 3, 16))
+        .baselineValues(LocalDate.of(15264, 3, 16))
+        .baselineValues(LocalDate.of(15379, 3, 17));
   }
 
   private void readFilesWithUserDisabledAutoCorrection() throws Exception {

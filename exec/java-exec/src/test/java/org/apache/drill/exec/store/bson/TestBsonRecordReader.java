@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 
 import org.apache.drill.exec.memory.RootAllocator;
@@ -31,6 +33,7 @@ import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.test.BaseTestQuery;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonBoolean;
@@ -84,7 +87,7 @@ public class TestBsonRecordReader {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(1000l, mapReader.reader("ts").readDateTime().getMillis());
+    assertEquals(1000000l, mapReader.reader("ts").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
   }
 
   @Test
@@ -207,7 +210,7 @@ public class TestBsonRecordReader {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(5262729712L, mapReader.reader("dateTimeKey").readDateTime().getMillis());
+    assertEquals(5262729712L, mapReader.reader("dateTimeKey").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
   }
 
   @Test

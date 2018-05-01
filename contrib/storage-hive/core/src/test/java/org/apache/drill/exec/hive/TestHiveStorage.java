@@ -17,18 +17,25 @@
  */
 package org.apache.drill.exec.hive;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
-import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -36,16 +43,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStorage extends HiveTestBase {
@@ -149,8 +148,8 @@ public class TestHiveStorage extends HiveTestBase {
             3455,
             "stringfield",
             "varcharfield",
-            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            DateUtility.parseBest("2013-07-05 17:01:00"),
+            DateUtility.parseLocalDate("2013-07-05"),
             "charfield",
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
             //"binary",
@@ -168,8 +167,8 @@ public class TestHiveStorage extends HiveTestBase {
             3455,
             "string",
             "varchar",
-            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            DateUtility.parseBest("2013-07-05 17:01:00"),
+            DateUtility.parseLocalDate("2013-07-05"),
             "char")
         .baselineValues( // All fields are null, but partition fields have non-null values
             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
@@ -189,10 +188,127 @@ public class TestHiveStorage extends HiveTestBase {
             3455,
             "string",
             "varchar",
-            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            DateUtility.parseBest("2013-07-05 17:01:00"),
+            DateUtility.parseLocalDate("2013-07-05"),
             "char")
         .go();
+  }
+
+  /**
+   * Test to ensure Drill reads the all supported types through native Parquet readers.
+   * NOTE: As part of Hive 1.2 upgrade, make sure this test and {@link #readAllSupportedHiveDataTypes()} are merged
+   * into one test.
+   */
+  @Test
+  public void readAllSupportedHiveDataTypesNativeParquet() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+      final String query = "SELECT * FROM hive.readtest_parquet";
+
+      // Make sure the plan has Hive scan with native parquet reader
+      testPhysicalPlan(query, "hive-drill-native-parquet-scan");
+
+      testBuilder().sqlQuery(query)
+          .unOrdered()
+          .baselineColumns(
+              "binary_field",
+              "boolean_field",
+              "tinyint_field",
+              "decimal0_field",
+              "decimal9_field",
+              "decimal18_field",
+              "decimal28_field",
+              "decimal38_field",
+              "double_field",
+              "float_field",
+              "int_field",
+              "bigint_field",
+              "smallint_field",
+              "string_field",
+              "varchar_field",
+              "timestamp_field",
+              "char_field",
+              // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
+              //"binary_part",
+              "boolean_part",
+              "tinyint_part",
+              "decimal0_part",
+              "decimal9_part",
+              "decimal18_part",
+              "decimal28_part",
+              "decimal38_part",
+              "double_part",
+              "float_part",
+              "int_part",
+              "bigint_part",
+              "smallint_part",
+              "string_part",
+              "varchar_part",
+              "timestamp_part",
+              "date_part",
+              "char_part")
+          .baselineValues(
+              "binaryfield".getBytes(),
+              false,
+              34,
+              new BigDecimal("66"),
+              new BigDecimal("2347.92"),
+              new BigDecimal("2758725827.99990"),
+              new BigDecimal("29375892739852.8"),
+              new BigDecimal("89853749534593985.783"),
+              8.345d,
+              4.67f,
+              123456,
+              234235L,
+              3455,
+              "stringfield",
+              "varcharfield",
+              DateUtility.parseBest("2013-07-05 17:01:00"),
+              "charfield",
+              // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
+              //"binary",
+              true,
+              64,
+              new BigDecimal("37"),
+              new BigDecimal("36.90"),
+              new BigDecimal("3289379872.94565"),
+              new BigDecimal("39579334534534.4"),
+              new BigDecimal("363945093845093890.900"),
+              8.345d,
+              4.67f,
+              123456,
+              234235L,
+              3455,
+              "string",
+              "varchar",
+              DateUtility.parseBest("2013-07-05 17:01:00"),
+              DateUtility.parseLocalDate("2013-07-05"),
+              "char")
+          .baselineValues( // All fields are null, but partition fields have non-null values
+              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+              // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
+              //"binary",
+              true,
+              64,
+              new BigDecimal("37"),
+              new BigDecimal("36.90"),
+              new BigDecimal("3289379872.94565"),
+              new BigDecimal("39579334534534.4"),
+              new BigDecimal("363945093845093890.900"),
+              8.345d,
+              4.67f,
+              123456,
+              234235L,
+              3455,
+              "string",
+              "varchar",
+              DateUtility.parseBest("2013-07-05 17:01:00"),
+              DateUtility.parseLocalDate("2013-07-05"),
+              "char")
+          .go();
+    } finally {
+        test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+    }
   }
 
   @Test
