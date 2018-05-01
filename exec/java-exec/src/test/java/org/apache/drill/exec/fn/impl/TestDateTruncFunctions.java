@@ -17,17 +17,18 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.test.BaseTestQuery;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.joda.time.DateTime;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTime;
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateTruncFunctions extends BaseTestQuery {
@@ -52,16 +53,16 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("second", "minute", "hour", "day", "month", "year", "quarter", "decade", "century", "millennium")
         .baselineValues(
-            formatTime.parseDateTime("2:30:21.0"), // seconds
-            formatTime.parseDateTime("2:30:00.0"), // minute
-            formatTime.parseDateTime("2:00:00.0"), // hour
-            formatTime.parseDateTime("0:00:00.0"), // day
-            formatTime.parseDateTime("0:00:00.0"), // month
-            formatTime.parseDateTime("0:00:00.0"), // year
-            formatTime.parseDateTime("0:00:00.0"), // quarter
-            formatTime.parseDateTime("0:00:00.0"), // decade
-            formatTime.parseDateTime("0:00:00.0"), // century
-            formatTime.parseDateTime("0:00:00.0")) // millennium
+            DateUtility.parseLocalTime("2:30:21.0"), // seconds
+            DateUtility.parseLocalTime("2:30:00.0"), // minute
+            DateUtility.parseLocalTime("2:00:00.0"), // hour
+            DateUtility.parseLocalTime("0:00:00.0"), // day
+            DateUtility.parseLocalTime("0:00:00.0"), // month
+            DateUtility.parseLocalTime("0:00:00.0"), // year
+            DateUtility.parseLocalTime("0:00:00.0"), // quarter
+            DateUtility.parseLocalTime("0:00:00.0"), // decade
+            DateUtility.parseLocalTime("0:00:00.0"), // century
+            DateUtility.parseLocalTime("0:00:00.0")) // millennium
         .go();
   }
 
@@ -88,19 +89,19 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("second", "minute", "hour", "day", "month", "week" , "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
         .baselineValues(
-            formatDate.parseDateTime("2011-02-03"), // seconds
-            formatDate.parseDateTime("2011-02-03"), // minute
-            formatDate.parseDateTime("2011-02-03"), // hour
-            formatDate.parseDateTime("2011-02-03"), // day
-            formatDate.parseDateTime("2011-02-01"), // month
-            formatDate.parseDateTime("2011-01-31"), // week
-            formatDate.parseDateTime("2011-01-01"), // year
-            formatDate.parseDateTime("2011-04-01"), // quarter-1
-            formatDate.parseDateTime("2011-07-01"), // quarter-2
-            formatDate.parseDateTime("2011-07-01"), // quarter-3
-            formatDate.parseDateTime("2010-01-01"), // decade-1
-            formatDate.parseDateTime("2070-01-01"), // decade-2
-            formatDate.parseDateTime("1970-01-01")) // decade-3
+            DateUtility.parseLocalDate("2011-02-03"), // seconds
+            DateUtility.parseLocalDate("2011-02-03"), // minute
+            DateUtility.parseLocalDate("2011-02-03"), // hour
+            DateUtility.parseLocalDate("2011-02-03"), // day
+            DateUtility.parseLocalDate("2011-02-01"), // month
+            DateUtility.parseLocalDate("2011-01-31"), // week
+            DateUtility.parseLocalDate("2011-01-01"), // year
+            DateUtility.parseLocalDate("2011-04-01"), // quarter-1
+            DateUtility.parseLocalDate("2011-07-01"), // quarter-2
+            DateUtility.parseLocalDate("2011-07-01"), // quarter-3
+            DateUtility.parseLocalDate("2010-01-01"), // decade-1
+            DateUtility.parseLocalDate("2070-01-01"), // decade-2
+            DateUtility.parseLocalDate("1970-01-01")) // decade-3
         .go();
   }
 
@@ -121,18 +122,18 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4", "c5")
         .baselineValues(
-            formatDate.parseDateTime("2001-01-01"), // c1
-            formatDate.parseDateTime("1901-01-01"), // c2
-            formatDate.parseDateTime("1901-01-01"), // c3
-            formatDate.parseDateTime("0801-01-01"), // c4
-            formatDate.parseDateTime("0001-01-01")) // c5
+            DateUtility.parseLocalDate("2001-01-01"), // c1
+            DateUtility.parseLocalDate("1901-01-01"), // c2
+            DateUtility.parseLocalDate("1901-01-01"), // c3
+            DateUtility.parseLocalDate("0801-01-01"), // c4
+            DateUtility.parseLocalDate("0001-01-01")) // c5
         .go();
   }
 
   @Test
   public void test() throws Exception {
     org.joda.time.MutableDateTime dateTime = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
-    dateTime.setMillis(formatDate.parseDateTime("2001-01-01"));
+    dateTime.setMillis(DateUtility.parseLocalDate("2001-01-01").atTime(LocalTime.MIDNIGHT).atOffset(ZoneOffset.UTC).toInstant().toEpochMilli());
     dateTime.setRounding(dateTime.getChronology().centuryOfEra());
   }
 
@@ -153,11 +154,11 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("m1", "m2", "m3", "m4", "m5")
         .baselineValues(
-            formatDate.parseDateTime("2001-01-01"), // m1
-            formatDate.parseDateTime("1001-01-01"), // m2
-            formatDate.parseDateTime("1001-01-01"), // m3
-            formatDate.parseDateTime("0001-01-01"), // m4
-            formatDate.parseDateTime("0001-01-01")) // m5
+                DateUtility.parseLocalDate("2001-01-01"), // m1
+                DateUtility.parseLocalDate("1001-01-01"), // m2
+                DateUtility.parseLocalDate("1001-01-01"), // m3
+                DateUtility.parseLocalDate("0001-01-01"), // m4
+                DateUtility.parseLocalDate("0001-01-01")) // m5
         .go();
   }
 
@@ -184,19 +185,19 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("second", "minute", "hour", "day", "month", "week" , "year", "q1", "q2", "q3", "decade1", "decade2", "decade3")
         .baselineValues(
-            formatTimeStamp.parseDateTime("2011-02-03 10:11:12.0"), // seconds
-            formatTimeStamp.parseDateTime("2011-02-03 10:11:00.0"), // minute
-            formatTimeStamp.parseDateTime("2011-02-03 10:00:00.0"), // hour
-            formatTimeStamp.parseDateTime("2011-02-03 00:00:00.0"), // day
-            formatTimeStamp.parseDateTime("2011-02-01 00:00:00.0"), // month
-            formatTimeStamp.parseDateTime("2011-01-31 00:00:00.0"), // week
-            formatTimeStamp.parseDateTime("2011-01-01 00:00:00.0"), // year
-            formatTimeStamp.parseDateTime("2011-04-01 00:00:00.0"), // quarter-1
-            formatTimeStamp.parseDateTime("2011-07-01 00:00:00.0"), // quarter-2
-            formatTimeStamp.parseDateTime("2011-07-01 00:00:00.0"), // quarter-3
-            formatTimeStamp.parseDateTime("2010-01-01 00:00:00.0"), // decade-1
-            formatTimeStamp.parseDateTime("2070-01-01 00:00:00.0"), // decade-2
-            formatTimeStamp.parseDateTime("1970-01-01 00:00:00.0")) // decade-3
+            DateUtility.parseLocalDateTime("2011-02-03 10:11:12.0"), // seconds
+            DateUtility.parseLocalDateTime("2011-02-03 10:11:00.0"), // minute
+            DateUtility.parseLocalDateTime("2011-02-03 10:00:00.0"), // hour
+            DateUtility.parseLocalDateTime("2011-02-03 00:00:00.0"), // day
+            DateUtility.parseLocalDateTime("2011-02-01 00:00:00.0"), // month
+            DateUtility.parseLocalDateTime("2011-01-31 00:00:00.0"), // week
+            DateUtility.parseLocalDateTime("2011-01-01 00:00:00.0"), // year
+            DateUtility.parseLocalDateTime("2011-04-01 00:00:00.0"), // quarter-1
+            DateUtility.parseLocalDateTime("2011-07-01 00:00:00.0"), // quarter-2
+            DateUtility.parseLocalDateTime("2011-07-01 00:00:00.0"), // quarter-3
+            DateUtility.parseLocalDateTime("2010-01-01 00:00:00.0"), // decade-1
+            DateUtility.parseLocalDateTime("2070-01-01 00:00:00.0"), // decade-2
+            DateUtility.parseLocalDateTime("1970-01-01 00:00:00.0")) // decade-3
         .go();
   }
 
@@ -217,11 +218,11 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4", "c5")
         .baselineValues(
-            formatTimeStamp.parseDateTime("2001-01-01 00:00:00.0"), // c1
-            formatTimeStamp.parseDateTime("1901-01-01 00:00:00.0"), // c2
-            formatTimeStamp.parseDateTime("1901-01-01 00:00:00.0"), // c3
-            formatTimeStamp.parseDateTime("0801-01-01 00:00:00.0"), // c4
-            formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0")) // c5
+            DateUtility.parseLocalDateTime("2001-01-01 00:00:00.0"), // c1
+            DateUtility.parseLocalDateTime("1901-01-01 00:00:00.0"), // c2
+            DateUtility.parseLocalDateTime("1901-01-01 00:00:00.0"), // c3
+            DateUtility.parseLocalDateTime("0801-01-01 00:00:00.0"), // c4
+            DateUtility.parseLocalDateTime("0001-01-01 00:00:00.0")) // c5
         .go();
   }
 
@@ -242,11 +243,11 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("m1", "m2", "m3", "m4", "m5")
         .baselineValues(
-            formatTimeStamp.parseDateTime("2001-01-01 00:00:00.0"), // m1
-            formatTimeStamp.parseDateTime("1001-01-01 00:00:00.0"), // m2
-            formatTimeStamp.parseDateTime("1001-01-01 00:00:00.0"), // m3
-            formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0"), // m4
-            formatTimeStamp.parseDateTime("0001-01-01 00:00:00.0")) // m5
+            DateUtility.parseLocalDateTime("2001-01-01 00:00:00.0"), // m1
+            DateUtility.parseLocalDateTime("1001-01-01 00:00:00.0"), // m2
+            DateUtility.parseLocalDateTime("1001-01-01 00:00:00.0"), // m3
+            DateUtility.parseLocalDateTime("0001-01-01 00:00:00.0"), // m4
+            DateUtility.parseLocalDateTime("0001-01-01 00:00:00.0")) // m5
         .go();
   }
 
@@ -327,12 +328,12 @@ public class TestDateTruncFunctions extends BaseTestQuery {
         + "date_trunc('YEAR', date '2011-2-2') as DATE2 "
         + "from cp.`employee.json` where employee_id < 2";
 
-    DateTime time1 = formatTime.parseDateTime("2:30:00.0");
-    DateTime time2 = formatTime.parseDateTime("2:30:21.0");
-    DateTime ts1 = formatTimeStamp.parseDateTime("1991-05-05 10:00:00.0");
-    DateTime ts2 = formatTimeStamp.parseDateTime("1991-05-05 10:11:12.0");
-    DateTime date1 = formatDate.parseDateTime("2011-02-01");
-    DateTime date2 = formatDate.parseDateTime("2011-01-01");
+    LocalTime time1 = DateUtility.parseLocalTime("2:30:00.0");
+    LocalTime time2 = DateUtility.parseLocalTime("2:30:21.0");
+    LocalDateTime ts1 = DateUtility.parseLocalDateTime("1991-05-05 10:00:00.0");
+    LocalDateTime ts2 = DateUtility.parseLocalDateTime("1991-05-05 10:11:12.0");
+    LocalDate date1 = DateUtility.parseLocalDate("2011-02-01");
+    LocalDate date2 = DateUtility.parseLocalDate("2011-01-01");
 
     testBuilder()
         .sqlQuery(query)

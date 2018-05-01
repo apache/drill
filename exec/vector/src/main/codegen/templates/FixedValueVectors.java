@@ -27,6 +27,7 @@
 package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.util.DecimalUtility;
 
 /**
@@ -506,17 +507,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     @Override
     public ${friendlyType} getObject(int index) {
-      org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
-      date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-      return date;
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(get(index)), ZoneOffset.UTC).toLocalDate();
     }
     <#elseif minor.class == "TimeStamp">
 
     @Override
     public ${friendlyType} getObject(int index) {
-      org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
-      date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-      return date;
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(get(index)), ZoneOffset.UTC);
     }
     <#elseif minor.class == "IntervalYear">
 
@@ -531,10 +528,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     <#elseif minor.class == "Time">
 
     @Override
-    public DateTime getObject(int index) {
-      org.joda.time.DateTime time = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
-      time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-      return time;
+    public ${friendlyType} getObject(int index) {
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(get(index)), ZoneOffset.UTC).toLocalTime();
     }
     <#elseif minor.class == "Decimal9" || minor.class == "Decimal18">
 

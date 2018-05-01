@@ -427,7 +427,7 @@ public class TestStarQueries extends BaseTestQuery {
   @Test // DRILL-1500
   @Category(UnlikelyTest.class)
   public void testStarPartitionFilterOrderBy() throws Exception {
-    org.joda.time.DateTime mydate = new org.joda.time.DateTime("1994-01-20T00:00:00.000");
+    java.time.LocalDate mydate = java.time.LocalDate.parse("1994-01-20");
 
     testBuilder()
     .sqlQuery("select * from dfs.`multilevel/parquet` where dir0=1994 and dir1='Q1' order by dir0 limit 1")

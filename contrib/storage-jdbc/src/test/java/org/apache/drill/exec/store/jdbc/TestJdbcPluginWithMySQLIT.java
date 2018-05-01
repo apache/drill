@@ -18,9 +18,8 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.PlanTestBase;
-
-import org.joda.time.DateTime;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,7 +39,7 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
                             "first_name, last_name, address, city, state, zip, " +
                             "bigint_field, smallint_field, numeric_field, " +
                             "boolean_field, double_field, float_field, real_field, " +
-                            "date_field, datetime_field, year_field, " +
+                            "date_field, datetime_field, year_field, time_field, " +
                             "json, text_field, tiny_text_field, medium_text_field, long_text_field, " +
                             "blob_field, bit_field, enum_field " +
                     "from mysql.`drill_mysql_test`.person")
@@ -50,7 +49,7 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
                     "bigint_field", "smallint_field", "numeric_field",
                     "boolean_field",
                     "double_field", "float_field", "real_field",
-                    "date_field", "datetime_field", "year_field",
+                    "date_field", "datetime_field", "year_field", "time_field",
                     "json", "text_field", "tiny_text_field", "medium_text_field", "long_text_field",
                     "blob_field", "bit_field", "enum_field")
             .baselineValues(1,
@@ -58,7 +57,7 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
                     123456789L, 1, 10.01,
                     false,
                     1.0, 1.1, 1.2,
-                    new DateTime(2012, 2, 29, 0, 0, 0), new DateTime(2012, 2, 29, 13, 0, 1), new DateTime(2015, 1, 1, 0, 0, 0),
+                    DateUtility.parseLocalDate("2012-02-29"), DateUtility.parseLocalDateTime("2012-02-29 13:00:01.0"), DateUtility.parseLocalDate("2015-01-01"), DateUtility.parseLocalTime("13:00:01.0"),
                     "{ a : 5, b : 6 }",
                     "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout",
                     "xxx",
@@ -71,7 +70,7 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
                     45456767L, 3, 30.04,
                     true,
                     3.0, 3.1, 3.2,
-                    new DateTime(2011, 10, 30, 0, 0, 0), new DateTime(2011, 10, 30, 11, 34, 21), new DateTime(2015, 1, 1, 0, 0, 0),
+                    DateUtility.parseLocalDate("2011-10-30"), DateUtility.parseLocalDateTime("2011-10-30 11:34:21.0"), DateUtility.parseLocalDate("2015-01-01"), DateUtility.parseLocalTime("11:34:21.0"),
                     "{ z : [ 1, 2, 3 ] }",
                     "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout",
                     "abc",
@@ -84,7 +83,7 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
                     123090L, -3, 55.12,
                     false,
                     5.0, 5.1, 5.55,
-                    new DateTime(2015, 6, 1, 0, 0, 0), new DateTime(2015, 9, 22, 15, 46, 10), new DateTime(1901, 1, 1, 0, 0, 0),
+                    DateUtility.parseLocalDate("2015-06-01"), DateUtility.parseLocalDateTime("2015-09-22 15:46:10.0"), DateUtility.parseLocalDate("1901-01-01"), DateUtility.parseLocalTime("16:00:01.0"),
                     "{ [ a, b, c ] }",
                     "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit",
                     "abc",
@@ -97,7 +96,7 @@ public class TestJdbcPluginWithMySQLIT extends PlanTestBase {
                     null, null, null,
                     null,
                     null, null, null,
-                    null, null, null,
+                    null, null, null, null,
                     null,
                     null,
                     null,

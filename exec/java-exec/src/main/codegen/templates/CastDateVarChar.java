@@ -71,11 +71,11 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   public void eval() {
 
       <#if type.from == "Time">
-      org.joda.time.LocalTime temp = new org.joda.time.LocalTime(in.value, org.joda.time.DateTimeZone.UTC);
-      String str = temp.toString();
+      java.time.LocalDateTime temp = java.time.Instant.ofEpochMilli(in.value).atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.format(temp);
       <#else>
-      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.UTC);
-      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.print(temp);
+      java.time.LocalDateTime temp = java.time.Instant.ofEpochMilli(in.value).atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.format(temp);
       </#if>
       out.buffer = buffer;
       out.start = 0;

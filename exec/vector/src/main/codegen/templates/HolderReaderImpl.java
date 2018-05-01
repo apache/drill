@@ -199,6 +199,12 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Bit" >
       return Boolean.valueOf(holder.value != 0);
+<#elseif minor.class == "Time">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalTime();
+<#elseif minor.class == "Date">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalDate();
+<#elseif minor.class == "TimeStamp">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC);
 <#else>
       ${friendlyType} value = new ${friendlyType}(this.holder.value);
       return value;
@@ -272,6 +278,12 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Bit" >
       return Boolean.valueOf(holder.value != 0);
+<#elseif minor.class == "Time">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalTime();
+<#elseif minor.class == "Date">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC).toLocalDate();
+<#elseif minor.class == "TimeStamp">
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.holder.value), ZoneOffset.UTC);
 <#else>
       ${friendlyType} value = new ${friendlyType}(this.holder.value);
       return value;
