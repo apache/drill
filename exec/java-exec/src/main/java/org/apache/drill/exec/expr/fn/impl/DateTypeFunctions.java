@@ -280,8 +280,8 @@ public class DateTypeFunctions {
 
         @Override
         public void eval() {
-            org.joda.time.DateTime temp = new org.joda.time.DateTime();
-            String str = org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStampTZ.print(temp);
+            java.time.LocalDateTime temp = java.time.LocalDateTime.now();
+            String str = org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStampTZ.format(temp);
             out.buffer = buffer;
             out.start = 0;
             out.end = Math.min(100,  str.length()); // truncate if target type has length smaller than that of input's string
