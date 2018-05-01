@@ -82,13 +82,34 @@ public final class ${className} extends BaseDataValueVector implements <#if type
    * The values vector has same name as Nullable vector name, and has the same type and attributes
    * as the nullable vector. This ensures that things like scale and precision are preserved in the values vector.
    */
-  private final ${valuesName} values = new ${minor.class}Vector(field, allocator);
+
+  private final ${valuesName} values;
 
   private final Mutator mutator = new Mutator();
-  private final Accessor accessor = new Accessor();
+  private final Accessor accessor;
 
   public ${className}(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
+    
+    // The values vector has the same type and attributes
+    // as the nullable vector, but with a mode of required. This ensures that
+    // things like scale and precision are preserved in the values vector.
+    // For backward compatibility, the values vector must have the same
+    // name as the enclosing vector.
+    // Setting the child to REQUIRED is a change, prior it was OPTIONAL. But
+    // if we then use the field to create a vector, we get the wrong type
+    // (we get an optional child vector when we want required.)
+    
+    values = new ${minor.class}Vector(
+        MaterializedField.create(field.getName(),
+            field.getType().toBuilder()
+              .setMode(DataMode.REQUIRED)
+              .build()),
+        allocator);
+    
+    field.addChild(bits.getField());
+    field.addChild(values.getField());
+    accessor = new Accessor();
   }
 
   @Override
