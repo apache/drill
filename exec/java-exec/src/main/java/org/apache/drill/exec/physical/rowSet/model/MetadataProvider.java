@@ -18,9 +18,14 @@
 package org.apache.drill.exec.physical.rowSet.model;
 
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.RepeatedListColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.VariantMetadata;
+import org.apache.drill.exec.record.metadata.VariantSchema;
 
 /**
  * Interface for retrieving and/or creating metadata given
@@ -31,15 +36,24 @@ public interface MetadataProvider {
   ColumnMetadata metadata(int index, MaterializedField field);
   MetadataProvider childProvider(ColumnMetadata colMetadata);
   TupleMetadata tuple();
+  VariantMetadata variant();
 
   public static class VectorDescrip {
     public final MetadataProvider parent;
     public final ColumnMetadata metadata;
 
+    public VectorDescrip(MetadataProvider provider, ColumnMetadata metadata) {
+      parent = provider;
+      this.metadata = metadata;
+    }
+
     public VectorDescrip(MetadataProvider provider, int index,
         MaterializedField field) {
-      parent = provider;
-      metadata = provider.metadata(index, field);
+      this(provider, provider.metadata(index, field));
+    }
+
+    public MetadataProvider childProvider() {
+      return parent.childProvider(metadata);
     }
   }
 
@@ -62,11 +76,91 @@ public interface MetadataProvider {
 
     @Override
     public MetadataProvider childProvider(ColumnMetadata colMetadata) {
-      return new MetadataCreator((TupleSchema) colMetadata.mapSchema());
+      return makeProvider(colMetadata);
+    }
+
+    public static MetadataProvider makeProvider(ColumnMetadata colMetadata) {
+      switch (colMetadata.structureType()) {
+      case MULTI_ARRAY:
+        return new ArraySchemaCreator((RepeatedListColumnMetadata) colMetadata);
+      case VARIANT:
+        return new VariantSchemaCreator((VariantSchema) colMetadata.variantSchema());
+      case TUPLE:
+        return new MetadataCreator((TupleSchema) colMetadata.mapSchema());
+      default:
+        throw new UnsupportedOperationException();
+      }
     }
 
     @Override
     public TupleMetadata tuple() { return tuple; }
+
+    @Override
+    public VariantMetadata variant() {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  public static class VariantSchemaCreator implements MetadataProvider {
+
+    private final VariantSchema variantSchema;
+
+    public VariantSchemaCreator(VariantSchema variantSchema) {
+      this.variantSchema = variantSchema;
+    }
+
+    @Override
+    public ColumnMetadata metadata(int index, MaterializedField field) {
+      return variantSchema.addType(field);
+    }
+
+    @Override
+    public MetadataProvider childProvider(ColumnMetadata colMetadata) {
+      return MetadataCreator.makeProvider(colMetadata);
+    }
+
+    @Override
+    public TupleMetadata tuple() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public VariantMetadata variant() {
+      return variantSchema;
+    }
+  }
+
+  public static class ArraySchemaCreator implements MetadataProvider {
+
+    private final RepeatedListColumnMetadata arraySchema;
+
+    public ArraySchemaCreator(RepeatedListColumnMetadata arraySchema) {
+      this.arraySchema = arraySchema;
+    }
+
+    @Override
+    public ColumnMetadata metadata(int index, MaterializedField field) {
+      assert index == 0;
+      assert arraySchema.childSchema() == null;
+      AbstractColumnMetadata childSchema = MetadataUtils.fromField(field.cloneEmpty());
+      arraySchema.childSchema(childSchema);
+      return childSchema;
+    }
+
+    @Override
+    public MetadataProvider childProvider(ColumnMetadata colMetadata) {
+      return MetadataCreator.makeProvider(colMetadata);
+    }
+
+    @Override
+    public TupleMetadata tuple() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public VariantMetadata variant() {
+      throw new UnsupportedOperationException();
+    }
   }
 
   public static class MetadataRetrieval implements MetadataProvider {
@@ -84,10 +178,87 @@ public interface MetadataProvider {
 
     @Override
     public MetadataProvider childProvider(ColumnMetadata colMetadata) {
-      return new MetadataRetrieval((TupleSchema) colMetadata.mapSchema());
+      return makeProvider(colMetadata);
+    }
+
+    public static MetadataProvider makeProvider(ColumnMetadata colMetadata) {
+      switch (colMetadata.structureType()) {
+      case MULTI_ARRAY:
+        return new ArraySchemaRetrieval(colMetadata);
+      case VARIANT:
+        return new VariantSchemaRetrieval((VariantSchema) colMetadata.variantSchema());
+      case TUPLE:
+        return new MetadataRetrieval(colMetadata.mapSchema());
+      default:
+        throw new UnsupportedOperationException();
+      }
     }
 
     @Override
     public TupleMetadata tuple() { return tuple; }
+
+    @Override
+    public VariantMetadata variant() {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  public static class VariantSchemaRetrieval implements MetadataProvider {
+
+    private final VariantSchema variantSchema;
+
+    public VariantSchemaRetrieval(VariantSchema variantSchema) {
+      this.variantSchema = variantSchema;
+    }
+
+    @Override
+    public ColumnMetadata metadata(int index, MaterializedField field) {
+      return variantSchema.member(field.getType().getMinorType());
+    }
+
+    @Override
+    public MetadataProvider childProvider(ColumnMetadata colMetadata) {
+      return MetadataRetrieval.makeProvider(colMetadata);
+    }
+
+    @Override
+    public TupleMetadata tuple() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public VariantMetadata variant() {
+      return variantSchema;
+    }
+  }
+
+  public static class ArraySchemaRetrieval implements MetadataProvider {
+
+    private final ColumnMetadata arraySchema;
+
+    public ArraySchemaRetrieval(ColumnMetadata arraySchema) {
+      this.arraySchema = arraySchema;
+    }
+
+    @Override
+    public ColumnMetadata metadata(int index, MaterializedField field) {
+      assert index == 0;
+      return arraySchema.childSchema();
+    }
+
+    @Override
+    public MetadataProvider childProvider(ColumnMetadata colMetadata) {
+      return MetadataRetrieval.makeProvider(colMetadata);
+    }
+
+    @Override
+    public TupleMetadata tuple() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public VariantMetadata variant() {
+      throw new UnsupportedOperationException();
+    }
   }
 }

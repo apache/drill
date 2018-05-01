@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.physical.rowSet.model.single;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
@@ -54,9 +54,10 @@ public class BuildVectorsFromMetadata {
   }
 
   private ValueVector buildVector(ColumnMetadata metadata) {
-    if (metadata.isMap()) {
+    switch (metadata.structureType()) {
+    case TUPLE:
       return buildMap(metadata);
-    } else {
+    default:
       return TypeHelper.getNewVector(metadata.schema(), allocator, null);
     }
   }
@@ -73,25 +74,31 @@ public class BuildVectorsFromMetadata {
 
     // Creating the map vector will create its contained vectors if we
     // give it a materialized field with children. So, instead pass a clone
-    // without children so we can add them.
+    // without children so we can add the children as we add vectors.
 
-    MaterializedField mapField = schema.schema();
-    MaterializedField emptyClone = MaterializedField.create(mapField.getName(), mapField.getType());
+    AbstractMapVector mapVector = (AbstractMapVector) TypeHelper.getNewVector(schema.emptySchema(), allocator, null);
+    populateMap(mapVector, schema.mapSchema(), false);
+    return mapVector;
+  }
 
-    // Don't get the map vector from the vector cache. Map vectors may
-    // have content that varies from batch to batch. Only the leaf
-    // vectors can be cached.
+  /**
+   * Create the contents building the model as we go.
+   *
+   * @param mapVector the vector to populate
+   * @param mapSchema description of the map
+   */
 
-    AbstractMapVector mapVector = (AbstractMapVector) TypeHelper.getNewVector(emptyClone, allocator, null);
-
-    // Create the contents building the model as we go.
-
-    TupleMetadata mapSchema = schema.mapSchema();
+  private void populateMap(AbstractMapVector mapVector,
+      TupleMetadata mapSchema, boolean inUnion) {
     for (int i = 0; i < mapSchema.size(); i++) {
       ColumnMetadata childSchema = mapSchema.metadata(i);
+
+      // Check for union-compatible types. But, maps must be required.
+
+      if (inUnion && ! childSchema.isMap() && childSchema.mode() == DataMode.REQUIRED) {
+        throw new IllegalArgumentException("Map members in a list or union must not be non-nullable");
+      }
       mapVector.putChild(childSchema.name(), buildVector(childSchema));
     }
-
-    return mapVector;
   }
 }

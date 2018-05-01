@@ -27,12 +27,11 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 public class NullVectorState implements VectorState {
 
-  @Override public int allocate(int cardinality) { return 0; }
-  @Override public void rollover(int cardinality) { }
-  @Override public void harvestWithLookAhead() { }
-  @Override public void startBatchWithLookAhead() { }
-  @Override public void reset() { }
-  @Override public ValueVector vector() { return null; }
+  /**
+   * Near-do-nothing state for a vector that requires no work to
+   * allocate or roll-over, but where we do want to at least track
+   * the vector itself. (Used for map and union pseudo-vectors.)
+   */
 
   public static class UnmanagedVectorState extends NullVectorState {
     ValueVector vector;
@@ -41,9 +40,18 @@ public class NullVectorState implements VectorState {
       this.vector = vector;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public ValueVector vector() { return vector; }
+    public <T extends ValueVector> T vector() { return (T) vector; }
   }
+
+  @Override public int allocate(int cardinality) { return 0; }
+  @Override public void rollover(int cardinality) { }
+  @Override public void harvestWithLookAhead() { }
+  @Override public void startBatchWithLookAhead() { }
+  @Override public void close() { }
+  @Override public <T extends ValueVector> T vector() { return null; }
+  @Override public boolean isProjected() { return false; }
 
   @Override
   public void dump(HierarchicalFormatter format) {

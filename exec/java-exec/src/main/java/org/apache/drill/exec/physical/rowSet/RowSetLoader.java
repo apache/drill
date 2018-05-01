@@ -76,9 +76,21 @@ public interface RowSetLoader extends TupleWriter {
    *
    * @param values
    *          variable-length argument list of column values
+   * @return this writer
    */
 
   RowSetLoader addRow(Object... values);
+
+  /**
+   * Similar to {@link #addRow(Object...)}, but for the odd case in which a
+   * row consists of a single column that is an object array (such as for
+   * a list or map) and so is ambiguous.
+   *
+   * @param value value of the one and only column
+   * @return this writer
+   */
+
+  RowSetLoader addSingleCol(Object value);
 
   /**
    * Indicates that no more rows fit into the current row batch and that the row

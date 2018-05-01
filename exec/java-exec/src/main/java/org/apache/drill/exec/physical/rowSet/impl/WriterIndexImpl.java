@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.rowSet.impl;
 
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 
 /**
@@ -58,6 +59,26 @@ class WriterIndexImpl implements ColumnWriterIndex {
       rowIndex = rsLoader.targetRowCount();
       return false;
     }
+  }
+
+  public int skipRows(int requestedCount) {
+
+    // Determine the number of rows that can be skipped. Note that since the
+    // batch must have no columns, there is no need to observe the normal
+    // batch size limit.
+
+    int skipped = Math.min(requestedCount,
+        ValueVector.MAX_ROW_COUNT - rowIndex);
+
+    // Update the row index with the skip count.
+
+    rowIndex += skipped;
+
+    // Tell the client how many rows were actually skipped.
+    // The client can make more requests in later batches to get
+    // the full amount.
+
+    return skipped;
   }
 
   public int size() {
