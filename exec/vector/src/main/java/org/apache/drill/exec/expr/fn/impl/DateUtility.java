@@ -17,10 +17,15 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.DateTimeParser;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
 
@@ -621,10 +626,14 @@ public class DateUtility {
     }
   }
 
-  public static final DateTimeFormatter formatDate        = DateTimeFormat.forPattern("yyyy-MM-dd");
-  public static final DateTimeFormatter formatTimeStamp    = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
-  public static final DateTimeFormatter formatTimeStampTZ = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS ZZZ");
-  public static final DateTimeFormatter formatTime        = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+  public static final DateTimeFormatter formatDate        = buildFormatter("yyyy-MM-dd");
+  public static final DateTimeFormatter formatTimeStamp   = buildFormatter("yyyy-MM-dd HH:mm:ss.SSS");
+  public static final DateTimeFormatter formatTimeStampTZ = buildFormatter("yyyy-MM-dd HH:mm:ss.SSS ZZZ");
+  public static final DateTimeFormatter formatTime        = buildFormatter("HH:mm:ss.SSS");
+
+  public static final DateTimeFormatter isoFormatDate     = formatDate;
+  public static final DateTimeFormatter isoFormatTimeStamp= buildFormatter("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ");
+  public static final DateTimeFormatter isoFormatTime     = buildFormatter("HH:mm:ss.SSSZZZZZ");
 
   public static DateTimeFormatter dateTimeTZFormat = null;
   public static DateTimeFormatter timeFormat = null;
@@ -639,29 +648,95 @@ public class DateUtility {
     return timezoneList[index];
   }
 
+  /**
+   * Parse given string into a LocalDate
+   */
+  public static LocalDate parseLocalDate(final String value) {
+      return LocalDate.parse(value, formatDate);
+  }
+
+  /**
+   * Parse given string into a LocalTime
+   */
+  public static LocalTime parseLocalTime(final String value) {
+      return LocalTime.parse(value, formatTime);
+  }
+
+  /**
+   * Parse the given string into a LocalDateTime.
+   */
+  public static LocalDateTime parseLocalDateTime(final String value) {
+      return LocalDateTime.parse(value, formatTimeStamp);
+  }
+
   // Returns the date time formatter used to parse date strings
   public static DateTimeFormatter getDateTimeFormatter() {
 
     if (dateTimeTZFormat == null) {
-      DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd");
-      DateTimeParser optionalTime = DateTimeFormat.forPattern(" HH:mm:ss").getParser();
-      DateTimeParser optionalSec = DateTimeFormat.forPattern(".SSS").getParser();
-      DateTimeParser optionalZone = DateTimeFormat.forPattern(" ZZZ").getParser();
+      DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      DateTimeFormatter optionalTime = DateTimeFormatter.ofPattern(" HH:mm:ss");
+      DateTimeFormatter optionalSec = DateTimeFormatter.ofPattern(".SSS");
+      DateTimeFormatter optionalZone = DateTimeFormatter.ofPattern(" ZZZ");
 
-      dateTimeTZFormat = new DateTimeFormatterBuilder().append(dateFormatter).appendOptional(optionalTime).appendOptional(optionalSec).appendOptional(optionalZone).toFormatter();
+      dateTimeTZFormat = new DateTimeFormatterBuilder().parseLenient()
+              .append(dateFormatter)
+              .appendOptional(optionalTime)
+              .appendOptional(optionalSec)
+              .appendOptional(optionalZone)
+              .toFormatter();
     }
 
     return dateTimeTZFormat;
   }
 
+  /**
+   * Best effort parsing of the given value
+   */
+  public static LocalDateTime parseBest(String value) {
+      TemporalAccessor parsed = getDateTimeFormatter().parse(value);
+      LocalDate datePart;
+      LocalTime timePart;
+      ZoneOffset zoneOffset;
+
+      long epochDay = 0, nanoSeconds = 0;
+      int offsetSeconds = 0;
+
+      // get different parsed parts
+      if (parsed.isSupported(ChronoField.EPOCH_DAY)) {
+          epochDay = parsed.getLong(ChronoField.EPOCH_DAY);
+      }
+      if (parsed.isSupported(ChronoField.NANO_OF_DAY)) {
+          nanoSeconds = parsed.getLong(ChronoField.NANO_OF_DAY);
+      }
+      if (parsed.isSupported(ChronoField.OFFSET_SECONDS)) {
+          offsetSeconds = parsed.get(ChronoField.OFFSET_SECONDS);
+      }
+
+      zoneOffset = ZoneOffset.ofTotalSeconds(offsetSeconds);
+      datePart = LocalDate.ofEpochDay(epochDay);
+      timePart = LocalTime.ofNanoOfDay(nanoSeconds);
+
+      return OffsetDateTime.of(datePart, timePart, zoneOffset).toLocalDateTime();
+  }
+
   // Returns time formatter used to parse time strings
   public static DateTimeFormatter getTimeFormatter() {
     if (timeFormat == null) {
-      DateTimeFormatter timeFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-      DateTimeParser optionalSec = DateTimeFormat.forPattern(".SSS").getParser();
-      timeFormat = new DateTimeFormatterBuilder().append(timeFormatter).appendOptional(optionalSec).toFormatter();
+      DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+      DateTimeFormatter optionalSec = DateTimeFormatter.ofPattern(".SSS");
+      timeFormat = new DateTimeFormatterBuilder().parseLenient()
+              .append(timeFormatter)
+              .appendOptional(optionalSec)
+              .toFormatter();
     }
     return timeFormat;
   }
 
+  // return a formatter that is lenient in its parsing of fields.  e.g.
+  // if the month specification is "MM", a lenient version of the formatter
+  // will accept a single digit month number as well as the 2-digit month
+  // number.
+  public static DateTimeFormatter buildFormatter(String pattern) {
+      return new DateTimeFormatterBuilder().parseLenient().append(DateTimeFormatter.ofPattern(pattern)).toFormatter();
+  }
 }

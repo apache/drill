@@ -17,11 +17,15 @@
  */
 package org.apache.drill.exec.planner.common;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.TokenBuffer;
-import com.google.common.collect.ImmutableList;
+import static org.apache.drill.exec.planner.logical.DrillOptiq.isLiteralNull;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.core.Values;
@@ -36,11 +40,11 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Period;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.apache.drill.exec.planner.logical.DrillOptiq.isLiteralNull;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Base class for logical and physical Values implemented in Drill.
@@ -197,7 +201,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         if (isLiteralNull(literal)) {
           out.writeDateNull();
         } else {
-          out.writeDate(new DateTime(literal.getValue()));
+          out.writeDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(new DateTime(literal.getValue()).getMillis()), ZoneOffset.UTC).toLocalDate());
         }
         return;
 
@@ -205,7 +209,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         if (isLiteralNull(literal)) {
           out.writeTimeNull();
         } else {
-          out.writeTime(new DateTime(literal.getValue()));
+          out.writeTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(new DateTime(literal.getValue()).getMillis()), ZoneOffset.UTC).toLocalTime());
         }
         return;
 
@@ -213,7 +217,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         if (isLiteralNull(literal)) {
           out.writeTimestampNull();
         } else {
-          out.writeTimestamp(new DateTime(literal.getValue()));
+          out.writeTimestamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(new DateTime(literal.getValue()).getMillis()), ZoneOffset.UTC));
         }
         return;
 

@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import com.google.common.collect.Lists;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.joda.time.DateTime;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -34,8 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.sql.Date;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 @Category(PlannerTest.class)
 public class TestEarlyLimit0Optimization extends BaseTestQuery {
@@ -110,8 +112,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         .ordered()
         .baselineColumns("employee_id", "full_name", "position_id", "department_id", "birth_date", "hire_date",
             "salary", "fsalary", "single", "education_level", "gender")
-        .baselineValues(1, "Sheri Nowmer", 1, 1L, new DateTime(Date.valueOf("1961-08-26").getTime()),
-            new DateTime(Date.valueOf("1994-12-01").getTime()), 80000.0D, 80000.0F, true, "Graduate Degree", "F")
+        .baselineValues(1, "Sheri Nowmer", 1, 1L, LocalDate.parse("1961-08-26"),
+            LocalDateTime.parse("1994-12-01 00:00:00", DateUtility.getDateTimeFormatter()), 80000.0D, 80000.0F, true, "Graduate Degree", "F")
         .go();
   }
 

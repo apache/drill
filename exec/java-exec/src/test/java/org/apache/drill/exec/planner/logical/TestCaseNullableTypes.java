@@ -19,8 +19,6 @@ package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -133,8 +131,7 @@ public class TestCaseNullableTypes extends BaseTestQuery {
 
   @Test //DRILL-5048
   public void testCaseNullableTimestamp() throws Exception {
-    DateTime date = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
-      .parseDateTime("2016-11-17 14:43:23");
+    java.time.LocalDateTime date = java.time.LocalDateTime.parse("2016-11-17 14:43:23", java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
     testBuilder()
       .sqlQuery("SELECT (CASE WHEN (false) THEN null ELSE CAST('2016-11-17 14:43:23' AS TIMESTAMP) END) res FROM (values(1)) foo")

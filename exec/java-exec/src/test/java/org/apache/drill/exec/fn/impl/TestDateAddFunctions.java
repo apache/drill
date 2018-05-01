@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.test.BaseTestQuery;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.joda.time.DateTime;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -41,12 +44,12 @@ public class TestDateAddFunctions extends BaseTestQuery {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6")
-      .baselineValues(DateTime.parse("2015-01-27T07:27:05.0"),
-                      DateTime.parse("2015-01-29T07:27:05.0"),
-                      DateTime.parse("2015-01-24T12:27:05.0"),
-                      DateTime.parse("2015-01-24T07:32:05.0"),
-                      DateTime.parse("2015-01-24T07:27:10.0"),
-                      DateTime.parse("2015-01-29T17:47:35.0"))
+      .baselineValues(LocalDateTime.parse("2015-01-27T07:27:05.0"),
+                      LocalDateTime.parse("2015-01-29T07:27:05.0"),
+                      LocalDateTime.parse("2015-01-24T12:27:05.0"),
+                      LocalDateTime.parse("2015-01-24T07:32:05.0"),
+                      LocalDateTime.parse("2015-01-24T07:27:10.0"),
+                      LocalDateTime.parse("2015-01-29T17:47:35.0"))
       .go();
   }
 
@@ -61,9 +64,9 @@ public class TestDateAddFunctions extends BaseTestQuery {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("col1", "col2", "col3")
-      .baselineValues(DateTime.parse("2015-04-24"),
-                      DateTime.parse("2015-06-24"),
-                      DateTime.parse("2020-01-24"))
+      .baselineValues(DateUtility.parseBest("2015-04-24"),
+                      DateUtility.parseBest("2015-06-24"),
+                      DateUtility.parseBest("2020-01-24"))
       .go();
   }
 
@@ -77,8 +80,8 @@ public class TestDateAddFunctions extends BaseTestQuery {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("col1", "col2")
-      .baselineValues(DateTime.parse("2015-01-27"),
-                      DateTime.parse("2015-01-29"))
+      .baselineValues(LocalDate.parse("2015-01-27"),
+                      LocalDate.parse("2015-01-29"))
       .go();
   }
 }
