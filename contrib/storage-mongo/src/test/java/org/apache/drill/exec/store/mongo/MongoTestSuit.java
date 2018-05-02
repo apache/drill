@@ -20,9 +20,10 @@ package org.apache.drill.exec.store.mongo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
@@ -94,7 +95,9 @@ public class MongoTestSuit implements MongoTestConstants {
       configServers.add(crateConfigServerConfig(CONFIG_SERVER_3_PORT));
 
       // creating replicaSets
-      Map<String, List<IMongodConfig>> replicaSets = new HashMap<>();
+      // A LinkedHashMap ensures that the config servers are started first.
+      Map<String, List<IMongodConfig>> replicaSets = new LinkedHashMap<>();
+
       List<IMongodConfig> replicaSet1 = new ArrayList<>();
       replicaSet1.add(crateIMongodConfig(MONGOD_1_PORT, false,
           REPLICA_SET_1_NAME));
@@ -102,7 +105,6 @@ public class MongoTestSuit implements MongoTestConstants {
           REPLICA_SET_1_NAME));
       replicaSet1.add(crateIMongodConfig(MONGOD_3_PORT, false,
           REPLICA_SET_1_NAME));
-      replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
       List<IMongodConfig> replicaSet2 = new ArrayList<>();
       replicaSet2.add(crateIMongodConfig(MONGOD_4_PORT, false,
           REPLICA_SET_2_NAME));
@@ -110,8 +112,10 @@ public class MongoTestSuit implements MongoTestConstants {
           REPLICA_SET_2_NAME));
       replicaSet2.add(crateIMongodConfig(MONGOD_6_PORT, false,
           REPLICA_SET_2_NAME));
-      replicaSets.put(REPLICA_SET_2_NAME, replicaSet2);
+
       replicaSets.put(CONFIG_REPLICA_SET, configServers);
+      replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
+      replicaSets.put(REPLICA_SET_2_NAME, replicaSet2);
 
       // create mongos
       IMongosConfig mongosConfig = createIMongosConfig();
