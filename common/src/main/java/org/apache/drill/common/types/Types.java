@@ -179,6 +179,35 @@ public class Types {
     }
   }
 
+  /**
+   * Extend decimal type with precision and scale.
+   *
+   * @param type major type
+   * @param typeName type converted to a string
+   * @return type name augmented with precision and scale,
+   * if type is a decimal
+   */
+
+  public static String getExtendedSqlTypeName(MajorType type) {
+
+    String typeName = getSqlTypeName(type);
+    switch (type.getMinorType()) {
+    case DECIMAL9:
+    case DECIMAL18:
+    case DECIMAL28SPARSE:
+    case DECIMAL28DENSE:
+    case DECIMAL38SPARSE:
+    case DECIMAL38DENSE:
+      // Disabled for now. See DRILL-6378
+      if (type.getPrecision() > 0) {
+        typeName += String.format("(%d, %d)",
+            type.getPrecision(), type.getScale());
+      }
+    default:
+    }
+    return typeName;
+  }
+
   public static String getSqlModeName(final MajorType type) {
     switch (type.getMode()) {
     case REQUIRED:

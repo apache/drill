@@ -19,7 +19,6 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import javax.inject.Inject;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -179,45 +178,14 @@ public class UnionFunctions {
     @Override
     public void eval() {
 
-      org.apache.drill.common.types.TypeProtos.MajorType type = input.getType();
-
-      // Note: extendType is a static function because the byte code magic
-      // for UDFS can't handle switch statements.
-
-      String typeName =
-          org.apache.drill.exec.expr.fn.impl.UnionFunctions.extendType(
-              type,
-              org.apache.drill.common.types.Types.getBaseSqlTypeName(type));
-
-      org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.varCharOutput(
-        typeName, buf, out);
+      String typeName = org.apache.drill.common.types.Types.getExtendedSqlTypeName(input.getType());
+      byte[] type = typeName.getBytes();
+      buf = buf.reallocIfNeeded(type.length);
+      buf.setBytes(0, type);
+      out.buffer = buf;
+      out.start = 0;
+      out.end = type.length;
     }
-  }
-
-  /**
-   * Extend decimal type with precision and range.
-   *
-   * @param type major type
-   * @param typeName type converted to a string
-   * @return type name augmented with precision and scale,
-   * if type is a decimal
-   */
-
-  public static String extendType(MajorType type, String typeName) {
-
-    // Disabled for now. See DRILL-6378
-//       switch (type.getMinorType()) {
-//      case DECIMAL9:
-//      case DECIMAL18:
-//      case DECIMAL28SPARSE:
-//      case DECIMAL28DENSE:
-//      case DECIMAL38SPARSE:
-//      case DECIMAL38DENSE:
-//        typeName += String.format("(%d, %d)",
-//            type.getPrecision(), type.getScale());
-//      default:
-//      }
-      return typeName;
   }
 
   @FunctionTemplate(name = "drillTypeOf",
@@ -239,8 +207,12 @@ public class UnionFunctions {
     public void eval() {
 
       String typeName = input.getType().getMinorType().name();
-      org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.varCharOutput(
-        typeName, buf, out);
+      byte[] type = typeName.getBytes();
+      buf = buf.reallocIfNeeded(type.length);
+      buf.setBytes(0, type);
+      out.buffer = buf;
+      out.start = 0;
+      out.end = type.length;
     }
   }
 

@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
+import io.netty.buffer.DrillBuf;
+import io.netty.util.internal.PlatformDependent;
 
-import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.joda.time.chrono.ISOChronology;
 
 import com.google.common.base.Charsets;
 
-import io.netty.buffer.DrillBuf;
-import io.netty.util.internal.PlatformDependent;
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 public class StringFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
@@ -202,127 +200,6 @@ public class StringFunctionHelpers {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
     return new String(buf, Charsets.UTF_16);
-  }
-
-  /**
-   * Convert a non-nullable VarChar input to a Java string, assuming UTF-8 encoding.
-   *
-   * @param input the VarChar holder for the input parameter
-   * @return Java String that holds the value
-   */
-
-  public static String varCharToString(VarCharHolder input) {
-    return org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(input);
-  }
-
-  /**
-   * Convert a nullable VarChar input to a Java string, assuming UTF-8 encoding.
-   *
-   * @param input the VarChar holder for the input parameter
-   * @return Java String that holds the value, or null if the input
-   * is null
-   */
-
-  public static String varCharToString(NullableVarCharHolder input) {
-    if (input.isSet == 0) {
-      return null;
-    }
-    return org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(input);
-  }
-
-  /**
-   * Convert a non-nullable VarBinary to a Java string, assuming that the
-   * VarBinary is actually a UTF-8 encoded string, as is often the case
-   * with HBase.
-   *
-   * @param input the input VarBinary parameter
-   * @return a Java string
-   */
-
-  public static String varBinaryToString(VarBinaryHolder input) {
-    int len = input.end - input.start;
-    byte buf[] = new byte[len];
-    input.buffer.getBytes(input.start, buf);
-    return new String(buf, Charsets.UTF_8);
-  }
-
-  /**
-   * Convert a nullable VarBinary to a Java string, assuming that the
-   * VarBinary is actually a UTF-8 encoded string, as is often the case
-   * with HBase.
-   *
-   * @param input the input VarBinary parameter
-   * @return a Java string, or null if the parameter was NULL
-   */
-
-  public static String varBinaryToString(NullableVarBinaryHolder input) {
-    if (input.isSet == 0) {
-      return null;
-    }
-    int len = input.end - input.start;
-    byte buf[] = new byte[len];
-    input.buffer.getBytes(input.start, buf);
-    return new String(buf, Charsets.UTF_8);
-  }
-
-  /**
-   * Convert a Java string to a Drill non-nullable output. Encodes the
-   * Java string into a set of UTF-8 bytes. Resizes the working
-   * buffer if needed. For this reason, you <b>must</b> assign the result of
-   * this function to your <tt>@Inject</tt> <tt>DrillBuf</tt>. That is:
-   * <pre><code>
-   * {@literal @}Output VarCharHolder output;
-   * {@literal @}Inject DrillBuf outputBuf;
-   * ...
-   *   String result = ...
-   *   outputBuf = varCharOutput(result, outputBuf, output);
-   * </code></pre>
-   *
-   * @param result the (non-null) string value to return
-   * @param outputBuf the output buffer identified by the
-   * {@literal @}Inject annotation
-   * @param output the non-nullable VarChar holder for the function output
-   * identified by the {@literal @}Output annotation
-   * @return the (possibly new) output buffer
-   */
-
-  public static DrillBuf varCharOutput(String result, DrillBuf outputBuf, VarCharHolder output) {
-    byte outBytes[] = result.toString().getBytes(com.google.common.base.Charsets.UTF_8);
-    outputBuf = outputBuf.reallocIfNeeded(outBytes.length);
-    outputBuf.setBytes(0, outBytes);
-    output.buffer = outputBuf;
-    output.start = 0;
-    output.end = outBytes.length;
-    return outputBuf;
-  }
-
-  /**
-   * Convert a Java string to an UTF-8 nullable VarChar buffer. The output will be
-   * null if the input is null. Else, this function works like the non-nullable
-   * version.
-   *
-   * @param result the (possibly null) result string
-   * @param outputBuf the output buffer identified by the
-   * {@literal @}Inject annotation
-   * @param output the nullable VarChar holder for the function output
-   * identified by the {@literal @}Output annotation
-   * @return the (possibly new) output buffer
-   */
-
-  public static DrillBuf varCharOutput(String result, DrillBuf outputBuf, NullableVarCharHolder output) {
-    if (result == null) {
-      output.buffer = outputBuf;
-      output.isSet = 0;
-      return outputBuf;
-    }
-    byte outBytes[] = result.toString().getBytes(com.google.common.base.Charsets.UTF_8);
-    outputBuf = outputBuf.reallocIfNeeded(outBytes.length);
-    outputBuf.setBytes(0, outBytes);
-    output.isSet = 1;
-    output.buffer = outputBuf;
-    output.start = 0;
-    output.end = outBytes.length;
-    return outputBuf;
   }
 
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();

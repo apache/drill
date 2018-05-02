@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -57,7 +58,7 @@ public class TestTypeFns extends ClusterTest {
     doTypeOfTestSpecial("a", "AGE(CURRENT_TIMESTAMP)", "INTERVAL");
     doTypeOfTestSpecial("BINARY_STRING(a)", "'\\xde\\xad\\xbe\\xef'", "VARBINARY");
     try {
-      client.alterSession("planner.enable_decimal_data_type", true);
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
       doTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL38SPARSE");
       doTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "DECIMAL9");
     } finally {
@@ -106,7 +107,7 @@ public class TestTypeFns extends ClusterTest {
     doSqlTypeOfTestSpecial("a", "AGE(CURRENT_TIMESTAMP)", "INTERVAL");
     doSqlTypeOfTestSpecial("BINARY_STRING(a)", "'\\xde\\xad\\xbe\\xef'", "BINARY VARYING");
     try {
-      client.alterSession("planner.enable_decimal_data_type", true);
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
 
       // These should include precision and scale: DECIMAL(p, s)
       // But, see DRILL-6378
