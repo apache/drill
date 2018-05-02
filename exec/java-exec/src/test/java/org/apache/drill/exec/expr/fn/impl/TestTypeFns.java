@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,13 +32,13 @@ public class TestTypeFns extends ClusterTest {
   public static void setup() throws Exception {
     // Use the following three lines if you add a function
     // to avoid the need for a full Drill build.
-//    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-//        .configProperty("drill.classpath.scanning.cache.enabled", false);
-//    startCluster(builder);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .configProperty("drill.classpath.scanning.cache.enabled", false);
+    startCluster(builder);
 
     // Use the following line if a full Drill build has been
     // done since adding new functions.
-    startCluster(ClusterFixture.builder(dirTestWatcher).maxParallelization(1));
+//    startCluster(ClusterFixture.builder(dirTestWatcher).maxParallelization(1));
   }
 
   @Test
@@ -49,6 +50,19 @@ public class TestTypeFns extends ClusterTest {
     doTypeOfTest("VARCHAR");
     doTypeOfTest("FLOAT", "FLOAT4");
     doTypeOfTest("DOUBLE", "FLOAT8");
+    doTypeOfTestSpecial("a", "true", "BIT");
+    doTypeOfTestSpecial("a", "CURRENT_DATE", "DATE");
+    doTypeOfTestSpecial("a", "CURRENT_TIME", "TIME");
+    doTypeOfTestSpecial("a", "CURRENT_TIMESTAMP", "TIMESTAMP");
+    doTypeOfTestSpecial("a", "AGE(CURRENT_TIMESTAMP)", "INTERVAL");
+    doTypeOfTestSpecial("BINARY_STRING(a)", "'\\xde\\xad\\xbe\\xef'", "VARBINARY");
+    try {
+      client.alterSession("planner.enable_decimal_data_type", true);
+      doTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL38SPARSE");
+      doTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "DECIMAL9");
+    } finally {
+      client.resetSession("planner.enable_decimal_data_type");
+    }
   }
 
   private void doTypeOfTest(String type) throws RpcException {
@@ -70,6 +84,12 @@ public class TestTypeFns extends ClusterTest {
     assertEquals("NULL", result);
   }
 
+  private void doTypeOfTestSpecial(String expr, String value, String resultType) throws RpcException {
+    String sql = "SELECT typeof(" + expr + ") FROM (VALUES (" + value + ")) AS T(a)";
+    String result = client.queryBuilder().sql(sql).singletonString();
+    assertEquals(resultType, result);
+  }
+
   @Test
   public void testSqlTypeOf() throws RpcException {
     // SMALLINT not supported in CAST
@@ -79,6 +99,23 @@ public class TestTypeFns extends ClusterTest {
     doSqlTypeOfTest("CHARACTER VARYING");
     doSqlTypeOfTest("FLOAT");
     doSqlTypeOfTest("DOUBLE");
+    doSqlTypeOfTestSpecial("a", "true", "BOOLEAN");
+    doSqlTypeOfTestSpecial("a", "CURRENT_DATE", "DATE");
+    doSqlTypeOfTestSpecial("a", "CURRENT_TIME", "TIME");
+    doSqlTypeOfTestSpecial("a", "CURRENT_TIMESTAMP", "TIMESTAMP");
+    doSqlTypeOfTestSpecial("a", "AGE(CURRENT_TIMESTAMP)", "INTERVAL");
+    doSqlTypeOfTestSpecial("BINARY_STRING(a)", "'\\xde\\xad\\xbe\\xef'", "BINARY VARYING");
+    try {
+      client.alterSession("planner.enable_decimal_data_type", true);
+
+      // These should include precision and scale: DECIMAL(p, s)
+      // But, see DRILL-6378
+
+      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL");
+      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "DECIMAL");
+    } finally {
+      client.resetSession("planner.enable_decimal_data_type");
+    }
   }
 
   private void doSqlTypeOfTest(String type) throws RpcException {
@@ -96,6 +133,12 @@ public class TestTypeFns extends ClusterTest {
     assertEquals(type, result);
   }
 
+  private void doSqlTypeOfTestSpecial(String expr, String value, String resultType) throws RpcException {
+    String sql = "SELECT sqlTypeof(" + expr + ") FROM (VALUES (" + value + ")) AS T(a)";
+    String result = client.queryBuilder().sql(sql).singletonString();
+    assertEquals(resultType, result);
+  }
+
   @Test
   public void testDrillTypeOf() throws RpcException {
     // SMALLINT not supported in CAST
@@ -105,6 +148,9 @@ public class TestTypeFns extends ClusterTest {
     doDrillTypeOfTest("CHARACTER VARYING", "VARCHAR");
     doDrillTypeOfTest("FLOAT", "FLOAT4");
     doDrillTypeOfTest("DOUBLE", "FLOAT8");
+
+    // Omitting the other types. Internal code is identical to
+    // typeof() except for null handling.
   }
 
   private void doDrillTypeOfTest(String type) throws RpcException {

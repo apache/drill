@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import javax.inject.Inject;
 
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -178,10 +179,45 @@ public class UnionFunctions {
     @Override
     public void eval() {
 
-      String typeName = org.apache.drill.common.types.Types.getBaseSqlTypeName(input.getType());
+      org.apache.drill.common.types.TypeProtos.MajorType type = input.getType();
+
+      // Note: extendType is a static function because the byte code magic
+      // for UDFS can't handle switch statements.
+
+      String typeName =
+          org.apache.drill.exec.expr.fn.impl.UnionFunctions.extendType(
+              type,
+              org.apache.drill.common.types.Types.getBaseSqlTypeName(type));
+
       org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.varCharOutput(
         typeName, buf, out);
     }
+  }
+
+  /**
+   * Extend decimal type with precision and range.
+   *
+   * @param type major type
+   * @param typeName type converted to a string
+   * @return type name augmented with precision and scale,
+   * if type is a decimal
+   */
+
+  public static String extendType(MajorType type, String typeName) {
+
+    // Disabled for now. See DRILL-6378
+//       switch (type.getMinorType()) {
+//      case DECIMAL9:
+//      case DECIMAL18:
+//      case DECIMAL28SPARSE:
+//      case DECIMAL28DENSE:
+//      case DECIMAL38SPARSE:
+//      case DECIMAL38DENSE:
+//        typeName += String.format("(%d, %d)",
+//            type.getPrecision(), type.getScale());
+//      default:
+//      }
+      return typeName;
   }
 
   @FunctionTemplate(name = "drillTypeOf",
