@@ -73,9 +73,7 @@
               <th>Version</th>
               <th>Status</th>
               <th>Uptime</th>
-              <#if (model.shouldShowAdminInfo() || !model.isAuthEnabled()) >
-              <th>Shutdown</th>
-              </#if>
+              <th style="display:${(model.isAuthEnabled() && !model.shouldShowAdminInfo())?then("none","table-cell")}">Shutdown</th>
             </tr>
           </thead>
           <tbody>
@@ -106,11 +104,11 @@
                 <td id="status" >${drillbit.getState()}</td>
                 <td class="uptime" >Not Available</td>
                 <td>
-                  <#if ( model.shouldShowAdminInfo() || !model.isAuthEnabled() || drillbit.isCurrent() ) >
-                      <button type="button" id="shutdown" onClick="shutdown($(this));" disabled="true" style="opacity:0.5;cursor:not-allowed;">
-                  <#else>
-                      <button type="button" id="shutdown" title="Drillbit cannot be shutdown remotely" disabled="true" style="opacity:0.5;cursor:not-allowed;">
-                  </#if>
+                <#if (model.isAuthEnabled() && !model.shouldShowAdminInfo())>
+                      <button class='shutdownCtrl' type="button" id="shutdown" disabled="true" style="opacity:0.5;cursor:not-allowed;display:none" onClick="" comment="Placeholder. Hidden by default">
+                <#else>
+                      <button class='shutdownCtrl' type="button" id="shutdown" disabled="true" style="opacity:0.5;cursor:not-allowed;display:inline" onClick="shutdown($(this));" title="Not available for remote Drillbits">
+                </#if>
                       <span class="glyphicon glyphicon-off"></span></button>
                 </td>
                 <td id="queriesCount">  </td>
@@ -219,7 +217,6 @@
       </div>
   </div>
    <script charset="utf-8">
-      var updateRemoteInfo = <#if (model.isAuthEnabled())>false<#else>true</#if>;
       var refreshTime = 10000;
       var nAText = "Not Available";
       var refresh = getRefreshTime();
@@ -227,6 +224,17 @@
       var size = $("#size").html();
       reloadMetrics();
       setInterval(reloadMetrics, refreshTime);
+
+      //Hide Shutdown buttons for remote HTTPS entries
+      function setShutdownCtrl() {
+        for (i = 1; i <= size; i++) {
+          let currentRow = $("#row-"+i);
+          if ( location.protocol == "https" && (currentRow.find("#current").html() != "Current") ) {
+            //Hide Shutdown Button for remote nodes with HTTPS enabled
+            currentRow.find(".shutdownCtrl").css('display','none');
+          }
+        }
+      }
 
       //Gets a refresh time for graceful shutdown
       function getRefreshTime() {
@@ -262,29 +270,32 @@
           let status_map = (dataResponse.responseJSON);
           //In case localhost has gone down (i.e. we don't know status from ZK)
           if (typeof status_map == 'undefined') {
-            let rxUpdateCount = 0;
-            let statusRespList = [];
-            //Query other nodes for state details
-            for (j = 1; j <= size; j++) {
-              let currentRow = $("#row-"+j);
+            //Query a couple of other nodes for state details
+            //Pick 3 Random bits
+            let randomAltBitList = getRandomIndexList(size, 3);
+            let numAltBits = randomAltBitList.length;
+            for (j = 0; j < numAltBits; j++) {
+              let currentRow = $("#row-"+ randomAltBitList[j]);
               if (currentRow.find("#current").html() == "Current") {
                 continue; //Skip LocalHost
               }
               let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
               let restPort = currentRow.find("#httpPort").contents().get(0).nodeValue.trim();
               let altStateUrl = location.protocol + "//" + address+":"+restPort + "/state";
-              let altResponse = $.getJSON(altStateUrl)
-                    .done(function(stateDataJson) {
+              let altResponse = $.ajax({
+               url:altStateUrl, 
+               dataType:'json', 
+               timeout: 3000,
+                    success : function(stateDataJson) {
                         //Update Status & Buttons for alternate stateData
-                        if (rxUpdateCount == 0) {
-                          statusRespList.push(stateDataJson); //Capture all stateDataJson incase of race condition
-                          rxUpdateCount++;
-                          if (rxUpdateCount > 0 && typeof status_map == 'undefined') {
-                            status_map = statusRespList.pop(); //Pop only 1
-                            updateStatusAndShutdown(stateDataJson);
-                          }
+                        if (typeof status_map == 'undefined') {
+                          //Note: Race-condition would not exist due to JScript's single threaded model, only one thread can update the variable
+                          //Ref: https://stackoverflow.com/questions/7238586/do-i-need-to-be-concerned-with-race-conditions-with-asynchronous-javascript
+                          status_map = stateDataJson; //Marking map as 'defined'
+                          updateStatusAndShutdown(stateDataJson);
                         }
-                      });
+                    }
+                });
               //Don't loop any more (for small #bits, status_map will never update fast enough)
               if (typeof status_map != 'undefined') {
                 break;
@@ -293,6 +304,28 @@
           } else {
             updateStatusAndShutdown(status_map);
           }
+      }
+
+      //Generates a list of indices
+      function getRandomIndexList(inputSize, outputSize) {
+        //Generate inputList
+        let inputList = [];
+        let outputList = [];
+        //Skip 'row-1'
+        for (p = 2; p <= inputSize; p++) {
+          let currentRow = $("#row-"+ p);
+          if (currentRow.find("#status").text() == 'ONLINE' ) {
+              inputList.push(p);
+          }
+        }
+        //Define how many to pick (pick min if numDBits is too small)
+        let actualOPSize = (inputList.length > outputSize ? outputSize : inputList.length);
+        for (q = 0; q < actualOPSize; q++) {
+          let randomIndex = Math.floor(Math.random() * inputList.length);
+          outputList.push(inputList[randomIndex]); //Capture random pick
+          inputList.splice(randomIndex, 1); //Remove from list
+        }
+        return outputList;
       }
 
       //Updates the status map
@@ -308,39 +341,37 @@
             let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
             let port = currentRow.find("#httpPort").html();
             let key = address+"-"+port;
-
             if (typeof status_map == 'undefined') {
-                currentRow.find("#status").text(nAText);
-                currentRow.find("#shutdown").prop('disabled',true).css('opacity',0.5);
+                currentRow.find("#status").text(nAText).css('font-style','').prop('title','');
+                currentRow.find("#shutdown").prop('disabled',true).css('opacity',0.5).css('cursor','not-allowed');
                 currentRow.find("#queriesCount").text("");
             } else if (status_map[key] == null) {
-                currentRow.find("#status").text("OFFLINE");
-                currentRow.find("#shutdown").prop('disabled',true).css('opacity',0.5);
+                currentRow.find("#status").text("OFFLINE*").css('font-style','italic').prop('title','Drillbit is De-Registered from ZooKeeper');
+                currentRow.find("#shutdown").prop('disabled',true).css('opacity',0.5).css('cursor','not-allowed');
                 currentRow.find("#queriesCount").text("");
             } else {
                 if (status_map[key] == "ONLINE") {
-                    currentRow.find("#status").text(status_map[key]);
-                    <#if ( model.shouldShowAdminInfo() || !model.isAuthEnabled() ) >
-                    if ( location.protocol != "https" || (currentRow.find("#current").html() == "Current") ) {
-                      currentRow.find("#shutdown").prop('disabled',false).css('opacity',1.0).css('cursor','pointer');
+                    currentRow.find("#status").text(status_map[key]).css('font-style','').prop('title','');
+                    //EnableShutdown IFF => !isAuthEnabled-&&-!HTTPS OR isAuthEnabled-&&-current
+                    if ( ( !${model.isAuthEnabled()?c} && location.protocol != "https" ) || ( ${model.shouldShowAdminInfo()?c} && currentRow.find("#current").html() == "Current" ) ) {
+                      currentRow.find("#shutdown").prop('disabled',false).css('opacity',1.0).css('cursor','pointer').attr('title','');
                     }
-                    </#if>
                 } else {
                     if (currentRow.find("#current").html() == "Current") {
                         fillQueryCount(i);
                     }
-                    currentRow.find("#status").text(status_map[key]);
+                    currentRow.find("#status").text(status_map[key]).css('font-style','').prop('title','');;
                 }
                 //Removing accounted key
                 delete bitMap[key];
             }
         }
         //If bitMap is not empty, then new bits have been discovered!
-        listNewDrillbits(bitMap, status_map);
+        listNewDrillbits(bitMap);
       }
 
       //Add new Bits for listing
-      function listNewDrillbits(newBits, status_map) {
+      function listNewDrillbits(newBits) {
         let newBitList = Object.keys(newBits);
         let tableRef = document.getElementById('bitTable').getElementsByTagName('tbody')[0];
         let bitId = size;
@@ -350,12 +381,11 @@
            let newBitHttpPort = newBitList[i].substring(splitPt+1);
            let newBitElemId = "neo-"+newBitList[i];
            let newBitElem = document.getElementsByName(newBitElemId);
-           if ( newBitElem.length == 0 ) {
-                 bitId++;
-               let bitState = status_map[newBitList[i]];
-               //Injecting new row for previously unseen Drillbit
-               $('#bitTable').find('tbody')
-                 .append("<tr id='row-" + bitId + "' class='newbit' title='Recommend page refresh for more info'>"
+           bitId++;
+           let bitState = newBits[newBitList[i]];
+           //Injecting new row for previously unseen Drillbit
+           $('#bitTable').find('tbody')
+               .append("<tr id='row-" + bitId + "' class='newbit' title='Recommend page refresh for more info'>"
                  + "<td>"+bitId+"</td>"
                  + "<td id='address' name='"+newBitElemId+"'>"+displayNodeName+" <span class='label label-primary' id='size' >new</span></td>"
                  + "<td id='httpPort' style='display:none'>"+newBitHttpPort+"</td>"
@@ -370,11 +400,11 @@
                  + "<td id='status'>"+bitState+"</td>"
                  + "<td class='uptime'>"+nAText+"</td>"
                  + "<td>"
-                   + "<button type='button' id='shutdown' onclick='shutdown($(this));' disabled='true' style='opacity:0.5;cursor:not-allowed;'>"
+                   + "<button type='button' id='shutdown' onclick='shutdown($(this));' disabled='true' style='opacity:0.5;cursor:not-allowed;${(model.isAuthEnabled() && !model.shouldShowAdminInfo())?then('display:none','')}'>"
                    + "<span class='glyphicon glyphicon-off'></span></button></td>"
                  + "<td uiElem='queriesCount' />"
-                 + "</tr>");
-           }
+                 + "</tr>"
+            );
         }
         //Update Drillbits count on top
         if (newBitList.length > 0) {
@@ -442,10 +472,14 @@
       //Iterates through all the nodes for update
       function reloadMetrics() {
           for (i = 1; i <= size; i++) {
-                let currentRow = $("#row-"+i);
-                let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
-                let httpPort = currentRow.find("#httpPort").contents().get(0).nodeValue.trim();
-                updateMetricsHtml(address, httpPort, i);
+            //Skip metrics update for remote bits in HTTPS mode
+            if (i > 1 && location.protocol == "https") {
+                break;
+            }
+            let currentRow = $("#row-"+i);
+            let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
+            let httpPort = currentRow.find("#httpPort").contents().get(0).nodeValue.trim();
+            updateMetricsHtml(address, httpPort, i);
           }
       }
 
@@ -455,9 +489,6 @@
            If Authentication or SSL is enabled; we'll assume we don't have valid certificates
         */
         let remoteHost = location.protocol+"//"+drillbit+":"+webport;
-        if ( !updateRemoteInfo || (location.protocol == "https") && remoteHost != location.host ) {
-          return;
-        }
         //
         let result = $.ajax({
           type: 'GET',
@@ -556,7 +587,7 @@
           elapsedTime = elapsedTime + s+"s";
         }
         return elapsedTime;
-};
+     };
   </script>
 </#macro>
 
