@@ -88,4 +88,16 @@ public class DrillFileSystemUtil {
     return FileSystemUtil.listAll(fs, path, recursive, FileSystemUtil.mergeFilters(DRILL_SYSTEM_FILTER, filters));
   }
 
+  /**
+   * Returns the status of a file/directory specified in source path to be renamed/moved to a destination path
+   *
+   * @param fs current file system
+   * @param src path to source
+   * @param dst path to destination
+   * @return status of rename/move
+   */
+  public static boolean rename(FileSystem fs, Path src, Path dst) throws IOException {
+    return FileSystemUtil.rename(fs, src, dst);
+  }
+
 }
