@@ -59,10 +59,10 @@ public class TestTypeFns extends ClusterTest {
     doTypeOfTestSpecial("BINARY_STRING(a)", "'\\xde\\xad\\xbe\\xef'", "VARBINARY");
     try {
       client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
-      doTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL38SPARSE");
-      doTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "DECIMAL9");
+      doTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "VARDECIMAL");
+      doTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "VARDECIMAL");
     } finally {
-      client.resetSession("planner.enable_decimal_data_type");
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 
@@ -112,10 +112,10 @@ public class TestTypeFns extends ClusterTest {
       // These should include precision and scale: DECIMAL(p, s)
       // But, see DRILL-6378
 
-      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL");
-      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "DECIMAL");
+      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL(38, 0)");
+      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "DECIMAL(6, 3)");
     } finally {
-      client.resetSession("planner.enable_decimal_data_type");
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 

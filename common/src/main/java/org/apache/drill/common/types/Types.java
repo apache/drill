@@ -198,6 +198,7 @@ public class Types {
     case DECIMAL28DENSE:
     case DECIMAL38SPARSE:
     case DECIMAL38DENSE:
+    case VARDECIMAL:
       // Disabled for now. See DRILL-6378
       if (type.getPrecision() > 0) {
         typeName += String.format("(%d, %d)",
