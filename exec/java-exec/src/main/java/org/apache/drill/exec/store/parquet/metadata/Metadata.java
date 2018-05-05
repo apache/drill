@@ -27,10 +27,13 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.collections.Collectors;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
-import org.apache.drill.exec.store.TimedRunnable;
+import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
@@ -66,8 +69,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetFileMetadata;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetTableMetadataBase;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.RowGroupMetadata;
@@ -291,7 +294,7 @@ public class Metadata {
 
     Map<FileStatus, FileSystem> fileStatusMap = fileStatuses.stream()
         .collect(
-            Collectors.toMap(
+            java.util.stream.Collectors.toMap(
                 Function.identity(),
                 s -> fs,
                 (oldFs, newFs) -> newFs,
@@ -332,20 +335,17 @@ public class Metadata {
    */
   private List<ParquetFileMetadata_v3> getParquetFileMetadata_v3(
       ParquetTableMetadata_v3 parquetTableMetadata_v3, Map<FileStatus, FileSystem> fileStatusMap) throws IOException {
-
-    List<TimedRunnable<ParquetFileMetadata_v3>> gatherers = fileStatusMap.entrySet().stream()
-        .map(e -> new MetadataGatherer(parquetTableMetadata_v3, e.getKey(), e.getValue()))
-        .collect(Collectors.toList());
-
-    List<ParquetFileMetadata_v3> metaDataList = new ArrayList<>();
-    metaDataList.addAll(TimedRunnable.run("Fetch parquet metadata", logger, gatherers, 16));
-    return metaDataList;
+    return TimedCallable.run("Fetch parquet metadata", logger,
+        Collectors.toList(fileStatusMap,
+            (fileStatus, fileSystem) -> new MetadataGatherer(parquetTableMetadata_v3, fileStatus, fileSystem)),
+        16
+    );
   }
 
   /**
    * TimedRunnable that reads the footer from parquet and collects file metadata
    */
-  private class MetadataGatherer extends TimedRunnable<ParquetFileMetadata_v3> {
+  private class MetadataGatherer extends TimedCallable<ParquetFileMetadata_v3> {
 
     private final ParquetTableMetadata_v3 parquetTableMetadata;
     private final FileStatus fileStatus;
@@ -362,13 +362,8 @@ public class Metadata {
       return getParquetFileMetadata_v3(parquetTableMetadata, fileStatus, fs);
     }
 
-    @Override
-    protected IOException convertToIOException(Exception e) {
-      if (e instanceof IOException) {
-        return (IOException) e;
-      } else {
-        return new IOException(e);
-      }
+    public String toString() {
+      return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("path", fileStatus.getPath()).toString();
     }
   }
 

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
-import com.google.common.collect.Lists;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.test.TestTools;
 import org.apache.drill.test.DrillTest;
@@ -27,24 +27,25 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
- * Unit testing for {@link TimedRunnable}.
+ * Unit testing for {@link TimedCallable}.
  */
 @Category({SlowTest.class})
-public class TestTimedRunnable extends DrillTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTimedRunnable.class);
+public class TestTimedCallable extends DrillTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTimedCallable.class);
 
   @Rule
   public final TestRule TIMEOUT = TestTools.getTimeoutRule(180000); // 3mins
 
-  private static class TestTask extends TimedRunnable {
+  private static class TestTask extends TimedCallable {
     final long sleepTime; // sleep time in ms
 
     public TestTask(final long sleepTime) {
@@ -53,39 +54,35 @@ public class TestTimedRunnable extends DrillTest {
 
     @Override
     protected Void runInner() throws Exception {
-      try {
-        Thread.sleep(sleepTime);
-      } catch (InterruptedException e) {
-        throw e;
-      }
+      Thread.sleep(sleepTime);
       return null;
     }
 
     @Override
-    protected IOException convertToIOException(Exception e) {
-      return new IOException("Failure while trying to sleep for sometime", e);
+    public String toString() {
+      return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("sleepTime", sleepTime).toString();
     }
   }
 
   @Test
   public void withoutAnyTasksTriggeringTimeout() throws Exception {
-    List<TimedRunnable<TestTask>> tasks = Lists.newArrayList();
+    int count = 100;
+    List<TimedCallable<TestTask>> tasks = new ArrayList<>(count);
 
-    for(int i=0; i<100; i++){
+    for (int i = 0; i < count; i++) {
       tasks.add(new TestTask(2000));
     }
 
-    TimedRunnable.run("Execution without triggering timeout", logger, tasks, 16);
+    TimedCallable.run("Execution without triggering timeout", logger, tasks, 16);
   }
 
   @Test
   public void withTasksExceedingTimeout() throws Exception {
-    UserException ex = null;
-
     try {
-      List<TimedRunnable<TestTask>> tasks = Lists.newArrayList();
+      int count = 100;
+      List<TimedCallable<TestTask>> tasks = new ArrayList<>(count);
 
-      for (int i = 0; i < 100; i++) {
+      for (int i = 0; i < count; i++) {
         if ((i & (i + 1)) == 0) {
           tasks.add(new TestTask(2000));
         } else {
@@ -93,26 +90,24 @@ public class TestTimedRunnable extends DrillTest {
         }
       }
 
-      TimedRunnable.run("Execution with some tasks triggering timeout", logger, tasks, 16);
+      TimedCallable.run("Execution with some tasks triggering timeout", logger, tasks, 16);
+      fail("Expected a UserException");
     } catch (UserException e) {
-      ex = e;
+      assertThat(e.getMessage(),
+          containsString("Waited for 105000 ms, but only 87 tasks for 'Execution with some tasks triggering timeout' are " +
+              "complete. Total number of tasks 100, parallelism 16."));
     }
-
-    assertNotNull("Expected a UserException", ex);
-    assertThat(ex.getMessage(),
-        containsString("Waited for 93750ms, but tasks for 'Execution with some tasks triggering timeout' are not " +
-            "complete. Total runnable size 100, parallelism 16."));
   }
 
   @Test
   public void withManyTasks() throws Exception {
+    int count = 150000;
+    List<TimedCallable<TestTask>> tasks = new ArrayList<>(count);
 
-    List<TimedRunnable<TestTask>> tasks = Lists.newArrayList();
-
-    for (int i = 0; i < 150000; i++) {
+    for (int i = 0; i < count; i++) {
       tasks.add(new TestTask(0));
     }
 
-    TimedRunnable.run("Execution with lots of tasks", logger, tasks, 16);
+    TimedCallable.run("Execution with lots of tasks", logger, tasks, 16);
   }
 }

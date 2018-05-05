@@ -19,17 +19,20 @@ package org.apache.drill.exec.store.schedule;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.store.TimedRunnable;
+import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -47,6 +50,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
+
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class BlockMapBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BlockMapBuilder.class);
@@ -70,11 +75,11 @@ public class BlockMapBuilder {
 
   public List<CompleteFileWork> generateFileWork(List<FileStatus> files, boolean blockify) throws IOException {
 
-    List<TimedRunnable<List<CompleteFileWork>>> readers = Lists.newArrayList();
+    List<TimedCallable<List<CompleteFileWork>>> readers = new ArrayList<>(files.size());
     for(FileStatus status : files){
       readers.add(new BlockMapReader(status, blockify));
     }
-    List<List<CompleteFileWork>> work = TimedRunnable.run("Get block maps", logger, readers, 16);
+    List<List<CompleteFileWork>> work = TimedCallable.run("Get block maps", logger, readers, 16);
     List<CompleteFileWork> singleList = Lists.newArrayList();
     for(List<CompleteFileWork> innerWorkList : work){
       singleList.addAll(innerWorkList);
@@ -84,7 +89,7 @@ public class BlockMapBuilder {
 
   }
 
-  private class BlockMapReader extends TimedRunnable<List<CompleteFileWork>> {
+  private class BlockMapReader extends TimedCallable<List<CompleteFileWork>> {
     final FileStatus status;
 
     // This variable blockify indicates if a single file can be read by multiple threads
@@ -103,9 +108,9 @@ public class BlockMapBuilder {
 
     @Override
     protected List<CompleteFileWork> runInner() throws Exception {
-      final List<CompleteFileWork> work = Lists.newArrayList();
+      final List<CompleteFileWork> work = new ArrayList<>();
 
-      final Set<String> noDrillbitHosts = logger.isDebugEnabled() ? Sets.<String>newHashSet() : null;
+      final Set<String> noDrillbitHosts = logger.isDebugEnabled() ? new HashSet<>() : null;
 
       boolean error = false;
       if (blockify && !compressed(status)) {
@@ -143,12 +148,10 @@ public class BlockMapBuilder {
       return work;
     }
 
-
     @Override
-    protected IOException convertToIOException(Exception e) {
-      return new IOException("Failure while trying to get block map for " + status.getPath(), e);
+    public String toString() {
+      return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("path", status.getPath()).toString();
     }
-
   }
 
   private class FileStatusWork implements FileWork{
