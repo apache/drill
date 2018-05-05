@@ -67,9 +67,11 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
       // mess up the schema since Convert_FromJson() is different from other regular functions in that it only knows
       // the output schema after evaluation is performed. When input has 0 row, Drill essentially does not have a way
       // to know the output type.
+      // Cannot pushdown limit and offset in to flatten as long as we don't know data distribution in flattened field
       if (!limitRel.isPushDown() && (limitRel.getFetch() != null)
           && (!DrillRelOptUtil.isLimit0(limitRel.getFetch())
-            || !DrillRelOptUtil.isProjectOutputSchemaUnknown(projectRel))) {
+            || !DrillRelOptUtil.isProjectOutputSchemaUnknown(projectRel))
+          && !DrillRelOptUtil.isProjectOutputRowcountUnknown(projectRel)) {
         return true;
       }
       return false;
@@ -82,14 +84,7 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
       RelNode child = projectRel.getInput();
       final RelNode limitUnderProject = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of(child));
       final RelNode newProject = projectRel.copy(projectRel.getTraitSet(), ImmutableList.of(limitUnderProject));
-      if (DrillRelOptUtil.isProjectOutputRowcountUnknown(projectRel)) {
-        //Preserve limit above the project since Flatten can produce more rows. Also mark it so we do not fire the rule again.
-        final RelNode limitAboveProject = new DrillLimitRel(limitRel.getCluster(), limitRel.getTraitSet(), newProject,
-            limitRel.getOffset(), limitRel.getFetch(), true);
-        call.transformTo(limitAboveProject);
-      } else {
-        call.transformTo(newProject);
-      }
+      call.transformTo(newProject);
     }
   };
 
