@@ -125,7 +125,7 @@ public class TestZookeeperClient {
 
     Mockito
         .when(client.getCache().getCurrentData(absPath))
-        .thenThrow(Exception.class);
+        .thenThrow(RuntimeException.class);
 
     client.hasPath(path);
   }

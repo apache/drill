@@ -28,10 +28,7 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
 public class TestEmptyPopulation extends BaseTestQuery {
 
   private UInt4Vector offsets;

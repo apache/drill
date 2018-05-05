@@ -47,7 +47,7 @@ public class TestTools {
     .indexOf("-agentlib:jdwp") > 0;
 
   public static TestRule getTimeoutRule(int timeout) {
-    return IS_DEBUG ? new TestName() : new Timeout(timeout);
+    return IS_DEBUG ? new TestName() : Timeout.millis(timeout);
   }
 
   /**

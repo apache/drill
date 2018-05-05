@@ -18,78 +18,42 @@
 package org.apache.drill.exec.sql;
 
 import com.google.common.collect.Lists;
-import mockit.Mock;
-import mockit.MockUp;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.store.StorageStrategy;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 @Category(SqlTest.class)
 public class TestCTTAS extends BaseTestQuery {
 
-  private static final UUID session_id = UUID.nameUUIDFromBytes("sessionId".getBytes());
   private static final String temp2_wk = "tmp2";
   private static final String temp2_schema = String.format("%s.%s", DFS_PLUGIN_NAME, temp2_wk);
 
-  private static FileSystem fs;
-  private static FsPermission expectedFolderPermission;
-  private static FsPermission expectedFilePermission;
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @BeforeClass
   public static void init() throws Exception {
-    MockUp<UUID> uuidMockUp = mockRandomUUID(session_id);
-    Properties testConfigurations = cloneDefaultTestConfigProperties();
-    testConfigurations.put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, DFS_TMP_SCHEMA);
-    updateTestCluster(1, DrillConfig.create(testConfigurations));
-    uuidMockUp.tearDown();
-
     File tmp2 = dirTestWatcher.makeSubDir(Paths.get("tmp2"));
-
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getConfig();
     pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(tmp2.getAbsolutePath(), true, null, false));
     pluginRegistry.createOrUpdate(DFS_PLUGIN_NAME, pluginConfig, true);
-
-    fs = getLocalFileSystem();
-    expectedFolderPermission = new FsPermission(StorageStrategy.TEMPORARY.getFolderPermission());
-    expectedFilePermission = new FsPermission(StorageStrategy.TEMPORARY.getFilePermission());
-  }
-
-  private static MockUp<UUID> mockRandomUUID(final UUID uuid) {
-    return new MockUp<UUID>() {
-      @Mock
-      public UUID randomUUID() {
-        return uuid;
-      }
-    };
   }
 
   @Test
@@ -105,10 +69,8 @@ public class TestCTTAS extends BaseTestQuery {
     try {
       for (String storageFormat : storageFormats) {
         String temporaryTableName = "temp_" + storageFormat;
-        mockRandomUUID(UUID.nameUUIDFromBytes(temporaryTableName.getBytes()));
         test("alter session set `store.format`='%s'", storageFormat);
         test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
-        checkPermission(temporaryTableName);
 
         testBuilder()
             .sqlQuery("select * from %s", temporaryTableName)
@@ -164,121 +126,91 @@ public class TestCTTAS extends BaseTestQuery {
   @Test
   public void testPartitionByWithTemporaryTables() throws Exception {
     String temporaryTableName = "temporary_table_with_partitions";
-    mockRandomUUID(UUID.nameUUIDFromBytes(temporaryTableName.getBytes()));
     test("create TEMPORARY table %s partition by (c1) as select * from (" +
         "select 'A' as c1 from (values(1)) union all select 'B' as c1 from (values(1))) t", temporaryTableName);
-    checkPermission(temporaryTableName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreationOutsideOfDefaultTemporaryWorkspace() throws Exception {
-    try {
-      String temporaryTableName = "temporary_table_outside_of_default_workspace";
-      test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", temp2_schema, temporaryTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: Temporary tables are not allowed to be created / dropped " +
-              "outside of default temporary workspace [%s].", DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    String temporaryTableName = "temporary_table_outside_of_default_workspace";
+
+    expectUserRemoteExceptionWithMessage(String.format(
+      "VALIDATION ERROR: Temporary tables are not allowed to be created / dropped " +
+        "outside of default temporary workspace [%s].", DFS_TMP_SCHEMA));
+
+    test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", temp2_schema, temporaryTableName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreateWhenTemporaryTableExistsWithoutSchema() throws Exception {
     String temporaryTableName = "temporary_table_exists_without_schema";
-    try {
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-         "VALIDATION ERROR: A table or view with given name [%s]" +
-             " already exists in schema [%s]", temporaryTableName, DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
+
+    expectUserRemoteExceptionWithTableExistsMessage(temporaryTableName, DFS_TMP_SCHEMA);
+
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreateWhenTemporaryTableExistsCaseInsensitive() throws Exception {
-    String temporaryTableName = "temporary_table_exists_without_schema";
-    try {
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName.toUpperCase());
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: A table or view with given name [%s]" +
-              " already exists in schema [%s]", temporaryTableName.toUpperCase(), DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    String temporaryTableName = "temporary_table_exists_case_insensitive";
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
+
+    expectUserRemoteExceptionWithTableExistsMessage(temporaryTableName.toUpperCase(), DFS_TMP_SCHEMA);
+
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName.toUpperCase());
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreateWhenTemporaryTableExistsWithSchema() throws Exception {
     String temporaryTableName = "temporary_table_exists_with_schema";
-    try {
-      test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
-      test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: A table or view with given name [%s]" +
-              " already exists in schema [%s]", temporaryTableName, DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
+
+    expectUserRemoteExceptionWithTableExistsMessage(temporaryTableName, DFS_TMP_SCHEMA);
+
+    test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreateWhenPersistentTableExists() throws Exception {
     String persistentTableName = "persistent_table_exists";
-    try {
-      test("create table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, persistentTableName);
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", persistentTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: A table or view with given name [%s]" +
-              " already exists in schema [%s]", persistentTableName, DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    test("create table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, persistentTableName);
+
+    expectUserRemoteExceptionWithTableExistsMessage(persistentTableName, DFS_TMP_SCHEMA);
+
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", persistentTableName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreateWhenViewExists() throws Exception {
     String viewName = "view_exists";
-    try {
-      test("create view %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, viewName);
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", viewName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: A table or view with given name [%s]" +
-              " already exists in schema [%s]", viewName, DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    test("create view %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, viewName);
+
+    expectUserRemoteExceptionWithTableExistsMessage(viewName, DFS_TMP_SCHEMA);
+
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", viewName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreatePersistentTableWhenTemporaryTableExists() throws Exception {
     String temporaryTableName = "temporary_table_exists_before_persistent";
-    try {
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
-      test("create table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: A table or view with given name [%s]" +
-              " already exists in schema [%s]", temporaryTableName, DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
+
+    expectUserRemoteExceptionWithTableExistsMessage(temporaryTableName, DFS_TMP_SCHEMA);
+
+    test("create table %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testCreateViewWhenTemporaryTableExists() throws Exception {
     String temporaryTableName = "temporary_table_exists_before_view";
-    try {
-      test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
-      test("create view %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: A non-view table with given name [%s] already exists in schema [%s]",
-          temporaryTableName, DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
+
+    expectUserRemoteExceptionWithMessage(String.format(
+      "VALIDATION ERROR: A non-view table with given name [%s] already exists in schema [%s]",
+      temporaryTableName, DFS_TMP_SCHEMA));
+
+    test("create view %s.%s as select 'A' as c1 from (values(1))", DFS_TMP_SCHEMA, temporaryTableName);
   }
 
   @Test
@@ -358,21 +290,18 @@ public class TestCTTAS extends BaseTestQuery {
         .go();
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testTemporaryTablesInViewDefinitions() throws Exception {
     String temporaryTableName = "temporary_table_for_view_definition";
     test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
 
-    try {
-      test("create view %s.view_with_temp_table as select * from %s", DFS_TMP_SCHEMA, temporaryTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", temporaryTableName)));
-      throw e;
-    }
+    expectUserRemoteExceptionWithMessage(String.format(
+      "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", temporaryTableName));
+
+    test("create view %s.view_with_temp_table as select * from %s", DFS_TMP_SCHEMA, temporaryTableName);
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testTemporaryTablesInViewExpansionLogic() throws Exception {
     String tableName = "table_for_expansion_logic_test";
     String viewName = "view_for_expansion_logic_test";
@@ -389,73 +318,48 @@ public class TestCTTAS extends BaseTestQuery {
 
     test("drop table %s", tableName);
     test("create temporary table %s as select 'TEMP' as c1 from (values(1))", tableName);
-    try {
-      test("select * from %s", viewName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", tableName)));
-      throw e;
-    }
+
+    expectUserRemoteExceptionWithMessage(String.format(
+      "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", tableName));
+
+    test("select * from %s", viewName);
   }
 
   @Test // DRILL-5952
   public void testCreateTemporaryTableIfNotExistsWhenTableWithSameNameAlreadyExists() throws Exception{
     final String newTblName = "createTemporaryTableIfNotExistsWhenATableWithSameNameAlreadyExists";
+    test("CREATE TEMPORARY TABLE %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
 
-    try {
-      String ctasQuery = String.format("CREATE TEMPORARY TABLE %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+    testBuilder()
+      .sqlQuery("CREATE TEMPORARY TABLE IF NOT EXISTS %s AS SELECT * FROM cp.`employee.json`", newTblName)
+      .unOrdered()
+      .baselineColumns("ok", "summary")
+      .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+      .go();
 
-      test(ctasQuery);
-
-      ctasQuery =
-        String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s AS SELECT * FROM cp.`employee.json`", newTblName);
-
-      testBuilder()
-        .sqlQuery(ctasQuery)
-        .unOrdered()
-        .baselineColumns("ok", "summary")
-        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
-        .go();
-    } finally {
-      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
-    }
+    test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
   }
 
   @Test // DRILL-5952
   public void testCreateTemporaryTableIfNotExistsWhenViewWithSameNameAlreadyExists() throws Exception{
     final String newTblName = "createTemporaryTableIfNotExistsWhenAViewWithSameNameAlreadyExists";
+    test("CREATE VIEW %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
 
-    try {
-      String ctasQuery = String.format("CREATE VIEW %s.%s AS SELECT * from cp.`region.json`", DFS_TMP_SCHEMA, newTblName);
+    testBuilder()
+      .sqlQuery("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName)
+      .unOrdered()
+      .baselineColumns("ok", "summary")
+      .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
+      .go();
 
-      test(ctasQuery);
-
-      ctasQuery =
-        String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
-
-      testBuilder()
-        .sqlQuery(ctasQuery)
-        .unOrdered()
-        .baselineColumns("ok", "summary")
-        .baselineValues(false, String.format("A table or view with given name [%s] already exists in schema [%s]", newTblName, DFS_TMP_SCHEMA))
-        .go();
-    } finally {
-      test(String.format("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
-    }
+    test("DROP VIEW IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
   }
 
   @Test // DRILL-5952
   public void testCreateTemporaryTableIfNotExistsWhenTableWithSameNameDoesNotExist() throws Exception{
     final String newTblName = "createTemporaryTableIfNotExistsWhenATableWithSameNameDoesNotExist";
-
-    try {
-      String ctasQuery = String.format("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
-
-      test(ctasQuery);
-
-    } finally {
-      test(String.format("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName));
-    }
+    test("CREATE TEMPORARY TABLE IF NOT EXISTS %s.%s AS SELECT * FROM cp.`employee.json`", DFS_TMP_SCHEMA, newTblName);
+    test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
   }
 
   @Test
@@ -498,47 +402,26 @@ public class TestCTTAS extends BaseTestQuery {
         .go();
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testDropTemporaryTableAsViewWithException() throws Exception {
     String temporaryTableName = "temporary_table_to_drop_like_view_with_exception";
     test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
 
-    try {
-      test("drop view %s.%s", DFS_TMP_SCHEMA, temporaryTableName);
-    } catch (UserRemoteException e) {
-      assertThat(e.getMessage(), containsString(String.format(
-              "VALIDATION ERROR: Unknown view [%s] in schema [%s]", temporaryTableName, DFS_TMP_SCHEMA)));
-      throw e;
-    }
+    expectUserRemoteExceptionWithMessage(String.format(
+      "VALIDATION ERROR: Unknown view [%s] in schema [%s]", temporaryTableName, DFS_TMP_SCHEMA));
+
+    test("drop view %s.%s", DFS_TMP_SCHEMA, temporaryTableName);
   }
 
-  private void checkPermission(String tmpTableName) throws IOException {
-    List<Path> matchingPath = findTemporaryTableLocation(tmpTableName);
-    assertEquals("Only one directory should match temporary table name " + tmpTableName, 1, matchingPath.size());
-    Path tmpTablePath = matchingPath.get(0);
-    assertEquals("Directory permission should match",
-        expectedFolderPermission, fs.getFileStatus(tmpTablePath).getPermission());
-    RemoteIterator<LocatedFileStatus> fileIterator = fs.listFiles(tmpTablePath, false);
-    while (fileIterator.hasNext()) {
-      assertEquals("File permission should match", expectedFilePermission, fileIterator.next().getPermission());
-    }
+  private void expectUserRemoteExceptionWithMessage(String message) {
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage(containsString(message));
   }
 
-  private List<Path> findTemporaryTableLocation(String tableName) throws IOException {
-    Path sessionTempLocation = new Path(dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(), session_id.toString());
-    assertTrue("Session temporary location must exist", fs.exists(sessionTempLocation));
-    assertEquals("Session temporary location permission should match",
-        expectedFolderPermission, fs.getFileStatus(sessionTempLocation).getPermission());
-    String tableUUID =  UUID.nameUUIDFromBytes(tableName.getBytes()).toString();
-
-    RemoteIterator<LocatedFileStatus> pathList = fs.listLocatedStatus(sessionTempLocation);
-    List<Path> matchingPath = Lists.newArrayList();
-    while (pathList.hasNext()) {
-      LocatedFileStatus path = pathList.next();
-      if (path.isDirectory() && path.getPath().getName().equals(tableUUID)) {
-        matchingPath.add(path.getPath());
-      }
-    }
-    return matchingPath;
+  private void expectUserRemoteExceptionWithTableExistsMessage(String tableName, String schemaName) {
+    expectUserRemoteExceptionWithMessage(String.format(
+      "VALIDATION ERROR: A table or view with given name [%s]" +
+        " already exists in schema [%s]", tableName, schemaName));
   }
+
 }
