@@ -17,32 +17,22 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import com.google.common.collect.Sets;
-import io.netty.buffer.DrillBuf;
+import javax.inject.Inject;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.NullableIntHolder;
-import org.apache.drill.exec.expr.holders.NullableTinyIntHolder;
-import org.apache.drill.exec.expr.holders.NullableUInt1Holder;
-import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.resolver.TypeCastRules;
-import org.apache.drill.exec.vector.complex.impl.UnionReader;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
+import io.netty.buffer.DrillBuf;
 
 /**
  * The class contains additional functions for union types in addition to those in GUnionFunctions
@@ -65,8 +55,10 @@ public class UnionFunctions {
     @Output
     IntHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       org.apache.drill.common.types.TypeProtos.MinorType type1;
       if (input1.isSet()) {
@@ -147,16 +139,104 @@ public class UnionFunctions {
     @Inject
     DrillBuf buf;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
 
-      byte[] type;
+      String typeName;
       if (input.isSet()) {
-         type = input.getType().getMinorType().name().getBytes();
+        typeName = input.getType().getMinorType().name();
       } else {
-        type = org.apache.drill.common.types.TypeProtos.MinorType.NULL.name().getBytes();
+        typeName = org.apache.drill.common.types.TypeProtos.MinorType.NULL.name();
       }
+      byte[] type = typeName.getBytes();
+      buf = buf.reallocIfNeeded(type.length);
+      buf.setBytes(0, type);
+      out.buffer = buf;
+      out.start = 0;
+      out.end = type.length;
+    }
+  }
+
+  @FunctionTemplate(name = "sqlTypeOf",
+          scope = FunctionTemplate.FunctionScope.SIMPLE,
+          nulls = NullHandling.INTERNAL)
+  public static class GetSqlType implements DrillSimpleFunc {
+
+    @Param
+    FieldReader input;
+    @Output
+    VarCharHolder out;
+    @Inject
+    DrillBuf buf;
+
+    @Override
+    public void setup() {}
+
+    @Override
+    public void eval() {
+
+      String typeName = org.apache.drill.common.types.Types.getExtendedSqlTypeName(input.getType());
+      byte[] type = typeName.getBytes();
+      buf = buf.reallocIfNeeded(type.length);
+      buf.setBytes(0, type);
+      out.buffer = buf;
+      out.start = 0;
+      out.end = type.length;
+    }
+  }
+
+  @FunctionTemplate(name = "drillTypeOf",
+          scope = FunctionTemplate.FunctionScope.SIMPLE,
+          nulls = NullHandling.INTERNAL)
+  public static class GetDrillType implements DrillSimpleFunc {
+
+    @Param
+    FieldReader input;
+    @Output
+    VarCharHolder out;
+    @Inject
+    DrillBuf buf;
+
+    @Override
+    public void setup() {}
+
+    @Override
+    public void eval() {
+
+      String typeName = input.getType().getMinorType().name();
+      byte[] type = typeName.getBytes();
+      buf = buf.reallocIfNeeded(type.length);
+      buf.setBytes(0, type);
+      out.buffer = buf;
+      out.start = 0;
+      out.end = type.length;
+    }
+  }
+
+  @FunctionTemplate(name = "modeOf",
+          scope = FunctionTemplate.FunctionScope.SIMPLE,
+          nulls = NullHandling.INTERNAL)
+  public static class GetMode implements DrillSimpleFunc {
+
+    @Param
+    FieldReader input;
+    @Output
+    VarCharHolder out;
+    @Inject
+    DrillBuf buf;
+
+    @Override
+    public void setup() {}
+
+    @Override
+    public void eval() {
+
+      String typeName = org.apache.drill.common.types.Types.getSqlModeName(
+          input.getType());
+      byte[] type = typeName.getBytes();
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;
@@ -173,8 +253,10 @@ public class UnionFunctions {
     @Output
     UnionHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       out.reader = in;
       out.isSet = in.isSet() ? 1 : 0;
@@ -188,8 +270,10 @@ public class UnionFunctions {
     @Param UnionHolder in;
     @Output UnionHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       if (in.isSet == 1) {
         if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.LIST) {
@@ -209,8 +293,10 @@ public class UnionFunctions {
     @Param UnionHolder in;
     @Output BitHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       if (in.isSet == 1) {
         out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.LIST ? 1 : 0;
@@ -227,8 +313,10 @@ public class UnionFunctions {
     @Param UnionHolder in;
     @Output UnionHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       if (in.isSet == 1) {
         if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.MAP) {
@@ -248,8 +336,10 @@ public class UnionFunctions {
     @Param UnionHolder in;
     @Output BitHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       if (in.isSet == 1) {
         out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.MAP ? 1 : 0;
@@ -265,8 +355,10 @@ public class UnionFunctions {
     @Param UnionHolder input;
     @Output BitHolder out;
 
+    @Override
     public void setup() { }
 
+    @Override
     public void eval() {
       out.value = input.isSet == 1 ? 1 : 0;
     }
@@ -278,8 +370,10 @@ public class UnionFunctions {
     @Param UnionHolder input;
     @Output BitHolder out;
 
+    @Override
     public void setup() { }
 
+    @Override
     public void eval() {
       out.value = input.isSet == 1 ? 0 : 1;
     }
