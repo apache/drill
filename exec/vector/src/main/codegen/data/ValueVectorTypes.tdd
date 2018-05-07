@@ -68,7 +68,7 @@
         { class: "UInt4", valueHolder: "UInt4Holder" },
         { class: "Float4", javaType: "float" , boxedType: "Float", accessorType: "double", accessorCast: "set",
           fields: [{name: "value", type: "float"}]},
-        { class: "Time", javaType: "int", friendlyType: "DateTime", accessorType: "int" },
+        { class: "Time", javaType: "int", friendlyType: "LocalTime", accessorType: "int" },
         { class: "IntervalYear", javaType: "int", friendlyType: "Period" }
         { class: "Decimal9", maxPrecisionDigits: 9, friendlyType: "BigDecimal",
           fields: [{name:"value", type:"int"}, {name: "scale", type: "int", include: false},
@@ -85,8 +85,8 @@
         { class: "BigInt"},
         { class: "UInt8" },
         { class: "Float8", javaType: "double" , boxedType: "Double", fields: [{name: "value", type: "double"}], },
-        { class: "Date", javaType: "long", friendlyType: "DateTime", accessorType: "long" },
-        { class: "TimeStamp", javaType: "long", friendlyType: "DateTime", accessorType: "long" }
+        { class: "Date", javaType: "long", friendlyType: "LocalDate", accessorType: "long" },
+        { class: "TimeStamp", javaType: "long", friendlyType: "LocalDateTime", accessorType: "long" }
         { class: "Decimal18", maxPrecisionDigits: 18, friendlyType: "BigDecimal",
           fields: [{name:"value", type:"long"}, {name: "scale", type: "int", include: false},
                    {name: "precision", type: "int", include: false}] },

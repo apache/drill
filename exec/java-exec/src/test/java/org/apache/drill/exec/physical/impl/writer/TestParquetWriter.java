@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.writer;
 
 import static org.apache.drill.exec.store.parquet.ParquetRecordWriter.DRILL_VERSION_PROPERTY;
-import static org.apache.drill.test.TestBuilder.convertToLocalTimestamp;
+import static org.apache.drill.test.TestBuilder.convertToLocalDateTime;
 import static org.apache.parquet.format.converter.ParquetMetadataConverter.NO_FILTER;
 import static org.apache.parquet.format.converter.ParquetMetadataConverter.SKIP_ROW_GROUPS;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY;
@@ -32,7 +32,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,11 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.util.Pair;
-import org.apache.drill.exec.util.JsonStringArrayList;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -52,6 +48,8 @@ import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -61,7 +59,6 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
-import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -70,6 +67,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 @RunWith(Parameterized.class)
 @Category({SlowTest.class, ParquetTest.class})
@@ -126,7 +126,7 @@ public class TestParquetWriter extends BaseTestQuery {
     allTypesSelection = Joiner.on(",").join(allTypeSelectsAndCasts);
   }
 
-  private String allTypesTable = "cp.`parquet/alltypes.json`";
+  private final String allTypesTable = "cp.`parquet/alltypes.json`";
 
   @Parameterized.Parameter
   public int repeat = 1;
@@ -624,7 +624,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .unOrdered()
           .sqlQuery("SELECT * FROM dfs.tmp.`%s`", newTblName)
           .baselineColumns("id", "name", "bday")
-          .baselineValues(1, "Sheri Nowmer", new DateTime(Date.valueOf("1961-08-26").getTime()))
+          .baselineValues(1, "Sheri Nowmer", LocalDate.parse("1961-08-26"))
           .go();
     } finally {
       deleteTableIfExists(newTblName);
@@ -799,7 +799,7 @@ public class TestParquetWriter extends BaseTestQuery {
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .ordered()
           .baselineColumns("date_value")
-          .baselineValues(new DateTime(convertToLocalTimestamp("1970-01-01 00:00:01.000")))
+          .baselineValues(convertToLocalDateTime("1970-01-01 00:00:01.000"))
           .build().run();
     } finally {
       resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
@@ -815,7 +815,7 @@ public class TestParquetWriter extends BaseTestQuery {
                "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .ordered()
           .baselineColumns("run_date")
-          .baselineValues(new DateTime(convertToLocalTimestamp("2017-12-06 16:38:43.988")))
+          .baselineValues(convertToLocalDateTime("2017-12-06 16:38:43.988"))
           .build().run();
     } finally {
       resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
@@ -873,7 +873,7 @@ public class TestParquetWriter extends BaseTestQuery {
         .sqlQuery("SELECT convert_from(timestamp_field, 'TIMESTAMP_IMPALA')  as timestamp_field "
              + "from cp.`parquet/part1/hive_all_types.parquet` ")
         .baselineColumns("timestamp_field")
-        .baselineValues(new DateTime(convertToLocalTimestamp("2013-07-06 00:01:00")))
+        .baselineValues(convertToLocalDateTime("2013-07-06 00:01:00"))
         .baselineValues((Object)null)
         .go();
   }
@@ -1004,10 +1004,10 @@ public class TestParquetWriter extends BaseTestQuery {
           .optionSettingQueriesForTestQuery(
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .baselineColumns("c", "d")
-          .baselineValues(new DateTime(Date.valueOf("2012-12-15").getTime()),
-              new DateTime(convertToLocalTimestamp("2016-04-24 20:06:28")))
-          .baselineValues(new DateTime(Date.valueOf("2011-07-09").getTime()),
-              new DateTime(convertToLocalTimestamp("2015-04-15 22:35:49")))
+          .baselineValues(LocalDate.parse("2012-12-15"),
+                  convertToLocalDateTime("2016-04-24 20:06:28"))
+          .baselineValues(LocalDate.parse("2011-07-09"),
+                  convertToLocalDateTime("2015-04-15 22:35:49"))
           .build()
           .run();
     } finally {

@@ -17,27 +17,25 @@
  */
 package org.apache.drill.exec;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+
+import java.math.BigDecimal;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.hamcrest.CoreMatchers;
-import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Timestamp;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveDrillNativeParquetReader extends HiveTestBase {
@@ -227,14 +225,14 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
         // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
         //"binary_part",
         "boolean_part", "tinyint_part", "decimal0_part", "decimal9_part", "decimal18_part", "decimal28_part", "decimal38_part", "double_part", "float_part", "int_part", "bigint_part", "smallint_part", "string_part", "varchar_part", "timestamp_part", "date_part", "char_part")
-        .baselineValues("binaryfield".getBytes(), false, 34, new BigDecimal("66"), new BigDecimal("2347.92"), new BigDecimal("2758725827.99990"), new BigDecimal("29375892739852.8"), new BigDecimal("89853749534593985.783"), 8.345d, 4.67f, 123456, 234235L, 3455, "stringfield", "varcharfield", new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()), "charfield",
+        .baselineValues("binaryfield".getBytes(), false, 34, new BigDecimal("66"), new BigDecimal("2347.92"), new BigDecimal("2758725827.99990"), new BigDecimal("29375892739852.8"), new BigDecimal("89853749534593985.783"), 8.345d, 4.67f, 123456, 234235L, 3455, "stringfield", "varcharfield", DateUtility.parseBest("2013-07-05 17:01:00"), "charfield",
         // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
         //"binary",
-        true, 64, new BigDecimal("37"), new BigDecimal("36.90"), new BigDecimal("3289379872.94565"), new BigDecimal("39579334534534.4"), new BigDecimal("363945093845093890.900"), 8.345d, 4.67f, 123456, 234235L, 3455, "string", "varchar", new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()), new DateTime(Date.valueOf("2013-07-05").getTime()), "char").baselineValues( // All fields are null, but partition fields have non-null values
+        true, 64, new BigDecimal("37"), new BigDecimal("36.90"), new BigDecimal("3289379872.94565"), new BigDecimal("39579334534534.4"), new BigDecimal("363945093845093890.900"), 8.345d, 4.67f, 123456, 234235L, 3455, "string", "varchar", DateUtility.parseBest("2013-07-05 17:01:00"), DateUtility.parseLocalDate("2013-07-05"), "char").baselineValues( // All fields are null, but partition fields have non-null values
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
         // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
         //"binary",
-        true, 64, new BigDecimal("37"), new BigDecimal("36.90"), new BigDecimal("3289379872.94565"), new BigDecimal("39579334534534.4"), new BigDecimal("363945093845093890.900"), 8.345d, 4.67f, 123456, 234235L, 3455, "string", "varchar", new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()), new DateTime(Date.valueOf("2013-07-05").getTime()), "char").go();
+        true, 64, new BigDecimal("37"), new BigDecimal("36.90"), new BigDecimal("3289379872.94565"), new BigDecimal("39579334534534.4"), new BigDecimal("363945093845093890.900"), 8.345d, 4.67f, 123456, 234235L, 3455, "string", "varchar", DateUtility.parseBest("2013-07-05 17:01:00"), DateUtility.parseLocalDate("2013-07-05"), "char").go();
   }
 
   @Test // DRILL-3938

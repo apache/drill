@@ -19,10 +19,15 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -54,7 +59,7 @@ public class ExtendedJsonOutput extends BasicJsonOutput {
   }
 
   @Override
-  public void writeDate(DateTime value) throws IOException {
+  public void writeDate(TemporalAccessor value) throws IOException {
     gen.writeStartObject();
     gen.writeFieldName(ExtendedType.DATE.serialized);
     super.writeDate(value);
@@ -62,18 +67,18 @@ public class ExtendedJsonOutput extends BasicJsonOutput {
   }
 
   @Override
-  public void writeTime(DateTime value) throws IOException {
+  public void writeTime(TemporalAccessor value) throws IOException {
     gen.writeStartObject();
     gen.writeFieldName(ExtendedType.TIME.serialized);
-    super.writeTime(value);
+    super.writeTime(((LocalTime) value).atOffset(ZoneOffset.UTC));   // output time in local time zone
     gen.writeEndObject();
   }
 
   @Override
-  public void writeTimestamp(DateTime value) throws IOException {
+  public void writeTimestamp(TemporalAccessor value) throws IOException {
     gen.writeStartObject();
     gen.writeFieldName(ExtendedType.TIMESTAMP.serialized);
-    super.writeTimestamp(value);
+    super.writeTimestamp(((LocalDateTime) value).atOffset(ZoneOffset.UTC)); // output date time in local time zone
     gen.writeEndObject();
   }
 
