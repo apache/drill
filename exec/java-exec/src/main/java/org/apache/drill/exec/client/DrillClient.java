@@ -520,7 +520,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    *
    * @return the server name, or null if not connected or if the server
    *         doesn't provide the name
-   * @return
+   * @return The server name.
    */
   public String getServerName() {
     return (client != null && client.getServerInfos() != null) ? client.getServerInfos().getName() : null;
@@ -533,7 +533,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    *
    * @return the server version, or null if not connected or if the server
    *         doesn't provide the version
-   * @return
+   * @return The server version.
    */
   public Version getServerVersion() {
     return (client != null && client.getServerInfos() != null) ? UserRpcUtils.getVersion(client.getServerInfos()) : null;
@@ -588,7 +588,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @param type
    * @param query
    * @param isSplitPlan - option to tell whether to return single or split plans for a query
-   * @return list of PlanFragments that can be used later on in {@link #runQuery(QueryType, List, UserResultsListener)}
+   * @return list of PlanFragments that can be used later on in {@link #runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType, java.util.List, org.apache.drill.exec.rpc.user.UserResultsListener)}
    * to run a query without additional planning
    */
   public DrillRpcFuture<QueryPlanFragments> planQuery(QueryType type, String query, boolean isSplitPlan) {
@@ -663,7 +663,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * Get the list of catalogs in <code>INFORMATION_SCHEMA.CATALOGS</code> table satisfying the given filters.
    *
    * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
-   * @return
+   * @return The list of catalogs in <code>INFORMATION_SCHEMA.CATALOGS</code> table satisfying the given filters.
    */
   public DrillRpcFuture<GetCatalogsResp> getCatalogs(LikeFilter catalogNameFilter) {
     final GetCatalogsReq.Builder reqBuilder = GetCatalogsReq.newBuilder();
@@ -679,7 +679,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    *
    * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
    * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
-   * @return
+   * @return The list of schemas in <code>INFORMATION_SCHEMA.SCHEMATA</code> table satisfying the given filters.
    */
   public DrillRpcFuture<GetSchemasResp> getSchemas(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter) {
     final GetSchemasReq.Builder reqBuilder = GetSchemasReq.newBuilder();
@@ -701,7 +701,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
    * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
    * @param tableTypeFilter Filter in <code>table type</code>. Pass null to apply no filter
-   * @return
+   * @return The list of tables in <code>INFORMATION_SCHEMA.TABLES</code> table satisfying the given filters.
    */
   public DrillRpcFuture<GetTablesResp> getTables(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
       LikeFilter tableNameFilter, List<String> tableTypeFilter) {
@@ -732,7 +732,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
    * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
    * @param columnNameFilter Filter in <code>column name</code>. Pass null to apply no filter.
-   * @return
+   * @return The list of columns in <code>INFORMATION_SCHEMA.COLUMNS</code> table satisfying the given filters.
    */
   public DrillRpcFuture<GetColumnsResp> getColumns(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
       LikeFilter tableNameFilter, LikeFilter columnNameFilter) {
@@ -757,10 +757,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
-   * Create a prepared statement for given <code>query</code>.
+   * Create a prepared statement for given the <code>query</code>.
    *
    * @param query
-   * @return
+   * @return The prepared statement for given the <code>query</code>.
    */
   public DrillRpcFuture<CreatePreparedStatementResp> createPreparedStatement(final String query) {
     final CreatePreparedStatementReq req =

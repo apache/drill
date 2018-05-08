@@ -21,14 +21,14 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * {@link ThreadFactory} for {@link ExecutorServices} that names threads sequentially.
+ * {@link ThreadFactory} for {@link java.util.concurrent.ExecutorService}s that names threads sequentially.
  * Creates Threads named with the prefix specified at construction time. Created threads
  * have the daemon bit set and priority Thread.MAX_PRIORITY.
  *
  * <p>An instance creates names with an instance-specific prefix suffixed with sequential
  * integers.</p>
  *
- * <p>Concurrency: See {@link newThread}.</p>
+ * <p>Concurrency: See {@link #newThread}.</p>
  */
 public class NamedThreadFactory implements ThreadFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NamedThreadFactory.class);

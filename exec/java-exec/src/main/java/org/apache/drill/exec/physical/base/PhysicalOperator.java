@@ -43,16 +43,13 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    * Describes whether or not a particular physical operator can actually be executed. Most physical operators can be
    * executed. However, Exchange nodes cannot be executed. In order to be executed, they must be converted into their
    * Exec sub components.
-   *
-   * @return
    */
   @JsonIgnore
   boolean isExecutable();
 
   /**
    * Describes the SelectionVector Mode for the output steam from this physical op.
-   * This property is used during physical plan creating using {@link PhysicalPlanCreator}.
-   * @return
+   * This property is used during physical plan creating using {@link org.apache.drill.exec.planner.physical.PhysicalPlanCreator}.
    */
   @JsonIgnore
   SelectionVectorMode getSVMode();
@@ -61,14 +58,12 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    * Provides capability to build a set of output based on traversing a query graph tree.
    *
    * @param physicalVisitor
-   * @return
    */
   <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E;
 
   /**
    * Regenerate with this node with a new set of children.  This is used in the case of materialization or optimization.
    * @param children
-   * @return
    */
   @JsonIgnore
   PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException;

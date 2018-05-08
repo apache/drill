@@ -83,7 +83,7 @@ public interface Exchange extends PhysicalOperator {
    * max width and affinity to Drillbits.
    *
    * @param receiverFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list.
-   * @return
+   * @return Sender {@link org.apache.drill.exec.planner.fragment.ParallelizationInfo}.
    */
   @JsonIgnore
   ParallelizationInfo getSenderParallelizationInfo(List<DrillbitEndpoint> receiverFragmentEndpoints);
@@ -93,7 +93,7 @@ public interface Exchange extends PhysicalOperator {
    * max width and affinity to Drillbits.
    *
    * @param senderFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list
-   * @return
+   * @return Receiver {@link org.apache.drill.exec.planner.fragment.ParallelizationInfo}.
    */
   @JsonIgnore
   ParallelizationInfo getReceiverParallelizationInfo(List<DrillbitEndpoint> senderFragmentEndpoints);
@@ -101,7 +101,7 @@ public interface Exchange extends PhysicalOperator {
   /**
    * Return the feeding child of this operator node.
    *
-   * @return
+   * @return The feeding child of this operator node.
    */
   PhysicalOperator getChild();
 

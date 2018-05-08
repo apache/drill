@@ -55,7 +55,7 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
   /**
    * Default sender parallelization width range is [1, Integer.MAX_VALUE] and no endpoint affinity
    * @param receiverFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list.
-   * @return
+   * @return Sender {@link org.apache.drill.exec.planner.fragment.ParallelizationInfo}.
    */
   @Override
   public ParallelizationInfo getSenderParallelizationInfo(List<DrillbitEndpoint> receiverFragmentEndpoints) {
@@ -66,7 +66,7 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
    * Default receiver parallelization width range is [1, Integer.MAX_VALUE] and affinity to nodes where sender
    * fragments are running.
    * @param senderFragmentEndpoints Endpoints assigned to receiver fragment if available, otherwise an empty list.
-   * @return
+   * @return Receiver {@link org.apache.drill.exec.planner.fragment.ParallelizationInfo}.
    */
   @Override
   public ParallelizationInfo getReceiverParallelizationInfo(List<DrillbitEndpoint> senderFragmentEndpoints) {

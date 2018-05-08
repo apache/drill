@@ -46,7 +46,7 @@ import com.sun.codemodel.JDefinedClass;
  * class without the normal byte-code manipulations. Plain Java allows
  * the option to persist, and debug, the generated code when building new
  * generated classes or otherwise working with generated code. To turn
- * on debugging, see the explanation in {@link ClassBuilder}.
+ * on debugging, see the explanation in {@link org.apache.drill.exec.compile.ClassBuilder}.
  *
  * @param <T>
  *          The interface that results from compiling and merging the runtime
@@ -149,7 +149,7 @@ public class CodeGenerator<T> {
   /**
    * Debug-time option to persist the code for the generated class to permit debugging.
    * Has effect only when code is generated using the plain Java option. Code
-   * is written to the code directory specified in {@link ClassBuilder}.
+   * is written to the code directory specified in {@link org.apache.drill.exec.compile.ClassBuilder}.
    * To debug code, set this option, then point your IDE to the code directory
    * when the IDE prompts you for the source code location.
    *

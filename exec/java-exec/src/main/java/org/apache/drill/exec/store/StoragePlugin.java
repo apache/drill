@@ -54,7 +54,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    *
    * @param userName User whom to impersonate when when reading the contents as part of Scan.
    * @param selection The configured storage engine specific selection.
-   * @return
+   * @return The physical scan operator for the particular GroupScan (read) node.
    * @throws IOException
    */
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException;
@@ -65,7 +65,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @param userName User whom to impersonate when when reading the contents as part of Scan.
    * @param selection The configured storage engine specific selection.
    * @param columns (optional) The list of column names to scan from the data source.
-   * @return
+   * @return The physical scan operator for the particular GroupScan (read) node.
    * @throws IOException
   */
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)

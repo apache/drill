@@ -487,12 +487,12 @@ public class PhysicalOpUnitTestBase extends ExecTest {
   }
 
   /**
-   * Create JSONRecordReader from input strings.
+   * Create {@link org.apache.drill.exec.store.easy.json.JSONRecordReader} from input strings.
    * @param jsonBatches : list of input strings, each element represent a batch. Each string could either
    *                    be in the form of "[{...}, {...}, ..., {...}]", or in the form of "{...}".
    * @param fragContext : fragment context
    * @param columnsToRead : list of schema paths to read from JSON reader.
-   * @return
+   * @return The {@link org.apache.drill.exec.store.easy.json.JSONRecordReader} corresponding to each given jsonBatch.
    */
   public static Iterator<RecordReader> getJsonReadersFromBatchString(List<String> jsonBatches, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
     ObjectMapper mapper = new ObjectMapper();
@@ -515,7 +515,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
    * @param inputPaths : list of .json file paths.
    * @param fragContext
    * @param columnsToRead
-   * @return
+   * @return The {@link org.apache.drill.exec.store.easy.json.JSONRecordReader} corresponding to each given input path.
    */
   public static Iterator<RecordReader> getJsonReadersFromInputFiles(DrillFileSystem fs, List<String> inputPaths, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
     List<RecordReader> readers = new ArrayList<>();

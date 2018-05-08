@@ -97,9 +97,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
    * destination container, indexed by an SV4.
    *
    * @param batchGroups the complete set of in-memory batches
-   * @param batch the record batch (operator) for the sort operator
-   * @param destContainer the vector container for the sort operator
-   * @return the sv4 for this operator
+   * @param outputBatchSize
    */
 
   public void merge(List<BatchGroup.InputBatch> batchGroups, int outputBatchSize) {
