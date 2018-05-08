@@ -27,7 +27,6 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.LogFixture;
-import org.apache.drill.test.DirTestWatcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;

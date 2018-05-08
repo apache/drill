@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 
 import de.flapdoodle.embed.mongo.MongoImportProcess;
 import org.apache.commons.lang3.StringUtils;

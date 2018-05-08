@@ -19,10 +19,7 @@ package org.apache.drill.exec.expr.holders;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.MapVector;
-
-import java.util.LinkedHashSet;
 
 public final class RepeatedMapHolder implements ValueHolder{
 

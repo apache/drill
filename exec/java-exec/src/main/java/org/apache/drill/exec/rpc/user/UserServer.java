@@ -44,7 +44,6 @@ import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.SaslSupport;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
-import org.apache.drill.exec.rpc.AbstractRemoteConnection;
 import org.apache.drill.exec.rpc.AbstractServerConnection;
 import org.apache.drill.exec.rpc.BasicServer;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;

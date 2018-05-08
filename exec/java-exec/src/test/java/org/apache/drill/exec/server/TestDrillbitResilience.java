@@ -53,7 +53,6 @@ import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
 import org.apache.drill.exec.physical.impl.SingleSenderCreator.SingleSenderRootExec;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
-import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionerDecorator;
 import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
 import org.apache.drill.exec.physical.impl.xsort.ExternalSortBatch;

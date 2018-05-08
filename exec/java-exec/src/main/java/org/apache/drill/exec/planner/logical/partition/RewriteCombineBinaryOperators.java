@@ -37,7 +37,6 @@ import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

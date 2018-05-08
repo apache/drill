@@ -18,18 +18,13 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
-import java.util.List;
 
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlNode;
-
-import com.google.common.base.Joiner;
 
 public abstract class AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSqlHandler.class);

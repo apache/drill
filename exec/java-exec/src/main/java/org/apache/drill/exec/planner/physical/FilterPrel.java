@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Filter;

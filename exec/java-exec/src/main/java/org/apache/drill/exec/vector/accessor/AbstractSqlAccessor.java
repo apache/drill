@@ -24,8 +24,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
-
 public abstract class AbstractSqlAccessor implements SqlAccessor {
 
   @Override

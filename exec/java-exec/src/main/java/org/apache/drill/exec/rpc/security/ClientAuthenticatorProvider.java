@@ -18,7 +18,6 @@
 package org.apache.drill.exec.rpc.security;
 
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.rpc.security.kerberos.KerberosFactory;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;

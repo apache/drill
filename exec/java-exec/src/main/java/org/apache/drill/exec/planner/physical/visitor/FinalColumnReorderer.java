@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.physical.visitor;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;

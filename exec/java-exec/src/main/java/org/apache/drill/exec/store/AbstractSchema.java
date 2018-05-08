@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;

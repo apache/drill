@@ -21,7 +21,6 @@ import org.apache.drill.categories.PlannerTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Category(PlannerTest.class)

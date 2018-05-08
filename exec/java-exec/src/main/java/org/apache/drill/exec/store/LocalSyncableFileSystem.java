@@ -30,7 +30,6 @@ import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.RandomAccess;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.ByteBufferReadable;

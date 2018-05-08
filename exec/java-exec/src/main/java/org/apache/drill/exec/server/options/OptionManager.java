@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.common.exceptions.UserException;
-
 import javax.validation.constraints.NotNull;
 
 /**

@@ -31,7 +31,6 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.RootAllocator;

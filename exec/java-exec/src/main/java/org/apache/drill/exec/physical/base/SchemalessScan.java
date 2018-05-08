@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
-import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.proto.CoordinationProtos;
 
 import java.util.List;

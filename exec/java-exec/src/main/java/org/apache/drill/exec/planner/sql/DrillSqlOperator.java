@@ -29,9 +29,7 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.validate.SqlMonotonicity;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 public class DrillSqlOperator extends SqlFunction {

@@ -61,7 +61,6 @@ import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import org.apache.drill.exec.server.options.OptionSet;
-import org.objectweb.asm.Label;
 
 public class ClassGenerator<T>{
 

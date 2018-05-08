@@ -22,7 +22,6 @@ import static org.junit.Assert.fail;
 
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;

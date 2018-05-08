@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.exec.store.sys.PersistentStore;
 import com.google.common.base.Preconditions;
 
 import java.util.EnumSet;

@@ -25,10 +25,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-
-import static org.slf4j.LoggerFactory.getLogger;
-
 /**
  * Proxy driver for tracing calls to a JDBC driver.
  * Reports calls and parameter values to, and return values and exceptions from,

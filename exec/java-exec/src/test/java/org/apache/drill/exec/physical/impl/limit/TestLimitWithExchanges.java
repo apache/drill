@@ -21,7 +21,6 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.OperatorFixture;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

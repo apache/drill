@@ -17,9 +17,9 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.hamcrest.CoreMatchers.*;
 
 import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;

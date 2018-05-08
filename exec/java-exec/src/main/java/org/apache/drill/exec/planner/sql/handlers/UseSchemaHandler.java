@@ -19,8 +19,6 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
-import com.google.common.base.Strings;
-
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.exec.ops.QueryContext;

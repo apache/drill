@@ -21,14 +21,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
-import java.sql.Statement;
 
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Meta.StatementHandle;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillStatement;
-import org.apache.drill.jdbc.InvalidParameterSqlException;
 
 /**
  * Drill's implementation of {@link Statement}.

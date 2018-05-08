@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.BigIntVector;

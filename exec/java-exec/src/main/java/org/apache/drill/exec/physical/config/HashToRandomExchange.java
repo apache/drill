@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.config;
 
-import java.util.List;
-
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.physical.base.AbstractExchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;

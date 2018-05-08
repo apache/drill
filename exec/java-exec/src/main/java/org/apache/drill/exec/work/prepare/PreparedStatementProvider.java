@@ -57,7 +57,6 @@ import org.joda.time.Period;
 import java.math.BigDecimal;
 import java.net.SocketAddress;
 import java.sql.Date;
-import java.sql.ResultSetMetaData;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;

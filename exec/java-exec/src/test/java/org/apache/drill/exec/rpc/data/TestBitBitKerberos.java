@@ -69,7 +69,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;

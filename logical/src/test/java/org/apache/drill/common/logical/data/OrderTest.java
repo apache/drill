@@ -17,9 +17,7 @@
  */
 package org.apache.drill.common.logical.data;
 
-import static org.junit.Assert.*;
-
-import java.sql.SQLException;
+import static org.junit.Assert.assertThat;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -29,7 +27,7 @@ import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 public class OrderTest {
 

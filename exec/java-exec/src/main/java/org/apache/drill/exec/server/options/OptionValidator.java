@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 

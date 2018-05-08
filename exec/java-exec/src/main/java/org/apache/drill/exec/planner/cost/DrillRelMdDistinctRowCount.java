@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.cost;
 
-import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;

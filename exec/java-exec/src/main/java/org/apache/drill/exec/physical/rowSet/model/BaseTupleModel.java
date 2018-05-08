@@ -24,7 +24,6 @@ import org.apache.drill.exec.record.metadata.AbstractColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
-import org.apache.drill.exec.record.VectorContainer;
 
 /**
  * Base implementation for a tuple model which is common to the "single"

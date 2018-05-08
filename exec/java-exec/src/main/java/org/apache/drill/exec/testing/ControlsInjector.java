@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.slf4j.Logger;
 
 public interface ControlsInjector {

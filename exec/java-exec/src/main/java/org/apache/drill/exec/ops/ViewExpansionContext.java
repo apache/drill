@@ -19,8 +19,6 @@ package org.apache.drill.exec.ops;
 
 import static org.apache.drill.exec.ExecConstants.IMPERSONATION_MAX_CHAINED_USER_HOPS;
 
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelOptTable.ToRelContext;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;

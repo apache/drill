@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.logical;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.exec.planner.common.DrillUnionRelBase;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalUnion;

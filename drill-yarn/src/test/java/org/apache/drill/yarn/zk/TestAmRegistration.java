@@ -17,7 +17,8 @@
  */
 package org.apache.drill.yarn.zk;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.drill.yarn.appMaster.AMRegistrar.AMRegistrationException;

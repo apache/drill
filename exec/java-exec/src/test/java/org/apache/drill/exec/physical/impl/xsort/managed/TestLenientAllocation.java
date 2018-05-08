@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.Accountant;

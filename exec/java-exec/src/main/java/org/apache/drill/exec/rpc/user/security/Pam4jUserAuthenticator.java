@@ -22,7 +22,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.jvnet.libpam.PAM;
 import org.jvnet.libpam.PAMException;
-import org.jvnet.libpam.UnixUser;
 
 import java.io.IOException;
 import java.util.List;

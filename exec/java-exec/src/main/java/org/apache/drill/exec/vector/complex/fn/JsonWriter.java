@@ -27,8 +27,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
 public class JsonWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonWriter.class);

@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
