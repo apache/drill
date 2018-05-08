@@ -311,7 +311,7 @@ public class ClusterControllerImpl implements ClusterController {
    * This approximation <b>does not</b> consider whether the node
    * has sufficient resources to run a task; only whether the node
    * itself exists.
-   * @return
+   * @return The approximate number of free YARN nodes.
    */
 
   @Override

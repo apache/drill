@@ -55,7 +55,7 @@ public enum DistributionAffinity {
   /**
    * Is the current DistributionAffinity less restrictive than the given DistributionAffinity?
    * @param distributionAffinity
-   * @return
+   * @return True if the current DistributionAffinity less restrictive than the given DistributionAffinity. False otherwise.
    */
   public boolean isLessRestrictiveThan(final DistributionAffinity distributionAffinity) {
     return ordinal() < distributionAffinity.ordinal();

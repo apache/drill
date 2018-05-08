@@ -39,7 +39,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-//@JsonDeserialize(using = LogicalExpression.De.class)  // Excluded as we need to register this with the DrillConfig.
 @JsonSerialize(using = LogicalExpression.Se.class)
 public interface LogicalExpression extends Iterable<LogicalExpression>{
   Logger logger = LoggerFactory.getLogger(LogicalExpression.class);

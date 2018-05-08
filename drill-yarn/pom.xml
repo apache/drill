@@ -43,7 +43,7 @@
          </configuration>
       </plugin>
         <!-- See http://stackoverflow.com/questions/31173467/maven-cannot-find-git-dotgitdirectory -->
-  <!-- 
+  <!--
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
@@ -65,7 +65,7 @@
      -->
     </plugins>
   </build>
-  
+
   <dependencies>
 
     <!-- For YARN client. -->
@@ -75,7 +75,7 @@
       <artifactId>hadoop-yarn-api</artifactId>
       <scope>compile</scope>
     </dependency>
-    
+
     <!--  Included as a reference because this seems to be the only
           way to pick up profile-specific jars. -->
 
@@ -116,7 +116,7 @@
       <version>1.0.13</version>
       <scope>test</scope>
     </dependency>
-    
+
     <!--  Testing -->
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -132,7 +132,7 @@
 	   <dependency>
 	      <groupId>org.apache.curator</groupId>
 	      <artifactId>curator-test</artifactId>
-	      <version>2.7.1</version>
+	      <version>${curator.test.version}</version>
 	      <scope>test</scope>
 	      <exclusions>
           <exclusion>

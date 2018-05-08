@@ -26,7 +26,7 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginConfigBase.class);
 
   /**
-   * scan for implementations of {@see FormatPlugin}.
+   * scan for implementations of see <b>FormatPlugin</b>.
    *
    * @param classpathScan - Drill configuration object, used to find the packages to scan
    * @return - list of classes that implement the interface.

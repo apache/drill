@@ -399,13 +399,13 @@ public class DecimalUtility {
   }
 
   /**
-   * Returns default precision for specified {@link TypeProtos.MinorType}
-   * or returns specified defaultPrecision if {@link TypeProtos.MinorType} isn't
-   * {@link TypeProtos.MinorType#INT} or {@link TypeProtos.MinorType#BIGINT}.
+   * Returns default precision for specified {@link org.apache.drill.common.types.TypeProtos.MinorType}
+   * or returns specified defaultPrecision if {@link org.apache.drill.common.types.TypeProtos.MinorType} isn't
+   * {@link org.apache.drill.common.types.TypeProtos.MinorType#INT} or {@link org.apache.drill.common.types.TypeProtos.MinorType#BIGINT}.
    *
    * @param minorType        type wich precision should be received
    * @param defaultPrecision default value for precision
-   * @return default precision for specified {@link TypeProtos.MinorType}
+   * @return default precision for specified {@link org.apache.drill.common.types.TypeProtos.MinorType}
    */
   public static int getDefaultPrecision(TypeProtos.MinorType minorType, int defaultPrecision) {
     switch (minorType) {

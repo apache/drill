@@ -17,23 +17,6 @@
  */
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/kudu/KuduRecordWriter.java" />
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package org.apache.drill.exec.store.kudu;
 
@@ -101,8 +84,8 @@ public abstract class KuduRecordWriter extends AbstractRecordWriter implements R
   <#list vv.types as type>
     <#list type.minor as minor>
       <#list vv.modes as mode>
-      
-        <#if mode.prefix == "Repeated" || 
+
+        <#if mode.prefix == "Repeated" ||
         minor.class == "TinyInt" ||
         minor.class == "UInt1" ||
         minor.class == "UInt2" ||
@@ -116,31 +99,31 @@ public abstract class KuduRecordWriter extends AbstractRecordWriter implements R
         minor.class == "Decimal38Sparse" ||
         minor.class?contains("Interval")
         >
-        
+
         <#else>
           @Override
           public FieldConverter getNew${mode.prefix}${minor.class}Converter(int fieldId, String fieldName, FieldReader reader) {
             return new ${mode.prefix}${minor.class}KuduConverter(fieldId, fieldName, reader);
           }
-      
+
           public class ${mode.prefix}${minor.class}KuduConverter extends FieldConverter {
             private Nullable${minor.class}Holder holder = new Nullable${minor.class}Holder();
-      
+
             public ${mode.prefix}${minor.class}KuduConverter(int fieldId, String fieldName, FieldReader reader) {
               super(fieldId, fieldName, reader);
             }
-      
+
             @Override
             public void writeField() throws IOException {
-         
+
           <#if mode.prefix == "Nullable" >
             if (!reader.isSet()) {
               return;
             }
           </#if>
-          
+
             reader.read(holder);
-            
+
             <#if minor.class == "Float4">
               row.addFloat(fieldId, holder.value);
             <#elseif minor.class == "TimeStamp">
