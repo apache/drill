@@ -44,11 +44,8 @@ import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentStatusReporter;
-import org.apache.drill.exec.work.fragment.NonRootFragmentManager;
 import org.apache.drill.exec.work.fragment.RootFragmentManager;
 
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -141,7 +138,6 @@ public class FragmentsRunner {
     }
   }
 
-
   /**
    * Set up the non-root fragments for execution. Some may be local, and some may be remote.
    * Messages are sent immediately, so they may start returning data even before we complete this.
@@ -158,17 +154,11 @@ public class FragmentsRunner {
      * executed there. We need to start up the intermediate fragments first so that they will be
      * ready once the leaf fragments start producing data. To satisfy both of these, we will
      * make a pass through the fragments and put them into the remote maps according to their
-     * leaf/intermediate state, as well as their target drillbit. Also filter the leaf/intermediate
-     * fragments which are assigned to run on local Drillbit node (or Foreman node) into separate lists.
-     *
-     * This will help to schedule local
+     * leaf/intermediate state, as well as their target drillbit.
      */
-    final Multimap<DrillbitEndpoint, PlanFragment> remoteLeafFragmentMap = ArrayListMultimap.create();
-    final List<PlanFragment> localLeafFragmentList = new ArrayList<>();
-    final Multimap<DrillbitEndpoint, PlanFragment> remoteIntFragmentMap = ArrayListMultimap.create();
-    final List<PlanFragment> localIntFragmentList = new ArrayList<>();
+    final Multimap<DrillbitEndpoint, PlanFragment> leafFragmentMap = ArrayListMultimap.create();
+    final Multimap<DrillbitEndpoint, PlanFragment> intFragmentMap = ArrayListMultimap.create();
 
-    final DrillbitEndpoint localDrillbitEndpoint = drillbitContext.getEndpoint();
     // record all fragments for status purposes.
     for (final PlanFragment planFragment : fragments) {
 
@@ -180,44 +170,38 @@ public class FragmentsRunner {
       foreman.getQueryManager().addFragmentStatusTracker(planFragment, false);
 
       if (planFragment.getLeafFragment()) {
-        updateFragmentCollection(planFragment, localDrillbitEndpoint, localLeafFragmentList, remoteLeafFragmentMap);
+        leafFragmentMap.put(planFragment.getAssignment(), planFragment);
       } else {
-        updateFragmentCollection(planFragment, localDrillbitEndpoint, localIntFragmentList, remoteIntFragmentMap);
+        intFragmentMap.put(planFragment.getAssignment(), planFragment);
       }
     }
 
     /*
      * We need to wait for the intermediates to be sent so that they'll be set up by the time
-     * the leaves start producing data. We'll use this latch to wait for the responses.
+     * the leaves start producing data. We'll use this latch to wait for the responses. All the local intermediate
+     * fragments are submitted locally without creating any actual control connection to itself.
      *
      * However, in order not to hang the process if any of the RPC requests fails, we always
      * count down (see FragmentSubmitFailures), but we count the number of failures so that we'll
      * know if any submissions did fail.
      */
-    scheduleRemoteIntermediateFragments(remoteIntFragmentMap);
-
-    // Setup local intermediate fragments
-    for (final PlanFragment fragment : localIntFragmentList) {
-      startLocalFragment(fragment);
-    }
+    scheduleIntermediateFragments(intFragmentMap);
 
     injector.injectChecked(foreman.getQueryContext().getExecutionControls(), "send-fragments", ForemanException.class);
     /*
      * Send the remote (leaf) fragments; we don't wait for these. Any problems will come in through
-     * the regular sendListener event delivery.
+     * the regular sendListener event delivery˚. All the local leaf fragments are submitted locally without creating
+     * any actual control connection to itself.
      */
-    for (final DrillbitEndpoint ep : remoteLeafFragmentMap.keySet()) {
-      sendRemoteFragments(ep, remoteLeafFragmentMap.get(ep), null, null);
-    }
-
-    // Setup local leaf fragments
-    for (final PlanFragment fragment : localLeafFragmentList) {
-      startLocalFragment(fragment);
+    for (final DrillbitEndpoint ep : leafFragmentMap.keySet()) {
+      sendRemoteFragments(ep, leafFragmentMap.get(ep), null, null);
     }
   }
 
   /**
-   * Send all the remote fragments belonging to a single target drillbit in one request.
+   * Send all the remote fragments belonging to a single target drillbit in one request. If the assignment
+   * DrillbitEndpoint is local Drillbit then {@link Controller#getTunnel(DrillbitEndpoint)} takes care of submitting it
+   * locally without actually creating a Control Connection to itself.
    *
    * @param assignment the drillbit assigned to these fragments
    * @param fragments the set of fragments
@@ -241,41 +225,21 @@ public class FragmentsRunner {
   }
 
   /**
-   * Add planFragment into either of local fragment list or remote fragment map based on assigned Drillbit Endpoint node
-   * and the local Drillbit Endpoint.
+   * Send intermediate fragment to the assigned Drillbit node. If the assignment DrillbitEndpoint is local Drillbit
+   * then {@link Controller#getTunnel(DrillbitEndpoint)} takes care of submitting it locally without actually creating
+   * a Control Connection to itself. Throws {@link UserException} in case of failure to send the fragment.
    *
-   * @param planFragment plan fragment
-   * @param localEndPoint local endpoint
-   * @param localFragmentList local fragment list
-   * @param remoteFragmentMap remote fragment map
+   * @param intermediateFragmentMap - Map of Drillbit Endpoint to list of intermediate PlanFragment's
    */
-  private void updateFragmentCollection(final PlanFragment planFragment, final DrillbitEndpoint localEndPoint,
-                                        final List<PlanFragment> localFragmentList,
-                                        final Multimap<DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
-    final DrillbitEndpoint assignedDrillbit = planFragment.getAssignment();
+  private void scheduleIntermediateFragments(final Multimap<DrillbitEndpoint, PlanFragment> intermediateFragmentMap) {
 
-    if (assignedDrillbit.equals(localEndPoint)) {
-      localFragmentList.add(planFragment);
-    } else {
-      remoteFragmentMap.put(assignedDrillbit, planFragment);
-    }
-  }
-
-  /**
-   * Send remote intermediate fragment to the assigned Drillbit node.
-   * Throw exception in case of failure to send the fragment.
-   *
-   * @param remoteFragmentMap - Map of Drillbit Endpoint to list of PlanFragment's
-   */
-  private void scheduleRemoteIntermediateFragments(final Multimap<DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
-
-    final int numIntFragments = remoteFragmentMap.keySet().size();
+    final int numIntFragments = intermediateFragmentMap.keySet().size();
     final ExtendedLatch endpointLatch = new ExtendedLatch(numIntFragments);
     final FragmentSubmitFailures fragmentSubmitFailures = new FragmentSubmitFailures();
 
     // send remote intermediate fragments
-    for (final DrillbitEndpoint ep : remoteFragmentMap.keySet()) {
-      sendRemoteFragments(ep, remoteFragmentMap.get(ep), endpointLatch, fragmentSubmitFailures);
+    for (final DrillbitEndpoint ep : intermediateFragmentMap.keySet()) {
+      sendRemoteFragments(ep, intermediateFragmentMap.get(ep), endpointLatch, fragmentSubmitFailures);
     }
 
     final long timeout = drillbitContext.getOptionManager().getLong(ExecConstants.FRAG_RUNNER_RPC_TIMEOUT) * numIntFragments;
@@ -310,29 +274,6 @@ public class FragmentsRunner {
       throw UserException.connectionError(submissionExceptions.get(0).rpcException)
           .message("Error setting up remote intermediate fragment execution")
           .addContext("Nodes with failures", sb.toString()).build(logger);
-    }
-  }
-
-
-  /**
-   * Start the locally assigned leaf or intermediate fragment
-   *
-   * @param fragment fragment
-   */
-  private void startLocalFragment(final PlanFragment fragment) throws ExecutionSetupException {
-    logger.debug("Received local fragment start instruction", fragment);
-
-    final FragmentContextImpl fragmentContext = new FragmentContextImpl(drillbitContext, fragment, drillbitContext.getFunctionImplementationRegistry());
-    final FragmentStatusReporter statusReporter = new FragmentStatusReporter(fragmentContext);
-    final FragmentExecutor fragmentExecutor = new FragmentExecutor(fragmentContext, fragment, statusReporter);
-
-    // we either need to start the fragment if it is a leaf fragment, or set up a fragment manager if it is non leaf.
-    if (fragment.getLeafFragment()) {
-      bee.addFragmentRunner(fragmentExecutor);
-    } else {
-      // isIntermediate, store for incoming data.
-      final NonRootFragmentManager manager = new NonRootFragmentManager(fragment, fragmentExecutor, statusReporter);
-      drillbitContext.getWorkBus().addFragmentManager(manager);
     }
   }
 

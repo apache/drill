@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.BitConnectionConfig;
@@ -24,8 +25,8 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 // config for bit to bit connection
-// package private
-class ControlConnectionConfig extends BitConnectionConfig {
+@VisibleForTesting
+public class ControlConnectionConfig extends BitConnectionConfig {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnectionConfig.class);
 
   private final ControlMessageHandler handler;
@@ -41,8 +42,8 @@ class ControlConnectionConfig extends BitConnectionConfig {
     return "control"; // unused
   }
 
-  ControlMessageHandler getMessageHandler() {
+  @VisibleForTesting
+  public ControlMessageHandler getMessageHandler() {
     return handler;
   }
-
 }
