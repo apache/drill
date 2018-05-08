@@ -40,12 +40,9 @@ public class FragmentStatusReporter implements AutoCloseable {
 
   protected final AtomicReference<DrillbitEndpoint> foremanDrillbit;
 
-  protected final DrillbitEndpoint localDrillbit;
-
   public FragmentStatusReporter(final ExecutorFragmentContext context) {
     this.context = context;
     this.foremanDrillbit = new AtomicReference<>(context.getForemanEndpoint());
-    this.localDrillbit = context.getEndpoint();
   }
 
   /**
@@ -119,14 +116,10 @@ public class FragmentStatusReporter implements AutoCloseable {
       return;
     }
 
-    if (localDrillbit.equals(foremanNode)) {
-      // Update the status locally
-      context.getWorkEventbus().statusUpdate(status);
-    } else {
-      // Send the status via Control Tunnel to remote foreman node
-      final ControlTunnel tunnel = context.getController().getTunnel(foremanNode);
-      tunnel.sendFragmentStatus(status);
-    }
+    // Send status for both local and remote foreman node via Tunnel. For local there won't be any network connection
+    // created and it will be submitted locally using LocalControlConnectionManager
+    final ControlTunnel tunnel = context.getController().getTunnel(foremanNode);
+    tunnel.sendFragmentStatus(status);
   }
 
   /**

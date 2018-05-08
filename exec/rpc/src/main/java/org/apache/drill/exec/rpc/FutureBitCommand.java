@@ -17,20 +17,24 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.Internal.EnumLite;
+import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
 
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.protobuf.MessageLite;
-
-public abstract class FutureBitCommand<T extends MessageLite, C extends RemoteConnection> implements RpcCommand<T,C> {
+public abstract class FutureBitCommand<T extends MessageLite, C extends RemoteConnection,
+  E extends EnumLite, M extends MessageLite> implements RpcCommand<T, C, E, M> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FutureBitCommand.class);
 
   protected final SettableFuture<T> settableFuture;
   private final RpcCheckedFuture<T> parentFuture;
 
+  private final RpcOutcomeListener<T> outcomeListener;
+
   public FutureBitCommand() {
     this.settableFuture = SettableFuture.create();
     this.parentFuture = new RpcCheckedFuture<T>(settableFuture);
+    outcomeListener = new DeferredRpcOutcome();
   }
 
   public abstract void doRpcCall(RpcOutcomeListener<T> outcomeListener, C connection);
@@ -38,7 +42,7 @@ public abstract class FutureBitCommand<T extends MessageLite, C extends RemoteCo
   @Override
   public void connectionAvailable(C connection) {
 
-    doRpcCall(new DeferredRpcOutcome(), connection);
+    doRpcCall(outcomeListener, connection);
   }
 
   @Override
@@ -72,9 +76,13 @@ public abstract class FutureBitCommand<T extends MessageLite, C extends RemoteCo
   }
 
   @Override
+  public RpcOutcomeListener<T> getOutcomeListener() {
+    return outcomeListener;
+  }
+
+  @Override
   public void connectionFailed(FailureType type, Throwable t) {
     settableFuture.setException(RpcException.mapException(
         String.format("Command failed while establishing connection.  Failure type %s.", type), t));
   }
-
 }

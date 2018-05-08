@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.rpc;
 
-import io.netty.buffer.ByteBuf;
-
+import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 
-public abstract class ListeningCommand<T extends MessageLite, C extends RemoteConnection> implements RpcCommand<T, C> {
+public abstract class ListeningCommand<T extends MessageLite, C extends RemoteConnection,
+  E extends EnumLite, M extends MessageLite> implements RpcCommand<T, C, E, M> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ListeningCommand.class);
 
   private final RpcOutcomeListener<T> listener;
@@ -35,7 +35,7 @@ public abstract class ListeningCommand<T extends MessageLite, C extends RemoteCo
   @Override
   public void connectionAvailable(C connection) {
 
-    doRpcCall(new DeferredRpcOutcome(), connection);
+    doRpcCall(listener, connection);
   }
 
   @Override
@@ -43,28 +43,15 @@ public abstract class ListeningCommand<T extends MessageLite, C extends RemoteCo
     connectionAvailable(connection);
   }
 
-  private class DeferredRpcOutcome implements RpcOutcomeListener<T> {
-
-    @Override
-    public void failed(RpcException ex) {
-      listener.failed(ex);
-    }
-
-    @Override
-    public void success(T value, ByteBuf buf) {
-      listener.success(value, buf);
-    }
-
-    @Override
-    public void interrupted(final InterruptedException e) {
-      listener.interrupted(e);
-    }
-  }
-
   @Override
   public void connectionFailed(FailureType type, Throwable t) {
     listener.failed(RpcException.mapException(
         String.format("Command failed while establishing connection.  Failure type %s.", type), t));
+  }
+
+  @Override
+  public RpcOutcomeListener<T> getOutcomeListener() {
+    return listener;
   }
 
 }
