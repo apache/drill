@@ -27,7 +27,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeAction;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeTask;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;

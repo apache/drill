@@ -55,7 +55,6 @@ import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.testing.ExecutionControls;

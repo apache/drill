@@ -19,13 +19,9 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
-import org.apache.calcite.tools.Planner;
-
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ShowSchemasHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
-import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;

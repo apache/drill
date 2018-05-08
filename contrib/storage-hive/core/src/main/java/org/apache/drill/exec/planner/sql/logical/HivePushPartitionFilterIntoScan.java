@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.logical;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.GroupScan;

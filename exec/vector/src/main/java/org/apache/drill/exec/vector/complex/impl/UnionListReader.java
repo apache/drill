@@ -25,9 +25,7 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 public class UnionListReader extends AbstractFieldReader {

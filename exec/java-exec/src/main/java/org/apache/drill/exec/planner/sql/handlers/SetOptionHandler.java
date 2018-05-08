@@ -23,8 +23,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.ValidationException;
 
 import org.apache.calcite.util.NlsString;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;

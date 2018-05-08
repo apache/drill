@@ -52,8 +52,6 @@ import org.mockito.Mockito;
 import sun.security.jgss.GSSUtil;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;

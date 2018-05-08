@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.sql.ResultSet;
 import java.sql.Time;
 import java.sql.Timestamp;
 

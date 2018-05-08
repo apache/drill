@@ -17,29 +17,25 @@
  */
 package org.apache.drill.jdbc;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.categories.JdbcTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
-import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.testing.Controls;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLTimeoutException;
 import java.sql.SQLException;
 

@@ -17,8 +17,6 @@
  */
 package org.apache.drill.test.rowSet.test;
 
-import static org.junit.Assert.*;
-
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -34,6 +32,9 @@ import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test reading with an indirection vector (sv2.) This form of

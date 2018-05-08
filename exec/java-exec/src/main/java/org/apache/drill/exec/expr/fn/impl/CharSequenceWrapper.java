@@ -23,7 +23,6 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
-import java.util.regex.Matcher;
 
 import io.netty.buffer.DrillBuf;
 

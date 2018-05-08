@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.logical;
 
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 
-import org.apache.drill.exec.planner.common.DrillScreenRelBase;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
 

@@ -21,8 +21,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.hive.HiveSubScan;
 import org.apache.drill.exec.store.hive.readers.HiveAbstractReader;
-import org.apache.drill.exec.store.hive.readers.initilializers.AbstractReadersInitializer;
-import org.apache.hadoop.mapred.InputSplit;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

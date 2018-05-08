@@ -28,8 +28,11 @@ import org.apache.drill.categories.JdbcTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
 
 /**
  * Class-level unit test for {@link TypeConvertingSqlAccessor}.

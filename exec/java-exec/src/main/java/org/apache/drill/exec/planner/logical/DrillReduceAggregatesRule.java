@@ -39,7 +39,6 @@ import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.trace.CalciteTrace;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillCalciteSqlAggFunctionWrapper;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;

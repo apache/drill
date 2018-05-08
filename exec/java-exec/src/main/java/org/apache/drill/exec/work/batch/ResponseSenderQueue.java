@@ -19,8 +19,6 @@ package org.apache.drill.exec.work.batch;
 
 import java.util.Queue;
 
-import org.apache.drill.exec.rpc.ResponseSender;
-import org.apache.drill.exec.rpc.data.DataRpcConfig;
 import org.apache.drill.exec.rpc.data.AckSender;
 
 import com.google.common.annotations.VisibleForTesting;

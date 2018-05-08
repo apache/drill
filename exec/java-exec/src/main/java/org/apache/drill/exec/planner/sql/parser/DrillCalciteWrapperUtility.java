@@ -20,9 +20,6 @@ package org.apache.drill.exec.planner.sql.parser;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlAggFunctionWrapper;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlFunctionWrapper;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlOperatorWrapper;
 import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
 
 /**

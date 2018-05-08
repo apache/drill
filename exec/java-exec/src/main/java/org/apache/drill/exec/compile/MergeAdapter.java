@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Iterator;
@@ -41,7 +39,6 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 /**
  * Serves two purposes. Renames all inner classes references to the outer class to the new name. Also adds all the

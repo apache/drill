@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.vector.ValueVector;

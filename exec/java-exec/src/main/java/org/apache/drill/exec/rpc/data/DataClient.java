@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import com.google.common.collect.ImmutableList;
 import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;

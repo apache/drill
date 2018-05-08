@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.google.common.collect.Iterators;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;

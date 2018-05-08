@@ -19,9 +19,7 @@ package org.apache.drill.exec.store.easy.text.compliant;
 
 import java.io.IOException;
 
-import com.univocity.parsers.common.ParserOutput;
 import com.univocity.parsers.common.ParsingContext;
-import com.univocity.parsers.common.input.CharInputReader;
 
 class TextParsingContext implements ParsingContext {
 

@@ -26,8 +26,6 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.accessor.ScalarReader;
-import org.apache.parquet.column.ColumnWriter;
 
 import java.util.Set;
 

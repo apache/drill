@@ -17,16 +17,13 @@
  */
 package org.apache.drill.yarn.client;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
-import org.apache.drill.yarn.client.ClientContext;
-import org.apache.drill.yarn.client.DrillOnYarn;
 import org.junit.Test;
 
 public class TestClient {

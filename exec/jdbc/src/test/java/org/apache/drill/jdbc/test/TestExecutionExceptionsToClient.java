@@ -17,8 +17,12 @@
  */
 package org.apache.drill.jdbc.test;
 
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.categories.JdbcTest;

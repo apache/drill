@@ -46,7 +46,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
 

@@ -42,8 +42,6 @@ import org.apache.parquet.hadoop.CodecFactory.BytesCompressor;
 import org.apache.parquet.io.ParquetEncodingException;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.bytes.ByteBufferAllocator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This is a copy of ColumnChunkPageWriteStore from parquet library except of OutputStream that is used here.

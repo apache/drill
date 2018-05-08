@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.drill.common.exceptions.UserException;
 
 import com.univocity.parsers.common.TextParsingException;
-import com.univocity.parsers.csv.CsvParserSettings;
 
 /*******************************************************************************
  * Portions Copyright 2014 uniVocity Software Pty Ltd

@@ -19,7 +19,6 @@ package org.apache.drill.exec.expr;
 
 import java.io.IOException;
 
-import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.server.options.OptionSet;

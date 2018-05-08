@@ -17,9 +17,6 @@
  */
 package org.apache.drill.jdbc;
 
-import java.sql.Statement;  // (for Javadoc reference(s))
-
-
 /**
  * SQLException for object-already-closed conditions, e.g., calling a method
  * on a closed {@link Statement}.

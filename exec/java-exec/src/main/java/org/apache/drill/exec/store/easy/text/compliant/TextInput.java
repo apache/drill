@@ -31,7 +31,6 @@ import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.io.compress.CompressionInputStream;
 
 import com.google.common.base.Preconditions;
-import com.univocity.parsers.common.Format;
 
 import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 

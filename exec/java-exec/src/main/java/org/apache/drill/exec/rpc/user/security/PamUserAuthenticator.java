@@ -19,7 +19,6 @@ package org.apache.drill.exec.rpc.user.security;
 
 import net.sf.jpam.Pam;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 

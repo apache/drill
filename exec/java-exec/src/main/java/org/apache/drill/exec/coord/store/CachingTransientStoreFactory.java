@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.exec.store.sys.PersistentStore;
 
 public class CachingTransientStoreFactory implements TransientStoreFactory {
   private final TransientStoreFactory delegate;

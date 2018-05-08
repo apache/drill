@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.coord.store;
 
-import org.apache.drill.exec.store.sys.PersistentStore;
-
 /**
  * Factory that is used to obtain a {@link TransientStore store} instance.
  */

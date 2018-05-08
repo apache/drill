@@ -17,9 +17,6 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
-
 import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -27,12 +24,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Array;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -42,7 +43,6 @@ import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
-import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
 

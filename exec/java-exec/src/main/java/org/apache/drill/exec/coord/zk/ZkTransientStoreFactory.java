@@ -20,7 +20,6 @@ package org.apache.drill.exec.coord.zk;
 import com.google.common.base.Preconditions;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.coord.store.TransientStore;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreFactory;
 

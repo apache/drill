@@ -17,9 +17,7 @@
  */
 package org.apache.drill.jdbc;
 
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.PreparedStatement;
-
 
 /**
  * Drill-specific {@link PreparedStatement}.

@@ -34,7 +34,6 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.kafka.KafkaSubScan.KafkaSubScanSpec;
 import org.apache.drill.exec.store.kafka.decoders.MessageReader;
 import org.apache.drill.exec.store.kafka.decoders.MessageReaderFactory;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;

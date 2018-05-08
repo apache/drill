@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillFilterRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;

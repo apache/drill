@@ -28,7 +28,6 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestComplexToJson extends BaseTestQuery {

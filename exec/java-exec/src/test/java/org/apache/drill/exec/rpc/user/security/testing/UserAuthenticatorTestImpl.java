@@ -18,7 +18,6 @@
 package org.apache.drill.exec.rpc.user.security.testing;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.impersonation.TestInboundImpersonation;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticationException;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticator;

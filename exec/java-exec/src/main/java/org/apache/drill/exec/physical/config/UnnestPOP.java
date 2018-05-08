@@ -23,16 +23,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Iterators;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractSingle;
-import org.apache.drill.exec.physical.base.LateralContract;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.beans.CoreOperatorType;
 
 import java.util.Iterator;
-import java.util.List;
 
 import static org.apache.drill.exec.proto.UserBitShared.CoreOperatorType.UNNEST_VALUE;
-import static org.apache.drill.exec.proto.beans.CoreOperatorType.UNNEST;
 
 @JsonTypeName("unnest")
 public class UnnestPOP extends AbstractSingle {

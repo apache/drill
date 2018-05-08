@@ -20,8 +20,6 @@ package org.apache.drill.exec.physical.base;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.Iterators;
-
 /**
  * Describes an operator that expects more than one children operators as its input.
  */

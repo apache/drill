@@ -19,8 +19,6 @@ package org.apache.drill.exec.util;
 
 import io.netty.buffer.DrillBuf;
 
-import java.io.DataInput;
-
 import org.apache.drill.common.util.DrillStringUtils;
 
 public class ByteBufUtil {

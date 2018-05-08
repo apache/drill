@@ -22,7 +22,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 

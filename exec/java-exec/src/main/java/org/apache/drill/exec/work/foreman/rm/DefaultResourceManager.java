@@ -20,7 +20,6 @@ package org.apache.drill.exec.work.foreman.rm;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.util.MemoryAllocationUtilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.foreman.Foreman;

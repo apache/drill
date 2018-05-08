@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.options;
 
 import com.google.common.collect.Maps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.exec.ops.FragmentContextImpl;
 
 import java.util.Map;
 

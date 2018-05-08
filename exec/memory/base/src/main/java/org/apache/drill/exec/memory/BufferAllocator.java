@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.BufferManager;
 
 /**

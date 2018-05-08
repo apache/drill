@@ -17,11 +17,8 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 
 public class TestWithZookeeper extends ExecTest {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestWithZookeeper.class);

@@ -27,11 +27,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 @JsonTypeName("window")

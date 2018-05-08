@@ -19,7 +19,6 @@ package org.apache.drill.exec.vector.complex.writer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.physical.impl.join.JoinTestBase;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -36,7 +35,9 @@ import java.util.List;
 
 import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class TestJsonNanInf extends BaseTestQuery {
 

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.calcite.avatica.util.Cursor.Accessor;

@@ -22,7 +22,6 @@ import java.util.concurrent.Callable;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.work.WorkManager;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.common.util.concurrent.ListenableFuture;

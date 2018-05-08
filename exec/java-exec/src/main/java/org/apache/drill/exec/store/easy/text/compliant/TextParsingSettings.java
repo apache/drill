@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.easy.text.compliant;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 
 import com.google.common.base.Charsets;
-import com.univocity.parsers.common.TextParsingException;
 
 public class TextParsingSettings {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TextParsingSettings.class);

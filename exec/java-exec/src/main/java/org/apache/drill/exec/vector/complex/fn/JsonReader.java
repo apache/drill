@@ -21,17 +21,14 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.BitSet;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.ListVectorOutput;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;

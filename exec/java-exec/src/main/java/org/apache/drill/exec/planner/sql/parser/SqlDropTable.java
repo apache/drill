@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DropTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;

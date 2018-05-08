@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.dotdrill;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;

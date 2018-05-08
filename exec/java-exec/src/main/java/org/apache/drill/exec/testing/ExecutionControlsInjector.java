@@ -19,7 +19,6 @@ package org.apache.drill.exec.testing;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.exec.ops.FragmentContextImpl;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 

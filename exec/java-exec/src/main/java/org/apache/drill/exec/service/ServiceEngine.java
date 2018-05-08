@@ -19,7 +19,6 @@ package org.apache.drill.exec.service;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.channel.EventLoopGroup;
 
 import java.net.InetAddress;

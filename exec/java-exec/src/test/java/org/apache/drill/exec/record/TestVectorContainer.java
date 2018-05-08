@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.record;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -28,7 +28,6 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

@@ -33,7 +33,6 @@ import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.QueryTestUtil;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
