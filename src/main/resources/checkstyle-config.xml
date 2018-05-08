@@ -27,16 +27,13 @@
 <module name="Checker">
 
   <module name="TreeWalker">
-
+    <module name="UnusedImports"/>
     <module name="IllegalImport">
       <!-- For "org.apache.commons.lang.*" classes use the corresponding class from "org.apache.commons.lang3.*" -->
       <property name="illegalPkgs" value="com.google.hive12,com.beust.jcommander.internal,jersey.repackaged,org.apache.commons.lang"/>
     </module>
 
-    <module name="AvoidStarImport">
-      <property name="allowStaticMemberImports" value="true"/>
-    </module>
-
+    <module name="AvoidStarImport"/>
     <module name="NeedBraces"/>
 
   </module>
