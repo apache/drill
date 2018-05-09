@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import io.netty.buffer.ByteBufUtil;
 import org.apache.drill.exec.util.filereader.BufferedDirectBufInputStream;
@@ -30,6 +31,7 @@ import org.apache.drill.exec.util.filereader.DirectBufInputStream;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.bytes.ByteBufferInputStream;
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.column.Dictionary;
 import org.apache.parquet.column.Encoding;
@@ -250,7 +252,7 @@ class PageReader {
   }
 
   public static BytesInput asBytesInput(DrillBuf buf, int offset, int length) throws IOException {
-    return BytesInput.from(buf.nioBuffer(offset, length), 0, length);
+    return BytesInput.from(buf.nioBuffer(offset, length));
   }
 
 
@@ -319,41 +321,44 @@ class PageReader {
 
     byteLength = pageHeader.uncompressed_page_size;
 
-    final ByteBuffer pageDataBuffer = pageData.nioBuffer(0, pageData.capacity());
+    final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, pageData.capacity()));
 
     readPosInBytes = 0;
     if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
       repetitionLevels = rlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.REPETITION_LEVEL);
-      repetitionLevels.initFromPage(currentPageCount, pageDataBuffer, (int) readPosInBytes);
+      repetitionLevels.initFromPage(currentPageCount, in);
       // we know that the first value will be a 0, at the end of each list of repeated values we will hit another 0 indicating
       // a new record, although we don't know the length until we hit it (and this is a one way stream of integers) so we
       // read the first zero here to simplify the reading processes, and start reading the first value the same as all
       // of the rest. Effectively we are 'reading' the non-existent value in front of the first allowing direct access to
       // the first list of repetition levels
-      readPosInBytes = repetitionLevels.getNextOffset();
+      readPosInBytes = in.position();
       repetitionLevels.readInteger();
     }
-    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0){
+    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0) {
       parentColumnReader.currDefLevel = -1;
       definitionLevels = dlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-      definitionLevels.initFromPage(currentPageCount, pageDataBuffer, (int) readPosInBytes);
-      readPosInBytes = definitionLevels.getNextOffset();
+      definitionLevels.initFromPage(currentPageCount, in);
+      readPosInBytes = in.position();
       if (!valueEncoding.usesDictionary()) {
         valueReader = valueEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
-        valueReader.initFromPage(currentPageCount, pageDataBuffer, (int) readPosInBytes);
+        valueReader.initFromPage(currentPageCount, in);
       }
     }
-    if (parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
+    if (valueReader == null && parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
       valueReader = valueEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
-      valueReader.initFromPage(currentPageCount, pageDataBuffer, (int) readPosInBytes);
+      valueReader.initFromPage(currentPageCount, in);
     }
     if (valueEncoding.usesDictionary()) {
       // initialize two of the dictionary readers, one is for determining the lengths of each value, the second is for
       // actually copying the values out into the vectors
+      Preconditions.checkState(readPosInBytes < pageData.capacity());
+      int index = (int)readPosInBytes;
+      ByteBuffer byteBuffer = pageData.nioBuffer(index, pageData.capacity() - index);
       dictionaryLengthDeterminingReader = new DictionaryValuesReader(dictionary);
-      dictionaryLengthDeterminingReader.initFromPage(currentPageCount, pageDataBuffer, (int) readPosInBytes);
+      dictionaryLengthDeterminingReader.initFromPage(currentPageCount, ByteBufferInputStream.wrap(byteBuffer));
       dictionaryValueReader = new DictionaryValuesReader(dictionary);
-      dictionaryValueReader.initFromPage(currentPageCount, pageDataBuffer, (int) readPosInBytes);
+      dictionaryValueReader.initFromPage(currentPageCount, ByteBufferInputStream.wrap(byteBuffer));
       parentColumnReader.usingDictionary = true;
     } else {
       parentColumnReader.usingDictionary = false;
@@ -445,25 +450,29 @@ class PageReader {
    * @throws IOException An IO related condition
    */
   void resetDefinitionLevelReader(int skipCount) throws IOException {
-    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0) {
-      throw new UnsupportedOperationException("Unsupoorted Operation");
+    Preconditions.checkState(parentColumnReader.columnDescriptor.getMaxDefinitionLevel() == 1);
+    Preconditions.checkState(currentPageCount > 0);
+
+    final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.repetition_level_encoding);
+    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.definition_level_encoding);
+
+    final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, pageData.capacity()));
+
+    if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
+      repetitionLevels = rlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.REPETITION_LEVEL);
+      repetitionLevels.initFromPage(currentPageCount, in);
+      repetitionLevels.readInteger();
     }
 
-    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.definition_level_encoding);
-    final ByteBuffer pageDataBuffer = pageData.nioBuffer(0, pageData.capacity());
-    final int defStartPos = repetitionLevels != null ? repetitionLevels.getNextOffset() : 0;
     definitionLevels = dlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
     parentColumnReader.currDefLevel = -1;
 
     // Now reinitialize the underlying decoder
-    assert currentPageCount > 0 : "Page count should be strictly upper than zero";
-    definitionLevels.initFromPage(currentPageCount, pageDataBuffer, defStartPos);
+    definitionLevels.initFromPage(currentPageCount, in);
 
     // Skip values if requested by caller
     for (int idx = 0; idx < skipCount; ++idx) {
       definitionLevels.skip();
     }
   }
-
-
 }

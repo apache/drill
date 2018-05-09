@@ -21,14 +21,13 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.format.PageHeader;
 import org.apache.parquet.format.Util;
-import org.apache.parquet.hadoop.util.CompatibilityUtil;
+import org.apache.parquet.hadoop.util.HadoopStreams;
 
 public class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
@@ -58,11 +57,7 @@ public class ColumnDataReader {
 
   public void loadPage(DrillBuf target, int pageLength) throws IOException {
     target.clear();
-    ByteBuffer directBuffer = target.nioBuffer(0, pageLength);
-    int lengthLeftToRead = pageLength;
-    while (lengthLeftToRead > 0) {
-      lengthLeftToRead -= CompatibilityUtil.getBuf(input, directBuffer, lengthLeftToRead);
-    }
+    HadoopStreams.wrap(input).read(target.nioBuffer(0, pageLength));
     target.writerIndex(pageLength);
   }
 
