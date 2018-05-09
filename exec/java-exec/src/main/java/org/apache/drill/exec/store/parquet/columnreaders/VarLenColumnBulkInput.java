@@ -204,7 +204,7 @@ final class VarLenColumnBulkInput<V extends ValueVector> implements VarLenBulkIn
         buffPagePayload = new VarLenBulkPageReader(pageInfo, columnPrecInfo, callback);
 
       } else {
-        buffPagePayload.set(pageInfo);
+        buffPagePayload.set(pageInfo, true);
       }
     } else {
       if (buffPagePayload == null) {

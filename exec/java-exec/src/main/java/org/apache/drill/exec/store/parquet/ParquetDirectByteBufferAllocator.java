@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -30,86 +31,47 @@ import org.apache.parquet.bytes.ByteBufferAllocator;
 /**
  * {@link ByteBufferAllocator} implementation that uses Drill's {@link BufferAllocator} to allocate and release
  * {@link ByteBuffer} objects.<br>
- * To properly release an allocated {@link ByteBuf}, this class keeps track of it's corresponding {@link ByteBuffer}
+ * To properly release an allocated {@link DrillBuf}, this class keeps track of it's corresponding {@link ByteBuffer}
  * that was passed to the Parquet library.
  */
 public class ParquetDirectByteBufferAllocator implements ByteBufferAllocator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetDirectByteBufferAllocator.class);
 
   private final BufferAllocator allocator;
-  private final HashMap<Key, ByteBuf> allocatedBuffers = new HashMap<>();
+  private final Map<ByteBuffer, DrillBuf> allocatedBuffers = new IdentityHashMap<>();
 
-  public ParquetDirectByteBufferAllocator(OperatorContext o){
-    allocator = o.getAllocator();
+  public ParquetDirectByteBufferAllocator(OperatorContext o) {
+    this(o.getAllocator());
   }
 
   public ParquetDirectByteBufferAllocator(BufferAllocator allocator) {
     this.allocator = allocator;
   }
 
-
   @Override
   public ByteBuffer allocate(int sz) {
-    ByteBuf bb = allocator.buffer(sz);
-    ByteBuffer b = bb.nioBuffer(0, sz);
-    final Key key = new Key(b);
-    allocatedBuffers.put(key, bb);
-    logger.debug("ParquetDirectByteBufferAllocator: Allocated {} bytes. Allocated ByteBuffer id: {}", sz, key.hash);
-    return b;
+    DrillBuf drillBuf = allocator.buffer(sz);
+    ByteBuffer byteBuffer = drillBuf.nioBuffer(0, sz);
+    allocatedBuffers.put(byteBuffer, drillBuf);
+    logger.debug("{}: Allocated {} bytes. Allocated DrillBuf with id {} and ByteBuffer {}", this, sz, drillBuf.getId(), System.identityHashCode(byteBuffer));
+    return byteBuffer;
   }
 
   @Override
-  public void release(ByteBuffer b) {
-    final Key key = new Key(b);
-    final ByteBuf bb = allocatedBuffers.get(key);
+  public void release(ByteBuffer byteBuffer) {
+    final DrillBuf drillBuf = allocatedBuffers.remove(byteBuffer);
     // The ByteBuffer passed in may already have been freed or not allocated by this allocator.
     // If it is not found in the allocated buffers, do nothing
-    if(bb != null) {
-      logger.debug("ParquetDirectByteBufferAllocator: Freed byte buffer. Allocated ByteBuffer id: {}", key.hash);
-      bb.release();
-      allocatedBuffers.remove(key);
+    if (drillBuf != null) {
+      logger.debug("{}: Freed DrillBuf with id {} and ByteBuffer {}", this, drillBuf.getId(), System.identityHashCode(byteBuffer));
+      drillBuf.release();
+    } else {
+      logger.warn("{}: ByteBuffer {} is not present", this, System.identityHashCode(byteBuffer));
     }
   }
 
   @Override
   public boolean isDirect() {
     return true;
-  }
-
-  /**
-   * ByteBuffer wrapper that computes a fixed hashcode.
-   * <br><br>
-   * Parquet only handles {@link ByteBuffer} objects, so we need to use them as keys to keep track of their corresponding
-   * {@link ByteBuf}, but {@link ByteBuffer} is mutable and it can't be used as a {@link HashMap} key as it is.<br>
-   * This class solves this by providing a fixed hashcode for {@link ByteBuffer} and uses reference equality in case
-   * of collisions (we don't need to compare the content of {@link ByteBuffer} because the object passed to
-   * {@link #release(ByteBuffer)} will be the same object returned from a previous {@link #allocate(int)}.
-   */
-  private class Key {
-    final int hash;
-    final ByteBuffer buffer;
-
-    Key(final ByteBuffer buffer) {
-      this.buffer = buffer;
-      // remember, we can't use buffer.hashCode()
-      this.hash = System.identityHashCode(buffer);
-    }
-
-    @Override
-    public int hashCode() {
-      return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (!(obj instanceof Key)) {
-        return false;
-      }
-      final Key key = (Key) obj;
-      return hash == key.hash && buffer == key.buffer;
-    }
   }
 }

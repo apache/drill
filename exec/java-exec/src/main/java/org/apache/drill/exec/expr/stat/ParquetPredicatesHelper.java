@@ -43,7 +43,7 @@ class ParquetPredicatesHelper {
    *          False if at least one row is not null.
    */
   static boolean isAllNulls(Statistics stat, long rowCount) {
-    return stat.getNumNulls() == rowCount;
+    return stat.isNumNullsSet() && stat.getNumNulls() == rowCount;
   }
 
   /**
@@ -54,7 +54,7 @@ class ParquetPredicatesHelper {
    *          False if the parquet file hasn't nulls.
    */
   static boolean hasNoNulls(Statistics stat) {
-    return stat.getNumNulls() == 0;
+    return !stat.isNumNullsSet() || stat.getNumNulls() == 0;
   }
 
 }
