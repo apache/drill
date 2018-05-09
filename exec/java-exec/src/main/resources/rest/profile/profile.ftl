@@ -86,7 +86,10 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       <p><pre>${model.profile.plan}</pre></p>
     </div>
     <div id="query-visual" class="tab-pane">
-      <svg id="query-visual-canvas" class="center-block"></svg>
+      <button type='button' class='btn btn-default' onclick='popUpAndPrintPlan();'><span class="glyphicon glyphicon-print"></span> Print Plan</button>
+      <div>
+        <svg id="query-visual-canvas" class="center-block"></svg>
+      </div>
     </div>
     <div id="query-edit" class="tab-pane">
       <p>
@@ -453,7 +456,16 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       enableBasicAutocompletion: true,
       enableLiveAutocompletion: false
     });
-  </script>
+
+    //Pops out a new window and provids prompt to print
+    var popUpAndPrintPlan = function() {
+      var srcSvg = $('#query-visual-canvas');
+      var screenRatio=0.9;
+      let printWindow = window.open('', 'PlanPrint', 'width=' + (screenRatio*screen.width) + ',height=' + (screenRatio*screen.height) );
+      printWindow.document.writeln($(srcSvg).parent().html());
+      printWindow.print();
+    };
+    </script>
 
 </#macro>
 
