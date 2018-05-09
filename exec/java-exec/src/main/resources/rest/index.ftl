@@ -224,6 +224,7 @@
       var size = $("#size").html();
       reloadMetrics();
       setInterval(reloadMetrics, refreshTime);
+      var hideShutdownBtns = setShutdownCtrl();
 
       //Hide Shutdown buttons for remote HTTPS entries
       function setShutdownCtrl() {
