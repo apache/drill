@@ -69,6 +69,11 @@ import com.google.common.base.Stopwatch;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
+/**
+ * Operator Batch which implements the TopN functionality. It is more efficient than (sort + limit) since unlike sort
+ * it doesn't have to store all the input data to sort it first and then apply limit on the sorted data. Instead
+ * internally it maintains a priority queue backed by a heap with the size being same as limit value.
+ */
 public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
 
@@ -134,6 +139,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       case OK:
       case OK_NEW_SCHEMA:
         for (VectorWrapper<?> w : incoming) {
+          // TODO: Not sure why the special handling for AbstractContainerVector is needed since creation of child
+          // vectors is taken care correctly if the field is retrieved from incoming vector and passed to it rather than
+          // creating a new Field instance just based on name and type.
           @SuppressWarnings("resource")
           ValueVector v = c.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
@@ -208,6 +216,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
+
           if (!incoming.getSchema().equals(schema)) {
             if (schema != null) {
               if (!unionTypeEnabled) {
@@ -244,8 +253,13 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
               priorityQueue = createNewPriorityQueue(new ExpandableHyperContainer(batch.getContainer()), config.getLimit());
             }
             priorityQueue.add(batch);
+            // Based on static threshold of number of batches, perform purge operation to release the memory for
+            // RecordBatches which are of no use or doesn't fall under TopN category
             if (countSincePurge > config.getLimit() && batchCount > batchPurgeThreshold) {
               purge();
+
+              // FixMe: I think below members should be initialized to limit and 1 respectively since after purge
+              // PriorityQueue will contain that many records and only 1 batch.
               countSincePurge = 0;
               batchCount = 0;
             }
@@ -286,11 +300,25 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     }
   }
 
+  /**
+   * When PriorityQueue is built up then it stores the list of limit number of record indexes (in heapSv4) which falls
+   * under TopN category. But it also stores all the incoming RecordBatches with all records inside a HyperContainer
+   * (hyperBatch). When a certain threshold of batches are reached then this method is called which copies the limit
+   * number of records whose indexes are stored in heapSv4 out of HyperBatch to a new VectorContainer and releases
+   * all other records and their batches. Later this new VectorContainer is stored inside the HyperBatch and it's
+   * corresponding indexes are stored in the heapSv4 vector. This is done to avoid holding up lot's of Record Batches
+   * which can create OutOfMemory condition.
+   * @throws SchemaChangeException
+   */
   private void purge() throws SchemaChangeException {
     Stopwatch watch = Stopwatch.createStarted();
     VectorContainer c = priorityQueue.getHyperBatch();
+
+    // Simple VectorConatiner which stores limit number of records only. The records whose indexes are stored inside
+    // selectionVector4 below are only copied from Hyper container to this simple container.
     VectorContainer newContainer = new VectorContainer(oContext);
     @SuppressWarnings("resource")
+    // SV4 storing the limit number of indexes
     SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
     SimpleSV4RecordBatch newBatch = new SimpleSV4RecordBatch(newContainer, null, context);
@@ -309,7 +337,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
       do {
+        // count is the limit number of records required by TopN batch
         int count = selectionVector4.getCount();
+        // Transfers count number of records from hyperBatch to simple container
         int copiedRecords = copier.copyRecords(0, count);
         assert copiedRecords == count;
         for (VectorWrapper<?> v : newContainer) {
@@ -318,10 +348,15 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         }
         newContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
         newContainer.setRecordCount(count);
+        // Store all the batches containing limit number of records
         builder.add(newBatch);
       } while (selectionVector4.next());
+      // Release the memory stored for the priority queue heap to store indexes
       selectionVector4.clear();
+      // Release the memory from HyperBatch container
       c.clear();
+      // New VectorContainer that contains only limit number of records and is later passed to resetQueue to create a
+      // HyperContainer backing the priority queue out of it
       VectorContainer newQueue = new VectorContainer();
       builder.build(newQueue);
       priorityQueue.resetQueue(newQueue, builder.getSv4().createNewWrapperCurrent());
