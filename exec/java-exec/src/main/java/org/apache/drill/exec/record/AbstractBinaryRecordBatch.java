@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> extends  AbstractRecordBatch<T> {
@@ -34,8 +35,31 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
   // state (IterOutcome) of the right input
   protected IterOutcome rightUpstream = IterOutcome.NONE;
 
-  // For now only used by Lateral and Merge Join
   protected RecordBatchMemoryManager batchMemoryManager;
+
+  public final int numInputs = 2;
+  public static final int LEFT_INDEX = 0;
+  public static final int RIGHT_INDEX = 1;
+
+  public enum Metric implements MetricDef {
+    LEFT_INPUT_BATCH_COUNT,
+    LEFT_AVG_INPUT_BATCH_BYTES,
+    LEFT_AVG_INPUT_ROW_BYTES,
+    LEFT_INPUT_RECORD_COUNT,
+    RIGHT_INPUT_BATCH_COUNT,
+    RIGHT_AVG_INPUT_BATCH_BYTES,
+    RIGHT_AVG_INPUT_ROW_BYTES,
+    RIGHT_INPUT_RECORD_COUNT,
+    OUTPUT_BATCH_COUNT,
+    AVG_OUTPUT_BATCH_BYTES,
+    AVG_OUTPUT_ROW_BYTES,
+    OUTPUT_RECORD_COUNT;
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
 
   protected AbstractBinaryRecordBatch(final T popConfig, final FragmentContext context, RecordBatch left,
       RecordBatch right) throws OutOfMemoryException {
@@ -98,32 +122,19 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
   }
 
   protected void updateBatchMemoryManagerStats() {
-    stats.setLongStat(JoinBatchMemoryManager.Metric.LEFT_INPUT_BATCH_COUNT,
-      batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.LEFT_INDEX));
-    stats.setLongStat(JoinBatchMemoryManager.Metric.LEFT_AVG_INPUT_BATCH_BYTES,
-      batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.LEFT_INDEX));
-    stats.setLongStat(JoinBatchMemoryManager.Metric.LEFT_AVG_INPUT_ROW_BYTES,
-      batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.LEFT_INDEX));
-    stats.setLongStat(JoinBatchMemoryManager.Metric.LEFT_INPUT_RECORD_COUNT,
-      batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.LEFT_INDEX));
+    stats.setLongStat(Metric.LEFT_INPUT_BATCH_COUNT, batchMemoryManager.getNumIncomingBatches(LEFT_INDEX));
+    stats.setLongStat(Metric.LEFT_AVG_INPUT_BATCH_BYTES, batchMemoryManager.getAvgInputBatchSize(LEFT_INDEX));
+    stats.setLongStat(Metric.LEFT_AVG_INPUT_ROW_BYTES, batchMemoryManager.getAvgInputRowWidth(LEFT_INDEX));
+    stats.setLongStat(Metric.LEFT_INPUT_RECORD_COUNT, batchMemoryManager.getTotalInputRecords(LEFT_INDEX));
 
-    stats.setLongStat(JoinBatchMemoryManager.Metric.RIGHT_INPUT_BATCH_COUNT,
-      batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.RIGHT_INDEX));
-    stats.setLongStat(JoinBatchMemoryManager.Metric.RIGHT_AVG_INPUT_BATCH_BYTES,
-      batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.RIGHT_INDEX));
-    stats.setLongStat(JoinBatchMemoryManager.Metric.RIGHT_AVG_INPUT_ROW_BYTES,
-      batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.RIGHT_INDEX));
-    stats.setLongStat(JoinBatchMemoryManager.Metric.RIGHT_INPUT_RECORD_COUNT,
-      batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.RIGHT_INDEX));
+    stats.setLongStat(Metric.RIGHT_INPUT_BATCH_COUNT, batchMemoryManager.getNumIncomingBatches(RIGHT_INDEX));
+    stats.setLongStat(Metric.RIGHT_AVG_INPUT_BATCH_BYTES, batchMemoryManager.getAvgInputBatchSize(RIGHT_INDEX));
+    stats.setLongStat(Metric.RIGHT_AVG_INPUT_ROW_BYTES, batchMemoryManager.getAvgInputRowWidth(RIGHT_INDEX));
+    stats.setLongStat(Metric.RIGHT_INPUT_RECORD_COUNT, batchMemoryManager.getTotalInputRecords(RIGHT_INDEX));
 
-    stats.setLongStat(JoinBatchMemoryManager.Metric.OUTPUT_BATCH_COUNT,
-      batchMemoryManager.getNumOutgoingBatches());
-    stats.setLongStat(JoinBatchMemoryManager.Metric.AVG_OUTPUT_BATCH_BYTES,
-      batchMemoryManager.getAvgOutputBatchSize());
-    stats.setLongStat(JoinBatchMemoryManager.Metric.AVG_OUTPUT_ROW_BYTES,
-      batchMemoryManager.getAvgOutputRowWidth());
-    stats.setLongStat(JoinBatchMemoryManager.Metric.OUTPUT_RECORD_COUNT,
-      batchMemoryManager.getTotalOutputRecords());
-
+    stats.setLongStat(Metric.OUTPUT_BATCH_COUNT, batchMemoryManager.getNumOutgoingBatches());
+    stats.setLongStat(Metric.AVG_OUTPUT_BATCH_BYTES, batchMemoryManager.getAvgOutputBatchSize());
+    stats.setLongStat(Metric.AVG_OUTPUT_ROW_BYTES, batchMemoryManager.getAvgOutputRowWidth());
+    stats.setLongStat(Metric.OUTPUT_RECORD_COUNT, batchMemoryManager.getTotalOutputRecords());
   }
 }
