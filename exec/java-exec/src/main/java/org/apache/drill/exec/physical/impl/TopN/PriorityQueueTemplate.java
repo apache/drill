@@ -171,13 +171,27 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   public void cleanup() {
     if (heapSv4 != null) {
       heapSv4.clear();
+      heapSv4 = null;
     }
     if (hyperBatch != null) {
       hyperBatch.clear();
+      hyperBatch = null;
     }
     if (finalSv4 != null) {
       finalSv4.clear();
+      finalSv4 = null;
     }
+    batchCount = 0;
+  }
+
+  /**
+   * When cleanup is called then heapSv4 is cleared and set to null and is only initialized during init call. Hence
+   * this is used to determine if priority queue is initialized or not.
+   * @return - true - queue is still initialized
+   *           false - queue is not yet initialized and before using queue init should be called
+   */
+  public boolean isInitialized() {
+    return (heapSv4 != null);
   }
 
   /**
@@ -228,6 +242,12 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     }
   }
 
+  /**
+   * Pop the root element which holds the minimum value in heap. In this case root element will be the index of
+   * record with minimum value. After extracting the root element it swaps the root element with last element in
+   * heapSv4 and does heapify (by calling siftDown) again.
+   * @return - Index for
+   */
   public int pop() {
     int value = heapSv4.get(0);
     swap(0, queueSize - 1);

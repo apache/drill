@@ -80,5 +80,7 @@ public interface PriorityQueue {
    */
   void cleanup();
 
+  boolean isInitialized();
+
   TemplateClassDefinition<PriorityQueue> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(PriorityQueue.class, PriorityQueueTemplate.class);
 }
