@@ -550,7 +550,9 @@ public class DrillOptiq {
                     literal.getType().getScale(),
                     literal.getType().getPrecision()));
           }
-          return ValueExpressions.getVarDecimal((BigDecimal) literal.getValue());
+          return ValueExpressions.getVarDecimal((BigDecimal) literal.getValue(),
+              literal.getType().getPrecision(),
+              literal.getType().getScale());
         }
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
         logger.warn("Converting exact decimal into approximate decimal.\n" +
