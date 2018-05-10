@@ -478,7 +478,13 @@
                 break;
             }
             let currentRow = $("#row-"+i);
-            let address = currentRow.find("#address").contents().get(0).nodeValue.trim();
+            let address = "";
+            //For 'current' bit, address is referred to by location.hostname instead of FQDN ()
+            if (i == 1) {
+              address = location.hostname;
+            } else {
+              address = currentRow.find("#address").contents().get(0).nodeValue.trim();
+            }
             let httpPort = currentRow.find("#httpPort").contents().get(0).nodeValue.trim();
             updateMetricsHtml(address, httpPort, i);
           }
