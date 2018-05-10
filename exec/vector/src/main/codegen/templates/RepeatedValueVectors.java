@@ -172,6 +172,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     for (int i = 0; i < count; i++) {
       mutator.add(outIndex, vAccessor.get(inIndex, i));
     }
+    mutator.setValueCount(outIndex+1);
   }
 
   public void copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
@@ -181,6 +182,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     for (int i = 0; i < count; i++) {
       mutator.addSafe(outIndex, vAccessor.get(inIndex, i));
     }
+    mutator.setValueCount(outIndex+1);
   }
 
   @Override
