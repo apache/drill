@@ -181,7 +181,9 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       VarDecimalHolder decimalHolder = (VarDecimalHolder) holder;
       return ValueExpressions.getVarDecimal(
           DecimalUtility.getBigDecimalFromDrillBuf(decimalHolder.buffer,
-              decimalHolder.start, decimalHolder.end - decimalHolder.start, decimalHolder.scale));
+              decimalHolder.start, decimalHolder.end - decimalHolder.start, decimalHolder.scale),
+          decimalHolder.precision,
+          decimalHolder.scale);
     case DATE:
       return ValueExpressions.getDate(((DateHolder) holder).value);
     case TIMESTAMP:

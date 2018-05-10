@@ -110,8 +110,8 @@ public class ValueExpressions {
       return new Decimal38Expression(i, ExpressionPosition.UNKNOWN);
   }
 
-  public static LogicalExpression getVarDecimal(BigDecimal i) {
-    return new VarDecimalExpression(i, ExpressionPosition.UNKNOWN);
+  public static LogicalExpression getVarDecimal(BigDecimal input, int precision, int scale) {
+    return new VarDecimalExpression(input, precision, scale, ExpressionPosition.UNKNOWN);
   }
 
   public static LogicalExpression getNumericExpression(String sign, String s, ExpressionPosition ep) {
@@ -403,11 +403,15 @@ public class ValueExpressions {
 
   public static class VarDecimalExpression extends LogicalExpressionBase {
 
-    private BigDecimal bigDecimal;
+    private final BigDecimal bigDecimal;
+    private final int precision;
+    private final int scale;
 
-    public VarDecimalExpression(BigDecimal input, ExpressionPosition pos) {
+    public VarDecimalExpression(BigDecimal input, int precision, int scale, ExpressionPosition pos) {
       super(pos);
       this.bigDecimal = input;
+      this.precision = precision;
+      this.scale = scale;
     }
 
     public BigDecimal getBigDecimal() {
@@ -419,8 +423,8 @@ public class ValueExpressions {
       return MajorType
           .newBuilder()
           .setMinorType(MinorType.VARDECIMAL)
-          .setScale(bigDecimal.scale())
-          .setPrecision(bigDecimal.precision())
+          .setScale(scale)
+          .setPrecision(precision)
           .setMode(DataMode.REQUIRED)
           .build();
     }
