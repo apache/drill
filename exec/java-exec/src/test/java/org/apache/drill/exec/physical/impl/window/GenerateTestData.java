@@ -357,7 +357,7 @@ public class GenerateTestData {
   private static void generateData(final String tableName, final Partition[] pby_data, final Partition[] nopby_data,
       final boolean addLineNo) throws FileNotFoundException {
     final Path path = TestTools.WORKING_PATH
-      .resolve(TestTools.TEST_RESOURCES)
+      .resolve(TestTools.TEST_RESOURCES_REL)
       .resolve(Paths.get("window", tableName));
 
     final File pathFolder = path.toFile();

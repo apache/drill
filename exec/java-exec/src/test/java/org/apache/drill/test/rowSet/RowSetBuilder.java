@@ -45,6 +45,13 @@ public final class RowSetBuilder {
   private boolean withSv2;
   private Set<Integer> skipIndices = Sets.newHashSet();
 
+  /**
+   * Creates a {@link RowSetBuilder}. Since {@link BatchSchema} does not handle complex types well, this has been deprecated in favor of the other constructors.
+   * @deprecated Use {@link #RowSetBuilder(BufferAllocator, TupleMetadata)} instead.
+   * @param allocator An allocator.
+   * @param schema A {@link BatchSchema}.
+   */
+  @Deprecated
   public RowSetBuilder(BufferAllocator allocator, BatchSchema schema) {
     this(allocator, MetadataUtils.fromFields(schema), 10);
   }

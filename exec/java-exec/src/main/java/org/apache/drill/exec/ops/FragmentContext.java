@@ -38,16 +38,8 @@ import org.apache.drill.exec.testing.ExecutionControls;
 import io.netty.buffer.DrillBuf;
 
 /**
- * Fragment context interface: separates implementation from definition.
- * Allows unit testing by mocking or reimplementing services with
- * test-time versions. The name is awkward, chosen to avoid renaming
- * the implementation class which is used in many places in legacy code.
- * New code should use this interface, and the names should eventually
- * be swapped with {@link FragmentContextImpl} becoming
- * <tt>FragmentContextImpl</tt> and this interface becoming
- * {@link FragmentContextImpl}.
+ * Provides the resources required by a non-exchange operator to execute.
  */
-
 public interface FragmentContext extends UdfUtilities, AutoCloseable {
   /**
    * Returns the UDF registry.

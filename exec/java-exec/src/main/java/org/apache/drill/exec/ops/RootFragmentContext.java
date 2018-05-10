@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.ops;
 
+/**
+ * Provides services needed by the {@link org.apache.drill.exec.work.fragment.FragmentExecutor}.
+ */
 public interface RootFragmentContext extends ExchangeFragmentContext {
   FragmentStats getStats();
 

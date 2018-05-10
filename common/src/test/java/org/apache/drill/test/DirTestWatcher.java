@@ -31,10 +31,10 @@ import java.nio.file.Paths;
  * </p>
  *
  * <p>
- * A {@link DirTestWatcher} is added to a test by declaring it as a JUnit {@link org.junit.Rule}. A {@link org.junit.Rule} is
- * a piece of code that is run before and after every JUnit test marked with the {@link org.junit.Test} annotation. When the
+ * A {@link DirTestWatcher} is added to a test by declaring it as a JUnit {@link org.junit.Rule}. A {@link org.junit.Rule Rule} is
+ * a piece of code that is run before and after every JUnit test marked with the {@link org.junit.Test Test} annotation. When the
  * {@link DirTestWatcher} is added to a test class the {@link DirTestWatcher} will create a temp directory before each of your
- * {@link org.junit.Test}s and optionally delete the temp directory after each of your {@link org.junit.Test}s. The temp directory
+ * {@link org.junit.Test Test}s and optionally delete the temp directory after each of your {@link org.junit.Test Test}s. The <b>base temp directory</b>
  * created by the {@link DirTestWatcher} is in the <b>target</b> folder of the maven project and has the form
  * <b>(my test class fully qualified name)/(my test method name)</b>. So in the context of the code example below, the temp directory created for
  * each test in <b>target</b> will be <b>my.proj.MyTestClass/myTestMethod1</b> and <b>my.proj.MyTestClass/myTestMethod2</b> respectively.
@@ -46,7 +46,7 @@ import java.nio.file.Paths;
  * </p>
  *
  * <p>
- * By default, the {@link DirTestWatcher} deletes the temp directory it creates at the end of each {@link org.junit.Test}. However, you can create a {@link DirTestWatcher}
+ * By default, the {@link DirTestWatcher} deletes the temp directory it creates at the end of each {@link org.junit.Test Test}. However, you can create a {@link DirTestWatcher}
  * by doing {@code new DirTestWatcher(false)} to disable the deletion of temp directories after a test. This is useful if you want to examine files after a test runs.
  * </p>
  *
@@ -54,16 +54,16 @@ import java.nio.file.Paths;
  * package my.proj;
  *
  * public class MyTestClass {
- *   &#064;org.junit.Rule
+ *   &#064;Rule
  *   public final DirTestWatcher dirTestWatcher = new DirTestWatcher();
  *
- *   &#064;org.junit.Test
+ *   &#064;Test
  *   public void myTestMethod1() {
  *     File dir = dirTestWatcher.getDir();
  *     // Do stuff in the temp directory
  *   }
  *
- *   &#064;org.junit.Test
+ *   &#064;Test
  *   public void myTestMethod2() {
  *     File dir = dirTestWatcher.getDir();
  *     // Do stuff in the temp directory

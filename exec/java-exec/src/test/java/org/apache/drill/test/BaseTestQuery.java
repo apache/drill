@@ -72,6 +72,10 @@ import com.google.common.io.Resources;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
 
+/**
+ * @deprecated Use {@link ClusterTest} instead.
+ */
+@Deprecated
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 

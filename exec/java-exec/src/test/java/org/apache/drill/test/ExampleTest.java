@@ -260,6 +260,30 @@ public class ExampleTest {
   }
 
   /**
+   * This example shows how to define a workspace that points to test files in src/main/resources.
+   */
+  @Test
+  public void sixthTest() throws Exception {
+    try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
+         ClientFixture client = cluster.clientFixture()) {
+      cluster.defineWorkspace("dfs", "resources", TestTools.TEST_RESOURCES_ABS.toFile().getAbsolutePath(), "tsv");
+      client.queryBuilder().sql("SELECT * from dfs.resources.`testframework/small_test_data.tsv`").printCsv();
+    }
+  }
+
+  /**
+   * This example shows how to define a workspace that points to test files in the sample-data folder.
+   */
+  @Test
+  public void seventhTest() throws Exception {
+    try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
+         ClientFixture client = cluster.clientFixture()) {
+      cluster.defineWorkspace("dfs", "sampledata", TestTools.SAMPLE_DATA.toFile().getAbsolutePath(), "parquet");
+      client.queryBuilder().sql("SELECT * from dfs.sampledata.`nation.parquet`").printCsv();
+    }
+  }
+
+  /**
    * Example of running a specific test as Java program. Handy if you want to
    * run the test from the command line, or if your test runs so long that JUnit
    * would kill it with a timeout.
