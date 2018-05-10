@@ -230,7 +230,7 @@
       function setShutdownCtrl() {
         for (i = 1; i <= size; i++) {
           let currentRow = $("#row-"+i);
-          if ( location.protocol == "https" && (currentRow.find("#current").html() != "Current") ) {
+          if ( location.protocol == "https:" && (currentRow.find("#current").html() != "Current") ) {
             //Hide Shutdown Button for remote nodes with HTTPS enabled
             currentRow.find(".shutdownCtrl").css('display','none');
           }
@@ -354,7 +354,7 @@
                 if (status_map[key] == "ONLINE") {
                     currentRow.find("#status").text(status_map[key]).css('font-style','').prop('title','');
                     //EnableShutdown IFF => !isAuthEnabled-&&-!HTTPS OR isAuthEnabled-&&-current
-                    if ( ( !${model.isAuthEnabled()?c} && location.protocol != "https" ) || ( ${model.shouldShowAdminInfo()?c} && currentRow.find("#current").html() == "Current" ) ) {
+                    if ( ( !${model.isAuthEnabled()?c} && location.protocol != "https:" ) || ( ${model.shouldShowAdminInfo()?c} && currentRow.find("#current").html() == "Current" ) ) {
                       currentRow.find("#shutdown").prop('disabled',false).css('opacity',1.0).css('cursor','pointer').attr('title','');
                     }
                 } else {
@@ -474,7 +474,7 @@
       function reloadMetrics() {
           for (i = 1; i <= size; i++) {
             //Skip metrics update for remote bits in HTTPS mode
-            if (i > 1 && location.protocol == "https") {
+            if (i > 1 && location.protocol == "https:") {
                 break;
             }
             let currentRow = $("#row-"+i);
