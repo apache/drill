@@ -29,7 +29,7 @@ import org.apache.drill.exec.physical.impl.unnest.UnnestRecordBatch;
 import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
 import org.apache.drill.exec.physical.impl.xsort.ExternalSortBatch;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-import org.apache.drill.exec.record.JoinBatchMemoryManager;
+import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 
 /**
@@ -53,9 +53,10 @@ public class OperatorMetricRegistry {
     register(CoreOperatorType.EXTERNAL_SORT_VALUE, ExternalSortBatch.Metric.class);
     register(CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE, ParquetRecordReader.Metric.class);
     register(CoreOperatorType.FLATTEN_VALUE, FlattenRecordBatch.Metric.class);
-    register(CoreOperatorType.MERGE_JOIN_VALUE, JoinBatchMemoryManager.Metric.class);
-    register(CoreOperatorType.LATERAL_JOIN_VALUE, JoinBatchMemoryManager.Metric.class);
+    register(CoreOperatorType.MERGE_JOIN_VALUE, AbstractBinaryRecordBatch.Metric.class);
+    register(CoreOperatorType.LATERAL_JOIN_VALUE, AbstractBinaryRecordBatch.Metric.class);
     register(CoreOperatorType.UNNEST_VALUE, UnnestRecordBatch.Metric.class);
+    register(CoreOperatorType.UNION_VALUE, AbstractBinaryRecordBatch.Metric.class);
   }
 
   private static void register(final int operatorType, final Class<? extends MetricDef> metricDef) {
