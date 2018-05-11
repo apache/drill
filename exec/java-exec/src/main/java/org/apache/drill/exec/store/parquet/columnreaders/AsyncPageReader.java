@@ -297,11 +297,11 @@ class AsyncPageReader extends PageReader {
     while (asyncPageRead != null && !asyncPageRead.isEmpty()) {
       try {
         Future<Void> f = asyncPageRead.poll();
-        if(!f.isDone() && !f.isCancelled()){
+        if(!f.isDone() && !f.isCancelled()) {
           f.cancel(true);
-        } else {
-          f.get(1, TimeUnit.MILLISECONDS);
         }
+        // The framework guarantees a blocking version of FutureTask cancellation. At this time we are
+        // guaranteed the task is not running (or will not be able to run).
       } catch (RuntimeException e) {
         // Do Nothing
       } catch (Exception e) {
