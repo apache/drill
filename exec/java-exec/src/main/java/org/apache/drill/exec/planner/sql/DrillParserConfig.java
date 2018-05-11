@@ -22,7 +22,6 @@ import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
 import org.apache.calcite.sql.validate.SqlConformance;
-import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 
@@ -30,6 +29,7 @@ public class DrillParserConfig implements SqlParser.Config {
 
   private final long identifierMaxLength;
   private final Quoting quotingIdentifiers;
+  public final static SqlConformance DRILL_CONFORMANCE = new DrillConformance();
 
   public DrillParserConfig(PlannerSettings settings) {
     identifierMaxLength = settings.getIdentifierMaxLength();
@@ -63,7 +63,7 @@ public class DrillParserConfig implements SqlParser.Config {
 
   @Override
   public SqlConformance conformance() {
-    return SqlConformanceEnum.DEFAULT;
+    return DRILL_CONFORMANCE;
   }
 
   @Override

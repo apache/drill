@@ -32,6 +32,7 @@ import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
+import org.apache.calcite.plan.Contexts;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCostFactory;
@@ -58,6 +59,7 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
+import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
@@ -139,7 +141,7 @@ public class SqlConverter {
         session);
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, SqlConformanceEnum.DEFAULT);
+    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance());
     validator.setIdentifierExpansion(true);
     cluster = null;
   }
@@ -159,7 +161,7 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, SqlConformanceEnum.DEFAULT);
+    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance());
     this.temporarySchema = parent.temporarySchema;
     this.session = parent.session;
     this.drillConfig = parent.drillConfig;
@@ -240,7 +242,7 @@ public class SqlConverter {
   private class DrillValidator extends SqlValidatorImpl {
 
     protected DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
-        RelDataTypeFactory typeFactory, SqlConformanceEnum conformance) {
+        RelDataTypeFactory typeFactory, SqlConformance conformance) {
       super(opTab, catalogReader, typeFactory, conformance);
     }
 
@@ -250,20 +252,22 @@ public class SqlConverter {
         RelDataType targetRowType,
         SqlValidatorScope scope) {
       switch (node.getKind()) {
-      case AS:
-        if (((SqlCall) node).operand(0) instanceof SqlIdentifier) {
-          SqlIdentifier tempNode = ((SqlCall) node).operand(0);
-          DrillCalciteCatalogReader catalogReader = (SqlConverter.DrillCalciteCatalogReader) getCatalogReader();
+        case AS:
+          if (((SqlCall) node).operand(0) instanceof SqlIdentifier) {
+            SqlIdentifier tempNode = ((SqlCall) node).operand(0);
+            DrillCalciteCatalogReader catalogReader = (SqlConverter.DrillCalciteCatalogReader) getCatalogReader();
 
-          // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
-          if (catalogReader.getTable(Lists.newArrayList(tempNode.names)) == null) {
-            catalogReader.isValidSchema(tempNode.names);
+            // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
+            if (catalogReader.getTable(Lists.newArrayList(tempNode.names)) == null) {
+              catalogReader.isValidSchema(tempNode.names);
+            }
+            changeNamesIfTableIsTemporary(tempNode);
           }
-          changeNamesIfTableIsTemporary(tempNode);
-        }
-      default:
-        super.validateFrom(node, targetRowType, scope);
+          break;
+        default:
+          break;
       }
+      super.validateFrom(node, targetRowType, scope);
     }
 
     @Override
