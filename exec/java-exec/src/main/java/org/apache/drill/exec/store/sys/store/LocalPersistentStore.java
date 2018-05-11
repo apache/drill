@@ -77,8 +77,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private int version = -1;
   private Function<String, Entry<String, V>> transformer;
 
-  private TreeSet<String> profilesSet;
-  private int profilesSetSize;
+  private ProfileSet profilesSet;
   private PathFilter sysFileSuffixFilter;
 //  private String mostRecentProfile;
   private long basePathLastModified;
@@ -89,8 +88,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   private boolean enableArchiving;
   private Path archivePath;
-  private TreeSet<String> pendingArchivalSet;
-  private int pendingArchivalSetSize;
+  private ProfileSet pendingArchivalSet;
   private int archivalThreshold;
   private int archivalRate;
   private Iterable<Entry<String, V>> iterableProfileSet;
@@ -102,24 +100,20 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     this.config = config;
     this.fs = fs;
     //MRU Profile Cache
-    this.profilesSet = new TreeSet<String>();
-    this.profilesSetSize= 0;
+    this.profilesSet = new ProfileSet(drillConfig.getInt(ExecConstants.HTTP_MAX_PROFILES));
     this.basePathLastModified = 0L;
     this.lastKnownFileCount = 0L;
     this.sysFileSuffixFilter = new DrillSysFilePathFilter();
     //this.mostRecentProfile = null;
 
     //Initializing for archiving
-    if (drillConfig != null ) {
-      this.enableArchiving = drillConfig.getBoolean(ExecConstants.PROFILES_STORE_ARCHIVE_ENABLED); //(maxStoreCapacity > 0); //Implicitly infer
+    this.enableArchiving = drillConfig.getBoolean(ExecConstants.PROFILES_STORE_ARCHIVE_ENABLED); //(maxStoreCapacity > 0); //Implicitly infer
+    if (enableArchiving == true ) {
       this.archivalThreshold = drillConfig.getInt(ExecConstants.PROFILES_STORE_CAPACITY);
       this.archivalRate = drillConfig.getInt(ExecConstants.PROFILES_STORE_ARCHIVE_RATE);
-    } else {
-      this.enableArchiving = false;
+      this.pendingArchivalSet = new ProfileSet(archivalRate);
+      this.archivePath = new Path(basePath, ARCHIVE_LOCATION);
     }
-    this.pendingArchivalSet = new TreeSet<String>();
-    this.pendingArchivalSetSize = 0;
-    this.archivePath = new Path(basePath, ARCHIVE_LOCATION);
 
     // Timing
     this.listAndBuildWatch = Stopwatch.createUnstarted();
@@ -137,14 +131,14 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
     //Base Dir
     try {
-      if (!fs.mkdirs(basePath)) {
+      if (!mkdirs(basePath)) {
         version++;
       }
       //Creating Archive if required
       if (enableArchiving) {
         try {
           if (!fs.exists(archivePath)) {
-            fs.mkdirs(archivePath);
+            mkdirs(archivePath);
           }
         } catch (IOException e) {
           logger.warn("Disabling profile archiving due to failure in creating profile archive {} : {}", archivePath, e);
@@ -165,8 +159,8 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     return PersistentStoreMode.PERSISTENT;
   }
 
-  private void mkdirs(Path path) throws IOException {
-    fs.mkdirs(path);
+  private boolean mkdirs(Path path) throws IOException {
+    return fs.mkdirs(path);
   }
 
   public static Path getLogDir() {
@@ -204,7 +198,6 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       throw new RuntimeException(e);
     }
 
-    logger.info("Requesting thread: {}-{}" , Thread.currentThread().getName(), Thread.currentThread().getId());
     //No need to acquire lock since incoming requests are synchronized
     try {
       long expectedFileCount = fs.getFileStatus(basePath).getLen();
@@ -226,51 +219,53 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
         //Listing ALL DrillSysFiles
         //Can apply MostRecentProfile name as filter. Unfortunately, Hadoop (2.7.1) currently doesn't leverage this to speed up
         List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false,
-            sysFileSuffixFilter
+            sysFileSuffixFilter /*TODO: Use MostRecentProfile */
             );
         //Checking if empty
         if (fileStatuses.isEmpty()) {
-          //WithoutFilter::
           return Collections.emptyIterator();
         }
+
         //Force a reload of the profile.
         //Note: We shouldn't need to do this if the load is incremental (i.e. using mostRecentProfile)
-        profilesSet.clear();
-        profilesSetSize = 0;
-        int profilesInStoreCount = 0;
+        profilesSet.clear(maxSetCapacity);
+        int numProfilesInStore = 0;
 
         if (enableArchiving) {
           pendingArchivalSet.clear();
-          pendingArchivalSetSize = 0;
         }
 
         //Constructing TreeMap from List
         for (FileStatus stat : fileStatuses) {
           String profileName = stat.getPath().getName();
-          profilesSetSize = addToProfileSet(profileName, profilesSetSize, maxSetCapacity);
-          profilesInStoreCount++;
+          //Strip extension and store only query ID
+          String oldestProfile = profilesSet.add(profileName.substring(0, profileName.length() - DRILL_SYS_FILE_EXT_SIZE));
+          if (enableArchiving && oldestProfile != null) {
+            pendingArchivalSet.add(oldestProfile, true);
+          }
+          numProfilesInStore++;
         }
 
         //Archive older profiles
         if (enableArchiving) {
-          archiveProfiles(fs, profilesInStoreCount);
+          archiveProfiles(numProfilesInStore);
         }
 
         //Report Lag
         if (listAndBuildWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
           logger.warn("Took {} ms to list & map {} profiles (out of {} profiles in store)", listAndBuildWatch.elapsed(TimeUnit.MILLISECONDS)
-              , profilesSetSize, profilesInStoreCount);
+              , profilesSet.size(), numProfilesInStore);
         }
         //Recording last checked modified time and the most recent profile
         basePathLastModified = currBasePathModified;
-        /*TODO: mostRecentProfile = profilesSet.first();*/
+        /*TODO: mostRecentProfile = profilesSet.getYoungest();*/
         lastKnownFileCount = expectedFileCount;
 
         //Transform profileSet for consumption
         transformWatch.start();
         iterableProfileSet = Iterables.transform(profilesSet, transformer);
         if (transformWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
-          logger.warn("Took {} ms to transform {} profiles", transformWatch.elapsed(TimeUnit.MILLISECONDS), profilesSetSize);
+          logger.warn("Took {} ms to transform {} profiles", transformWatch.elapsed(TimeUnit.MILLISECONDS), profilesSet.size());
         }
       }
       return iterableProfileSet.iterator();
@@ -279,18 +274,20 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     }
   }
 
-  private void archiveProfiles(DrillFileSystem fs, int profilesInStoreCount) {
+  private void archiveProfiles(int profilesInStoreCount) {
     if (profilesInStoreCount > archivalThreshold) {
       //We'll attempt to reduce to 90% of threshold, but in batches of archivalRate
-      int pendingArchivalCount = profilesInStoreCount - (int) Math.round(0.9*archivalThreshold);
-      logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", pendingArchivalCount
-          , Math.min(pendingArchivalCount, archivalRate), archivePath);
+      int excessCount = profilesInStoreCount - (int) Math.round(0.9*archivalThreshold);
+      int numToArchive = Math.min(excessCount, archivalRate);
+      logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", excessCount
+          , numToArchive, archivePath);
       try {
         if (fs.isDirectory(archivePath)) {
           int archivedCount = 0;
           archiveWatch.reset().start(); //Clocking
-          while (archivedCount < archivalRate) {
-            String toArchive = pendingArchivalSet.pollLast() + DRILL_SYS_FILE_SUFFIX;
+          //while (archivedCount < archivalRate) {
+          while (!pendingArchivalSet.isEmpty()) {
+            String toArchive = pendingArchivalSet.removeOldest() + DRILL_SYS_FILE_SUFFIX;
             boolean renameStatus = DrillFileSystemUtil.rename(fs, new Path(basePath, toArchive), new Path(archivePath, toArchive));
             if (!renameStatus) {
               //Stop attempting any more archiving since other StoreProviders might be archiving
@@ -302,7 +299,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
           }
           logger.info("Archived {} profiles to {} in {} ms", archivedCount, archivePath, archiveWatch.stop().elapsed(TimeUnit.MILLISECONDS));
         } else {
-          logger.error("Unable to archive {} profiles to {}", pendingArchivalSetSize, archivePath.toString());
+          logger.error("Unable to archive {} profiles to {}", pendingArchivalSet.size(), archivePath.toString());
         }
       } catch (IOException e) {
         e.printStackTrace();
@@ -310,55 +307,6 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     }
     //Clean up
     pendingArchivalSet.clear();
-  }
-
-  /**
-   * Add profile name to a TreeSet
-   * @param profileName Name of the profile to add
-   * @param currentSize Provided so as to avoid the need to recount
-   * @param maximumCapacity Maximum number of profiles to maintain
-   * @return Current size of tree after addition
-   */
-  private int addToProfileSet(String profileName, int currentSize, int maximumCapacity) {
-    //Add if not reached max capacity
-    if (currentSize < maximumCapacity) {
-      profilesSet.add(profileName.substring(0, profileName.length() - DRILL_SYS_FILE_EXT_SIZE));
-      currentSize++;
-    } else {
-      boolean addedProfile = profilesSet.add(profileName.substring(0, profileName.length() - DRILL_SYS_FILE_EXT_SIZE));
-      //Remove existing 'oldest' file
-      if (addedProfile) {
-        String oldestProfile = profilesSet.pollLast();
-        if (enableArchiving) {
-          addToArchiveSet(oldestProfile, archivalRate);
-        }
-      }
-    }
-    return currentSize;
-  }
-
-  /**
-   * Add profile name to a TreeSet
-   * @param profileName Name of the profile to add
-   * @param currentSize Provided so as to avoid the need to recount
-   * @param maximumCapacity Maximum number of profiles to maintain
-   * @return Current size of tree after addition
-   */
-  private int addToArchiveSet(String profileName, int maximumCapacity) {
-    //TODO make this global
-    int currentSize = pendingArchivalSet.size();
-    //Add if not reached max capacity
-    if (currentSize < maximumCapacity) {
-      pendingArchivalSet.add(profileName);
-      currentSize++;
-    } else {
-      boolean addedProfile = pendingArchivalSet.add(profileName);
-      //Remove existing 'youngest' file
-      if (addedProfile) {
-        pendingArchivalSet.pollFirst();
-      }
-    }
-    return currentSize;
   }
 
   private Path makePath(String name) {
