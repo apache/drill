@@ -834,18 +834,18 @@ public class ClassGenerator<T>{
     public String toString() {
       DebugStringBuilder buf = new DebugStringBuilder(this);
       if (isConstant()) {
-        buf.append("const ");
+        buf.print("const ");
       }
-      buf.append(holder.type().fullName())
-        .append(" ")
-        .append(holder.name())
-        .append(", ")
-        .append(type.getMode().name())
-        .append(" ")
-        .append(type.getMinorType().name())
-        .append(", ");
+      buf.print(holder.type().fullName())
+        .print(" ")
+        .print(holder.name())
+        .print(", ")
+        .print(type.getMode().name())
+        .print(" ")
+        .print(type.getMinorType().name())
+        .print(", ");
       holder.generate(buf.formatter());
-      buf.append(", ");
+      buf.print(", ");
       value.generate(buf.formatter());
       return buf.toString();
     }

@@ -44,7 +44,7 @@ public class DebugStringBuilder {
     fmt = new JFormatter( writer );
   }
 
-  public DebugStringBuilder append( String s ) {
+  public DebugStringBuilder print( String s ) {
     writer.print( s );
     return this;
   }
