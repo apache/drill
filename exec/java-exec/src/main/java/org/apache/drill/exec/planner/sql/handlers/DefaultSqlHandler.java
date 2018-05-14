@@ -237,12 +237,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       // HEP for rules, which are failed at the LOGICAL_PLANNING stage for Volcano planner
       final RelNode setOpTransposeNode = transform(PlannerType.HEP, PlannerPhase.PRE_LOGICAL_PLANNING, relNode);
 
-      // HEP Join Push Transitive Predicates
-      final RelNode transitiveClosureNode =
-          transform(PlannerType.HEP, PlannerPhase.TRANSITIVE_CLOSURE, setOpTransposeNode);
-
-      // HEP Directory pruning .
-      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, transitiveClosureNode);
+      // HEP Directory pruning.
+      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, setOpTransposeNode);
       final RelTraitSet logicalTraits = pruned.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
       final RelNode convertedRelNode;
@@ -254,13 +250,22 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         final RelNode intermediateNode2;
         if (context.getPlannerSettings().isHepPartitionPruningEnabled()) {
 
-          // hep is enabled and hep pruning is enabled.
           final RelNode intermediateNode = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL, pruned, logicalTraits);
-          intermediateNode2 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.PARTITION_PRUNING, intermediateNode);
+
+          // HEP Join Push Transitive Predicates
+          final RelNode transitiveClosureNode =
+              transform(PlannerType.HEP, PlannerPhase.TRANSITIVE_CLOSURE, intermediateNode);
+
+          // hep is enabled and hep pruning is enabled.
+          intermediateNode2 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.PARTITION_PRUNING, transitiveClosureNode);
 
         } else {
           // Only hep is enabled
-          intermediateNode2 = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE, pruned, logicalTraits);
+          final RelNode intermediateNode =
+              transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE, pruned, logicalTraits);
+
+          // HEP Join Push Transitive Predicates
+          intermediateNode2 = transform(PlannerType.HEP, PlannerPhase.TRANSITIVE_CLOSURE, intermediateNode);
         }
 
         // Do Join Planning.
