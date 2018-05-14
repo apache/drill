@@ -452,7 +452,7 @@ public class RecordBatchSizer {
            .append(", per-array: ")
            .append(cardinality);
       }
-      buf.append("Per entry: std data size: ")
+      buf.append(", Per entry: std data size: ")
          .append(getStdDataSizePerEntry())
          .append(", std net size: ")
          .append(getStdNetSizePerEntry())
@@ -758,12 +758,8 @@ public class RecordBatchSizer {
   @Override
   public String toString() {
     StringBuilder buf = new StringBuilder();
-    buf.append("Actual batch schema & sizes {\n");
-    for (ColumnSize colSize : columnSizes.values()) {
-      buf.append("  ");
-      buf.append(colSize.toString());
-      buf.append("\n");
-    }
+
+    buf.append("Batch size: {");
     buf.append( "  Records: " );
     buf.append(rowCount);
     buf.append(", Total size: ");
@@ -776,7 +772,15 @@ public class RecordBatchSizer {
     buf.append(netRowWidth);
     buf.append(", Density: ");
     buf.append(avgDensity);
-    buf.append("%}");
+    buf.append("% }\n");
+
+    buf.append("Batch schema & sizes: {\n");
+    for (ColumnSize colSize : columnSizes.values()) {
+      buf.append("  ");
+      buf.append(colSize.toString());
+      buf.append(" }\n");
+    }
+    buf.append(" }\n");
     return buf.toString();
   }
 

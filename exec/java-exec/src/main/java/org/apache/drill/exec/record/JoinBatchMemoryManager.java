@@ -48,12 +48,10 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
       case LEFT_INDEX:
         setRecordBatchSizer(inputIndex, new RecordBatchSizer(leftIncoming));
         leftRowWidth = getRecordBatchSizer(inputIndex).getRowAllocSize();
-        logger.debug("left incoming batch size : {}", getRecordBatchSizer(inputIndex));
         break;
       case RIGHT_INDEX:
         setRecordBatchSizer(inputIndex, new RecordBatchSizer(rightIncoming));
         rightRowWidth = getRecordBatchSizer(inputIndex).getRowAllocSize();
-        logger.debug("right incoming batch size : {}", getRecordBatchSizer(inputIndex));
       default:
         break;
     }
@@ -84,9 +82,6 @@ public class JoinBatchMemoryManager extends RecordBatchMemoryManager {
 
     // set the new row width
     setOutgoingRowWidth(newOutgoingRowWidth);
-
-    logger.debug("output batch size : {}, avg outgoing rowWidth : {}, output rowCount : {}",
-      getOutputBatchSize(), getOutgoingRowWidth(), getOutputRowCount());
 
     return adjustOutputRowCount(outputPosition + numOutputRowsRemaining);
   }
