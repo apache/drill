@@ -265,8 +265,8 @@ public enum PlannerPhase {
       RuleInstance.UNION_TO_DISTINCT_RULE,
 
       // Add support for WHERE style joins.
-      DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
-      DrillFilterJoinRules.DRILL_JOIN,
+      DrillFilterJoinRules.FILTER_INTO_JOIN,
+      DrillFilterJoinRules.JOIN_PUSH_CONDITION,
       RuleInstance.JOIN_PUSH_EXPRESSIONS_RULE,
       // End support for WHERE style joins.
 
@@ -532,19 +532,18 @@ public enum PlannerPhase {
 
   /**
    * RuleSet for join transitive closure, used only in HepPlanner.<p>
-   * TODO: {@link RuleInstance#JOIN_PUSH_TRANSITIVE_PREDICATES_RULE} should be copied to #staticRuleSet,
-   * once CALCITE-1048 is solved. This still should be present in {@link #TRANSITIVE_CLOSURE} stage
-   * for applying additional filters before {@link #DIRECTORY_PRUNING}.
+   * TODO: {@link RuleInstance#DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE} should be moved into {@link #staticRuleSet},
+   * (with using {@link DrillRelFactories#LOGICAL_BUILDER}) once CALCITE-1048 is solved. This block can be removed then.
    *
    * @return set of planning rules
    */
   static RuleSet getJoinTransitiveClosureRules() {
     return RuleSets.ofList(ImmutableSet.<RelOptRule> builder()
         .add(
-            DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
-            DrillFilterJoinRules.DRILL_JOIN,
-            RuleInstance.JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,
-            RuleInstance.FILTER_MERGE_RULE
+            RuleInstance.DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,
+            DrillFilterJoinRules.DRILL_FILTER_INTO_JOIN,
+            RuleInstance.REMOVE_IS_NOT_DISTINCT_FROM_RULE,
+            RuleInstance.DRILL_FILTER_MERGE_RULE
         ).build());
   }
 }
