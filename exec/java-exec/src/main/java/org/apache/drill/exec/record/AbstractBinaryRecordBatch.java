@@ -125,20 +125,5 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
     stats.setLongStat(JoinBatchMemoryManager.Metric.OUTPUT_RECORD_COUNT,
       batchMemoryManager.getTotalOutputRecords());
 
-    logger.debug("left input: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
-      batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.LEFT_INDEX),
-      batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.LEFT_INDEX),
-      batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.LEFT_INDEX),
-      batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.LEFT_INDEX));
-
-    logger.debug("right input: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
-      batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.RIGHT_INDEX),
-      batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.RIGHT_INDEX),
-      batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.RIGHT_INDEX),
-      batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.RIGHT_INDEX));
-
-    logger.debug("output: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
-      batchMemoryManager.getNumOutgoingBatches(), batchMemoryManager.getAvgOutputBatchSize(),
-      batchMemoryManager.getAvgOutputRowWidth(), batchMemoryManager.getTotalOutputRecords());
   }
 }

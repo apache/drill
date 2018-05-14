@@ -308,6 +308,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     // entire incoming recods has been unnested. If the entire records has been
     // unnested, we return EMIT and any blocking operators in the pipeline will
     // unblock.
+    logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
     return hasRemainder ? IterOutcome.OK : IterOutcome.EMIT;
   }
 
@@ -409,11 +410,11 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     stats.setLongStat(Metric.AVG_OUTPUT_ROW_BYTES, memoryManager.getAvgOutputRowWidth());
     stats.setLongStat(Metric.OUTPUT_RECORD_COUNT, memoryManager.getTotalOutputRecords());
 
-    logger.debug("input: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+    logger.debug("BATCH_STATS, incoming aggregate: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
         memoryManager.getNumIncomingBatches(), memoryManager.getAvgInputBatchSize(),
         memoryManager.getAvgInputRowWidth(), memoryManager.getTotalInputRecords());
 
-    logger.debug("output: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
+    logger.debug("BATCH_STATS, outgoing aggregate: batch count : {}, avg batch bytes : {},  avg row bytes : {}, record count : {}",
         memoryManager.getNumOutgoingBatches(), memoryManager.getAvgOutputBatchSize(),
         memoryManager.getAvgOutputRowWidth(), memoryManager.getTotalOutputRecords());
 
