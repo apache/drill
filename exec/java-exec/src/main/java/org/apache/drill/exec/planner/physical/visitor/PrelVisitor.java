@@ -24,6 +24,8 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
+import org.apache.drill.exec.planner.physical.CorrelatePrel;
 
 
 public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
@@ -36,5 +38,7 @@ public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   public RETURN visitJoin(JoinPrel prel, EXTRA value) throws EXCEP;
   public RETURN visitProject(ProjectPrel prel, EXTRA value) throws EXCEP;
   public RETURN visitPrel(Prel prel, EXTRA value) throws EXCEP;
+  public RETURN visitUnnest(UnnestPrel prel, EXTRA value) throws EXCEP;
+  public RETURN visitCorrelate(CorrelatePrel prel, EXTRA value) throws EXCEP;
 
 }

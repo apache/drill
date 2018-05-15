@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -37,11 +36,9 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
-import java.util.Iterator;
 import java.util.List;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
@@ -351,23 +348,14 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     recordCount = 0;
     final List<TransferPair> transfers = Lists.newArrayList();
 
-    //TODO: fixthis once planner changes are done
     final FieldReference fieldReference =
-        new FieldReference(SchemaPath.getSimplePath(popConfig.getColumn().toString() + "_flat"));
+        new FieldReference(popConfig.getColumn());
 
     final TransferPair transferPair = getUnnestFieldTransferPair(fieldReference);
 
     final ValueVector unnestVector = transferPair.getTo();
     transfers.add(transferPair);
-    if (unnestVector instanceof MapVector) {
-      Iterator<ValueVector> it = unnestVector.iterator();
-      while (it.hasNext()) {
-        container.add(it.next());
-      }
-    }
-    else {
-      container.add(unnestVector);
-    }
+    container.add(unnestVector);
     logger.debug("Added transfer for unnest expression.");
     container.buildSchema(SelectionVectorMode.NONE);
 

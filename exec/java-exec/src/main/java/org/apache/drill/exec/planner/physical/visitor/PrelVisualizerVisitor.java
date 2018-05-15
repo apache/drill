@@ -24,6 +24,8 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
+import org.apache.drill.exec.planner.physical.CorrelatePrel;
 
 /**
  * Debug-time class that prints a PRel tree to the console for
@@ -69,7 +71,7 @@ public class PrelVisualizerVisitor
     }
 
     private void indent() {
-      for (int i = 0;  i < level;  i++) {
+      for (int i = 0; i < level; i++) {
         out.append(INDENT);
       }
     }
@@ -225,4 +227,15 @@ public class PrelVisualizerVisitor
     return null;
   }
 
+  @Override
+  public Void visitUnnest(UnnestPrel prel, VisualizationState value) throws Exception {
+    visitPrel(prel, value);
+    return null;
+  }
+
+  @Override
+  public Void visitCorrelate(CorrelatePrel prel, VisualizationState value) throws Exception {
+    visitPrel(prel, value);
+    return null;
+  }
 }

@@ -52,6 +52,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -81,6 +82,7 @@ import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.UserSession;
+import static org.apache.calcite.util.Static.RESOURCE;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.exec.store.ColumnExplorer;
@@ -260,6 +262,11 @@ public class SqlConverter {
               catalogReader.isValidSchema(tempNode.names);
             }
             changeNamesIfTableIsTemporary(tempNode);
+          }
+          else  if (((SqlCall) node).operand(0).getKind() == SqlKind.UNNEST) {
+            if (((SqlCall) node).operandCount() < 3) {
+              throw RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
+            }
           }
           break;
         default:

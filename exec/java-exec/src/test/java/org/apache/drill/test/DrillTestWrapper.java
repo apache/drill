@@ -515,6 +515,15 @@ public class DrillTestWrapper {
       addTypeInfoIfMissing(actual.get(0), testBuilder);
       addToMaterializedResults(actualRecords, actual, loader);
 
+      // If actual result record number is 0,
+      // and the baseline records does not exist, and baselineColumns provided,
+      // compare actual column number/names with expected columns
+      if (actualRecords.size() == 0
+          && (baselineRecords == null || baselineRecords.size()==0)
+          && baselineColumns != null) {
+        checkColumnDef(loader.getSchema());
+      }
+
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
@@ -528,6 +537,18 @@ public class DrillTestWrapper {
       compareResults(expectedRecords, actualRecords);
     } finally {
       cleanupBatches(actual, expected);
+    }
+  }
+
+  public void checkColumnDef(BatchSchema batchSchema) throws Exception{
+    assert (batchSchema != null && batchSchema.getFieldCount()==baselineColumns.length);
+    for (int i=0; i<baselineColumns.length; ++i) {
+      if (!SchemaPath.parseFromString(baselineColumns[i]).equals(
+          SchemaPath.parseFromString(batchSchema.getColumn(i).getName()))) {
+        throw new Exception(i + "the expected column name is not matching: "
+            + baselineColumns[i] + " is not " +
+            batchSchema.getColumn(i).getName());
+      }
     }
   }
 

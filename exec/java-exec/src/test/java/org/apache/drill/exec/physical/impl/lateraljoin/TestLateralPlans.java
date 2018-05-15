@@ -20,10 +20,15 @@ package org.apache.drill.exec.physical.impl.lateraljoin;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.Ignore;
 
 public class TestLateralPlans extends BaseTestQuery {
 
@@ -40,8 +45,8 @@ public class TestLateralPlans extends BaseTestQuery {
 
   @Test
   public void testLateralSql() throws Exception {
-    String Sql = "select t.c_name, t2.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t,"
-                 + " unnest(t.orders) t2 limit 1";
+    String Sql = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
+        " unnest(t.orders) t2(ord) limit 1";
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
@@ -52,21 +57,20 @@ public class TestLateralPlans extends BaseTestQuery {
 
   @Test
   public void testExplainLateralSql() throws Exception {
-    String Sql = "explain plan without implementation for"
-        + " select t.c_name, t2.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t,"
-        + " unnest(t.orders) t2 limit 1";
+    String Sql = "explain plan without implementation for select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t," +
+        " unnest(t.orders) t2(ord) limit 1";
     test(Sql);
   }
 
   @Test
   public void testFilterPushCorrelate() throws Exception {
     test("alter session set `planner.slice_target`=1");
-    String query = "select t.c_name, t2.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t,"
-        + " unnest(t.orders) t2 where t.c_name='customer1' AND t2.o_shop='Meno Park 1st' ";
-    PlanTestBase.testPlanMatchingPatterns(query,
-        new String[] {"Correlate(.*[\n\r])+.*Filter(.*[\n\r])+.*Scan(.*[\n\r])+.*Filter"},
-        new String[]{}
-    );
+    String query = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t,"
+        + " unnest(t.orders) t2(ord) where t.c_name='customer1' AND t2.ord.o_shop='Meno Park 1st' ";
+
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"Correlate(.*[\n\r])+.*Filter(.*[\n\r])+.*Scan(.*[\n\r])+.*Filter"},
+        new String[]{});
+
     testBuilder()
         .unOrdered()
         .sqlQuery(query)
@@ -76,41 +80,199 @@ public class TestLateralPlans extends BaseTestQuery {
   }
 
   @Test
-  @Ignore("naming of single column")
   public void testLateralSqlPlainCol() throws Exception {
-    String Sql = "select t.c_name, t2.c_phone from cp.`lateraljoin/nested-customer.json` t, unnest(t.c_phone) t2 limit 1";
+    String Sql = "select t.c_name, t2.phone as c_phone from cp.`lateraljoin/nested-customer.json` t,"
+        + " unnest(t.c_phone) t2(phone) limit 1";
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
-        .baselineColumns("c_name", "c_phone_flat")
+        .baselineColumns("c_name", "c_phone")
         .baselineValues("customer1", "6505200001")
         .go();
-
   }
 
   @Test
   public void testLateralSqlStar() throws Exception {
-    String Sql = "select * from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) t2 limit 1";
-    test(Sql);
-  }
+    String Sql = "select * from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) Orders(ord) limit 0";
 
-  @Test
-  @Ignore("To be fixed: how to specify columns names for table alias in dynamic case")
-  public void testLateralSqlWithAS() throws Exception {
-    String Sql = "select t.c_name, t2.o_shop from cp.`lateraljoin/nested-customer.parquet` t,"
-        + " unnest(t.orders) as t2(o_shop) limit 1";
     testBuilder()
         .unOrdered()
         .sqlQuery(Sql)
-        .baselineColumns("c_name", "o_shop")
-        .baselineValues("customer1", "Meno Park 1st")
+        .baselineColumns("c_name", "c_id", "c_phone", "orders", "c_address", "ord")
+        .expectsEmptyResultSet()
         .go();
+  }
 
+  @Test
+  public void testLateralSqlStar2() throws Exception {
+    String Sql = "select c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
+
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .baselineColumns("c_name", "c_id", "c_phone", "orders", "c_address")
+        .expectsEmptyResultSet()
+        .go();
+  }
+
+  @Test
+  public void testLateralSqlStar3() throws Exception {
+    String Sql = "select Orders.*, c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
+
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .baselineColumns("ord","c_name", "c_id", "c_phone", "orders", "c_address")
+        .expectsEmptyResultSet()
+        .go();
+  }
+
+  @Test
+  public void testLateralSqlStar4() throws Exception {
+    String Sql = "select Orders.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord) limit 0";
+
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .baselineColumns("ord")
+        .expectsEmptyResultSet()
+        .go();
+  }
+
+  @Test
+  public void testLateralSqlWithAS() throws Exception {
+    String Sql = "select t.c_name, t2.orders from cp.`lateraljoin/nested-customer.parquet` t,"
+        + " unnest(t.orders) as t2(orders)";
+    String baselineQuery = "select t.c_name, t2.orders from cp.`lateraljoin/nested-customer.parquet` t inner join" +
+        " (select c_name, flatten(orders) from cp" +
+        ".`lateraljoin/nested-customer.parquet` ) as t2(name, orders) on t.c_name = t2.name";
+
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .sqlBaselineQuery(baselineQuery)
+        .go();
+  }
+
+  @Test
+  public void testMultiUnnestLateralAtSameLevel() throws Exception {
+    String Sql = "select t.c_name, t2.orders, t3.orders from cp.`lateraljoin/nested-customer.parquet` t," +
+        " LATERAL ( select t2.orders from unnest(t.orders) as t2(orders)) as t2, LATERAL " +
+        "(select t3.orders from unnest(t.orders) as t3(orders)) as t3";
+    String baselineQuery = "select t.c_name, t2.orders, t3.orders from cp.`lateraljoin/nested-customer.parquet` t inner join" +
+        " (select c_name, flatten(orders) from cp.`lateraljoin/nested-customer.parquet` ) as t2 (name, orders) on t.c_name = t2.name " +
+        " inner join (select c_name, flatten(orders) from cp.`lateraljoin/nested-customer.parquet` ) as t3(name, orders) on t.c_name = t3.name";
+
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .sqlBaselineQuery(baselineQuery)
+        .go();
   }
 
   @Test
   public void testSubQuerySql() throws Exception {
-    String Sql = "select t2.os.* from (select t.orders as os from cp.`lateraljoin/nested-customer.parquet` t) t2";
-    test(Sql);
+    String Sql = "select t.c_name, d1.items as items0 , t3.items as items1 from cp.`lateraljoin/nested-customer.parquet` t," +
+        " lateral (select t2.ord.items as items from unnest(t.orders) t2(ord)) d1," +
+        " unnest(d1.items) t3(items)";
+
+    String baselineQuery = "select t.c_name, t3.orders.items as items0, t3.items as items1 from cp.`lateraljoin/nested-customer.parquet` t " +
+        " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
+        "t3(name, orders, items) on t.c_name = t3.name ";
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .sqlBaselineQuery(baselineQuery)
+        .go();
+  }
+
+  @Test
+  public void testUnnestWithFilter() throws Exception {
+    String Sql = "select t.c_name, d1.items as items0, t3.items as items1 from cp.`lateraljoin/nested-customer.parquet` t," +
+        " lateral (select t2.ord.items as items from unnest(t.orders) t2(ord)) d1," +
+        " unnest(d1.items) t3(items) where t.c_id > 1";
+
+    String baselineQuery = "select t.c_name, t3.orders.items as items0, t3.items as items1 from cp.`lateraljoin/nested-customer.parquet` t " +
+        " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
+        "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1";
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .sqlBaselineQuery(baselineQuery)
+        .go();
+  }
+
+  @Test
+  @Ignore ()
+  public void testUnnestWithAggInSubquery() throws Exception {
+    String Sql = "select t.c_name, t3.items from cp.`lateraljoin/nested-customer.parquet` t," +
+        " lateral (select t2.ord.items as items from unnest(t.orders) t2(ord)) d1," +
+        " lateral (select avg(t3.items.i_number) from unnest(d1.items) t3(items)) where t.c_id > 1";
+
+    String baselineQuery = "select t.c_name, avg(t3.items.i_number) from cp.`lateraljoin/nested-customer.parquet` t " +
+        " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
+        "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1 group by t.c_name";
+
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      client
+          .queryBuilder()
+          .sql(Sql)
+          .run();
+    }
+  }
+
+  @Test
+  public void testUnnestWithAggOnOuterTable() throws Exception {
+    String Sql = "select avg(d2.inum) from cp.`lateraljoin/nested-customer.parquet` t," +
+        " lateral (select t2.ord.items as items from unnest(t.orders) t2(ord)) d1," +
+        " lateral (select t3.items.i_number as inum from unnest(d1.items) t3(items)) d2 where t.c_id > 1 group by t.c_id";
+
+    String baselineQuery = "select avg(t3.items.i_number) from cp.`lateraljoin/nested-customer.parquet` t " +
+        " inner join (select c_name, f, flatten(t1.f.items) from (select c_name, flatten(orders) as f from cp.`lateraljoin/nested-customer.parquet`) as t1 ) " +
+        "t3(name, orders, items) on t.c_name = t3.name where t.c_id > 1 group by t.c_id";
+
+    testBuilder()
+        .unOrdered()
+        .sqlQuery(Sql)
+        .sqlBaselineQuery(baselineQuery)
+        .go();
+  }
+
+  @Test
+  public void testUnnestTableAndColumnAlias() throws Exception {
+    String Sql = "select t.c_name from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) ";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      client
+          .queryBuilder()
+          .sql(Sql)
+          .run();
+    } catch (UserRemoteException ex) {
+      assert(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+    }
+  }
+
+  @Test
+  public void testUnnestColumnAlias() throws Exception {
+    String Sql = "select t.c_name, t2.orders from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) t2";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      client
+          .queryBuilder()
+          .sql(Sql)
+          .run();
+    } catch (UserRemoteException ex) {
+      assert(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+    }
   }
 }
