@@ -245,6 +245,22 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   }
 
   /**
+   * Removes a file or directory copied at relativePath inside the root directory
+   * @param relPath - relative path of file/directory to be deleted from the root directory
+   * @throws IOException - Throws exception in case of failure
+   */
+  public void removeFileFromRoot(Path relPath) throws IOException {
+    removeFromRoot(relPath, DirType.ROOT);
+  }
+
+  private void removeFromRoot(Path relPath, DirType dirType) throws IOException {
+    final File baseDir = getDir(dirType);
+    final Path finalPath = baseDir.toPath().resolve(relPath);
+    final File file = finalPath.toFile();
+    FileUtils.forceDelete(file);
+  }
+
+  /**
    * This copies a file or directory from <b>src/test/resources</b> into the temp root directory (corresponding to <b>dfs.root</b>). The file or directory is copied
    * to the provided relative destPath in the temp root directory.
    * @param relPath The source relative path of a file or directory from <b>src/test/resources</b> that will be copied.
