@@ -30,6 +30,7 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -189,14 +190,13 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 
-  @Override
-  public Prel visitScan(ScanPrel scanPrel, Void value) throws RuntimeException {
-    if (StarColumnHelper.containsStarColumn(scanPrel.getRowType()) && prefixedForStar) {
+  private Prel prefixTabNameToStar(Prel prel, Void value) throws RuntimeException {
+    if (StarColumnHelper.containsStarColumn(prel.getRowType()) && prefixedForStar) {
 
       List<RexNode> exprs = Lists.newArrayList();
 
-      for (RelDataTypeField field : scanPrel.getRowType().getFieldList()) {
-        RexNode expr = scanPrel.getCluster().getRexBuilder().makeInputRef(field.getType(), field.getIndex());
+      for (RelDataTypeField field : prel.getRowType().getFieldList()) {
+        RexNode expr = prel.getCluster().getRexBuilder().makeInputRef(field.getType(), field.getIndex());
         exprs.add(expr);
       }
 
@@ -204,23 +204,33 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
       long tableId = tableNumber.getAndIncrement();
 
-      for (String name : scanPrel.getRowType().getFieldNames()) {
+      for (String name : prel.getRowType().getFieldNames()) {
         if (StarColumnHelper.isNonPrefixedStarColumn(name)) {
           fieldNames.add("T" +  tableId + StarColumnHelper.PREFIX_DELIMITER + name);  // Add prefix to * column.
         } else {
           fieldNames.add(name);  // Keep regular column as it is.
         }
       }
-      RelDataType rowType = RexUtil.createStructType(scanPrel.getCluster().getTypeFactory(),
+      RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(),
           exprs, fieldNames, null);
 
       // insert a PAS.
-      ProjectPrel proj = new ProjectPrel(scanPrel.getCluster(), scanPrel.getTraitSet(), scanPrel, exprs, rowType);
+      ProjectPrel proj = new ProjectPrel(prel.getCluster(), prel.getTraitSet(), prel, exprs, rowType);
 
       return proj;
     } else {
-      return visitPrel(scanPrel, value);
+      return visitPrel(prel, value);
     }
+  }
+
+  @Override
+  public Prel visitScan(ScanPrel scanPrel, Void value) throws RuntimeException {
+    return prefixTabNameToStar(scanPrel, value);
+  }
+
+  @Override
+  public Prel visitUnnest(UnnestPrel unnestPrel, Void value) throws RuntimeException {
+    return prefixTabNameToStar(unnestPrel, value);
   }
 
   private List<String> makeUniqueNames(List<String> names) {

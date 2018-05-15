@@ -21,9 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -34,6 +31,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.FragmentStats;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.logical.DrillLogicalTestutils;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -46,12 +44,8 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Order;
@@ -131,33 +125,19 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 
   @Override
   protected LogicalExpression parseExpr(String expr) {
-    ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
-    ExprParser parser = new ExprParser(tokens);
-    try {
-      return parser.parse().e;
-    } catch (RecognitionException e) {
-      throw new RuntimeException("Error parsing expression: " + expr);
-    }
+    return DrillLogicalTestutils.parseExpr(expr);
   }
 
   protected Order.Ordering ordering(String expression, RelFieldCollation.Direction direction, RelFieldCollation.NullDirection nullDirection) {
-    return new Order.Ordering(direction, parseExpr(expression), nullDirection);
+    return DrillLogicalTestutils.ordering(expression, direction, nullDirection);
   }
 
   protected JoinCondition joinCond(String leftExpr, String relationship, String rightExpr) {
-    return new JoinCondition(relationship, parseExpr(leftExpr), parseExpr(rightExpr));
+    return DrillLogicalTestutils.joinCond(leftExpr, relationship, rightExpr);
   }
 
   protected List<NamedExpression> parseExprs(String... expressionsAndOutputNames) {
-    Preconditions.checkArgument(expressionsAndOutputNames.length %2 ==0, "List of expressions and output field names" +
-        " is not complete, each expression must explicitly give and output name,");
-    List<NamedExpression> ret = new ArrayList<>();
-    for (int i = 0; i < expressionsAndOutputNames.length; i += 2) {
-      ret.add(new NamedExpression(parseExpr(expressionsAndOutputNames[i]),
-          new FieldReference(new SchemaPath(new PathSegment.NameSegment(expressionsAndOutputNames[i+1])))));
-    }
-    return ret;
+    return DrillLogicalTestutils.parseExprs(expressionsAndOutputNames);
   }
 
   protected static class BatchIterator implements Iterable<VectorAccessible> {

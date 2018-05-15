@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical.visitor;
 import java.util.List;
 
 import org.apache.drill.exec.planner.physical.JoinPrel;
+import org.apache.drill.exec.planner.physical.CorrelatePrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.calcite.rel.RelNode;
 
@@ -35,25 +36,26 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
 
   @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
+    return preparePrel(prel, getChildren(prel));
+  }
+
+  private List<RelNode> getChildren(Prel prel) {
     List<RelNode> children = Lists.newArrayList();
     for(Prel child : prel){
       child = child.accept(this, null);
       children.add(child);
     }
+    return children;
+  }
 
-    return (Prel) prel.copy(prel.getTraitSet(), children);
-
+  private Prel preparePrel(Prel prel, List<RelNode> renamedNodes) {
+    return (Prel) prel.copy(prel.getTraitSet(), renamedNodes);
   }
 
   @Override
   public Prel visitJoin(JoinPrel prel, Void value) throws RuntimeException {
 
-    List<RelNode> children = Lists.newArrayList();
-
-    for(Prel child : prel){
-      child = child.accept(this, null);
-      children.add(child);
-    }
+    List<RelNode> children = getChildren(prel);
 
     final int leftCount = children.get(0).getRowType().getFieldCount();
 
@@ -65,7 +67,25 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
     reNamedChildren.add(left);
     reNamedChildren.add(right);
 
-    return (Prel) prel.copy(prel.getTraitSet(), reNamedChildren);
+    return preparePrel(prel, reNamedChildren);
   }
 
+  //TODO: consolidate this code with join column renaming.
+  @Override
+  public Prel visitCorrelate(CorrelatePrel prel, Void value) throws RuntimeException {
+
+    List<RelNode> children = getChildren(prel);
+
+    final int leftCount = children.get(0).getRowType().getFieldCount();
+
+    List<RelNode> reNamedChildren = Lists.newArrayList();
+
+    RelNode left = prel.getCorrelateInput(0, children.get(0));
+    RelNode right = prel.getCorrelateInput(leftCount, children.get(1));
+
+    reNamedChildren.add(left);
+    reNamedChildren.add(right);
+
+    return preparePrel(prel, reNamedChildren);
+  }
 }
