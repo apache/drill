@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.impl.BaseTestOpBatchEmitOutcome;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.test.rowSet.RowSet;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Category(OperatorTest.class)
 public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
   /**

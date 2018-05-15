@@ -223,8 +223,12 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     Object[][][] baseline = {
         {
-          {1, 1, 2, 2, 2, 3, 3, 4},
-          {"0", "1", "2", "3", "4", "5", "6", "9"}
+          {1, 1, 2, 2, 2, 3, 3},
+          {"0", "1", "2", "3", "4", "5", "6"}
+        },
+        {
+          {4},
+          {"9"}
         }
     };
 

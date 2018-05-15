@@ -129,6 +129,9 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       return (T) existing;
     } else if (nullFilled(existing)) {
       existing.clear();
+      // Since it's removing old vector and adding new one based on new type, it should do same for Materialized field,
+      // Otherwise there will be duplicate of same field with same name but different type.
+      field.removeChild(existing.getField());
       create = true;
     }
     if (create) {

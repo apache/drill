@@ -135,6 +135,15 @@ public class VectorContainer implements VectorAccessible {
     return addOrGet(field, null);
   }
 
+  /**
+   * This method should be called with MaterializedField which also has correct children field list specially when
+   * the field type is MAP. Otherwise after calling this method if caller is not creating TransferPair on the
+   * ValueVector, then the new ValueVector will not have information about it's list of children MaterializedField.
+   * @param field
+   * @param callBack
+   * @param <T>
+   * @return
+   */
   @SuppressWarnings("unchecked")
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
     final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getName()));

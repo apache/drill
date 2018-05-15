@@ -526,7 +526,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   @Override
   protected boolean setupNewSchema() throws SchemaChangeException {
     setupNewSchemaFromInput(this.incoming);
-    if (container.isSchemaChanged()) {
+    if (container.isSchemaChanged() || callBack.getSchemaChangedAndReset()) {
       container.buildSchema(SelectionVectorMode.NONE);
       return true;
     } else {

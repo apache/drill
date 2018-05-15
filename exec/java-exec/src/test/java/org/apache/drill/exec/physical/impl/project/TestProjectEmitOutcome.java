@@ -17,17 +17,20 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.impl.BaseTestOpBatchEmitOutcome;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.test.rowSet.RowSet;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Category(OperatorTest.class)
 public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
   /**
