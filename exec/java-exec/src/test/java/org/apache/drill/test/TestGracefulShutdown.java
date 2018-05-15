@@ -204,19 +204,16 @@ public class TestGracefulShutdown extends BaseTestQuery {
     try ( ClusterFixture cluster = builder.build();
           final ClientFixture client = cluster.clientFixture()) {
       Drillbit drillbit = cluster.drillbit("db1");
-      int port = drillbit.getContext().getConfig().getInt("drill.exec.http.port");
+      int port = drillbit.getWebServerPort();
       int grace_period = drillbit.getContext().getConfig().getInt(ExecConstants.GRACE_PERIOD);
       listener =  client.queryBuilder().sql(sql).futureSummary();
       Thread.sleep(60000);
-      while( port < 8049) {
-        URL url = new URL("http://localhost:"+port+"/gracefulShutdown");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        if (conn.getResponseCode() != 200) {
-          throw new RuntimeException("Failed : HTTP error code : "
-                  + conn.getResponseCode());
-        }
-        port++;
+      URL url = new URL("http://localhost:"+port+"/gracefulShutdown");
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestMethod("POST");
+      if (conn.getResponseCode() != 200) {
+        throw new RuntimeException("Failed : HTTP error code : "
+                + conn.getResponseCode());
       }
       Thread.sleep(grace_period);
       Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
@@ -237,7 +234,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
       }
 
       Assert.assertTrue(listener.isDone());
-      Assert.assertEquals(1,drillbitEndpoints.size());
+      Assert.assertEquals(2,drillbitEndpoints.size());
     }
   }
 
@@ -255,22 +252,17 @@ public class TestGracefulShutdown extends BaseTestQuery {
     try ( ClusterFixture cluster = builder.build();
           final ClientFixture client = cluster.clientFixture()) {
       Drillbit drillbit = cluster.drillbit("db1");
-      int port = drillbit.getContext().getConfig().getInt("drill.exec.http.port");
+      int port = drillbit.getWebServerPort();
       int grace_period = drillbit.getContext().getConfig().getInt(ExecConstants.GRACE_PERIOD);
       listener =  client.queryBuilder().sql(sql).futureSummary();
       Thread.sleep(10000);
-
-      while( port < 8048) {
-        URL url = new URL("http://localhost:"+port+"/shutdown");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        if (conn.getResponseCode() != 200) {
-          throw new RuntimeException("Failed : HTTP error code : "
-                  + conn.getResponseCode());
-        }
-        port++;
+      URL url = new URL("http://localhost:"+port+"/shutdown");
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestMethod("POST");
+      if (conn.getResponseCode() != 200) {
+        throw new RuntimeException("Failed : HTTP error code : "
+                + conn.getResponseCode());
       }
-
       Thread.sleep(grace_period);
 
       Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
