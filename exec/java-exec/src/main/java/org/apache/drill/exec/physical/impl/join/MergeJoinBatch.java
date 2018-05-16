@@ -122,7 +122,9 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     @Override
     public void update(int inputIndex) {
       status.setTargetOutputRowCount(super.update(inputIndex, status.getOutPosition()));
-      logger.debug("BATCH_STATS, incoming {}:\n {}", inputIndex == 0 ? "left" : "right", getRecordBatchSizer(inputIndex));
+      if (logger.isDebugEnabled()) {
+        logger.debug("BATCH_STATS, incoming {}:\n {}", inputIndex == 0 ? "left" : "right", getRecordBatchSizer(inputIndex));
+      }
     }
   }
 
@@ -268,7 +270,9 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
       vw.getValueVector().getMutator().setValueCount(getRecordCount());
     }
 
-    logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+    }
 
     batchMemoryManager.updateOutgoingStats(getRecordCount());
   }

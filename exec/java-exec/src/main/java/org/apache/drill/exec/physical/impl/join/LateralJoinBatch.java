@@ -637,8 +637,10 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
     batchMemoryManager.updateOutgoingStats(outputIndex);
-    logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
-    logger.debug("Number of records emitted: " + outputIndex);
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+      logger.debug("Number of records emitted: " + outputIndex);
+    }
 
     // Update the output index for next output batch to zero
     outputIndex = 0;
@@ -872,7 +874,9 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     // a new output batch with new incoming then it will not cause any problem since outputIndex will be 0
     final int newOutputRowCount = batchMemoryManager.update(inputIndex, outputIndex);
 
-    logger.debug("BATCH_STATS, incoming {}:\n {}", inputIndex == 0 ? "left" : "right", batchMemoryManager.getRecordBatchSizer(inputIndex));
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, incoming {}:\n {}", inputIndex == 0 ? "left" : "right", batchMemoryManager.getRecordBatchSizer(inputIndex));
+    }
 
     if (useMemoryManager) {
       maxOutputRowCount = newOutputRowCount;
