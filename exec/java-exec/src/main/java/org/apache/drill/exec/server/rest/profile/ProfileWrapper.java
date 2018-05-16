@@ -63,7 +63,7 @@ public class ProfileWrapper {
 
   public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig) {
     this.profile = profile;
-    this.id = QueryIdHelper.getQueryId(profile.getId());
+    this.id = profile.getId().hasText() ? profile.getId().getText() : QueryIdHelper.getQueryId(profile.getId());
     //Generating Operator Name map (DRILL-6140)
     String profileTextPlan = profile.hasPlan() ? profile.getPlan() : "" ;
     generateOpMap(profileTextPlan);

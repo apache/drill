@@ -150,6 +150,8 @@ public final class SchemaUserBitShared
                     output.writeSFixed64(1, message.getPart1(), false);
                 if(message.hasPart2())
                     output.writeSFixed64(2, message.getPart2(), false);
+                if(message.hasText())
+                    output.writeString(3, message.getText(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryId message)
             {
@@ -195,6 +197,9 @@ public final class SchemaUserBitShared
                         case 2:
                             builder.setPart2(input.readSFixed64());
                             break;
+                        case 3:
+                            builder.setText(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -237,6 +242,7 @@ public final class SchemaUserBitShared
             {
                 case 1: return "part1";
                 case 2: return "part2";
+                case 3: return "text";
                 default: return null;
             }
         }
@@ -250,6 +256,7 @@ public final class SchemaUserBitShared
         {
             fieldMap.put("part1", 1);
             fieldMap.put("part2", 2);
+            fieldMap.put("text", 3);
         }
     }
 

@@ -31,6 +31,7 @@ message UserCredentials {
 message QueryId {
   optional sfixed64 part1 = 1;
   optional sfixed64 part2 = 2;
+  optional string text = 3;
 }
 
 message DrillPBError{
