@@ -30,6 +30,22 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
+  <div>
+  <table><tr>
+    <td align='left'>
+      <button type="button"  title="Open in new window" onclick="popOutProfile('${model.getQueryId()}');" class="btn btn-default btn-sm">
+      <b>Query Profile:</b> ${model.getQueryId()} <span class="glyphicon glyphicon-new-window"/></button>
+     </td><td align="right" width="100%">
+       <div class="input-group">
+         <span class="input-group-addon" style="font-size:95%">Delimiter </span>
+         <input id="delimitBy" type="text" class="form-control input-sm" name="delimitBy" title="Specify delimiter" placeholder="Required" maxlength="2" size="2" value=",">
+       </div></td><td>
+       <button type="button"  title="Export visible table as CSV" onclick="exportTableAsCsv('${model.getQueryId()}');" class="btn btn-default btn-sm">
+       <b>Export </b> <span class="glyphicon glyphicon-export"/></button>
+     </td>
+  </tr>
+  </table>
+  </div>
   <#if model.isEmpty()>
     <div class="jumbotron">
       <p class="lead">No result found.</p>
@@ -59,11 +75,67 @@
       $('#result').dataTable( {
         "aaSorting": [],
         "scrollX" : true,
+        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        "lengthChange": true,
         "dom": '<"H"lCfr>t<"F"ip>',
         "jQueryUI" : true
       } );
     } );
-  </script>
+
+    //Pop out profile (needed to avoid losing query results)
+    function popOutProfile(queryId) {
+      var profileUrl = location.protocol+'//'+ location.host+'/profiles/'+queryId;
+      var tgtWindow = '_blank';
+      window.open(profileUrl, tgtWindow);
+    }
+
+//Ref: https://jsfiddle.net/gengns/j1jm2tjx/
+function download_csv(csvRecords, filename) {
+    var csvFile;
+    var downloadElem;
+
+    //CSV File
+    csvFile = new Blob([csvRecords], {type: "text/csv"});
+    // Download link
+    downloadElem = document.createElement("a");
+    // File name
+    downloadElem.download = filename;
+
+    // We have to create a link to the file
+    downloadElem.href = window.URL.createObjectURL(csvFile);
+
+    // Make sure that the link is not displayed
+    downloadElem.style.display = "none";
+
+    // Add the link to your DOM
+    document.body.appendChild(downloadElem);
+
+    // Launch the download prompt
+    downloadElem.click();
+}
+
+function exportTableAsCsv(queryId) {
+    var filename = queryId+'.csv';
+    var csv = []; //Array of records
+    var rows = document.getElementById('result').querySelectorAll("tr");
+    var delimiter = document.getElementById('delimitBy').value;
+	if (delimiter == 'undefined' || delimiter.length==0) {
+	  delimiter = ",";
+	}
+    for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll("th, td");
+
+        for (var j = 0; j < cols.length; j++)
+            row.push(cols[j].textContent);
+
+        csv.push(row.join(delimiter));
+    }
+
+    // Download CSV
+    download_csv(csv.join("\n"), filename);
+}
+
+    </script>
 </#macro>
 
 <@page_html/>
