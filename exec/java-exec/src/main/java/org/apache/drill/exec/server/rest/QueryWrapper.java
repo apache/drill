@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
 import org.apache.drill.exec.work.WorkManager;
 
@@ -79,17 +80,22 @@ public class QueryWrapper {
     }
 
     // Return the QueryResult.
-    return new QueryResult(webUserConnection.columns, webUserConnection.results);
+    return new QueryResult(queryId, webUserConnection.columns, webUserConnection.results);
   }
 
   public static class QueryResult {
+    private final String queryId;
     public final Collection<String> columns;
-
     public final List<Map<String, String>> rows;
 
-    public QueryResult(Collection<String> columns, List<Map<String, String>> rows) {
+    public QueryResult(QueryId queryId, Collection<String> columns, List<Map<String, String>> rows) {
+      this.queryId = QueryIdHelper.getQueryId(queryId);
       this.columns = columns;
       this.rows = rows;
+    }
+
+    public String getQueryId() {
+      return queryId;
     }
   }
 
