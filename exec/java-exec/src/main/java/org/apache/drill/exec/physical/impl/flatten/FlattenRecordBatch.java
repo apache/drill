@@ -157,7 +157,9 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       // i.e. all rows fit within memory budget.
       setOutputRowCount(Math.min(columnSize.getElementCount(), getOutputRowCount()));
 
-      logger.debug("BATCH_STATS, incoming:\n {}", getRecordBatchSizer());
+      if (logger.isDebugEnabled()) {
+        logger.debug("BATCH_STATS, incoming:\n {}", getRecordBatchSizer());
+      }
 
       updateIncomingStats();
     }
@@ -260,7 +262,9 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
     flattenMemoryManager.updateOutgoingStats(outputRecords);
 
-    logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+    }
 
     // Get the final outcome based on hasRemainder since that will determine if all the incoming records were
     // consumed in current output batch or not

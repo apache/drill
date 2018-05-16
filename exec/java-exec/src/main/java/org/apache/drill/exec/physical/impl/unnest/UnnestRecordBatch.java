@@ -124,10 +124,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       // i.e. all rows fit within memory budget.
       setOutputRowCount(Math.min(columnSize.getElementCount(), getOutputRowCount()));
 
-      logger.debug("incoming batch size : {}", getRecordBatchSizer());
-
-      logger.debug("output batch size : {}, avg outgoing rowWidth : {}, output rowCount : {}",
-          outputBatchSize, avgOutgoingRowWidth, getOutputRowCount());
+      if (logger.isDebugEnabled()) {
+        logger.debug("BATCH_STATS, incoming:\n {}", getRecordBatchSizer());
+      }
 
       updateIncomingStats();
     }
@@ -301,7 +300,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     // entire incoming recods has been unnested. If the entire records has been
     // unnested, we return EMIT and any blocking operators in the pipeline will
     // unblock.
-    logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+    }
     return hasRemainder ? IterOutcome.OK : IterOutcome.EMIT;
   }
 
