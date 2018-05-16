@@ -699,7 +699,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       
     public void set(int index, BigDecimal value) {
       DecimalUtility.getSparseFromBigDecimal(value, data, index * VALUE_WIDTH,
-           field.getScale(), field.getPrecision(), ${minor.nDecimalDigits});
+          field.getScale(), ${minor.nDecimalDigits});
     }
 
     public void setSafe(int index, BigDecimal value) {

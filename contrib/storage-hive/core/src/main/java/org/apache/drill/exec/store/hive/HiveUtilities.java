@@ -233,7 +233,7 @@ public class HiveUtilities {
         final Decimal9Holder holder = new Decimal9Holder();
         holder.scale = v.getField().getScale();
         holder.precision = v.getField().getPrecision();
-        holder.value = DecimalUtility.getDecimal9FromBigDecimal(value, holder.scale, holder.precision);
+        holder.value = DecimalUtility.getDecimal9FromBigDecimal(value, holder.scale);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);
         }
@@ -246,7 +246,7 @@ public class HiveUtilities {
         final Decimal18Holder holder = new Decimal18Holder();
         holder.scale = v.getField().getScale();
         holder.precision = v.getField().getPrecision();
-        holder.value = DecimalUtility.getDecimal18FromBigDecimal(value, holder.scale, holder.precision);
+        holder.value = DecimalUtility.getDecimal18FromBigDecimal(value, holder.scale);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);
         }
@@ -266,7 +266,7 @@ public class HiveUtilities {
         holder.precision = v.getField().getPrecision();
         holder.buffer = managedBuffer;
         holder.start = 0;
-        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale, holder.precision,
+        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale,
             Decimal28SparseHolder.nDecimalDigits);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);
@@ -286,7 +286,7 @@ public class HiveUtilities {
         holder.precision = v.getField().getPrecision();
         holder.buffer = managedBuffer;
         holder.start = 0;
-        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale, holder.precision,
+        DecimalUtility.getSparseFromBigDecimal(value, holder.buffer, 0, holder.scale,
             Decimal38SparseHolder.nDecimalDigits);
         for (int i = start; i < end; i++) {
           v.getMutator().setSafe(i, holder);

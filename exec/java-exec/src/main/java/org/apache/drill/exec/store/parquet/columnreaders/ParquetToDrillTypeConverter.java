@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
-import org.apache.drill.common.util.CoreDecimalUtility;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
@@ -128,7 +128,7 @@ public class ParquetToDrillTypeConverter {
     MinorType minorType = getMinorType(primitiveTypeName, length, convertedType, options);
     TypeProtos.MajorType.Builder typeBuilder = TypeProtos.MajorType.newBuilder().setMinorType(minorType).setMode(mode);
 
-    if (CoreDecimalUtility.isDecimalType(minorType)) {
+    if (Types.isDecimalType(minorType)) {
       int precision = schemaElement.getPrecision();
       int scale = schemaElement.getScale();
 
