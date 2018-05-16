@@ -1422,6 +1422,21 @@ public final class UserBitShared {
      * <code>optional sfixed64 part2 = 2;</code>
      */
     long getPart2();
+
+    // optional string text = 3;
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    boolean hasText();
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    java.lang.String getText();
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getTextBytes();
   }
   /**
    * Protobuf type {@code exec.shared.QueryId}
@@ -1482,6 +1497,11 @@ public final class UserBitShared {
             case 17: {
               bitField0_ |= 0x00000002;
               part2_ = input.readSFixed64();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              text_ = input.readBytes();
               break;
             }
           }
@@ -1556,9 +1576,53 @@ public final class UserBitShared {
       return part2_;
     }
 
+    // optional string text = 3;
+    public static final int TEXT_FIELD_NUMBER = 3;
+    private java.lang.Object text_;
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    public boolean hasText() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    public java.lang.String getText() {
+      java.lang.Object ref = text_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          text_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string text = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTextBytes() {
+      java.lang.Object ref = text_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        text_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       part1_ = 0L;
       part2_ = 0L;
+      text_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1578,6 +1642,9 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeSFixed64(2, part2_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getTextBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1594,6 +1661,10 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSFixed64Size(2, part2_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getTextBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1715,6 +1786,8 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00000001);
         part2_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
+        text_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -1751,6 +1824,10 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00000002;
         }
         result.part2_ = part2_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.text_ = text_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1772,6 +1849,11 @@ public final class UserBitShared {
         }
         if (other.hasPart2()) {
           setPart2(other.getPart2());
+        }
+        if (other.hasText()) {
+          bitField0_ |= 0x00000004;
+          text_ = other.text_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1862,6 +1944,80 @@ public final class UserBitShared {
       public Builder clearPart2() {
         bitField0_ = (bitField0_ & ~0x00000002);
         part2_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional string text = 3;
+      private java.lang.Object text_ = "";
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public boolean hasText() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public java.lang.String getText() {
+        java.lang.Object ref = text_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          text_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTextBytes() {
+        java.lang.Object ref = text_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          text_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public Builder setText(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        text_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public Builder clearText() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        text_ = getDefaultInstance().getText();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string text = 3;</code>
+       */
+      public Builder setTextBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        text_ = value;
         onChanged();
         return this;
       }
@@ -24049,133 +24205,133 @@ public final class UserBitShared {
       "\n\023UserBitShared.proto\022\013exec.shared\032\013Type" +
       "s.proto\032\022Coordination.proto\032\017SchemaDef.p" +
       "roto\"$\n\017UserCredentials\022\021\n\tuser_name\030\001 \001" +
-      "(\t\"\'\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 " +
-      "\001(\020\"\355\003\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
-      "\n\010endpoint\030\002 \001(\0132\026.exec.DrillbitEndpoint" +
-      "\0227\n\nerror_type\030\003 \001(\0162#.exec.shared.Drill" +
-      "PBError.ErrorType\022\017\n\007message\030\004 \001(\t\0220\n\tex" +
-      "ception\030\005 \001(\0132\035.exec.shared.ExceptionWra" +
-      "pper\0220\n\rparsing_error\030\006 \003(\0132\031.exec.share",
-      "d.ParsingError\"\362\001\n\tErrorType\022\016\n\nCONNECTI" +
-      "ON\020\000\022\r\n\tDATA_READ\020\001\022\016\n\nDATA_WRITE\020\002\022\014\n\010F" +
-      "UNCTION\020\003\022\t\n\005PARSE\020\004\022\016\n\nPERMISSION\020\005\022\010\n\004" +
-      "PLAN\020\006\022\014\n\010RESOURCE\020\007\022\n\n\006SYSTEM\020\010\022\031\n\025UNSU" +
-      "PPORTED_OPERATION\020\t\022\016\n\nVALIDATION\020\n\022\023\n\017E" +
-      "XECUTION_ERROR\020\013\022\022\n\016INTERNAL_ERROR\020\014\022\025\n\021" +
-      "UNSPECIFIED_ERROR\020\r\"\246\001\n\020ExceptionWrapper" +
-      "\022\027\n\017exception_class\030\001 \001(\t\022\017\n\007message\030\002 \001" +
-      "(\t\022:\n\013stack_trace\030\003 \003(\0132%.exec.shared.St" +
-      "ackTraceElementWrapper\022,\n\005cause\030\004 \001(\0132\035.",
-      "exec.shared.ExceptionWrapper\"\205\001\n\030StackTr" +
-      "aceElementWrapper\022\022\n\nclass_name\030\001 \001(\t\022\021\n" +
-      "\tfile_name\030\002 \001(\t\022\023\n\013line_number\030\003 \001(\005\022\023\n" +
-      "\013method_name\030\004 \001(\t\022\030\n\020is_native_method\030\005" +
-      " \001(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002 \001" +
-      "(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(" +
-      "\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022\024\n\014" +
-      "record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exec" +
-      ".shared.SerializedField\022)\n!carries_two_b" +
-      "yte_selection_vector\030\003 \001(\010\"\205\001\n\010NamePart\022",
-      "(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart.Typ" +
-      "e\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.sh" +
-      "ared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY" +
-      "\020\001\"\324\001\n\017SerializedField\022%\n\nmajor_type\030\001 \001" +
-      "(\0132\021.common.MajorType\022(\n\tname_part\030\002 \001(\013" +
-      "2\025.exec.shared.NamePart\022+\n\005child\030\003 \003(\0132\034" +
-      ".exec.shared.SerializedField\022\023\n\013value_co" +
-      "unt\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\025\n\rbu" +
-      "ffer_length\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007node_" +
-      "id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\263\002\n\013Q",
-      "ueryResult\0228\n\013query_state\030\001 \001(\0162#.exec.s" +
-      "hared.QueryResult.QueryState\022&\n\010query_id" +
-      "\030\002 \001(\0132\024.exec.shared.QueryId\022(\n\005error\030\003 " +
-      "\003(\0132\031.exec.shared.DrillPBError\"\227\001\n\nQuery" +
-      "State\022\014\n\010STARTING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMP" +
-      "LETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026CAN" +
-      "CELLATION_REQUESTED\020\005\022\014\n\010ENQUEUED\020\006\022\r\n\tP" +
-      "REPARING\020\007\022\014\n\010PLANNING\020\010\"p\n\tQueryData\022&\n" +
-      "\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\021\n" +
-      "\trow_count\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec.sha",
-      "red.RecordBatchDef\"\330\001\n\tQueryInfo\022\r\n\005quer" +
-      "y\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#." +
-      "exec.shared.QueryResult.QueryState\022\017\n\004us" +
-      "er\030\004 \001(\t:\001-\022\'\n\007foreman\030\005 \001(\0132\026.exec.Dril" +
-      "lbitEndpoint\022\024\n\014options_json\030\006 \001(\t\022\022\n\nto" +
-      "tal_cost\030\007 \001(\001\022\025\n\nqueue_name\030\010 \001(\t:\001-\"\242\004" +
-      "\n\014QueryProfile\022 \n\002id\030\001 \001(\0132\024.exec.shared" +
-      ".QueryId\022$\n\004type\030\002 \001(\0162\026.exec.shared.Que" +
-      "ryType\022\r\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005qu" +
-      "ery\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\013",
-      "2\026.exec.DrillbitEndpoint\0222\n\005state\030\010 \001(\0162" +
-      "#.exec.shared.QueryResult.QueryState\022\027\n\017" +
-      "total_fragments\030\t \001(\005\022\032\n\022finished_fragme" +
-      "nts\030\n \001(\005\022;\n\020fragment_profile\030\013 \003(\0132!.ex" +
-      "ec.shared.MajorFragmentProfile\022\017\n\004user\030\014" +
-      " \001(\t:\001-\022\r\n\005error\030\r \001(\t\022\024\n\014verboseError\030\016" +
-      " \001(\t\022\020\n\010error_id\030\017 \001(\t\022\022\n\nerror_node\030\020 \001" +
-      "(\t\022\024\n\014options_json\030\021 \001(\t\022\017\n\007planEnd\030\022 \001(" +
-      "\003\022\024\n\014queueWaitEnd\030\023 \001(\003\022\022\n\ntotal_cost\030\024 " +
-      "\001(\001\022\025\n\nqueue_name\030\025 \001(\t:\001-\"t\n\024MajorFragm",
-      "entProfile\022\031\n\021major_fragment_id\030\001 \001(\005\022A\n" +
-      "\026minor_fragment_profile\030\002 \003(\0132!.exec.sha" +
-      "red.MinorFragmentProfile\"\350\002\n\024MinorFragme" +
-      "ntProfile\022)\n\005state\030\001 \001(\0162\032.exec.shared.F" +
-      "ragmentState\022(\n\005error\030\002 \001(\0132\031.exec.share" +
-      "d.DrillPBError\022\031\n\021minor_fragment_id\030\003 \001(" +
-      "\005\0226\n\020operator_profile\030\004 \003(\0132\034.exec.share" +
-      "d.OperatorProfile\022\022\n\nstart_time\030\005 \001(\003\022\020\n" +
-      "\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017" +
-      "max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132",
-      "\026.exec.DrillbitEndpoint\022\023\n\013last_update\030\n" +
-      " \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\377\001\n\017Operator" +
-      "Profile\0221\n\rinput_profile\030\001 \003(\0132\032.exec.sh" +
-      "ared.StreamProfile\022\023\n\013operator_id\030\003 \001(\005\022" +
-      "\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_nanos\030\005 " +
-      "\001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_local" +
-      "_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132" +
-      "\030.exec.shared.MetricValue\022\022\n\nwait_nanos\030" +
-      "\t \001(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 \001(\003\022" +
-      "\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013Met",
-      "ricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_valu" +
-      "e\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n\010Registr" +
-      "y\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar\"/\n\003Jar\022" +
-      "\014\n\004name\030\001 \001(\t\022\032\n\022function_signature\030\002 \003(" +
-      "\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004d" +
-      "ata\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec.shared." +
-      "SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020" +
-      "\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007" +
-      "\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEX" +
-      "ECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFr",
-      "agmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALL" +
-      "OCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\t" +
-      "CANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_" +
-      "REQUESTED\020\006*\360\006\n\020CoreOperatorType\022\021\n\rSING" +
-      "LE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FIL" +
-      "TER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004" +
-      "\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDE" +
-      "R\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030" +
-      "ORDERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020\n\022" +
-      "\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SENDER\020",
-      "\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REMOVE" +
-      "R\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N_SO" +
-      "RT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UN" +
-      "ION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GROUP" +
-      "_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_TAB" +
-      "LE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQUET_" +
-      "WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT_WR" +
-      "ITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SC" +
-      "AN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COMPLE" +
-      "X_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016HB",
-      "ASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOO" +
-      "P_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_" +
-      "SCAN\020%\022\022\n\016KAFKA_SUB_SCAN\020&\022\021\n\rKUDU_SUB_S" +
-      "CAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014LATERAL_JOIN\020)\022\n\n\006" +
-      "UNNEST\020*\022,\n(HIVE_DRILL_NATIVE_PARQUET_RO" +
-      "W_GROUP_SCAN\020+*g\n\nSaslStatus\022\020\n\014SASL_UNK" +
-      "NOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRE" +
-      "SS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B" +
-      ".\n\033org.apache.drill.exec.protoB\rUserBitS" +
-      "haredH\001"
+      "(\t\"5\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 " +
+      "\001(\020\022\014\n\004text\030\003 \001(\t\"\355\003\n\014DrillPBError\022\020\n\010er" +
+      "ror_id\030\001 \001(\t\022(\n\010endpoint\030\002 \001(\0132\026.exec.Dr" +
+      "illbitEndpoint\0227\n\nerror_type\030\003 \001(\0162#.exe" +
+      "c.shared.DrillPBError.ErrorType\022\017\n\007messa" +
+      "ge\030\004 \001(\t\0220\n\texception\030\005 \001(\0132\035.exec.share" +
+      "d.ExceptionWrapper\0220\n\rparsing_error\030\006 \003(",
+      "\0132\031.exec.shared.ParsingError\"\362\001\n\tErrorTy" +
+      "pe\022\016\n\nCONNECTION\020\000\022\r\n\tDATA_READ\020\001\022\016\n\nDAT" +
+      "A_WRITE\020\002\022\014\n\010FUNCTION\020\003\022\t\n\005PARSE\020\004\022\016\n\nPE" +
+      "RMISSION\020\005\022\010\n\004PLAN\020\006\022\014\n\010RESOURCE\020\007\022\n\n\006SY" +
+      "STEM\020\010\022\031\n\025UNSUPPORTED_OPERATION\020\t\022\016\n\nVAL" +
+      "IDATION\020\n\022\023\n\017EXECUTION_ERROR\020\013\022\022\n\016INTERN" +
+      "AL_ERROR\020\014\022\025\n\021UNSPECIFIED_ERROR\020\r\"\246\001\n\020Ex" +
+      "ceptionWrapper\022\027\n\017exception_class\030\001 \001(\t\022" +
+      "\017\n\007message\030\002 \001(\t\022:\n\013stack_trace\030\003 \003(\0132%." +
+      "exec.shared.StackTraceElementWrapper\022,\n\005",
+      "cause\030\004 \001(\0132\035.exec.shared.ExceptionWrapp" +
+      "er\"\205\001\n\030StackTraceElementWrapper\022\022\n\nclass" +
+      "_name\030\001 \001(\t\022\021\n\tfile_name\030\002 \001(\t\022\023\n\013line_n" +
+      "umber\030\003 \001(\005\022\023\n\013method_name\030\004 \001(\t\022\030\n\020is_n" +
+      "ative_method\030\005 \001(\010\"\\\n\014ParsingError\022\024\n\014st" +
+      "art_column\030\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\ne" +
+      "nd_column\030\004 \001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016Reco" +
+      "rdBatchDef\022\024\n\014record_count\030\001 \001(\005\022+\n\005fiel" +
+      "d\030\002 \003(\0132\034.exec.shared.SerializedField\022)\n" +
+      "!carries_two_byte_selection_vector\030\003 \001(\010",
+      "\"\205\001\n\010NamePart\022(\n\004type\030\001 \001(\0162\032.exec.share" +
+      "d.NamePart.Type\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003" +
+      " \001(\0132\025.exec.shared.NamePart\"\033\n\004Type\022\010\n\004N" +
+      "AME\020\000\022\t\n\005ARRAY\020\001\"\324\001\n\017SerializedField\022%\n\n" +
+      "major_type\030\001 \001(\0132\021.common.MajorType\022(\n\tn" +
+      "ame_part\030\002 \001(\0132\025.exec.shared.NamePart\022+\n" +
+      "\005child\030\003 \003(\0132\034.exec.shared.SerializedFie" +
+      "ld\022\023\n\013value_count\030\004 \001(\005\022\027\n\017var_byte_leng" +
+      "th\030\005 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"7\n\nNodeS" +
+      "tatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_footpri",
+      "nt\030\002 \001(\003\"\263\002\n\013QueryResult\0228\n\013query_state\030" +
+      "\001 \001(\0162#.exec.shared.QueryResult.QuerySta" +
+      "te\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.Query" +
+      "Id\022(\n\005error\030\003 \003(\0132\031.exec.shared.DrillPBE" +
+      "rror\"\227\001\n\nQueryState\022\014\n\010STARTING\020\000\022\013\n\007RUN" +
+      "NING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006F" +
+      "AILED\020\004\022\032\n\026CANCELLATION_REQUESTED\020\005\022\014\n\010E" +
+      "NQUEUED\020\006\022\r\n\tPREPARING\020\007\022\014\n\010PLANNING\020\010\"p" +
+      "\n\tQueryData\022&\n\010query_id\030\001 \001(\0132\024.exec.sha" +
+      "red.QueryId\022\021\n\trow_count\030\002 \001(\005\022(\n\003def\030\003 ",
+      "\001(\0132\033.exec.shared.RecordBatchDef\"\330\001\n\tQue" +
+      "ryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005" +
+      "state\030\003 \001(\0162#.exec.shared.QueryResult.Qu" +
+      "eryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007foreman\030\005 \001" +
+      "(\0132\026.exec.DrillbitEndpoint\022\024\n\014options_js" +
+      "on\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001\022\025\n\nqueue_na" +
+      "me\030\010 \001(\t:\001-\"\242\004\n\014QueryProfile\022 \n\002id\030\001 \001(\013" +
+      "2\024.exec.shared.QueryId\022$\n\004type\030\002 \001(\0162\026.e" +
+      "xec.shared.QueryType\022\r\n\005start\030\003 \001(\003\022\013\n\003e" +
+      "nd\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022\'\n",
+      "\007foreman\030\007 \001(\0132\026.exec.DrillbitEndpoint\0222" +
+      "\n\005state\030\010 \001(\0162#.exec.shared.QueryResult." +
+      "QueryState\022\027\n\017total_fragments\030\t \001(\005\022\032\n\022f" +
+      "inished_fragments\030\n \001(\005\022;\n\020fragment_prof" +
+      "ile\030\013 \003(\0132!.exec.shared.MajorFragmentPro" +
+      "file\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005error\030\r \001(\t\022\024\n\014" +
+      "verboseError\030\016 \001(\t\022\020\n\010error_id\030\017 \001(\t\022\022\n\n" +
+      "error_node\030\020 \001(\t\022\024\n\014options_json\030\021 \001(\t\022\017" +
+      "\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd\030\023 \001(\003\022\022\n" +
+      "\ntotal_cost\030\024 \001(\001\022\025\n\nqueue_name\030\025 \001(\t:\001-",
+      "\"t\n\024MajorFragmentProfile\022\031\n\021major_fragme" +
+      "nt_id\030\001 \001(\005\022A\n\026minor_fragment_profile\030\002 " +
+      "\003(\0132!.exec.shared.MinorFragmentProfile\"\350" +
+      "\002\n\024MinorFragmentProfile\022)\n\005state\030\001 \001(\0162\032" +
+      ".exec.shared.FragmentState\022(\n\005error\030\002 \001(" +
+      "\0132\031.exec.shared.DrillPBError\022\031\n\021minor_fr" +
+      "agment_id\030\003 \001(\005\0226\n\020operator_profile\030\004 \003(" +
+      "\0132\034.exec.shared.OperatorProfile\022\022\n\nstart" +
+      "_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_" +
+      "used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n\010e",
+      "ndpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022\023\n" +
+      "\013last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(" +
+      "\003\"\377\001\n\017OperatorProfile\0221\n\rinput_profile\030\001" +
+      " \003(\0132\032.exec.shared.StreamProfile\022\023\n\013oper" +
+      "ator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013" +
+      "setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003" +
+      "\022#\n\033peak_local_memory_allocated\030\007 \001(\003\022(\n" +
+      "\006metric\030\010 \003(\0132\030.exec.shared.MetricValue\022" +
+      "\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007" +
+      "records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schema",
+      "s\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(" +
+      "\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value\030\003 " +
+      "\001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.shar" +
+      "ed.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_" +
+      "signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechan" +
+      "ism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162" +
+      "\027.exec.shared.SaslStatus*5\n\nRpcChannel\022\017" +
+      "\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*" +
+      "V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PH" +
+      "YSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STAT",
+      "EMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027" +
+      "\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010" +
+      "FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n" +
+      "\026CANCELLATION_REQUESTED\020\006*\360\006\n\020CoreOperat" +
+      "orType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_S" +
+      "ENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022" +
+      "\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_P" +
+      "ARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_" +
+      "RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t" +
+      "\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n",
+      "\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION" +
+      "_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE" +
+      "\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n" +
+      "\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PAR" +
+      "QUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026" +
+      "\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN" +
+      "\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCA" +
+      "N\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022" +
+      "\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SC" +
+      "AN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CO",
+      "NSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"" +
+      "\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020" +
+      "$\022\021\n\rPCAP_SUB_SCAN\020%\022\022\n\016KAFKA_SUB_SCAN\020&" +
+      "\022\021\n\rKUDU_SUB_SCAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014LATE" +
+      "RAL_JOIN\020)\022\n\n\006UNNEST\020*\022,\n(HIVE_DRILL_NAT" +
+      "IVE_PARQUET_ROW_GROUP_SCAN\020+*g\n\nSaslStat" +
+      "us\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020" +
+      "SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013" +
+      "SASL_FAILED\020\004B.\n\033org.apache.drill.exec.p" +
+      "rotoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -24193,7 +24349,7 @@ public final class UserBitShared {
           internal_static_exec_shared_QueryId_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryId_descriptor,
-              new java.lang.String[] { "Part1", "Part2", });
+              new java.lang.String[] { "Part1", "Part2", "Text", });
           internal_static_exec_shared_DrillPBError_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_exec_shared_DrillPBError_fieldAccessorTable = new

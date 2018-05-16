@@ -165,7 +165,7 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
   <#assign queued = queueName != "" && queueName != "-" />
 
   <div class="page-header"></div>
-  <h3>Query Profile</h3>
+  <h3>Query Profile : <span style='font-size:85%'>${model.getQueryId()}</span></h3>
   <div class="panel-group" id="query-profile-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">

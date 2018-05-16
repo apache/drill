@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.user;
 
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -68,7 +69,9 @@ public class UserWorker{
     final long time = (int) (System.currentTimeMillis()/1000);
     final long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
     final long p2 = r.nextLong();
-    final QueryId id = QueryId.newBuilder().setPart1(p1).setPart2(p2).build();
+    final QueryId id = QueryId.newBuilder().setPart1(p1).setPart2(p2)
+        .setText((new UUID(p1, p2)).toString())
+        .build();
     return id;
   }
 
