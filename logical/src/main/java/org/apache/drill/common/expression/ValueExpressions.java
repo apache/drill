@@ -28,7 +28,6 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.util.CoreDecimalUtility;
 
 import com.google.common.collect.Iterators;
 
@@ -92,22 +91,6 @@ public class ValueExpressions {
 
   public static LogicalExpression getIntervalDay(long intervalInMillis) {
       return new IntervalDayExpression(intervalInMillis);
-  }
-
-  public static LogicalExpression getDecimal9(BigDecimal i) {
-    return new Decimal9Expression(i, ExpressionPosition.UNKNOWN);
-  }
-
-  public static LogicalExpression getDecimal18(BigDecimal i) {
-    return new Decimal18Expression(i, ExpressionPosition.UNKNOWN);
-  }
-
-  public static LogicalExpression getDecimal28(BigDecimal i) {
-    return new Decimal28Expression(i, ExpressionPosition.UNKNOWN);
-  }
-
-  public static LogicalExpression getDecimal38(BigDecimal i) {
-      return new Decimal38Expression(i, ExpressionPosition.UNKNOWN);
   }
 
   public static LogicalExpression getVarDecimal(BigDecimal input, int precision, int scale) {
@@ -265,7 +248,7 @@ public class ValueExpressions {
       super(pos);
       this.scale = input.scale();
       this.precision = input.precision();
-      this.decimal = CoreDecimalUtility.getDecimal9FromBigDecimal(input, scale, precision);
+      this.decimal = input.setScale(scale, BigDecimal.ROUND_HALF_UP).intValue();
     }
 
 
@@ -307,7 +290,7 @@ public class ValueExpressions {
       super(pos);
       this.scale = input.scale();
       this.precision = input.precision();
-      this.decimal = CoreDecimalUtility.getDecimal18FromBigDecimal(input, scale, precision);
+      this.decimal = input.setScale(scale, BigDecimal.ROUND_HALF_UP).longValue();
     }
 
 
