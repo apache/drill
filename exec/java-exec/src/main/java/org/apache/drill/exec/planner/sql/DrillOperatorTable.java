@@ -44,7 +44,6 @@ import java.util.Map;
  * {@link #inner SqlStdOperatorTable}, and Drill User Defined Functions.
  */
 public class DrillOperatorTable extends SqlStdOperatorTable {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOperatorTable.class);
   private static final SqlOperatorTable inner = SqlStdOperatorTable.instance();
   private final List<SqlOperator> calciteOperators = Lists.newArrayList();
   private final List<SqlOperator> drillOperatorsWithoutInference = Lists.newArrayList();
@@ -102,8 +101,8 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   @Override
   public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category,
-      SqlSyntax syntax, List<SqlOperator> operatorList) {
-    if(isInferenceEnabled()) {
+                                      SqlSyntax syntax, List<SqlOperator> operatorList) {
+    if (isInferenceEnabled()) {
       populateFromTypeInference(opName, category, syntax, operatorList);
     } else {
       populateFromWithoutTypeInference(opName, category, syntax, operatorList);
@@ -111,12 +110,12 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   }
 
   private void populateFromTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
-      SqlSyntax syntax, List<SqlOperator> operatorList) {
+                                         SqlSyntax syntax, List<SqlOperator> operatorList) {
     final List<SqlOperator> calciteOperatorList = Lists.newArrayList();
     inner.lookupOperatorOverloads(opName, category, syntax, calciteOperatorList);
-    if(!calciteOperatorList.isEmpty()) {
-      for(SqlOperator calciteOperator : calciteOperatorList) {
-        if(calciteToWrapper.containsKey(calciteOperator)) {
+    if (!calciteOperatorList.isEmpty()) {
+      for (SqlOperator calciteOperator : calciteOperatorList) {
+        if (calciteToWrapper.containsKey(calciteOperator)) {
           operatorList.add(calciteToWrapper.get(calciteOperator));
         } else {
           operatorList.add(calciteOperator);
@@ -134,7 +133,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   }
 
   private void populateFromWithoutTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
-      SqlSyntax syntax, List<SqlOperator> operatorList) {
+                                                SqlSyntax syntax, List<SqlOperator> operatorList) {
     inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
     if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
       List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(opName.getSimple().toLowerCase());
@@ -148,7 +147,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   public List<SqlOperator> getOperatorList() {
     final List<SqlOperator> sqlOperators = Lists.newArrayList();
     sqlOperators.addAll(calciteOperators);
-    if(isInferenceEnabled()) {
+    if (isInferenceEnabled()) {
       sqlOperators.addAll(drillOperatorsWithInference);
     } else {
       sqlOperators.addAll(drillOperatorsWithoutInference);
@@ -159,7 +158,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   // Get the list of SqlOperator's with the given name.
   public List<SqlOperator> getSqlOperator(String name) {
-    if(isInferenceEnabled()) {
+    if (isInferenceEnabled()) {
       return drillOperatorsWithInferenceMap.get(name.toLowerCase());
     } else {
       return drillOperatorsWithoutInferenceMap.get(name.toLowerCase());
@@ -167,15 +166,15 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   }
 
   private void populateWrappedCalciteOperators() {
-    for(SqlOperator calciteOperator : inner.getOperatorList()) {
+    for (SqlOperator calciteOperator : inner.getOperatorList()) {
       final SqlOperator wrapper;
-      if(calciteOperator instanceof SqlAggFunction) {
+      if (calciteOperator instanceof SqlAggFunction) {
         wrapper = new DrillCalciteSqlAggFunctionWrapper((SqlAggFunction) calciteOperator,
             getFunctionListWithInference(calciteOperator.getName()));
-      } else if(calciteOperator instanceof SqlFunction) {
+      } else if (calciteOperator instanceof SqlFunction) {
         wrapper = new DrillCalciteSqlFunctionWrapper((SqlFunction) calciteOperator,
             getFunctionListWithInference(calciteOperator.getName()));
-      } else if(calciteOperator instanceof SqlBetweenOperator) {
+      } else if (calciteOperator instanceof SqlBetweenOperator) {
         // During the procedure of converting to RexNode,
         // StandardConvertletTable.convertBetween expects the SqlOperator to be a subclass of SqlBetweenOperator
         final SqlBetweenOperator sqlBetweenOperator = (SqlBetweenOperator) calciteOperator;
@@ -184,14 +183,14 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
         final String drillOpName;
         // For UNARY_MINUS (-) or UNARY_PLUS (+), we do not rename them as function_add or function_subtract.
         // Otherwise, Calcite will mix them up with binary operator subtract (-) or add (+)
-        if(calciteOperator == SqlStdOperatorTable.UNARY_MINUS || calciteOperator == SqlStdOperatorTable.UNARY_PLUS) {
+        if (calciteOperator == SqlStdOperatorTable.UNARY_MINUS || calciteOperator == SqlStdOperatorTable.UNARY_PLUS) {
           drillOpName = calciteOperator.getName();
         } else {
           drillOpName = FunctionCallFactory.replaceOpWithFuncName(calciteOperator.getName());
         }
 
         final List<DrillFuncHolder> drillFuncHolders = getFunctionListWithInference(drillOpName);
-        if(drillFuncHolders.isEmpty()) {
+        if (drillFuncHolders.isEmpty()) {
           continue;
         }
 
@@ -203,17 +202,17 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   private List<DrillFuncHolder> getFunctionListWithInference(String name) {
     final List<DrillFuncHolder> functions = Lists.newArrayList();
-    for(SqlOperator sqlOperator : drillOperatorsWithInferenceMap.get(name.toLowerCase())) {
-      if(sqlOperator instanceof DrillSqlOperator) {
+    for (SqlOperator sqlOperator : drillOperatorsWithInferenceMap.get(name.toLowerCase())) {
+      if (sqlOperator instanceof DrillSqlOperator) {
         final List<DrillFuncHolder> list = ((DrillSqlOperator) sqlOperator).getFunctions();
-        if(list != null) {
+        if (list != null) {
           functions.addAll(list);
         }
       }
 
-      if(sqlOperator instanceof DrillSqlAggOperator) {
+      if (sqlOperator instanceof DrillSqlAggOperator) {
         final List<DrillFuncHolder> list = ((DrillSqlAggOperator) sqlOperator).getFunctions();
-        if(list != null) {
+        if (list != null) {
           functions.addAll(list);
         }
       }

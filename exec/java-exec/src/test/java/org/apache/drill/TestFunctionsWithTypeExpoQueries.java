@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Category(SqlFunctionTest.class)
@@ -412,9 +413,9 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-            .setMinorType(TypeProtos.MinorType.TIMESTAMP)
-            .setMode(TypeProtos.DataMode.REQUIRED)
-            .build();
+        .setMinorType(TypeProtos.MinorType.TIMESTAMP)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
     testBuilder()
@@ -546,19 +547,19 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     final TypeProtos.MajorType majorType1 = TypeProtos.MajorType.newBuilder()
-            .setMinorType(TypeProtos.MinorType.BIGINT)
-            .setMode(TypeProtos.DataMode.OPTIONAL)
-            .build();
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
 
     final TypeProtos.MajorType majorType2 = TypeProtos.MajorType.newBuilder()
-            .setMinorType(TypeProtos.MinorType.FLOAT8)
-            .setMode(TypeProtos.DataMode.OPTIONAL)
-            .build();
+        .setMinorType(TypeProtos.MinorType.FLOAT8)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
 
     final TypeProtos.MajorType majorType3 = TypeProtos.MajorType.newBuilder()
-            .setMinorType(TypeProtos.MinorType.BIGINT)
-            .setMode(TypeProtos.DataMode.REQUIRED)
-            .build();
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col1"), majorType1));
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col2"), majorType2));
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col3"), majorType3));
@@ -753,7 +754,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .setMode(TypeProtos.DataMode.REQUIRED)
         .build();
 
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
     testBuilder()
@@ -775,7 +776,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .setMode(TypeProtos.DataMode.OPTIONAL)
         .build();
 
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
     testBuilder()

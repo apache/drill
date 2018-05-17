@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,14 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import com.google.common.collect.Lists;
-
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.fun.SqlBetweenOperator;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.type.SqlTypeUtil;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -55,26 +51,24 @@ public class DrillCalciteSqlBetweenOperatorWrapper extends SqlBetweenOperator im
   }
 
   /**
-   *
-   * Since Calcite has its rule for type compatibility (see {@link SqlTypeUtil#isComparable(RelDataType, RelDataType)}),
-   * which is usually different from Drill's, this method is overridden here to avoid Calcite early terminating the
-   * queries.
+   * Since Calcite has its rule for type compatibility
+   * (see {@link org.apache.calcite.sql.type.SqlTypeUtil#isComparable(org.apache.calcite.rel.type.RelDataType,
+   * org.apache.calcite.rel.type.RelDataType)}), which is usually different from Drill's, this method is overridden here to avoid
+   * Calcite early terminating the queries.
    */
   @Override
-  public boolean checkOperandTypes(
-      SqlCallBinding callBinding,
-      boolean throwOnFailure) {
-    final List<TypeProtos.MinorType> types = Lists.newArrayList();
-    for(int i = 0; i < callBinding.getOperandCount(); ++i) {
+  public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
+    final List<TypeProtos.MinorType> types = new ArrayList<>();
+    for (int i = 0; i < callBinding.getOperandCount(); i++) {
       final TypeProtos.MinorType inMinorType = TypeInferenceUtils.getDrillTypeFromCalciteType(callBinding.getOperandType(i));
-      if(inMinorType == TypeProtos.MinorType.LATE) {
+      if (inMinorType == TypeProtos.MinorType.LATE) {
         return true;
       }
       types.add(inMinorType);
     }
 
     final boolean isCompatible = TypeCastRules.getLeastRestrictiveType(types) != null;
-    if(!isCompatible && throwOnFailure) {
+    if (!isCompatible && throwOnFailure) {
       throw callBinding.newValidationSignatureError();
     }
     return isCompatible;
