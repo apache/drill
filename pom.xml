@@ -52,7 +52,7 @@
     <jackson.version>2.7.9</jackson.version>
     <jackson.databind.version>2.7.9.1</jackson.databind.version>
     <mapr.release.version>5.2.1-mapr</mapr.release.version>
-    <ojai.version>1.1</ojai.version>
+    <ojai.version>2.0.1-mapr-1804</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
     <findbugs.version>3.0.0</findbugs.version>
     <netty.tcnative.classifier/>
