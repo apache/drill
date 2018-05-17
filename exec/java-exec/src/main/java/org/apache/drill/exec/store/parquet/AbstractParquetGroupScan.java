@@ -255,8 +255,7 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
         logger.debug("materializedFilter : {}", ExpressionStringBuilder.toString(materializedFilter));
 
         Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(materializedFilter);
-        filterPredicate = (ParquetFilterPredicate) ParquetFilterBuilder.buildParquetFilterPredicate(
-            materializedFilter, constantBoundaries, udfUtilities);
+        filterPredicate = ParquetFilterBuilder.buildParquetFilterPredicate(materializedFilter, constantBoundaries, udfUtilities);
 
         if (filterPredicate == null) {
           return null;

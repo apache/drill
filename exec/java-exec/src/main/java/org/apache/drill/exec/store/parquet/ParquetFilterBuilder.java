@@ -42,6 +42,7 @@ import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.expr.stat.ParquetBooleanPredicates;
 import org.apache.drill.exec.expr.stat.ParquetComparisonPredicates;
+import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
 import org.apache.drill.exec.expr.stat.ParquetIsPredicates;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -54,7 +55,7 @@ import java.util.Set;
 
 /**
  * A visitor which visits a materialized logical expression, and build ParquetFilterPredicate
- * If a visitXXX method returns null, that means the corresponding filter branch is not qualified for pushdown.
+ * If a visitXXX method returns null, that means the corresponding filter branch is not qualified for push down.
  */
 public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<LogicalExpression>, RuntimeException> {
   static final Logger logger = LoggerFactory.getLogger(ParquetFilterBuilder.class);
@@ -66,11 +67,17 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
    * @param constantBoundaries set of constant expressions
    * @param udfUtilities udf utilities
    *
-   * @return logical expression
+   * @return parquet filter predicate
    */
-  public static LogicalExpression buildParquetFilterPredicate(LogicalExpression expr, final Set<LogicalExpression> constantBoundaries, UdfUtilities udfUtilities) {
-    return expr.accept(new ParquetFilterBuilder(udfUtilities), constantBoundaries);
+  public static ParquetFilterPredicate buildParquetFilterPredicate(LogicalExpression expr, final Set<LogicalExpression> constantBoundaries, UdfUtilities udfUtilities) {
+    LogicalExpression logicalExpression = expr.accept(new ParquetFilterBuilder(udfUtilities), constantBoundaries);
+    if (logicalExpression instanceof ParquetFilterPredicate) {
+      return (ParquetFilterPredicate) logicalExpression;
+    }
+    logger.debug("Logical expression {} was not qualified for filter push down", logicalExpression);
+    return null;
   }
+
 
   private ParquetFilterBuilder(UdfUtilities udfUtilities) {
     this.udfUtilities = udfUtilities;
@@ -150,6 +157,10 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
           return null;
         }
       } else {
+        if (childPredicate instanceof TypedFieldExpr) {
+          // Calcite simplifies `= true` expression to field name, wrap it with is true predicate
+          childPredicate = new ParquetIsPredicates.IsTruePredicate(childPredicate);
+        }
         childPredicates.add(childPredicate);
       }
     }
