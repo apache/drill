@@ -49,8 +49,8 @@
     <avatica.version>1.11.0</avatica.version>
     <janino.version>2.7.6</janino.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
-    <jackson.version>2.7.9</jackson.version>
-    <jackson.databind.version>2.7.9.1</jackson.databind.version>
+    <jackson.version>2.9.5</jackson.version>
+    <jackson.databind.version>2.9.5</jackson.databind.version>
     <mapr.release.version>5.2.1-mapr</mapr.release.version>
     <ojai.version>1.1</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
