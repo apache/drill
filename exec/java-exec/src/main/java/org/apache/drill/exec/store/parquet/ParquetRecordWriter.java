@@ -30,6 +30,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -251,7 +252,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     String name = field.getName();
     int length = ParquetTypeHelper.getLengthForMinorType(minorType);
     PrimitiveTypeName primitiveTypeName = ParquetTypeHelper.getPrimitiveTypeNameForMinorType(minorType);
-    if (DecimalUtility.isDecimalType(minorType)) {
+    if (Types.isDecimalType(minorType)) {
       primitiveTypeName = logicalTypeForDecimals;
       if (usePrimitiveTypesForDecimals) {
         if (field.getPrecision() <= ParquetTypeHelper.getMaxPrecisionForPrimitiveType(PrimitiveTypeName.INT32)) {

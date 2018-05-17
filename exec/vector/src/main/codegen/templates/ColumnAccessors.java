@@ -178,13 +178,11 @@ public class ColumnAccessors {
     <#elseif drillType == "Decimal9">
       return DecimalUtility.getBigDecimalFromPrimitiveTypes(
           buf.getInt(${getOffset}),
-          type.getScale(),
-          type.getPrecision());
+          type.getScale());
     <#elseif drillType == "Decimal18">
       return DecimalUtility.getBigDecimalFromPrimitiveTypes(
           buf.getLong(${getOffset}),
-          type.getScale(),
-          type.getPrecision());
+          type.getScale());
     <#elseif drillType == "IntervalYear">
       return DateUtilities.fromIntervalYear(
           buf.getInt(${getOffset}));
@@ -296,21 +294,21 @@ public class ColumnAccessors {
       <#elseif drillType == "Decimal9">
       drillBuf.setInt(${putOffset},
           DecimalUtility.getDecimal9FromBigDecimal(value,
-              type.getScale(), type.getPrecision()));
+              type.getScale()));
       <#elseif drillType == "Decimal18">
       drillBuf.setLong(${putOffset},
           DecimalUtility.getDecimal18FromBigDecimal(value,
-              type.getScale(), type.getPrecision()));
+              type.getScale()));
       <#elseif drillType == "Decimal38Sparse">
       <#-- Hard to optimize this case. Just use the available tools. -->
       DecimalUtility.getSparseFromBigDecimal(value, drillBuf,
           ${putOffset},
-          type.getScale(), type.getPrecision(), 6);
+          type.getScale(), 6);
       <#elseif drillType == "Decimal28Sparse">
       <#-- Hard to optimize this case. Just use the available tools. -->
       DecimalUtility.getSparseFromBigDecimal(value, drillBuf,
           ${putOffset},
-          type.getScale(), type.getPrecision(), 5);
+          type.getScale(), 5);
       <#elseif drillType == "IntervalYear">
       drillBuf.setInt(${putOffset},
           value.getYears() * 12 + value.getMonths());

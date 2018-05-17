@@ -27,12 +27,11 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.util.CoreDecimalUtility;
 
 import com.google.protobuf.TextFormat;
 
+@SuppressWarnings("WeakerAccess")
 public class Types {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
 
   public static final int MAX_VARCHAR_LENGTH = 65535;
   public static final int UNDEFINED = 0;
@@ -45,10 +44,6 @@ public class Types {
 
   public static boolean isUnion(MajorType toType) {
     return toType.getMinorType() == MinorType.UNION;
-  }
-
-  public enum Comparability {
-    UNKNOWN, NONE, EQUAL, ORDERED
   }
 
   public static boolean isComplex(final MajorType type) {
@@ -90,6 +85,37 @@ public class Types {
     case UINT4:
     case UINT8:
       return true;
+    default:
+      return false;
+    }
+  }
+
+  /**
+   * Returns true if specified type is decimal data type.
+   *
+   * @param type type to check
+   * @return true if specified type is decimal data type.
+   */
+  public static boolean isDecimalType(MajorType type) {
+    return isDecimalType(type.getMinorType());
+  }
+
+  /**
+   * Returns true if specified type is decimal data type.
+   *
+   * @param minorType type to check
+   * @return true if specified type is decimal data type.
+   */
+  public static boolean isDecimalType(MinorType minorType) {
+    switch(minorType) {
+      case VARDECIMAL:
+      case DECIMAL38SPARSE:
+      case DECIMAL38DENSE:
+      case DECIMAL28SPARSE:
+      case DECIMAL28DENSE:
+      case DECIMAL18:
+      case DECIMAL9:
+        return true;
       default:
         return false;
     }
@@ -182,11 +208,9 @@ public class Types {
    * Extend decimal type with precision and scale.
    *
    * @param type major type
-   * @param typeName type converted to a string
    * @return type name augmented with precision and scale,
    * if type is a decimal
    */
-
   public static String getExtendedSqlTypeName(MajorType type) {
 
     String typeName = getSqlTypeName(type);
@@ -266,7 +290,7 @@ public class Types {
 
   /**
    * Reports whether given RPC-level type is a signed type (per semantics of
-   * {@link ResultSetMetaData#isSigned(int)}).
+   * {@link java.sql.ResultSetMetaData#isSigned(int)}).
    */
   public static boolean isJdbcSignedType( final MajorType type ) {
     final boolean isSigned;
@@ -477,41 +501,6 @@ public class Types {
     }
   }
 
-  public static boolean isBytesScalarType(final MajorType type) {
-    if (type.getMode() == REPEATED) {
-      return false;
-    }
-    switch(type.getMinorType()) {
-    case FIXEDBINARY:
-    case VARBINARY:
-      return true;
-    default:
-      return false;
-    }
-  }
-
-  public static Comparability getComparability(final MajorType type) {
-    if (type.getMode() == REPEATED) {
-      return Comparability.NONE;
-    }
-    if (type.getMinorType() == MinorType.LATE) {
-      return Comparability.UNKNOWN;
-    }
-
-    switch(type.getMinorType()) {
-    case LATE:
-      return Comparability.UNKNOWN;
-    case MAP:
-      return Comparability.NONE;
-    case BIT:
-      return Comparability.EQUAL;
-    default:
-      return Comparability.ORDERED;
-    }
-
-  }
-
-
   public static boolean softEquals(final MajorType a, final MajorType b, final boolean allowNullSwap) {
     if (a.getMinorType() != b.getMinorType()) {
       return false;
@@ -530,10 +519,6 @@ public class Types {
       }
     }
     return a.getMode() == b.getMode();
-  }
-
-  public static boolean isLateBind(final MajorType type) {
-    return type.getMinorType() == MinorType.LATE;
   }
 
   public static boolean isUntypedNull(final MajorType type) {
@@ -570,19 +555,6 @@ public class Types {
 
   public static MajorType optional(final MinorType type) {
     return MajorType.newBuilder().setMode(DataMode.OPTIONAL).setMinorType(type).build();
-  }
-
-  public static MajorType overrideMinorType(final MajorType originalMajorType, final MinorType overrideMinorType) {
-    switch (originalMajorType.getMode()) {
-      case REPEATED:
-        return repeated(overrideMinorType);
-      case OPTIONAL:
-        return optional(overrideMinorType);
-      case REQUIRED:
-        return required(overrideMinorType);
-      default:
-        throw new UnsupportedOperationException();
-    }
   }
 
   public static MajorType overrideMode(final MajorType originalMajorType, final DataMode overrideMode) {
@@ -765,7 +737,7 @@ public class Types {
   public static MajorType.Builder calculateTypePrecisionAndScale(MajorType leftType, MajorType rightType, MajorType.Builder typeBuilder) {
     if (leftType.getMinorType().equals(rightType.getMinorType())) {
       boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
-      boolean isDecimal = CoreDecimalUtility.isDecimalType(leftType);
+      boolean isDecimal = isDecimalType(leftType);
 
       if ((isScalarString || isDecimal) && leftType.hasPrecision() && rightType.hasPrecision()) {
         typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
@@ -776,10 +748,6 @@ public class Types {
       }
     }
     return typeBuilder;
-  }
-
-  public static boolean isLaterType(MajorType type) {
-    return type.getMinorType() == MinorType.LATE;
   }
 
   public static boolean isEquivalent(MajorType type1, MajorType type2) {
@@ -815,10 +783,8 @@ public class Types {
 
     // Now it gets slow because subtype lists are not ordered.
 
-    List<MinorType> copy1 = new ArrayList<>();
-    List<MinorType> copy2 = new ArrayList<>();
-    copy1.addAll(subtypes1);
-    copy2.addAll(subtypes2);
+    List<MinorType> copy1 = new ArrayList<>(subtypes1);
+    List<MinorType> copy2 = new ArrayList<>(subtypes2);
     Collections.sort(copy1);
     Collections.sort(copy2);
     return copy1.equals(copy2);

@@ -25,6 +25,7 @@ import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -36,7 +37,6 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
-import org.apache.drill.exec.util.DecimalUtility;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -123,8 +123,8 @@ public class JoinUtils {
     // allow implicit cast if both the input types are numeric and any of them is non-decimal
     // or both of them are decimal
     if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)
-        && ((!DecimalUtility.isDecimalType(input1) && !DecimalUtility.isDecimalType(input2))
-          || DecimalUtility.isDecimalType(input1) && DecimalUtility.isDecimalType(input2))) {
+        && ((!Types.isDecimalType(input1) && !Types.isDecimalType(input2))
+          || Types.isDecimalType(input1) && Types.isDecimalType(input2))) {
       return true;
     }
 

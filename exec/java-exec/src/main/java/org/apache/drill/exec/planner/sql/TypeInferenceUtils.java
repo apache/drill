@@ -46,7 +46,6 @@ import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.util.CoreDecimalUtility;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
@@ -57,6 +56,7 @@ import org.apache.drill.exec.resolver.TypeCastRules;
 import java.util.List;
 import java.util.Set;
 
+@SuppressWarnings("WeakerAccess")
 public class TypeInferenceUtils {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeInferenceUtils.class);
 
@@ -906,7 +906,7 @@ public class TypeInferenceUtils {
               .setMode(dataMode)
               .setMinorType(minorType);
 
-      if (CoreDecimalUtility.isDecimalType(minorType)) {
+      if (Types.isDecimalType(minorType)) {
         builder
             .setScale(type.getScale())
             .setPrecision(type.getPrecision());

@@ -77,14 +77,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 .round(new java.math.MathContext(precision.value, java.math.RoundingMode.HALF_UP));
 
   <#if type.to.endsWith("Decimal9")>
-    out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal9FromBigDecimal(bd, out.scale, out.precision);
+    out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal9FromBigDecimal(bd, out.scale);
   <#elseif type.to.endsWith("Decimal18")>
-    out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal18FromBigDecimal(bd, out.scale, out.precision);
+    out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal18FromBigDecimal(bd, out.scale);
   <#elseif type.to.endsWith("Sparse")>
     out.start = 0;
     out.buffer = buffer;
     org.apache.drill.exec.util.DecimalUtility
-        .getSparseFromBigDecimal(bd, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+        .getSparseFromBigDecimal(bd, out.buffer, out.start, out.scale, out.nDecimalDigits);
   </#if>
   }
 }

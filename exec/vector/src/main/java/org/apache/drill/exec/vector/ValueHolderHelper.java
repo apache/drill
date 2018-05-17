@@ -127,7 +127,7 @@ public class ValueHolderHelper {
     byte[] b = s.getBytes(Charsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
-    vch.buffer = a.buffer(b.length); //
+    vch.buffer = a.buffer(b.length);
     vch.buffer.setBytes(0, b);
     return vch;
   }
@@ -180,7 +180,7 @@ public class ValueHolderHelper {
     dch.start = 0;
     dch.buffer = buf.reallocIfNeeded(5 * DecimalUtility.INTEGER_SIZE);
     DecimalUtility
-        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
+        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal28SparseHolder.nDecimalDigits);
 
     return dch;
   }
@@ -195,9 +195,9 @@ public class ValueHolderHelper {
       dch.precision = bigDecimal.precision();
       Decimal38SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
       dch.start = 0;
-    dch.buffer = buf.reallocIfNeeded(dch.maxPrecision * DecimalUtility.INTEGER_SIZE);
+    dch.buffer = buf.reallocIfNeeded(Decimal38SparseHolder.maxPrecision * DecimalUtility.INTEGER_SIZE);
     DecimalUtility
-        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
+        .getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, Decimal38SparseHolder.nDecimalDigits);
 
       return dch;
   }
