@@ -103,6 +103,24 @@ public final class BitRpcUtility {
     }
   }
 
+  /**
+   * Verifies if local and remote Drillbit Endpoint has same control server by using address and control port
+   * information. This method is used instead of equals in {@link DrillbitEndpoint} because DrillbitEndpoint stores
+   * state information in it.
+   * For local Drillbit a reference is stored in {@link org.apache.drill.exec.server.DrillbitContext} as soon as
+   * Drillbit is started in {@link org.apache.drill.exec.service.ServiceEngine#start} with state as STARTUP, but
+   * while planning minor fragment the assignment list is used from active list of Drillbits in which state for local
+   * Drillbit will not be STARTUP
+   * @param local - DrillbitEndpoint instance for local bit
+   * @param remote - DrillbitEndpoint instance for remote bit
+   * @return true if address and control port for local and remote are same.
+   *         false - otherwise
+   */
+  public static boolean isLocalControlServer(DrillbitEndpoint local, DrillbitEndpoint remote) {
+    return local.hasAddress() && local.hasControlPort() && remote.hasAddress() && remote.hasControlPort() &&
+      local.getAddress().equals(remote.getAddress()) && local.getControlPort() == remote.getControlPort();
+  }
+
   // Suppress default constructor
   private BitRpcUtility() {
   }

@@ -19,16 +19,16 @@ package org.apache.drill.exec.rpc.user.security;
 
 import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
-import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.control.ControlRpcMetrics;
 import org.apache.drill.exec.rpc.data.DataRpcMetrics;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
 import org.apache.drill.exec.rpc.user.UserRpcMetrics;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
@@ -176,6 +176,38 @@ public class TestUserBitKerberos extends BaseTestQuery {
     assertTrue(1 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
     assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
     assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+  }
+
+  @Test
+  public void testUnecryptedConnectionCounter_LocalControlMessage() throws Exception {
+    final Properties connectionProps = new Properties();
+    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
+    connectionProps.setProperty(DrillProperties.KERBEROS_FROM_SUBJECT, "true");
+    final Subject clientSubject = JaasKrbUtil.loginUsingKeytab(krbHelper.CLIENT_PRINCIPAL,
+      krbHelper.clientKeytab.getAbsoluteFile());
+
+    Subject.doAs(clientSubject, new PrivilegedExceptionAction<Void>() {
+      @Override
+      public Void run() throws Exception {
+        updateClient(connectionProps);
+        return null;
+      }
+    });
+
+    // Run query on memory system table this sends remote fragments to all Drillbit and Drillbits then send data
+    // using data channel. In this test we have only 1 Drillbit so there should not be any control connection but a
+    // local data connections
+    testSql("SELECT * FROM sys.memory");
+
+    // Check encrypted counters value
+    assertTrue(0 == UserRpcMetrics.getInstance().getEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
+    assertTrue(0 == DataRpcMetrics.getInstance().getEncryptedConnectionCount());
+
+    // Check unencrypted counters value
+    assertTrue(1 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    assertTrue(2 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
   }
 
   @AfterClass

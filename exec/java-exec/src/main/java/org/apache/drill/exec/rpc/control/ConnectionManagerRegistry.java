@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.rpc.BitRpcUtility;
 
 public class ConnectionManagerRegistry implements Iterable<ControlConnectionManager> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConnectionManagerRegistry.class);
@@ -40,9 +41,12 @@ public class ConnectionManagerRegistry implements Iterable<ControlConnectionMana
   public ControlConnectionManager getConnectionManager(DrillbitEndpoint remoteEndpoint) {
     assert localEndpoint != null :
         "DrillbitEndpoint must be set before a connection manager can be retrieved";
+
+    final boolean isLocalServer = BitRpcUtility.isLocalControlServer(localEndpoint, remoteEndpoint);
     ControlConnectionManager m = registry.get(remoteEndpoint);
     if (m == null) {
-      m = new ControlConnectionManager(config, localEndpoint, remoteEndpoint);
+      m = (isLocalServer) ? new LocalControlConnectionManager(config, remoteEndpoint)
+                    : new RemoteControlConnectionManager(config, localEndpoint, remoteEndpoint);
       final ControlConnectionManager m2 = registry.putIfAbsent(remoteEndpoint, m);
       if (m2 != null) {
         m = m2;

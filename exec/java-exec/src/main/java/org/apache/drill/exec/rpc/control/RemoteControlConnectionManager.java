@@ -17,27 +17,25 @@
  */
 package org.apache.drill.exec.rpc.control;
 
-import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
+import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.BasicClient;
-import org.apache.drill.exec.rpc.ReconnectingConnection;
 
-/**
- * Maintains connection between two particular bits.
- */
-public abstract class ControlConnectionManager extends ReconnectingConnection<ControlConnection, BitControlHandshake>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnectionManager.class);
+public class RemoteControlConnectionManager extends ControlConnectionManager {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteControlConnectionManager.class);
 
-  public ControlConnectionManager(DrillbitEndpoint localEndpoint, DrillbitEndpoint remoteEndpoint) {
-    super(
-        BitControlHandshake.newBuilder()
-            .setRpcVersion(ControlRpcConfig.RPC_VERSION)
-            .setEndpoint(localEndpoint)
-            .build(),
-        remoteEndpoint.getAddress(),
-        remoteEndpoint.getControlPort());
+  private final ControlConnectionConfig config;
+  private final DrillbitEndpoint remoteEndpoint;
+
+  public RemoteControlConnectionManager(ControlConnectionConfig config, DrillbitEndpoint
+    localEndpoint, DrillbitEndpoint remoteEndpoint) {
+    super(localEndpoint, remoteEndpoint);
+    this.config = config;
+    this.remoteEndpoint = remoteEndpoint;
   }
 
   @Override
-  protected abstract BasicClient<?, ControlConnection, BitControlHandshake, ?> getNewClient();
+  protected BasicClient<?, ControlConnection, BitControl.BitControlHandshake, ?> getNewClient() {
+    return new ControlClient(config, remoteEndpoint, new CloseHandlerCreator());
+  }
 }

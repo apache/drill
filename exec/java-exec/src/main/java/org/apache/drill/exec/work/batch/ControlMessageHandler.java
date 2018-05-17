@@ -91,14 +91,16 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
     }
 
     case RpcType.REQ_FRAGMENT_STATUS_VALUE:
-      bee.getContext().getWorkBus().statusUpdate( get(pBody, FragmentStatus.PARSER));
+      final FragmentStatus status = get(pBody, FragmentStatus.PARSER);
+      requestFragmentStatus(status);
       // TODO: Support a type of message that has no response.
       sender.send(ControlRpcConfig.OK);
       break;
 
     case RpcType.REQ_QUERY_CANCEL_VALUE: {
       final QueryId queryId = get(pBody, QueryId.PARSER);
-      if (bee.cancelForeman(queryId, null)) {
+      final Ack cancelStatus = requestQueryCancel(queryId);
+      if (cancelStatus.getOk()) {
         sender.send(ControlRpcConfig.OK);
       } else {
         sender.send(ControlRpcConfig.FAIL);
@@ -108,21 +110,14 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
 
     case RpcType.REQ_INITIALIZE_FRAGMENTS_VALUE: {
       final InitializeFragments fragments = get(pBody, InitializeFragments.PARSER);
-      final DrillbitContext drillbitContext = bee.getContext();
-      for(int i = 0; i < fragments.getFragmentCount(); i++) {
-        startNewFragment(fragments.getFragment(i), drillbitContext);
-      }
+      initializeFragment(fragments);
       sender.send(ControlRpcConfig.OK);
       break;
     }
 
     case RpcType.REQ_QUERY_STATUS_VALUE: {
       final QueryId queryId = get(pBody, QueryId.PARSER);
-      final Foreman foreman = bee.getForemanForQueryId(queryId);
-      if (foreman == null) {
-        throw new RpcException("Query not running on node.");
-      }
-      final QueryProfile profile = foreman.getQueryManager().getQueryProfile();
+      final QueryProfile profile = requestQueryStatus(queryId);
       sender.send(new Response(RpcType.RESP_QUERY_STATUS, profile));
       break;
     }
@@ -145,7 +140,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
    * @param fragment
    * @throws UserRpcException
    */
-  private void startNewFragment(final PlanFragment fragment, final DrillbitContext drillbitContext)
+  public void startNewFragment(final PlanFragment fragment, final DrillbitContext drillbitContext)
       throws UserRpcException {
     logger.debug("Received remote fragment start instruction", fragment);
 
@@ -182,7 +177,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
   /* (non-Javadoc)
    * @see org.apache.drill.exec.work.batch.BitComHandler#cancelFragment(org.apache.drill.exec.proto.ExecProtos.FragmentHandle)
    */
-  private Ack cancelFragment(final FragmentHandle handle) {
+  public Ack cancelFragment(final FragmentHandle handle) {
     /**
      * For case 1, see {@link org.apache.drill.exec.work.foreman.QueryManager#cancelExecutingFragments}.
      * In comments below, "active" refers to fragment states: SENDING, AWAITING_ALLOCATION, RUNNING and
@@ -213,7 +208,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
     return Acks.OK;
   }
 
-  private Ack resumeFragment(final FragmentHandle handle) {
+  public Ack resumeFragment(final FragmentHandle handle) {
     // resume a pending fragment
     final FragmentManager manager = bee.getContext().getWorkBus().getFragmentManager(handle);
     if (manager != null) {
@@ -233,7 +228,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
     return Acks.OK;
   }
 
-  private Ack receivingFragmentFinished(final FinishedReceiver finishedReceiver) {
+  public Ack receivingFragmentFinished(final FinishedReceiver finishedReceiver) {
 
     final FragmentManager manager = bee.getContext().getWorkBus().getFragmentManager(finishedReceiver.getSender());
 
@@ -252,6 +247,32 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
     }
 
     return Acks.OK;
+  }
+
+  public Ack requestFragmentStatus(FragmentStatus status) {
+    bee.getContext().getWorkBus().statusUpdate( status);
+    return Acks.OK;
+  }
+
+  public Ack requestQueryCancel(QueryId queryId) {
+    return bee.cancelForeman(queryId, null) ? Acks.OK : Acks.FAIL;
+  }
+
+  public Ack initializeFragment(InitializeFragments fragments) throws RpcException {
+    final DrillbitContext drillbitContext = bee.getContext();
+    for (int i = 0; i < fragments.getFragmentCount(); i++) {
+      startNewFragment(fragments.getFragment(i), drillbitContext);
+    }
+
+    return Acks.OK;
+  }
+
+  public QueryProfile requestQueryStatus(QueryId queryId) throws RpcException {
+    final Foreman foreman = bee.getForemanForQueryId(queryId);
+    if (foreman == null) {
+      throw new RpcException("Query not running on node.");
+    }
+    return foreman.getQueryManager().getQueryProfile();
   }
 
   public CustomHandlerRegistry getHandlerRegistry() {

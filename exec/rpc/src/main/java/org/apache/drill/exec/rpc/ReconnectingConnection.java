@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.protobuf.Internal.EnumLite;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.GenericFutureListener;
 
@@ -52,7 +53,8 @@ public abstract class ReconnectingConnection<C extends ClientConnection, HS exte
 
   protected abstract BasicClient<?, C, HS, ?> getNewClient();
 
-  public <T extends MessageLite, R extends RpcCommand<T, C>> void runCommand(R cmd) {
+  public <T extends MessageLite, E extends EnumLite, M extends MessageLite,
+    R extends RpcCommand<T, C, E, M>> void runCommand(R cmd) {
 //    if(logger.isDebugEnabled()) logger.debug(String.format("Running command %s sending to host %s:%d", cmd, host, port));
     C connection = connectionHolder.get();
     if (connection != null) {
@@ -78,7 +80,7 @@ public abstract class ReconnectingConnection<C extends ClientConnection, HS exte
       } else {
 //        logger.debug("No connection active, opening client connection.");
         BasicClient<?, C, HS, ?> client = getNewClient();
-        ConnectionListeningFuture<T> future = new ConnectionListeningFuture<>(cmd);
+        ConnectionListeningFuture<T,E,M> future = new ConnectionListeningFuture<>(cmd);
         client.connectAsClient(future, handshake, host, port);
         future.waitAndRun();
 //        logger.debug("Connection available and active, command now being run inline.");
@@ -88,13 +90,13 @@ public abstract class ReconnectingConnection<C extends ClientConnection, HS exte
     }
   }
 
-  public class ConnectionListeningFuture<R extends MessageLite>
+  public class ConnectionListeningFuture<R extends MessageLite, E extends EnumLite, M extends MessageLite>
       extends AbstractFuture<C>
       implements RpcConnectionHandler<C> {
 
-    private RpcCommand<R, C> cmd;
+    private RpcCommand<R, C, E, M> cmd;
 
-    public ConnectionListeningFuture(RpcCommand<R, C> cmd) {
+    public ConnectionListeningFuture(RpcCommand<R, C, E, M> cmd) {
       super();
       this.cmd = cmd;
     }
@@ -173,9 +175,7 @@ public abstract class ReconnectingConnection<C extends ClientConnection, HS exte
         incoming.getChannel().close();
       }
       set(connection);
-
     }
-
   }
 
   /** Factory for close handlers **/
@@ -204,7 +204,6 @@ public abstract class ReconnectingConnection<C extends ClientConnection, HS exte
       connectionHolder.compareAndSet(connection, null);
       parent.operationComplete(future);
     }
-
   }
 
   public CloseHandlerCreator getCloseHandlerCreator() {
@@ -223,5 +222,4 @@ public abstract class ReconnectingConnection<C extends ClientConnection, HS exte
       c.getChannel().close();
     }
   }
-
 }
