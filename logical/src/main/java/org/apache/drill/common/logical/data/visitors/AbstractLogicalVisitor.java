@@ -30,7 +30,6 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.RunningAggregate;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.common.logical.data.Sequence;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Transform;
 import org.apache.drill.common.logical.data.Union;
@@ -94,11 +93,6 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     @Override
     public T visitGroupingAggregate(GroupingAggregate groupBy, X value) throws E {
       return visitOp(groupBy, value);
-    }
-
-    @Override
-    public T visitSequence(Sequence sequence, X value) throws E {
-        return visitOp(sequence, value);
     }
 
     @Override
