@@ -64,7 +64,6 @@ import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
-import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Util;
@@ -384,10 +383,7 @@ public class SqlConverter {
     //To avoid unexpected column errors set a value of top to false
     final RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, false);
     final RelRoot rel2 = rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
-    final RelRoot rel3 = rel2.withRel(
-        RelDecorrelator.decorrelateQuery(rel2.rel,
-            sqlToRelConverterConfig.getRelBuilderFactory().create(cluster, null)));
-    return rel3;
+    return rel2;
   }
 
   private class Expander implements RelOptTable.ViewExpander {
@@ -478,7 +474,7 @@ public class SqlConverter {
 
     @Override
     public boolean isExpand() {
-      return SqlToRelConverterConfig.DEFAULT.isExpand();
+      return false;
     }
 
     @Override

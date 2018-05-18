@@ -145,7 +145,6 @@ public class TestTpchDistributedStreaming extends BaseTestQuery {
   }
 
   @Test
-  @Ignore
   public void tpch21() throws Exception{
     testDistributed("queries/tpch/21.sql");
   }

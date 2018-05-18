@@ -113,6 +113,16 @@ public enum PlannerPhase {
     }
   },
 
+  SUBQUERY_REWRITE("Sub-queries rewrites") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return RuleSets.ofList(
+          RuleInstance.SUB_QUERY_FILTER_REMOVE_RULE,
+          RuleInstance.SUB_QUERY_PROJECT_REMOVE_RULE,
+          RuleInstance.SUB_QUERY_JOIN_REMOVE_RULE
+      );
+    }
+  },
+
   LOGICAL_PRUNE("Logical Planning (with partition pruning)") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
