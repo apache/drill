@@ -19,13 +19,25 @@ package org.apache.drill.exec.work.batch;
 
 import java.io.IOException;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.RawFragmentBatch;
 
-interface DataCollector extends AutoCloseable {
+public interface DataCollector extends AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataCollector.class);
   public boolean batchArrived(int minorFragmentId, RawFragmentBatch batch) throws IOException ;
   public int getOppositeMajorFragmentId();
   public RawBatchBuffer[] getBuffers();
   public int getTotalIncomingFragments();
   public void close() throws Exception;
+  /**
+   * Enables caller (e.g., receiver) to attach its buffer allocator to this Data Collector in order
+   * to claim ownership of incoming batches; by default, the fragment allocator owns these batches.
+   *
+   * @param allocator operator buffer allocator
+   */
+  void setAllocator(BufferAllocator allocator);
+  /**
+   * @return allocator
+   */
+  BufferAllocator getAllocator();
 }

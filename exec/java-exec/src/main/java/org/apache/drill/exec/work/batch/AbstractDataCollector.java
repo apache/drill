@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.record.RawFragmentBatch;
@@ -37,6 +38,8 @@ public abstract class AbstractDataCollector implements DataCollector {
   private final int incomingStreams;
   protected final RawBatchBuffer[] buffers;
   protected final ArrayWrappedIntIntMap fragmentMap;
+  /** Allocator which owns incoming batches */
+  protected BufferAllocator ownerAllocator;
 
   /**
    * @param parentAccounter
@@ -53,6 +56,7 @@ public abstract class AbstractDataCollector implements DataCollector {
     this.parentAccounter = parentAccounter;
     this.remainders = new AtomicIntegerArray(incomingStreams);
     this.oppositeMajorFragmentId = collector.getOppositeMajorFragmentId();
+    this.ownerAllocator = context.getAllocator();
     // Create fragmentId to index that is within the range [0, incoming.size()-1]
     // We use this mapping to find objects belonging to the fragment in buffers and remainders arrays.
     fragmentMap = new ArrayWrappedIntIntMap();
@@ -114,6 +118,19 @@ public abstract class AbstractDataCollector implements DataCollector {
   @Override
   public void close() throws Exception {
     AutoCloseables.close(buffers);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public BufferAllocator getAllocator() {
+    return this.ownerAllocator;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setAllocator(BufferAllocator allocator) {
+    Preconditions.checkArgument(allocator != null, "buffer allocator cannot be null");
+    this.ownerAllocator = allocator;
   }
 
 }

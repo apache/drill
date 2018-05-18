@@ -136,6 +136,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     this.config = config;
     this.inputCounts = new long[config.getNumSenders()];
     this.outputCounts = new long[config.getNumSenders()];
+
+    // Register this operator's buffer allocator so that incoming buffers are owned by this allocator
+    context.getBuffers().getCollector(config.getOppositeMajorFragmentId()).setAllocator(oContext.getAllocator());
   }
 
   @SuppressWarnings("resource")

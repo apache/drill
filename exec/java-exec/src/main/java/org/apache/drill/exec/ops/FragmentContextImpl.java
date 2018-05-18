@@ -449,13 +449,16 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   public void close() {
     waitForSendComplete();
 
+    // Close the buffers before closing the operators; this is needed as buffer ownership
+    // is attached to the receive operators.
+    suppressingClose(buffers);
+
     // close operator context
     for (OperatorContextImpl opContext : contexts) {
       suppressingClose(opContext);
     }
 
     suppressingClose(bufferManager);
-    suppressingClose(buffers);
     suppressingClose(allocator);
   }
 

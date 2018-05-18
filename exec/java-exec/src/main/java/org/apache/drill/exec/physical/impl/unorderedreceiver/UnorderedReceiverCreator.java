@@ -37,7 +37,7 @@ public class UnorderedReceiverCreator implements BatchCreator<UnorderedReceiver>
     IncomingBuffers bufHolder = context.getBuffers();
     assert bufHolder != null : "IncomingBuffers must be defined for any place a receiver is declared.";
 
-    RawBatchBuffer[] buffers = bufHolder.getBuffers(receiver.getOppositeMajorFragmentId());
+    RawBatchBuffer[] buffers = bufHolder.getCollector(receiver.getOppositeMajorFragmentId()).getBuffers();
     assert buffers.length == 1;
     RawBatchBuffer buffer = buffers[0];
     return new UnorderedReceiverBatch(context, buffer, receiver);
