@@ -31,6 +31,7 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -156,7 +157,7 @@ public class SqlHandlerUtil {
             .message("Partition column %s is not in the SELECT list of CTAS!", col)
             .build(logger);
       } else {
-        if (SchemaPath.DYNAMIC_STAR.equals(field.getName())) {
+        if (StarColumnHelper.isStarColumn(field.getName())) {
           colRefStarNames.add(col);
 
           final List<RexNode> operands = Lists.newArrayList();
