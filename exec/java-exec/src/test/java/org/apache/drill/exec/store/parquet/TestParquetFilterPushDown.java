@@ -26,6 +26,7 @@ import org.apache.drill.exec.proto.BitControl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.junit.Assert;
@@ -424,6 +425,9 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
     final String queryNotEqualFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where not col_bln = false";
     testParquetFilterPD(queryNotEqualFalse, 4, 2, false);
+
+    final String queryEqualTrueWithAnd = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = true and unk_col = 'a'";
+    testParquetFilterPD(queryEqualTrueWithAnd, 0, 2, false);
   }
 
   @Test // DRILL-5359
@@ -445,10 +449,9 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   public void testMultiRowGroup() throws Exception {
     // multirowgroup is a parquet file with 2 rowgroups inside. One with a = 1 and the other with a = 2;
     // FilterPushDown should be able to remove the rowgroup with a = 1 from the scan operator.
-    final String sql = String.format("select * from dfs.`parquet/multirowgroup.parquet` where a > 1");
+    final String sql = "select * from dfs.`parquet/multirowgroup.parquet` where a > 1";
     final String[] expectedPlan = {"numRowGroups=1"};
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -461,23 +464,20 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     String numFilesPattern = "numFiles=" + expectedNumFiles;
     String usedMetaPattern = "usedMetadataFile=" + usedMetadataFile;
 
-    testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern}, new String[] {});
+    testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern});
   }
 
-  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final String exprStr,
-      boolean canDropExpected) throws Exception{
+  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final String exprStr, boolean canDropExpected) throws Exception{
     final LogicalExpression filterExpr = parseExpr(exprStr);
     testParquetRowGroupFilterEval(footer, 0, filterExpr, canDropExpected);
   }
 
-  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final int rowGroupIndex,
-      final LogicalExpression filterExpr, boolean canDropExpected) throws Exception {
-    boolean canDrop = ParquetRGFilterEvaluator.evalFilter(filterExpr, footer, rowGroupIndex,
-        fragContext.getOptions(), fragContext);
+  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final int rowGroupIndex, final LogicalExpression filterExpr, boolean canDropExpected) {
+    boolean canDrop = ParquetRGFilterEvaluator.evalFilter(filterExpr, footer, rowGroupIndex, fragContext.getOptions(), fragContext);
     Assert.assertEquals(canDropExpected, canDrop);
   }
 
   private ParquetMetadata getParquetMetaData(File file) throws IOException{
-    return ParquetFileReader.readFooter(new Configuration(fs.getConf()), new Path(file.toURI()));
+    return ParquetFileReader.readFooter(new Configuration(fs.getConf()), new Path(file.toURI()), ParquetMetadataConverter.NO_FILTER);
   }
 }
