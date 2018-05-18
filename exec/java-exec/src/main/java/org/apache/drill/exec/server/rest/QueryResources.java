@@ -96,8 +96,10 @@ public class QueryResources {
   public static class TabularResult {
     private final List<String> columns;
     private final List<List<String>> rows;
+    private final String queryId;
 
     public TabularResult(QueryResult result) {
+      queryId = result.getQueryId();
       final List<List<String>> rows = Lists.newArrayList();
       for (Map<String, String> rowMap:result.rows) {
         final List<String> row = Lists.newArrayList();
@@ -113,6 +115,10 @@ public class QueryResources {
 
     public boolean isEmpty() {
       return columns.isEmpty();
+    }
+
+    public String getQueryId() {
+      return queryId;
     }
 
     public List<String> getColumns() {
