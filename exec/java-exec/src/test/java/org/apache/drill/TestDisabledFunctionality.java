@@ -47,28 +47,21 @@ public class TestDisabledFunctionality extends BaseTestQuery {
     throw ex;
   }
 
-  @Test(expected = UnsupportedFunctionException.class)  // see DRILL-1937
-  public void testDisabledExplainplanForComparisonWithNonscalarSubquery() throws Exception {
-    try {
-      test("explain plan for select n_name from cp.`tpch/nation.parquet` " +
-           "where n_nationkey = " +
-           "(select r_regionkey from cp.`tpch/region.parquet` " +
-           "where r_regionkey = 1)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
+  @Test
+  public void testComparisonWithSingleValueSubQuery() throws Exception {
+    String query = "select n_name from cp.`tpch/nation.parquet` " +
+        "where n_nationkey = " +
+        "(select r_regionkey from cp.`tpch/region.parquet` " +
+        "where r_regionkey = 1)";
+    PlanTestBase.testPlanMatchingPatterns(query,
+        new String[]{"agg.*SINGLE_VALUE", "Filter.*=\\(\\$0, 1\\)"});
 
-  @Test(expected = UnsupportedFunctionException.class)  // see DRILL-1937
-  public void testDisabledComparisonWithNonscalarSubquery() throws Exception {
-    try {
-      test("select n_name from cp.`tpch/nation.parquet` " +
-           "where n_nationkey = " +
-           "(select r_regionkey from cp.`tpch/region.parquet` " +
-           "where r_regionkey = 1)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("n_name")
+        .baselineValues("ARGENTINA")
+        .go();
   }
 
   @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
@@ -215,17 +208,20 @@ public class TestDisabledFunctionality extends BaseTestQuery {
     }
   }
 
-  @Test(expected = UnsupportedFunctionException.class) // see DRILL-1325, DRILL-2155, see DRILL-1937
-  public void testMultipleUnsupportedOperatorations() throws Exception {
-    try {
-      test("select a.lastname, b.n_name " +
+  @Test
+  public void testMultipleComparisonWithSingleValueSubQuery() throws Exception {
+    String query = "select a.last_name, b.n_name " +
           "from cp.`employee.json` a, cp.`tpch/nation.parquet` b " +
           "where b.n_nationkey = " +
           "(select r_regionkey from cp.`tpch/region.parquet` " +
-          "where r_regionkey = 1)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
+          "where r_regionkey = 1) limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("last_name", "n_name")
+        .baselineValues("Nowmer", "ARGENTINA")
+        .go();
   }
 
   @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2068, DRILL-1325
