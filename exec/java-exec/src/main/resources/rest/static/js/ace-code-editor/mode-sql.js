@@ -15,11 +15,11 @@ var SqlHighlightRules = function() {
     //Covered: https://drill.apache.org/docs/supported-sql-commands/
     var keywords = (
         "select|insert|update|delete|from|where|and|or|group|by|order|limit|offset|having|as|case|" +
-        "when|else|end|type|left|right|join|on|outer|desc|asc|union|create|table|key|if|" +
+        "when|else|end|type|left|right|join|on|outer|desc|asc|union|create|table|key|if|lateral|apply|unnest|" +
         "not|default|null|inner|database|drop|" +
         "flatten|kvgen|columns|" +
         "set|reset|alter|session|system|" +
-        "temporary|function|using|jar|between|distinct" +
+        "temporary|function|using|jar|between|distinct|" +
         "partition|view|schema|files|" +
         "explain|plan|with|without|implementation|" +
         "show|describe|use"
