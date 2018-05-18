@@ -167,23 +167,4 @@
       </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>mapr</id>
-      <properties>
-        <!-- TODO: MapR Hive 2.1 client version libraries use older jackson libraries than Hive 2.3 client.
-        It can be removed after updating onto 2.3 version -->
-        <jackson.databind.mapr.hive.version>2.4.2</jackson.databind.mapr.hive.version>
-      </properties>
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.databind.mapr.hive.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
-    </profile>
-  </profiles>
 </project>

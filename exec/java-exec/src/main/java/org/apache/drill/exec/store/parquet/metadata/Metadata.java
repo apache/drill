@@ -40,8 +40,6 @@ import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -60,6 +58,8 @@ import org.apache.parquet.schema.Type;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -542,7 +542,7 @@ public class Metadata {
     SimpleModule module = new SimpleModule();
     module.addSerializer(ColumnMetadata_v3.class, new ColumnMetadata_v3.Serializer());
     mapper.registerModule(module);
-    FSDataOutputStream os = fs.create(p);
+    OutputStream os = fs.create(p);
     mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetTableMetadata);
     os.flush();
     os.close();
@@ -555,7 +555,7 @@ public class Metadata {
     ObjectMapper mapper = new ObjectMapper(jsonFactory);
     SimpleModule module = new SimpleModule();
     mapper.registerModule(module);
-    FSDataOutputStream os = fs.create(p);
+    OutputStream os = fs.create(p);
     mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetTableMetadataDirs);
     os.flush();
     os.close();
@@ -586,7 +586,7 @@ public class Metadata {
     mapper.registerModule(serialModule);
     mapper.registerModule(module);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    try (FSDataInputStream is = fs.open(path)) {
+    try (InputStream is = fs.open(path)) {
       boolean alreadyCheckedModification;
       boolean newMetadata = false;
       alreadyCheckedModification = metaContext.getStatus(metadataParentDirPath);

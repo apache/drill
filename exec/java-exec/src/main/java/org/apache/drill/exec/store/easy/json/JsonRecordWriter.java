@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.easy.json;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +34,6 @@ import org.apache.drill.exec.vector.complex.fn.ExtendedJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.JsonWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -56,7 +56,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
 
   private int index;
   private FileSystem fs = null;
-  private FSDataOutputStream stream = null;
+  private OutputStream stream = null;
 
   private final JsonFactory factory = new JsonFactory();
   private final StorageStrategy storageStrategy;

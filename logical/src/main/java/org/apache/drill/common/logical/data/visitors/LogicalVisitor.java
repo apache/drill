@@ -30,11 +30,9 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.RunningAggregate;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.common.logical.data.Sequence;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Transform;
 import org.apache.drill.common.logical.data.Union;
-import org.apache.drill.common.logical.data.Window;
 import org.apache.drill.common.logical.data.Window;
 import org.apache.drill.common.logical.data.Writer;
 
@@ -60,7 +58,6 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
     public RETURN visitJoin(Join join, EXTRA value) throws EXCEP;
     public RETURN visitLimit(Limit limit, EXTRA value) throws EXCEP;
     public RETURN visitRunningAggregate(RunningAggregate runningAggregate, EXTRA value) throws EXCEP;
-    public RETURN visitSequence(Sequence sequence, EXTRA value) throws EXCEP;
     public RETURN visitTransform(Transform transform, EXTRA value) throws EXCEP;
     public RETURN visitUnion(Union union, EXTRA value) throws EXCEP;
     public RETURN visitWindow(Window window, EXTRA value) throws EXCEP;
