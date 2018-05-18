@@ -100,8 +100,29 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return result;
   }
 
-  // DRILL-5525: the semantics of this method are badly broken.
-  // Caveat emptor.
+  /**
+   * DRILL-5525: the semantics of this method are badly broken.
+   * Caveat emptor.
+   *
+   * This check used for detecting actual schema change inside operator record batch will not work for
+   * AbstractContainerVectors (like MapVector). In each record batch a reference to incoming batch schema is
+   * stored (let say S:{a: int}) and then equals is called on that stored reference and current incoming batch schema.
+   * Internally schema object has references to Materialized fields from vectors in container. If there is change in
+   * incoming batch schema, then the upstream will create a new ValueVector in its output container with the new
+   * detected type, which in turn will have new instance for Materialized Field. Then later a new BatchSchema object
+   * is created for this new incoming batch (let say S":{a":varchar}). The operator calling equals will have reference
+   * to old schema object (S) and hence first check will not be satisfied and then it will call equals on each of the
+   * Materialized Field (a.equals(a")). Since new materialized field is created for newly created vector the equals
+   * check on field will return false. And schema change will be detected in this case.
+   * Now consider instead of int vector there is a MapVector such that initial schema was (let say S:{a:{b:int, c:int}}
+   * and then later schema for Map field c changes, then in container Map vector will be found but later the children
+   * vector for field c will be replaced. This new schema object will be created as (S":{a:{b:int, c":varchar}}). Now
+   * when S.equals(S") is called it will eventually call a.equals(a) which will return true even though the schema of
+   * children value vector c has changed. This is because no new vector is created for field (a) and hence it's object
+   * reference to MaterializedField has not changed which will be reflected in both old and new schema instances.
+   * Hence we should make use of {@link BatchSchema#isEquivalent(BatchSchema)} method instead since
+   * {@link MaterializedField#isEquivalent(MaterializedField)} method is updated to remove the reference check.
+   */
 
   @Override
   public boolean equals(Object obj) {
@@ -151,7 +172,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
 
   /**
    * Compare that two schemas are identical according to the rules defined
-   * in {@ link MaterializedField#isEquivalent(MaterializedField)}. In particular,
+   * in {@link MaterializedField#isEquivalent(MaterializedField)}. In particular,
    * this method requires that the fields have a 1:1 ordered correspondence
    * in the two schemas.
    *

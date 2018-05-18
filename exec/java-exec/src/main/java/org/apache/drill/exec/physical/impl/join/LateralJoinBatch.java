@@ -125,8 +125,8 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     // Left side has some records in the batch so let's process right batch
     childOutcome = processRightBatch();
 
-    // reset the left & right outcomes to OK here and send the empty batch downstream
-    // Assumption being right side will always send OK_NEW_SCHEMA with empty batch which is what UNNEST will do
+    // reset the left & right outcomes to OK here and send the empty batch downstream. Non-Empty right batch with
+    // OK_NEW_SCHEMA will be handled in subsequent next call
     if (childOutcome == OK_NEW_SCHEMA) {
       leftUpstream = (leftUpstream != EMIT) ? OK : leftUpstream;
       rightUpstream = OK;
@@ -344,22 +344,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
       switch (leftUpstream) {
         case OK_NEW_SCHEMA:
           // This OK_NEW_SCHEMA is received post build schema phase and from left side
-          // If schema didn't actually changed then just handle it as OK outcome. This is fine since it is not setting
-          // up any incoming vector references in setupNewSchema. While copying the records it always work on latest
-          // incoming vector.
-          if (!isSchemaChanged(left.getSchema(), leftSchema)) {
-            logger.warn(String.format("New schema received from left side is same as previous known left schema. " +
-              "Ignoring this schema change. Old Left Schema: %s, New Left Schema: %s", leftSchema, left.getSchema()));
-
-            // Current left batch is empty and schema didn't changed as well, so let's get next batch and loose
-            // OK_NEW_SCHEMA outcome
-            processLeftBatchInFuture = false;
-            if (emptyLeftBatch) {
-              continue;
-            } else {
-              leftUpstream = OK;
-            }
-          } else if (outputIndex > 0) { // can only reach here from produceOutputBatch
+          if (outputIndex > 0) { // can only reach here from produceOutputBatch
             // This means there is already some records from previous join inside left batch
             // So we need to pass that downstream and then handle the OK_NEW_SCHEMA in subsequent next call
             processLeftBatchInFuture = true;
@@ -439,20 +424,12 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
           // We should not get OK_NEW_SCHEMA multiple times for the same left incoming batch. So there won't be a
           // case where we get OK_NEW_SCHEMA --> OK (with batch) ---> OK_NEW_SCHEMA --> OK/EMIT fall through
           //
-          // Right batch with OK_NEW_SCHEMA is always going to be an empty batch, so let's pass the new schema
-          // downstream and later with subsequent next() call the join output will be produced
-          Preconditions.checkState(right.getRecordCount() == 0,
-            "Right side batch with OK_NEW_SCHEMA is not empty");
-
-          if (!isSchemaChanged(right.getSchema(), rightSchema)) {
-            logger.warn(String.format("New schema received from right side is same as previous known right schema. " +
-              "Ignoring this schema change. Old Right schema: %s, New Right Schema: %s",
-              rightSchema, right.getSchema()));
-            continue;
-          }
+          // Right batch with OK_NEW_SCHEMA can be non-empty so update the rightJoinIndex correctly and pass the
+          // new schema downstream with empty batch and later with subsequent next() call the join output will be
+          // produced
           if (handleSchemaChange()) {
             container.setRecordCount(0);
-            rightJoinIndex = -1;
+            rightJoinIndex = (right.getRecordCount() > 0) ? 0 : -1;
             return OK_NEW_SCHEMA;
           } else {
             return STOP;
@@ -637,10 +614,10 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
     batchMemoryManager.updateOutgoingStats(outputIndex);
-    if (logger.isDebugEnabled()) {
-      logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
-      logger.debug("Number of records emitted: " + outputIndex);
-    }
+
+    logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+    logger.debug("Number of records emitted: {} and Allocator Stats: [AllocatedMem: {}, PeakMem: {}]", outputIndex,
+      container.getAllocator().getAllocatedMemory(), container.getAllocator().getPeakMemoryAllocation());
 
     // Update the output index for next output batch to zero
     outputIndex = 0;
