@@ -27,6 +27,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.planner.StarColumnHelper;
 
 
 /**
@@ -147,7 +148,7 @@ public class FieldSelection {
 
   private static boolean containsStar(List<SchemaPath> columns) {
     for (SchemaPath expr : columns) {
-      if (SchemaPath.DYNAMIC_STAR.equals(expr.getRootSegment().getPath())) {
+      if (StarColumnHelper.isStarColumn(expr.getRootSegment().getPath())) {
         return true;
       }
     }

@@ -20,12 +20,12 @@ package org.apache.drill.exec.physical.impl.lateraljoin;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.exec.work.prepare.PreparedStatementTestBase;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestLateralPlans extends BaseTestQuery {
+public class TestLateralPlans extends PreparedStatementTestBase {
 
   @BeforeClass
   public static void enableUnnestLateral() throws Exception {
@@ -90,8 +90,50 @@ public class TestLateralPlans extends BaseTestQuery {
 
   @Test
   public void testLateralSqlStar() throws Exception {
-    String Sql = "select * from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) t2 limit 1";
-    test(Sql);
+    String Sql = "select * from cp.`lateraljoin/nested-customer.json` t, unnest(t.orders) t2 limit 0";
+
+    testBuilder()
+            .unOrdered()
+            .sqlQuery(Sql)
+            .baselineColumns("c_name", "c_id", "c_phone", "orders", "c_address", "o_id", "o_shop", "o_amount", "items")
+            .expectsEmptyResultSet()
+            .go();
+  }
+
+  @Test
+  public void testLateralSqlStar2() throws Exception {
+    String Sql = "select c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) o limit 0";
+
+    testBuilder()
+            .unOrdered()
+            .sqlQuery(Sql)
+            .baselineColumns("c_name", "c_id", "c_phone", "orders", "c_address")
+            .expectsEmptyResultSet()
+            .go();
+  }
+
+  @Test
+  public void testLateralSqlStar3() throws Exception {
+    String Sql = "select o.*, c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) o limit 0";
+
+    testBuilder()
+            .unOrdered()
+            .sqlQuery(Sql)
+            .baselineColumns("o_id", "o_shop", "o_amount", "items", "c_name", "c_id", "c_phone", "orders", "c_address")
+            .expectsEmptyResultSet()
+            .go();
+  }
+
+  @Test
+  public void testLateralSqlStar4() throws Exception {
+    String Sql = "select o.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) o limit 0";
+
+    testBuilder()
+            .unOrdered()
+            .sqlQuery(Sql)
+            .baselineColumns("o_id", "o_shop", "o_amount", "items")
+            .expectsEmptyResultSet()
+            .go();
   }
 
   @Test

@@ -51,7 +51,7 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
 
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> visitor, X value) throws E {
-    return visitor.visitPrel(this, value);
+    return visitor.visitUnnest(this, value);
   }
 
   @Override

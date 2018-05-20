@@ -44,7 +44,7 @@ import org.apache.drill.exec.planner.physical.WriterPrel;
  */
 
 public class PrelVisualizerVisitor
-    implements PrelVisitor<Void, PrelVisualizerVisitor.VisualizationState, Exception> {
+    extends BasePrelVisitor<Void, PrelVisualizerVisitor.VisualizationState, Exception> {
 
   public static class VisualizationState {
 
