@@ -52,6 +52,17 @@ package org.apache.drill.exec.vector;
 
 public final class ${className} extends BaseDataValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector, NullableVector {
 
+  /**
+   * Optimization to set contiguous values nullable state in a bulk manner; cannot define this array
+   * within the Mutator class as Java doesn't allow static initialization within a non static inner class.
+   */
+  private static final int DEFINED_VALUES_ARRAY_LEN = 1 << 10;
+  private static final byte[] DEFINED_VALUES_ARRAY  = new byte[DEFINED_VALUES_ARRAY_LEN];
+
+  static {
+    Arrays.fill(DEFINED_VALUES_ARRAY, (byte) 1);
+  }
+
   private final FieldReader reader = new Nullable${minor.class}ReaderImpl(Nullable${minor.class}Vector.this);
 
   /**
@@ -537,6 +548,18 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       bits.getMutator().set(index, 1);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void setIndexDefined(int index, int numValues) {
+      int remaining = numValues;
+
+      while (remaining > 0) {
+        int batchSz = Math.min(remaining, DEFINED_VALUES_ARRAY_LEN);
+        bits.getMutator().set(index + (numValues - remaining), DEFINED_VALUES_ARRAY, 0, batchSz);
+        remaining -= batchSz;
+      }
+    }
+
     /**
      * Set the variable length element at the specified index to the supplied value.
      *
@@ -736,7 +759,85 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       values.getMutator().setValueCount(valueCount);
       bits.getMutator().setValueCount(valueCount);
     }
+    <#if type.major == "VarLen">
+    /** Enables this wrapper container class to participate in bulk mutator logic */
+    private final class VarLenBulkInputCallbackImpl implements VarLenBulkInput.BulkInputCallback<VarLenBulkEntry> {
+      /** The default buffer size */
+      private static final int DEFAULT_BUFF_SZ = 1024 << 2;
+      /** A buffered mutator to the bits vector */
+      private final UInt1Vector.BufferedMutator bitsMutator;
 
+      private VarLenBulkInputCallbackImpl(int _start_idx) {
+        bitsMutator = new UInt1Vector.BufferedMutator(_start_idx, DEFAULT_BUFF_SZ, bits);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public void onNewBulkEntry(final VarLenBulkEntry entry) {
+        final int[] lengths = entry.getValuesLength();
+        final ByteBuffer buffer = bitsMutator.getByteBuffer();
+        final byte[] bufferArray = buffer.array();
+        int remaining = entry.getNumValues();
+        int srcPos = 0;
+
+        // We need to set the bit indicators
+
+        do {
+          if (buffer.remaining() < 1) {
+            bitsMutator.flush();
+          }
+
+          final int toCopy      = Math.min(remaining, buffer.remaining());
+          final int startTgtPos = buffer.position();
+          final int maxTgtPos   = startTgtPos + toCopy;
+
+          if (entry.hasNulls()) {
+            for (int idx = startTgtPos; idx < maxTgtPos; idx++) {
+              final int valLen = lengths[srcPos++];
+
+              if (valLen >= 0) {
+                bufferArray[idx] = 1;
+                ++setCount;
+              } else {
+                // This is a null entry
+                bufferArray[idx] = 0;
+              }
+            }
+          } else { // Optimization when there are no nulls within this bulk entry
+            for (int idx = startTgtPos; idx < maxTgtPos; idx++) {
+              bufferArray[idx] = 1;
+            }
+            setCount += toCopy;
+          }
+
+          // Update counters
+          buffer.position(maxTgtPos);
+          remaining -= toCopy;
+
+        } while (remaining > 0);
+        <#if type.major == "VarLen">
+        // Update global counters
+        lastSet += entry.getNumValues();
+        </#if>
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public void onEndBulkInput() {
+        bitsMutator.flush();
+      }
+    }
+
+    /** {@inheritDoc} */
+    public void setSafe(VarLenBulkInput<VarLenBulkEntry> input) {
+      // Register a callback so that we can assign indicators to each value
+      VarLenBulkInput.BulkInputCallback<VarLenBulkEntry> callback = new VarLenBulkInputCallbackImpl(input.getStartIndex());
+
+      // Now delegate bulk processing to the value container
+      values.getMutator().setSafe(input, callback);
+    }
+
+    </#if>
     @Override
     public void generateTestData(int valueCount){
       bits.getMutator().generateTestDataAlt(valueCount);

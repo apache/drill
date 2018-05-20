@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 import java.lang.Override;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Set;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -39,6 +41,9 @@ package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
 
+import java.util.Iterator;
+import java.nio.ByteOrder;
+
 /**
  * ${minor.class}Vector implements a vector of variable width values.  Elements in the vector
  * are accessed by position from the logical start of the vector.  A fixed width offsetVector
@@ -56,7 +61,7 @@ package org.apache.drill.exec.vector;
 public final class ${minor.class}Vector extends BaseDataValueVector implements VariableWidthVector {
 
   private static final int INITIAL_BYTE_COUNT = Math.min(INITIAL_VALUE_ALLOCATION * DEFAULT_RECORD_BYTE_COUNT, MAX_BUFFER_SIZE);
-  
+
   private final UInt${type.width}Vector offsetVector = new UInt${type.width}Vector(offsetsField, allocator);
   private final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
 
@@ -73,7 +78,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public FieldReader getReader() {
+  public FieldReader getReader(){
     return reader;
   }
 
@@ -101,12 +106,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public int getValueCapacity() {
+  public int getValueCapacity(){
     return Math.max(offsetVector.getValueCapacity() - 1, 0);
   }
 
   @Override
-  public int getByteCapacity() {
+  public int getByteCapacity(){
     return data.capacity();
   }
 
@@ -127,7 +132,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
    */
   public int getVarByteLength(){
     final int valueCount = getAccessor().getValueCount();
-    if (valueCount == 0) {
+    if(valueCount == 0) {
       return 0;
     }
     return offsetVector.getAccessor().get(valueCount);
@@ -173,22 +178,22 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return buffers;
   }
 
-  public long getOffsetAddr() {
+  public long getOffsetAddr(){
     return offsetVector.getBuffer().memoryAddress();
   }
 
   @Override
-  public UInt${type.width}Vector getOffsetVector() {
+  public UInt${type.width}Vector getOffsetVector(){
     return offsetVector;
   }
 
   @Override
-  public TransferPair getTransferPair(BufferAllocator allocator) {
+  public TransferPair getTransferPair(BufferAllocator allocator){
     return new TransferImpl(getField(), allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator){
     return new TransferImpl(getField().withPath(ref), allocator);
   }
 
@@ -197,7 +202,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return new TransferImpl((${minor.class}Vector) to);
   }
 
-  public void transferTo(${minor.class}Vector target) {
+  public void transferTo(${minor.class}Vector target){
     target.clear();
     this.offsetVector.transferTo(target.offsetVector);
     target.data = data.transferOwnership(target.allocator).buffer;
@@ -282,17 +287,17 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       to = new ${minor.class}Vector(field, allocator);
     }
 
-    public TransferImpl(${minor.class}Vector to) {
+    public TransferImpl(${minor.class}Vector to){
       this.to = to;
     }
 
     @Override
-    public ${minor.class}Vector getTo() {
+    public ${minor.class}Vector getTo(){
       return to;
     }
 
     @Override
-    public void transfer() {
+    public void transfer(){
       transferTo(to);
     }
 
@@ -313,7 +318,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     if (size > MAX_ALLOCATION_SIZE) {
       throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
-    allocationSizeInBytes = (int)size;
+    allocationSizeInBytes = (int) size;
     offsetVector.setInitialCapacity(valueCount + 1);
   }
 
@@ -439,7 +444,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   public final class Accessor extends BaseValueVector.BaseAccessor implements VariableWidthAccessor {
     final UInt${type.width}Vector.Accessor oAccessor = offsetVector.getAccessor();
-    
+
     public long getStartEnd(int index){
       return oAccessor.getTwoAsLong(index);
     }
@@ -606,6 +611,46 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
 
     /**
+     * Copies the bulk input into this value vector and extends its capacity if necessary.
+     * @param input bulk input
+     */
+    public <T extends VarLenBulkEntry> void setSafe(VarLenBulkInput<T> input) {
+      setSafe(input, null);
+    }
+
+    /**
+     * Copies the bulk input into this value vector and extends its capacity if necessary. The callback
+     * mechanism allows decoration as caller is invoked for each bulk entry.
+     *
+     * @param input bulk input
+     * @param callback a bulk input callback object (optional)
+     */
+    public <T extends VarLenBulkEntry> void setSafe(VarLenBulkInput<T> input, VarLenBulkInput.BulkInputCallback<T> callback) {
+      // Let's allocate a buffered mutator to optimize memory copy performance
+      BufferedMutator bufferedMutator = new BufferedMutator(input.getStartIndex(), ${minor.class}Vector.this);
+
+      // Let's process the input
+      while (input.hasNext()) {
+        T entry = input.next();
+        bufferedMutator.setSafe(entry);
+
+        if (callback != null) {
+          callback.onNewBulkEntry(entry);
+        }
+      }
+
+      // Flush any data not yet copied to this VL container
+      bufferedMutator.flush();
+
+      // Inform the input object we're done reading
+      input.done();
+
+      if (callback != null) {
+        callback.onEndBulkInput();
+      }
+    }
+
+    /**
      * Set the variable length element at the specified index to the supplied byte array.
      *
      * @param index   position of the bit to set
@@ -728,7 +773,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       }
     }
 
-    protected void set(int index, int start, int length, DrillBuf buffer) {
+    protected void set(int index, int start, int length, DrillBuf buffer){
       assert index >= 0;
       final int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
@@ -736,14 +781,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       data.setBytes(currentOffset, bb);
     }
 
-    protected void set(int index, Nullable${minor.class}Holder holder) {
+    protected void set(int index, Nullable${minor.class}Holder holder){
       final int length = holder.end - holder.start;
       final int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       data.setBytes(currentOffset, holder.buffer, holder.start, length);
     }
 
-    protected void set(int index, ${minor.class}Holder holder) {
+    protected void set(int index, ${minor.class}Holder holder){
       final int length = holder.end - holder.start;
       final int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
@@ -804,6 +849,165 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         set(i, even ? evenValue : oddValue);
         }
       setValueCount(size);
+    }
+  }
+
+  /**
+   * Helper class to buffer container mutation as a means to optimize native memory copy operations. Ideally, this
+   * should be done transparently as part of the Mutator and Accessor APIs.
+   *
+   * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
+   */
+  public static final class BufferedMutator {
+    /** The default buffer size */
+    private static final int DEFAULT_BUFF_SZ = 1024 << 2;
+    /** Byte buffer */
+    private final ByteBuffer buffer;
+    /** Indicator on whether to enable data buffering */
+    private final boolean enableDataBuffering = false;
+    /** Current offset within the data buffer */
+    private int dataBuffOff;
+    /** Total data length (contained within data and buffer) */
+    private int totalDataLen;
+    /** Parent container */
+    private final ${minor.class}Vector parent;
+    /** A buffered mutator to the offsets vector */
+    private final UInt4Vector.BufferedMutator offsetsMutator;
+
+    /** @see {@link #BufferedMutator(int startIdx, int buffSz, ${minor.class}Vector parent)} */
+    public BufferedMutator(int startIdx, ${minor.class}Vector parent) {
+      this(startIdx, DEFAULT_BUFF_SZ, parent);
+    }
+
+    /**
+     * Buffered mutator to optimize bulk access to the underlying vector container
+     * @param startIdx start idex of the first value to be copied
+     * @param buffSz buffer length to us
+     * @param parent parent container object
+     */
+    public BufferedMutator(int startIdx, int buffSz, ${minor.class}Vector parent) {
+      if (enableDataBuffering) {
+        this.buffer = ByteBuffer.allocate(buffSz);
+        // set the buffer to the native byte order
+        this.buffer.order(ByteOrder.nativeOrder());
+      } else {
+        this.buffer = null;
+      }
+
+      this.parent = parent;
+      this.dataBuffOff = this.parent.offsetVector.getAccessor().get(startIdx);
+      this.totalDataLen = this.dataBuffOff;
+      this.offsetsMutator = new UInt4Vector.BufferedMutator(startIdx, buffSz * 4, parent.offsetVector);
+
+      // Forcing the offsetsMutator to operate at index+1
+      this.offsetsMutator.setSafe(this.dataBuffOff);
+    }
+
+    public void setSafe(VarLenBulkEntry bulkEntry) {
+      // The new entry doesn't fit in remaining space
+      if (enableDataBuffering && buffer.remaining() < bulkEntry.getTotalLength()) {
+        flushInternal();
+      }
+
+      // Now update the offsets vector with new information
+      int[] lengths = bulkEntry.getValuesLength();
+      int numValues = bulkEntry.getNumValues();
+
+      setOffsets(lengths, numValues, bulkEntry.hasNulls());
+
+      // Now we're able to buffer the new bulk entry
+      if (enableDataBuffering && buffer.remaining() >= bulkEntry.getTotalLength() && bulkEntry.arrayBacked()) {
+        buffer.put(bulkEntry.getArrayData(), bulkEntry.getDataStartOffset(), bulkEntry.getTotalLength());
+
+      } else {
+        // The new entry is larger than the buffer (note at this point we know the buffer has been flushed)
+        while (parent.data.capacity() < totalDataLen) {
+          parent.reAlloc();
+        }
+
+        if (bulkEntry.arrayBacked()) {
+          parent.data.setBytes(dataBuffOff,
+            bulkEntry.getArrayData(),
+            bulkEntry.getDataStartOffset(),
+            bulkEntry.getTotalLength());
+
+        } else {
+          parent.data.setBytes(dataBuffOff,
+            bulkEntry.getData(),
+            bulkEntry.getDataStartOffset(),
+            bulkEntry.getTotalLength());
+        }
+
+        // Update the underlying DrillBuf offset
+        dataBuffOff += bulkEntry.getTotalLength();
+      }
+    }
+
+    public void flush() {
+      flushInternal();
+      offsetsMutator.flush();
+    }
+
+    private void flushInternal() {
+      if (!enableDataBuffering) {
+        return; // NOOP
+      }
+      int numElements = buffer.position();
+
+      if (numElements == 0) {
+        return; // NOOP
+      }
+
+      while (parent.data.capacity() < totalDataLen) {
+        parent.reAlloc();
+      }
+
+      try {
+        parent.data.setBytes(dataBuffOff, buffer.array(), 0, buffer.position());
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+
+      // Update counters
+      dataBuffOff += buffer.position();
+
+      // Reset the byte buffer
+      buffer.clear();
+    }
+
+    private void setOffsets(int[] lengths, int numValues, boolean hasNulls) {
+      // We need to compute source offsets using the current larget offset and the value length array.
+      final ByteBuffer offByteBuff = offsetsMutator.getByteBuffer();
+      final byte[] bufferArray = offByteBuff.array();
+      int remaining = numValues;
+      int srcPos = 0;
+
+      do {
+        if (offByteBuff.remaining() < 4) {
+          offsetsMutator.flush();
+        }
+
+        final int toCopy  = Math.min(remaining, offByteBuff.remaining() / 4);
+        int tgtPos       = offByteBuff.position();
+
+        if (!hasNulls) {
+          for (int idx = 0; idx < toCopy; idx++, tgtPos += 4, srcPos++) {
+            totalDataLen += lengths[srcPos];
+            UInt4Vector.BufferedMutator.writeInt(totalDataLen, bufferArray, tgtPos);
+          }
+        } else {
+          for (int idx = 0; idx < toCopy; idx++, tgtPos += 4, srcPos++) {
+            final int curr_len = lengths[srcPos];
+            totalDataLen    += (curr_len >= 0) ? curr_len : 0;
+            UInt4Vector.BufferedMutator.writeInt(totalDataLen, bufferArray, tgtPos);
+          }
+        }
+
+        // Update counters
+        offByteBuff.position(tgtPos);
+        remaining -= toCopy;
+
+      } while (remaining > 0);
     }
   }
 }
