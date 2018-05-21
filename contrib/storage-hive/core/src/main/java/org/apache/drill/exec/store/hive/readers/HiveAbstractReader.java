@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.ListenableFuture;
 import io.netty.buffer.DrillBuf;
@@ -203,20 +204,10 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
           }
         }
       }
-      ColumnProjectionUtils.appendReadColumns(job, columnIds);
-
-      // TODO: Use below overloaded method instead of above simpler version of it, once Hive client dependencies
-      // (from all profiles) will be updated to 2.3 version or above
-//      ColumnProjectionUtils.appendReadColumns(job, columnIds, selectedColumnNames,
-//          Lists.newArrayList(Iterables.transform(getColumns(), new Function<SchemaPath, String>()
-//      {
-//        @Nullable
-//        @Override
-//        public String apply(@Nullable SchemaPath path)
-//        {
-//          return path.getRootSegmentPath();
-//        }
-//      })));
+      List<String> paths = getColumns().stream()
+          .map(SchemaPath::getRootSegmentPath)
+          .collect(Collectors.toList());
+      ColumnProjectionUtils.appendReadColumns(job, columnIds, selectedColumnNames, paths);
 
       for (String columnName : selectedColumnNames) {
         StructField fieldRef = finalOI.getStructFieldRef(columnName);
