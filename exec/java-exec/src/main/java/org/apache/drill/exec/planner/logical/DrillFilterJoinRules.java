@@ -59,10 +59,10 @@ public class DrillFilterJoinRules {
       };
 
   /** Predicate that always returns true for any filter in OUTER join, and only true
-   * for strict EQUAL or IS_DISTINCT_FROM conditions (without functions) over RexInputRef in INNER join.
+   * for strict EQUAL or IS_DISTINCT_FROM conditions (without any mathematical operations) over RexInputRef in INNER join.
    * With this predicate, the filter expression that return true will be kept in the JOIN OP.
    * Example:  INNER JOIN,   L.C1 = R.C2 will be kepted in JOIN.
-   *                         L.C3 + 100 = R.C4 + 100 and L.C5 < R.C6 will be pulled up into Filter above JOIN.
+   *                         L.C3 + 100 = R.C4 + 100, L.C5 < R.C6 will be pulled up into Filter above JOIN.
    *           OUTER JOIN,   Keep any filter in JOIN.
   */
   public static final FilterJoinRule.Predicate STRICT_EQUAL_IS_DISTINCT_FROM =

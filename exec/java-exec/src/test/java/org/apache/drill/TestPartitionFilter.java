@@ -433,4 +433,21 @@ public class TestPartitionFilter extends PlanTestBase {
         .run();
 
   }
+
+  @Test // DRILL-6173
+  public void testDirPruningTransitivePredicates() throws Exception {
+    final String query = "select * from dfs.`multilevel/parquet` t1 join dfs.`multilevel/parquet2` t2 on " +
+        " t1.dir0 = t2.dir0 where t1.dir0 = '1994' and t1.dir1 = 'Q1'";
+
+    String [] expectedPlan = {"1994"};
+    String [] excluded = {"1995", "Filter\\("};
+
+    // verify we get correct count(*).
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 800;
+    assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
+
+    // verify plan that filter is applied in partition pruning.
+    testPlanMatchingPatterns(query, expectedPlan, excluded);
+  }
 }
