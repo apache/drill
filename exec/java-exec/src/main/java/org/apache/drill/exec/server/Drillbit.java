@@ -20,6 +20,8 @@ package org.apache.drill.exec.server;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.tools.ToolProvider;
+
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.concurrent.ExtendedLatch;
@@ -130,6 +132,12 @@ public class Drillbit implements AutoCloseable {
     final CaseInsensitiveMap<OptionDefinition> definitions,
     final RemoteServiceSet serviceSet,
     final ScanResult classpathScan) throws Exception {
+
+    //Must start up with access to JDK Compiler
+    if (ToolProvider.getSystemJavaCompiler() == null) {
+      throw new DrillbitStartupException("JDK Java compiler not available. Ensure Drill is running with the java executable from a JDK and not a JRE");
+    }
+
     gracePeriod = config.getInt(ExecConstants.GRACE_PERIOD);
     final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Construction started.");
@@ -400,7 +408,11 @@ public class Drillbit implements AutoCloseable {
     try {
       bit = new Drillbit(config, validators, remoteServiceSet, classpathScan);
     } catch (final Exception ex) {
-      throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
+      if (ex instanceof DrillbitStartupException) {
+        throw (DrillbitStartupException) ex;
+      } else {
+        throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
+      }
     }
 
     try {
