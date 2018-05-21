@@ -139,6 +139,9 @@
             <filter>
               <artifact>org.apache.hive:hive-exec</artifact>
               <excludes>
+                <!-- This exclusion can be removed once hive-exec uses parquet-hadoop-bundle 1.8.2 or higher.
+                 It can be so, for example, after upgrading Hive to 3.0. To check if it's safe to remove the exclusion
+                 you can use TestHiveStorage.readFromAlteredPartitionedTableWithEmptyGroupType() test case. -->
                 <exclude>org/apache/parquet/schema/*</exclude>
               </excludes>
             </filter>
