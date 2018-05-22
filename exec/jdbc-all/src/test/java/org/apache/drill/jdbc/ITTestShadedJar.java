@@ -39,6 +39,8 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 public class ITTestShadedJar {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ITTestShadedJar.class);
+
   private static DrillbitClassLoader drillbitLoader;
   private static URLClassLoader rootClassLoader;
   private static int userPort;
@@ -132,11 +134,6 @@ public class ITTestShadedJar {
 
   @Test
   public void testDatabaseVersion() throws Exception {
-
-    // print class path for debugging
-    System.out.println("java.class.path:");
-    System.out.println(System.getProperty("java.class.path"));
-
     final URLClassLoader loader = (URLClassLoader) ClassLoader.getSystemClassLoader();
     Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
     method.setAccessible(true);
@@ -158,11 +155,6 @@ public class ITTestShadedJar {
 
   @Test
   public void executeJdbcAllQuery() throws Exception {
-
-    // print class path for debugging
-    System.out.println("java.class.path:");
-    System.out.println(System.getProperty("java.class.path"));
-
     final URLClassLoader loader = (URLClassLoader) ClassLoader.getSystemClassLoader();
     Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
     method.setAccessible(true);
@@ -181,16 +173,21 @@ public class ITTestShadedJar {
   }
 
   private static void printQuery(Connection c, String query) throws SQLException {
+    final StringBuilder sb = new StringBuilder();
+
     try (Statement s = c.createStatement(); ResultSet result = s.executeQuery(query)) {
       while (result.next()) {
         final int columnCount = result.getMetaData().getColumnCount();
         for(int i = 1; i < columnCount+1; i++){
-          System.out.print(result.getObject(i));
-          System.out.print('\t');
+          sb.append(result.getObject(i));
+          sb.append('\t');
         }
-        System.out.println(result.getObject(1));
+
+        sb.append(result.getObject(1)).append('\n');
       }
     }
+
+    logger.info(sb.toString());
   }
 
   private static int getClassesLoadedCount(ClassLoader classLoader) {
@@ -200,22 +197,26 @@ public class ITTestShadedJar {
       Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       return classes.size();
     } catch (Exception e) {
-      System.out.println("Failure while loading class count.");
+      logger.error("Exception ", e);
       return -1;
     }
   }
 
   private static void printClassesLoaded(String prefix, ClassLoader classLoader) {
+    final StringBuilder sb = new StringBuilder();
+
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
       Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       for (Class<?> c : classes) {
-        System.out.println(prefix + ": " + c.getName());
+        sb.append(prefix).append(": ").append(c.getName()).append('\n');
       }
     } catch (Exception e) {
-      System.out.println("Failure while printing loaded classes.");
+      logger.error("Exception ", e);
     }
+
+    logger.info(sb.toString());
   }
 
   private static void runWithLoader(String name, ClassLoader loader) throws Exception {

@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
-import java.util.LinkedList;
-
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.hadoop.fs.BlockLocation;
 import org.junit.Test;
 
@@ -28,6 +25,8 @@ import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 
 public class TestAffinityCalculator extends ExecTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAffinityCalculator.class);
+
   private final String port = "1234";
 
   public BlockLocation[] buildBlockLocations(String[] hosts, long blockSize) {
@@ -46,15 +45,6 @@ public class TestAffinityCalculator extends ExecTest {
     return blockLocations;
   }
 
-  public LinkedList<CoordinationProtos.DrillbitEndpoint> buildEndpoints(int numberOfEndpoints) {
-    LinkedList<CoordinationProtos.DrillbitEndpoint> endPoints = new LinkedList<>();
-
-    for (int i = 0; i < numberOfEndpoints; i++) {
-      endPoints.add(CoordinationProtos.DrillbitEndpoint.newBuilder().setAddress("host" + i).build());
-    }
-    return endPoints;
-  }
-
   @Test
   public void testBuildRangeMap() {
     BlockLocation[] blocks = buildBlockLocations(new String[4], 256*1024*1024);
@@ -68,6 +58,6 @@ public class TestAffinityCalculator extends ExecTest {
     }
     ImmutableRangeMap<Long,BlockLocation> map = blockMapBuilder.build();
     long tB = System.nanoTime();
-    System.out.println(String.format("Took %f ms to build range map", (tB - tA) / 1e6));
+    logger.info(String.format("Took %f ms to build range map", (tB - tA) / 1e6));
   }
 }

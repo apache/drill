@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import ch.qos.logback.classic.Level;
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
@@ -25,7 +24,6 @@ import org.apache.drill.categories.SlowTest;
 
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
-import org.apache.drill.test.LogFixture;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -38,11 +36,6 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
   @Test
   // Should spill, including recursive spill
   public void testSimpleHashJoinSpill() {
-    LogFixture.LogFixtureBuilder logBuilder = LogFixture.builder()
-      .toConsole()
-      .logger("org.apache.drill", Level.WARN);
-
-
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
       Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.INNER);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);
@@ -59,7 +52,6 @@ public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
       rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }
 
-    LogFixture logs = logBuilder.build();
     opTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))

@@ -46,6 +46,7 @@ import com.google.common.base.Preconditions;
  */
 
 public class ProfileParser {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileParser.class);
 
   /**
    * The original JSON profile.
@@ -390,11 +391,10 @@ public class ProfileParser {
       for (OperatorProfile op : ops) {
         OperatorSummary opDef = major.ops.get(op.opId);
         if (opDef == null) {
-          System.out.println("Can't find operator def: " + major.id + "-" + op.opId);
+          logger.info("Can't find operator def: {}-{}", major.id, op.opId);
           continue;
         }
         op.opName = CoreOperatorType.valueOf(op.type).name();
-//        System.out.println(major.id + "-" + id + "-" + opDef.stepId + " - Def: " + opDef.name + " / Prof: " + op.opName);
         op.opName = op.opName.replace("_", " ");
         op.name = opDef.name;
         if (op.name.equalsIgnoreCase(op.opName)) {
@@ -639,14 +639,12 @@ public class ProfileParser {
   {
     @Override
     protected void visitOp(OperatorSummary node, int indent) {
-      System.out.print(indentString(indent));
-      System.out.println(node.toString());
+      logger.info("{}{}", indentString(indent), node.toString());
     }
 
     @Override
     protected void visitSubtree(OperatorSummary node, int i, int indent) {
-      System.out.print(indentString(indent));
-      System.out.println(subtreeLabel(node, i));
+      logger.info("{}{}", indentString(indent), subtreeLabel(node, i));
     }
   }
 
@@ -668,26 +666,29 @@ public class ProfileParser {
   {
     @Override
     protected void visitOp(OperatorSummary node, int indentLevel) {
-      System.out.print(String.format("%02d-%02d ", node.majorId, node.stepId));
+      final StringBuilder nodeBuilder = new StringBuilder();
+      nodeBuilder.append(String.format("%02d-%02d ", node.majorId, node.stepId));
       String indent = indentString(indentLevel, ". ");
-      System.out.print(indent + node.name);
+      nodeBuilder.append(indent + node.name);
       if (node.opName != null) {
-        System.out.print(" (" + node.opName + ")");
+        nodeBuilder.append(" (" + node.opName + ")");
       }
-      System.out.println();
+      logger.info(nodeBuilder.toString());
+
+      final StringBuilder costBuilder = new StringBuilder();
       indent = indentString(15);
-      System.out.print(indent);
-      System.out.println(String.format("  Estimate: %,15.0f rows, %,7.0f MB",
+      costBuilder.append(indent);
+      costBuilder.append(String.format("  Estimate: %,15.0f rows, %,7.0f MB",
                          node.estRows, node.estMemoryCost / 1024 / 1024));
-      System.out.print(indent);
-      System.out.println(String.format("  Actual:   %,15d rows, %,7d MB",
+      costBuilder.append(indent);
+      costBuilder.append(String.format("  Actual:   %,15d rows, %,7d MB",
                          node.actualRows, node.actualMemory / 1024 / 1024));
+      logger.info(nodeBuilder.toString());
     }
 
     @Override
     protected void visitSubtree(OperatorSummary node, int i, int indent) {
-      System.out.print(indentString(indent) + "      ");
-      System.out.println(subtreeLabel(node, i));
+      logger.info("{}      {}", indentString(indent), subtreeLabel(node, i));
     }
   }
 
@@ -806,12 +807,10 @@ public class ProfileParser {
       singleThread = ! totals.isTree;
       singleFragment = (totals.maxFrag == 0);
       super.visit(root, 0);
-      System.out.println("Total:");
+      logger.info("Total:");
       String indent = singleThread? "  " : indentString(15);
-      System.out.print(indent);
-      System.out.println(String.format("Setup:   %,6d ms", totals.totalSetup));
-      System.out.print(indent);
-      System.out.println(String.format("Process: %,6d ms", totals.totalProcess));
+      logger.info("{}{}", indent, String.format("Setup:   %,6d ms", totals.totalSetup));
+      logger.info("{}{}", indent, String.format("Process: %,6d ms", totals.totalProcess));
     }
 
     @Override
@@ -824,38 +823,39 @@ public class ProfileParser {
     }
 
     private void printSimpleFormat(OperatorSummary node) {
+      final StringBuilder sb = new StringBuilder();
+
       if (singleFragment) {
-        System.out.print(String.format("%02d ", node.stepId));
+        sb.append(String.format("%02d ", node.stepId));
       } else {
-        System.out.print(String.format("%02d-%02d ", node.majorId, node.stepId));
+        sb.append(String.format("%02d-%02d ", node.majorId, node.stepId));
       }
-      System.out.print(node.name);
+      sb.append(node.name);
       if (node.opName != null) {
-        System.out.print(" (" + node.opName + ")");
+        sb.append(" (" + node.opName + ")");
       }
-      System.out.println();
+      logger.info(sb.toString());
       printTimes(node, "  ");
     }
 
     private void printTimes(OperatorSummary node, String indent) {
-      System.out.print(indent);
-      System.out.println(String.format("Setup:   %,6d ms - %3d%%, %3d%%", node.setupMs,
+      logger.info("{}{}", indent, String.format("Setup:   %,6d ms - %3d%%, %3d%%", node.setupMs,
                          percent(node.setupMs, totals.totalSetup),
                          percent(node.setupMs, totals.total)));
-      System.out.print(indent);
-      System.out.println(String.format("Process: %,6d ms - %3d%%, %3d%%", node.processMs,
+      logger.info("{}{}", indent, String.format("Process: %,6d ms - %3d%%, %3d%%", node.processMs,
                          percent(node.processMs, totals.totalProcess),
                          percent(node.processMs, totals.total)));
     }
 
     private void printTreeFormat(OperatorSummary node, int indentLevel) {
-      System.out.print(String.format("%02d-%02d ", node.majorId, node.stepId));
+      final StringBuilder sb = new StringBuilder();
+      sb.append(String.format("%02d-%02d ", node.majorId, node.stepId));
       String indent = indentString(indentLevel, ". ");
-      System.out.print(indent + node.name);
+      sb.append(indent + node.name);
       if (node.opName != null) {
-        System.out.print(" (" + node.opName + ")");
+        sb.append(" (" + node.opName + ")");
       }
-      System.out.println();
+      logger.info(sb.toString());
       indent = indentString(15);
       printTimes(node, indent);
     }
@@ -886,29 +886,23 @@ public class ProfileParser {
     for (int i = 0;  i <= n;  i++) {
       OperatorProfile op = opInfo.get(i);
       if (op == null) { continue; }
-      System.out.print("Op: ");
-      System.out.print(op.opId);
-      System.out.println(" " + op.name);
-      System.out.print("  Setup:   " + op.setupMs);
-      System.out.print(" - " + percent(op.setupMs, totalSetup) + "%");
-      System.out.println(", " + percent(op.setupMs, total) + "%");
-      System.out.print("  Process: " + op.processMs);
-      System.out.print(" - " + percent(op.processMs, totalProcess) + "%");
-      System.out.println(", " + percent(op.processMs, total) + "%");
+      logger.info("Op: {} {}", op.opId, op.name);
+      logger.info("Setup:   {} - {}%, {}%", op.setupMs, percent(op.setupMs, totalSetup), percent(op.setupMs, total));
+      logger.info("Process: {} - {}%, {}%", op.processMs, percent(op.processMs, totalProcess), percent(op.processMs, total));
       if (op.type == 17) {
         long value = op.getMetric(0);
-        System.out.println("  Spills: " + value);
+        logger.info("  Spills: {}", value);
       }
       if (op.waitMs > 0) {
-        System.out.println("  Wait:    " + op.waitMs);
+        logger.info("  Wait:    {}", op.waitMs);
       }
       if (op.peakMem > 0) {
-        System.out.println("  Memory: " + op.peakMem);
+        logger.info("  Memory: {}", op.peakMem);
       }
     }
-    System.out.println("Total:");
-    System.out.println("  Setup:   " + totalSetup);
-    System.out.println("  Process: " + totalProcess);
+    logger.info("Total:");
+    logger.info("  Setup:   {}", totalSetup);
+    logger.info("  Process: {}", totalProcess);
   }
 
   public static long percent(long value, long total) {

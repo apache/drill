@@ -84,7 +84,6 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
     sql = canonizeHBaseSQL(sql);
-    System.out.println("Running query:\n" + sql);
     return testSqlWithResults(sql);
   }
 

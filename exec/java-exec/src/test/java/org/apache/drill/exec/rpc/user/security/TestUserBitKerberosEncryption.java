@@ -512,8 +512,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       fail();
     } catch (Exception ex) {
       assert (ex.getCause() instanceof NonTransientRpcException);
-      System.out.println("Caught exception: " + ex.getMessage());
-      logger.info("Caught exception: " + ex.getMessage());
+      logger.error("Caught exception: ", ex);
     }
   }
 
@@ -543,8 +542,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       fail();
     } catch (Exception ex) {
       assert (ex.getCause() instanceof NonTransientRpcException);
-      System.out.println("Caught exception: " + ex.getMessage());
-      logger.info("Caught exception: " + ex.getMessage());
+      logger.error("Caught exception: ", ex);
     }
   }
 
@@ -579,8 +577,7 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
       fail();
     } catch (Exception ex) {
       assert (ex.getCause() instanceof RpcException);
-      System.out.println("Caught exception: " + ex.getMessage());
-      logger.info("Caught exception: " + ex.getMessage());
+      logger.error("Caught exception: ", ex);
     }
   }
 

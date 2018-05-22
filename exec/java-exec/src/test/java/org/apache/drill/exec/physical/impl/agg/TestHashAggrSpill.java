@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.agg;
 
-import ch.qos.logback.classic.Level;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
@@ -29,7 +28,6 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.ProfileParser;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.categories.SlowTest;
@@ -59,10 +57,6 @@ public class TestHashAggrSpill extends DrillTest {
      */
     private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel, boolean fallback ,boolean predict,
                            String sql, long expectedRows, int cycle, int fromPart, int toPart) throws Exception {
-        LogFixture.LogFixtureBuilder logBuilder = LogFixture.builder()
-          .toConsole()
-          .logger("org.apache.drill", Level.WARN);
-
         ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
           .sessionOption(ExecConstants.HASHAGG_MAX_MEMORY_KEY,maxMem)
           .sessionOption(ExecConstants.HASHAGG_NUM_PARTITIONS_KEY,numPartitions)
@@ -76,10 +70,9 @@ public class TestHashAggrSpill extends DrillTest {
         String sqlStr = sql != null ? sql :  // if null then use this default query
           "SELECT empid_s17, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1200K` GROUP BY empid_s17, dept_i, branch_i";
 
-        try (LogFixture logs = logBuilder.build();
-             ClusterFixture cluster = builder.build();
+        try (ClusterFixture cluster = builder.build();
              ClientFixture client = cluster.clientFixture()) {
-            runAndDump(client, sqlStr, expectedRows, cycle, fromPart,toPart);
+          runAndDump(client, sqlStr, expectedRows, cycle, fromPart, toPart);
         }
     }
     /**

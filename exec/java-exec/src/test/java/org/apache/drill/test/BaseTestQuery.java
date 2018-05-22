@@ -525,7 +525,6 @@ public class BaseTestQuery extends ExecTest {
       loader.clear();
       result.release();
     }
-    System.out.println("Total record count: " + rowCount);
     return rowCount;
   }
 

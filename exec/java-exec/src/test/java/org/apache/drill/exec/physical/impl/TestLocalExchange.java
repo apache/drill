@@ -195,7 +195,6 @@ public class TestLocalExchange extends PlanTestBase {
     final int numOccurrances = NUM_EMPLOYEES/NUM_DEPTS;
 
     final String plan = getPlanInString("EXPLAIN PLAN FOR " + groupByMultipleQuery, JSON_FORMAT);
-    System.out.println("Plan: " + plan);
 
     jsonExchangeOrderChecker(plan, false, 1, "hash32asdouble\\(.*, hash32asdouble\\(.*, hash32asdouble\\(.*\\) \\) \\) ");
 
@@ -270,7 +269,6 @@ public class TestLocalExchange extends PlanTestBase {
     setupHelper(isMuxOn, isDeMuxOn);
 
     String plan = getPlanInString("EXPLAIN PLAN FOR " + query, JSON_FORMAT);
-    System.out.println("Plan: " + plan);
 
     if ( isMuxOn ) {
       // # of hash exchanges should be = # of mux exchanges + # of demux exchanges

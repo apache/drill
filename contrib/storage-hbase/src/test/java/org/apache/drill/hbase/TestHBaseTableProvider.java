@@ -21,8 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Map.Entry;
-
 import com.google.common.collect.Lists;
 import org.apache.drill.categories.HbaseStorageTest;
 import org.apache.drill.common.config.LogicalPlanPersistence;
@@ -66,12 +64,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     assertTrue(hbaseStore.contains(""));
     assertFalse(hbaseStore.contains("unknown_key"));
 
-    int rowCount = 0;
-    for (Entry<String, String> entry : Lists.newArrayList(hbaseStore.getAll())) {
-      rowCount++;
-      System.out.println(entry.getKey() + "=" + entry.getValue());
-    }
-    assertEquals(7, rowCount);
+    assertEquals(7, Lists.newArrayList(hbaseStore.getAll()).size());
 
     PersistentStore<String> hbaseTestStore = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase.test").build());
     hbaseTestStore.put("", "v0");
@@ -84,12 +77,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     assertEquals("v0", hbaseStore.get(""));
     assertEquals("testValue", hbaseStore.get(".test"));
 
-    rowCount = 0;
-    for (Entry<String, String> entry : Lists.newArrayList(hbaseTestStore.getAll())) {
-      rowCount++;
-      System.out.println(entry.getKey() + "=" + entry.getValue());
-    }
-    assertEquals(6, rowCount);
+    assertEquals(6, Lists.newArrayList(hbaseTestStore.getAll()).size());
   }
 
   @AfterClass
