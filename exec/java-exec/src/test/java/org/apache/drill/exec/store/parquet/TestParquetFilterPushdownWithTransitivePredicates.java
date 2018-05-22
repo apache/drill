@@ -190,8 +190,7 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
-  @Test // TODO: CALCITE-1048
-  @Ignore // For now plan has "first.*numRowGroups=16"
+  @Test
   public void testForFilterInHaving() throws Exception {
     String query = String.format("SELECT t1.`year`, t2.`year`, t1.`period`, t3.`period` FROM %s t1 " +
         "JOIN %s t2 ON t1.`year` = t2.`year` " +
@@ -270,7 +269,5 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     final String[] expectedPlan = {"first.*numRowGroups=2", "second.*numRowGroups=1"};
     testPlanMatchingPatterns(query, expectedPlan);
   }
-
-
 }
 
