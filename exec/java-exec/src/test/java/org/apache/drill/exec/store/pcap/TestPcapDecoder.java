@@ -35,6 +35,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestPcapDecoder extends BaseTestQuery {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPcapDecoder.class);
+
   private static File bigFile;
 
   @Test
@@ -148,10 +150,10 @@ public class TestPcapDecoder extends BaseTestQuery {
       p = pd.nextPacket();
     }
     long t1 = System.nanoTime();
-    System.out.printf("\nSpeed test for per packet object%s\n", msg);
-    System.out.printf("    Read %.1f MB in %.2f s for %.1f MB/s\n", total / 1e6, (t1 - t0) / 1e9, (double) total * 1e3 / (t1 - t0));
-    System.out.printf("    %d packets, %d TCP packets, %d UDP\n", allCount, tcpCount, udpCount);
-    System.out.printf("\n\n\n");
+    logger.info("Speed test for per packet object {}", msg);
+    logger.info(String.format("    Read %.1f MB in %.2f s for %.1f MB/s\n", total / 1e6, (t1 - t0) / 1e9, (double) total * 1e3 / (t1 - t0)));
+    logger.info(String.format("    %d packets, %d TCP packets, %d UDP\n", allCount, tcpCount, udpCount));
+    logger.info("\n\n\n");
   }
 
   /**
@@ -200,10 +202,10 @@ public class TestPcapDecoder extends BaseTestQuery {
       }
     }
     long t1 = System.nanoTime();
-    System.out.printf("\nSpeed test for in-place packet decoding\n");
-    System.out.printf("    Read %.1f MB in %.2f s for %.1f MB/s\n", total / 1e6, (t1 - t0) / 1e9, (double) total * 1e3 / (t1 - t0));
-    System.out.printf("    %d packets, %d TCP packets, %d UDP\n", allCount, tcpCount, udpCount);
-    System.out.printf("\n\n\n");
+    logger.info("Speed test for in-place packet decoding");
+    logger.info(String.format("    Read %.1f MB in %.2f s for %.1f MB/s\n", total / 1e6, (t1 - t0) / 1e9, (double) total * 1e3 / (t1 - t0)));
+    logger.info(String.format("    %d packets, %d TCP packets, %d UDP\n", allCount, tcpCount, udpCount));
+    logger.info("\n\n\n");
   }
 
 
@@ -216,7 +218,7 @@ public class TestPcapDecoder extends BaseTestQuery {
     bigFile = File.createTempFile("tcp", ".pcap");
     bigFile.deleteOnExit();
     boolean first = true;
-    System.out.printf("Building large test file\n");
+    logger.info("Building large test file");
     try (DataOutputStream out = new DataOutputStream(new FileOutputStream(bigFile))) {
       for (int i = 0; i < 1000e6 / (29208 - 24) + 1; i++) {
         // might be faster to keep this open and rewind each time, but
@@ -231,7 +233,7 @@ public class TestPcapDecoder extends BaseTestQuery {
   }
 
   public static void main(String[] args) throws IOException {
-    System.out.printf("Checking speeds for various approaches\n\n");
+    logger.info("Checking speeds for various approaches");
     buildBigTcpFile();
     checkConventionalApproach();
     checkBufferedApproach();

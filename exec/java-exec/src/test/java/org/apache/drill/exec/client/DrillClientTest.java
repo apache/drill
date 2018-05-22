@@ -33,6 +33,7 @@ import static org.junit.Assert.fail;
  */
 
 public class DrillClientTest extends DrillSystemTestBase {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClientTest.class);
 
   private final DrillConfig config = DrillConfig.create();
 
@@ -128,7 +129,7 @@ public class DrillClientTest extends DrillSystemTestBase {
         (drillBitConnection, config.getString(ExecConstants.INITIAL_USER_PORT));
       fail();
     } catch (InvalidConnectionInfoException e) {
-      System.out.println(e.getMessage());
+      logger.error("Exception ", e);
     }
   }
 
@@ -142,7 +143,7 @@ public class DrillClientTest extends DrillSystemTestBase {
         (drillBitConnection, config.getString(ExecConstants.INITIAL_USER_PORT));
       fail();
     } catch (InvalidConnectionInfoException e) {
-      System.out.println(e.getMessage());
+      logger.error("Exception ", e);
     }
   }
 
@@ -156,7 +157,7 @@ public class DrillClientTest extends DrillSystemTestBase {
         (drillBitConnection, config.getString(ExecConstants.INITIAL_USER_PORT));
       fail();
     } catch (InvalidConnectionInfoException e) {
-      System.out.println(e.getMessage());
+      logger.error("Exception ", e);
     }
   }
 
@@ -170,7 +171,7 @@ public class DrillClientTest extends DrillSystemTestBase {
         (drillBitConnection, config.getString(ExecConstants.INITIAL_USER_PORT));
       fail();
     } catch (InvalidConnectionInfoException e) {
-      System.out.println(e.getMessage());
+      logger.error("Exception ", e);
     }
   }
 
@@ -237,7 +238,7 @@ public class DrillClientTest extends DrillSystemTestBase {
         (drillBitConnection, config.getString(ExecConstants.INITIAL_USER_PORT));
       fail();
     } catch (InvalidConnectionInfoException e) {
-      System.out.println(e.getMessage());
+      logger.error("Exception ", e);
     }
   }
 
@@ -251,7 +252,7 @@ public class DrillClientTest extends DrillSystemTestBase {
         (drillBitConnection, config.getString(ExecConstants.INITIAL_USER_PORT));
       fail();
     } catch (InvalidConnectionInfoException e) {
-      System.out.println(e.getMessage());
+      logger.error("Exception ", e);
     }
   }
 }

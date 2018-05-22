@@ -65,6 +65,7 @@ import com.google.common.base.Charsets;
  */
 
 public class TestResultSetLoaderTorture extends SubOperatorTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestResultSetLoaderTorture.class);
 
   private static class TestSetup {
     int n1Cycle = 5;
@@ -130,15 +131,11 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
       // Write until overflow
 
       writeRowCount = rootWriter.rowCount();
-      //System.out.println("Start count: " + writeRowCount);
       while (! rootWriter.isFull()) {
         lastRowDiscarded = false;
         writeRow();
         rowId++;
       }
-//      System.out.println("End of batch: rowId: " + rowId +
-//          ", count: " + writeRowCount +
-//          ", writer count:" + rootWriter.rowCount());
     }
 
     private void writeRow() {
@@ -166,12 +163,6 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
         writeRowCount++;
       } else {
         lastRowDiscarded = true;
-//        System.out.println("Skip row ID: " + rowId +
-//            ", count: " + writeRowCount +
-//            ", row set: " + rootWriter.rowCount());
-      }
-      if (rowId >= startPrint &&  rowId <= endPrint) {
-        System.out.println();
       }
     }
 
@@ -228,10 +219,7 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
 
     public void print(String label, Object value) {
       if (rowId >= startPrint &&  rowId <= endPrint) {
-        System.out.print(label);
-        System.out.print(" = ");
-        System.out.print(value);
-        System.out.print(" ");
+        logger.info("{} = {}", label, value);
       }
     }
 
@@ -278,7 +266,6 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
 
     public void verify() {
       while (rootReader.next()) {
-//        System.out.println(readState.rowId);
         verifyRow();
         readState.rowId++;
       }

@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -36,7 +35,6 @@ import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
@@ -82,49 +80,9 @@ public class TestLoad extends ExecTest {
 
     byteBuf.release();
 
-    // TODO: Replace this with actual validation, not just dumping to the console.
+    // TODO: Do actual validation
 
-    boolean firstColumn = true;
-    int recordCount = 0;
-    for (final VectorWrapper<?> v : batchLoader) {
-      if (firstColumn) {
-        firstColumn = false;
-      } else {
-        System.out.print("\t");
-      }
-      System.out.print(v.getField().getName());
-      System.out.print("[");
-      System.out.print(v.getField().getType().getMinorType());
-      System.out.print("]");
-    }
-
-    System.out.println();
-    for (int r = 0; r < batchLoader.getRecordCount(); r++) {
-      boolean first = true;
-      recordCount++;
-      for (final VectorWrapper<?> v : batchLoader) {
-        if (first) {
-          first = false;
-        } else {
-          System.out.print("\t");
-        }
-        final ValueVector.Accessor accessor = v.getValueVector().getAccessor();
-        if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
-          final Object obj = accessor.getObject(r);
-          if (obj != null) {
-            System.out.print(accessor.getObject(r));
-          } else {
-            System.out.print("NULL");
-          }
-        } else {
-          System.out.print(accessor.getObject(r));
-        }
-      }
-      if (!first) {
-        System.out.println();
-      }
-    }
-    assertEquals(100, recordCount);
+    assertEquals(100, batchLoader.getRecordCount());
 
     // Free the original vectors
 

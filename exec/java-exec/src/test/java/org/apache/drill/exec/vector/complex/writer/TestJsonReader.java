@@ -56,7 +56,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestJsonReader extends BaseTestQuery {
-  private static final boolean VERBOSE_DEBUG = false;
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
   @BeforeClass
   public static void setupTestFiles() {
@@ -154,27 +154,24 @@ public class TestJsonReader extends BaseTestQuery {
   }
 
   public void runTestsOnFile(String filename, UserBitShared.QueryType queryType, String[] queries, long[] rowCounts) throws Exception {
-    if (VERBOSE_DEBUG) {
-      System.out.println("===================");
-      System.out.println("source data in json");
-      System.out.println("===================");
-      System.out.println(Files.toString(DrillFileUtils.getResourceAsFile(filename), Charsets.UTF_8));
-    }
+    logger.debug("===================");
+    logger.debug("source data in json");
+    logger.debug("===================");
+    logger.debug(Files.toString(DrillFileUtils.getResourceAsFile(filename), Charsets.UTF_8));
 
     int i = 0;
     for (String query : queries) {
-      if (VERBOSE_DEBUG) {
-        System.out.println("=====");
-        System.out.println("query");
-        System.out.println("=====");
-        System.out.println(query);
-        System.out.println("======");
-        System.out.println("result");
-        System.out.println("======");
-      }
+      logger.debug("=====");
+      logger.debug("query");
+      logger.debug("=====");
+      logger.debug(query);
+      logger.debug("======");
+      logger.debug("result");
+      logger.debug("======");
       int rowCount = testRunAndPrint(queryType, query);
       assertEquals(rowCounts[i], rowCount);
-      System.out.println();
+
+      logger.debug("\n");
       i++;
     }
   }

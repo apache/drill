@@ -235,7 +235,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
       } else {
         cellString = DrillStringUtils.escapeNewLines(String.valueOf(o));
       }
-      System.out.printf(row + "th value: " + cellString + "\n");
+      logger.info("{}th value: {}", row, cellString);
     }
   }
 

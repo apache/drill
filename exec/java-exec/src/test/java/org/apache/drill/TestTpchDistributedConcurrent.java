@@ -50,6 +50,8 @@ import static org.junit.Assert.assertNull;
  */
 @Category({SlowTest.class})
 public class TestTpchDistributedConcurrent extends BaseTestQuery {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributedConcurrent.class);
+
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(360000); // Longer timeout than usual.
 
   /*
@@ -151,7 +153,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
       super.submissionFailed(uex);
 
       completionSemaphore.release();
-      System.out.println("submissionFailed for " + query + "\nwith " + uex);
+      logger.error("submissionFailed for {} \nwith:", query, uex);
       synchronized(TestTpchDistributedConcurrent.this) {
         final Object object = listeners.remove(this);
         assertNotNull("listener not found", object);
@@ -168,7 +170,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
         try {
           submissionSemaphore.acquire();
         } catch(InterruptedException e) {
-          System.out.println("QuerySubmitter quitting.");
+          logger.error("QuerySubmitter quitting.");
           return;
         }
 
@@ -197,8 +199,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
 
       // List the failed queries.
       for(final FailedQuery fq : failedQueries) {
-        System.err.println(String.format(
-            "%s failed with %s", fq.queryFile, fq.userEx));
+        logger.error(String.format("%s failed with %s", fq.queryFile, fq.userEx));
       }
     }
 
@@ -212,9 +213,9 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
         sb.append(s.toString());
         sb.append('\n');
       }
-      System.out.println("interruptedException: " + interruptedException.getMessage() +
-          " from \n" + sb.toString());
+      logger.error("Interruped Exception ", interruptedException);
     }
+
     assertNull("Query error caused interruption", interruptedException);
 
     final int nListeners = listeners.size();

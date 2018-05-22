@@ -147,7 +147,6 @@ public class TestPartitionSender extends PlanTestBase {
 
     test("ALTER SESSION SET `planner.slice_target`=1");
     String plan = getPlanInString("EXPLAIN PLAN FOR " + groupByQuery, JSON_FORMAT);
-    System.out.println("Plan: " + plan);
 
     final DrillbitContext drillbitContext = getDrillbitContext();
     final PhysicalPlanReader planReader = drillbitContext.getPlanReader();

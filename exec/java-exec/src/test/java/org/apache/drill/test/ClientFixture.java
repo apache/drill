@@ -51,6 +51,7 @@ import org.apache.drill.test.rowSet.RowSetBuilder;
  */
 
 public class ClientFixture implements AutoCloseable {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClientFixture.class);
 
   public static class ClientBuilder {
 
@@ -334,30 +335,21 @@ public class ClientFixture implements AutoCloseable {
     }
   }
 
-  private boolean trace = false;
-
-  public void enableTrace(boolean flag) {
-    this.trace = flag;
-  }
-
   public int exec(Reader in) throws IOException {
     StatementParser parser = new StatementParser(in);
     int count = 0;
     for (;;) {
       String stmt = parser.parseNext();
       if (stmt == null) {
-        if (trace) {
-          System.out.println("----");
-        }
+        logger.debug("----");
         return count;
       }
       if (stmt.isEmpty()) {
         continue;
       }
-      if (trace) {
-        System.out.println("----");
-        System.out.println(stmt);
-      }
+
+      logger.debug("----");
+      logger.debug(stmt);
       runSqlSilently(stmt);
       count++;
     }

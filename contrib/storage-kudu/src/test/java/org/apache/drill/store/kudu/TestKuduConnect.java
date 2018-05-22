@@ -35,7 +35,6 @@ import org.apache.kudu.client.KuduSession;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.ListTablesResponse;
 import org.apache.kudu.client.PartialRow;
-import org.apache.kudu.client.RowResult;
 import org.apache.kudu.client.RowResultIterator;
 import org.apache.kudu.client.SessionConfiguration;
 import org.junit.experimental.categories.Category;
@@ -99,8 +98,7 @@ public class TestKuduConnect {
       while (scanner.hasMoreRows()) {
         RowResultIterator results = scanner.nextRows();
         while (results.hasNext()) {
-          RowResult result = results.next();
-          System.out.println(result.toStringLongFormat());
+          logger.debug(results.next().toString());
         }
       }
     }

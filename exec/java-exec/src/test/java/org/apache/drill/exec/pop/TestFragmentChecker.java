@@ -24,7 +24,6 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -50,8 +49,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
 
   }
 
-  private void print(String fragmentFile, int bitCount, int expectedFragmentCount) throws Exception{
-    System.out.println(String.format("=================Building plan fragments for [%s].  Allowing %d total Drillbits.==================", fragmentFile, bitCount));
+  private void print(String fragmentFile, int bitCount, int expectedFragmentCount) throws Exception {
     PhysicalPlanReader ppr = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
     SimpleParallelizer par = new SimpleParallelizer(1000*1000, 5, 10, 1.2);
@@ -70,14 +68,6 @@ public class TestFragmentChecker extends PopUnitTestBase{
         UserSession.Builder.newBuilder().withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build()).build(),
         queryContextInfo);
     qwu.applyPlan(ppr);
-    System.out.println(String.format("=========ROOT FRAGMENT [%d:%d] =========", qwu.getRootFragment().getHandle().getMajorFragmentId(), qwu.getRootFragment().getHandle().getMinorFragmentId()));
-
-    System.out.print(qwu.getRootFragment().getFragmentJson());
-
-    for(PlanFragment f : qwu.getFragments()) {
-      System.out.println(String.format("=========Fragment [%d:%d]=====", f.getHandle().getMajorFragmentId(), f.getHandle().getMinorFragmentId()));
-      System.out.print(f.getFragmentJson());
-    }
 
     assertEquals(expectedFragmentCount,
         qwu.getFragments().size() + 1 /* root fragment is not part of the getFragments() list*/);
@@ -86,7 +76,5 @@ public class TestFragmentChecker extends PopUnitTestBase{
   @Test
   public void validateSingleExchangeFragment() throws Exception{
     print("/physical_single_exchange.json", 1, 2);
-
   }
-
 }

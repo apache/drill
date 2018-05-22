@@ -36,7 +36,6 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.categories.SlowTest;
 import org.junit.Rule;
 import org.junit.Test;
@@ -134,8 +133,6 @@ public class TestSimpleExternalSort extends DrillTest {
       loader.clear();
       b.release();
     }
-
-    System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
   }
 
   @Test
@@ -211,7 +208,6 @@ public class TestSimpleExternalSort extends DrillTest {
         loader.clear();
         b.release();
       }
-      System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
     }
   }
 }

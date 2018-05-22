@@ -24,6 +24,8 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type.Repetition;
 
 public class ParquetSchemaMerge {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetSchemaMerge.class);
+
   public static void main(String[] args) {
     MessageType message1;
     MessageType message2;
@@ -42,6 +44,6 @@ public class ParquetSchemaMerge {
 
     StringBuilder builder = new StringBuilder();
     message3.writeToStringBuilder(builder, "");
-    System.out.println(builder);
+    logger.info(builder.toString());
   }
 }

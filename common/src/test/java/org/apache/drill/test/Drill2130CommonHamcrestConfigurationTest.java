@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 public class Drill2130CommonHamcrestConfigurationTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drill2130CommonHamcrestConfigurationTest.class);
 
   @SuppressWarnings("unused")
   private org.hamcrest.MatcherAssert forCompileTimeCheckForNewEnoughHamcrest;
@@ -38,8 +39,7 @@ public class Drill2130CommonHamcrestConfigurationTest {
              + "  Got NoSuchMethodError;  e: " + e );
     }
     catch ( AssertionError e ) {
-      System.out.println( "Class path seems fine re new JUnit vs. old Hamcrest."
-                          + " (Got AssertionError, not NoSuchMethodError.)" );
+      logger.info("Class path seems fine re new JUnit vs. old Hamcrest. (Got AssertionError, not NoSuchMethodError.)");
     }
   }
 

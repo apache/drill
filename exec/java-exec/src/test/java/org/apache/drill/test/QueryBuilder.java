@@ -511,8 +511,8 @@ public class QueryBuilder {
   public long print() throws Exception {
     DrillConfig config = client.cluster().config( );
 
-    boolean verbose = ! config.getBoolean(QueryTestUtil.TEST_QUERY_PRINTING_SILENT) ||
-                      DrillTest.verbose();
+    boolean verbose = !config.getBoolean(QueryTestUtil.TEST_QUERY_PRINTING_SILENT);
+
     if (verbose) {
       return print(Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
     } else {
