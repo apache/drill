@@ -56,7 +56,7 @@ public class PriorityQueueCopierWrapper extends BaseSortWrapper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierWrapper.class);
 
   private static final GeneratorMapping COPIER_MAPPING = new GeneratorMapping("doSetup", "doCopy", null, null);
-  private static final MappingSet COPIER_MAPPING_SET = new MappingSet(COPIER_MAPPING, COPIER_MAPPING);
+  private final MappingSet COPIER_MAPPING_SET = new MappingSet(COPIER_MAPPING, COPIER_MAPPING);
 
   /**
    * A single PriorityQueueCopier instance is used for 2 purposes:
