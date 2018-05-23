@@ -67,6 +67,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 
 /**
  * <p>
@@ -134,6 +135,8 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   private final AccountingUserConnection accountingUserConnection;
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
+
+  private RuntimeFilterWritable runtimeFilterWritable;
 
   /**
    * Create a FragmentContext instance for non-root fragment.
@@ -344,6 +347,16 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     return getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
   }
 
+  @Override
+  public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
+    this.runtimeFilterWritable = runtimeFilter;
+  }
+
+  @Override
+  public RuntimeFilterWritable getRuntimeFilter() {
+    return runtimeFilterWritable;
+  }
+
   /**
    * Get this fragment's allocator.
    * @return the allocator
@@ -457,7 +470,9 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     for (OperatorContextImpl opContext : contexts) {
       suppressingClose(opContext);
     }
-
+    if (runtimeFilterWritable != null) {
+      suppressingClose(runtimeFilterWritable);
+    }
     suppressingClose(bufferManager);
     suppressingClose(allocator);
   }

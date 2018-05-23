@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
+import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.Acks;
@@ -32,6 +33,7 @@ import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
 import java.io.IOException;
@@ -52,8 +54,23 @@ class DataServerRequestHandler implements RequestHandler<DataServerConnection> {
   @Override
   public void handle(DataServerConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody,
                      ResponseSender sender) throws RpcException {
-    assert rpcType == BitData.RpcType.REQ_RECORD_BATCH_VALUE;
+    switch (rpcType) {
+      case RpcType.REQ_RUNTIME_FILTER_VALUE : {
+        handleRuntimeFilterRequest(pBody, dBody, sender);
+        break;
+      }
 
+      case RpcType.REQ_RECORD_BATCH_VALUE : {
+        handleRecordBatchRequest(pBody, dBody, sender);
+        break;
+      }
+
+      default:
+        throw new RpcException("Not yet supported.");
+    }
+  }
+
+  private void handleRecordBatchRequest(ByteBuf pBody, ByteBuf dBody, ResponseSender sender) throws RpcException {
     final FragmentRecordBatch fragmentBatch = RpcBus.get(pBody, FragmentRecordBatch.PARSER);
     final AckSender ack = new AckSender(sender);
 
@@ -72,15 +89,36 @@ class DataServerRequestHandler implements RequestHandler<DataServerConnection> {
 
     } catch (IOException | FragmentSetupException e) {
       logger.error("Failure while getting fragment manager. {}",
-          QueryIdHelper.getQueryIdentifiers(fragmentBatch.getQueryId(),
-              fragmentBatch.getReceivingMajorFragmentId(),
-              fragmentBatch.getReceivingMinorFragmentIdList()), e);
+        QueryIdHelper.getQueryIdentifiers(fragmentBatch.getQueryId(),
+          fragmentBatch.getReceivingMajorFragmentId(),
+          fragmentBatch.getReceivingMinorFragmentIdList()), e);
       ack.clear();
       sender.send(new Response(BitData.RpcType.ACK, Acks.FAIL));
     } finally {
 
       // decrement the extra reference we grabbed at the top.
       ack.sendOk();
+    }
+  }
+
+  private void handleRuntimeFilterRequest(ByteBuf pBody, ByteBuf dBody, ResponseSender sender) throws RpcException {
+    BitData.RuntimeFilterBDef runtimeFilterBDef = RpcBus.get(pBody, BitData.RuntimeFilterBDef.PARSER);
+    if (dBody == null) {
+      return;
+    }
+    RuntimeFilterWritable runtimeFilterWritable = new RuntimeFilterWritable(runtimeFilterBDef, (DrillBuf) dBody);
+    AckSender ackSender = new AckSender(sender);
+    ackSender.increment();
+    try {
+      // hand to WorkerBee to solve the received RuntimeFilter, the receiver maybe Foreman or a scan node.
+      bee.receiveRuntimeFilter(runtimeFilterWritable);
+    } catch (Exception e) {
+      logger.error("error to solve received runtime filter, {}",
+        QueryIdHelper.getQueryId(runtimeFilterBDef.getQueryId()), e);
+      ackSender.clear();
+      sender.send(new Response(BitData.RpcType.ACK, Acks.FAIL));
+    } finally {
+      ackSender.sendOk();
     }
   }
 
@@ -112,4 +150,5 @@ class DataServerRequestHandler implements RequestHandler<DataServerConnection> {
         .setMinorFragmentId(batch.getReceivingMinorFragmentId(index))
         .build();
   }
+
 }

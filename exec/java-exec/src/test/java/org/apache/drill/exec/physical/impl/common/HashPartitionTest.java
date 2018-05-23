@@ -238,7 +238,7 @@ public class HashPartitionTest {
       try (OperatorFixture operatorFixture = new OperatorFixture.Builder(HashPartitionTest.this.dirTestWatcher).build()) {
 
         final FragmentContext context = operatorFixture.getFragmentContext();
-        final HashJoinPOP pop = new HashJoinPOP(null, null, null, JoinRelType.FULL);
+        final HashJoinPOP pop = new HashJoinPOP(null, null, null, JoinRelType.FULL, null);
         final OperatorContext operatorContext = operatorFixture.operatorContext(pop);
         final DrillConfig config = context.getConfig();
         final BufferAllocator allocator = operatorFixture.allocator();

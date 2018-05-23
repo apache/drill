@@ -44,15 +44,16 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionList;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.work.QueryWorkUnit;
-import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
-import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.work.QueryWorkUnit;
+import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
+
 
 /**
  * The simple parallelizer determines the level of parallelization of a plan based on the cost of the underlying
@@ -169,7 +170,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
     for (Wrapper wrapper : leafFragments) {
       parallelizeFragment(wrapper, planningSet, activeEndpoints);
     }
-
+    planningSet.findRootWrapper(rootFragment);
     return planningSet;
   }
 
@@ -264,7 +265,6 @@ public class SimpleParallelizer implements ParallelizationParameters {
 
     MinorFragmentDefn rootFragmentDefn = null;
     FragmentRoot rootOperator = null;
-
     // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
     // assigned before we can materialize, so we start a new loop here rather than utilizing the previous one.
     for (Wrapper wrapper : planningSet) {
@@ -319,8 +319,8 @@ public class SimpleParallelizer implements ParallelizationParameters {
         }
       }
     }
-
-    return new QueryWorkUnit(rootOperator, rootFragmentDefn, fragmentDefns);
+    Wrapper rootWrapper = planningSet.getRootWrapper();
+    return new QueryWorkUnit(rootOperator, rootFragmentDefn, fragmentDefns, rootWrapper);
   }
 
   /**

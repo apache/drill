@@ -58,6 +58,14 @@ public final class BitData {
      * </pre>
      */
     SASL_MESSAGE(4, 4),
+    /**
+     * <code>REQ_RUNTIME_FILTER = 5;</code>
+     *
+     * <pre>
+     * send runtime filter data from HashJoin to Foreman, from Foreman to Scan nodes.
+     * </pre>
+     */
+    REQ_RUNTIME_FILTER(5, 5),
     ;
 
     /**
@@ -88,6 +96,14 @@ public final class BitData {
      * </pre>
      */
     public static final int SASL_MESSAGE_VALUE = 4;
+    /**
+     * <code>REQ_RUNTIME_FILTER = 5;</code>
+     *
+     * <pre>
+     * send runtime filter data from HashJoin to Foreman, from Foreman to Scan nodes.
+     * </pre>
+     */
+    public static final int REQ_RUNTIME_FILTER_VALUE = 5;
 
 
     public final int getNumber() { return value; }
@@ -99,6 +115,7 @@ public final class BitData {
         case 2: return GOODBYE;
         case 3: return REQ_RECORD_BATCH;
         case 4: return SASL_MESSAGE;
+        case 5: return REQ_RUNTIME_FILTER;
         default: return null;
       }
     }
@@ -2397,6 +2414,1198 @@ public final class BitData {
     // @@protoc_insertion_point(class_scope:exec.bit.data.FragmentRecordBatch)
   }
 
+  public interface RuntimeFilterBDefOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.shared.QueryId query_id = 1;
+    /**
+     * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     */
+    boolean hasQueryId();
+    /**
+     * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId();
+    /**
+     * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder();
+
+    // optional int32 major_fragment_id = 2;
+    /**
+     * <code>optional int32 major_fragment_id = 2;</code>
+     */
+    boolean hasMajorFragmentId();
+    /**
+     * <code>optional int32 major_fragment_id = 2;</code>
+     */
+    int getMajorFragmentId();
+
+    // optional int32 minor_fragment_id = 3;
+    /**
+     * <code>optional int32 minor_fragment_id = 3;</code>
+     */
+    boolean hasMinorFragmentId();
+    /**
+     * <code>optional int32 minor_fragment_id = 3;</code>
+     */
+    int getMinorFragmentId();
+
+    // optional bool to_foreman = 4;
+    /**
+     * <code>optional bool to_foreman = 4;</code>
+     *
+     * <pre>
+     * true means sending to foreman,false means sending to scan nodes
+     * </pre>
+     */
+    boolean hasToForeman();
+    /**
+     * <code>optional bool to_foreman = 4;</code>
+     *
+     * <pre>
+     * true means sending to foreman,false means sending to scan nodes
+     * </pre>
+     */
+    boolean getToForeman();
+
+    // repeated int32 bloom_filter_size_in_bytes = 5;
+    /**
+     * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+     */
+    java.util.List<java.lang.Integer> getBloomFilterSizeInBytesList();
+    /**
+     * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+     */
+    int getBloomFilterSizeInBytesCount();
+    /**
+     * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+     */
+    int getBloomFilterSizeInBytes(int index);
+
+    // repeated string probe_fields = 6;
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    java.util.List<java.lang.String>
+    getProbeFieldsList();
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    int getProbeFieldsCount();
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    java.lang.String getProbeFields(int index);
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getProbeFieldsBytes(int index);
+  }
+  /**
+   * Protobuf type {@code exec.bit.data.RuntimeFilterBDef}
+   */
+  public static final class RuntimeFilterBDef extends
+      com.google.protobuf.GeneratedMessage
+      implements RuntimeFilterBDefOrBuilder {
+    // Use RuntimeFilterBDef.newBuilder() to construct.
+    private RuntimeFilterBDef(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private RuntimeFilterBDef(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final RuntimeFilterBDef defaultInstance;
+    public static RuntimeFilterBDef getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public RuntimeFilterBDef getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private RuntimeFilterBDef(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = queryId_.toBuilder();
+              }
+              queryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(queryId_);
+                queryId_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              majorFragmentId_ = input.readInt32();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              minorFragmentId_ = input.readInt32();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              toForeman_ = input.readBool();
+              break;
+            }
+            case 40: {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                bloomFilterSizeInBytes_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              bloomFilterSizeInBytes_.add(input.readInt32());
+              break;
+            }
+            case 42: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
+                bloomFilterSizeInBytes_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                bloomFilterSizeInBytes_.add(input.readInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 50: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                probeFields_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              probeFields_.add(input.readBytes());
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          bloomFilterSizeInBytes_ = java.util.Collections.unmodifiableList(bloomFilterSizeInBytes_);
+        }
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          probeFields_ = new com.google.protobuf.UnmodifiableLazyStringList(probeFields_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_RuntimeFilterBDef_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_RuntimeFilterBDef_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.class, org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<RuntimeFilterBDef> PARSER =
+        new com.google.protobuf.AbstractParser<RuntimeFilterBDef>() {
+      public RuntimeFilterBDef parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RuntimeFilterBDef(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RuntimeFilterBDef> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.shared.QueryId query_id = 1;
+    public static final int QUERY_ID_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
+    /**
+     * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     */
+    public boolean hasQueryId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
+      return queryId_;
+    }
+    /**
+     * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
+      return queryId_;
+    }
+
+    // optional int32 major_fragment_id = 2;
+    public static final int MAJOR_FRAGMENT_ID_FIELD_NUMBER = 2;
+    private int majorFragmentId_;
+    /**
+     * <code>optional int32 major_fragment_id = 2;</code>
+     */
+    public boolean hasMajorFragmentId() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int32 major_fragment_id = 2;</code>
+     */
+    public int getMajorFragmentId() {
+      return majorFragmentId_;
+    }
+
+    // optional int32 minor_fragment_id = 3;
+    public static final int MINOR_FRAGMENT_ID_FIELD_NUMBER = 3;
+    private int minorFragmentId_;
+    /**
+     * <code>optional int32 minor_fragment_id = 3;</code>
+     */
+    public boolean hasMinorFragmentId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int32 minor_fragment_id = 3;</code>
+     */
+    public int getMinorFragmentId() {
+      return minorFragmentId_;
+    }
+
+    // optional bool to_foreman = 4;
+    public static final int TO_FOREMAN_FIELD_NUMBER = 4;
+    private boolean toForeman_;
+    /**
+     * <code>optional bool to_foreman = 4;</code>
+     *
+     * <pre>
+     * true means sending to foreman,false means sending to scan nodes
+     * </pre>
+     */
+    public boolean hasToForeman() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional bool to_foreman = 4;</code>
+     *
+     * <pre>
+     * true means sending to foreman,false means sending to scan nodes
+     * </pre>
+     */
+    public boolean getToForeman() {
+      return toForeman_;
+    }
+
+    // repeated int32 bloom_filter_size_in_bytes = 5;
+    public static final int BLOOM_FILTER_SIZE_IN_BYTES_FIELD_NUMBER = 5;
+    private java.util.List<java.lang.Integer> bloomFilterSizeInBytes_;
+    /**
+     * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getBloomFilterSizeInBytesList() {
+      return bloomFilterSizeInBytes_;
+    }
+    /**
+     * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+     */
+    public int getBloomFilterSizeInBytesCount() {
+      return bloomFilterSizeInBytes_.size();
+    }
+    /**
+     * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+     */
+    public int getBloomFilterSizeInBytes(int index) {
+      return bloomFilterSizeInBytes_.get(index);
+    }
+
+    // repeated string probe_fields = 6;
+    public static final int PROBE_FIELDS_FIELD_NUMBER = 6;
+    private com.google.protobuf.LazyStringList probeFields_;
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getProbeFieldsList() {
+      return probeFields_;
+    }
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    public int getProbeFieldsCount() {
+      return probeFields_.size();
+    }
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    public java.lang.String getProbeFields(int index) {
+      return probeFields_.get(index);
+    }
+    /**
+     * <code>repeated string probe_fields = 6;</code>
+     *
+     * <pre>
+     * probe fields with corresponding BloomFilters
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getProbeFieldsBytes(int index) {
+      return probeFields_.getByteString(index);
+    }
+
+    private void initFields() {
+      queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      majorFragmentId_ = 0;
+      minorFragmentId_ = 0;
+      toForeman_ = false;
+      bloomFilterSizeInBytes_ = java.util.Collections.emptyList();
+      probeFields_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, queryId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, majorFragmentId_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(3, minorFragmentId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBool(4, toForeman_);
+      }
+      for (int i = 0; i < bloomFilterSizeInBytes_.size(); i++) {
+        output.writeInt32(5, bloomFilterSizeInBytes_.get(i));
+      }
+      for (int i = 0; i < probeFields_.size(); i++) {
+        output.writeBytes(6, probeFields_.getByteString(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, queryId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, majorFragmentId_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, minorFragmentId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(4, toForeman_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < bloomFilterSizeInBytes_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeInt32SizeNoTag(bloomFilterSizeInBytes_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getBloomFilterSizeInBytesList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < probeFields_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(probeFields_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getProbeFieldsList().size();
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.BitData.RuntimeFilterBDef prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.bit.data.RuntimeFilterBDef}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitData.RuntimeFilterBDefOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_RuntimeFilterBDef_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_RuntimeFilterBDef_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.class, org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getQueryIdFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (queryIdBuilder_ == null) {
+          queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+        } else {
+          queryIdBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        majorFragmentId_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        minorFragmentId_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        toForeman_ = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        bloomFilterSizeInBytes_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        probeFields_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_RuntimeFilterBDef_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.BitData.RuntimeFilterBDef getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.BitData.RuntimeFilterBDef build() {
+        org.apache.drill.exec.proto.BitData.RuntimeFilterBDef result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.BitData.RuntimeFilterBDef buildPartial() {
+        org.apache.drill.exec.proto.BitData.RuntimeFilterBDef result = new org.apache.drill.exec.proto.BitData.RuntimeFilterBDef(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (queryIdBuilder_ == null) {
+          result.queryId_ = queryId_;
+        } else {
+          result.queryId_ = queryIdBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.majorFragmentId_ = majorFragmentId_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.minorFragmentId_ = minorFragmentId_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.toForeman_ = toForeman_;
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          bloomFilterSizeInBytes_ = java.util.Collections.unmodifiableList(bloomFilterSizeInBytes_);
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.bloomFilterSizeInBytes_ = bloomFilterSizeInBytes_;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          probeFields_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              probeFields_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.probeFields_ = probeFields_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.BitData.RuntimeFilterBDef) {
+          return mergeFrom((org.apache.drill.exec.proto.BitData.RuntimeFilterBDef)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.BitData.RuntimeFilterBDef other) {
+        if (other == org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.getDefaultInstance()) return this;
+        if (other.hasQueryId()) {
+          mergeQueryId(other.getQueryId());
+        }
+        if (other.hasMajorFragmentId()) {
+          setMajorFragmentId(other.getMajorFragmentId());
+        }
+        if (other.hasMinorFragmentId()) {
+          setMinorFragmentId(other.getMinorFragmentId());
+        }
+        if (other.hasToForeman()) {
+          setToForeman(other.getToForeman());
+        }
+        if (!other.bloomFilterSizeInBytes_.isEmpty()) {
+          if (bloomFilterSizeInBytes_.isEmpty()) {
+            bloomFilterSizeInBytes_ = other.bloomFilterSizeInBytes_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureBloomFilterSizeInBytesIsMutable();
+            bloomFilterSizeInBytes_.addAll(other.bloomFilterSizeInBytes_);
+          }
+          onChanged();
+        }
+        if (!other.probeFields_.isEmpty()) {
+          if (probeFields_.isEmpty()) {
+            probeFields_ = other.probeFields_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureProbeFieldsIsMutable();
+            probeFields_.addAll(other.probeFields_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.BitData.RuntimeFilterBDef parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.BitData.RuntimeFilterBDef) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.shared.QueryId query_id = 1;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public boolean hasQueryId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
+        if (queryIdBuilder_ == null) {
+          return queryId_;
+        } else {
+          return queryIdBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public Builder setQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
+        if (queryIdBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          queryId_ = value;
+          onChanged();
+        } else {
+          queryIdBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public Builder setQueryId(
+          org.apache.drill.exec.proto.UserBitShared.QueryId.Builder builderForValue) {
+        if (queryIdBuilder_ == null) {
+          queryId_ = builderForValue.build();
+          onChanged();
+        } else {
+          queryIdBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
+        if (queryIdBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
+            queryId_ =
+              org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(queryId_).mergeFrom(value).buildPartial();
+          } else {
+            queryId_ = value;
+          }
+          onChanged();
+        } else {
+          queryIdBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public Builder clearQueryId() {
+        if (queryIdBuilder_ == null) {
+          queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+          onChanged();
+        } else {
+          queryIdBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryId.Builder getQueryIdBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getQueryIdFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
+        if (queryIdBuilder_ != null) {
+          return queryIdBuilder_.getMessageOrBuilder();
+        } else {
+          return queryId_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
+          getQueryIdFieldBuilder() {
+        if (queryIdBuilder_ == null) {
+          queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>(
+                  queryId_,
+                  getParentForChildren(),
+                  isClean());
+          queryId_ = null;
+        }
+        return queryIdBuilder_;
+      }
+
+      // optional int32 major_fragment_id = 2;
+      private int majorFragmentId_ ;
+      /**
+       * <code>optional int32 major_fragment_id = 2;</code>
+       */
+      public boolean hasMajorFragmentId() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int32 major_fragment_id = 2;</code>
+       */
+      public int getMajorFragmentId() {
+        return majorFragmentId_;
+      }
+      /**
+       * <code>optional int32 major_fragment_id = 2;</code>
+       */
+      public Builder setMajorFragmentId(int value) {
+        bitField0_ |= 0x00000002;
+        majorFragmentId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 major_fragment_id = 2;</code>
+       */
+      public Builder clearMajorFragmentId() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        majorFragmentId_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 minor_fragment_id = 3;
+      private int minorFragmentId_ ;
+      /**
+       * <code>optional int32 minor_fragment_id = 3;</code>
+       */
+      public boolean hasMinorFragmentId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int32 minor_fragment_id = 3;</code>
+       */
+      public int getMinorFragmentId() {
+        return minorFragmentId_;
+      }
+      /**
+       * <code>optional int32 minor_fragment_id = 3;</code>
+       */
+      public Builder setMinorFragmentId(int value) {
+        bitField0_ |= 0x00000004;
+        minorFragmentId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 minor_fragment_id = 3;</code>
+       */
+      public Builder clearMinorFragmentId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        minorFragmentId_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional bool to_foreman = 4;
+      private boolean toForeman_ ;
+      /**
+       * <code>optional bool to_foreman = 4;</code>
+       *
+       * <pre>
+       * true means sending to foreman,false means sending to scan nodes
+       * </pre>
+       */
+      public boolean hasToForeman() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bool to_foreman = 4;</code>
+       *
+       * <pre>
+       * true means sending to foreman,false means sending to scan nodes
+       * </pre>
+       */
+      public boolean getToForeman() {
+        return toForeman_;
+      }
+      /**
+       * <code>optional bool to_foreman = 4;</code>
+       *
+       * <pre>
+       * true means sending to foreman,false means sending to scan nodes
+       * </pre>
+       */
+      public Builder setToForeman(boolean value) {
+        bitField0_ |= 0x00000008;
+        toForeman_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool to_foreman = 4;</code>
+       *
+       * <pre>
+       * true means sending to foreman,false means sending to scan nodes
+       * </pre>
+       */
+      public Builder clearToForeman() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        toForeman_ = false;
+        onChanged();
+        return this;
+      }
+
+      // repeated int32 bloom_filter_size_in_bytes = 5;
+      private java.util.List<java.lang.Integer> bloomFilterSizeInBytes_ = java.util.Collections.emptyList();
+      private void ensureBloomFilterSizeInBytesIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          bloomFilterSizeInBytes_ = new java.util.ArrayList<java.lang.Integer>(bloomFilterSizeInBytes_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+      /**
+       * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getBloomFilterSizeInBytesList() {
+        return java.util.Collections.unmodifiableList(bloomFilterSizeInBytes_);
+      }
+      /**
+       * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+       */
+      public int getBloomFilterSizeInBytesCount() {
+        return bloomFilterSizeInBytes_.size();
+      }
+      /**
+       * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+       */
+      public int getBloomFilterSizeInBytes(int index) {
+        return bloomFilterSizeInBytes_.get(index);
+      }
+      /**
+       * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+       */
+      public Builder setBloomFilterSizeInBytes(
+          int index, int value) {
+        ensureBloomFilterSizeInBytesIsMutable();
+        bloomFilterSizeInBytes_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+       */
+      public Builder addBloomFilterSizeInBytes(int value) {
+        ensureBloomFilterSizeInBytesIsMutable();
+        bloomFilterSizeInBytes_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+       */
+      public Builder addAllBloomFilterSizeInBytes(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureBloomFilterSizeInBytesIsMutable();
+        super.addAll(values, bloomFilterSizeInBytes_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
+       */
+      public Builder clearBloomFilterSizeInBytes() {
+        bloomFilterSizeInBytes_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+
+      // repeated string probe_fields = 6;
+      private com.google.protobuf.LazyStringList probeFields_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureProbeFieldsIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          probeFields_ = new com.google.protobuf.LazyStringArrayList(probeFields_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public java.util.List<java.lang.String>
+          getProbeFieldsList() {
+        return java.util.Collections.unmodifiableList(probeFields_);
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public int getProbeFieldsCount() {
+        return probeFields_.size();
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public java.lang.String getProbeFields(int index) {
+        return probeFields_.get(index);
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getProbeFieldsBytes(int index) {
+        return probeFields_.getByteString(index);
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public Builder setProbeFields(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureProbeFieldsIsMutable();
+        probeFields_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public Builder addProbeFields(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureProbeFieldsIsMutable();
+        probeFields_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public Builder addAllProbeFields(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureProbeFieldsIsMutable();
+        super.addAll(values, probeFields_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public Builder clearProbeFields() {
+        probeFields_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string probe_fields = 6;</code>
+       *
+       * <pre>
+       * probe fields with corresponding BloomFilters
+       * </pre>
+       */
+      public Builder addProbeFieldsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureProbeFieldsIsMutable();
+        probeFields_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.bit.data.RuntimeFilterBDef)
+    }
+
+    static {
+      defaultInstance = new RuntimeFilterBDef(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.bit.data.RuntimeFilterBDef)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_data_BitClientHandshake_descriptor;
   private static
@@ -2412,6 +3621,11 @@ public final class BitData {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_data_FragmentRecordBatch_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_bit_data_RuntimeFilterBDef_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_bit_data_RuntimeFilterBDef_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -2434,10 +3648,16 @@ public final class BitData {
       " \003(\005\022!\n\031sending_major_fragment_id\030\004 \001(\005\022" +
       "!\n\031sending_minor_fragment_id\030\005 \001(\005\022(\n\003de" +
       "f\030\006 \001(\0132\033.exec.shared.RecordBatchDef\022\023\n\013" +
-      "isLastBatch\030\007 \001(\010*V\n\007RpcType\022\r\n\tHANDSHAK" +
-      "E\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_" +
-      "BATCH\020\003\022\020\n\014SASL_MESSAGE\020\004B(\n\033org.apache." +
-      "drill.exec.protoB\007BitDataH\001"
+      "isLastBatch\030\007 \001(\010\"\277\001\n\021RuntimeFilterBDef\022" +
+      "&\n\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022" +
+      "\031\n\021major_fragment_id\030\002 \001(\005\022\031\n\021minor_frag" +
+      "ment_id\030\003 \001(\005\022\022\n\nto_foreman\030\004 \001(\010\022\"\n\032blo" +
+      "om_filter_size_in_bytes\030\005 \003(\005\022\024\n\014probe_f" +
+      "ields\030\006 \003(\t*n\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n" +
+      "\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BATCH\020",
+      "\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FILTE" +
+      "R\020\005B(\n\033org.apache.drill.exec.protoB\007BitD" +
+      "ataH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2462,6 +3682,12 @@ public final class BitData {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_data_FragmentRecordBatch_descriptor,
               new java.lang.String[] { "QueryId", "ReceivingMajorFragmentId", "ReceivingMinorFragmentId", "SendingMajorFragmentId", "SendingMinorFragmentId", "Def", "IsLastBatch", });
+          internal_static_exec_bit_data_RuntimeFilterBDef_descriptor =
+            getDescriptor().getMessageTypes().get(3);
+          internal_static_exec_bit_data_RuntimeFilterBDef_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_data_RuntimeFilterBDef_descriptor,
+              new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", "ToForeman", "BloomFilterSizeInBytes", "ProbeFields", });
           return null;
         }
       };

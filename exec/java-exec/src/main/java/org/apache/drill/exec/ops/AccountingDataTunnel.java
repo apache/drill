@@ -23,6 +23,8 @@ import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
+
 
 /**
  * Wrapper around a {@link org.apache.drill.exec.rpc.data.DataTunnel} that tracks the status of batches sent to
@@ -42,6 +44,11 @@ public class AccountingDataTunnel {
   public void sendRecordBatch(FragmentWritableBatch batch) {
     sendingAccountor.increment();
     tunnel.sendRecordBatch(statusHandler, batch);
+  }
+
+  public void sendRuntimeFilter(RuntimeFilterWritable batch) {
+    sendingAccountor.increment();
+    tunnel.sendRuntimeFilter(statusHandler, batch);
   }
 
   /**

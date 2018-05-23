@@ -66,6 +66,7 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.test.ClusterFixtureBuilder.RuntimeOption;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.HyperRowSetImpl;
@@ -311,6 +312,16 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
         context.close();
       }
       bufferManager.close();
+    }
+
+    @Override
+    public RuntimeFilterWritable getRuntimeFilter() {
+      return null;
+    }
+
+    @Override
+    public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
+
     }
 
     @Override

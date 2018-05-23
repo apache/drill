@@ -156,6 +156,22 @@ public class TypeValidators {
     }
   }
 
+  public static class IntegerValidator extends LongValidator {
+    public IntegerValidator(String name) {
+      super(name);
+    }
+
+    @Override
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
+      if (v.num_val > Integer.MAX_VALUE || v.num_val < Integer.MIN_VALUE) {
+        throw UserException.validationError()
+          .message(String.format("Option %s does not have a valid integer value", getOptionName()))
+          .build(logger);
+      }
+    }
+  }
+
   public static class RangeLongValidator extends LongValidator {
     private final long min;
     private final long max;

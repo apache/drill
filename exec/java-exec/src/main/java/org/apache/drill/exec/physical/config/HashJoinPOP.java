@@ -18,7 +18,8 @@
 package org.apache.drill.exec.physical.config;
 
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
@@ -32,26 +33,44 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
+import org.apache.drill.exec.work.filter.RuntimeFilterDef;
+
 
 @JsonTypeName("hash-join")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class HashJoinPOP extends AbstractJoinPop {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashJoinPOP.class);
 
+  private RuntimeFilterDef runtimeFilterDef;
+
   @JsonCreator
   public HashJoinPOP(@JsonProperty("left") PhysicalOperator left, @JsonProperty("right") PhysicalOperator right,
-                       @JsonProperty("conditions") List<JoinCondition> conditions,
-                       @JsonProperty("joinType") JoinRelType joinType) {
-        super(left, right, joinType, null, conditions);
-        Preconditions.checkArgument(joinType != null, "Join type is missing for HashJoin Pop");
+                     @JsonProperty("conditions") List<JoinCondition> conditions,
+                     @JsonProperty("joinType") JoinRelType joinType,
+                     @JsonProperty("runtimeFilterDef") RuntimeFilterDef runtimeFilterDef) {
+    super(left, right, joinType, null, conditions);
+    Preconditions.checkArgument(joinType != null, "Join type is missing for HashJoin Pop");
+    this.runtimeFilterDef = runtimeFilterDef;
   }
+
+  @VisibleForTesting
+  public HashJoinPOP(PhysicalOperator left, PhysicalOperator right,
+                     List<JoinCondition> conditions,
+                     JoinRelType joinType) {
+    super(left, right, joinType, null, conditions);
+    Preconditions.checkArgument(joinType != null, "Join type is missing for HashJoin Pop");
+  }
+
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
         Preconditions.checkArgument(children.size() == 2);
-        HashJoinPOP newHashJoin = new HashJoinPOP(children.get(0), children.get(1), conditions, joinType);
+
+        HashJoinPOP newHashJoin = new HashJoinPOP(children.get(0), children.get(1), conditions, joinType, runtimeFilterDef);
         newHashJoin.setMaxAllocation(getMaxAllocation());
         return newHashJoin;
   }
+
 
   public HashJoinPOP flipIfRight() {
       if (joinType == JoinRelType.RIGHT) {
@@ -59,8 +78,8 @@ public class HashJoinPOP extends AbstractJoinPop {
             for (JoinCondition c : conditions) {
                 flippedConditions.add(c.flip());
             }
-            return new HashJoinPOP(right, left, flippedConditions, JoinRelType.LEFT);
-      } else {
+            return new HashJoinPOP(right, left, flippedConditions, JoinRelType.LEFT, runtimeFilterDef);
+        } else {
             return this;
       }
   }
@@ -89,5 +108,14 @@ public class HashJoinPOP extends AbstractJoinPop {
     // In case forced to use a single partition - do not consider this a buffered op (when memory is divided)
     return queryContext == null ||
       1 < (int) queryContext.getOptions().getOption(ExecConstants.HASHJOIN_NUM_PARTITIONS_VALIDATOR);
+  }
+
+  public void setRuntimeFilterDef(RuntimeFilterDef runtimeFilterDef) {
+    this.runtimeFilterDef = runtimeFilterDef;
+  }
+
+
+  public RuntimeFilterDef getRuntimeFilterDef() {
+    return runtimeFilterDef;
   }
 }

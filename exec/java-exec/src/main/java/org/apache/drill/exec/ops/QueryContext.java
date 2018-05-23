@@ -248,6 +248,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
   }
 
+  public boolean isRuntimeFilterEnabled() {
+    return this.getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER_KEY).bool_val;
+  }
+
   public DrillOperatorTable getDrillOperatorTable() {
     return table;
   }

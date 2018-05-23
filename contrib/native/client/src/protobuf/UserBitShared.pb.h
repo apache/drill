@@ -259,11 +259,12 @@ enum CoreOperatorType {
   IMAGE_SUB_SCAN = 52,
   SEQUENCE_SUB_SCAN = 53,
   PARTITION_LIMIT = 54,
-  PCAPNG_SUB_SCAN = 55
+  PCAPNG_SUB_SCAN = 55,
+   RUNTIME_FILTER = 56
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = PCAPNG_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = RUNTIME_FILTER;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();

@@ -97,6 +97,7 @@ import org.apache.drill.exec.planner.physical.visitor.LateralUnnestRowIDVisitor;
 import org.apache.drill.exec.planner.physical.visitor.MemoryEstimationVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.RewriteProjectToFlatten;
+import org.apache.drill.exec.planner.physical.visitor.RuntimeFilterVisitor;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.SplitUpComplexExpressions;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
@@ -593,15 +594,24 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      */
     phyRelNode = InsertLocalExchangeVisitor.insertLocalExchanges(phyRelNode, queryOptions);
 
+    /*
+     * 8.)
+     * Insert RuntimeFilter over Scan nodes
+     */
+    if (context.isRuntimeFilterEnabled()) {
+      phyRelNode = RuntimeFilterVisitor.addRuntimeFilter(phyRelNode, context);
+    }
 
-    /* 8.)
+
+    /* 9.)
      * Next, we add any required selection vector removers given the supported encodings of each
      * operator. This will ultimately move to a new trait but we're managing here for now to avoid
      * introducing new issues in planning before the next release
      */
     phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
 
-    /* 9.)
+
+    /* 10.)
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */
@@ -623,7 +633,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     propsBuilder.options(new JSONOptions(context.getOptions().getOptionList()));
     propsBuilder.resultMode(ResultMode.EXEC);
     propsBuilder.generator(this.getClass().getSimpleName(), "");
-    return new PhysicalPlan(propsBuilder.build(), getPops(op));
+    PhysicalPlan plan =  new PhysicalPlan(propsBuilder.build(), getPops(op));
+    return plan;
+
   }
 
   public static List<PhysicalOperator> getPops(PhysicalOperator root) {

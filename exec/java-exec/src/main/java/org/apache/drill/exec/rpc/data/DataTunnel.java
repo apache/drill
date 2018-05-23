@@ -19,9 +19,7 @@ package org.apache.drill.exec.rpc.data;
 
 import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
-
 import java.util.concurrent.Semaphore;
-
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
@@ -30,6 +28,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 
 
 public class DataTunnel {
@@ -72,7 +71,7 @@ public class DataTunnel {
     try {
       if (isInjectionControlSet) {
         // Wait for interruption if set. Used to simulate the fragment interruption while the fragment is waiting for
-        // semaphore acquire. We expect the
+        // semaphore acquire.
         testInjector.injectInterruptiblePause(testControls, "data-tunnel-send-batch-wait-for-interrupt", testLogger);
       }
 
@@ -86,6 +85,26 @@ public class DataTunnel {
 
       outcomeListener.interrupted(e);
 
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  public void sendRuntimeFilter(RpcOutcomeListener<Ack> outcomeListener, RuntimeFilterWritable runtimeFilter) {
+    SendRuntimeFilterAsyncListen cmd = new SendRuntimeFilterAsyncListen(outcomeListener, runtimeFilter);
+    try{
+      if (isInjectionControlSet) {
+        // Wait for interruption if set. Used to simulate the fragment interruption while the fragment is waiting for
+        // semaphore acquire.
+        testInjector.injectInterruptiblePause(testControls, "data-tunnel-send-runtime_filter-wait-for-interrupt", testLogger);
+      }
+
+      manager.runCommand(cmd);
+    } catch(final InterruptedException e){
+      // Release the buffers first before informing the listener about the interrupt.
+      runtimeFilter.close();
+      outcomeListener.interrupted(e);
       // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
       // interruption and respond to it if it wants to.
       Thread.currentThread().interrupt();
@@ -153,6 +172,36 @@ public class DataTunnel {
       for (ByteBuf buffer : batch.getBuffers()) {
         buffer.release();
       }
+      super.connectionFailed(type, t);
+    }
+  }
+
+  private class SendRuntimeFilterAsyncListen extends ListeningCommand<Ack, DataClientConnection, RpcType, MessageLite> {
+    final RuntimeFilterWritable runtimeFilter;
+
+    public SendRuntimeFilterAsyncListen(RpcOutcomeListener<Ack> listener, RuntimeFilterWritable runtimeFilter) {
+      super(listener);
+      this.runtimeFilter = runtimeFilter;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, DataClientConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_RUNTIME_FILTER, runtimeFilter.getRuntimeFilterBDef(), Ack.class, runtimeFilter.getData());
+    }
+
+    @Override
+    public RpcType getRpcType() {
+      return RpcType.REQ_RUNTIME_FILTER;
+    }
+
+    @Override
+    public MessageLite getMessage() {
+      return runtimeFilter.getRuntimeFilterBDef();
+    }
+
+    @Override
+    public void connectionFailed(FailureType type, Throwable t) {
+      runtimeFilter.close();
       super.connectionFailed(type, t);
     }
   }

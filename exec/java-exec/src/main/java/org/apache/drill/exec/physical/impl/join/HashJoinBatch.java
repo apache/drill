@@ -29,7 +29,10 @@ import com.google.common.collect.Sets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.ErrorCollector;
+import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.JoinCondition;
@@ -43,8 +46,11 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.fn.impl.ValueVectorHashHelper;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -63,11 +69,17 @@ import org.apache.drill.exec.record.JoinBatchMemoryManager;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchSizer;
+import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.drill.exec.work.filter.BloomFilter;
+import org.apache.drill.exec.work.filter.BloomFilterDef;
+import org.apache.drill.exec.work.filter.RuntimeFilterDef;
+import org.apache.drill.exec.work.filter.RuntimeFilterReporter;
+
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
@@ -172,6 +184,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   private int originalPartition = -1; // the partition a secondary reads from
   IntVector read_right_HV_vector; // HV vector that was read from the spilled batch
   private int maxBatchesInMemory;
+  private List<BloomFilter> bloomFilters = new ArrayList<>();
+  private List<String> probeFields = new ArrayList<>(); // keep the same sequence with the bloomFilters
+  private boolean enableRuntimeFilter;
+  private RuntimeFilterReporter runtimeFilterReporter;
+  private ValueVectorHashHelper.Hash64 hash64;
 
   /**
    * This holds information about the spilled partitions for the build and probe side.
@@ -603,6 +620,50 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     // Create the chained hash table
     baseHashTable =
       new ChainedHashTable(htConfig, context, allocator, buildBatch, probeBatch, null);
+    if (enableRuntimeFilter) {
+      setupHash64(htConfig);
+    }
+  }
+
+  private void setupHash64(HashTableConfig htConfig) throws SchemaChangeException {
+    LogicalExpression[] keyExprsBuild = new LogicalExpression[htConfig.getKeyExprsBuild().size()];
+    ErrorCollector collector = new ErrorCollectorImpl();
+    int i = 0;
+    for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), buildBatch, collector, context.getFunctionRegistry());
+      if (collector.hasErrors()) {
+        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      }
+      if (expr == null) {
+        continue;
+      }
+      keyExprsBuild[i] = expr;
+      i++;
+    }
+    i = 0;
+    boolean missingField = false;
+    TypedFieldId[] buildSideTypeFieldIds = new TypedFieldId[keyExprsBuild.length];
+    for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
+      SchemaPath schemaPath = (SchemaPath) ne.getExpr();
+      TypedFieldId typedFieldId = buildBatch.getValueVectorId(schemaPath);
+      if (typedFieldId == null) {
+        missingField = true;
+        break;
+      }
+      buildSideTypeFieldIds[i] = typedFieldId;
+      i++;
+    }
+    if (missingField) {
+      logger.info("As some build side key fields not found, runtime filter was disabled");
+      enableRuntimeFilter = false;
+      return;
+    }
+    ValueVectorHashHelper hashHelper = new ValueVectorHashHelper(buildBatch, context);
+    try {
+      hash64 = hashHelper.getHash64(keyExprsBuild, buildSideTypeFieldIds);
+    } catch (Exception e) {
+      throw new SchemaChangeException("Failed to construct a field's hash64 dynamic codes", e);
+    }
   }
 
   /**
@@ -635,6 +696,29 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
     spilledInners = new HJSpilledPartition[numPartitions];
 
+  }
+
+  private void initializeRuntimeFilter() {
+    if (!enableRuntimeFilter) {
+      return;
+    }
+    if (runtimeFilterReporter != null) {
+      return;
+    }
+    runtimeFilterReporter = new RuntimeFilterReporter((ExecutorFragmentContext) context);
+    RuntimeFilterDef runtimeFilterDef = popConfig.getRuntimeFilterDef();
+    //RuntimeFilter is not a necessary part of a HashJoin operator, only the query which satisfy the
+    //RuntimeFilterManager's judgement will have the RuntimeFilterDef.
+    if (runtimeFilterDef != null) {
+      List<BloomFilterDef> bloomFilterDefs = runtimeFilterDef.getBloomFilterDefs();
+      for (BloomFilterDef bloomFilterDef : bloomFilterDefs) {
+        int numBytes = bloomFilterDef.getNumBytes();
+        String probeField =  bloomFilterDef.getProbeField();
+        probeFields.add(probeField);
+        BloomFilter bloomFilter = new BloomFilter(numBytes, context.getAllocator());
+        bloomFilters.add(bloomFilter);
+      }
+    }
   }
 
   /**
@@ -774,6 +858,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
     initializeBuild();
 
+    initializeRuntimeFilter();
+
     // Make the calculator aware of our partitions
     final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet = new HashJoinMemoryCalculator.PartitionStatSet(partitions);
     buildCalc.setPartitionStatSet(partitionStatSet);
@@ -806,6 +892,18 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         if ( cycleNum > 0 ) {
           read_right_HV_vector = (IntVector) buildBatch.getContainer().getLast();
         }
+        //create runtime filter
+        if (cycleNum == 0 && enableRuntimeFilter) {
+          //create runtime filter and send out async
+          int condFieldIndex = 0;
+          for (BloomFilter bloomFilter : bloomFilters) {
+            for (int ind = 0; ind < currentRecordCount; ind++) {
+              long hashCode = hash64.hash64Code(ind, 0, condFieldIndex);
+              bloomFilter.insert(hashCode);
+            }
+            condFieldIndex++;
+          }
+        }
 
         // For every record in the build batch, hash the key columns and keep the result
         for (int ind = 0; ind < currentRecordCount; ind++) {
@@ -825,6 +923,12 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       }
       // Get the next incoming record batch
       rightUpstream = next(HashJoinHelper.RIGHT_INPUT, buildBatch);
+    }
+
+    if (cycleNum == 0 && enableRuntimeFilter) {
+      if (bloomFilters.size() > 0) {
+        runtimeFilterReporter.sendOut(bloomFilters, probeFields, this.popConfig.getRuntimeFilterDef().isSendToForeman());
+      }
     }
 
     // Move the remaining current batches into their temp lists, or spill
@@ -971,9 +1075,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     joinType = popConfig.getJoinType();
     conditions = popConfig.getConditions();
     this.popConfig = popConfig;
-
     rightExpr = new ArrayList<>(conditions.size());
     buildJoinColumns = Sets.newHashSet();
+    List<SchemaPath> rightConditionPaths = new ArrayList<>();
+    for (int i = 0; i < conditions.size(); i++) {
+      final SchemaPath rightPath = (SchemaPath) conditions.get(i).getRight();
+      rightConditionPaths.add(rightPath);
+    }
 
     for (int i = 0; i < conditions.size(); i++) {
       final SchemaPath rightPath = (SchemaPath) conditions.get(i).getRight();
@@ -1015,8 +1123,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     logger.debug("BATCH_STATS, configured output batch size: {}, allocated memory {}, avail mem factor {}, output batch size: {}",
       configuredBatchSize, allocator.getLimit(), avail_mem_factor, outputBatchSize);
 
+
     batchMemoryManager = new JoinBatchMemoryManager(outputBatchSize, left, right, new HashSet<>());
     logger.debug("BATCH_STATS, configured output batch size: {}", configuredBatchSize);
+    enableRuntimeFilter = context.getOptions().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER);
   }
 
   /**

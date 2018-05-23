@@ -21,100 +21,82 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SlowTest;
-
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
+import org.apache.drill.exec.work.filter.BloomFilter;
+import org.apache.drill.exec.work.filter.BloomFilterDef;
+import org.apache.drill.exec.work.filter.RuntimeFilterDef;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Category({SlowTest.class, OperatorTest.class})
-public class TestHashJoinSpill extends PhysicalOpUnitTestBase {
+public class TestHashJoinJPPD extends PhysicalOpUnitTestBase {
 
   @SuppressWarnings("unchecked")
   @Test
-  // Should spill, including recursive spill
-  public void testSimpleHashJoinSpill() {
+  public void testBroadcastHashJoin1Cond() {
+    List<BloomFilterDef> bloomFilterDefs = new ArrayList<>();
+    int numBytes = BloomFilter.optimalNumOfBytes(2600, 0.01);
+    BloomFilterDef bloomFilterDef = new BloomFilterDef(numBytes, true, "lft");
+    bloomFilterDefs.add(bloomFilterDef);
+    RuntimeFilterDef runtimeFilterDef = new RuntimeFilterDef(true, false, bloomFilterDefs, false );
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.INNER, null);
+      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.INNER, runtimeFilterDef);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_rows_in_batch", 64);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.max_batches_in_memory", 8);
+    operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.enable.runtime_filter", true);
     // Put some duplicate values
     List<String> leftTable = Lists.newArrayList("[{\"lft\": 0, \"a\" : \"a string\"}]",
       "[{\"lft\": 0, \"a\" : \"a different string\"},{\"lft\": 0, \"a\" : \"yet another\"}]");
     List<String> rightTable = Lists.newArrayList("[{\"rgt\": 0, \"b\" : \"a string\"}]",
       "[{\"rgt\": 0, \"b\" : \"a different string\"},{\"rgt\": 0, \"b\" : \"yet another\"}]");
-    int numRows = 2_500;
+    int numRows = 2500;
     for ( int cnt = 1; cnt <= numRows; cnt++ ) {
       leftTable.add("[{\"lft\": " + cnt + ", \"a\" : \"a string\"}]");
-      rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }
-
     opTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")
-      .expectedTotalRows( numRows + 9 )
+      .expectedTotalRows(  9 )
       .go();
   }
 
   @SuppressWarnings("unchecked")
   @Test
-  public void testRightOuterHashJoinSpill() {
+  public void testBroadcastHashJoin2Cond() {
+    List<BloomFilterDef> bloomFilterDefs = new ArrayList<>();
+    int numBytes = BloomFilter.optimalNumOfBytes(2600, 0.01);
+    BloomFilterDef bloomFilterDef = new BloomFilterDef(numBytes, true, "lft");
+    BloomFilterDef bloomFilterDef1 = new BloomFilterDef(numBytes, true, "a");
+    bloomFilterDefs.add(bloomFilterDef);
+    bloomFilterDefs.add(bloomFilterDef1);
+    RuntimeFilterDef runtimeFilterDef = new RuntimeFilterDef(true, false, bloomFilterDefs, false );
     HashJoinPOP joinConf = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.RIGHT, null);
+      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt"), joinCond("a", "EQUALS", "b")), JoinRelType.INNER, runtimeFilterDef);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 4);
-    operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_rows_in_batch", 64);
+    operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_rows_in_batch", 128);
     operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.max_batches_in_memory", 8);
+    operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.enable.runtime_filter", true);
     // Put some duplicate values
     List<String> leftTable = Lists.newArrayList("[{\"lft\": 0, \"a\" : \"a string\"}]",
       "[{\"lft\": 0, \"a\" : \"a different string\"},{\"lft\": 0, \"a\" : \"yet another\"}]");
     List<String> rightTable = Lists.newArrayList("[{\"rgt\": 0, \"b\" : \"a string\"}]",
       "[{\"rgt\": 0, \"b\" : \"a different string\"},{\"rgt\": 0, \"b\" : \"yet another\"}]");
-    int numRows = 8_000;
-    for ( int cnt = 1; cnt <= numRows; cnt++ ) {
-      // leftTable.add("[{\"lft\": " + cnt + ", \"a\" : \"a string\"}]");
-      rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
-    }
-
-    opTestBuilder()
-      .physicalOperator(joinConf)
-      .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
-      .baselineColumns("lft", "a", "b", "rgt")
-      .expectedTotalRows( numRows + 9 )
-      .go();
-  }
-
-  @SuppressWarnings("unchecked")
-  @Test
-  public void testLeftOuterHashJoinSpill() {
-    HashJoinPOP joinConf = new HashJoinPOP(null, null,
-      Lists.newArrayList(joinCond("lft", "EQUALS", "rgt")), JoinRelType.LEFT, null);
-    operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_partitions", 8);
-    operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.num_rows_in_batch", 64);
-    operatorFixture.getOptionManager().setLocalOption("exec.hashjoin.max_batches_in_memory", 12);
-    // Put some duplicate values
-    List<String> leftTable = Lists.newArrayList("[{\"lft\": 0, \"a\" : \"a string\"}]",
-      "[{\"lft\": 0, \"a\" : \"a different string\"},{\"lft\": 0, \"a\" : \"yet another\"}]");
-    List<String> rightTable = Lists.newArrayList("[{\"rgt\": 0, \"b\" : \"a string\"}]",
-      "[{\"rgt\": 0, \"b\" : \"a different string\"},{\"rgt\": 0, \"b\" : \"yet another\"}]");
-    int numRows = 4_000; // 100_000
-    for (int cnt = 1; cnt <= numRows / 2; cnt++) { // inner use only half, to check the left-outer join
-      // leftTable.add("[{\"lft\": " + cnt + ", \"a\" : \"a string\"}]");
-      rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
-    }
+    int numRows = 2500;
     for ( int cnt = 1; cnt <= numRows; cnt++ ) {
       leftTable.add("[{\"lft\": " + cnt + ", \"a\" : \"a string\"}]");
-      // rightTable.add("[{\"rgt\": " + cnt + ", \"b\" : \"a string\"}]");
     }
-
     opTestBuilder()
       .physicalOperator(joinConf)
       .inputDataStreamsJson(Lists.newArrayList(leftTable,rightTable))
       .baselineColumns("lft", "a", "b", "rgt")
-      .expectedTotalRows( numRows + 9 )
+      .expectedTotalRows(  3 )
       .go();
   }
+
 }

@@ -32,7 +32,7 @@ import org.apache.drill.common.Version;
  * Give access to Drill version as captured during the build
  *
  * <strong>Caution</strong> don't rely on major, minor and patch versions only to compare two 
- * Drill versions. Instead you should use the whole string, and apply the same semver algorithm 
+ * Drill versions. Instead you should use the whole string, and apply the same semver algorithm
  * as Maven (see {@code org.apache.maven.artifact.versioning.ComparableVersion}).
  *
  */
