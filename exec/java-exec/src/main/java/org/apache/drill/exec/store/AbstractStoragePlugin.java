@@ -29,13 +29,20 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.drill.exec.server.DrillbitContext;
 
 /** Abstract class for StorePlugin implementations.
  * See StoragePlugin for description of the interface intent and its methods.
  */
 public abstract class AbstractStoragePlugin implements StoragePlugin {
 
-  protected AbstractStoragePlugin() { }
+  private final DrillbitContext context;
+  private final String name;
+
+  protected AbstractStoragePlugin(DrillbitContext inContext, String inName) {
+    this.context = inContext;
+    this.name = inName;
+  }
 
   @Override
   public boolean supportsRead() {
@@ -49,7 +56,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   /**
    * @deprecated Marking for deprecation in next major version release. Use
-   *             {@link #getPhysicalOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
+   *             {@link #getOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
    */
   @Override
   @Deprecated
@@ -59,7 +66,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   /**
    * @deprecated Marking for deprecation in next major version release. Use
-   *             {@link #getPhysicalOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
+   *             {@link #getOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
    */
   @Deprecated
   public Set<? extends RelOptRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext) {
@@ -68,7 +75,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   /**
    * @deprecated Marking for deprecation in next major version release. Use
-   *             {@link #getPhysicalOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
+   *             {@link #getOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}
    */
   @Deprecated
   public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
@@ -110,4 +117,12 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   @Override
   public void close() throws Exception { }
+
+  public DrillbitContext getContext() {
+    return context;
+  }
+
+  public String getName() {
+    return name;
+  }
 }

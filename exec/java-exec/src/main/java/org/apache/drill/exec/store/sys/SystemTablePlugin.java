@@ -32,7 +32,6 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.pojo.PojoDataType;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -45,25 +44,17 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
 
   public static final String SYS_SCHEMA_NAME = "sys";
 
-  private final DrillbitContext context;
-  private final String name;
   private final SystemTablePluginConfig config;
   private final SystemSchema schema = new SystemSchema();
 
   public SystemTablePlugin(SystemTablePluginConfig config, DrillbitContext context, String name) {
+    super(context, name);
     this.config = config;
-    this.context = context;
-    this.name = name;
   }
 
   @Override
   public StoragePluginConfig getConfig() {
     return config;
-  }
-
-  @JsonIgnore
-  public DrillbitContext getContext() {
-    return this.context;
   }
 
   @Override
@@ -73,7 +64,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
 
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) {
-    SystemTable table = selection.getWith(context.getLpPersistence(), SystemTable.class);
+    SystemTable table = selection.getWith(getContext().getLpPersistence(), SystemTable.class);
     return new SystemTableScan(table, this);
   }
 
@@ -102,7 +93,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
     public DrillTable getTable(String name) {
       for (SystemTable table : SystemTable.values()) {
         if (table.getTableName().equalsIgnoreCase(name)) {
-          return new StaticDrillTable(SystemTablePlugin.this.name, SystemTablePlugin.this, TableType.SYSTEM_TABLE,
+          return new StaticDrillTable(getName(), SystemTablePlugin.this, TableType.SYSTEM_TABLE,
             table, new PojoDataType(table.getPojoClass()));
         }
       }
