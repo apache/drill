@@ -73,23 +73,23 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinBatch.class);
 
-  public final MappingSet setupMapping =
+  private final MappingSet setupMapping =
     new MappingSet("null", "null",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doSetup", null, null));
-  public final MappingSet copyLeftMapping =
+  private final MappingSet copyLeftMapping =
     new MappingSet("leftIndex", "outIndex",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCopyLeft", null, null));
-  public final MappingSet copyRightMappping =
+  private final MappingSet copyRightMappping =
     new MappingSet("rightIndex", "outIndex",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCopyRight", null, null));
-  public final MappingSet compareMapping =
+  private final MappingSet compareMapping =
     new MappingSet("leftIndex", "rightIndex",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCompare", null, null));
-  public final MappingSet compareRightMapping =
+  private final MappingSet compareRightMapping =
     new MappingSet("rightIndex", "null",
       GM("doSetup", "doSetup", null, null),
       GM("doSetup", "doCompare", null, null));

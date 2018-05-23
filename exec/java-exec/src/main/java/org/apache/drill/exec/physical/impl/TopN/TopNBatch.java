@@ -72,9 +72,9 @@ import com.sun.codemodel.JExpr;
 public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
 
-  public final MappingSet mainMapping = createMainMappingSet();
-  public final MappingSet leftMapping = createLeftMappingSet();
-  public final MappingSet rightMapping = createRightMappingSet();
+  private final MappingSet mainMapping = createMainMappingSet();
+  private final MappingSet leftMapping = createLeftMappingSet();
+  private final MappingSet rightMapping = createRightMappingSet();
 
   private final int batchPurgeThreshold;
   private final boolean codegenDump;

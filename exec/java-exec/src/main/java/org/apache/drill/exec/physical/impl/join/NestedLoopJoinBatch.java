@@ -111,17 +111,17 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
 
 
   // Mapping set for the right side
-  private static final MappingSet emitRightMapping =
+  private final MappingSet emitRightMapping =
       new MappingSet("rightCompositeIndex" /* read index */, "outIndex" /* write index */, "rightContainer" /* read container */,
           "outgoing" /* write container */, EMIT_RIGHT_CONSTANT, EMIT_RIGHT);
 
   // Mapping set for the left side
-  private static final MappingSet emitLeftMapping = new MappingSet("leftIndex" /* read index */, "outIndex" /* write index */,
+  private final MappingSet emitLeftMapping = new MappingSet("leftIndex" /* read index */, "outIndex" /* write index */,
       "leftBatch" /* read container */,
       "outgoing" /* write container */,
       EMIT_LEFT_CONSTANT, EMIT_LEFT);
 
-  private static final MappingSet SETUP_LEFT_MAPPING = new MappingSet("leftIndex" /* read index */, "outIndex" /* write index */,
+  private final MappingSet SETUP_LEFT_MAPPING = new MappingSet("leftIndex" /* read index */, "outIndex" /* write index */,
       "leftBatch" /* read container */,
       "outgoing" /* write container */,
       ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);

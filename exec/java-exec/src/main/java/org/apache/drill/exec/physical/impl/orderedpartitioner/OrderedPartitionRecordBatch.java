@@ -101,11 +101,11 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       .mode(SerializationMode.DRILL_SERIALIZIABLE) //
       .build();
 
-  public final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP,
+  private final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP,
       ClassGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet incomingMapping = new MappingSet("inIndex", null, "incoming", null,
+  private final MappingSet incomingMapping = new MappingSet("inIndex", null, "incoming", null,
       ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet partitionMapping = new MappingSet("partitionIndex", null, "partitionVectors", null,
+  private final MappingSet partitionMapping = new MappingSet("partitionIndex", null, "partitionVectors", null,
       ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
 
   private final int recordsToSample; // How many records must be received before analyzing
