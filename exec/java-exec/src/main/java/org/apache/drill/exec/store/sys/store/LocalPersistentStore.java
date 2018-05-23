@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.drill.common.AutoCloseables.Closeable;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.common.config.DrillConfig;
@@ -68,15 +70,18 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   //Provides a threshold above which we report an event's time
   private static final long RESPONSE_TIME_THRESHOLD_MSEC = 2000L;
-  private static final String ARCHIVE_LOCATION = "archived";
 
   private static final int DRILL_SYS_FILE_EXT_SIZE = DRILL_SYS_FILE_SUFFIX.length();
   private final Path basePath;
   private final PersistentStoreConfig<V> config;
   private final DrillFileSystem fs;
   private int version = -1;
-  private Function<String, Entry<String, V>> transformer;
+  private final Lock /*ReadWriteLock*/ lock = new ReentrantLock(true); //new ReentrantReadWriteLock();
+  private final AutoCloseableLock profileStoreLock = new AutoCloseableLock(lock/*.writeLock()*/);
+  private Function<String, Entry<String, V>> stringTransformer;
+  private Function<FileStatus, Entry<String, V>> fileStatusTransformer;
 
+  private LocalPersistentStoreArchiver archiver;
   private ProfileSet profilesSet;
   private PathFilter sysFileSuffixFilter;
 //  private String mostRecentProfile;
@@ -87,15 +92,9 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private Stopwatch transformWatch;
 
   private boolean enableArchiving;
-  private Path archivePath;
-  private ProfileSet pendingArchivalSet;
-  private int archivalThreshold;
-  private int archivalRate;
   private Iterable<Entry<String, V>> iterableProfileSet;
-  private Stopwatch archiveWatch;
 
   public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config, DrillConfig drillConfig) {
-    super();
     this.basePath = new Path(base, config.getName());
     this.config = config;
     this.fs = fs;
@@ -107,21 +106,21 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     //this.mostRecentProfile = null;
 
     //Initializing for archiving
-    this.enableArchiving = drillConfig.getBoolean(ExecConstants.PROFILES_STORE_ARCHIVE_ENABLED); //(maxStoreCapacity > 0); //Implicitly infer
+    this.enableArchiving = drillConfig.getBoolean(ExecConstants.PROFILES_STORE_ARCHIVE_ENABLED);
     if (enableArchiving == true ) {
-      this.archivalThreshold = drillConfig.getInt(ExecConstants.PROFILES_STORE_CAPACITY);
-      this.archivalRate = drillConfig.getInt(ExecConstants.PROFILES_STORE_ARCHIVE_RATE);
-      this.pendingArchivalSet = new ProfileSet(archivalRate);
-      this.archivePath = new Path(basePath, ARCHIVE_LOCATION);
+      try {
+        this.archiver = new LocalPersistentStoreArchiver(fs, basePath, drillConfig);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     // Timing
     this.listAndBuildWatch = Stopwatch.createUnstarted();
     this.transformWatch = Stopwatch.createUnstarted();
-    this.archiveWatch = Stopwatch.createUnstarted();
 
-    // One time transformer function instantiation
-    this.transformer = new Function<String, Entry<String, V>>() {
+    // Transformer function to extract profile based on query ID String
+    this.stringTransformer = new Function<String, Entry<String, V>>() {
       @Nullable
       @Override
       public Entry<String, V> apply(String key) {
@@ -129,21 +128,21 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       }
     };
 
+    // Transformer function to extract profile based on FileStatus
+    this.fileStatusTransformer = new Function<FileStatus, Entry<String, V>>() {
+      @Nullable
+      @Override
+      public Entry<String, V> apply(FileStatus fStatus) {
+        Path fPath = fStatus.getPath();
+        String sanSuffixName = fPath.getName().substring(0, fPath.getName().length() - DRILL_SYS_FILE_EXT_SIZE);
+        return new ImmutableEntry<>(sanSuffixName, get(fStatus));
+      }
+    };
+
     //Base Dir
     try {
       if (!mkdirs(basePath)) {
         version++;
-      }
-      //Creating Archive if required
-      if (enableArchiving) {
-        try {
-          if (!fs.exists(archivePath)) {
-            mkdirs(archivePath);
-          }
-        } catch (IOException e) {
-          logger.warn("Disabling profile archiving due to failure in creating profile archive {} : {}", archivePath, e);
-          this.enableArchiving = false;
-        }
       }
     } catch (IOException e) {
       throw new RuntimeException("Failure setting pstore configuration path.");
@@ -189,6 +188,47 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
+    try (Closeable lock = profileStoreLock.open()) {
+      try {
+        //Recursively look for files (can't apply filename filters, or else sub-directories get excluded)
+        List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, true);
+        if (fileStatuses.isEmpty()) {
+          return Collections.emptyIterator();
+        }
+
+        List<FileStatus> files = Lists.newArrayList();
+        for (FileStatus fileStatus : fileStatuses) {
+          if (fileStatus.getPath().getName().endsWith(DRILL_SYS_FILE_SUFFIX)) {
+            files.add(fileStatus);
+          }
+        }
+
+        Collections.sort(files, new Comparator<FileStatus>() {
+          @Override
+          public int compare(FileStatus fs1, FileStatus fs2) {
+            return fs1.getPath().getName().compareTo(fs2.getPath().getName());
+          }
+        });
+
+        return Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), fileStatusTransformer).iterator();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  /**
+   * Get range of potentially cached profiles (primary usecase is for the WebServer)
+   * @param skip
+   * @param take
+   * @return iterator of profiles
+   */
+  @Override
+  public Iterator<Map.Entry<String, V>> getRange(int skip, int take, boolean useCache) {
+    if (!useCache) {
+      return getRange(skip, take);
+    }
+
     //Marking currently seen modification time
     long currBasePathModified = 0L;
     try {
@@ -197,116 +237,82 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       logger.error("Failed to get FileStatus for {}", basePath, e);
       throw new RuntimeException(e);
     }
-
-    //No need to acquire lock since incoming requests are synchronized
-    try {
-      long expectedFileCount = fs.getFileStatus(basePath).getLen();
-      logger.debug("Current ModTime: {} (Last known ModTime: {})", currBasePathModified, basePathLastModified);
-      logger.debug("Expected {} files (Last known {} files)", expectedFileCount, lastKnownFileCount);
-
-      //Force-read list of profiles based on change of any of the 3 states
-      if (this.basePathLastModified < currBasePathModified  //Has ModificationTime changed?
-          || this.lastKnownFileCount != expectedFileCount   //Has Profile Count changed?
-          || (skip + take) > maxSetCapacity ) {             //Does requestSize exceed current cached size
-
-        if (maxSetCapacity < (skip + take)) {
-          logger.debug("Updating last Max Capacity from {} to {}", maxSetCapacity , (skip + take) );
-          maxSetCapacity = skip + take;
-        }
-        //Mark Start Time
-        listAndBuildWatch.reset().start();
-
-        //Listing ALL DrillSysFiles
-        //Can apply MostRecentProfile name as filter. Unfortunately, Hadoop (2.7.1) currently doesn't leverage this to speed up
-        List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false,
-            sysFileSuffixFilter /*TODO: Use MostRecentProfile */
-            );
-        //Checking if empty
-        if (fileStatuses.isEmpty()) {
-          return Collections.emptyIterator();
-        }
-
-        //Force a reload of the profile.
-        //Note: We shouldn't need to do this if the load is incremental (i.e. using mostRecentProfile)
-        profilesSet.clear(maxSetCapacity);
-        int numProfilesInStore = 0;
-
-        if (enableArchiving) {
-          pendingArchivalSet.clear();
-        }
-
-        //Constructing TreeMap from List
-        for (FileStatus stat : fileStatuses) {
-          String profileName = stat.getPath().getName();
-          //Strip extension and store only query ID
-          String oldestProfile = profilesSet.add(profileName.substring(0, profileName.length() - DRILL_SYS_FILE_EXT_SIZE));
-          if (enableArchiving && oldestProfile != null) {
-            pendingArchivalSet.add(oldestProfile, true);
-          }
-          numProfilesInStore++;
-        }
-
-        //Archive older profiles
-        if (enableArchiving) {
-          archiveProfiles(numProfilesInStore);
-        }
-
-        //Report Lag
-        if (listAndBuildWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
-          logger.warn("Took {} ms to list & map {} profiles (out of {} profiles in store)", listAndBuildWatch.elapsed(TimeUnit.MILLISECONDS)
-              , profilesSet.size(), numProfilesInStore);
-        }
-        //Recording last checked modified time and the most recent profile
-        basePathLastModified = currBasePathModified;
-        /*TODO: mostRecentProfile = profilesSet.getYoungest();*/
-        lastKnownFileCount = expectedFileCount;
-
-        //Transform profileSet for consumption
-        transformWatch.start();
-        iterableProfileSet = Iterables.transform(profilesSet, transformer);
-        if (transformWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
-          logger.warn("Took {} ms to transform {} profiles", transformWatch.elapsed(TimeUnit.MILLISECONDS), profilesSet.size());
-        }
-      }
-      return iterableProfileSet.iterator();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void archiveProfiles(int profilesInStoreCount) {
-    if (profilesInStoreCount > archivalThreshold) {
-      //We'll attempt to reduce to 90% of threshold, but in batches of archivalRate
-      int excessCount = profilesInStoreCount - (int) Math.round(0.9*archivalThreshold);
-      int numToArchive = Math.min(excessCount, archivalRate);
-      logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", excessCount
-          , numToArchive, archivePath);
+    //Need to acquire lock since incoming non-web requests are not guaranteed to be synchronized
+    try (Closeable lock = profileStoreLock.open()) {
       try {
-        if (fs.isDirectory(archivePath)) {
-          int archivedCount = 0;
-          archiveWatch.reset().start(); //Clocking
-          //while (archivedCount < archivalRate) {
-          while (!pendingArchivalSet.isEmpty()) {
-            String toArchive = pendingArchivalSet.removeOldest() + DRILL_SYS_FILE_SUFFIX;
-            boolean renameStatus = DrillFileSystemUtil.rename(fs, new Path(basePath, toArchive), new Path(archivePath, toArchive));
-            if (!renameStatus) {
-              //Stop attempting any more archiving since other StoreProviders might be archiving
-              logger.error("Move failed for {} from {} to {}", toArchive, basePath.toString(), archivePath.toString());
-              logger.warn("Skip archiving under the assumption that another Drillbit is archiving");
-              break;
-            }
-            archivedCount++;
+        long expectedFileCount = fs.getFileStatus(basePath).getLen();
+        logger.debug("Current ModTime: {} (Last known ModTime: {})", currBasePathModified, basePathLastModified);
+        logger.debug("Expected {} files (Last known {} files)", expectedFileCount, lastKnownFileCount);
+
+        //Force-read list of profiles based on change of any of the 3 states
+        if (this.basePathLastModified < currBasePathModified  //Has ModificationTime changed?
+            || this.lastKnownFileCount != expectedFileCount   //Has Profile Count changed?
+            || (skip + take) > maxSetCapacity ) {             //Does requestSize exceed current cached size
+
+          if (maxSetCapacity < (skip + take)) {
+            logger.debug("Updating last Max Capacity from {} to {}", maxSetCapacity , (skip + take) );
+            maxSetCapacity = skip + take;
           }
-          logger.info("Archived {} profiles to {} in {} ms", archivedCount, archivePath, archiveWatch.stop().elapsed(TimeUnit.MILLISECONDS));
-        } else {
-          logger.error("Unable to archive {} profiles to {}", pendingArchivalSet.size(), archivePath.toString());
+          //Mark Start Time
+          listAndBuildWatch.reset().start();
+
+          //Listing ALL DrillSysFiles
+          //Can apply MostRecentProfile name as filter. Unfortunately, Hadoop (2.7.1) currently doesn't leverage this to speed up
+          List<FileStatus> fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, //Not performing recursive search of profiles
+              sysFileSuffixFilter /*TODO: Use MostRecentProfile */
+              );
+          //Checking if empty
+          if (fileStatuses.isEmpty()) {
+            return Collections.emptyIterator();
+          }
+
+          //Force a reload of the profile.
+          //Note: We shouldn't need to do this if the load is incremental (i.e. using mostRecentProfile)
+          profilesSet.clear(maxSetCapacity);
+          int numProfilesInStore = 0;
+
+          if (enableArchiving) {
+            archiver.clearPending();
+          }
+
+          //Populating cache with profiles
+          for (FileStatus stat : fileStatuses) {
+            String profileName = stat.getPath().getName();
+            //Strip extension and store only query ID
+            String oldestProfile = profilesSet.add(profileName.substring(0, profileName.length() - DRILL_SYS_FILE_EXT_SIZE));
+            if (enableArchiving && oldestProfile != null) {
+              archiver.addProfile(oldestProfile);
+            }
+            numProfilesInStore++;
+          }
+
+          //Archive older profiles
+          if (enableArchiving) {
+            archiver.archiveProfiles(numProfilesInStore);
+          }
+
+          //Report Lag
+          if (listAndBuildWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
+            logger.warn("Took {} ms to list & map {} profiles (out of {} profiles in store)", listAndBuildWatch.elapsed(TimeUnit.MILLISECONDS)
+                , profilesSet.size(), numProfilesInStore);
+          }
+          //Recording last checked modified time and the most recent profile
+          basePathLastModified = currBasePathModified;
+          /*TODO: mostRecentProfile = profilesSet.getYoungest();*/
+          lastKnownFileCount = expectedFileCount;
+
+          //Transform profileSet for consumption
+          transformWatch.start();
+          iterableProfileSet = Iterables.transform(profilesSet, stringTransformer);
+          if (transformWatch.stop().elapsed(TimeUnit.MILLISECONDS) >= RESPONSE_TIME_THRESHOLD_MSEC) {
+            logger.warn("Took {} ms to transform {} profiles", transformWatch.elapsed(TimeUnit.MILLISECONDS), profilesSet.size());
+          }
         }
+        return iterableProfileSet.iterator();
       } catch (IOException e) {
-        e.printStackTrace();
+        throw new RuntimeException(e);
       }
     }
-    //Clean up
-    pendingArchivalSet.clear();
   }
 
   private Path makePath(String name) {
@@ -326,22 +332,42 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     }
   }
 
+  //Deserialize path's contents
+  private V deserialize(Path srcPath) {
+    final Path path = srcPath;
+    try (InputStream is = fs.open(path)) {
+      return config.getSerializer().deserialize(IOUtils.toByteArray(is));
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to deserialize \"" + path + "\"", e);
+    }
+  }
+
   @Override
   public V get(String key) {
+    Path path = null;
     try {
-      Path path = makePath(key);
+      path = makePath(key);
       if (!fs.exists(path)) {
         return null;
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    final Path path = makePath(key);
-    try (InputStream is = fs.open(path)) {
-      return config.getSerializer().deserialize(IOUtils.toByteArray(is));
+    return deserialize(path);
+  }
+
+  //For profiles not on basePath
+  public V get(FileStatus fStat) {
+    Path path = null;
+    try {
+      path = fStat.getPath();
+      if (!fs.exists(path)) {
+        return null;
+      }
     } catch (IOException e) {
-      throw new RuntimeException("Unable to deserialize \"" + path + "\"", e);
+      throw new RuntimeException(e);
     }
+    return deserialize(path);
   }
 
   @Override

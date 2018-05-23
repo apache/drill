@@ -54,4 +54,13 @@ public interface PersistentStore<V> extends Store<V> {
    */
   Iterator<Map.Entry<String, V>> getAll();
 
+  /**
+   * Returns, from a possible cache, an iterator of desired number of entries offsetting by the skip value.
+   *
+   * @param skip  number of records to skip from beginning
+   * @param take  max number of records to return
+   * @param useCache  use cache if available
+   */
+  Iterator<Map.Entry<String, V>> getRange(int skip, int take, boolean useCache);
+
 }

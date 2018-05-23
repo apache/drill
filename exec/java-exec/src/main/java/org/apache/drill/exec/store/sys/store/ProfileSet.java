@@ -69,7 +69,7 @@ public class ProfileSet implements Iterable<String> {
    */
   public String add(String profile, boolean retainOldest) {
     store.add(profile);
-    if ( size.incrementAndGet() > maxCapacity ) {
+    if (size.incrementAndGet() > maxCapacity) {
       if (retainOldest) {
         return removeYoungest();
       } else {
@@ -136,7 +136,7 @@ public class ProfileSet implements Iterable<String> {
    */
   public void clear(int capacity, boolean forceResize) {
     clear();
-    if (forceResize || capacity > maxCapacity ) {
+    if (forceResize || capacity > maxCapacity) {
       maxCapacity = capacity;
     }
   }

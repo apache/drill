@@ -272,7 +272,7 @@ public class ProfileResources {
 
       final List<ProfileInfo> finishedQueries = new ArrayList<ProfileResources.ProfileInfo>(maxProfilesToLoad);
 
-      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad);
+      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad, true); //Leverage any underlying cache
       while (range.hasNext()) {
         try {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();

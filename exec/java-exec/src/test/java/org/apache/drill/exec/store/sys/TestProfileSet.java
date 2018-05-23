@@ -116,7 +116,7 @@ public class TestProfileSet {
       assertEquals(null, poppedProfile);
     }
 
-    assert(testSet.size() == initCapacity);
+    assertEquals(initCapacity, testSet.size());
 
     //Testing No Excess by looking at oldest popped
     for (int i = initCapacity; i < finalCapacity; i++) {
@@ -124,7 +124,7 @@ public class TestProfileSet {
       assertEquals(null, poppedProfile);
     }
 
-    assert(testSet.size() == finalCapacity);
+    assertEquals(finalCapacity, testSet.size());
   }
 
 }

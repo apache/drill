@@ -27,4 +27,9 @@ public abstract class BasePersistentStore<V> implements PersistentStore<V> {
     return getRange(0, Integer.MAX_VALUE);
   }
 
+  @Override
+  public Iterator<Map.Entry<String, V>> getRange(int skip, int take, boolean useCache) {
+    //No implicit cache implemented by default
+    return getRange(skip, take, false);
+  }
 }
