@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
@@ -78,6 +79,7 @@ public class HashPrelUtil {
   // the hash based operators make use of 4 bytes of hash value, not 8 bytes (for reduced memory use).
   private static final String HASH32_FUNCTION_NAME = "hash32";
   private static final String HASH32_DOUBLE_FUNCTION_NAME = "hash32AsDouble";
+  private static final String HASH64_DOUBLE_FUNCTION_NAME = "hash64AsDouble";
 
   /**
    * Create hash based partition expression based on the given distribution fields.
@@ -123,6 +125,43 @@ public class HashPrelUtil {
     }
 
     return func;
+  }
+
+  /**
+   * Create hash expression based on the given input fields.
+   *
+   * @param inputExprs Expression list based on which the hash expression is constructed.
+   * @param helper Implementation of {@link HashExpressionCreatorHelper}
+   *               which is used to create function expressions.
+   * @param hashAsDouble Whether to use the hash as double function or regular hash64 function.
+   * @param <T> Input and output expression type.
+   *           Currently it could be either {@link RexNode} or {@link LogicalExpression}
+   * @return
+   */
+  public static <T> T createHash64Expression(
+    List<T> inputExprs,
+    T seed,
+    HashExpressionCreatorHelper<T> helper,
+    boolean hashAsDouble) {
+    Preconditions.checkArgument(inputExprs.size() > 0);
+    final String functionName = hashAsDouble ? HASH64_DOUBLE_FUNCTION_NAME : HASH32_FUNCTION_NAME;
+    T func = helper.createCall(functionName,  ImmutableList.of(inputExprs.get(0), seed));
+    for (int i = 1; i<inputExprs.size(); i++) {
+      func = helper.createCall(functionName, ImmutableList.of(inputExprs.get(i), func));
+    }
+    return func;
+  }
+
+  /**
+   * Creates hash expression for input field and seed.
+   *
+   * @param field field expression
+   * @param seed seed expression
+   * @param hashAsDouble whether to use the hash as double function or regular hash64 function
+   * @return hash expression
+   */
+  public static LogicalExpression getHash64Expression(LogicalExpression field, LogicalExpression seed, boolean hashAsDouble) {
+    return createHash64Expression(ImmutableList.of(field), seed, HASH_HELPER_LOGICALEXPRESSION, hashAsDouble);
   }
 
   /**

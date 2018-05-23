@@ -36,6 +36,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
 
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 
 /**
  * Provides the resources required by a non-exchange operator to execute.
@@ -157,6 +158,18 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
 
   @Override
   void close();
+
+  /**
+   * Return null ,if setRuntimeFilter not being called
+   * @return
+   */
+  RuntimeFilterWritable getRuntimeFilter();
+
+  /**
+   * Set a RuntimeFilter when the RuntimeFilter receiver belongs to the same MinorFragment
+   * @param runtimeFilter
+   */
+  public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter);
 
   interface ExecutorState {
     /**

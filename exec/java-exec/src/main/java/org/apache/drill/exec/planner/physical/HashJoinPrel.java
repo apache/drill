@@ -38,27 +38,30 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.work.filter.RuntimeFilterDef;
 
 public class HashJoinPrel  extends JoinPrel {
 
   private boolean swapped = false;
+  private RuntimeFilterDef runtimeFilterDef;
 
   public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
                       JoinRelType joinType) throws InvalidRelException {
-    this(cluster, traits, left, right, condition, joinType, false);
+    this(cluster, traits, left, right, condition, joinType, false, null);
   }
 
   public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType, boolean swapped) throws InvalidRelException {
+      JoinRelType joinType, boolean swapped, RuntimeFilterDef runtimeFilterDef) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
     this.swapped = swapped;
     joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
+    this.runtimeFilterDef = runtimeFilterDef;
   }
 
   @Override
   public Join copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {
-      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType, this.swapped);
+      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType, this.swapped, this.runtimeFilterDef);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
@@ -76,7 +79,7 @@ public class HashJoinPrel  extends JoinPrel {
   }
 
   @Override
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
+  public org.apache.drill.exec.physical.base.PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     // Depending on whether the left/right is swapped for hash inner join, pass in different
     // combinations of parameters.
     if (! swapped) {
@@ -113,7 +116,8 @@ public class HashJoinPrel  extends JoinPrel {
 
     buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
 
-    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
+    RuntimeFilterDef runtimeFilterDef = this.getRuntimeFilterDef();
+    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype, runtimeFilterDef);
     return creator.addMetadata(this, hjoin);
   }
 
@@ -124,5 +128,14 @@ public class HashJoinPrel  extends JoinPrel {
   public boolean isSwapped() {
     return this.swapped;
   }
+
+  public RuntimeFilterDef getRuntimeFilterDef() {
+    return runtimeFilterDef;
+  }
+
+  public void setRuntimeFilterDef(RuntimeFilterDef runtimeFilterDef) {
+    this.runtimeFilterDef = runtimeFilterDef;
+  }
+
 
 }

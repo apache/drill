@@ -26,7 +26,9 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -41,6 +43,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
@@ -374,6 +377,45 @@ public class WorkManager implements AutoCloseable {
 
     public FragmentExecutor getFragmentRunner(final FragmentHandle handle) {
       return runningFragments.get(handle);
+    }
+
+    public void receiveRuntimeFilter(final RuntimeFilterWritable runtimeFilter) {
+      BitData.RuntimeFilterBDef runtimeFilterDef = runtimeFilter.getRuntimeFilterBDef();
+      boolean toForeman = runtimeFilterDef.getToForeman();
+      QueryId queryId = runtimeFilterDef.getQueryId();
+      String queryIdStr = QueryIdHelper.getQueryId(queryId);
+      //to foreman
+      if (toForeman) {
+        Foreman foreman = queries.get(queryId);
+        if (foreman != null) {
+          executor.execute(new Runnable() {
+            @Override
+            public void run() {
+              final Thread currentThread = Thread.currentThread();
+              final String originalName = currentThread.getName();
+              currentThread.setName(queryIdStr + ":foreman:registerRuntimeFilter");
+              try {
+                foreman.getRuntimeFilterManager().registerRuntimeFilter(runtimeFilter);
+              } catch (Exception e) {
+                logger.warn("Exception while registering the RuntimeFilter", e);
+              } finally {
+                currentThread.setName(originalName);
+              }
+            }
+          });
+        }
+      } else {
+        //to the probe side scan node
+        int majorId = runtimeFilterDef.getMajorFragmentId();
+        int minorId = runtimeFilterDef.getMinorFragmentId();
+        ExecProtos.FragmentHandle fragmentHandle = ExecProtos.FragmentHandle.newBuilder().setMajorFragmentId(majorId)
+          .setMinorFragmentId(minorId)
+          .setQueryId(queryId).build();
+        FragmentExecutor fragmentExecutor = runningFragments.get(fragmentHandle);
+        if (fragmentExecutor != null) {
+          fragmentExecutor.getContext().setRuntimeFilter(runtimeFilter);
+        }
+      }
     }
   }
 

@@ -417,4 +417,152 @@ public final class SchemaBitData
         }
     }
 
+    public static final class RuntimeFilterBDef
+    {
+        public static final org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitData.RuntimeFilterBDef>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitData.RuntimeFilterBDef message) throws java.io.IOException
+            {
+                if(message.hasQueryId())
+                    output.writeObject(1, message.getQueryId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
+
+                if(message.hasMajorFragmentId())
+                    output.writeInt32(2, message.getMajorFragmentId(), false);
+                if(message.hasMinorFragmentId())
+                    output.writeInt32(3, message.getMinorFragmentId(), false);
+                if(message.hasToForeman())
+                    output.writeBool(4, message.getToForeman(), false);
+                for(int bloomFilterSizeInBytes : message.getBloomFilterSizeInBytesList())
+                    output.writeInt32(5, bloomFilterSizeInBytes, true);
+                for(String probeFields : message.getProbeFieldsList())
+                    output.writeString(6, probeFields, true);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitData.RuntimeFilterBDef message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitData.RuntimeFilterBDef> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitData.RuntimeFilterBDef message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.BitData.RuntimeFilterBDef newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setQueryId(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.MERGE));
+
+                            break;
+                        case 2:
+                            builder.setMajorFragmentId(input.readInt32());
+                            break;
+                        case 3:
+                            builder.setMinorFragmentId(input.readInt32());
+                            break;
+                        case 4:
+                            builder.setToForeman(input.readBool());
+                            break;
+                        case 5:
+                            builder.addBloomFilterSizeInBytes(input.readInt32());
+                            break;
+                        case 6:
+                            builder.addProbeFields(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.RuntimeFilterBDef.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitData.RuntimeFilterBDef.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "queryId";
+                case 2: return "majorFragmentId";
+                case 3: return "minorFragmentId";
+                case 4: return "toForeman";
+                case 5: return "bloomFilterSizeInBytes";
+                case 6: return "probeFields";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("queryId", 1);
+            fieldMap.put("majorFragmentId", 2);
+            fieldMap.put("minorFragmentId", 3);
+            fieldMap.put("toForeman", 4);
+            fieldMap.put("bloomFilterSizeInBytes", 5);
+            fieldMap.put("probeFields", 6);
+        }
+    }
+
 }

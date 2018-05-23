@@ -50,6 +50,7 @@ public class OptionValue implements Comparable<OptionValue> {
   public static final String JSON_STRING_VAL = "string_val";
   public static final String JSON_BOOL_VAL = "bool_val";
   public static final String JSON_FLOAT_VAL = "float_val";
+  public static final String JSON_INTEGER_VAL = "int_val";
   public static final String JSON_SCOPE = "scope";
 
   /**
@@ -252,6 +253,7 @@ public class OptionValue implements Comparable<OptionValue> {
     } else if (!string_val.equals(other.string_val)) {
       return false;
     }
+
     return true;
   }
 

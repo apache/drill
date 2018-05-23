@@ -81,7 +81,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
   @SuppressWarnings("unchecked")
   @Test
   public void testSimpleHashJoin() {
-    HashJoinPOP joinConf = new HashJoinPOP(null, null, Lists.newArrayList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT);
+    HashJoinPOP joinConf = new HashJoinPOP(null, null, Lists.newArrayList(joinCond("x", "EQUALS", "x1")), JoinRelType.LEFT, null);
     // TODO - figure out where to add validation, column names must be unique, even between the two batches,
     // for all columns, not just the one in the join condition
     // TODO - if any are common between the two, it is failing in the generated setup method in HashJoinProbeGen

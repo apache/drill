@@ -16,6 +16,8 @@ enum RpcType {
 
   // both bit request and response
   SASL_MESSAGE = 4;
+
+  REQ_RUNTIME_FILTER = 5; // send runtime filter data from HashJoin to Foreman, from Foreman to Scan nodes.
 }
 
 message BitClientHandshake{
@@ -36,4 +38,13 @@ message FragmentRecordBatch{
   optional int32 sending_minor_fragment_id = 5;
   optional exec.shared.RecordBatchDef def = 6;
   optional bool isLastBatch = 7;
+}
+
+message RuntimeFilterBDef{
+  optional exec.shared.QueryId query_id = 1;
+  optional int32 major_fragment_id = 2;
+  optional int32 minor_fragment_id = 3;
+  optional bool to_foreman = 4; // true means sending to foreman,false means sending to scan nodes
+  repeated int32 bloom_filter_size_in_bytes = 5;
+  repeated string probe_fields = 6; // probe fields with corresponding BloomFilters
 }

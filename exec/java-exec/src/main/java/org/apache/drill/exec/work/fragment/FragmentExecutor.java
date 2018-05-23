@@ -207,7 +207,6 @@ public class FragmentExecutor implements Runnable {
   }
 
   private void cleanup(FragmentState state) {
-
     closeOutResources();
 
     updateState(state);

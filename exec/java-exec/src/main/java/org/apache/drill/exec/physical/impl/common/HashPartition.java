@@ -62,7 +62,7 @@ import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_SIZE;
  *    Created to represent an active partition for the Hash-Join operator
  *  (active means: currently receiving data, or its data is being probed; as opposed to fully
  *   spilled partitions).
- *    After all the build/iner data is read for this partition - if all its data is in memory, then
+ *    After all the build/inner data is read for this partition - if all its data is in memory, then
  *  a hash table and a helper are created, and later this data would be probed.
  *    If all this partition's build/inner data was spilled, then it begins to work as an outer
  *  partition (see the flag "processingOuter") -- reusing some of the fields (e.g., currentBatch,

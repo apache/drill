@@ -22,7 +22,6 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 
 public class GenericCopierFactory {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GenericCopierFactory.class);
 
   public static Copier createAndSetupCopier(RecordBatch incoming, VectorContainer outputContainer,
                                             SchemaChangeCallBack callBack) {

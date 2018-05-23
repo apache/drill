@@ -42,17 +42,19 @@ void protobuf_ShutdownFile_BitData_2eproto();
 class BitClientHandshake;
 class BitServerHandshake;
 class FragmentRecordBatch;
+class RuntimeFilterBDef;
 
 enum RpcType {
   HANDSHAKE = 0,
   ACK = 1,
   GOODBYE = 2,
   REQ_RECORD_BATCH = 3,
-  SASL_MESSAGE = 4
+  SASL_MESSAGE = 4,
+  REQ_RUNTIME_FILTER = 5
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = SASL_MESSAGE;
+const RpcType RpcType_MAX = REQ_RUNTIME_FILTER;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -405,6 +407,150 @@ class FragmentRecordBatch : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static FragmentRecordBatch* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class RuntimeFilterBDef : public ::google::protobuf::Message {
+ public:
+  RuntimeFilterBDef();
+  virtual ~RuntimeFilterBDef();
+
+  RuntimeFilterBDef(const RuntimeFilterBDef& from);
+
+  inline RuntimeFilterBDef& operator=(const RuntimeFilterBDef& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const RuntimeFilterBDef& default_instance();
+
+  void Swap(RuntimeFilterBDef* other);
+
+  // implements Message ----------------------------------------------
+
+  RuntimeFilterBDef* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const RuntimeFilterBDef& from);
+  void MergeFrom(const RuntimeFilterBDef& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.shared.QueryId query_id = 1;
+  inline bool has_query_id() const;
+  inline void clear_query_id();
+  static const int kQueryIdFieldNumber = 1;
+  inline const ::exec::shared::QueryId& query_id() const;
+  inline ::exec::shared::QueryId* mutable_query_id();
+  inline ::exec::shared::QueryId* release_query_id();
+  inline void set_allocated_query_id(::exec::shared::QueryId* query_id);
+
+  // optional int32 major_fragment_id = 2;
+  inline bool has_major_fragment_id() const;
+  inline void clear_major_fragment_id();
+  static const int kMajorFragmentIdFieldNumber = 2;
+  inline ::google::protobuf::int32 major_fragment_id() const;
+  inline void set_major_fragment_id(::google::protobuf::int32 value);
+
+  // optional int32 minor_fragment_id = 3;
+  inline bool has_minor_fragment_id() const;
+  inline void clear_minor_fragment_id();
+  static const int kMinorFragmentIdFieldNumber = 3;
+  inline ::google::protobuf::int32 minor_fragment_id() const;
+  inline void set_minor_fragment_id(::google::protobuf::int32 value);
+
+  // optional bool to_foreman = 4;
+  inline bool has_to_foreman() const;
+  inline void clear_to_foreman();
+  static const int kToForemanFieldNumber = 4;
+  inline bool to_foreman() const;
+  inline void set_to_foreman(bool value);
+
+  // repeated int32 bloom_filter_size_in_bytes = 5;
+  inline int bloom_filter_size_in_bytes_size() const;
+  inline void clear_bloom_filter_size_in_bytes();
+  static const int kBloomFilterSizeInBytesFieldNumber = 5;
+  inline ::google::protobuf::int32 bloom_filter_size_in_bytes(int index) const;
+  inline void set_bloom_filter_size_in_bytes(int index, ::google::protobuf::int32 value);
+  inline void add_bloom_filter_size_in_bytes(::google::protobuf::int32 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      bloom_filter_size_in_bytes() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_bloom_filter_size_in_bytes();
+
+  // repeated string probe_fields = 6;
+  inline int probe_fields_size() const;
+  inline void clear_probe_fields();
+  static const int kProbeFieldsFieldNumber = 6;
+  inline const ::std::string& probe_fields(int index) const;
+  inline ::std::string* mutable_probe_fields(int index);
+  inline void set_probe_fields(int index, const ::std::string& value);
+  inline void set_probe_fields(int index, const char* value);
+  inline void set_probe_fields(int index, const char* value, size_t size);
+  inline ::std::string* add_probe_fields();
+  inline void add_probe_fields(const ::std::string& value);
+  inline void add_probe_fields(const char* value);
+  inline void add_probe_fields(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& probe_fields() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_probe_fields();
+
+  // @@protoc_insertion_point(class_scope:exec.bit.data.RuntimeFilterBDef)
+ private:
+  inline void set_has_query_id();
+  inline void clear_has_query_id();
+  inline void set_has_major_fragment_id();
+  inline void clear_has_major_fragment_id();
+  inline void set_has_minor_fragment_id();
+  inline void clear_has_minor_fragment_id();
+  inline void set_has_to_foreman();
+  inline void clear_has_to_foreman();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::shared::QueryId* query_id_;
+  ::google::protobuf::int32 major_fragment_id_;
+  ::google::protobuf::int32 minor_fragment_id_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > bloom_filter_size_in_bytes_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> probe_fields_;
+  bool to_foreman_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+
+  friend void  protobuf_AddDesc_BitData_2eproto();
+  friend void protobuf_AssignDesc_BitData_2eproto();
+  friend void protobuf_ShutdownFile_BitData_2eproto();
+
+  void InitAsDefaultInstance();
+  static RuntimeFilterBDef* default_instance_;
+};
 // ===================================================================
 
 
@@ -718,6 +864,183 @@ inline bool FragmentRecordBatch::islastbatch() const {
 inline void FragmentRecordBatch::set_islastbatch(bool value) {
   set_has_islastbatch();
   islastbatch_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// RuntimeFilterBDef
+
+// optional .exec.shared.QueryId query_id = 1;
+inline bool RuntimeFilterBDef::has_query_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void RuntimeFilterBDef::set_has_query_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void RuntimeFilterBDef::clear_has_query_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void RuntimeFilterBDef::clear_query_id() {
+  if (query_id_ != NULL) query_id_->::exec::shared::QueryId::Clear();
+  clear_has_query_id();
+}
+inline const ::exec::shared::QueryId& RuntimeFilterBDef::query_id() const {
+  return query_id_ != NULL ? *query_id_ : *default_instance_->query_id_;
+}
+inline ::exec::shared::QueryId* RuntimeFilterBDef::mutable_query_id() {
+  set_has_query_id();
+  if (query_id_ == NULL) query_id_ = new ::exec::shared::QueryId;
+  return query_id_;
+}
+inline ::exec::shared::QueryId* RuntimeFilterBDef::release_query_id() {
+  clear_has_query_id();
+  ::exec::shared::QueryId* temp = query_id_;
+  query_id_ = NULL;
+  return temp;
+}
+inline void RuntimeFilterBDef::set_allocated_query_id(::exec::shared::QueryId* query_id) {
+  delete query_id_;
+  query_id_ = query_id;
+  if (query_id) {
+    set_has_query_id();
+  } else {
+    clear_has_query_id();
+  }
+}
+
+// optional int32 major_fragment_id = 2;
+inline bool RuntimeFilterBDef::has_major_fragment_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void RuntimeFilterBDef::set_has_major_fragment_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void RuntimeFilterBDef::clear_has_major_fragment_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void RuntimeFilterBDef::clear_major_fragment_id() {
+  major_fragment_id_ = 0;
+  clear_has_major_fragment_id();
+}
+inline ::google::protobuf::int32 RuntimeFilterBDef::major_fragment_id() const {
+  return major_fragment_id_;
+}
+inline void RuntimeFilterBDef::set_major_fragment_id(::google::protobuf::int32 value) {
+  set_has_major_fragment_id();
+  major_fragment_id_ = value;
+}
+
+// optional int32 minor_fragment_id = 3;
+inline bool RuntimeFilterBDef::has_minor_fragment_id() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void RuntimeFilterBDef::set_has_minor_fragment_id() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void RuntimeFilterBDef::clear_has_minor_fragment_id() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void RuntimeFilterBDef::clear_minor_fragment_id() {
+  minor_fragment_id_ = 0;
+  clear_has_minor_fragment_id();
+}
+inline ::google::protobuf::int32 RuntimeFilterBDef::minor_fragment_id() const {
+  return minor_fragment_id_;
+}
+inline void RuntimeFilterBDef::set_minor_fragment_id(::google::protobuf::int32 value) {
+  set_has_minor_fragment_id();
+  minor_fragment_id_ = value;
+}
+
+// optional bool to_foreman = 4;
+inline bool RuntimeFilterBDef::has_to_foreman() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void RuntimeFilterBDef::set_has_to_foreman() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void RuntimeFilterBDef::clear_has_to_foreman() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void RuntimeFilterBDef::clear_to_foreman() {
+  to_foreman_ = false;
+  clear_has_to_foreman();
+}
+inline bool RuntimeFilterBDef::to_foreman() const {
+  return to_foreman_;
+}
+inline void RuntimeFilterBDef::set_to_foreman(bool value) {
+  set_has_to_foreman();
+  to_foreman_ = value;
+}
+
+// repeated int32 bloom_filter_size_in_bytes = 5;
+inline int RuntimeFilterBDef::bloom_filter_size_in_bytes_size() const {
+  return bloom_filter_size_in_bytes_.size();
+}
+inline void RuntimeFilterBDef::clear_bloom_filter_size_in_bytes() {
+  bloom_filter_size_in_bytes_.Clear();
+}
+inline ::google::protobuf::int32 RuntimeFilterBDef::bloom_filter_size_in_bytes(int index) const {
+  return bloom_filter_size_in_bytes_.Get(index);
+}
+inline void RuntimeFilterBDef::set_bloom_filter_size_in_bytes(int index, ::google::protobuf::int32 value) {
+  bloom_filter_size_in_bytes_.Set(index, value);
+}
+inline void RuntimeFilterBDef::add_bloom_filter_size_in_bytes(::google::protobuf::int32 value) {
+  bloom_filter_size_in_bytes_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+RuntimeFilterBDef::bloom_filter_size_in_bytes() const {
+  return bloom_filter_size_in_bytes_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+RuntimeFilterBDef::mutable_bloom_filter_size_in_bytes() {
+  return &bloom_filter_size_in_bytes_;
+}
+
+// repeated string probe_fields = 6;
+inline int RuntimeFilterBDef::probe_fields_size() const {
+  return probe_fields_.size();
+}
+inline void RuntimeFilterBDef::clear_probe_fields() {
+  probe_fields_.Clear();
+}
+inline const ::std::string& RuntimeFilterBDef::probe_fields(int index) const {
+  return probe_fields_.Get(index);
+}
+inline ::std::string* RuntimeFilterBDef::mutable_probe_fields(int index) {
+  return probe_fields_.Mutable(index);
+}
+inline void RuntimeFilterBDef::set_probe_fields(int index, const ::std::string& value) {
+  probe_fields_.Mutable(index)->assign(value);
+}
+inline void RuntimeFilterBDef::set_probe_fields(int index, const char* value) {
+  probe_fields_.Mutable(index)->assign(value);
+}
+inline void RuntimeFilterBDef::set_probe_fields(int index, const char* value, size_t size) {
+  probe_fields_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RuntimeFilterBDef::add_probe_fields() {
+  return probe_fields_.Add();
+}
+inline void RuntimeFilterBDef::add_probe_fields(const ::std::string& value) {
+  probe_fields_.Add()->assign(value);
+}
+inline void RuntimeFilterBDef::add_probe_fields(const char* value) {
+  probe_fields_.Add()->assign(value);
+}
+inline void RuntimeFilterBDef::add_probe_fields(const char* value, size_t size) {
+  probe_fields_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+RuntimeFilterBDef::probe_fields() const {
+  return probe_fields_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+RuntimeFilterBDef::mutable_probe_fields() {
+  return &probe_fields_;
 }
 
 

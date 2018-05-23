@@ -52,7 +52,7 @@ public class OptionValueTest {
       "myOption", "3000", OptionValue.OptionScope.SYSTEM);
 
     final OptionValue expectedValue = OptionValue.create(
-      OptionValue.AccessibleScopes.ALL, "myOption", 3000, OptionValue.OptionScope.SYSTEM);
+      OptionValue.AccessibleScopes.ALL, "myOption", 3000l, OptionValue.OptionScope.SYSTEM);
 
     Assert.assertEquals(expectedValue, createdValue);
   }

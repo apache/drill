@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.fragment.Wrapper;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos;
@@ -75,9 +76,10 @@ public class QueryWorkUnit {
   private final FragmentRoot rootOperator; // for local
   private List<PlanFragment> fragments = new ArrayList<>();
   private final List<MinorFragmentDefn> minorFragmentDefns;
+  private final Wrapper rootWrapper;
 
   public QueryWorkUnit(final FragmentRoot rootOperator, final MinorFragmentDefn rootFragmentDefn,
-      final List<MinorFragmentDefn> minorFragmentDefns) {
+      final List<MinorFragmentDefn> minorFragmentDefns, final Wrapper rootWrapper) {
     Preconditions.checkNotNull(rootOperator);
     Preconditions.checkNotNull(rootFragmentDefn);
     Preconditions.checkNotNull(minorFragmentDefns);
@@ -85,6 +87,7 @@ public class QueryWorkUnit {
     this.rootFragmentDefn = rootFragmentDefn;
     this.rootOperator = rootOperator;
     this.minorFragmentDefns = minorFragmentDefns;
+    this.rootWrapper = rootWrapper;
   }
 
   public PlanFragment getRootFragment() {
@@ -157,4 +160,10 @@ public class QueryWorkUnit {
     }
     return stringBuilder.toString();
   }
+
+
+  public Wrapper getRootWrapper() {
+    return rootWrapper;
+  }
+
 }

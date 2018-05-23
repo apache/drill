@@ -41,6 +41,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -331,6 +332,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
    * </p>
    */
   protected static class MockExecutorFragmentContext extends OperatorFixture.MockFragmentContext implements ExecutorFragmentContext {
+    private RuntimeFilterWritable runtimeFilterWritable;
 
     public MockExecutorFragmentContext(final FragmentContext fragmentContext) {
       super(fragmentContext.getConfig(), fragmentContext.getOptions(), fragmentContext.getAllocator(),
@@ -428,6 +430,16 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     @Override
     public boolean isUserAuthenticationEnabled() {
       return false;
+    }
+
+    @Override
+    public void setRuntimeFilter(RuntimeFilterWritable runtimeFilter) {
+      this.runtimeFilterWritable = runtimeFilter;
+    }
+
+    @Override
+    public RuntimeFilterWritable getRuntimeFilter() {
+      return runtimeFilterWritable;
     }
   }
 
