@@ -23,26 +23,28 @@
 <script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
 <script>
     $(document).ready(function() {
-      $("#profileList").DataTable( {
-        //Preserve order
-        "ordering": false,
-        "searching": true,
-        "paging": true,
-        "pagingType": "first_last_numbers",
-        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        "lengthChange": true,
-        "info": true,
-        //Ref: https://legacy.datatables.net/ref#sDom
-        "sDom": '<"top"lftip><"bottom"><"clear">',
-        //Customized info labels
-        "language": {
-            "lengthMenu": "Display _MENU_ profiles per page",
-            "zeroRecords": "No matching profiles found!",
-            "info": "Showing page _PAGE_ of _PAGES_ ",
-            "infoEmpty": "No profiles available",
-            "infoFiltered": "(filtered _TOTAL_ from _MAX_)",
-            "search": "Search Profiles  "
-        }
+      $.each(["running","completed"], function(i, key) {
+        $("#profileList_"+key).DataTable( {
+          //Preserve order
+          "ordering": false,
+          "searching": true,
+          "paging": true,
+          "pagingType": "full_numbers",
+          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+          "lengthChange": true,
+          "info": true,
+          //Ref: https://legacy.datatables.net/ref#sDom
+          "sDom": '<"top"lftip><"bottom"><"clear">',
+          //Customized info labels
+          "language": {
+              "lengthMenu": "Display _MENU_ profiles per page",
+              "zeroRecords": "No matching profiles found!",
+              "info": "Showing page _PAGE_ of _PAGES_ ",
+              "infoEmpty": "No profiles available",
+              "infoFiltered": "(filtered _TOTAL_ from _MAX_)",
+              "search": "Search Profiles  "
+          }
+        } );
       } );
     } );
 </script>
@@ -94,7 +96,7 @@
   </#if>
   <#if (model.getRunningQueries()?size > 0) >
     <h3>Running Queries</h3>
-    <@list_queries queries=model.getRunningQueries()/>
+    <@list_queries queries=model.getRunningQueries() stateList="running" />
     <div class="page-header">
     </div>
   <#else>
@@ -139,12 +141,12 @@
             $("#fetchMax").val(maxFetched);
     });
     </script>
-  <@list_queries queries=model.getFinishedQueries()/>
+  <@list_queries queries=model.getFinishedQueries() stateList="completed" />
 </#macro>
 
-<#macro list_queries queries>
+<#macro list_queries queries stateList>
     <div class="table-responsive">
-        <table id="profileList" class="table table-hover dataTable" role="grid">
+        <table id="profileList_${stateList}" class="table table-hover dataTable" role="grid">
             <thead>
             <tr role="row">
                 <th>Time</th>
