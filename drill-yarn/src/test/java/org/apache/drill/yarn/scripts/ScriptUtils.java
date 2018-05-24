@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -66,7 +67,6 @@ public class ScriptUtils {
     String args[] = {
       "-Dlog.path=/.*/drill/log/sqlline\\.log",
       "-Dlog.query.path=/.*/drill/log/sqlline_queries\\.json",
-      "-XX:MaxPermSize=512M",
       "sqlline\\.SqlLine",
       "-d",
       "org\\.apache\\.drill\\.jdbc\\.Driver",
@@ -123,11 +123,10 @@ public class ScriptUtils {
       "-Xms4G",
       "-Xmx4G",
       "-XX:MaxDirectMemorySize=8G",
-      "-XX:MaxPermSize=512M",
       "-XX:ReservedCodeCacheSize=1G",
-      // Removed in Drill 1.8
-//      "-Ddrill\\.exec\\.enable-epoll=true",
-      "-XX:\\+CMSClassUnloadingEnabled",
+      "-Ddrill\\.exec\\.enable-epoll=false",
+      // Removed in Drill 1.14
+      //"-XX:\\+CMSClassUnloadingEnabled",
       "-XX:\\+UseG1GC",
       "org\\.apache\\.drill\\.exec\\.server\\.Drillbit",
       "-Dlog\\.path=/.*/script-test/drill/log/drillbit\\.log",
@@ -197,7 +196,8 @@ public class ScriptUtils {
       "sqlline",
       //sqlline.bat
       //submit_plan
-      "yarn-drillbit.sh"
+      "yarn-drillbit.sh",
+      "auto-setup.sh"
   };
 
   /**
@@ -286,24 +286,89 @@ public class ScriptUtils {
     }
   }
 
+  public void writeEnvFile(PrintWriter out, String key, String value, boolean overrideValue) {
+    out.print("export ");
+    out.print(key);
+    out.print("=");
+
+    if (!overrideValue) {
+      out.print("${");
+      out.print(key);
+      out.print(":-");
+    }
+    out.print("\"");
+    out.print(value);
+    out.print("\"");
+
+    if (!overrideValue) {
+      out.print("}");
+    }
+    out.println();
+  }
+
   /**
    * Create a drill-env.sh or distrib-env.sh file with the given environment in
    * the recommended format.
+   * different formats based on overrideValue flag
+   *
+   * @param file - File instance to set environment variables in
+   * @param env - Environment to be placed inside File
+   * @param overrideValue - true - Set environment value such that it overrides previously set value
+   *                      - false - Set environment value in recommended format.
    */
-
-  public void createEnvFile(File file, Map<String, String> env)
+  public void createEnvFile(File file, Map<String, String> env, boolean overrideValue)
       throws IOException {
     try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
       out.println("#!/usr/bin/env bash");
       for (String key : env.keySet()) {
         String value = env.get(key);
-        out.print("export ");
-        out.print(key);
-        out.print("=${");
-        out.print(key);
-        out.print(":-\"");
-        out.print(value);
-        out.println("\"}");
+        writeEnvFile(out, key, value, overrideValue);
+      }
+    }
+  }
+
+  /**
+   * Creates a drill-env.sh or distrib-env.sh file with the given environment under
+   * a given condition. If size of env map is smaller than condition map then last
+   * env entry is repeated for rest of conditions.
+   *
+   * @param file - File instance to set environment and condition in
+   * @param condition - Conditions to guard environment variable
+   * @param env - Environment to be placed inside File
+   * @param overrideValue - true - Set environment value such that it overrides previously set value
+   *                      - false - Set environment value in recommended format.
+   *
+   */
+  public void createEnvFileWithCondition(File file, Map<String, String> condition,
+                                         Map<String, String> env, boolean overrideValue) throws IOException {
+    if (env.size() == 0 || condition.size() == 0) {
+      return;
+    }
+
+    final Iterator envIterator = env.entrySet().iterator();
+    Map.Entry currentEnv = (Map.Entry) envIterator.next();
+
+    try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+      out.println("#!/usr/bin/env bash");
+
+      for (String condKey : condition.keySet()) {
+        String condValue = condition.get(condKey);
+        out.print("if [ \"$");
+        out.print(condKey);
+        out.print("\" = \"");
+        out.print(condValue);
+        out.println("\" ]; then");
+
+        final String envKey = currentEnv.getKey().toString();
+        final String envValue = currentEnv.getValue().toString();
+        writeEnvFile(out, envKey, envValue, overrideValue);
+
+        out.println("fi");
+        out.println();
+
+        if (envIterator.hasNext()) {
+          currentEnv = (Map.Entry) envIterator.next();
+        }
       }
     }
   }
@@ -342,7 +407,8 @@ public class ScriptUtils {
    * Consume the input from a stream, specifically the stderr or stdout stream
    * from a process.
    *
-   * @see http://stackoverflow.com/questions/14165517/processbuilder-forwarding-stdout-and-stderr-of-started-processes-without-blocki
+   * @link http://stackoverflow.com/questions/14165517/processbuilder-forwarding-stdout-and-stderr-of-started-processes
+   * -without-blocki
    */
 
   private static class StreamGobbler extends Thread {
