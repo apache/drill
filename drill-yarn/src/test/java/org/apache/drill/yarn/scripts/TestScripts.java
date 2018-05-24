@@ -159,14 +159,6 @@ public class TestScripts {
       result.validateArgRegex("-Xloggc:.*/" + logTail);
     }
 
-    // Max Perm Size
-
-    {
-      RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_RUN)
-          .addEnv("DRILLBIT_MAX_PERM", "600M").run();
-      result.validateArg("-XX:MaxPermSize=600M");
-    }
-
     // Code cache size
 
     {
@@ -346,9 +338,8 @@ public class TestScripts {
     drillEnv.put("DRILL_HEAP", "5G");
     drillEnv.put("DRILL_MAX_DIRECT_MEMORY", "7G");
     drillEnv.put("SERVER_LOG_GC", "1");
-    drillEnv.put("DRILLBIT_MAX_PERM", "600M");
     drillEnv.put("DRILLBIT_CODE_CACHE_SIZE", "2G");
-    context.createEnvFile(new File(siteDir, fileName), drillEnv);
+    context.createEnvFile(new File(siteDir, fileName), drillEnv, false);
 
     {
       RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_RUN).run();
@@ -358,8 +349,7 @@ public class TestScripts {
           propArg,
           "-Xms5G", "-Xmx5G",
           "-XX:MaxDirectMemorySize=7G",
-          "-XX:ReservedCodeCacheSize=2G",
-          "-XX:MaxPermSize=600M"
+          "-XX:ReservedCodeCacheSize=2G"
       };
 
       result.validateArgs(expectedArgs);
@@ -378,9 +368,47 @@ public class TestScripts {
           .run();
       assertEquals(0, result.returnCode);
       result.validateArg("-XX:MaxDirectMemorySize=9G");
-      result.validateArg("-XX:MaxPermSize=600M");
       String logTail = context.testDrillHome.getName() + "/log/drillbit.gc";
       assertFalse(result.containsArgRegex("-Xloggc:.*/" + logTail));
+    }
+  }
+
+  @Test
+  public void testDistribEnvWithNegativeCond() throws IOException {
+    // Construct condition map
+    final Map<String, String> conditions = new HashMap<>();
+    conditions.put("DRILLBIT_CONTEXT", "0");
+    final String expectedArgs[] = {"-XX:ReservedCodeCacheSize=1G"};
+    doEnvFileWithConditionTest("distrib-env.sh", conditions, expectedArgs);
+  }
+
+  @Test
+  public void testDistribEnvWithPositiveCond() throws IOException {
+    // Construct condition map
+    final Map<String, String> conditions = new HashMap<>();
+    conditions.put("DRILLBIT_CONTEXT", "1");
+    final String expectedArgs[] = {"-XX:ReservedCodeCacheSize=2G"};
+    doEnvFileWithConditionTest("distrib-env.sh", conditions, expectedArgs);
+  }
+
+  /**
+   * Implementation of the drill-env.sh or distrib-env.sh tests with conditions
+   * guarding environment variables.
+   */
+  private void doEnvFileWithConditionTest(String fileName, Map<String, String> conditions,
+                                          String[] expectedArgs) throws IOException {
+    context.createMockDistrib();
+    File siteDir = new File(context.testDrillHome, "conf");
+    context.createMockConf(siteDir);
+
+    // Set a property in the env file.
+    Map<String, String> drillEnv = new HashMap<>();
+    drillEnv.put("DRILLBIT_CODE_CACHE_SIZE", "2G");
+    context.createEnvFileWithCondition(new File(siteDir, fileName), conditions, drillEnv, false);
+    {
+      RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_RUN).run();
+      assertEquals(0, result.returnCode);
+      result.validateArgs(expectedArgs);
     }
   }
 
@@ -400,13 +428,12 @@ public class TestScripts {
     Map<String, String> distribEnv = new HashMap<>();
     distribEnv.put("DRILL_HEAP", "5G");
     distribEnv.put("DRILL_MAX_DIRECT_MEMORY", "7G");
-    distribEnv.put("DRILLBIT_MAX_PERM", "600M");
-    context.createEnvFile(new File(siteDir, "distrib-env.sh"), distribEnv);
+    context.createEnvFile(new File(siteDir, "distrib-env.sh"), distribEnv, false);
 
     Map<String, String> drillEnv = new HashMap<>();
     drillEnv.put("DRILL_HEAP", "6G");
     drillEnv.put("DRILL_MAX_DIRECT_MEMORY", "9G");
-    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv);
+    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv, false);
 
     {
       RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_RUN).run();
@@ -414,8 +441,7 @@ public class TestScripts {
       String expectedArgs[] = {
           "-Xms6G", "-Xmx6G",
           "-XX:MaxDirectMemorySize=9G",
-          "-XX:MaxPermSize=600M",
-          "-XX:ReservedCodeCacheSize=1G" // Default
+          "-XX:ReservedCodeCacheSize=1024m" // Default
       };
 
       result.validateArgs(expectedArgs);
@@ -428,8 +454,7 @@ public class TestScripts {
       String expectedArgs[] = {
           "-Xms6G", "-Xmx6G",
           "-XX:MaxDirectMemorySize=5G",
-          "-XX:MaxPermSize=600M",
-          "-XX:ReservedCodeCacheSize=1G" // Default
+          "-XX:ReservedCodeCacheSize=1024m" // Default
       };
 
       result.validateArgs(expectedArgs);
@@ -498,19 +523,17 @@ public class TestScripts {
     Map<String, String> distribEnv = new HashMap<>();
     distribEnv.put("DRILL_HEAP", "5G");
     distribEnv.put("DRILL_MAX_DIRECT_MEMORY", "7G");
-    distribEnv.put("DRILLBIT_MAX_PERM", "600M");
-    context.createEnvFile(new File(confDir, "distrib-env.sh"), distribEnv);
+    context.createEnvFile(new File(confDir, "distrib-env.sh"), distribEnv, false);
 
     Map<String, String> drillEnv = new HashMap<>();
     drillEnv.put("DRILL_HEAP", "6G");
     drillEnv.put("DRILL_MAX_DIRECT_MEMORY", "9G");
-    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv);
+    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv, false);
 
     String expectedArgs[] = {
         "-Xms6G", "-Xmx6G",
         "-XX:MaxDirectMemorySize=9G",
-        "-XX:MaxPermSize=600M",
-        "-XX:ReservedCodeCacheSize=1G" // Default
+        "-XX:ReservedCodeCacheSize=1024m" // Default
     };
 
     // Site set using argument
@@ -611,8 +634,7 @@ public class TestScripts {
 
     String prefix = "-Djava.library.path=";
     {
-      RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_RUN)
-          .run();
+      RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_RUN).run();
       assertFalse(result.containsArgRegex(prefix + ".*"));
       assertNull(result.libPath);
     }
@@ -874,7 +896,7 @@ public class TestScripts {
     File pidDir = context.createDir(new File(context.testDir, "pid"));
     Map<String, String> drillEnv = new HashMap<>();
     drillEnv.put("DRILL_PID_DIR", pidDir.getAbsolutePath());
-    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv);
+    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv, false);
 
     {
       RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_START)
@@ -905,7 +927,7 @@ public class TestScripts {
 
     Map<String, String> drillEnv = new HashMap<>();
     drillEnv.put("DRILL_MAX_DIRECT_MEMORY", "9G");
-    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv);
+    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv, false);
 
     // Use the -site (--config) option.
 
@@ -948,7 +970,7 @@ public class TestScripts {
     context.removeDir(new File(context.testDrillHome, "log"));
     Map<String, String> drillEnv = new HashMap<>();
     drillEnv.put("DRILL_LOG_DIR", logsDir.getAbsolutePath());
-    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv);
+    context.createEnvFile(new File(siteDir, "drill-env.sh"), drillEnv, false);
 
     {
       DrillbitRun runner = new DrillbitRun(DrillbitRun.DRILLBIT_START);
@@ -1122,7 +1144,6 @@ public class TestScripts {
       drillEnv.put("DRILL_HEAP", "5G");
       drillEnv.put("DRILL_MAX_DIRECT_MEMORY", "7G");
       drillEnv.put("SERVER_LOG_GC", "1");
-      drillEnv.put("DRILLBIT_MAX_PERM", "600M");
       drillEnv.put("DRILLBIT_CODE_CACHE_SIZE", "2G");
       RunResult result = new ScriptRunner("sqlline")
           .withEnvironment(drillEnv)
@@ -1138,11 +1159,9 @@ public class TestScripts {
 
       Map<String, String> shellEnv = new HashMap<>();
       shellEnv.put("CLIENT_GC_OPTS", "-XX:+UseG1GC");
-      shellEnv.put("SQLLINE_JAVA_OPTS", "-XX:MaxPermSize=256M");
       RunResult result = new ScriptRunner("sqlline")
           .withEnvironment(shellEnv)
           .run();
-      assertTrue(result.containsArg("-XX:MaxPermSize=256M"));
       assertTrue(result.containsArg("-XX:+UseG1GC"));
     }
     {
@@ -1156,7 +1175,6 @@ public class TestScripts {
       drillEnv.put("DRILL_HEAP", "5G");
       drillEnv.put("DRILL_MAX_DIRECT_MEMORY", "7G");
       drillEnv.put("SERVER_LOG_GC", "1");
-      drillEnv.put("DRILLBIT_MAX_PERM", "600M");
       drillEnv.put("DRILLBIT_CODE_CACHE_SIZE", "2G");
       drillEnv.put("DRILL_EMBEDDED", "1");
       RunResult result = new ScriptRunner("sqlline")
@@ -1168,11 +1186,84 @@ public class TestScripts {
           "-Xms5G", "-Xmx5G",
           "-XX:MaxDirectMemorySize=7G",
           "-XX:ReservedCodeCacheSize=2G",
-          "-XX:MaxPermSize=600M"
       };
 
       result.validateArgs(expectedArgs);
       assertTrue(result.containsArg("sqlline.SqlLine"));
+    }
+  }
+
+  /**
+   * Test to verify no effect of DRILLBIT_CONTEXT for Sqlline.
+   * @throws IOException
+   */
+  @Test
+  public void testSqllineWithDrillbitContextEnv() throws IOException {
+    context.createMockDistrib();
+    File siteDir = new File(context.testDrillHome, "conf");
+    context.createMockConf(siteDir);
+
+    // Test when SQLLINE_JAVA_OPTS is overriden inside a condition for
+    // DRILLBIT_CONTEXT = 0, then there is no effect
+    {
+      // Create a condition variable to be placed in distrib-env.sh
+      Map<String, String> conditions = new HashMap<>();
+      conditions.put("DRILLBIT_CONTEXT", "0");
+
+      // Create environment variable to be placed inside a condition in distrib-env.sh
+      Map<String, String> drillEnv = new HashMap<>();
+      drillEnv.put("SQLLINE_JAVA_OPTS", "-XX:MaxPermSize=256M");
+
+      // Create the environment variable file overriding SQLLINE_JAVA_OPTS
+      context.createEnvFileWithCondition(new File(siteDir, "distrib-env.sh"), conditions, drillEnv, true);
+
+      // Expected value of the property
+      String expectedArgs[] = {"-XX:MaxPermSize=256M"};
+
+      // Run the test and match the output with expectedArgs
+      RunResult result = new ScriptRunner("sqlline").run();
+      assertEquals(0, result.returnCode);
+      result.validateJava();
+      result.validateClassPath(ScriptUtils.stdCp);
+      // Since by default MaxPermSize is not set anymore for Sqlline. It's removed in 1.13
+      assertFalse(result.containsArgsRegex(expectedArgs));
+    }
+
+    // Test when SQLLINE_JAVA_OPTS is overriden inside a condition for
+    // DRILLBIT_CONTEXT = 1, then there is no effect
+    {
+      Map<String, String> conditions = new HashMap<>();
+      conditions.put("DRILLBIT_CONTEXT", "1");
+
+      Map<String, String> drillEnv = new HashMap<>();
+      drillEnv.put("SQLLINE_JAVA_OPTS", "-XX:MaxPermSize=256M");
+      String expectedArgs[] = {"-XX:MaxPermSize=256M"};
+
+      // Create the environment variable file overriding SQLLINE_JAVA_OPTS
+      context.createEnvFileWithCondition(new File(siteDir, "distrib-env.sh"), conditions, drillEnv, true);
+      RunResult result = new ScriptRunner("sqlline").run();
+      assertEquals(0, result.returnCode);
+      result.validateJava();
+      result.validateClassPath(ScriptUtils.stdCp);
+      // Since by default MaxPermSize is not set anymore for Sqlline. It's removed in 1.13
+      assertFalse(result.containsArgsRegex(expectedArgs));
+    }
+
+    // Test when SQLLINE_JAVA_OPTS is overriden without condition for
+    // DRILLBIT_CONTEXT then the environment variable is updated
+    {
+      Map<String, String> drillEnv = new HashMap<>();
+      drillEnv.put("SQLLINE_JAVA_OPTS", "-XX:MaxPermSize=256M");
+
+      // Create the environment variable file overriding SQLLINE_JAVA_OPTS without any condition
+      // around it.
+      String expectedArgs[] = {"-XX:MaxPermSize=256M"};
+      context.createEnvFile(new File(siteDir, "distrib-env.sh"), drillEnv, true);
+      RunResult result = new ScriptRunner("sqlline").run();
+      assertEquals(0, result.returnCode);
+      result.validateJava();
+      result.validateClassPath(ScriptUtils.stdCp);
+      assertTrue(result.containsArgsRegex(expectedArgs));
     }
   }
 
