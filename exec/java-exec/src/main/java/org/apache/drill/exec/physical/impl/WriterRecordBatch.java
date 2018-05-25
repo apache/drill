@@ -95,8 +95,14 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
             return upstream;
 
           case NOT_YET:
-          case NONE:
             break;
+          case NONE:
+            if (schema != null) {
+              // Schema is for the output batch schema which is setup in setupNewSchema(). Since the output
+              // schema is fixed ((Fragment(VARCHAR), Number of records written (BIGINT)) we should set it
+              // up even with 0 records for it to be reported back to the client.
+              break;
+            }
 
           case OK_NEW_SCHEMA:
             setupNewSchema();

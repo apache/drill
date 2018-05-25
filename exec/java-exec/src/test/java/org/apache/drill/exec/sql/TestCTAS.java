@@ -315,6 +315,16 @@ public class TestCTAS extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testCTASWithEmptyJson() throws Exception {
+    final String newTblName = "tbl4444";
+    try {
+      test(String.format("CREATE TABLE %s.%s AS SELECT * FROM cp.`project/pushdown/empty.json`", DFS_TMP_SCHEMA, newTblName));
+    } finally {
+      test("DROP TABLE IF EXISTS %s.%s", DFS_TMP_SCHEMA, newTblName);
+    }
+  }
+
   private static void ctasErrorTestHelper(final String ctasSql, final String expErrorMsg) throws Exception {
     final String createTableSql = String.format(ctasSql, "testTableName");
     errorMsgTestHelper(createTableSql, expErrorMsg);

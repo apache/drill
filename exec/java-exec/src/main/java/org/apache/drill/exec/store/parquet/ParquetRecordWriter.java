@@ -230,7 +230,8 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     // Its value is likely below Integer.MAX_VALUE (2GB), although rowGroupSize is a long type.
     // Therefore this size is cast to int, since allocating byte array in under layer needs to
     // limit the array size in an int scope.
-    int initialBlockBufferSize = max(MINIMUM_BUFFER_SIZE, blockSize / this.schema.getColumns().size() / 5);
+    int initialBlockBufferSize = this.schema.getColumns().size() > 0 ?
+        max(MINIMUM_BUFFER_SIZE, blockSize / this.schema.getColumns().size() / 5) : MINIMUM_BUFFER_SIZE;
     // We don't want this number to be too small either. Ideally, slightly bigger than the page size,
     // but not bigger than the block buffer
     int initialPageBufferSize = max(MINIMUM_BUFFER_SIZE, min(pageSize + pageSize / 10, initialBlockBufferSize));
