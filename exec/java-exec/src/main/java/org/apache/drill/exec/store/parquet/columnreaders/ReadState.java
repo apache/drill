@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
+import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.parquet.column.ColumnDescriptor;
@@ -39,7 +40,10 @@ import org.apache.parquet.hadoop.metadata.BlockMetaData;
  */
 
 public class ReadState {
+  /** The Parquet Schema */
   private final ParquetSchema schema;
+  /** Responsible for managing record batch size constraints */
+  private final RecordBatchSizerManager batchSizerMgr;
   private final ParquetReaderStats parquetReaderStats;
   private VarLenBinaryReader varLengthReader;
   /**
@@ -48,8 +52,12 @@ public class ReadState {
    * that need only have their value count set at the end of each call to next(), as the values default to null.
    */
   private List<NullableIntVector> nullFilledVectors;
-  private List<ColumnReader<?>> columnReaders = new ArrayList<>();
-  private long numRecordsToRead; // number of records to read
+  private List<ColumnReader<?>> fixedLenColumnReaders = new ArrayList<>();
+  private final long totalNumRecordsToRead; // number of records to read
+
+  // counter for the values that have been read in this pass (a single call to the next() method)
+  private int valuesReadInCurrentBatch;
+
   /**
    * Keeps track of the number of records read thus far.
    * <p>
@@ -60,19 +68,29 @@ public class ReadState {
   private long totalRecordsRead;
   private boolean useAsyncColReader;
 
-  public ReadState(ParquetSchema schema, ParquetReaderStats parquetReaderStats, long numRecordsToRead, boolean useAsyncColReader) {
+  public ReadState(ParquetSchema schema,
+    RecordBatchSizerManager batchSizerMgr, ParquetReaderStats parquetReaderStats, long numRecordsToRead,
+    boolean useAsyncColReader) {
+
     this.schema = schema;
+    this.batchSizerMgr = batchSizerMgr;
     this.parquetReaderStats = parquetReaderStats;
     this.useAsyncColReader = useAsyncColReader;
     if (! schema.isStarQuery()) {
       nullFilledVectors = new ArrayList<>();
     }
+
+    // Because of JIRA MD-3953, the Parquet reader is sometimes getting the wrong
+    // number of rows to read. For now, returning all a file data (till
+    // downstream operator stop consuming).
+    numRecordsToRead = -1;
+
     // Callers can pass -1 if they want to read all rows.
     if (numRecordsToRead == ParquetRecordReader.NUM_RECORDS_TO_READ_NOT_SPECIFIED) {
-      this.numRecordsToRead = schema.getGroupRecordCount();
+      this.totalNumRecordsToRead = schema.getGroupRecordCount();
     } else {
       assert (numRecordsToRead >= 0);
-      this.numRecordsToRead = Math.min(numRecordsToRead, schema.getGroupRecordCount());
+      this.totalNumRecordsToRead = Math.min(numRecordsToRead, schema.getGroupRecordCount());
     }
   }
 
@@ -99,10 +117,10 @@ public class ReadState {
         // create a reader and add it to the appropriate list
         varLengthColumns.add(columnMetadata.makeVariableWidthReader(reader));
       } else if (columnMetadata.isRepeated()) {
-        varLengthColumns.add(columnMetadata.makeRepeatedFixedWidthReader(reader, schema.getRecordsPerBatch()));
+        varLengthColumns.add(columnMetadata.makeRepeatedFixedWidthReader(reader));
       }
       else {
-        columnReaders.add(columnMetadata.makeFixedWidthReader(reader, schema.getRecordsPerBatch()));
+        fixedLenColumnReaders.add(columnMetadata.makeFixedWidthReader(reader));
       }
     }
     varLengthReader = new VarLenBinaryReader(reader, varLengthColumns);
@@ -119,8 +137,8 @@ public class ReadState {
    */
 
   public ColumnReader<?> getFirstColumnReader() {
-    if (columnReaders.size() > 0) {
-      return columnReaders.get(0);
+    if (fixedLenColumnReaders.size() > 0) {
+      return fixedLenColumnReaders.get(0);
     }
     else if (varLengthReader.columns.size() > 0) {
       return varLengthReader.columns.get(0);
@@ -130,21 +148,46 @@ public class ReadState {
   }
 
   public void resetBatch() {
-    for (final ColumnReader<?> column : columnReaders) {
+    for (final ColumnReader<?> column : fixedLenColumnReaders) {
       column.valuesReadInCurrentPass = 0;
     }
     for (final VarLengthColumn<?> r : varLengthReader.columns) {
       r.valuesReadInCurrentPass = 0;
     }
+    setValuesReadInCurrentPass(0);
   }
 
   public ParquetSchema schema() { return schema; }
-  public List<ColumnReader<?>> getColumnReaders() { return columnReaders; }
+  public RecordBatchSizerManager batchSizerMgr() { return batchSizerMgr; }
+  public List<ColumnReader<?>> getFixedLenColumnReaders() { return fixedLenColumnReaders; }
   public long recordsRead() { return totalRecordsRead; }
   public VarLenBinaryReader varLengthReader() { return varLengthReader; }
-  public long getRecordsToRead() { return numRecordsToRead; }
+  public long getTotalRecordsToRead() { return totalNumRecordsToRead; }
   public boolean useAsyncColReader() { return useAsyncColReader; }
   public ParquetReaderStats parquetReaderStats() { return parquetReaderStats; }
+
+  /**
+   * @return values read within the latest batch
+   */
+  public int getValuesReadInCurrentPass() {
+    return valuesReadInCurrentBatch;
+  }
+
+  /**
+   * @return remaining values to read
+   */
+  public int getRemainingValuesToRead() {
+    assert totalNumRecordsToRead >= totalRecordsRead;
+    return (int) (totalNumRecordsToRead - totalRecordsRead);
+  }
+
+  /**
+   * @param valuesReadInCurrentBatch the valuesReadInCurrentBatch to set
+   */
+  public void setValuesReadInCurrentPass(int valuesReadInCurrentBatch) {
+    this.valuesReadInCurrentBatch = valuesReadInCurrentBatch;
+  }
+
 
   /**
    * When the SELECT clause references columns that do not exist in the Parquet
@@ -170,16 +213,15 @@ public class ReadState {
 
   public void updateCounts(int readCount) {
     totalRecordsRead += readCount;
-    numRecordsToRead -= readCount;
   }
 
   public void close() {
-    if (columnReaders != null) {
-      for (final ColumnReader<?> column : columnReaders) {
+    if (fixedLenColumnReaders != null) {
+      for (final ColumnReader<?> column : fixedLenColumnReaders) {
         column.clear();
       }
-      columnReaders.clear();
-      columnReaders = null;
+      fixedLenColumnReaders.clear();
+      fixedLenColumnReaders = null;
     }
     if (varLengthReader != null) {
       for (final VarLengthColumn<? extends ValueVector> r : varLengthReader.columns) {

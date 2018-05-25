@@ -445,8 +445,8 @@ class PageReader {
    * @throws IOException An IO related condition
    */
   void resetDefinitionLevelReader(int skipCount) throws IOException {
-    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0) {
-      throw new UnsupportedOperationException("Unsupoorted Operation");
+    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() > 1) {
+      throw new UnsupportedOperationException("Unsupported Operation");
     }
 
     final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.definition_level_encoding);

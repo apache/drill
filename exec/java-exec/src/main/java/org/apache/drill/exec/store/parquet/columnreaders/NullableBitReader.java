@@ -33,9 +33,9 @@ import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
  */
 final class NullableBitReader extends ColumnReader<NullableBitVector> {
 
-  NullableBitReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+  NullableBitReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                     boolean fixedLength, NullableBitVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
   @Override

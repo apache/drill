@@ -20,16 +20,18 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import java.nio.ByteBuffer;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
+import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
 
 /** Handles fixed data types that have been erroneously tagged as Variable Length. */
-final class VarLenFixedEntryReader extends VarLenAbstractEntryReader {
+final class VarLenFixedEntryReader extends VarLenAbstractPageEntryReader {
 
   VarLenFixedEntryReader(ByteBuffer buffer,
     PageDataInfo pageInfo,
     ColumnPrecisionInfo columnPrecInfo,
-    VarLenColumnBulkEntry entry) {
+    VarLenColumnBulkEntry entry,
+    VarLenColumnBulkInputCallback containerCallback) {
 
-    super(buffer, pageInfo, columnPrecInfo, entry);
+    super(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
   }
 
   /** {@inheritDoc} */

@@ -21,17 +21,19 @@ import java.nio.ByteBuffer;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.DictionaryReaderWrapper;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
+import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
 import org.apache.parquet.io.api.Binary;
 
 /** Handles nullable variable data types using a dictionary */
-final class VarLenNullableDictionaryReader extends VarLenAbstractEntryReader {
+final class VarLenNullableDictionaryReader extends VarLenAbstractPageEntryReader {
 
   VarLenNullableDictionaryReader(ByteBuffer buffer,
     PageDataInfo pageInfo,
     ColumnPrecisionInfo columnPrecInfo,
-    VarLenColumnBulkEntry entry) {
+    VarLenColumnBulkEntry entry,
+    VarLenColumnBulkInputCallback containerCallback) {
 
-    super(buffer, pageInfo, columnPrecInfo, entry);
+    super(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
   }
 
   /** {@inheritDoc} */
@@ -102,14 +104,20 @@ final class VarLenNullableDictionaryReader extends VarLenAbstractEntryReader {
 
   private final VarLenColumnBulkEntry getEntrySingle(int valsToReadWithinPage) {
     final int[] valueLengths = entry.getValuesLength();
+    final DictionaryReaderWrapper valueReader = pageInfo.dictionaryValueReader;
 
     // Initialize the reader if needed
     pageInfo.definitionLevels.readFirstIntegerIfNeeded();
 
     if (pageInfo.definitionLevels.readCurrInteger() == 1) {
-      final DictionaryReaderWrapper valueReader = pageInfo.dictionaryValueReader;
       final Binary currEntry = valueReader.getEntry();
       final int dataLen = currEntry.length();
+
+      // Is there enough memory to handle this large value?
+      if (batchMemoryConstraintsReached(1, 4, dataLen)) {
+        entry.set(0, 0, 0, 0); // no data to be consumed
+        return entry;
+      }
 
       // Set the value length
       valueLengths[0] = dataLen;

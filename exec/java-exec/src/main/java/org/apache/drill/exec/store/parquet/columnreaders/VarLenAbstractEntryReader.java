@@ -17,24 +17,20 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.DrillBuf;
 import java.nio.ByteBuffer;
 
-import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
-import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
-
-import io.netty.buffer.DrillBuf;
+import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
 
 /** Abstract class for sub-classes implementing several algorithms for loading a Bulk Entry */
 abstract class VarLenAbstractEntryReader {
 
   /** byte buffer used for buffering page data */
   protected final ByteBuffer buffer;
-  /** Page Data Information */
-  protected final PageDataInfo pageInfo;
-  /** expected precision type: fixed or variable length */
-  protected final ColumnPrecisionInfo columnPrecInfo;
   /** Bulk entry */
   protected final VarLenColumnBulkEntry entry;
+  /** A callback to allow bulk readers interact with their container */
+  private final VarLenColumnBulkInputCallback containerCallback;
 
   /**
    * CTOR.
@@ -44,14 +40,12 @@ abstract class VarLenAbstractEntryReader {
    * @param entry reusable bulk entry object
    */
   VarLenAbstractEntryReader(ByteBuffer buffer,
-    PageDataInfo pageInfo,
-    ColumnPrecisionInfo columnPrecInfo,
-    VarLenColumnBulkEntry entry) {
+    VarLenColumnBulkEntry entry,
+    VarLenColumnBulkInputCallback containerCallback) {
 
     this.buffer = buffer;
-    this.pageInfo = pageInfo;
-    this.columnPrecInfo = columnPrecInfo;
     this.entry = entry;
+    this.containerCallback = containerCallback;
   }
 
   /**
@@ -61,53 +55,14 @@ abstract class VarLenAbstractEntryReader {
   abstract VarLenColumnBulkEntry getEntry(int valsToReadWithinPage);
 
   /**
-   * Indicates whether to use bulk processing
+   * @param newBitsMemory new "bits" memory size
+   * @param newOffsetsMemory new "offsets" memory size
+   * @param newDataMemory new "data" memory size
+   * @return true if the new payload ("bits", "offsets", "data") will trigger a constraint violation; false
+   *         otherwise
    */
-  protected final boolean bulkProcess() {
-    return columnPrecInfo.bulkProcess;
-  }
-
-  /**
-   * Loads new data into the buffer if empty or the force flag is set.
-   *
-   * @param force flag to force loading new data into the buffer
-   */
-  protected final boolean load(boolean force) {
-
-    if (!force && buffer.hasRemaining()) {
-      return true; // NOOP
-    }
-
-    // We're here either because the buffer is empty or we want to force a new load operation.
-    // In the case of force, there might be unprocessed data (still in the buffer) which is fine
-    // since the caller updates the page data buffer's offset only for the data it has consumed; this
-    // means unread data will be loaded again but this time will be positioned in the beginning of the
-    // buffer. This can happen only for the last entry in the buffer when either of its length or value
-    // is incomplete.
-    buffer.clear();
-
-    final int bufferCapacity = VarLenBulkPageReader.BUFF_SZ;
-    final int remaining = remainingPageData();
-    final int toCopy = remaining > bufferCapacity ? bufferCapacity : remaining;
-
-    if (toCopy == 0) {
-      return false;
-    }
-
-    pageInfo.pageData.getBytes(pageInfo.pageDataOff, buffer.array(), buffer.position(), toCopy);
-
-    buffer.limit(toCopy);
-
-    // At this point the buffer position is 0 and its limit set to the number of bytes copied.
-
-    return true;
-  }
-
-  /**
-   * @return remaining data in current page
-   */
-  protected final int remainingPageData() {
-    return pageInfo.pageDataLen - pageInfo.pageDataOff;
+  protected boolean batchMemoryConstraintsReached(int newBitsMemory, int newOffsetsMemory, int newDataMemory) {
+    return containerCallback.batchMemoryConstraintsReached(newBitsMemory, newOffsetsMemory, newDataMemory);
   }
 
   /**
@@ -115,7 +70,7 @@ abstract class VarLenAbstractEntryReader {
    * @param pos start position
    * @return an integer encoded as a low endian
    */
-  protected final int getInt(final byte[] buff, final int pos) {
+  static final int getInt(final byte[] buff, final int pos) {
     return DrillBuf.getInt(buff, pos);
   }
 

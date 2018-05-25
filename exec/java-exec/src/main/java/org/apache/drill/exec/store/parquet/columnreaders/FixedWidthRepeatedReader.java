@@ -46,8 +46,10 @@ public class FixedWidthRepeatedReader extends VarLengthColumn<RepeatedValueVecto
   boolean notFishedReadingList;
   byte[] leftOverBytes;
 
-  FixedWidthRepeatedReader(ParquetRecordReader parentReader, ColumnReader<?> dataReader, int dataTypeLengthInBytes, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, RepeatedValueVector valueVector, SchemaElement schemaElement) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, valueVector, schemaElement);
+  FixedWidthRepeatedReader(ParquetRecordReader parentReader, ColumnReader<?> dataReader, int dataTypeLengthInBytes,
+                           ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData, boolean fixedLength,
+                           RepeatedValueVector valueVector, SchemaElement schemaElement) throws ExecutionSetupException {
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, valueVector, schemaElement);
     this.dataTypeLengthInBytes = dataTypeLengthInBytes;
     this.dataReader = dataReader;
     this.dataReader.pageReader.clear();

@@ -38,13 +38,13 @@ public abstract class BatchReader {
 
   public int readBatch() throws Exception {
     ColumnReader<?> firstColumnStatus = readState.getFirstColumnReader();
-    long recordsToRead = Math.min(getReadCount(firstColumnStatus), readState.getRecordsToRead());
+    int currBatchNumRecords = readState.batchSizerMgr().getCurrentRecordsPerBatch();
+    long recordsToRead = Math.min(currBatchNumRecords, readState.getRemainingValuesToRead());
     int readCount = readRecords(firstColumnStatus, recordsToRead);
+
     readState.fillNullVectors(readCount);
     return readCount;
   }
-
-  protected abstract long getReadCount(ColumnReader<?> firstColumnStatus);
 
   protected abstract int readRecords(ColumnReader<?> firstColumnStatus, long recordsToRead) throws Exception;
 
@@ -59,14 +59,14 @@ public abstract class BatchReader {
   }
 
   protected void readAllFixedFieldsSerial(long recordsToRead) throws IOException {
-    for (ColumnReader<?> crs : readState.getColumnReaders()) {
+    for (ColumnReader<?> crs : readState.getFixedLenColumnReaders()) {
       crs.processPages(recordsToRead);
     }
   }
 
   protected void readAllFixedFieldsParallel(long recordsToRead) throws Exception {
     ArrayList<Future<Long>> futures = Lists.newArrayList();
-    for (ColumnReader<?> crs : readState.getColumnReaders()) {
+    for (ColumnReader<?> crs : readState.getFixedLenColumnReaders()) {
       Future<Long> f = crs.processPagesAsync(recordsToRead);
       if (f != null) {
         futures.add(f);
@@ -106,15 +106,6 @@ public abstract class BatchReader {
     }
 
     @Override
-    protected long getReadCount(ColumnReader<?> firstColumnStatus) {
-      if (readState.recordsRead() == readState.schema().getGroupRecordCount()) {
-        return 0;
-      }
-      return Math.min(ParquetRecordReader.DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH,
-                      readState.schema().getGroupRecordCount() - readState.recordsRead());
-    }
-
-    @Override
     protected int readRecords(ColumnReader<?> firstColumnStatus, long recordsToRead) {
       readState.updateCounts((int) recordsToRead);
       return (int) recordsToRead;
@@ -133,15 +124,19 @@ public abstract class BatchReader {
     }
 
     @Override
-    protected long getReadCount(ColumnReader<?> firstColumnStatus) {
-      return Math.min(readState.schema().getRecordsPerBatch(),
-                      firstColumnStatus.columnChunkMetaData.getValueCount() - firstColumnStatus.totalValuesRead);
-    }
-
-    @Override
     protected int readRecords(ColumnReader<?> firstColumnStatus, long recordsToRead) throws Exception {
       readAllFixedFields(recordsToRead);
-      return firstColumnStatus.getRecordsReadInCurrentPass();
+
+      if (firstColumnStatus != null) {
+        readState.setValuesReadInCurrentPass(firstColumnStatus.getRecordsReadInCurrentPass());
+      } else {
+        // No rows to return if there are no columns
+        readState.setValuesReadInCurrentPass(0);
+      }
+
+      readState.updateCounts((int) recordsToRead);
+
+      return readState.getValuesReadInCurrentPass();
     }
   }
 
@@ -157,15 +152,22 @@ public abstract class BatchReader {
     }
 
     @Override
-    protected long getReadCount(ColumnReader<?> firstColumnStatus) {
-      return ParquetRecordReader.DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH;
-    }
-
-    @Override
     protected int readRecords(ColumnReader<?> firstColumnStatus, long recordsToRead) throws Exception {
+      // We should not rely on the "firstColumnStatus.getRecordsReadInCurrentPass()" when dealing
+      // with variable length columns as each might return a different number of records. The batch size
+      // will be the lowest value. The variable column readers will update the "readState" object to
+      // reflect the correct information.
       long fixedRecordsToRead = readState.varLengthReader().readFields(recordsToRead);
       readAllFixedFields(fixedRecordsToRead);
-      return firstColumnStatus.getRecordsReadInCurrentPass();
+
+      // Sanity check the fixed readers read the expected number of rows
+      if (firstColumnStatus != null) {
+        assert firstColumnStatus.getRecordsReadInCurrentPass() == readState.getValuesReadInCurrentPass();
+      }
+
+      readState.updateCounts((int) fixedRecordsToRead);
+
+      return readState.getValuesReadInCurrentPass();
     }
   }
 }

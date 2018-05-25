@@ -632,6 +632,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       // Let's process the input
       while (input.hasNext()) {
         T entry = input.next();
+
+        if (entry == null || ((VarLenBulkEntry) entry).getNumValues() == 0) {
+          break; // this could happen when handling columnar batch sizing constraints
+        }
         bufferedMutator.setSafe(entry);
 
         if (callback != null) {
@@ -897,7 +901,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       this.parent = parent;
       this.dataBuffOff = this.parent.offsetVector.getAccessor().get(startIdx);
       this.totalDataLen = this.dataBuffOff;
-      this.offsetsMutator = new UInt4Vector.BufferedMutator(startIdx, buffSz * 4, parent.offsetVector);
+      this.offsetsMutator = new UInt4Vector.BufferedMutator(startIdx, buffSz, parent.offsetVector);
 
       // Forcing the offsetsMutator to operate at index+1
       this.offsetsMutator.setSafe(this.dataBuffOff);
@@ -970,6 +974,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
       // Update counters
       dataBuffOff += buffer.position();
+      assert dataBuffOff == totalDataLen;
 
       // Reset the byte buffer
       buffer.clear();
@@ -1008,6 +1013,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
         remaining -= toCopy;
 
       } while (remaining > 0);
+
+      // We need to flush as offset data can be accessed during loading to
+      // figute out current payload size.
+      offsetsMutator.flush();
+
     }
   }
 }
