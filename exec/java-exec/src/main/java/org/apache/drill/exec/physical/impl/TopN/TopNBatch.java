@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -602,7 +601,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       int index = 0;
       for (VectorWrapper<?> w : queueContainer) {
         HyperVectorWrapper wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
-        wrapper.addVectors(w.getValueVectors());
+        wrapper.updateVectorList(w.getValueVectors());
       }
       // Since the reference of SV4 is held by downstream operator and there is no schema change, so just copy the
       // underlying buffer from priority queue sv4.
