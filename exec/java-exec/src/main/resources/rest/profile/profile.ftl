@@ -86,7 +86,9 @@ table.sortable thead .sorting_desc { background-image: url("/static/img/black-de
       <p><pre>${model.profile.plan}</pre></p>
     </div>
     <div id="query-visual" class="tab-pane">
-      <button type='button' class='btn btn-default' onclick='popUpAndPrintPlan();'><span class="glyphicon glyphicon-print"></span> Print Plan</button>
+      <div style='padding: 15px 15px;'>
+        <button type='button' class='btn btn-default' onclick='popUpAndPrintPlan();'><span class="glyphicon glyphicon-print"></span> Print Plan</button>
+      </div>
       <div>
         <svg id="query-visual-canvas" class="center-block"></svg>
       </div>
