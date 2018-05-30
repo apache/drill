@@ -88,22 +88,36 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   }
 
   public DrillFileSystem(Configuration fsConf, OperatorStats operatorStats) throws IOException {
-    this.underlyingFs = FileSystem.get(fsConf);
+    this(fsConf, URI.create(fsConf.getRaw(FS_DEFAULT_NAME_KEY)), operatorStats);
+  }
+
+  public DrillFileSystem(Configuration fsConf, URI Uri, OperatorStats operatorStats) throws IOException {
+    this.underlyingFs = FileSystem.get(Uri, fsConf);
+    logger.trace("Configuration for the DrillFileSystem " + fsConf.getRaw(FS_DEFAULT_NAME_KEY) +
+        ", underlyingFs: " + this.underlyingFs.getUri());
     this.codecFactory = new CompressionCodecFactory(fsConf);
     this.operatorStats = operatorStats;
+    setConf(fsConf);
   }
 
   @Override
   public void setConf(Configuration conf) {
     // Guard against setConf(null) call that is called as part of superclass constructor (Configured) of the
     // DrillFileSystem, at which point underlyingFs is null.
-    if (conf != null && underlyingFs != null) {
-      underlyingFs.setConf(conf);
+    if(conf != null) {
+      super.setConf(conf);
+      if (underlyingFs != null && underlyingFs.getConf() == null) {
+        underlyingFs.setConf(conf);
+      }
+
     }
   }
 
   @Override
   public Configuration getConf() {
+    if (super.getConf() != null) {
+      return super.getConf();
+    }
     return underlyingFs.getConf();
   }
 
