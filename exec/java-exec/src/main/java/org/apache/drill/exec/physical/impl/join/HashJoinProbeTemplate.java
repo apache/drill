@@ -31,6 +31,8 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 
+import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
+
 public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
   VectorContainer container; // the outgoing container
@@ -44,8 +46,6 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   private JoinRelType joinType;
 
   private HashJoinBatch outgoingJoinBatch = null;
-
-  private static final int TARGET_RECORDS_PER_BATCH = 4000;
 
   // Number of records to process on the probe side
   private int recordsToProcess = 0;
@@ -83,6 +83,16 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   private int partitionMask = 0; // numPartitions - 1
   private int bitsInMask = 0; // number of bits in the MASK
   private int rightHVColPosition;
+  private int targetOutputRecords;
+
+  @Override
+  public void setTargetOutputCount(int targetOutputRecords) {
+    this.targetOutputRecords = targetOutputRecords;
+  }
+
+  public int getOutputCount() {
+    return outputRecords;
+  }
 
   /**
    *  Setup the Hash Join Probe object
@@ -209,7 +219,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
 
   private void executeProjectRightPhase(int currBuildPart) {
-    while (outputRecords < TARGET_RECORDS_PER_BATCH && recordsProcessed < recordsToProcess) {
+    while (outputRecords < targetOutputRecords && recordsProcessed < recordsToProcess) {
       outputRecords =
         outputRow(partitions[currBuildPart].getContainers(), unmatchedBuildIndexes.get(recordsProcessed),
           null /* no probeBatch */, 0 /* no probe index */ );
@@ -219,7 +229,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
   private void executeProbePhase() throws SchemaChangeException {
 
-    while (outputRecords < TARGET_RECORDS_PER_BATCH && probeState != ProbeState.DONE && probeState != ProbeState.PROJECT_RIGHT) {
+    while (outputRecords < targetOutputRecords && probeState != ProbeState.DONE && probeState != ProbeState.PROJECT_RIGHT) {
 
       // Check if we have processed all records in this batch we need to invoke next
       if (recordsProcessed == recordsToProcess) {
@@ -262,6 +272,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
                 probeBatch.getSchema());
             }
           case OK:
+            setTargetOutputCount(outgoingJoinBatch.getBatchMemoryManager().update(probeBatch, LEFT_INDEX,outputRecords));
             recordsToProcess = probeBatch.getRecordCount();
             recordsProcessed = 0;
             // If we received an empty batch do nothing
@@ -274,10 +285,9 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
         }
       }
 
-        int probeIndex = -1;
+      int probeIndex = -1;
       // Check if we need to drain the next row in the probe side
       if (getNextRecord) {
-
         if ( !buildSideIsEmpty ) {
           int hashCode = ( cycleNum == 0 ) ?
             partitions[0].getProbeHashCode(recordsProcessed)

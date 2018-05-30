@@ -163,6 +163,19 @@ public class RecordBatchMemoryManager {
     updateIncomingStats(index);
   }
 
+  public int update(int inputIndex, int outputPosition, boolean useAggregate) {
+    // by default just return the outputRowCount
+    return getOutputRowCount();
+  }
+
+  public int update(RecordBatch batch, int inputIndex, int outputPosition) {
+    return getOutputRowCount();
+  }
+
+  public int update(RecordBatch batch, int inputIndex, int outputPosition, boolean useAggregate) {
+    return getOutputRowCount();
+  }
+
   public int getOutputRowCount() {
     return outputRowCount;
   }
@@ -205,8 +218,7 @@ public class RecordBatchMemoryManager {
   }
 
   public void setRecordBatchSizer(RecordBatchSizer sizer) {
-    this.sizer[DEFAULT_INPUT_INDEX] = sizer;
-    inputBatchStats[DEFAULT_INPUT_INDEX] = new BatchStats();
+    setRecordBatchSizer(DEFAULT_INPUT_INDEX, sizer);
   }
 
   public RecordBatchSizer getRecordBatchSizer(int index) {
@@ -261,7 +273,6 @@ public class RecordBatchMemoryManager {
     return UInt4Vector.VALUE_WIDTH;
   }
 
-
   public void allocateVectors(VectorContainer container, int recordCount) {
     // Allocate memory for the vectors.
     // This will iteratively allocate memory for all nested columns underneath.
@@ -269,10 +280,7 @@ public class RecordBatchMemoryManager {
       RecordBatchSizer.ColumnSize colSize = getColumnSize(w.getField().getName());
       colSize.allocateVector(w.getValueVector(), recordCount);
     }
-  }
-
-  public void allocateVectors(VectorContainer container) {
-    allocateVectors(container, outputRowCount);
+    container.setRecordCount(0);
   }
 
   public void allocateVectors(List<ValueVector> valueVectors, int recordCount) {
@@ -282,6 +290,10 @@ public class RecordBatchMemoryManager {
       RecordBatchSizer.ColumnSize colSize = getColumnSize(v.getField().getName());
       colSize.allocateVector(v, recordCount);
     }
+  }
+
+  public void allocateVectors(VectorContainer container) {
+    allocateVectors(container, outputRowCount);
   }
 
   public void allocateVectors(List<ValueVector> valueVectors) {

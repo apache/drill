@@ -57,15 +57,18 @@ import org.apache.drill.exec.physical.impl.common.HashPartition;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.JoinBatchMemoryManager;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.calcite.rel.core.JoinRelType;
+
+import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
+import static org.apache.drill.exec.record.JoinBatchMemoryManager.RIGHT_INDEX;
 
 /**
  *   This class implements the runtime execution for the Hash-Join operator
@@ -94,11 +97,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
    * The maximum number of records within each internal batch.
    */
   private int RECORDS_PER_BATCH; // internal batches
-
-  /**
-   * The maximum number of records in each outgoing batch.
-   */
-  private static final int TARGET_RECORDS_PER_BATCH = 4000;
 
   // Join type, INNER, LEFT, RIGHT or OUTER
   private final JoinRelType joinType;
@@ -172,7 +170,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     public String outerSpillFile;
     int cycleNum;
     int origPartn;
-    int prevOrigPartn; }
+    int prevOrigPartn;
+  }
 
   /**
    * Queue of spilled partitions to process.
@@ -181,7 +180,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
   private HJSpilledPartition spilledInners[]; // for the outer to find the partition
 
   public enum Metric implements MetricDef {
-
     NUM_BUCKETS,
     NUM_ENTRIES,
     NUM_RESIZING,
@@ -190,8 +188,19 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     SPILLED_PARTITIONS, // number of original partitions spilled to disk
     SPILL_MB,         // Number of MB of data spilled to disk. This amount is first written,
                       // then later re-read. So, disk I/O is twice this amount.
-    SPILL_CYCLE       // 0 - no spill, 1 - spill, 2 - SECONDARY, 3 - TERTIARY
-    ;
+    SPILL_CYCLE,       // 0 - no spill, 1 - spill, 2 - SECONDARY, 3 - TERTIARY
+    LEFT_INPUT_BATCH_COUNT,
+    LEFT_AVG_INPUT_BATCH_BYTES,
+    LEFT_AVG_INPUT_ROW_BYTES,
+    LEFT_INPUT_RECORD_COUNT,
+    RIGHT_INPUT_BATCH_COUNT,
+    RIGHT_AVG_INPUT_BATCH_BYTES,
+    RIGHT_AVG_INPUT_ROW_BYTES,
+    RIGHT_INPUT_RECORD_COUNT,
+    OUTPUT_BATCH_COUNT,
+    AVG_OUTPUT_BATCH_BYTES,
+    AVG_OUTPUT_ROW_BYTES,
+    OUTPUT_RECORD_COUNT;
 
     // duplicate for hash ag
 
@@ -221,18 +230,22 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       throw new SchemaChangeException(e);
     }
 
-    // Build the container schema and set the counts
-    for (final VectorWrapper<?> w : container) {
-      w.getValueVector().allocateNew();
-    }
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    container.setRecordCount(outputRecords);
   }
 
   @Override
   protected boolean prefetchFirstBatchFromBothSides() {
     leftUpstream = sniffNonEmptyBatch(0, left);
     rightUpstream = sniffNonEmptyBatch(1, right);
+
+    // For build side, use aggregate i.e. average row width across batches
+    batchMemoryManager.update(LEFT_INDEX, 0);
+    batchMemoryManager.update(RIGHT_INDEX, 0, true);
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("BATCH_STATS, incoming left:\n {}", batchMemoryManager.getRecordBatchSizer(LEFT_INDEX));
+      logger.debug("BATCH_STATS, incoming right:\n {}", batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX));
+    }
 
     if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
       state = BatchState.STOP;
@@ -333,9 +346,20 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
            joinType != JoinRelType.INNER) {  // or if this is a left/full outer join
 
         // Allocate the memory for the vectors in the output container
-        allocateVectors();
+        batchMemoryManager.allocateVectors(container);
+        hashJoinProbe.setTargetOutputCount(batchMemoryManager.getOutputRowCount());
 
         outputRecords = hashJoinProbe.probeAndProject();
+
+        for (final VectorWrapper<?> v : container) {
+          v.getValueVector().getMutator().setValueCount(outputRecords);
+        }
+        container.setRecordCount(outputRecords);
+
+        batchMemoryManager.updateOutgoingStats(outputRecords);
+        if (logger.isDebugEnabled()) {
+          logger.debug("BATCH_STATS, outgoing:\n {}", new RecordBatchSizer(this));
+        }
 
         /* We are here because of one the following
          * 1. Completed processing of all the records and we are done
@@ -345,10 +369,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         if (outputRecords > 0 || state == BatchState.FIRST) {
           if (state == BatchState.FIRST) {
             state = BatchState.NOT_FIRST;
-          }
-
-          for (final VectorWrapper<?> v : container) {
-            v.getValueVector().getMutator().setValueCount(outputRecords);
           }
 
           return IterOutcome.OK;
@@ -557,7 +577,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         RECORDS_PER_BATCH,
         maxBatchSize,
         maxBatchSize,
-        TARGET_RECORDS_PER_BATCH,
+        batchMemoryManager.getOutputRowCount(),
+        batchMemoryManager.getOutputBatchSize(),
         HashTable.DEFAULT_LOAD_FACTOR);
 
       disableSpilling(null);
@@ -628,7 +649,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         RECORDS_PER_BATCH,
         maxBatchSize,
         maxBatchSize,
-        TARGET_RECORDS_PER_BATCH,
+        batchMemoryManager.getOutputRowCount(),
+        batchMemoryManager.getOutputBatchSize(),
         HashTable.DEFAULT_LOAD_FACTOR);
 
       if (firstCycle && doMemoryCalculation) {
@@ -665,6 +687,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
         for (HashPartition partn : partitions) { partn.updateBatches(); }
         // Fall through
       case OK:
+        batchMemoryManager.update(buildBatch, RIGHT_INDEX, 0, true);
         // Special treatment (when no spill, and single partition) -- use the incoming vectors as they are (no row copy)
         if ( numPartitions == 1 ) {
           partitions[0].appendBatch(buildBatch);
@@ -803,22 +826,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
   }
 
-  private void allocateVectors() {
-    for (final VectorWrapper<?> vectorWrapper : container) {
-      ValueVector valueVector = vectorWrapper.getValueVector();
-
-      if (valueVector instanceof FixedWidthVector) {
-        ((FixedWidthVector) valueVector).allocateNew(TARGET_RECORDS_PER_BATCH);
-      } else if (valueVector instanceof VariableWidthVector) {
-        ((VariableWidthVector) valueVector).allocateNew(8 * TARGET_RECORDS_PER_BATCH, TARGET_RECORDS_PER_BATCH);
-      } else {
-        valueVector.allocateNew();
-      }
-    }
-
-    container.setRecordCount(0); // reset container's counter back to zero records
-  }
-
   // (After the inner side was read whole) - Has that inner partition spilled
   public boolean isSpilledInner(int part) {
     if ( spilledInners == null ) { return false; } // empty inner
@@ -879,6 +886,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
 
     // Create empty partitions (in the ctor - covers the case where right side is empty)
     partitions = new HashPartition[0];
+
+    // get the output batch size from config.
+    int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+    batchMemoryManager = new JoinBatchMemoryManager(configuredBatchSize, left, right);
   }
 
   /**
@@ -966,6 +977,23 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
     buildBatch.kill(sendUpstream);
   }
 
+  public void updateMetrics() {
+    stats.setLongStat(HashJoinBatch.Metric.LEFT_INPUT_BATCH_COUNT, batchMemoryManager.getNumIncomingBatches(LEFT_INDEX));
+    stats.setLongStat(HashJoinBatch.Metric.LEFT_AVG_INPUT_BATCH_BYTES, batchMemoryManager.getAvgInputBatchSize(LEFT_INDEX));
+    stats.setLongStat(HashJoinBatch.Metric.LEFT_AVG_INPUT_ROW_BYTES, batchMemoryManager.getAvgInputRowWidth(LEFT_INDEX));
+    stats.setLongStat(HashJoinBatch.Metric.LEFT_INPUT_RECORD_COUNT, batchMemoryManager.getTotalInputRecords(LEFT_INDEX));
+
+    stats.setLongStat(HashJoinBatch.Metric.RIGHT_INPUT_BATCH_COUNT, batchMemoryManager.getNumIncomingBatches(RIGHT_INDEX));
+    stats.setLongStat(HashJoinBatch.Metric.RIGHT_AVG_INPUT_BATCH_BYTES, batchMemoryManager.getAvgInputBatchSize(RIGHT_INDEX));
+    stats.setLongStat(HashJoinBatch.Metric.RIGHT_AVG_INPUT_ROW_BYTES, batchMemoryManager.getAvgInputRowWidth(RIGHT_INDEX));
+    stats.setLongStat(HashJoinBatch.Metric.RIGHT_INPUT_RECORD_COUNT, batchMemoryManager.getTotalInputRecords(RIGHT_INDEX));
+
+    stats.setLongStat(HashJoinBatch.Metric.OUTPUT_BATCH_COUNT, batchMemoryManager.getNumOutgoingBatches());
+    stats.setLongStat(HashJoinBatch.Metric.AVG_OUTPUT_BATCH_BYTES, batchMemoryManager.getAvgOutputBatchSize());
+    stats.setLongStat(HashJoinBatch.Metric.AVG_OUTPUT_ROW_BYTES, batchMemoryManager.getAvgOutputRowWidth());
+    stats.setLongStat(HashJoinBatch.Metric.OUTPUT_RECORD_COUNT, batchMemoryManager.getTotalOutputRecords());
+  }
+
   @Override
   public void close() {
     if ( cycleNum > 0 ) { // spilling happened
@@ -973,6 +1001,25 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> {
       // SpilledRecordBatch "scanners" as it only knows about the original left/right ops.
       killIncoming(false);
     }
+
+    updateMetrics();
+
+    logger.debug("BATCH_STATS, incoming aggregate left: batch count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
+      batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.LEFT_INDEX),
+      batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.LEFT_INDEX),
+      batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.LEFT_INDEX),
+      batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.LEFT_INDEX));
+
+    logger.debug("BATCH_STATS, incoming aggregate right: batch count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
+      batchMemoryManager.getNumIncomingBatches(JoinBatchMemoryManager.RIGHT_INDEX),
+      batchMemoryManager.getAvgInputBatchSize(JoinBatchMemoryManager.RIGHT_INDEX),
+      batchMemoryManager.getAvgInputRowWidth(JoinBatchMemoryManager.RIGHT_INDEX),
+      batchMemoryManager.getTotalInputRecords(JoinBatchMemoryManager.RIGHT_INDEX));
+
+    logger.debug("BATCH_STATS, outgoing aggregate: batch count : {}, avg bytes : {},  avg row bytes : {}, record count : {}",
+      batchMemoryManager.getNumOutgoingBatches(), batchMemoryManager.getAvgOutputBatchSize(),
+      batchMemoryManager.getAvgOutputRowWidth(), batchMemoryManager.getTotalOutputRecords());
+
     this.cleanup();
     super.close();
   }

@@ -251,12 +251,50 @@ public class RecordBatchSizer {
     }
 
     /**
-     * This returns actual entry size if rowCount > 0 or standard size otherwise.
+     * This returns actual entry size if rowCount > 0 or allocation size otherwise.
      * Use this for the cases when you might get empty batches with schema
      * and you still need to do memory calculations based on just schema.
      */
     public int getAllocSizePerEntry() {
-      return rowCount() == 0 ? getStdNetSizePerEntry() : getNetSizePerEntry();
+      if (rowCount() != 0) {
+        return getNetSizePerEntry();
+      }
+
+      int stdNetSize;
+      try {
+        stdNetSize = TypeHelper.getSize(metadata.getType());
+
+        // TypeHelper estimates 50 bytes for variable length. That is pretty high number
+        // to use as approximation for empty batches. Use 8 instead.
+        switch (metadata.getType().getMinorType()) {
+          case VARBINARY:
+          case VARCHAR:
+          case VAR16CHAR:
+          case VARDECIMAL:
+            stdNetSize = 4 + 8;
+            break;
+        }
+      } catch (Exception e) {
+        stdNetSize = 0;
+      }
+
+      if (isOptional) {
+        stdNetSize += BIT_VECTOR_WIDTH;
+      }
+
+      if (isRepeated) {
+        stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
+      }
+
+      for (ColumnSize columnSize : children.values()) {
+        stdNetSize += columnSize.getAllocSizePerEntry();
+      }
+
+      if (isRepeatedList()) {
+        stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
+      }
+
+      return stdNetSize;
     }
 
     /**
@@ -771,6 +809,13 @@ public class RecordBatchSizer {
   }
 
   public static int safeDivide(int num, float denom) {
+    if (denom == 0) {
+      return 0;
+    }
+    return (int) Math.ceil((double) num / denom);
+  }
+
+  public static int safeDivide(int num, double denom) {
     if (denom == 0) {
       return 0;
     }
