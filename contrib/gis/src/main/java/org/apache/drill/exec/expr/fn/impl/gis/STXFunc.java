@@ -23,19 +23,22 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_geomfromtext", scope = FunctionTemplate.FunctionScope.SIMPLE,
+/*
+ * Return the X coordinate of the point, or NaN if not available
+ */
+@FunctionTemplate(name = "st_x", scope = FunctionTemplate.FunctionScope.SIMPLE,
   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class STGeomFromText implements DrillSimpleFunc {
+public class STXFunc implements DrillSimpleFunc {
   @Param
-  NullableVarCharHolder input;
+  VarBinaryHolder geomParam;
 
   @Output
-  VarBinaryHolder out;
+  Float8Holder out;
 
   @Inject
   DrillBuf buffer;
@@ -44,17 +47,16 @@ public class STGeomFromText implements DrillSimpleFunc {
   }
 
   public void eval() {
-    String wktText = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end,
-            input.buffer);
 
     com.esri.core.geometry.ogc.OGCGeometry geom;
-    geom = com.esri.core.geometry.ogc.OGCGeometry.fromText(wktText);
-    java.nio.ByteBuffer pointBytes = geom.asBinary();
 
-    int outputSize = pointBytes.remaining();
-    buffer = out.buffer = buffer.reallocIfNeeded(outputSize);
-    out.start = 0;
-    out.end = outputSize;
-    buffer.setBytes(0, pointBytes);
+    geom = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(geomParam.buffer.nioBuffer(geomParam.start, geomParam.end - geomParam.start));
+
+    if (geom != null && geom.geometryType().equals("Point")) {
+      out.value = ((com.esri.core.geometry.ogc.OGCPoint) geom).X();
+    } else {
+      out.value = Double.NaN;
+    }
   }
 }

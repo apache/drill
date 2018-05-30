@@ -23,19 +23,26 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_geomfromtext", scope = FunctionTemplate.FunctionScope.SIMPLE,
+/*
+ Returns true if and only if no points of B lie in the exterior of A,
+ and at least one point of the interior of B lies in the interior of A.
+*/
+@FunctionTemplate(name = "st_contains", scope = FunctionTemplate.FunctionScope.SIMPLE,
   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class STGeomFromText implements DrillSimpleFunc {
+public class STContains implements DrillSimpleFunc {
   @Param
-  NullableVarCharHolder input;
+  VarBinaryHolder geom1Param;
+
+  @Param
+  VarBinaryHolder geom2Param;
 
   @Output
-  VarBinaryHolder out;
+  BitHolder out;
 
   @Inject
   DrillBuf buffer;
@@ -44,17 +51,16 @@ public class STGeomFromText implements DrillSimpleFunc {
   }
 
   public void eval() {
-    String wktText = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end,
-            input.buffer);
+    com.esri.core.geometry.ogc.OGCGeometry geom1;
+    com.esri.core.geometry.ogc.OGCGeometry geom2;
 
-    com.esri.core.geometry.ogc.OGCGeometry geom;
-    geom = com.esri.core.geometry.ogc.OGCGeometry.fromText(wktText);
-    java.nio.ByteBuffer pointBytes = geom.asBinary();
+    geom1 = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end - geom1Param.start));
+    geom2 = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(geom2Param.buffer.nioBuffer(geom2Param.start, geom2Param.end - geom2Param.start));
 
-    int outputSize = pointBytes.remaining();
-    buffer = out.buffer = buffer.reallocIfNeeded(outputSize);
-    out.start = 0;
-    out.end = outputSize;
-    buffer.setBytes(0, pointBytes);
+    int contains = geom1.contains(geom2) ? 1 : 0;
+
+    out.value = contains;
   }
 }
