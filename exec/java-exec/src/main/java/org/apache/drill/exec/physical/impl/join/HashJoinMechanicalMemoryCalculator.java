@@ -77,6 +77,7 @@ public class HashJoinMechanicalMemoryCalculator implements HashJoinMemoryCalcula
                            int maxBatchNumRecordsBuild,
                            int maxBatchNumRecordsProbe,
                            int outputBatchNumRecords,
+                           int outputBatchSize,
                            double loadFactor) {
       this.initialPartitions = initialPartitions;
     }
