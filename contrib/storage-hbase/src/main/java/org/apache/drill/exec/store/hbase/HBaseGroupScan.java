@@ -405,8 +405,8 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   }
 
   @JsonIgnore
-  public void setFilterPushedDown(boolean b) {
-    this.filterPushedDown = true;
+  public void setFilterPushedDown(boolean filterPushedDown) {
+    this.filterPushedDown = filterPushedDown;
   }
 
   @JsonIgnore
