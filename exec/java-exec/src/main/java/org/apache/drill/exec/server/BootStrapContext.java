@@ -221,6 +221,16 @@ public class BootStrapContext implements AutoCloseable {
   @Override
   public void close() {
     try {
+      loop2.shutdownGracefully(0, 0, TimeUnit.SECONDS);
+    } catch ( Exception e ) {
+      logger.warn("Failure During Bit-Client shutdown.", e);
+    }
+    try {
+      loop.shutdownGracefully(0, 0, TimeUnit.SECONDS);
+    } catch ( Exception e ) {
+      logger.warn("Failure During Bit-Server shutdown.", e);
+    }
+    try {
       DrillMetrics.resetMetrics();
     } catch (Error | Exception e) {
       logger.warn("failure resetting metrics.", e);
