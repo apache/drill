@@ -1,6 +1,6 @@
 ---
 title: "Use Postman to Run SQL Queries on Drill Data Sources"
-date: 2018-05-30 00:16:00 UTC
+date: 2018-05-31 01:30:24 UTC
 parent: "REST API"
 ---
 
@@ -14,7 +14,7 @@ Complete the following steps to install and configure Postman to run Drill queri
   
 ![Request URL](https://i.imgur.com/slNIu8p.png)  
   
-4-Select the **Headers** tab. Enter **Content-Type** as the key and **application/json** as the value. Add another entry with **User-Name** as the key and **mapr** as the value.  
+4-Select the **Headers** tab and then enter **Content-Type** as the key and **application/json** as the value. Add another entry with **User-Name** as the key and **mapr** as the value.  
   
 ![Headers](https://i.imgur.com/mreqm7S.png)  
 
