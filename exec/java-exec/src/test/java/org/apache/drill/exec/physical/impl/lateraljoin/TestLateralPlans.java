@@ -18,10 +18,13 @@
 package org.apache.drill.exec.physical.impl.lateraljoin;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
@@ -30,10 +33,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Ignore;
 
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class TestLateralPlans extends BaseTestQuery {
+  private static final String regularTestFile_1 = "cust_order_10_1.json";
+  private static final String regularTestFile_2 = "cust_order_10_2.json";
 
   @BeforeClass
   public static void enableUnnestLateral() throws Exception {
+    dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_1));
+    dirTestWatcher.copyResourceToRoot(Paths.get("lateraljoin", "multipleFiles", regularTestFile_2));
     test("alter session set `planner.enable_unnest_lateral`=true");
   }
 
@@ -255,7 +266,7 @@ public class TestLateralPlans extends BaseTestQuery {
           .sql(Sql)
           .run();
     } catch (UserRemoteException ex) {
-      assert(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+      assertTrue(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
     }
   }
 
@@ -272,7 +283,156 @@ public class TestLateralPlans extends BaseTestQuery {
           .sql(Sql)
           .run();
     } catch (UserRemoteException ex) {
-      assert(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+      assertTrue(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
     }
+  }
+
+  /***********************************************************************************************
+   Following test cases are introduced to make sure no exchanges are present on right side of
+   Lateral join.
+   **********************************************************************************************/
+
+  @Test
+  public void testNoExchangeWithAggWithoutGrpBy() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord)) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithStreamAggWithGrpBy() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord) group by t2.ord.o_orderkey) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
+            .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), false)
+            .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithHashAggWithGrpBy() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select sum(t2.ord.o_totalprice) as totalprice from unnest(t.c_orders) t2(ord) group by t2.ord.o_orderkey) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
+            .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), true)
+            .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), false);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithOrderByWithoutLimit() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithOrderByLimit() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t," +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+
+  @Test
+  public void testNoExchangeWithLateralsDownStreamJoin() throws Exception {
+    String Sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t, dfs.`lateraljoin/multipleFiles` t2, " +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1" +
+            " where t.c_name = t2.c_name";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithLateralsDownStreamUnion() throws Exception {
+    String Sql = "select t.c_name from dfs.`lateraljoin/multipleFiles` t union all " +
+            " select t.c_name from dfs.`lateraljoin/multipleFiles` t, " +
+                    " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  @Test
+  public void testNoExchangeWithLateralsDownStreamAgg() throws Exception {
+    String Sql = "select sum(d1.totalprice) from dfs.`lateraljoin/multipleFiles` t, " +
+            " lateral ( select t2.ord.o_totalprice as totalprice from unnest(t.c_orders) t2(ord) order by t2.ord.o_orderkey limit 10) d1 group by t.c_custkey";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1)
+            .setOptionDefault(PlannerSettings.HASHAGG.getOptionName(), false)
+            .setOptionDefault(PlannerSettings.STREAMAGG.getOptionName(), true);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String rightChild = getRightChildOfLateral(explain);
+      assertFalse(rightChild.contains("Exchange"));
+    }
+  }
+
+  private String getRightChildOfLateral(String explain) throws Exception {
+    Matcher matcher = Pattern.compile("Correlate.*Unnest", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
+    assertTrue (matcher.find());
+    String CorrelateUnnest = matcher.group(0);
+    return CorrelateUnnest.substring(CorrelateUnnest.lastIndexOf("Scan"));
   }
 }
