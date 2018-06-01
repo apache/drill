@@ -60,7 +60,7 @@ public class SelectionVector4 implements AutoCloseable {
     return length;
   }
 
-  public ByteBuf getData() {
+  private ByteBuf getData() {
     return data;
   }
 
@@ -108,7 +108,11 @@ public class SelectionVector4 implements AutoCloseable {
   public boolean next() {
 //    logger.debug("Next called. Start: {}, Length: {}, recordCount: " + recordCount, start, length);
 
-    if (isEmpty()) {
+    if (start + length >= recordCount) {
+
+      start = recordCount;
+      length = 0;
+//      logger.debug("Setting count to zero.");
       return false;
     }
 
@@ -117,18 +121,6 @@ public class SelectionVector4 implements AutoCloseable {
     length = newEnd - start;
 //    logger.debug("New start {}, new length {}", start, length);
     return true;
-  }
-
-  public boolean isEmpty() {
-    if (start + length >= recordCount) {
-
-      start = recordCount;
-      length = 0;
-//      logger.debug("Setting count to zero.");
-      return true;
-    }
-
-    return false;
   }
 
   public void clear() {
@@ -148,7 +140,9 @@ public class SelectionVector4 implements AutoCloseable {
     this.data = fromSV4.getData();
     // Need to retain the data buffer since if fromSV4 clears out the buffer it's not actually released unless the
     // copied SV4 has also released it
-    this.data.retain();
+    if (data != DeadBuf.DEAD_BUFFER) {
+      this.data.retain();
+    }
   }
 
   public static int getBatchIndex(int sv4Index) {

@@ -101,8 +101,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   private Copier copier;
   private boolean first = true;
   private int recordCount = 0;
-  private IterOutcome laskKnownOutcome = OK;
+  private IterOutcome lastKnownOutcome = OK;
   private boolean firstBatchForSchema = true;
+  private boolean hasOutputRecords = false;
 
   public TopNBatch(TopN popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -187,41 +188,51 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       return NONE;
     }
 
-    // If both schema and priorityQueue are non-null and priority queue is not reset, that means we still have data
-    // to be sent downstream for the current record boundary
-    if (schema != null && priorityQueue != null && priorityQueue.isInitialized()) {
-      if (sv4.next()) {
-        recordCount = sv4.getCount();
-        container.setRecordCount(recordCount);
-      } else {
-        recordCount = 0;
-        container.setRecordCount(0);
-      }
-      return getFinalOutcome();
+    // Check if anything is remaining from previous record boundary
+    if (hasOutputRecords) {
+      return handleRemainingOutput();
     }
 
     try{
+      boolean incomingHasSv2 = false;
+      switch (incoming.getSchema().getSelectionVectorMode()) {
+        case NONE: {
+          break;
+        }
+        case TWO_BYTE: {
+          incomingHasSv2 = true;
+          break;
+        }
+        case FOUR_BYTE: {
+          throw new SchemaChangeException("TopN doesn't support incoming with SV4 mode");
+        }
+        default:
+          throw new UnsupportedOperationException("Unsupported SV mode detected in TopN incoming batch");
+      }
+
       outer: while (true) {
         Stopwatch watch = Stopwatch.createStarted();
         if (first) {
-          laskKnownOutcome = IterOutcome.OK_NEW_SCHEMA;
+          lastKnownOutcome = IterOutcome.OK_NEW_SCHEMA;
+          // Create the SV4 object upfront to be used for both empty and non-empty incoming batches at EMIT boundary
+          sv4 = new SelectionVector4(context.getAllocator(), 0);
           first = false;
         } else {
-          laskKnownOutcome = next(incoming);
+          lastKnownOutcome = next(incoming);
         }
-        if (laskKnownOutcome == OK && schema == null) {
-          laskKnownOutcome = IterOutcome.OK_NEW_SCHEMA;
+        if (lastKnownOutcome == OK && schema == null) {
+          lastKnownOutcome = IterOutcome.OK_NEW_SCHEMA;
           container.clear();
         }
         logger.debug("Took {} us to get next", watch.elapsed(TimeUnit.MICROSECONDS));
-        switch (laskKnownOutcome) {
+        switch (lastKnownOutcome) {
         case NONE:
           break outer;
         case NOT_YET:
           throw new UnsupportedOperationException();
         case OUT_OF_MEMORY:
         case STOP:
-          return laskKnownOutcome;
+          return lastKnownOutcome;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
           // schema change handling in case when EMIT is also seen is same as without EMIT. i.e. only if union type
@@ -250,6 +261,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
             for (VectorWrapper<?> w : incoming) {
               w.clear();
             }
+            // Release memory for incoming SV2 vector
+            if (incomingHasSv2) {
+              incoming.getSelectionVector2().clear();
+            }
             break;
           }
           countSincePurge += incoming.getRecordCount();
@@ -275,9 +290,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
             // RecordBatches which are of no use or doesn't fall under TopN category
             if (countSincePurge > config.getLimit() && batchCount > batchPurgeThreshold) {
               purge();
-
-              // FixMe: I think below members should be initialized to limit and 1 respectively since after purge
-              // PriorityQueue will contain that many records and only 1 batch.
               countSincePurge = 0;
               batchCount = 0;
             }
@@ -294,28 +306,20 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
         // If the last seen outcome is EMIT then break the loop. We do it here since we want to process the batch
         // with records and EMIT outcome in above case statements
-        if (laskKnownOutcome == EMIT) {
+        if (lastKnownOutcome == EMIT) {
           break;
         }
       }
 
       // PriorityQueue can be null here if first batch is received with OK_NEW_SCHEMA and is empty and second next()
-      // call returned NONE or EMIT. In case of NONE it will change state to DONE and return NONE whereas in case of
-      // EMIT it has to still continue working for future records.
+      // call returned NONE or EMIT.
       if (schema == null || priorityQueue == null) {
         // builder may be null at this point if the first incoming batch is empty
-        if (laskKnownOutcome == NONE) { // that means we saw NONE
-          state = BatchState.DONE;
-        } else if (laskKnownOutcome == EMIT) {
-          // since priority queue is null that means it has not seen any batch with data
-          assert (countSincePurge == 0 && batchCount == 0);
-          container.zeroVectors();
-        }
-        return laskKnownOutcome;
+        return handleEmptyBatches(lastKnownOutcome);
       }
 
       priorityQueue.generate();
-      prepareOutputContainer();
+      prepareOutputContainer(priorityQueue.getHyperBatch(), priorityQueue.getFinalSv4());
 
       // With EMIT outcome control will come here multiple times whereas without EMIT outcome control will only come
       // here once. In EMIT outcome case if there is schema change in any iteration then that will be handled by
@@ -494,9 +498,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
    * Resets TopNBatch state to process next incoming batches independent of already seen incoming batches.
    */
   private void resetTopNState() {
-    laskKnownOutcome = OK;
+    lastKnownOutcome = OK;
     countSincePurge = 0;
     batchCount = 0;
+    hasOutputRecords = false;
     releaseResource();
   }
 
@@ -533,7 +538,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       firstBatchForSchema = false;
     } else if (recordCount == 0) {
       // get the outcome to return before calling refresh since that resets the lastKnowOutcome to OK
-      outcomeToReturn = laskKnownOutcome == EMIT ? EMIT : NONE;
+      outcomeToReturn = lastKnownOutcome == EMIT ? EMIT : NONE;
       resetTopNState();
     } else {
       outcomeToReturn = OK;
@@ -582,33 +587,89 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
    * has not changed then it prepares the container keeping the VectorWrapper and SV4 references as is since that is
    * what is needed by downstream operator.
    */
-  private void prepareOutputContainer() {
+  private void prepareOutputContainer(VectorContainer dataContainer, SelectionVector4 dataSv4) {
     container.zeroVectors();
+    hasOutputRecords = true;
     // Check if this is the first output batch for the new known schema. If yes then prepare the output container
     // with the proper vectors, otherwise re-use the previous vectors.
-    final VectorContainer queueContainer = priorityQueue.getHyperBatch();
     if (firstBatchForSchema) {
       container.clear();
-      for (VectorWrapper<?> w : queueContainer) {
+      for (VectorWrapper<?> w : dataContainer) {
         container.add(w.getValueVectors());
       }
       container.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
-      sv4 = priorityQueue.getFinalSv4();
+      sv4 = dataSv4;
     } else {
       // Schema didn't changed so we should keep the reference of HyperVectorWrapper in outgoing container intact and
       // populate the HyperVectorWrapper with new list of vectors. Here the assumption is order of ValueVectors is same
       // across multiple record boundary unless a new schema is observed
       int index = 0;
-      for (VectorWrapper<?> w : queueContainer) {
+      for (VectorWrapper<?> w : dataContainer) {
         HyperVectorWrapper wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
         wrapper.updateVectorList(w.getValueVectors());
       }
       // Since the reference of SV4 is held by downstream operator and there is no schema change, so just copy the
       // underlying buffer from priority queue sv4.
-      this.sv4.copy(priorityQueue.getFinalSv4());
+      this.sv4.copy(dataSv4);
     }
     recordCount = sv4.getCount();
     container.setRecordCount(recordCount);
+  }
+
+  /**
+   * Method handles returning correct outcome and setting recordCount for output container when next() is called
+   * multiple time for single record boundary. It handles cases when some output was already returned at current record
+   * boundary but Either there is more left to return OR proper outcome with empty batch is left to return.
+   * Example: For first EMIT record boundary if all the records were returned in previous call with OK_NEW_SCHEMA
+   * outcome, then this method will handle returning empty output batch with EMIT outcome in subsequent next() call.
+   * @return - Outcome to return downstream
+   */
+  private IterOutcome handleRemainingOutput() {
+    // if priority queue is not null that means the incoming batches were non-empty. And if there are more records
+    // to send downstream for this record boundary
+    if (priorityQueue != null && sv4.next()) {
+      recordCount = sv4.getCount();
+      container.setRecordCount(recordCount);
+    } else { // This means that either:
+      // 1) Priority Queue was not null and all records have been sent downstream for this record boundary
+      // 2) Or Priority Queue is null, since all the incoming batches were empty for current record boundary (or EMIT
+      // outcome). In the previous call we must have returned OK_NEW_SCHEMA along with SV4 container, so it will
+      // return EMIT outcome now
+      recordCount = 0;
+      container.setRecordCount(0);
+    }
+    return getFinalOutcome();
+  }
+
+  /**
+   * Method to handle preparing output container and returning proper outcome to downstream when either NONE or only
+   * empty batches have been seen but with EMIT outcome. In either of the case PriorityQueue is not created yet since no
+   * actual records have been received so far.
+   * @param incomingOutcome - outcome received from upstream. Either NONE or EMIT
+   * @return - outcome to return downstream. NONE when incomingOutcome is NONE. OK_NEW_SCHEMA/EMIT when incomingOutcome
+   * is EMIT and is first/non-first empty input batch respectively.
+   */
+  private IterOutcome handleEmptyBatches(IterOutcome incomingOutcome) {
+    IterOutcome outcomeToReturn = incomingOutcome;
+
+    // In case of NONE it will change state to DONE and return NONE whereas in case of
+    // EMIT it has to still continue working for future records.
+    if (incomingOutcome == NONE) { // this means we saw NONE
+      state = BatchState.DONE;
+      container.clear();
+      recordCount = 0;
+      container.setRecordCount(recordCount);
+    } else if (incomingOutcome == EMIT) {
+      // since priority queue is null that means it has not seen any batch with data
+      assert (countSincePurge == 0 && batchCount == 0);
+      final VectorContainer hyperContainer = new ExpandableHyperContainer(incoming.getContainer());
+      prepareOutputContainer(hyperContainer, sv4);
+
+      // update the outcome to return
+      outcomeToReturn = getFinalOutcome();
+    }
+
+    return outcomeToReturn;
   }
 
   public static class SimpleSV4RecordBatch extends SimpleRecordBatch {

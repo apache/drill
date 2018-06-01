@@ -111,7 +111,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * @throws Exception
    */
   @Test
-  public void testTopNEmptyBatchEmitOutcome() throws Exception {
+  public void testTopNEmptyBatchEmitOutcome() {
     inputContainer.add(emptyInputRowSet.container());
     inputContainer.add(emptyInputRowSet.container());
 
@@ -128,6 +128,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
     assertTrue(topNBatch.next() == OK_NEW_SCHEMA);
     outputRecordCount += topNBatch.getRecordCount();
+    assertTrue(topNBatch.next() == OK_NEW_SCHEMA);
     assertTrue(topNBatch.next() == EMIT);
     outputRecordCount += topNBatch.getRecordCount();
     assertEquals(0, outputRecordCount);
@@ -141,7 +142,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * @throws Exception
    */
   @Test
-  public void testTopNNonEmptyBatchEmitOutcome() throws Exception {
+  public void testTopNNonEmptyBatchEmitOutcome() {
     final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
       .addRow(2, 20, "item2")
       .addRow(13, 130, "item13")
@@ -188,6 +189,118 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     expectedRowSet.clear();
   }
 
+  @Test
+  public void testTopNEmptyBatchFollowedByNonEmptyBatchEmitOutcome() {
+    final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 20, "item2")
+      .addRow(13, 130, "item13")
+      .addRow(4, 40, "item4")
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(13, 130, "item13")
+      .addRow(4, 40, "item4")
+      .addRow(2, 20, "item2")
+      .build();
+
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet2.container());
+
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final TopN topNConfig = new TopN(null,
+      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+        RelFieldCollation.NullDirection.FIRST)), false, 10);
+    final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    outputRecordCount += topNBatch.getRecordCount();
+    assertEquals(0, outputRecordCount);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK);
+    outputRecordCount += topNBatch.getRecordCount();
+    assertEquals(3, outputRecordCount);
+
+    // verify results
+    verifyColumnCount(topNBatch, inputSchema.size());
+    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
+    outputRecordCount += topNBatch.getRecordCount();
+    assertEquals(3, outputRecordCount);
+
+    // Release memory for row sets
+    nonEmptyInputRowSet2.clear();
+    expectedRowSet.clear();
+  }
+
+  @Test
+  public void testTopNMultipleEmptyBatchFollowedByNonEmptyBatchEmitOutcome() {
+    final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(2, 20, "item2")
+      .addRow(13, 130, "item13")
+      .addRow(4, 40, "item4")
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(13, 130, "item13")
+      .addRow(4, 40, "item4")
+      .addRow(2, 20, "item2")
+      .build();
+
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet2.container());
+
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final TopN topNConfig = new TopN(null,
+      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+        RelFieldCollation.NullDirection.FIRST)), false, 10);
+    final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    outputRecordCount += topNBatch.getRecordCount();
+    assertEquals(0, outputRecordCount);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK);
+    outputRecordCount += topNBatch.getRecordCount();
+    assertEquals(3, outputRecordCount);
+
+    // verify results
+    verifyColumnCount(topNBatch, inputSchema.size());
+    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
+    outputRecordCount += topNBatch.getRecordCount();
+    assertEquals(3, outputRecordCount);
+
+    // Release memory for row sets
+    nonEmptyInputRowSet2.clear();
+    expectedRowSet.clear();
+  }
+
   /**
    * Verifies that if TopNBatch receives multiple non-empty record batch with EMIT outcome in between then it produces
    * output for those input batch correctly. In this case it receives first non-empty batch with OK_NEW_SCHEMA in
@@ -198,7 +311,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * @throws Exception
    */
   @Test
-  public void testTopNResetsAfterFirstEmitOutcome() throws Exception {
+  public void testTopNResetsAfterFirstEmitOutcome() {
     final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
       .addRow(2, 20, "item2")
       .addRow(3, 30, "item3")
@@ -261,7 +374,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * @throws Exception
    */
   @Test
-  public void testTopN_NonEmptyFirst_EmptyOKEmitOutcome() throws Exception {
+  public void testTopN_NonEmptyFirst_EmptyOKEmitOutcome() {
     final RowSet.SingleRowSet expectedRowSet1 = operatorFixture.rowSetBuilder(inputSchema)
       .addRow(1, 10, "item1")
       .build();
@@ -311,7 +424,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * @throws Exception
    */
   @Test
-  public void testTopNMultipleOutputBatchWithLowerLimits() throws Exception {
+  public void testTopNMultipleOutputBatchWithLowerLimits() {
     final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
       .addRow(4, 40, "item4")
       .addRow(2, 20, "item2")
@@ -372,7 +485,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   @Test
-  public void testTopNMultipleEMITOutcome() throws Exception {
+  public void testTopNMultipleEMITOutcome() {
     final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
       .addRow(2, 20, "item2")
       .addRow(3, 30, "item3")
@@ -456,7 +569,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   @Test
-  public void testTopNMultipleInputToMultipleOutputBatch_LowerLimits() throws Exception {
+  public void testTopNMultipleInputToMultipleOutputBatch_LowerLimits() {
 
     final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
       .addRow(7, 70, "item7")
