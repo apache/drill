@@ -44,7 +44,7 @@ where
 * `schema` is the name of a [storage plugin]({{site.baseurl}}/docs/storage-plugin-registration) configuration to use as the default for queries. For example,`schema=hive`. Optional.  
 * `zk name` specifies one or more ZooKeeper host names, or IP addresses. Use `local` instead of a host name or IP address to connect to the local Drillbit. Required. 
 * `port` is the ZooKeeper port number. Port 2181 is the default. On a MapR cluster, the default is 5181. Optional. 
-* `directory` is the Drill directory in ZooKeeper, which by default is `/Drill`. Optional. 
+* `directory` is the Drill directory in ZooKeeper, which by default is `/drill`. Optional. 
 * `cluster ID` is `drillbits1` by default. If the default has changed, [determine the cluster ID]({{site.baseurl}}/docs/using-the-jdbc-driver/#determining-the-cluster-id) and use it. Optional.
 
 ### Determining the Cluster ID
