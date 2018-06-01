@@ -85,6 +85,7 @@ The driver supports the following schema types:
   * CSV
   * TSV
 * Hive
+* RDBMS
 
 ### Advanced Properties
 
