@@ -342,7 +342,7 @@ public class HiveMetadataProvider {
    */
   public static class LogicalInputSplit {
 
-    private final Collection<InputSplit> inputSplits = new ArrayList<>();
+    private final List<InputSplit> inputSplits = new ArrayList<>();
     private final Partition partition;
 
     public LogicalInputSplit(InputSplit inputSplit, Partition partition) {
@@ -355,7 +355,7 @@ public class HiveMetadataProvider {
       this.partition = partition;
     }
 
-    public Collection<InputSplit> getInputSplits() {
+    public List<InputSplit> getInputSplits() {
       return inputSplits;
     }
 
@@ -375,7 +375,7 @@ public class HiveMetadataProvider {
     }
 
     /**
-     * @return collection of unique locations where inout splits are stored
+     * @return collection of unique locations where input splits are stored
      */
     public Collection<String> getLocations() throws IOException {
       Set<String> locations = new HashSet<>();
