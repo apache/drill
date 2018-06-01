@@ -76,6 +76,7 @@ if ! $is_cygwin; then
   DRILL_SHELL_OPTS="$DRILL_SHELL_OPTS --color=true"
 fi
 
+# To add nohup support for SQLline script
 if [[ ( ! $(ps -o stat= -p $$) =~ "+" ) && ! ( -p /dev/stdin ) ]]; then
     export SQLLINE_JAVA_OPTS="$SQLLINE_JAVA_OPTS -Djline.terminal=jline.UnsupportedTerminal"
 fi
