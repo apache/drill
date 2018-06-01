@@ -70,10 +70,12 @@ Next, let's go into the Drill web interface and enable the S3 storage plugin.  I
 
 1. Point your browser to `http://<host>:8047`
 2. Select the 'Storage' tab.
-2. A good starting configuration for S3 can be entirely the same as the `dfs` plugin, except the connection parameter is changed to `s3://bucket`.  So first select the `Update` button for `dfs`, then select the text area and copy it into the clipboard (on Windows, ctrl-A, ctrl-C works).
+2. A good starting configuration for S3 can be entirely the same as the `dfs` plugin, except the connection parameter is changed to `s3n://bucket`.  So first select the `Update` button for `dfs`, then select the text area and copy it into the clipboard (on Windows, ctrl-A, ctrl-C works).
 2. Press `Back`, then create a new plugin by typing the name into the `New Storage Plugin`, then press `Create`.  You can choose any name, but a good convention is to use `s3-<bucketname>` so you can easily identify it later.
-3. In the configuration area, paste the configuration you just grabbed from 'dfs'.  Change the line `connection: "file:///"` to `connection: "s3://<bucket>"`.
+3. In the configuration area, paste the configuration you just grabbed from 'dfs'.  Change the line `connection: "file:///"` to `connection: "s3n://<bucket>"`.
 4. Click `Update`.  You should see a message that indicates success.
+ 
+Note: Make sure the URI has scheme "s3n", not "s3". It will not work with "s3".
 
 At this point you can run queries on the data directly and you have a couple of options on how you want to access it.  You can use Drill Explorer and create a custom view (based on an SQL query) that you can then access in Tableau or other BI tools, or just use Drill directly from within the tool.
 
