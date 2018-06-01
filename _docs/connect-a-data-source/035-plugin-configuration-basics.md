@@ -87,7 +87,7 @@ The following table describes the attributes you configure for storage plugins i
     <td>"workspaces". . . "writable"</td>
     <td>true<br>false</td>
     <td>no</td>
-    <td>One or more unique workspace names. If defined more than once, the last workspace name overrides the others.</td>
+    <td>Allows or disallows writing in the workspaces</td>
   </tr>
   <tr>
     <td>"workspaces". . . "defaultInputFormat"</td>
