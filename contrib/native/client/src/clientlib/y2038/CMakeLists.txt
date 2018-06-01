@@ -18,14 +18,6 @@
 
 # Y2038 library
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS "-fPIC")
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_C_FLAGS "-fPIC")
-endif()
-
 set (Y2038_SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/time64.c
     )

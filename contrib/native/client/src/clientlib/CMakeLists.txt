@@ -50,7 +50,6 @@ set_property(
     )
 
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "/EHsc")
     add_definitions(-DDRILL_CLIENT_EXPORTS -D_SCL_SECURE_NO_WARNINGS)
 endif()
 
