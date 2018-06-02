@@ -89,7 +89,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     // the planner is "fooled" into thinking that this operator will do
     // disk I/O.
 
-    int rowCount = 0;
+    double rowCount = 0;
     int rowWidth = 0;
 
     // Can have multiple "read entries" which simulate blocks or
@@ -126,7 +126,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
 
       rowWidth = Math.max(rowWidth, groupRowWidth);
     }
-    int dataSize = rowCount * rowWidth;
+    double dataSize = rowCount * rowWidth;
     scanStats = new ScanStats(GroupScanProperty.EXACT_ROW_COUNT,
                                rowCount,
                                DrillCostBase.BASE_CPU_COST * dataSize,
