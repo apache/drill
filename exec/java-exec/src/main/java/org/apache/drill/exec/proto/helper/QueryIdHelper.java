@@ -33,7 +33,7 @@ public class QueryIdHelper {
 
   public static QueryId getQueryIdFromString(final String queryId) {
     final UUID uuid = UUID.fromString(queryId);
-    return QueryId.newBuilder().setPart1(uuid.getMostSignificantBits()).setPart2(uuid.getLeastSignificantBits()).build();
+    return QueryId.newBuilder().setPart1(uuid.getMostSignificantBits()).setPart2(uuid.getLeastSignificantBits()).setText(queryId).build();
   }
 
   public static String getQueryIdentifier(final FragmentHandle h) {
