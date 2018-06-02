@@ -49,7 +49,6 @@ public final class QueryId implements Externalizable, Message<QueryId>, Schema<Q
     
     private long part1;
     private long part2;
-    private String text;
 
     public QueryId()
     {
@@ -81,19 +80,6 @@ public final class QueryId implements Externalizable, Message<QueryId>, Schema<Q
     public QueryId setPart2(long part2)
     {
         this.part2 = part2;
-        return this;
-    }
-
-    // text
-
-    public String getText()
-    {
-        return text;
-    }
-
-    public QueryId setText(String text)
-    {
-        this.text = text;
         return this;
     }
 
@@ -157,9 +143,6 @@ public final class QueryId implements Externalizable, Message<QueryId>, Schema<Q
                 case 2:
                     message.part2 = input.readSFixed64();
                     break;
-                case 3:
-                    message.text = input.readString();
-                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -174,9 +157,6 @@ public final class QueryId implements Externalizable, Message<QueryId>, Schema<Q
 
         if(message.part2 != 0)
             output.writeSFixed64(2, message.part2, false);
-
-        if(message.text != null)
-            output.writeString(3, message.text, false);
     }
 
     public String getFieldName(int number)
@@ -185,7 +165,6 @@ public final class QueryId implements Externalizable, Message<QueryId>, Schema<Q
         {
             case 1: return "part1";
             case 2: return "part2";
-            case 3: return "text";
             default: return null;
         }
     }
@@ -201,7 +180,6 @@ public final class QueryId implements Externalizable, Message<QueryId>, Schema<Q
     {
         __fieldMap.put("part1", 1);
         __fieldMap.put("part2", 2);
-        __fieldMap.put("text", 3);
     }
     
 }
