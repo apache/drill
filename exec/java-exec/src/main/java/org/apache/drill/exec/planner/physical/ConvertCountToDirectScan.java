@@ -154,7 +154,7 @@ public class ConvertCountToDirectScan extends Prule {
   private Map<String, Long> collectCounts(PlannerSettings settings, DrillAggregateRel agg, DrillScanRel scan, DrillProjectRel project) {
     final Set<String> implicitColumnsNames = ColumnExplorer.initImplicitFileColumns(settings.getOptions()).keySet();
     final GroupScan oldGrpScan = scan.getGroupScan();
-    final long totalRecordCount = oldGrpScan.getScanStats(settings).getRecordCount();
+    final long totalRecordCount = (long)oldGrpScan.getScanStats(settings).getRecordCount();
     final LinkedHashMap<String, Long> result = new LinkedHashMap<>();
 
     for (int i = 0; i < agg.getAggCallList().size(); i++) {
