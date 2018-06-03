@@ -45,24 +45,6 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
-  public void testFilterPushDownRowKeyNotEqual() throws Exception {
-    setColumnWidths(new int[] {8, 38, 38});
-    final String sql = "SELECT\n"
-        + "  *\n"
-        + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName\n"
-        + "WHERE\n"
-        + "  row_key <> 'b4'";
-
-    runHBaseSQLVerifyCount(sql, 6);
-
-    final String[] expectedPlan = {".*startRow=, stopRow=, filter=RowFilter \\(NOT_EQUAL, b4\\).*"};
-    final String[] excludedPlan ={};
-    final String sqlHBase = canonizeHBaseSQL(sql);
-    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
-  }
-
-  @Test
   public void testFilterPushDownRowKeyEqualWithItem() throws Exception {
     setColumnWidths(new int[] {20, 30});
     final String sql = "SELECT\n"
