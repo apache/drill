@@ -137,23 +137,11 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
   @Override
   public void buildSchema() throws SchemaChangeException {
-    VectorContainer c = new VectorContainer(oContext);
     IterOutcome outcome = next(incoming);
     switch (outcome) {
       case OK:
       case OK_NEW_SCHEMA:
         for (VectorWrapper<?> w : incoming) {
-          // TODO: Not sure why the special handling for AbstractContainerVector is needed since creation of child
-          // vectors is taken care correctly if the field is retrieved from incoming vector and passed to it rather than
-          // creating a new Field instance just based on name and type.
-          @SuppressWarnings("resource")
-          ValueVector v = c.addOrGet(w.getField());
-          if (v instanceof AbstractContainerVector) {
-            w.getValueVector().makeTransferPair(v);
-            v.clear();
-          }
-        }
-        for (VectorWrapper<?> w : c) {
           @SuppressWarnings("resource")
           ValueVector v = container.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {

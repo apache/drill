@@ -32,6 +32,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
+import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
 import org.apache.drill.exec.physical.impl.join.HashJoinMemoryCalculator;
 import org.apache.drill.exec.physical.impl.join.HashJoinMemoryCalculatorImpl;
@@ -41,13 +42,13 @@ import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetBatch;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Assert;
@@ -68,27 +69,31 @@ public class HashPartitionTest {
       private RowSet probeRowSet;
 
       @Override
-      public RecordBatch createBuildBatch(BatchSchema schema, BufferAllocator allocator) {
-        buildRowSet = new RowSetBuilder(allocator, schema)
+      public CloseableRecordBatch createBuildBatch(BatchSchema schema, FragmentContext context) {
+        buildRowSet = new RowSetBuilder(context.getAllocator(), schema)
           .addRow(1, "green")
           .addRow(3, "red")
           .addRow(2, "blue")
           .build();
-        return new RowSetBatch(buildRowSet);
+        return new MockRecordBatch.Builder().
+          sendData(buildRowSet).
+          build(context);
       }
 
       @Override
-      public void createResultBuildBatch(BatchSchema schema, BufferAllocator allocator) {
+      public void createResultBuildBatch(BatchSchema schema, FragmentContext context) {
       }
 
       @Override
-      public RecordBatch createProbeBatch(BatchSchema schema, BufferAllocator allocator) {
-        probeRowSet = new RowSetBuilder(allocator, schema)
+      public CloseableRecordBatch createProbeBatch(BatchSchema schema, FragmentContext context) {
+        probeRowSet = new RowSetBuilder(context.getAllocator(), schema)
           .addRow(.5, "yellow")
           .addRow(1.5, "blue")
           .addRow(2.5, "black")
           .build();
-        return new RowSetBatch(probeRowSet);
+        return new MockRecordBatch.Builder().
+          sendData(probeRowSet).
+          build(context);
       }
 
       @Override
@@ -114,9 +119,9 @@ public class HashPartitionTest {
 
         final HashJoinMemoryCalculator.BuildSidePartitioning noopCalc = new HashJoinMemoryCalculatorImpl.NoopBuildSidePartitioningImpl();
 
-        hashPartition.appendInnerRow(buildRowSet.container(), 0, 10, noopCalc);
-        hashPartition.appendInnerRow(buildRowSet.container(), 1, 11, noopCalc);
-        hashPartition.appendInnerRow(buildRowSet.container(), 2, 12, noopCalc);
+        hashPartition.appendInnerRow(buildBatch.getContainer(), 0, 10, noopCalc);
+        hashPartition.appendInnerRow(buildBatch.getContainer(), 1, 11, noopCalc);
+        hashPartition.appendInnerRow(buildBatch.getContainer(), 2, 12, noopCalc);
         hashPartition.completeAnInnerBatch(false, false);
         hashPartition.buildContainersHashTableAndHelper();
 
@@ -155,22 +160,24 @@ public class HashPartitionTest {
       private RowSet actualBuildRowSet;
 
       @Override
-      public RecordBatch createBuildBatch(BatchSchema schema, BufferAllocator allocator) {
-        buildRowSet = new RowSetBuilder(allocator, schema)
+      public CloseableRecordBatch createBuildBatch(BatchSchema schema, FragmentContext context) {
+        buildRowSet = new RowSetBuilder(context.getAllocator(), schema)
           .addRow(1, "green")
           .addRow(3, "red")
           .addRow(2, "blue")
           .build();
-        return new RowSetBatch(buildRowSet);
+        return new MockRecordBatch.Builder().
+          sendData(buildRowSet).
+          build(context);
       }
 
       @Override
-      public void createResultBuildBatch(BatchSchema schema, BufferAllocator allocator) {
+      public void createResultBuildBatch(BatchSchema schema, FragmentContext context) {
         final BatchSchema newSchema = BatchSchema.newBuilder()
           .addFields(schema)
           .addField(MaterializedField.create(HashPartition.HASH_VALUE_COLUMN_NAME, HashPartition.HVtype))
           .build();
-        actualBuildRowSet = new RowSetBuilder(allocator, newSchema)
+        actualBuildRowSet = new RowSetBuilder(context.getAllocator(), newSchema)
           .addRow(1, "green", 10)
           .addRow(3, "red", 11)
           .addRow(2, "blue", 12)
@@ -178,13 +185,15 @@ public class HashPartitionTest {
       }
 
       @Override
-      public RecordBatch createProbeBatch(BatchSchema schema, BufferAllocator allocator) {
-        probeRowSet = new RowSetBuilder(allocator, schema)
+      public CloseableRecordBatch createProbeBatch(BatchSchema schema, FragmentContext context) {
+        probeRowSet = new RowSetBuilder(context.getAllocator(), schema)
           .addRow(.5, "yellow")
           .addRow(1.5, "blue")
           .addRow(2.5, "black")
           .build();
-        return new RowSetBatch(probeRowSet);
+        return new MockRecordBatch.Builder().
+          sendData(probeRowSet).
+          build(context);
       }
 
       @Override
@@ -210,9 +219,9 @@ public class HashPartitionTest {
 
         final HashJoinMemoryCalculator.BuildSidePartitioning noopCalc = new HashJoinMemoryCalculatorImpl.NoopBuildSidePartitioningImpl();
 
-        hashPartition.appendInnerRow(buildRowSet.container(), 0, 10, noopCalc);
-        hashPartition.appendInnerRow(buildRowSet.container(), 1, 11, noopCalc);
-        hashPartition.appendInnerRow(buildRowSet.container(), 2, 12, noopCalc);
+        hashPartition.appendInnerRow(buildBatch.getContainer(), 0, 10, noopCalc);
+        hashPartition.appendInnerRow(buildBatch.getContainer(), 1, 11, noopCalc);
+        hashPartition.appendInnerRow(buildBatch.getContainer(), 2, 12, noopCalc);
         hashPartition.completeAnInnerBatch(false, false);
         hashPartition.spillThisPartition();
         final String spillFile = hashPartition.getSpillFile();
@@ -260,15 +269,17 @@ public class HashPartitionTest {
         MaterializedField buildColB = MaterializedField.create("buildColB", Types.required(TypeProtos.MinorType.VARCHAR));
         List<MaterializedField> buildCols = Lists.newArrayList(buildColA, buildColB);
         final BatchSchema buildSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, buildCols);
-        final RecordBatch buildBatch = testCase.createBuildBatch(buildSchema, allocator);
-        testCase.createResultBuildBatch(buildSchema, allocator);
+        final CloseableRecordBatch buildBatch = testCase.createBuildBatch(buildSchema, operatorContext.getFragmentContext());
+        buildBatch.next();
+        testCase.createResultBuildBatch(buildSchema, operatorContext.getFragmentContext());
 
         // Create probe batch
         MaterializedField probeColA = MaterializedField.create("probeColA", Types.required(TypeProtos.MinorType.FLOAT4));
         MaterializedField probeColB = MaterializedField.create("probeColB", Types.required(TypeProtos.MinorType.VARCHAR));
         List<MaterializedField> probeCols = Lists.newArrayList(probeColA, probeColB);
         final BatchSchema probeSchema = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, probeCols);
-        final RecordBatch probeBatch = testCase.createProbeBatch(probeSchema, allocator);
+        final CloseableRecordBatch probeBatch = testCase.createProbeBatch(probeSchema, operatorContext.getFragmentContext());
+        probeBatch.next();
 
         final LogicalExpression buildColExpression = SchemaPath.getSimplePath(buildColB.getName());
         final LogicalExpression probeColExpression = SchemaPath.getSimplePath(probeColB.getName());
@@ -285,14 +296,17 @@ public class HashPartitionTest {
         baseHashTable.updateIncoming(buildBatch, probeBatch);
 
         testCase.run(spillSet, buildSchema, probeSchema, buildBatch, probeBatch, baseHashTable, context, operatorContext);
+
+        buildBatch.close();
+        probeBatch.close();
       }
     }
   }
 
   interface HashPartitionTestCase {
-    RecordBatch createBuildBatch(BatchSchema schema, BufferAllocator allocator);
-    void createResultBuildBatch(BatchSchema schema, BufferAllocator allocator);
-    RecordBatch createProbeBatch(BatchSchema schema, BufferAllocator allocator);
+    CloseableRecordBatch createBuildBatch(BatchSchema schema, FragmentContext context);
+    void createResultBuildBatch(BatchSchema schema, FragmentContext context);
+    CloseableRecordBatch createProbeBatch(BatchSchema schema, FragmentContext context);
 
     void run(SpillSet spillSet,
              BatchSchema buildSchema,

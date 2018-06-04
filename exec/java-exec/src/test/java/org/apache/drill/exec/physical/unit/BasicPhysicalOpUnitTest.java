@@ -38,6 +38,8 @@ import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.physical.config.FlattenPOP;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
+import org.apache.drill.test.LegacyOperatorTestBuilder;
+import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -51,7 +53,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> jsonBatches = Lists.newArrayList(
         "[{\"x\": 5 },{\"x\": 10 }]",
         "[{\"x\": 20 },{\"x\": 30 },{\"x\": 40 }]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(projectConf)
         .inputDataStreamJson(jsonBatches)
         .baselineColumns("x")
@@ -69,7 +71,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> jsonBatches = Lists.newArrayList(
         "[{\"json_col\": \"{ \\\"a\\\" : 1 }\"}]",
         "[{\"json_col\": \"{ \\\"a\\\" : 5 }\"}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(projectConf)
         .inputDataStreamJson(jsonBatches)
         .baselineColumns("complex_col")
@@ -91,7 +93,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> rightJsonBatches = Lists.newArrayList(
         "[{\"x1\": 5, \"a2\" : \"asdf\"}]",
         "[{\"x1\": 6, \"a2\" : \"qwerty\"},{\"x1\": 5, \"a2\" : \"12345\"}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(joinConf)
         .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches))
         .baselineColumns("x", "a", "a2", "x1")
@@ -116,7 +118,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> rightJsonBatches = Lists.newArrayList(
         "[{\"x1\": 5, \"a2\" : \"asdf\"}]",
         "[{\"x1\": 5, \"a2\" : \"12345\"}, {\"x1\": 6, \"a2\" : \"qwerty\"}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(joinConf)
         .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches))
         .baselineColumns("x", "a", "a2", "x1")
@@ -135,7 +137,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(aggConf)
         .inputDataStreamJson(inputJsonBatches)
         .baselineColumns("b_sum", "a")
@@ -150,7 +152,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(aggConf)
         .inputDataStreamJson(inputJsonBatches)
         .baselineColumns("b_sum", "a")
@@ -165,7 +167,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> inputJsonBatches = Lists.newArrayList(
         "[{\"a\": {\"b\" : 1 }}]",
         "[{\"a\": {\"b\" : 5}},{\"a\": {\"b\" : 8}}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(complexToJson)
         .inputDataStreamJson(inputJsonBatches)
         .baselineColumns("a")
@@ -182,7 +184,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]",
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(filterConf)
         .inputDataStreamJson(inputJsonBatches)
         .baselineColumns("a", "b")
@@ -206,7 +208,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
       inputJsonBatches.add(batchString.toString());
     }
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(flatten)
             .inputDataStreamJson(inputJsonBatches)
             .baselineColumns("a", "b")
@@ -225,7 +227,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]",
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(sortConf)
         .maxAllocation(15_000_000L)
         .inputDataStreamJson(inputJsonBatches)
@@ -253,8 +255,8 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
       inputJsonBatches.add(batchString.toString());
     }
 
-    OperatorTestBuilder opTestBuilder =
-        opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder =
+        legacyOpTestBuilder()
             .initReservation(initReservation)
             .maxAllocation(maxAllocation)
             .physicalOperator(sortConf)
@@ -312,7 +314,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
         "[{\"a\": 5, \"b\" : 1 }]",
         "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]",
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(sortConf)
         .inputDataStreamJson(inputJsonBatches)
         .baselineColumns("a", "b")
@@ -336,7 +338,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
     List<String> rightJsonBatches = Lists.newArrayList(
         "[{\"x\": 5, \"a\" : \"asdf\"}]",
         "[{\"x\": 5, \"a\" : \"12345\"}, {\"x\": 6, \"a\" : \"qwerty\"}]");
-    opTestBuilder()
+    legacyOpTestBuilder()
         .physicalOperator(mergeConf)
         .inputDataStreamsJson(Lists.newArrayList(leftJsonBatches, rightJsonBatches))
         .baselineColumns("x", "a")

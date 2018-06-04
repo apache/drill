@@ -20,77 +20,99 @@ package org.apache.drill.exec.physical.impl.svremover;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
+import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetBatch;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.schema.SchemaBuilder;
+import org.junit.Rule;
 import org.junit.Test;
 
 public abstract class AbstractGenericCopierTest {
+  @Rule
+  public final BaseDirTestWatcher baseDirTestWatcher = new BaseDirTestWatcher();
+
   @Test
-  public void testCopyRecords() throws SchemaChangeException {
-    try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final TupleMetadata batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
+  public void testCopyRecords() throws Exception {
+    try (OperatorFixture operatorFixture = new OperatorFixture.Builder(baseDirTestWatcher).build()) {
+      final BufferAllocator allocator = operatorFixture.allocator();
+      final BatchSchema batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
       final RowSet srcRowSet = createSrcRowSet(allocator);
-      final RowSet destRowSet = new RowSetBuilder(allocator, batchSchema).build();
-      final VectorContainer destContainer = destRowSet.container();
-      final Copier copier = createCopier(new RowSetBatch(srcRowSet), destContainer, null);
+      final VectorContainer destContainer = new VectorContainer(allocator, batchSchema);
+
+      destContainer.setRecordCount(0);
       final RowSet expectedRowSet = createExpectedRowset(allocator);
 
-      copier.copyRecords(0, 3);
+      MockRecordBatch mockRecordBatch = null;
 
       try {
-        new RowSetComparison(expectedRowSet).verify(destRowSet);
-      } finally {
-        srcRowSet.clear();
+        mockRecordBatch = new MockRecordBatch.Builder().
+          sendData(srcRowSet).
+          build(operatorFixture.getFragmentContext());
+        mockRecordBatch.next();
+        final Copier copier = createCopier(mockRecordBatch, destContainer, null);
+        copier.copyRecords(0, 3);
 
-        if (srcRowSet instanceof RowSet.HyperRowSet) {
-          ((RowSet.HyperRowSet)srcRowSet).getSv4().clear();
+        new RowSetComparison(expectedRowSet).verify(DirectRowSet.fromContainer(destContainer));
+      } finally {
+        if (mockRecordBatch != null) {
+          mockRecordBatch.close();
         }
 
-        destRowSet.clear();
+        srcRowSet.clear();
+        destContainer.clear();
         expectedRowSet.clear();
       }
     }
   }
 
   @Test
-  public void testAppendRecords() throws SchemaChangeException {
-    try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final TupleMetadata batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
+  public void testAppendRecords() throws Exception {
+    try (OperatorFixture operatorFixture = new OperatorFixture.Builder(baseDirTestWatcher).build()) {
+      final BufferAllocator allocator = operatorFixture.allocator();
+      final BatchSchema batchSchema = createTestSchema(BatchSchema.SelectionVectorMode.NONE);
       final RowSet srcRowSet = createSrcRowSet(allocator);
-      final RowSet destRowSet = new RowSetBuilder(allocator, batchSchema).build();
-      final VectorContainer destContainer = destRowSet.container();
-      final Copier copier = createCopier(new RowSetBatch(srcRowSet), destContainer, null);
+      final VectorContainer destContainer = new VectorContainer(allocator, batchSchema);
+
+      AbstractCopier.allocateOutgoing(destContainer, 3);
+
+      destContainer.setRecordCount(0);
       final RowSet expectedRowSet = createExpectedRowset(allocator);
 
-      copier.appendRecord(0);
-      copier.appendRecords(1, 2);
+      MockRecordBatch mockRecordBatch = null;
 
       try {
-        new RowSetComparison(expectedRowSet).verify(destRowSet);
-      } finally {
-        srcRowSet.clear();
+        mockRecordBatch = new MockRecordBatch.Builder().
+          sendData(srcRowSet).
+          build(operatorFixture.getFragmentContext());
+        mockRecordBatch.next();
+        final Copier copier = createCopier(mockRecordBatch, destContainer, null);
+        copier.appendRecord(0);
+        copier.appendRecords(1, 2);
 
-        if (srcRowSet instanceof RowSet.HyperRowSet) {
-          ((RowSet.HyperRowSet)srcRowSet).getSv4().clear();
+        new RowSetComparison(expectedRowSet).verify(DirectRowSet.fromContainer(destContainer));
+      } finally {
+        if (mockRecordBatch != null) {
+          mockRecordBatch.close();
         }
 
-        destRowSet.clear();
+        srcRowSet.clear();
+        destContainer.clear();
         expectedRowSet.clear();
       }
     }
   }
 
-  public abstract RowSet createSrcRowSet(RootAllocator allocator) throws SchemaChangeException;
+  public abstract RowSet createSrcRowSet(BufferAllocator allocator) throws SchemaChangeException;
 
   public Copier createCopier(RecordBatch incoming, VectorContainer outputContainer,
                                       SchemaChangeCallBack callback) {
@@ -117,7 +139,7 @@ public abstract class AbstractGenericCopierTest {
     return new Object[]{106, "black", new float[]{.75f}, new String[]{"4a"}};
   }
 
-  private RowSet createExpectedRowset(RootAllocator allocator) {
+  public RowSet createExpectedRowset(BufferAllocator allocator) {
     return new RowSetBuilder(allocator, createTestSchema(BatchSchema.SelectionVectorMode.NONE))
       .addRow(row1())
       .addRow(row2())
@@ -125,7 +147,7 @@ public abstract class AbstractGenericCopierTest {
       .build();
   }
 
-  protected TupleMetadata createTestSchema(BatchSchema.SelectionVectorMode mode) {
+  protected BatchSchema createTestSchema(BatchSchema.SelectionVectorMode mode) {
     MaterializedField colA = MaterializedField.create("colA", Types.required(TypeProtos.MinorType.INT));
     MaterializedField colB = MaterializedField.create("colB", Types.required(TypeProtos.MinorType.VARCHAR));
     MaterializedField colC = MaterializedField.create("colC", Types.repeated(TypeProtos.MinorType.FLOAT4));
@@ -136,6 +158,6 @@ public abstract class AbstractGenericCopierTest {
       .add(colC)
       .add(colD)
       .withSVMode(mode)
-      .buildSchema();
+      .build();
   }
 }

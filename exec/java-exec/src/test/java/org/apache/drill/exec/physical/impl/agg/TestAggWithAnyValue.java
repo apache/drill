@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.agg;
 
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
-import org.apache.drill.exec.physical.unit.PhysicalOpUnitTestBase;
+import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
@@ -59,7 +59,7 @@ public class TestAggWithAnyValue {
               "{ \"age\": {\"min\":43, \"max\":80}, \"city\": \"Palo Alto\", \"de\": \"987654321987654321987654321.13987654321\"," +
               " \"a\": [{\"b\":70, \"c\":85}, {\"b\":90, \"c\":145}], \"m\": [{\"n\": [7, 8, 9]}], \"f\": [{\"g\": {\"h\": [{\"k\": 50}, {\"k\": 60}]}}]," +
               "\"p\": {\"q\": [33, 34, 35]}" + "}]");
-      opTestBuilder()
+      legacyOpTestBuilder()
           .physicalOperator(aggConf)
           .inputDataStreamJson(inputJsonBatches)
           .baselineColumns("age", "any_a")

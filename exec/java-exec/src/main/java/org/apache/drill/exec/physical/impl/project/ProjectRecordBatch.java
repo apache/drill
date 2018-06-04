@@ -329,6 +329,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       m.setValueCount(count);
     }
 
+    container.setRecordCount(count);
+
     if (complexWriters == null) {
       return;
     }
