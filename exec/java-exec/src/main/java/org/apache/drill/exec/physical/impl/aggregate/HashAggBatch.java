@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -86,7 +85,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
           "aggrValuesContainer" /* workspace container */, UPDATE_AGGR_INSIDE, UPDATE_AGGR_OUTSIDE, UPDATE_AGGR_INSIDE);
 
 
-  public HashAggBatch(HashAggregate popConfig, RecordBatch incoming, FragmentContext context) throws ExecutionSetupException {
+  public HashAggBatch(HashAggregate popConfig, RecordBatch incoming, FragmentContext context) {
     super(popConfig, context);
     this.incoming = incoming;
     wasKilled = false;
@@ -149,14 +148,23 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     // if aggregation is complete and not all records have been output yet
     if (aggregator.buildComplete() ||
         // or: 1st phase need to return (not fully grouped) partial output due to memory pressure
-        aggregator.earlyOutput()) {
+        aggregator.earlyOutput() ||
+        // or: while handling an EMIT - returning output for that section
+        aggregator.handlingEmit() ) {
       // then output the next batch downstream
       HashAggregator.AggIterOutcome aggOut = aggregator.outputCurrentBatch();
-      // if Batch returned, or end of data - then return the appropriate iter outcome
-      if ( aggOut == HashAggregator.AggIterOutcome.AGG_NONE ) { return IterOutcome.NONE; }
-      if ( aggOut == HashAggregator.AggIterOutcome.AGG_OK ) { return IterOutcome.OK; }
-      // if RESTART - continue below with doWork() - read some spilled partition, just like reading incoming
-      incoming = aggregator.getNewIncoming(); // Restart - incoming was just changed
+      // if Batch returned, or end of data, or Emit - then return the appropriate iter outcome
+      switch ( aggOut ) {
+        case AGG_NONE:
+          return IterOutcome.NONE;
+        case AGG_OK:
+          return IterOutcome.OK;
+        case AGG_EMIT:
+          return IterOutcome.EMIT;
+        default: // i.e. RESTART
+          // if RESTART - continue below with doWork() - read some spilled partition, just like reading incoming
+          incoming = aggregator.getNewIncoming(); // Restart - incoming was just changed
+      }
     }
 
     if (wasKilled) { // if kill() was called before, then finish up
@@ -227,6 +235,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     ClassGenerator<HashAggregator> cg = top.getRoot();
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
     top.plainJavaCapable(true);
+    // Uncomment the following line to allow debugging of the template code
+    // top.saveCodeForDebugging(true);
     container.clear();
 
     int numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().size() : 0;

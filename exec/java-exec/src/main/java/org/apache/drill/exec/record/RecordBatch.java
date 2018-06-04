@@ -259,7 +259,7 @@ public interface RecordBatch extends VectorAccessible {
    *
    * @return The internal vector container
    */
-  public VectorContainer getContainer();
+  VectorContainer getContainer();
 
   /**
    * Gets the value vector type and ID for the given schema path.  The

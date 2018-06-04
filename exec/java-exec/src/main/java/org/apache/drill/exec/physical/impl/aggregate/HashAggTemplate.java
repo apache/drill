@@ -168,6 +168,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private boolean allFlushed = false;
   private boolean buildComplete = false;
   private boolean handlingSpills = false; // True once starting to process spill files
+  private boolean handleEmit = false; // true after receiving an EMIT, till finish handling it
 
   private OperatorStats stats = null;
   private HashTableStats htStats = new HashTableStats();
@@ -604,32 +605,36 @@ public abstract class HashAggTemplate implements HashAggregator {
       for (VectorWrapper<?> v : incoming) {
         v.getValueVector().clear();
       }
-      //
-      // Get the NEXT input batch, initially from the upstream, later (if there was a spill)
-      // from one of the spill files (The spill case is handled differently here to avoid
-      // collecting stats on the spilled records)
-      //
-      long memAllocBeforeNext = allocator.getAllocatedMemory();
-      if ( handlingSpills ) {
-        outcome = incoming.next(); // get it from the SpilledRecordBatch
-      } else {
-        // Get the next RecordBatch from the incoming (i.e. upstream operator)
-        outcome = outgoing.next(0, incoming);
-      }
-      long memAllocAfterNext = allocator.getAllocatedMemory();
-      long incomingBatchSize = memAllocAfterNext - memAllocBeforeNext;
 
-      // If incoming batch is bigger than our estimate - adjust the estimate to match
-      if ( estMaxBatchSize < incomingBatchSize) {
-        logger.debug("Found a bigger next {} batch: {} , prior estimate was: {}, mem allocated {}",handlingSpills ? "spill" : "incoming",
-            incomingBatchSize, estMaxBatchSize, memAllocAfterNext);
-        estMaxBatchSize = incomingBatchSize;
+      if ( handleEmit ) {
+        outcome = IterOutcome.NONE; // finished behaving like OK, now behave like NONE
       }
+      else {
+        //
+        // Get the NEXT input batch, initially from the upstream, later (if there was a spill)
+        // from one of the spill files (The spill case is handled differently here to avoid
+        // collecting stats on the spilled records)
+        //
+        long memAllocBeforeNext = allocator.getAllocatedMemory();
+        if (handlingSpills) {
+          outcome = incoming.next(); // get it from the SpilledRecordBatch
+        } else {
+          // Get the next RecordBatch from the incoming (i.e. upstream operator)
+          outcome = outgoing.next(0, incoming);
+        }
+        long memAllocAfterNext = allocator.getAllocatedMemory();
+        long incomingBatchSize = memAllocAfterNext - memAllocBeforeNext;
 
-      if (EXTRA_DEBUG_1) {
-        logger.debug("Received IterOutcome of {}", outcome);
+        // If incoming batch is bigger than our estimate - adjust the estimate to match
+        if (estMaxBatchSize < incomingBatchSize) {
+          logger.debug("Found a bigger next {} batch: {} , prior estimate was: {}, mem allocated {}", handlingSpills ? "spill" : "incoming", incomingBatchSize, estMaxBatchSize, memAllocAfterNext);
+          estMaxBatchSize = incomingBatchSize;
+        }
+
+        if (EXTRA_DEBUG_1) {
+          logger.debug("Received IterOutcome of {}", outcome);
+        }
       }
-
       // Handle various results from getting the next batch
       switch (outcome) {
         case OUT_OF_MEMORY:
@@ -644,6 +649,10 @@ public abstract class HashAggTemplate implements HashAggregator {
           // TODO: new schema case needs to be handled appropriately
           return AggOutcome.UPDATE_AGGREGATOR;
 
+        case EMIT:
+          handleEmit = true;
+          // remember EMIT, but continue like handling OK
+
         case OK:
           currentBatchRecordCount = incoming.getRecordCount(); // size of next batch
 
@@ -657,20 +666,35 @@ public abstract class HashAggTemplate implements HashAggregator {
         case NONE:
           resetIndex(); // initialize index (in case spill files need to be processed)
 
-          buildComplete = true;
+          // Either flag buildComplete or handleEmit (or earlyOutput) would cause returning of
+          // the outgoing batch downstream (see innerNext() in HashAggBatch).
+          buildComplete = true ; // now should go and return outgoing
 
+          if ( handleEmit ) {
+            buildComplete = false; // This was not a real NONE - more incoming is expected
+            // don't aggregate this incoming batch again (in the loop above; when doWork() is called again)
+            currentBatchRecordCount = 0;
+          }
           updateStats(htables);
 
           // output the first batch; remaining batches will be output
           // in response to each next() call by a downstream operator
           AggIterOutcome aggOutcome = outputCurrentBatch();
 
-          if ( aggOutcome == AggIterOutcome.AGG_RESTART ) {
-            // Output of first batch returned a RESTART (all new partitions were spilled)
-            return AggOutcome.CALL_WORK_AGAIN; // need to read/process the next partition
+          switch ( aggOutcome ) {
+            case AGG_RESTART:
+              // Output of first batch returned a RESTART (all new partitions were spilled)
+              return AggOutcome.CALL_WORK_AGAIN; // need to read/process the next partition
+            case AGG_EMIT:
+              // Following an incoming EMIT, if the output was only a single batch
+              // outcome is set to IterOutcome.EMIT;
+              break;
+            case AGG_NONE: // no output
+              break;
+            default:
+              // Regular output (including after EMIT, when more output batches are planned)
+              outcome = IterOutcome.OK;
           }
-
-          if ( aggOutcome != AggIterOutcome.AGG_NONE ) { outcome = IterOutcome.OK; }
 
           return AggOutcome.RETURN_OUTCOME;
 
@@ -750,6 +774,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       logger.trace("Output values allocated {} but the estimate was only {}. Adjusting ...",memAdded,estOutgoingAllocSize);
       estOutgoingAllocSize = memAdded;
     }
+    outContainer.setRecordCount(records);
     // try to restore the reserve
     restoreReservedMemory();
   }
@@ -1011,6 +1036,23 @@ public abstract class HashAggTemplate implements HashAggregator {
   @Override
   public AggIterOutcome outputCurrentBatch() {
 
+    // Handle the case of an EMIT with an empty batch
+    if ( handleEmit && ( batchHolders == null || batchHolders[0].size() == 0 ) ) {
+      lastBatchOutputCount = 0; // empty
+      allocateOutgoing(0);
+      for (VectorWrapper<?> v : outgoing) {
+        v.getValueVector().getMutator().setValueCount(0);
+      }
+      outgoing.getContainer().setRecordCount(0);
+      // When returning the last outgoing batch (following an incoming EMIT), then replace OK with EMIT
+      this.outcome = IterOutcome.EMIT;
+      handleEmit = false; // finish handling EMIT
+      if ( outBatchIndex != null ) {
+        outBatchIndex[0] = 0; // reset, for the next EMIT
+      }
+      return AggIterOutcome.AGG_EMIT;
+    }
+
     // when incoming was an empty batch, just finish up
     if ( schema == null ) {
       logger.trace("Incoming was empty; output is an empty batch.");
@@ -1164,6 +1206,13 @@ public abstract class HashAggTemplate implements HashAggregator {
         outBatchIndex[earlyPartition] = 0; // reset, for next time
         earlyOutput = false ; // done with early output
       }
+      else if ( handleEmit ) {
+        // When returning the last outgoing batch (following an incoming EMIT), then replace OK with EMIT
+        this.outcome = IterOutcome.EMIT;
+        handleEmit = false; // finished handling EMIT
+        outBatchIndex[partitionToReturn] = 0; // reset, for the next EMIT
+        return AggIterOutcome.AGG_EMIT;
+      }
       else if ( (partitionToReturn + 1 == numPartitions) && spilledPartitionsList.isEmpty() ) { // last partition ?
 
         allFlushed = true; // next next() call will return NONE
@@ -1187,6 +1236,12 @@ public abstract class HashAggTemplate implements HashAggregator {
   public boolean buildComplete() {
     return buildComplete;
   }
+
+  @Override
+  public boolean handlingEmit() {
+    return handleEmit;
+  }
+
   @Override
   public boolean earlyOutput() { return earlyOutput; }
 
@@ -1464,7 +1519,8 @@ public abstract class HashAggTemplate implements HashAggregator {
    * @param htables
    */
   private void updateStats(HashTable[] htables) {
-    if ( cycleNum > 0 ) { return; } // These stats are only for before processing spilled files
+    if ( cycleNum > 0 ||  // These stats are only for before processing spilled files
+      handleEmit ) { return; } // and no stats collecting when handling an EMIT
     long numSpilled = 0;
     HashTableStats newStats = new HashTableStats();
     // sum the stats from all the partitions

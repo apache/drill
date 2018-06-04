@@ -56,7 +56,7 @@ import com.google.common.base.Preconditions;
 public class TestBuilder {
 
   /**
-   * Test query to rung. Type of object depends on the {@link #queryType}
+   * Test query to run. Type of object depends on the {@link #queryType}
    */
   private Object query;
   // the type of query for the test
