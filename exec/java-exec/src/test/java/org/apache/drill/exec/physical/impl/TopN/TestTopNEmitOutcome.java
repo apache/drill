@@ -225,17 +225,13 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
 
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     outputRecordCount += topNBatch.getRecordCount();
     assertEquals(3, outputRecordCount);
 
     // verify results
     verifyColumnCount(topNBatch, inputSchema.size());
     verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
-
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
-    outputRecordCount += topNBatch.getRecordCount();
-    assertEquals(3, outputRecordCount);
 
     // Release memory for row sets
     nonEmptyInputRowSet2.clear();
@@ -284,17 +280,13 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
 
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     outputRecordCount += topNBatch.getRecordCount();
     assertEquals(3, outputRecordCount);
 
     // verify results
     verifyColumnCount(topNBatch, inputSchema.size());
     verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
-
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
-    outputRecordCount += topNBatch.getRecordCount();
-    assertEquals(3, outputRecordCount);
 
     // Release memory for row sets
     nonEmptyInputRowSet2.clear();
@@ -329,10 +321,12 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     inputContainer.add(nonEmptyInputRowSet.container());
     inputContainer.add(emptyInputRowSet.container());
     inputContainer.add(nonEmptyInputRowSet2.container());
+    inputContainer.add(emptyInputRowSet.container());
 
     inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
     inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.EMIT);
 
     final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
@@ -355,7 +349,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(0, topNBatch.getRecordCount());
 
     // State refresh happens and limit again works on new data batches
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(2, topNBatch.getRecordCount());
 
     // verify results with baseline
@@ -409,7 +403,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
-
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.NONE);
     // Release memory for row set
     expectedRowSet1.clear();
   }
@@ -517,7 +511,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(0, topNBatch.getRecordCount());
 
     // After seeing EMIT limit will refresh it's state and again evaluate limit on next set of input batches
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(2, topNBatch.getRecordCount());
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
@@ -624,18 +618,93 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(2, topNBatch.getRecordCount());
 
     verifyColumnCount(topNBatch, inputSchema.size());
     verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet2.container());
 
-    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
-    assertEquals(0, topNBatch.getRecordCount());
-
     nonEmptyInputRowSet2.clear();
     nonEmptyInputRowSet3.clear();
     expectedRowSet1.clear();
     expectedRowSet2.clear();
+  }
+
+  /*****************************************************************************************
+   Tests for validating regular TopN behavior with no EMIT outcome
+  ******************************************************************************************/
+  @Test
+  public void testTopN_WithEmptyNonEmptyBatchesAndOKOutcome() {
+    final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(7, 70, "item7")
+      .addRow(3, 30, "item3")
+      .addRow(13, 130, "item13")
+      .build();
+
+    final RowSet.SingleRowSet nonEmptyInputRowSet3 = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(17, 170, "item17")
+      .addRow(23, 230, "item23")
+      .addRow(130, 1300, "item130")
+      .build();
+
+    final RowSet.SingleRowSet expectedRowSet = operatorFixture.rowSetBuilder(inputSchema)
+      .addRow(130, 1300, "item130")
+      .addRow(23, 230, "item23")
+      .addRow(17, 170, "item17")
+      .addRow(13, 130, "item13")
+      .build();
+
+    inputContainer.add(nonEmptyInputRowSet.container());
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet2.container());
+    inputContainer.add(emptyInputRowSet.container());
+    inputContainer.add(nonEmptyInputRowSet3.container());
+    inputContainer.add(emptyInputRowSet.container());
+
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+    inputOutcomes.add(RecordBatch.IterOutcome.OK);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final TopN topNConfig = new TopN(null,
+      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+        RelFieldCollation.NullDirection.FIRST)), false, 4);
+    final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertEquals(4, topNBatch.getRecordCount());
+
+    verifyColumnCount(topNBatch, inputSchema.size());
+    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.NONE);
+
+    nonEmptyInputRowSet2.clear();
+    nonEmptyInputRowSet3.clear();
+    expectedRowSet.clear();
+  }
+
+  @Test
+  public void testRegularTopNWithEmptyDataSet() {
+    inputContainer.add(emptyInputRowSet.container());
+
+    inputOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+
+    final MockRecordBatch mockInputBatch = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
+      inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
+
+    final TopN topNConfig = new TopN(null,
+      Lists.newArrayList(ordering("id_left", RelFieldCollation.Direction.DESCENDING,
+        RelFieldCollation.NullDirection.FIRST)), false, 4);
+    final TopNBatch topNBatch = new TopNBatch(topNConfig, operatorFixture.getFragmentContext(), mockInputBatch);
+
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+    assertTrue(topNBatch.next() == RecordBatch.IterOutcome.NONE);
   }
 }

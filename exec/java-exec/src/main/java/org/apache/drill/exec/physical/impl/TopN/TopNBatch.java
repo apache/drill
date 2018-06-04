@@ -193,6 +193,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       return handleRemainingOutput();
     }
 
+    // Reset the TopN state for next iteration
+    resetTopNState();
+
     try{
       boolean incomingHasSv2 = false;
       switch (incoming.getSchema().getSelectionVectorMode()) {
@@ -313,7 +316,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
       // PriorityQueue can be null here if first batch is received with OK_NEW_SCHEMA and is empty and second next()
       // call returned NONE or EMIT.
-      if (schema == null || priorityQueue == null) {
+      // PriorityQueue can be uninitialized here if only empty batch is received between 2 EMIT outcome.
+      if (schema == null || (priorityQueue == null || !priorityQueue.isInitialized())) {
         // builder may be null at this point if the first incoming batch is empty
         return handleEmptyBatches(lastKnownOutcome);
       }
@@ -540,6 +544,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       // get the outcome to return before calling refresh since that resets the lastKnowOutcome to OK
       outcomeToReturn = lastKnownOutcome == EMIT ? EMIT : NONE;
       resetTopNState();
+    } else if (lastKnownOutcome == EMIT) {
+      // in case of EMIT check if this output batch returns all the data or not. If yes then return EMIT along with this
+      // output batch else return OK. Remaining data will be sent downstream in subsequent next() call.
+      final boolean hasMoreRecords = sv4.hasNext();
+      outcomeToReturn = (hasMoreRecords) ? OK : EMIT;
+      hasOutputRecords = hasMoreRecords;
     } else {
       outcomeToReturn = OK;
     }

@@ -108,8 +108,7 @@ public class SelectionVector4 implements AutoCloseable {
   public boolean next() {
 //    logger.debug("Next called. Start: {}, Length: {}, recordCount: " + recordCount, start, length);
 
-    if (start + length >= recordCount) {
-
+    if (!hasNext()) {
       start = recordCount;
       length = 0;
 //      logger.debug("Setting count to zero.");
@@ -121,6 +120,11 @@ public class SelectionVector4 implements AutoCloseable {
     length = newEnd - start;
 //    logger.debug("New start {}, new length {}", start, length);
     return true;
+  }
+
+  public boolean hasNext() {
+    final int endIndex = start + length;
+    return endIndex < recordCount;
   }
 
   public void clear() {
