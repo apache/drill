@@ -140,7 +140,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
    * @param rootFragment
    * @param session
    * @param queryContextInfo
-   * @return
+   * @return The {@link QueryWorkUnit}s.
    * @throws ExecutionSetupException
    */
   public List<QueryWorkUnit> getSplitFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
@@ -154,7 +154,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
    * Helper method to reuse the code for QueryWorkUnit(s) generation
    * @param activeEndpoints
    * @param rootFragment
-   * @return
+   * @return A {@link PlanningSet}.
    * @throws ExecutionSetupException
    */
   protected PlanningSet getFragmentsHelper(Collection<DrillbitEndpoint> activeEndpoints, Fragment rootFragment) throws ExecutionSetupException {

@@ -185,7 +185,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   /**
    * Visible only for memory allocation calculations.
    *
-   * @return
+   * @return The {@link BufferLedger} associated with this {@link DrillBuf}.
    */
   public BufferLedger getLedger() { return ledger; }
 

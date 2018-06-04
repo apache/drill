@@ -62,7 +62,6 @@ public interface ClusterController extends RegistryHandler {
    *
    * @param containers
    *          the set of containers provided by YARN
-   * @return the set of tasks to launch
    */
 
   void containersAllocated(List<Container> containers);
@@ -146,8 +145,6 @@ public interface ClusterController extends RegistryHandler {
    * Called by the main thread to wait for the normal shutdown of the
    * controller. Such shutdown occurs when the admin sends a sutdown
    * command from the UI or REST API.
-   *
-   * @return
    */
 
   boolean waitForCompletion();
@@ -176,8 +173,6 @@ public interface ClusterController extends RegistryHandler {
   /**
    * Return the target number of tasks that the controller seeks to maintain.
    * This is the sum across all pools.
-   *
-   * @return
    */
 
   int getTargetCount();
@@ -190,14 +185,13 @@ public interface ClusterController extends RegistryHandler {
    * when reducing cluster size.
    *
    * @param id
-   * @return
    */
 
   boolean cancelTask(int id);
 
   /**
    * Whether this distribution of YARN supports disk resources.
-   * @return
+   * @return True if this distribution of YARN supports disk resources. False otherwise.
    */
 
   boolean supportsDiskResource();

@@ -72,8 +72,6 @@ public interface Scheduler {
   /**
    * Whether tasks from this scheduler should incorporate app startup/shutdown
    * acknowledgements (acks) into the task lifecycle.
-   *
-   * @return
    */
 
   boolean isTracked();
@@ -83,7 +81,7 @@ public interface Scheduler {
   /**
    * Get the desired number of running tasks.
    *
-   * @return
+   * @return The desired number of running tasks
    */
   int getTarget();
 
@@ -119,7 +117,7 @@ public interface Scheduler {
    * Return an estimate of progress given as a ratio of (work completed, total
    * work).
    *
-   * @return
+   * @return Estimate of progress.
    */
   int[] getProgress();
 
@@ -135,7 +133,7 @@ public interface Scheduler {
   /**
    * For reporting, get the YARN resources requested by processes in
    * this pool.
-   * @return
+   * @return The request spec.
    */
 
   ContainerRequestSpec getResource( );

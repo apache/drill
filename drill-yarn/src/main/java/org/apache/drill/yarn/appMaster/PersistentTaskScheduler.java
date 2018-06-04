@@ -79,7 +79,7 @@ public abstract class PersistentTaskScheduler extends AbstractScheduler {
    * running tasks to target level. Thus, a persistent cluster
    * will normally report 100% progress.
    *
-   * @return
+   * @return The progress of persistent tasks.
    */
 
   @Override

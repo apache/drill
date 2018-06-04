@@ -106,7 +106,7 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
 /**
  * Supported metadata versions.
  * <p>
- * Note: keep them synchronized with {@link Metadata.ParquetTableMetadataBase} versions
+ * Note: keep them synchronized with {@link org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetTableMetadataBase} versions
  */
   public static class Constants {
     /**
@@ -134,7 +134,7 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
 
     /**
      * Version 3.2: An array with the components of the field name in
-     * {@link Metadata.ColumnTypeMetadata_v3.Key} class is replaced by the SchemaPath.<br>
+     * {@link org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ColumnTypeMetadata_v3.Key} class is replaced by the {@link org.apache.drill.common.expression.SchemaPath}.<br>
      * See DRILL-4264
      */
     public static final String V3_2 = "3.2";

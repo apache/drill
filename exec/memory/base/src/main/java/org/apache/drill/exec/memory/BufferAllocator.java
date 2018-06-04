@@ -177,7 +177,7 @@ public interface BufferAllocator extends AutoCloseable {
    * those indexes.
    *
    * @param buf the Drillbuf to write
-   * @param output the output stream
+   * @param out the output stream
    * @throws IOException if a write error occurs
    */
 

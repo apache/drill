@@ -39,7 +39,7 @@ public interface TupleReader extends ColumnReader {
    *
    * @param colIndex column index
    * @return reader for the column
-   * @throws IndexOutOfRangeException if the index is invalid
+   * @throws {@link java.lang.IndexOutOfBoundsException} if the index is invalid
    */
 
   ObjectReader column(int colIndex);
@@ -47,7 +47,7 @@ public interface TupleReader extends ColumnReader {
   /**
    * Return a column reader by name.
    *
-   * @param colIndex column name
+   * @param colName column name
    * @return reader for the column, or <tt>null</tt> if no such
    * column exists
    */

@@ -110,7 +110,6 @@ public class ImpersonationUtil {
    * @param opUserName Name of the user whom to impersonate while setting up the operator.
    * @param queryUserName Name of the user who issues the query. If <i>opUserName</i> is invalid,
    *                      then this parameter must be valid user name.
-   * @return
    */
   public static UserGroupInformation createProxyUgi(String opUserName, String queryUserName) {
     if (!Strings.isNullOrEmpty(opUserName)) {
@@ -131,7 +130,6 @@ public class ImpersonationUtil {
    * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} for give user name.
    *
    * @param proxyUserName Proxy user name (must be valid)
-   * @return
    */
   public static UserGroupInformation createProxyUgi(String proxyUserName) {
     try {
@@ -202,7 +200,6 @@ public class ImpersonationUtil {
    *
    * @param proxyUserName Name of the user whom to impersonate while accessing the FileSystem contents.
    * @param fsConf FileSystem configuration.
-   * @return
    */
   public static DrillFileSystem createFileSystem(String proxyUserName, Configuration fsConf) {
     return createFileSystem(createProxyUgi(proxyUserName), fsConf, null);
@@ -234,7 +231,7 @@ public class ImpersonationUtil {
    * @param userName User who is checked for administrative privileges.
    * @param adminUsers Comma separated list of admin usernames,
    * @param adminGroups Comma separated list of admin usergroups
-   * @return
+   * @return True if the user has admin priveleges. False otherwise.
    */
   public static boolean hasAdminPrivileges(final String userName, final String adminUsers, final String adminGroups) {
     // Process user is by default an admin

@@ -30,8 +30,8 @@ import io.netty.buffer.DrillBuf;
  * DrillBufs to give UDF writers general purpose buffers we can account for. To prevent the need
  * for UDFs to contain boilerplate to close all of the buffers they request, this list
  * is tracked at a higher level and all of the buffers are freed once we are sure that
- * the code depending on them is done executing (currently {@link FragmentContext}
- * and {@link QueryContext}.
+ * the code depending on them is done executing (currently FragmentContext
+ * and QueryContext.
  */
 public interface BufferManager extends AutoCloseable {
 

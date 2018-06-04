@@ -36,9 +36,10 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
  * walk the schema tree to allocate new vectors according to a given
  * row count and the size information provided in column metadata.
  * <p>
- * @see {@link AllocationHelper} - the class which this one replaces
- * @see {@link org.apache.drill.exec.record.VectorInitializer} - an earlier cut at implementation
- * based on data from the {@link org.apache.drill.exec.record.RecordBatchSizer}
+ *   {@link org.apache.drill.exec.vector.AllocationHelper} - the class which this one replaces
+ *   {@link org.apache.drill.exec.record.VectorInitializer} - an earlier cut at implementation
+ *   based on data from the {@link org.apache.drill.exec.record.RecordBatchSizer}
+ * </p>
  */
 
 // TODO: Does not yet handle lists; lists are a simple extension

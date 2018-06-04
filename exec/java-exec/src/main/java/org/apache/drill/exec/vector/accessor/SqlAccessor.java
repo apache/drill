@@ -43,12 +43,12 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
  * </p>
  * <li>
  *   a get method that return primitive type throws an exception (callers are
- *   responsible for calling {@link isNull} to check for null before calling
+ *   responsible for calling {@link #isNull(int)} to check for null before calling
  *   such methods)
  * </li>
  * <li>
  *   a get method that returns a non-primitive type returns Java {@code null}
- *   (the caller does not need to call {@link isNull} to check for nulls)
+ *   (the caller does not need to call {@link #isNull(int)} to check for nulls)
  * </li>
  */
 public interface SqlAccessor {

@@ -344,7 +344,7 @@ public class AllocationManager {
      * use.
      *
      * @param allocator
-     * @return
+     * @return The ledger associated with a particular BufferAllocator.
      */
 
     public BufferLedger getLedgerForAllocator(BufferAllocator allocator) {
@@ -375,10 +375,8 @@ public class AllocationManager {
      * @param length
      *          The length in bytes that this DrillBuf will provide access to.
      * @param manager
-     *          An optional BufferManager argument that can be used to manage expansion of this DrillBuf
-     * @param retain
-     *          Whether or not the newly created buffer should get an additional reference count added to it.
-     * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger
+     *          An optional BufferManager argument that can be used to manage expansion of this DrillBuf.
+     * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger.
      */
     public DrillBuf newDrillBuf(int offset, int length, BufferManager manager) {
       allocator.assertOpen();
