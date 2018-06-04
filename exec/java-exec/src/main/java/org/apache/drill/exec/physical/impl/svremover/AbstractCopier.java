@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.svremover;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -30,7 +30,7 @@ public abstract class AbstractCopier implements Copier {
   protected VectorContainer outgoing;
 
   @Override
-  public void setup(RecordBatch incoming, VectorContainer outgoing) {
+  public void setup(VectorAccessible incoming, VectorContainer outgoing) {
     this.outgoing = outgoing;
 
     final int count = outgoing.getNumberOfColumns();
@@ -43,15 +43,7 @@ public abstract class AbstractCopier implements Copier {
 
   @Override
   public int copyRecords(int index, int recordCount) {
-    for(VectorWrapper<?> out : outgoing){
-      TypeProtos.MajorType type = out.getField().getType();
-      if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
-        out.getValueVector().allocateNew();
-      } else {
-        AllocationHelper.allocate(out.getValueVector(), recordCount, 1);
-      }
-    }
-
+    allocateOutgoing(outgoing, recordCount);
     return insertRecords(0, index, recordCount);
   }
 
@@ -91,4 +83,16 @@ public abstract class AbstractCopier implements Copier {
   public abstract void copyEntryIndirect(int inIndex, int outIndex);
 
   public abstract void copyEntry(int inIndex, int outIndex);
+
+  public static void allocateOutgoing(VectorContainer outgoing, int recordCount) {
+    for(VectorWrapper<?> out : outgoing) {
+      TypeProtos.MajorType type = out.getField().getType();
+
+      if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
+        out.getValueVector().allocateNew();
+      } else {
+        AllocationHelper.allocate(out.getValueVector(), recordCount, 1);
+      }
+    }
+  }
 }

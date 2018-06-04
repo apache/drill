@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
@@ -29,7 +29,7 @@ import org.apache.drill.test.rowSet.RowSetBuilder;
 public class GenericSV2BatchCopierTest extends AbstractGenericCopierTest {
 
   @Override
-  public RowSet createSrcRowSet(RootAllocator allocator) {
+  public RowSet createSrcRowSet(BufferAllocator allocator) {
     return new RowSetBuilder(allocator, createTestSchema(BatchSchema.SelectionVectorMode.TWO_BYTE))
       .addSelection(true, row1())
       .addRow(row2())

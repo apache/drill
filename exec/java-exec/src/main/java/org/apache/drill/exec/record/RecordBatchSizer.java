@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.Map;
 
@@ -634,6 +636,11 @@ public class RecordBatchSizer {
   private Map<String, ColumnSize> columnSizes = CaseInsensitiveMap.newHashMap();
 
   /**
+   * This field is used by the convenience method {@link #columnsList()}.
+   */
+  private List<ColumnSize> columnSizesList = new ArrayList<>();
+
+  /**
    * Number of records (rows) in the batch.
    */
   private int rowCount;
@@ -715,6 +722,8 @@ public class RecordBatchSizer {
     for (VectorWrapper<?> vw : va) {
       ColumnSize colSize = measureColumn(vw.getValueVector(), "");
       columnSizes.put(vw.getField().getName(), colSize);
+      columnSizesList.add(colSize);
+      stdRowWidth += colSize.getStdDataSizePerEntry();
       netBatchSize += colSize.getTotalNetSize();
       maxSize = Math.max(maxSize, colSize.getTotalDataSize());
       if (colSize.metadata.isNullable()) {
@@ -883,6 +892,14 @@ public class RecordBatchSizer {
 
   public int getNetRowWidth() { return netRowWidth; }
   public Map<String, ColumnSize> columns() { return columnSizes; }
+
+  /**
+   * This is a convenience method to get the sizes of columns in the same order that the corresponding value vectors
+   * are stored within a {@link org.apache.drill.exec.record.VectorAccessible}.
+   * @return The sizes of columns in the same order that the corresponding value vectors are stored within a
+   * {@link org.apache.drill.exec.record.VectorAccessible}.
+   */
+  public List<ColumnSize> columnsList() { return columnSizesList; }
 
   /**
    * Compute the "real" width of the row, taking into account each varchar column size

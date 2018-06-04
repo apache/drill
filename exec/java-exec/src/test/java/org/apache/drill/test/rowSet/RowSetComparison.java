@@ -20,13 +20,22 @@ package org.apache.drill.test.rowSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.bouncycastle.util.Arrays;
+import org.junit.Assert;
 
 /**
  * For testing, compare the contents of two row sets (record batches)
@@ -58,10 +67,10 @@ public class RowSetComparison {
    */
   private boolean mask[];
   /**
-   * Floats and doubles do not compare exactly. This delta is used
-   * by JUnit for such comparisons.
+   * Floats and doubles do not compare exactly. This MathContext is used
+   * to construct BigDecimals of the desired precision.
    */
-  private double delta = 0.001;
+  private MathContext scale = new MathContext(3);
   /**
    * Tests can skip the first n rows.
    */
@@ -106,14 +115,15 @@ public class RowSetComparison {
   }
 
   /**
-   * Specify the delta value to use when comparing float or
+   * Specify the precision to use when comparing float or
    * double values.
    *
-   * @param delta the delta to use in float and double comparisons
+   * @param scale the precision to use for comparing floats and doubles. See {@link BigDecimal#scale()} for
+   *              a definition scale.
    * @return this builder
    */
-  public RowSetComparison withDelta(double delta) {
-    this.delta = delta;
+  public RowSetComparison withScale(int scale) {
+    this.scale = new MathContext(scale);
     return this;
   }
 
@@ -142,28 +152,93 @@ public class RowSetComparison {
     return this;
   }
 
+  private void compareSchemasAndCounts(RowSet actual) {
+    assertTrue("Schemas don't match.\n" +
+      "Expected: " + expected.schema().toString() +
+      "\nActual: " + actual.schema(), expected.schema().isEquivalent(actual.schema()));
+    int testLength = getTestLength();
+    int dataLength = offset + testLength;
+    assertTrue("Missing expected rows", expected.rowCount() >= dataLength);
+    assertTrue("Missing actual rows", actual.rowCount() >= dataLength);
+  }
+
+  private int getTestLength() {
+    return span > -1 ? span : expected.rowCount() - offset;
+  }
+
+  public void unorderedVerify(RowSet actual) {
+    compareSchemasAndCounts(actual);
+
+    int testLength = getTestLength();
+    RowSetReader er = expected.reader();
+    RowSetReader ar = actual.reader();
+
+    for (int i = 0; i < offset; i++) {
+      er.next();
+      ar.next();
+    }
+
+    final Multiset<List<Object>> expectedSet = HashMultiset.create();
+    final Multiset<List<Object>> actualSet = HashMultiset.create();
+
+    for (int rowCounter = 0; rowCounter < testLength; rowCounter++) {
+      er.next();
+      ar.next();
+
+      expectedSet.add(buildRow(er));
+      actualSet.add(buildRow(ar));
+    }
+
+    Assert.assertEquals(expectedSet, actualSet);
+  }
+
+  /**
+   * Convenience method to verify the actual results, then free memory
+   * for both the expected and actual result sets.
+   * @param actual the actual results to verify
+   */
+  public void unorderedVerifyAndClearAll(RowSet actual) {
+    try {
+      unorderedVerify(actual);
+    } finally {
+      expected.clear();
+      actual.clear();
+    }
+  }
+
+  private List<Object> buildRow(RowSetReader reader) {
+    final List<Object> row = new ArrayList<>();
+
+    for (int i = 0; i < mask.length; i++) {
+      if (!mask[i]) {
+        continue;
+      }
+
+      final ScalarReader scalarReader = reader.column(i).scalar();
+      final Object value = getScalar(scalarReader);
+      row.add(value);
+    }
+
+    return row;
+  }
+
   /**
    * Verify the actual rows using the rules defined in this builder
    * @param actual the actual results to verify
    */
 
   public void verify(RowSet actual) {
-    assertTrue("Schemas don't match.\n" +
-        "Expected: " + expected.schema().toString() +
-        "\nActual: " + actual.schema(), expected.schema().isEquivalent(actual.schema()));
-    int testLength = expected.rowCount() - offset;
-    if (span > -1) {
-      testLength = span;
-    }
-    int dataLength = offset + testLength;
-    assertTrue("Missing expected rows", expected.rowCount() >= dataLength);
-    assertTrue("Missing actual rows", actual.rowCount() >= dataLength);
+    compareSchemasAndCounts(actual);
+    int testLength = getTestLength();
+
     RowSetReader er = expected.reader();
     RowSetReader ar = actual.reader();
+
     for (int i = 0; i < offset; i++) {
       er.next();
       ar.next();
     }
+
     for (int i = 0; i < testLength; i++) {
       er.next();
       ar.next();
@@ -245,34 +320,32 @@ public class RowSetComparison {
     if (! ec.isNull()) {
       assertTrue(label + " - column is null", ! ac.isNull());
     }
+
     switch (ec.valueType()) {
-    case BYTES: {
+      case BYTES:
         byte expected[] = ac.getBytes();
         byte actual[] = ac.getBytes();
         assertEquals(label + " - byte lengths differ", expected.length, actual.length);
         assertTrue(label, Arrays.areEqual(expected, actual));
         break;
-     }
-     case DOUBLE:
-       assertEquals(label, ec.getDouble(), ac.getDouble(), delta);
-       break;
-     case INTEGER:
-       assertEquals(label, ec.getInt(), ac.getInt());
-       break;
-     case LONG:
-       assertEquals(label, ec.getLong(), ac.getLong());
-       break;
-     case STRING:
-       assertEquals(label, ec.getString(), ac.getString());
-        break;
-     case DECIMAL:
-       assertEquals(label, ec.getDecimal(), ac.getDecimal());
-       break;
-     case PERIOD:
-       assertEquals(label, ec.getPeriod(), ac.getPeriod());
-       break;
-     default:
-        throw new IllegalStateException( "Unexpected type: " + ec.valueType());
+      default:
+        assertEquals(label, getScalar(ec), getScalar(ac));
+    }
+  }
+
+  private Object getScalar(final ScalarReader scalarReader) {
+    if (scalarReader.isNull()) {
+      return Optional.absent();
+    }
+
+    switch (scalarReader.valueType()) {
+      case BYTES:
+        return ByteBuffer.wrap(scalarReader.getBytes());
+      case DOUBLE: {
+        return new BigDecimal(scalarReader.getDouble(), this.scale).stripTrailingZeros();
+      }
+      default:
+        return scalarReader.getObject();
     }
   }
 

@@ -49,6 +49,8 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
+import org.apache.drill.test.LegacyOperatorTestBuilder;
+import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -121,7 +123,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(projectConf)
             .inputDataStreamJson(inputJsonBatches)
             .baselineColumns(baselineColumns)
@@ -197,7 +199,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
       fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", memoryLimit);
 
-      OperatorTestBuilder opTestBuilder = opTestBuilder()
+      LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
               .physicalOperator(projectConf)
               .inputDataStreamJson(inputJsonBatches)
               .baselineColumns(baselineColumns)
@@ -276,7 +278,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(projectConf)
             .inputDataStreamJson(inputJsonBatches)
             .baselineColumns(baselineColumns)
@@ -347,7 +349,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(projectConf)
             .inputDataStreamJson(inputJsonBatches)
             .baselineColumns(baselineColumns)
@@ -418,7 +420,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(projectConf)
             .inputDataStreamJson(inputJsonBatches)
             .baselineColumns(baselineColumns)
@@ -481,7 +483,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -549,7 +551,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -611,7 +613,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -672,7 +674,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -760,7 +762,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -869,7 +871,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -967,7 +969,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -1065,7 +1067,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
     // Here we expect 16 batches because each batch will be limited by upper limit of 65535 records.
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "c")
@@ -1125,7 +1127,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // Here we expect 10 batches because each batch will be bounded by lower limit of at least 1 record.
     // do not check the output batch size as it will be more than configured value of 1024, so we get
     // at least one record out.
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "c")
@@ -1172,7 +1174,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     batchString.append("]");
     inputJsonBatches.add(batchString.toString());
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b")
@@ -1233,7 +1235,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(flatten)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b", "c")
@@ -1302,7 +1304,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately 4 batches because of fragmentation factor of 2 accounted for in merge join.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(mergeJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
@@ -1372,7 +1374,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We should get 1 batch.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize*2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(mergeJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(1)  // verify number of batches
@@ -1426,7 +1428,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5,  "c1" : 3, "a2":6,  "c2": 3
 
     // expect two batches, batch limited by 65535 records
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(mergeJoin)
       .baselineColumns("a1", "c1", "a2", "c2")
       .expectedNumBatches(2)  // verify number of batches
@@ -1481,7 +1483,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // set very low value of output batch size so we can do only one row per batch.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", 128);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(mergeJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(10)  // verify number of batches
@@ -1549,7 +1551,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We should get 2 batches, one for the left and one for the right.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize*2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(unionAll)
       .baselineColumns("a1", "b1", "c1")
       .expectedNumBatches(2)  // verify number of batches
@@ -1620,7 +1622,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We should get 4 batches, 2 for the left and 2 for the right.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(unionAll)
       .baselineColumns("a1", "b1", "c1")
       .expectedNumBatches(4)  // verify number of batches
@@ -1692,7 +1694,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We should get 22 batches for 22 rows.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", 128);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(unionAll)
       .baselineColumns("a1","b1", "c1")
       .expectedNumBatches(22)  // verify number of batches
@@ -1764,7 +1766,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately 4 batches because of fragmentation factor of 2 accounted for in merge join.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
@@ -1834,7 +1836,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We should get 1 batch.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize*2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(1)  // verify number of batches
@@ -1888,7 +1890,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // "a1" : 5,  "c1" : 3, "a2":6,  "c2": 3
 
     // expect two batches, batch limited by 65535 records
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "c1", "a2", "c2")
       .expectedNumBatches(2)  // verify number of batches
@@ -1943,7 +1945,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // set very low value of output batch size so we can do only one row per batch.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", 128);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(10)  // verify number of batches
@@ -2011,7 +2013,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately 4 batches because of fragmentation factor of 2 accounted for in merge join.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
@@ -2080,7 +2082,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately 4 batches because of fragmentation factor of 2 accounted for in merge join.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashJoin)
       .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
       .expectedNumBatches(4)  // verify number of batches
@@ -2102,7 +2104,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
        "[{\"a\": 5, \"b\" : 1 }]",
          "[{\"a\": 5, \"b\" : 5},{\"a\": 3, \"b\" : 8}]");
 
-    opTestBuilder()
+    legacyOpTestBuilder()
       .physicalOperator(aggConf)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("b_sum", "a")
@@ -2157,7 +2159,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashAgg)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b_sum")
@@ -2218,7 +2220,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashAgg)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b_avg")
@@ -2278,7 +2280,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately get 2 batches and max of 4.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize / 2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
       .physicalOperator(hashAgg)
       .inputDataStreamJson(inputJsonBatches)
       .baselineColumns("a", "b_max")
@@ -2350,7 +2352,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately 4 batches.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(nestedLoopJoin)
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(4)  // verify number of batches
@@ -2424,7 +2426,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We should get 1 batch.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize*2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(nestedLoopJoin)
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(1)  // verify number of batches
@@ -2482,7 +2484,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     // we expect n(n+1)/2 number of records i.e. (500 * 501)/2 = 125250
     // expect two batches, batch limited by 65535 records
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(nestedLoopJoin)
             .baselineColumns("a1", "c1", "a2", "c2")
             .expectedNumBatches(2)  // verify number of batches
@@ -2542,7 +2544,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // set very low value of output batch size so we can do only one row per batch.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", 128);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(nestedLoopJoin)
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(10)  // verify number of batches
@@ -2612,7 +2614,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
     // We will get approximately 4 batches.
     fragContext.getOptions().setLocalOption("drill.exec.memory.operator.output_batch_size", totalSize/2);
 
-    OperatorTestBuilder opTestBuilder = opTestBuilder()
+    LegacyOperatorTestBuilder opTestBuilder = legacyOpTestBuilder()
             .physicalOperator(nestedLoopJoin)
             .baselineColumns("a1", "b1", "c1", "a2", "b2", "c2")
             .expectedNumBatches(4)  // verify number of batches
