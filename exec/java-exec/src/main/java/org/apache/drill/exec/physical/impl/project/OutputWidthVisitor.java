@@ -210,7 +210,7 @@ public class OutputWidthVisitor extends AbstractExecExprVisitor<OutputWidthExpre
             TypedFieldId fieldId = varLenReadExpr.getReadExpression().getTypedFieldId();
             columnName =  TypedFieldId.getPath(fieldId, state.manager.getIncomingBatch());
         }
-        final RecordBatchSizer.ColumnSize columnSize = state.manager.getComplexColumnSize(columnName);
+        final RecordBatchSizer.ColumnSize columnSize = state.manager.getColumnSize(columnName);
 
         int columnWidth = columnSize.getNetSizePerEntry();
         return new FixedLenExpr(columnWidth);

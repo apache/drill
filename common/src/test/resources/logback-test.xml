@@ -50,7 +50,7 @@
   </appender>
 
   <root>
-    <level value="error"/>o
+    <level value="error"/>
     <if condition='property("drill.lilith.enable").equalsIgnoreCase("true")'>
       <then>
         <appender-ref ref="SOCKET"/>

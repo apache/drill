@@ -608,11 +608,7 @@ public class RecordBatchSizer {
     return stdNetSize;
   }
 
-  public ColumnSize getComplexColumn(String path) {
-    //attempt a simple lookup before attempting a complex lookup
-    final RecordBatchSizer.ColumnSize columnSize = this.getColumn(path);
-    if (columnSize != null) { return columnSize; }
-
+  private ColumnSize getComplexColumn(String path) {
     String[] segments = Strings.split(path, '.');
     Map<String, ColumnSize> map = columnSizes;
     return getComplexColumnImpl(segments, 0, map);
@@ -630,9 +626,13 @@ public class RecordBatchSizer {
     return getComplexColumnImpl(segments, level + 1, map);
   }
 
-
   public ColumnSize getColumn(String name) {
-    return columnSizes.get(name);
+    final RecordBatchSizer.ColumnSize columnSize =  columnSizes.get(name);
+    if (columnSize != null) {
+      return columnSize;
+    } else {
+      return getComplexColumn(name);
+    }
   }
 
   // This keeps information for only top level columns. Information for nested
