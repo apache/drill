@@ -95,30 +95,31 @@ public abstract class OutputWidthExpression {
     }
 
     /**
-     * VarLenReadExpr captures the name of a variable length column that is used (read) in an expression.
-     * The captured name will be used to lookup the average entry size for the column in the corresponding
+     * VarLenReadExpr captures the inputColumnName and the readExpression used to read a variable length column.
+     * The captured inputColumnName will be used to lookup the average entry size for the column in the corresponding.
+     * If inputColumnName is null then the readExpression is used to get the name of the column.
      * {@link org.apache.drill.exec.record.RecordBatchSizer}
      */
     public static class VarLenReadExpr extends OutputWidthExpression  {
         ValueVectorReadExpression readExpression;
-        String name;
+        String inputColumnName;
 
         public VarLenReadExpr(ValueVectorReadExpression readExpression) {
             this.readExpression = readExpression;
-            this.name = null;
+            this.inputColumnName = null;
         }
 
-        public VarLenReadExpr(String name) {
+        public VarLenReadExpr(String inputColumnName) {
             this.readExpression = null;
-            this.name = name;
+            this.inputColumnName = inputColumnName;
         }
 
         public ValueVectorReadExpression getReadExpression() {
             return readExpression;
         }
 
-        public String getName() {
-            return name;
+        public String getInputColumnName() {
+            return inputColumnName;
         }
 
         @Override
