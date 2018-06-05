@@ -20,7 +20,6 @@ package org.apache.drill.exec.server.rest;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
-import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
@@ -31,7 +30,6 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
-import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.WorkManager;
@@ -43,10 +41,7 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.SecurityHandler;
-import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -81,13 +76,8 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.Set;
-
-import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
-import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTICATED_ROLE;
 
 /**
  * Wrapper class around jetty based webserver.
@@ -96,36 +86,29 @@ public class WebServer implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
 
   private static final int PORT_HUNT_TRIES = 100;
+  private static final String BASE_STATIC_PATH = "/rest/static/";
+  private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
 
   private final DrillConfig config;
-
   private final MetricRegistry metrics;
-
   private final WorkManager workManager;
-
-  private final BootStrapContext context;
+  private final Drillbit drillbit;
 
   private Server embeddedJetty;
-
-  private final Drillbit drillbit;
 
   /**
    * Create Jetty based web server.
    *
    * @param context     Bootstrap context.
    * @param workManager WorkManager instance.
+   * @param drillbit    Drillbit instance.
    */
   public WebServer(final BootStrapContext context, final WorkManager workManager, final Drillbit drillbit) {
-    this.context = context;
     this.config = context.getConfig();
     this.metrics = context.getMetrics();
     this.workManager = workManager;
     this.drillbit = drillbit;
   }
-
-  private static final String BASE_STATIC_PATH = "/rest/static/";
-
-  private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
 
   /**
    * Checks if only impersonation is enabled.
@@ -140,7 +123,6 @@ public class WebServer implements AutoCloseable {
 
   /**
    * Start the web server including setup.
-   * @throws Exception
    */
   @SuppressWarnings("resource")
   public void start() throws Exception {
@@ -175,7 +157,6 @@ public class WebServer implements AutoCloseable {
       } catch (BindException e) {
         if (portHunt) {
           logger.info("Failed to start on port {}, trying port {}", port, ++port, e);
-          continue;
         } else {
           throw e;
         }
@@ -250,6 +231,8 @@ public class WebServer implements AutoCloseable {
   private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
     SessionManager sessionManager = new HashSessionManager();
     sessionManager.setMaxInactiveInterval(config.getInt(ExecConstants.HTTP_SESSION_MAX_IDLE_SECS));
+    // response cookie will be returned with HttpOnly flag
+    sessionManager.getSessionCookieConfig().setHttpOnly(true);
     sessionManager.addEventListener(new HttpSessionListener() {
       @Override
       public void sessionCreated(HttpSessionEvent se) {
@@ -285,21 +268,6 @@ public class WebServer implements AutoCloseable {
     return new SessionHandler(sessionManager);
   }
 
-  /**
-   * @return {@link SecurityHandler} with appropriate {@link LoginService}, {@link Authenticator} and constraints.
-   */
-  private ConstraintSecurityHandler createSecurityHandler() {
-    ConstraintSecurityHandler security = new ConstraintSecurityHandler();
-
-    Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
-    security.setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
-
-    security.setAuthenticator(new FormAuthenticator("/login", "/login", true));
-    security.setLoginService(new DrillRestLoginService(workManager.getContext()));
-
-    return security;
-  }
-
   public int getPort() {
     if (!isRunning()) {
       throw new UnsupportedOperationException("Http is not enabled");
@@ -331,7 +299,6 @@ public class WebServer implements AutoCloseable {
    * they will be used else a self-signed certificate is generated and used.
    *
    * @return Initialized {@link ServerConnector} for HTTPS connections.
-   * @throws Exception
    */
   private ServerConnector createHttpsConnector(int port, int acceptors, int selectors) throws Exception {
     logger.info("Setting up HTTPS connector for web server");
@@ -425,9 +392,8 @@ public class WebServer implements AutoCloseable {
    * Create HTTP connector.
    *
    * @return Initialized {@link ServerConnector} instance for HTTP connections.
-   * @throws Exception
    */
-  private ServerConnector createHttpConnector(int port, int acceptors, int selectors) throws Exception {
+  private ServerConnector createHttpConnector(int port, int acceptors, int selectors) {
     logger.info("Setting up HTTP connector for web server");
     final HttpConfiguration httpConfig = new HttpConfiguration();
     final ServerConnector httpConnector =
