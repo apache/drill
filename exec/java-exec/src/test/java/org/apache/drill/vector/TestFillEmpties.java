@@ -37,6 +37,7 @@ import org.junit.experimental.categories.Category;
 
 @Category(VectorTest.class)
 public class TestFillEmpties extends SubOperatorTest {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFillEmpties.class);
 
   @Test
   public void testNullableVarChar() {
@@ -136,13 +137,15 @@ public class TestFillEmpties extends SubOperatorTest {
   }
 
   private void visualize(IntVector vector, int valueCount) {
-    System.out.print("Values: [");
+    final StringBuilder sb = new StringBuilder();
+    sb.append("Values: [");
     IntVector.Accessor accessor = vector.getAccessor();
     for (int i = 0; i < valueCount; i++) {
-      if (i > 0) { System.out.print(" "); }
-      System.out.print(accessor.get(i));
+      if (i > 0) { sb.append(" "); }
+      sb.append(accessor.get(i));
     }
-    System.out.println("]");
+    sb.append("]");
+    logger.info(sb.toString());
   }
 
   private void visualize(NullableVarCharVector vector, int valueCount) {
@@ -157,31 +160,37 @@ public class TestFillEmpties extends SubOperatorTest {
 
   private void visualize(String label, UInt4Vector offsetVector,
       int valueCount) {
-    System.out.print(label + ": [");
+    final StringBuilder sb = new StringBuilder();
+    sb.append(label + ": [");
     UInt4Vector.Accessor accessor = offsetVector.getAccessor();
     for (int i = 0; i < valueCount; i++) {
-      if (i > 0) { System.out.print(" "); }
-      System.out.print(accessor.get(i));
+      if (i > 0) { sb.append(" "); }
+      sb.append(accessor.get(i));
     }
-    System.out.println("]");
+    sb.append("]");
+    logger.info(sb.toString());
   }
 
   private void visualize(String label, DrillBuf buffer, int valueCount) {
-    System.out.print(label + ": [");
+    final StringBuilder sb = new StringBuilder();
+    sb.append(label + ": [");
     for (int i = 0; i < valueCount; i++) {
-      if (i > 0) { System.out.print(" "); }
-      System.out.print((char) buffer.getByte(i));
+      if (i > 0) { sb.append(" "); }
+      sb.append((char) buffer.getByte(i));
     }
-    System.out.println("]");
+    sb.append("]");
+    logger.info(sb.toString());
   }
 
   private void visualize(String label, BaseDataValueVector.BaseAccessor accessor, int valueCount) {
-    System.out.print(label + ": [");
+    final StringBuilder sb = new StringBuilder();
+    sb.append(label + ": [");
     for (int i = 0; i < valueCount; i++) {
-      if (i > 0) { System.out.print(" "); }
-      System.out.print(accessor.isNull(i) ? 0 : 1);
+      if (i > 0) { sb.append(" "); }
+      sb.append(accessor.isNull(i) ? 0 : 1);
     }
-    System.out.println("]");
+    sb.append("]");
+    logger.info(sb.toString());
   }
 
   private void verifyOffsets(UInt4Vector offsetVector, int[] expected) {

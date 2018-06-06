@@ -77,8 +77,6 @@ public class Bug1735ConnectionCloseTest extends JdbcTestQueryBase {
   @Test
   public void testCloseDoesntLeakResourcesBasic() throws Exception {
     for ( int i = 1; i <= SMALL_ITERATION_COUNT; i++ ) {
-      logger.info( "iteration " + i + ":" );
-      System.out.println( "iteration " + i + ":" );
       Connection connection = new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());
       connection.close();
     }
@@ -94,9 +92,6 @@ public class Bug1735ConnectionCloseTest extends JdbcTestQueryBase {
   @Test
   public void testCloseDoesntLeakResourcesMany() throws Exception {
     for ( int i = 1; i <= LARGE_ITERATION_COUNT; i++ ) {
-      logger.info( "iteration " + i + ":" );
-      System.out.println( "iteration " + i + ":" );
-
       // (Note: Can't use JdbcTest's connect(...) because it returns connection
       // that doesn't really close.
       Connection connection = new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());

@@ -55,6 +55,7 @@ import java.util.List;
 
 @Category(VectorTest.class)
 public class TestRecordIterator extends PopUnitTestBase {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRecordIterator.class);
   DrillConfig c = DrillConfig.create();
 
   @Test
@@ -318,7 +319,7 @@ public class TestRecordIterator extends PopUnitTestBase {
         final Integer v = (Integer)o;
         result &= (v == expected);
       } else {
-        System.out.println(String.format("Found wrong type %s at position %d", o.getClass(), position));
+        logger.error("Found wrong type {} at position {}", o.getClass(), position);
         result = false;
         break;
       }

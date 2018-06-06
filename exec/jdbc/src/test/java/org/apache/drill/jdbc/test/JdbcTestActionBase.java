@@ -36,6 +36,8 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Stopwatch;
 
 public class JdbcTestActionBase extends JdbcTestBase {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestActionBase.class);
+
   // Set a timeout unless we're debugging.
   static Connection connection;
 
@@ -61,6 +63,8 @@ public class JdbcTestActionBase extends JdbcTestBase {
   }
 
   protected void testAction(JdbcAction action, long rowcount) throws Exception {
+    final StringBuilder sb = new StringBuilder();
+
     int rows = 0;
     Stopwatch watch = Stopwatch.createStarted();
     ResultSet r = action.getResult(connection);
@@ -70,28 +74,28 @@ public class JdbcTestActionBase extends JdbcTestBase {
       ResultSetMetaData md = r.getMetaData();
       if (first == true) {
         for (int i = 1; i <= md.getColumnCount(); i++) {
-          System.out.print(md.getColumnName(i));
-          System.out.print('\t');
+          sb.append(md.getColumnName(i));
+          sb.append('\t');
         }
-        System.out.println();
+        sb.append('\n');
         first = false;
       }
 
       for (int i = 1; i <= md.getColumnCount(); i++) {
-        System.out.print(r.getObject(i));
-        System.out.print('\t');
+        sb.append(r.getObject(i));
+        sb.append('\t');
       }
-      System.out.println();
+      sb.append('\n');
     }
 
-    System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
+    sb.append(String.format("Query completed in %d millis.\n", watch.elapsed(TimeUnit.MILLISECONDS)));
 
     if (rowcount != -1) {
       Assert.assertEquals((long) rowcount, (long) rows);
     }
 
-    System.out.println("\n\n\n");
-
+    sb.append("\n\n\n");
+    logger.info(sb.toString());
   }
 
   public interface JdbcAction {

@@ -50,7 +50,6 @@ public class TestParsePhysicalPlan extends ExecTest {
     ObjectReader r = lpp.getMapper().reader(PhysicalPlan.class);
     ObjectWriter writer = lpp.getMapper().writer();
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(DrillFileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));
-    String unparse = plan.unparse(writer);
-//    System.out.println(unparse);
+    plan.unparse(writer);
   }
 }

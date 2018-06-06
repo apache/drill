@@ -44,8 +44,6 @@ public class TestHiveUDFs extends BaseTestQuery {
 
   @Test
   public void testGenericUDF() throws Throwable {
-
-    int numRecords = 0;
     String planString = Resources.toString(Resources.getResource("functions/hive/GenericUDF.json"), Charsets.UTF_8);
     List<QueryDataBatch> results = testPhysicalWithResults(planString);
 
@@ -82,10 +80,6 @@ public class TestHiveUDFs extends BaseTestQuery {
         String concat = new String(concatV.getAccessor().get(i), Charsets.UTF_8);
         assertTrue(concat.equals(in+"-"+in));
 
-        float flt1 = flt1V.getAccessor().get(i);
-        String format_number = new String(format_numberV.getAccessor().get(i), Charsets.UTF_8);
-
-
         String nullableStr1 = null;
         if (!nullableStr1V.getAccessor().isNull(i)) {
           nullableStr1 = new String(nullableStr1V.getAccessor().get(i), Charsets.UTF_8);
@@ -100,23 +94,15 @@ public class TestHiveUDFs extends BaseTestQuery {
         if (nullableStr1 != null) {
           assertEquals(nullableStr1.toUpperCase(), upperNullableStr1);
         }
-
-        System.out.println(in + ", " + upper + ", " + concat + ", " +
-          flt1 + ", " + format_number + ", " + nullableStr1 + ", " + upperNullableStr1);
-
-        numRecords++;
       }
 
       result.release();
       batchLoader.clear();
     }
-
-    System.out.println("Processed " + numRecords + " records");
   }
 
   @Test
   public void testUDF() throws Throwable {
-    int numRecords = 0;
     String planString = Resources.toString(Resources.getResource("functions/hive/UDF.json"), Charsets.UTF_8);
     List<QueryDataBatch> results = testPhysicalWithResults(planString);
 
@@ -146,8 +132,6 @@ public class TestHiveUDFs extends BaseTestQuery {
         long str1Length = str1LengthV.getAccessor().get(i);
         assertTrue(str1.length() == str1Length);
 
-        int str1Ascii = str1AsciiV.getAccessor().get(i);
-
         float flt1 = flt1V.getAccessor().get(i);
 
         double pow = 0;
@@ -155,16 +139,10 @@ public class TestHiveUDFs extends BaseTestQuery {
           pow = powV.getAccessor().get(i);
           assertTrue(Math.pow(flt1, 2.0) == pow);
         }
-
-        System.out.println(str1 + ", " + str1Length + ", " + str1Ascii + ", " + flt1 + ", " + pow);
-        numRecords++;
       }
 
       result.release();
       batchLoader.clear();
     }
-
-    System.out.println("Processed " + numRecords + " records");
   }
-
 }

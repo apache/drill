@@ -23,6 +23,7 @@ import java.nio.IntBuffer;
 import org.apache.drill.exec.ExecTest;
 
 public final class EscapeTest1 extends ExecTest{
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EscapeTest1.class);
 
   public static class Timer{
     long n1;
@@ -33,7 +34,7 @@ public final class EscapeTest1 extends ExecTest{
     }
 
     public void print(long sum){
-      System.out.println(String.format("Completed %s in %d ms.  Output was %d", name, (System.nanoTime() - n1)/1000/1000, sum));
+      logger.info("Completed {} in {} ms. Output was {}", name, (System.nanoTime() - n1)/1000/1000, sum);
     }
   }
 

@@ -83,9 +83,6 @@ public class TestSimpleFilter extends ExecTest {
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     int recordCount = 0;
     while(exec.next()) {
-      for (int i = 0; i < exec.getSelectionVector4().getCount(); i++) {
-        System.out.println("Got: " + exec.getSelectionVector4().get(i));
-      }
       recordCount += exec.getSelectionVector4().getCount();
     }
     exec.close();

@@ -36,13 +36,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 public class VectorUtil {
-
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorUtil.class);
   public static final int DEFAULT_COLUMN_WIDTH = 15;
 
   public static void showVectorAccessibleContent(VectorAccessible va, final String delimiter) {
-
+    final StringBuilder sb = new StringBuilder();
     int rows = va.getRecordCount();
-    System.out.println(rows + " row(s):");
+    sb.append(rows).append(" row(s):\n");
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
       columns.add(formatFieldSchema(vw.getValueVector().getField()));
@@ -50,7 +50,7 @@ public class VectorUtil {
 
     int width = columns.size();
     for (String column : columns) {
-      System.out.printf("%s%s",column, column.equals(columns.get(width - 1)) ? "\n" : delimiter);
+      sb.append(column).append(column.equals(columns.get(width - 1)) ? "\n" : delimiter);
     }
     for (int row = 0; row < rows; row++) {
       int columnCounter = 0;
@@ -65,14 +65,14 @@ public class VectorUtil {
         if (o == null) {
           //null value
           String value = "null";
-          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+          sb.append(value).append(lastColumn ? "\n" : delimiter);
         }
         else if (o instanceof byte[]) {
           String value = new String((byte[]) o);
-          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+          sb.append(value).append(lastColumn ? "\n" : delimiter);
         } else {
           String value = o.toString();
-          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+          sb.append(value).append(lastColumn ? "\n" : delimiter);
         }
         columnCounter++;
       }
@@ -81,6 +81,8 @@ public class VectorUtil {
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
+
+    logger.info(sb.toString());
   }
 
   public static String formatFieldSchema(MaterializedField field) {
@@ -140,6 +142,7 @@ public class VectorUtil {
   }
 
   public static void showVectorAccessibleContent(VectorAccessible va, int[] columnWidths) {
+    final StringBuilder sb = new StringBuilder();
     int width = 0;
     int columnIndex = 0;
     List<String> columns = Lists.newArrayList();
@@ -153,19 +156,20 @@ public class VectorUtil {
     }
 
     int rows = va.getRecordCount();
-    System.out.println(rows + " row(s):");
+    sb.append(rows).append(" row(s):\n");
     for (int row = 0; row < rows; row++) {
       // header, every 50 rows.
       if (row%50 == 0) {
-        System.out.println(StringUtils.repeat("-", width + 1));
+        sb.append(StringUtils.repeat("-", width + 1)).append('\n');
         columnIndex = 0;
         for (String column : columns) {
           int columnWidth = getColumnWidth(columnWidths, columnIndex);
-          System.out.printf(formats.get(columnIndex), column.length() <= columnWidth ? column : column.substring(0, columnWidth - 1));
+          sb.append(String.format(formats.get(columnIndex), column.length() <= columnWidth ? column : column.substring(0, columnWidth - 1)));
           columnIndex++;
         }
-        System.out.printf("|\n");
-        System.out.println(StringUtils.repeat("-", width + 1));
+
+        sb.append("|\n");
+        sb.append(StringUtils.repeat("-", width + 1)).append('\n');
       }
       // column values
       columnIndex = 0;
@@ -178,13 +182,13 @@ public class VectorUtil {
         } else {
           cellString = DrillStringUtils.escapeNewLines(String.valueOf(o));
         }
-        System.out.printf(formats.get(columnIndex), cellString.length() <= columnWidth ? cellString : cellString.substring(0, columnWidth - 1));
+        sb.append(String.format(formats.get(columnIndex), cellString.length() <= columnWidth ? cellString : cellString.substring(0, columnWidth - 1)));
         columnIndex++;
       }
-      System.out.printf("|\n");
+      sb.append("|\n");
     }
     if (rows > 0) {
-      System.out.println(StringUtils.repeat("-", width + 1));
+      sb.append(StringUtils.repeat("-", width + 1)).append('\n');
     }
 
     for (VectorWrapper<?> vw : va) {

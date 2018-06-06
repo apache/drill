@@ -59,8 +59,6 @@ public class TestTpcdsSf1Leaks extends BaseTestQuery {
     try {
       final String query = getFile("tpcds-sf1/q73.sql");
       for (int i = 0; i < 20; i++) {
-        System.out.printf("%nRun #%d%n", i+1);
-
         try {
           runSQL(query);
         } catch (final Exception e) {

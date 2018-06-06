@@ -51,7 +51,7 @@ public class ExpressionTest extends ExecTest {
 
   @Test
   public void testBasicExpression() throws Exception {
-    System.out.println(getExpressionCode("if(true) then 1 else 0 end"));
+    getExpressionCode("if(true) then 1 else 0 end");
   }
 
   @Test
@@ -76,7 +76,7 @@ public class ExpressionTest extends ExecTest {
     when(batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN))).thenReturn(tfid);
     when(batch.getValueAccessorById(IntVector.class, tfid.getFieldIds())).thenReturn(wrapper);
 
-    System.out.println(getExpressionCode("1 + 1", batch));
+    getExpressionCode("1 + 1", batch);
   }
 
   @Test
@@ -85,7 +85,7 @@ public class ExpressionTest extends ExecTest {
     when(batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN)))
       .thenReturn(new TypedFieldId(Types.optional(MinorType.BIGINT), false, 0));
 
-    System.out.println(getExpressionCode("1 + alpha", batch));
+    getExpressionCode("1 + alpha", batch);
   }
 
   @Test(expected = ExpressionParsingException.class)

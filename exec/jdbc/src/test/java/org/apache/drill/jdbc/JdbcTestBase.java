@@ -397,7 +397,7 @@ public class JdbcTestBase extends ExecTest {
         connection = adapter.createConnection();
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
-        System.out.println(JdbcTestBase.toString(resultSet, recordCount));
+        logger.debug(JdbcTestBase.toString(resultSet, recordCount));
         resultSet.close();
         return this;
       } finally {

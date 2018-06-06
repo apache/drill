@@ -87,12 +87,7 @@ public class DumpCatTest  extends ExecTest {
       final int minorFragmentId = handle.getMinorFragmentId();
 
       final String logLocation = c.getString(ExecConstants.TRACE_DUMP_DIRECTORY);
-
-      System.out.println("Found log location: " + logLocation);
-
       final String filename = String.format("%s//%s_%d_%d_mock-scan", logLocation, qid, majorFragmentId, minorFragmentId);
-
-      System.out.println("File Name: " + filename);
 
       final Configuration conf = new Configuration();
       conf.set(FileSystem.FS_DEFAULT_NAME_KEY, c.getString(ExecConstants.TRACE_DUMP_FILESYSTEM));

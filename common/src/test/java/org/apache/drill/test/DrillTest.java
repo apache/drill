@@ -17,21 +17,17 @@
  */
 package org.apache.drill.test;
 
-import java.io.PrintStream;
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.List;
 
-import org.apache.commons.io.output.NullOutputStream;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.DisableOnDebug;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -67,32 +63,6 @@ public class DrillTest {
    * Tests that do not use this rule are not affected.
    */
   @Rule public final ExpectedException thrownException = ExpectedException.none();
-
-  @Rule public TestName TEST_NAME = new TestName();
-
-  /**
-   * Option to cause tests to produce verbose output. Many tests provide
-   * detailed information to stdout when enabled. To enable:
-   * <p>
-   * <tt>java ... -Dtest.verbose=true ...</tt>
-   */
-  public static final String VERBOSE_OUTPUT = "test.verbose";
-
-  protected static final boolean verbose = Boolean.parseBoolean(System.getProperty(VERBOSE_OUTPUT));
-
-  /**
-   * Output destination for verbose test output. Rather than using
-   * <tt>System.out</tt>, use <tt>DrillTest.out</tt>. Output will
-   * automagically be routed to the bit bucket unless the
-   * {@link #VERBOSE_OUTPUT} flag is set.
-   */
-
-  public static final PrintStream out = verbose ? System.out : new PrintStream(new NullOutputStream());
-
-  @Before
-  public void printID() throws Exception {
-    System.out.printf("Running %s#%s\n", getClass().getName(), TEST_NAME.getMethodName());
-  }
 
   @BeforeClass
   public static void initDrillTest() throws Exception {
@@ -194,17 +164,5 @@ public class DrillTest {
     public long getMemNonHeap() {
       return memoryBean.getNonHeapMemoryUsage().getUsed();
     }
-  }
-
-  /**
-   * Reports whether verbose output has been selected for this test run.
-   *
-   * @return <tt>true</tt> if verbose output is wanted (test is likely running
-   * in a debugger), <tt>false</tt> if verbose output is to be suppressed
-   * (test is likely running in a batch Maven build).
-   */
-
-  public static boolean verbose( ) {
-    return verbose;
   }
 }

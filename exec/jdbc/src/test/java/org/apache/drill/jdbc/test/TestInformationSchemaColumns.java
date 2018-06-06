@@ -151,7 +151,6 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
                                      final String tableOrViewName,
                                      final String columnName ) throws SQLException
   {
-    System.out.println( "(Setting up row for " + tableOrViewName + "." + columnName + ".)");
     final Statement stmt = connection.createStatement();
     final ResultSet mdrUnk =
         stmt.executeQuery(
@@ -184,16 +183,10 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
                               + "WHERE TABLE_SCHEMA = 'hive_test.default' "
                               + "  AND TABLE_NAME = 'infoschematest'" );
 
-    System.out.println( "(Hive infoschematest columns: " );
     int hiveTestColumnRowCount = 0;
     while ( util.next() ) {
       hiveTestColumnRowCount++;
-      System.out.println(
-          " Hive test column: "
-          + util.getString( 1 ) + " - " + util.getString( 2 ) + " - "
-          + util.getString( 3 ) + " - " + util.getString( 4 ) );
     }
-    System.out.println( " Hive test column count: " + hiveTestColumnRowCount + ")" );
     if ( 0 == hiveTestColumnRowCount ) {
       // No Hive test data--create it.
       new HiveTestDataGenerator().generateTestData();

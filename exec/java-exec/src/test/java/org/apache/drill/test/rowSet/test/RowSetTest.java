@@ -73,6 +73,7 @@ import org.junit.Test;
  */
 
 public class RowSetTest extends SubOperatorTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RowSetTest.class);
 
   /**
    * Test the simplest constructs: a row with top-level scalar
@@ -809,15 +810,16 @@ public class RowSetTest extends SubOperatorTest {
     // values.
 
     while (reader.next()) {
-      print(reader.scalar("a").getString());
+      final StringBuilder sb = new StringBuilder();
+      sb.append(print(reader.scalar("a").getString()));
       ArrayReader bReader = reader.array("b");
       while (bReader.next()) {
-        print(bReader.scalar().getInt());
+        sb.append(print(bReader.scalar().getInt()));
       }
       TupleReader cReader = reader.tuple("c");
-      print(cReader.scalar("c1").getInt());
-      print(cReader.scalar("c2").getString());
-      endRow();
+      sb.append(print(cReader.scalar("c1").getInt()));
+      sb.append(print(cReader.scalar("c2").getString()));
+      logger.debug(sb.toString());
     }
 
     // Step 7: Free memory.
@@ -825,18 +827,17 @@ public class RowSetTest extends SubOperatorTest {
     rowSet.clear();
   }
 
-  public void print(Object obj) {
-    if (obj instanceof String) {
-      System.out.print("\"");
-      System.out.print(obj);
-      System.out.print("\"");
-    } else {
-      System.out.print(obj);
-    }
-    System.out.print(" ");
-  }
+  public String print(Object obj) {
+    final StringBuilder sb = new StringBuilder();
 
-  public void endRow() {
-    System.out.println();
+    if (obj instanceof String) {
+      sb.append("\"");
+      sb.append(obj);
+      sb.append("\"");
+    } else {
+      sb.append(obj);
+    }
+    sb.append(" ");
+    return sb.toString();
   }
 }
