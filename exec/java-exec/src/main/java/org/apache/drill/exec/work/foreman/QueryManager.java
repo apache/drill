@@ -348,6 +348,7 @@ public class QueryManager implements AutoCloseable {
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setType(runQuery.getType())
         .setId(queryId)
+        .setQueryId(QueryIdHelper.getQueryId(queryId))
         .setState(foreman.getState())
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
