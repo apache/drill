@@ -91,6 +91,7 @@ public class TestBuilder {
   private List<Map<String, Object>> baselineRecords;
 
   private int expectedNumBatches = DrillTestWrapper.EXPECTED_BATCH_COUNT_NOT_SET;
+  private int expectedNumRecords = DrillTestWrapper.EXPECTED_NUM_RECORDS_NOT_SET;
 
   public TestBuilder(TestServices services) {
     this.services = services;
@@ -127,12 +128,9 @@ public class TestBuilder {
     return this;
   }
 
-  public DrillTestWrapper build() throws Exception {
-    if ( ! ordered && highPerformanceComparison ) {
-      throw new Exception("High performance comparison only available for ordered checks, to enforce this restriction, ordered() must be called first.");
-    }
+  public DrillTestWrapper build() {
     return new DrillTestWrapper(this, services, query, queryType, baselineOptionSettingQueries, testOptionSettingQueries,
-        getValidationQueryType(), ordered, highPerformanceComparison, baselineColumns, baselineRecords, expectedNumBatches);
+        getValidationQueryType(), ordered, highPerformanceComparison, baselineColumns, baselineRecords, expectedNumBatches, expectedNumRecords);
   }
 
   public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
@@ -248,17 +246,8 @@ public class TestBuilder {
     throw new RuntimeException("Must provide some kind of baseline, either a baseline file or another query");
   }
 
-  protected UserBitShared.QueryType getValidationQueryType() throws Exception {
-    if (singleExplicitBaselineRecord()) {
-      return null;
-    }
-
-    if (ordered) {
-      // If there are no base line records or no baseline query then we will check to make sure that the records are in ascending order
-      return null;
-    }
-
-    throw new RuntimeException("Must provide some kind of baseline, either a baseline file or another query");
+  protected UserBitShared.QueryType getValidationQueryType() {
+    return null;
   }
 
   public JSONTestBuilder jsonBaselineFile(String filePath) {
@@ -326,6 +315,12 @@ public class TestBuilder {
    */
   public TestBuilder expectsNumBatches(int expectedNumBatches) {
     this.expectedNumBatches = expectedNumBatches;
+    return this;
+  }
+
+  public TestBuilder expectsNumRecords(int expectedNumRecords) {
+    this.expectedNumRecords = expectedNumRecords;
+    this.ordered = false;
     return this;
   }
 
@@ -544,7 +539,7 @@ public class TestBuilder {
     }
 
     @Override
-    protected UserBitShared.QueryType getValidationQueryType() throws Exception {
+    protected UserBitShared.QueryType getValidationQueryType() {
       return UserBitShared.QueryType.SQL;
     }
   }
@@ -577,7 +572,7 @@ public class TestBuilder {
     }
 
     @Override
-    protected UserBitShared.QueryType getValidationQueryType() throws Exception {
+    protected UserBitShared.QueryType getValidationQueryType() {
       return null;
     }
 
@@ -608,7 +603,7 @@ public class TestBuilder {
     }
 
     @Override
-    protected UserBitShared.QueryType getValidationQueryType() throws Exception {
+    protected UserBitShared.QueryType getValidationQueryType() {
       return UserBitShared.QueryType.SQL;
     }
 
@@ -639,7 +634,7 @@ public class TestBuilder {
     }
 
     @Override
-    protected UserBitShared.QueryType getValidationQueryType() throws Exception {
+    protected UserBitShared.QueryType getValidationQueryType() {
       return baselineQueryType;
     }
 
