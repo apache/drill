@@ -159,7 +159,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       } else {
         if (childPredicate instanceof TypedFieldExpr) {
           // Calcite simplifies `= true` expression to field name, wrap it with is true predicate
-          childPredicate = new ParquetIsPredicates.IsTruePredicate(childPredicate);
+          childPredicate = ParquetIsPredicates.createIsPredicate(FunctionGenerationHelper.IS_TRUE, childPredicate);
         }
         childPredicates.add(childPredicate);
       }
@@ -170,11 +170,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     } else if (childPredicates.size() == 1) {
       return childPredicates.get(0); // only one leg is qualified, remove boolean op.
     } else {
-      if (functionName.equals("booleanOr")) {
-        return new ParquetBooleanPredicates.OrPredicate(op.getName(), childPredicates, op.getPosition());
-      } else {
-        return new ParquetBooleanPredicates.AndPredicate(op.getName(), childPredicates, op.getPosition());
-      }
+      return ParquetBooleanPredicates.createBooleanPredicate(functionName, op.getName(), childPredicates, op.getPosition());
     }
   }
 
@@ -272,22 +268,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
 
     String funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
 
-    switch (funcName) {
-    case FunctionGenerationHelper.EQ :
-      return new ParquetComparisonPredicates.EqualPredicate(newArgs.get(0), newArgs.get(1));
-    case FunctionGenerationHelper.GT :
-      return new ParquetComparisonPredicates.GTPredicate(newArgs.get(0), newArgs.get(1));
-    case FunctionGenerationHelper.GE :
-      return new ParquetComparisonPredicates.GEPredicate(newArgs.get(0), newArgs.get(1));
-    case FunctionGenerationHelper.LT :
-      return new ParquetComparisonPredicates.LTPredicate(newArgs.get(0), newArgs.get(1));
-    case FunctionGenerationHelper.LE :
-      return new ParquetComparisonPredicates.LEPredicate(newArgs.get(0), newArgs.get(1));
-    case FunctionGenerationHelper.NE :
-      return new ParquetComparisonPredicates.NEPredicate(newArgs.get(0), newArgs.get(1));
-    default:
-      return null;
-    }
+    return ParquetComparisonPredicates.createComparisonPredicate(funcName, newArgs.get(0), newArgs.get(1));
   }
 
   private LogicalExpression handleIsFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
@@ -302,23 +283,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     }
     LogicalExpression arg = functionHolderExpression.args.get(0);
 
-    switch (funcName) {
-      case FunctionGenerationHelper.IS_NULL:
-        return new ParquetIsPredicates.IsNullPredicate(arg.accept(this, value));
-      case FunctionGenerationHelper.IS_NOT_NULL:
-        return new ParquetIsPredicates.IsNotNullPredicate(arg.accept(this, value));
-      case FunctionGenerationHelper.IS_TRUE:
-        return new ParquetIsPredicates.IsTruePredicate(arg.accept(this, value));
-      case FunctionGenerationHelper.IS_NOT_TRUE:
-        return new ParquetIsPredicates.IsNotTruePredicate(arg.accept(this, value));
-      case FunctionGenerationHelper.IS_FALSE:
-        return new ParquetIsPredicates.IsFalsePredicate(arg.accept(this, value));
-      case FunctionGenerationHelper.IS_NOT_FALSE:
-        return new ParquetIsPredicates.IsNotFalsePredicate(arg.accept(this, value));
-      default:
-        logger.warn("Unhandled IS function. Function name: {}", funcName);
-        return null;
-    }
+    return ParquetIsPredicates.createIsPredicate(funcName, arg.accept(this, value));
   }
 
   private static boolean isCompareFunction(String funcName) {
