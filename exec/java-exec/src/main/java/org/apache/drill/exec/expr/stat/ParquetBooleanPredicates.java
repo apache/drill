@@ -27,50 +27,72 @@ import java.util.List;
 /**
  * Boolean predicates for parquet filter pushdown.
  */
-public class ParquetBooleanPredicates {
-  public static abstract class ParquetBooleanPredicate extends BooleanOperator implements ParquetFilterPredicate {
-    public ParquetBooleanPredicate(String name, List<LogicalExpression> args, ExpressionPosition pos) {
-      super(name, args, pos);
-    }
+public abstract class ParquetBooleanPredicates<C extends Comparable<C>> extends BooleanOperator
+    implements ParquetFilterPredicate<C> {
 
-    @Override
-    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
-      return visitor.visitBooleanOperator(this, value);
-    }
+  private ParquetBooleanPredicates(String name, List<LogicalExpression> args, ExpressionPosition pos) {
+    super(name, args, pos);
   }
 
-  public static class AndPredicate extends ParquetBooleanPredicate {
-    public AndPredicate(String name, List<LogicalExpression> args, ExpressionPosition pos) {
-      super(name, args, pos);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      // "and" : as long as one branch is OK to drop, we can drop it.
-      for (LogicalExpression child : this) {
-        if (child instanceof ParquetFilterPredicate && ((ParquetFilterPredicate) child).canDrop(evaluator)) {
-          return true;
-        }
-      }
-      return false;
-    }
+  @Override
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+    return visitor.visitBooleanOperator(this, value);
   }
 
-  public static class OrPredicate extends ParquetBooleanPredicate {
-    public OrPredicate(String name, List<LogicalExpression> args, ExpressionPosition pos) {
-      super(name, args, pos);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      for (LogicalExpression child : this) {
-        // "long" : as long as one branch is NOT ok to drop, we can NOT drop it.
-        if (! ((ParquetFilterPredicate) child).canDrop(evaluator)) {
-          return false;
+  @SuppressWarnings("unchecked")
+  private static <C extends Comparable<C>> LogicalExpression createAndPredicate(
+      String name,
+      List<LogicalExpression> args,
+      ExpressionPosition pos
+  ) {
+    return new ParquetBooleanPredicates<C>(name, args, pos) {
+      @Override
+      public boolean canDrop(RangeExprEvaluator<C> evaluator) {
+        // "and" : as long as one branch is OK to drop, we can drop it.
+        for (LogicalExpression child : this) {
+          if (child instanceof ParquetFilterPredicate && ((ParquetFilterPredicate)child).canDrop(evaluator)) {
+            return true;
+          }
         }
+        return false;
       }
+    };
+  }
 
-      return true;
+  @SuppressWarnings("unchecked")
+  private static <C extends Comparable<C>> LogicalExpression createOrPredicate(
+      String name,
+      List<LogicalExpression> args,
+      ExpressionPosition pos
+  ) {
+    return new ParquetBooleanPredicates<C>(name, args, pos) {
+      @Override
+      public boolean canDrop(RangeExprEvaluator<C> evaluator) {
+        for (LogicalExpression child : this) {
+          // "or" : as long as one branch is NOT ok to drop, we can NOT drop it.
+          if (!(child instanceof ParquetFilterPredicate) || !((ParquetFilterPredicate)child).canDrop(evaluator)) {
+            return false;
+          }
+        }
+        return true;
+      }
+    };
+  }
+
+  public static <C extends Comparable<C>> LogicalExpression createBooleanPredicate(
+      String function,
+      String name,
+      List<LogicalExpression> args,
+      ExpressionPosition pos
+  ) {
+    switch (function) {
+      case "booleanOr":
+        return ParquetBooleanPredicates.<C>createOrPredicate(name, args, pos);
+      case "booleanAnd":
+        return ParquetBooleanPredicates.<C>createAndPredicate(name, args, pos);
+      default:
+        logger.warn("Unknown Boolean '{}' predicate.", function);
+        return null;
     }
   }
 }

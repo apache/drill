@@ -20,274 +20,199 @@ package org.apache.drill.exec.expr.stat;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.LogicalExpressionBase;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.parquet.column.statistics.Statistics;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.BiPredicate;
+
+import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isNullOrEmpty;
+import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isAllNulls;
 
 /**
  * Comparison predicates for parquet filter pushdown.
  */
-public class ParquetComparisonPredicates {
-  public static abstract  class ParquetCompPredicate extends LogicalExpressionBase implements ParquetFilterPredicate {
-    protected final LogicalExpression left;
-    protected final LogicalExpression right;
+public class ParquetComparisonPredicates<C extends Comparable<C>> extends LogicalExpressionBase
+    implements ParquetFilterPredicate<C> {
+  private final LogicalExpression left;
+  private final LogicalExpression right;
+  private final BiPredicate<Statistics<C>, Statistics<C>> predicate;
 
-    public ParquetCompPredicate(LogicalExpression left, LogicalExpression right) {
-      super(left.getPosition());
-      this.left = left;
-      this.right = right;
+  private ParquetComparisonPredicates(
+      LogicalExpression left,
+      LogicalExpression right,
+      BiPredicate<Statistics<C>, Statistics<C>> predicate
+  ) {
+    super(left.getPosition());
+    this.left = left;
+    this.right = right;
+    this.predicate = predicate;
+  }
+
+  @Override
+  public Iterator<LogicalExpression> iterator() {
+    final List<LogicalExpression> args = new ArrayList<>();
+    args.add(left);
+    args.add(right);
+    return args.iterator();
+  }
+
+  @Override
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+    return visitor.visitUnknown(this, value);
+  }
+
+  /**
+   * Semantics of canDrop() is very similar to what is implemented in Parquet library's
+   * {@link org.apache.parquet.filter2.statisticslevel.StatisticsFilter} and
+   * {@link org.apache.parquet.filter2.predicate.FilterPredicate}
+   *
+   * Main difference :
+   * 1. A RangeExprEvaluator is used to compute the min/max of an expression, such as CAST function
+   * of a column. CAST function could be explicitly added by Drill user (It's recommended to use CAST
+   * function after DRILL-4372, if user wants to reduce planning time for limit 0 query), or implicitly
+   * inserted by Drill, when the types of compare operands are not identical. Therefore, it's important
+   * to allow CAST function to appear in the filter predicate.
+   * 2. We do not require list of ColumnChunkMetaData to do the evaluation, while Parquet library's
+   * StatisticsFilter has such requirement. Drill's ParquetTableMetaData does not maintain ColumnChunkMetaData,
+   * making it impossible to directly use Parquet library's StatisticFilter in query planning time.
+   * 3. We allows both sides of comparison operator to be a min/max range. As such, we support
+   * expression_of(Column1)   <   expression_of(Column2),
+   * where Column1 and Column2 are from same parquet table.
+   */
+  @Override
+  public boolean canDrop(RangeExprEvaluator<C> evaluator) {
+    Statistics<C> leftStat = left.accept(evaluator, null);
+    if (isNullOrEmpty(leftStat)) {
+      return false;
     }
 
-    @Override
-    public Iterator<LogicalExpression> iterator() {
-      final List<LogicalExpression> args = new ArrayList<>();
-      args.add(left);
-      args.add(right);
-      return args.iterator();
+    Statistics<C> rightStat = right.accept(evaluator, null);
+    if (isNullOrEmpty(rightStat)) {
+      return false;
     }
 
-    @Override
-    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
-      return visitor.visitUnknown(this, value);
+    // if either side is ALL null, = is evaluated to UNKNOWN -> canDrop
+    if (isAllNulls(leftStat, evaluator.getRowCount()) || isAllNulls(rightStat, evaluator.getRowCount())) {
+      return true;
     }
 
+    return (leftStat.hasNonNullValue() && rightStat.hasNonNullValue()) && predicate.test(leftStat, rightStat);
   }
 
   /**
    * EQ (=) predicate
    */
-  public static class EqualPredicate extends ParquetCompPredicate {
-    public EqualPredicate(LogicalExpression left, LogicalExpression right) {
-      super(left, right);
-    }
-
-    /**
-        Semantics of canDrop() is very similar to what is implemented in Parquet library's
-        {@link org.apache.parquet.filter2.statisticslevel.StatisticsFilter} and
-        {@link org.apache.parquet.filter2.predicate.FilterPredicate}
-
-        Main difference :
-     1. A RangeExprEvaluator is used to compute the min/max of an expression, such as CAST function
-        of a column. CAST function could be explicitly added by Drill user (It's recommended to use CAST
-        function after DRILL-4372, if user wants to reduce planning time for limit 0 query), or implicitly
-        inserted by Drill, when the types of compare operands are not identical. Therefore, it's important
-         to allow CAST function to appear in the filter predicate.
-     2. We do not require list of ColumnChunkMetaData to do the evaluation, while Parquet library's
-        StatisticsFilter has such requirement. Drill's ParquetTableMetaData does not maintain ColumnChunkMetaData,
-        making it impossible to directly use Parquet library's StatisticFilter in query planning time.
-     3. We allows both sides of comparison operator to be a min/max range. As such, we support
-           expression_of(Column1)   <   expression_of(Column2),
-        where Column1 and Column2 are from same parquet table.
-     */
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics leftStat = left.accept(evaluator, null);
-      Statistics rightStat = right.accept(evaluator, null);
-
-      if (leftStat == null ||
-          rightStat == null ||
-          leftStat.isEmpty() ||
-          rightStat.isEmpty()) {
-        return false;
-      }
-
-      // if either side is ALL null, = is evaluated to UNKNOW -> canDrop
-      if (ParquetPredicatesHelper.isAllNulls(leftStat, evaluator.getRowCount()) ||
-          ParquetPredicatesHelper.isAllNulls(rightStat, evaluator.getRowCount())) {
-        return true;
-      }
-
+  private static <C extends Comparable<C>> LogicalExpression createEqualPredicate(
+      LogicalExpression left,
+      LogicalExpression right
+  ) {
+    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max < right's min, or right's max < left's min
-      if ( ( leftStat.genericGetMax().compareTo(rightStat.genericGetMin()) < 0
-            || rightStat.genericGetMax().compareTo(leftStat.genericGetMin()) < 0)) {
-        return true;
-      } else {
-        return false;
+      final C leftMin = leftStat.genericGetMin();
+      final C rightMin = rightStat.genericGetMin();
+      return leftStat.genericGetMax().compareTo(rightMin) < 0 || rightStat.genericGetMax().compareTo(leftMin) < 0;
+    }) {
+      @Override
+      public String toString() {
+        return left + " = " + right;
       }
-    }
-
-    @Override
-    public String toString() {
-      return left.toString()  + " = " + right.toString();
-    }
+    };
   }
 
   /**
    * GT (>) predicate.
    */
-  public static class GTPredicate extends ParquetCompPredicate {
-    public GTPredicate(LogicalExpression left, LogicalExpression right) {
-      super(left, right);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics leftStat = left.accept(evaluator, null);
-      Statistics rightStat = right.accept(evaluator, null);
-
-      if (leftStat == null ||
-          rightStat == null ||
-          leftStat.isEmpty() ||
-          rightStat.isEmpty()) {
-        return false;
-      }
-
-      // if either side is ALL null, = is evaluated to UNKNOW -> canDrop
-      if (ParquetPredicatesHelper.isAllNulls(leftStat, evaluator.getRowCount()) ||
-          ParquetPredicatesHelper.isAllNulls(rightStat, evaluator.getRowCount())) {
-        return true;
-      }
-
+  private static <C extends Comparable<C>> LogicalExpression createGTPredicate(
+      LogicalExpression left,
+      LogicalExpression right
+  ) {
+    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max <= right's min.
-      if ( leftStat.genericGetMax().compareTo(rightStat.genericGetMin()) <= 0 ) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+      final C rightMin = rightStat.genericGetMin();
+      return leftStat.genericGetMax().compareTo(rightMin) <= 0;
+    });
   }
 
   /**
    * GE (>=) predicate.
    */
-  public static class GEPredicate extends ParquetCompPredicate {
-    public GEPredicate(LogicalExpression left, LogicalExpression right) {
-      super(left, right);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics leftStat = left.accept(evaluator, null);
-      Statistics rightStat = right.accept(evaluator, null);
-
-      if (leftStat == null ||
-          rightStat == null ||
-          leftStat.isEmpty() ||
-          rightStat.isEmpty()) {
-        return false;
-      }
-
-      // if either side is ALL null, = is evaluated to UNKNOW -> canDrop
-      if (ParquetPredicatesHelper.isAllNulls(leftStat, evaluator.getRowCount()) ||
-          ParquetPredicatesHelper.isAllNulls(rightStat, evaluator.getRowCount())) {
-        return true;
-      }
-
+  private static <C extends Comparable<C>> LogicalExpression createGEPredicate(
+      LogicalExpression left,
+      LogicalExpression right
+  ) {
+    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max < right's min.
-      if ( leftStat.genericGetMax().compareTo(rightStat.genericGetMin()) < 0 ) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+      final C rightMin = rightStat.genericGetMin();
+      return leftStat.genericGetMax().compareTo(rightMin) < 0;
+    });
   }
 
   /**
    * LT (<) predicate.
    */
-  public static class LTPredicate extends ParquetCompPredicate {
-    public LTPredicate(LogicalExpression left, LogicalExpression right) {
-      super(left, right);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics leftStat = left.accept(evaluator, null);
-      Statistics rightStat = right.accept(evaluator, null);
-
-      if (leftStat == null ||
-          rightStat == null ||
-          leftStat.isEmpty() ||
-          rightStat.isEmpty()) {
-        return false;
-      }
-
-      // if either side is ALL null, = is evaluated to UNKNOW -> canDrop
-      if (ParquetPredicatesHelper.isAllNulls(leftStat, evaluator.getRowCount()) ||
-          ParquetPredicatesHelper.isAllNulls(rightStat, evaluator.getRowCount())) {
-        return true;
-      }
-
+  private static <C extends Comparable<C>> LogicalExpression createLTPredicate(
+      LogicalExpression left,
+      LogicalExpression right
+  ) {
+    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
       // can drop when right's max <= left's min.
-      if ( rightStat.genericGetMax().compareTo(leftStat.genericGetMin()) <= 0 ) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+      final C leftMin = leftStat.genericGetMin();
+      return rightStat.genericGetMax().compareTo(leftMin) <= 0;
+    });
   }
 
   /**
    * LE (<=) predicate.
    */
-  public static class LEPredicate extends ParquetCompPredicate {
-    public LEPredicate(LogicalExpression left, LogicalExpression right) {
-      super(left, right);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics leftStat = left.accept(evaluator, null);
-      Statistics rightStat = right.accept(evaluator, null);
-
-      if (leftStat == null ||
-          rightStat == null ||
-          leftStat.isEmpty() ||
-          rightStat.isEmpty()) {
-        return false;
-      }
-
-      // if either side is ALL null, = is evaluated to UNKNOW -> canDrop
-      if (ParquetPredicatesHelper.isAllNulls(leftStat, evaluator.getRowCount()) ||
-          ParquetPredicatesHelper.isAllNulls(rightStat, evaluator.getRowCount())) {
-        return true;
-      }
-
+  private static <C extends Comparable<C>> LogicalExpression createLEPredicate(
+      LogicalExpression left, LogicalExpression right
+  ) {
+    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
       // can drop when right's max < left's min.
-      if ( rightStat.genericGetMax().compareTo(leftStat.genericGetMin()) < 0 ) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+      final C leftMin = leftStat.genericGetMin();
+      return rightStat.genericGetMax().compareTo(leftMin) < 0;
+    });
   }
 
   /**
    * NE (!=) predicate.
    */
-  public static class NEPredicate extends ParquetCompPredicate {
-    public NEPredicate(LogicalExpression left, LogicalExpression right) {
-      super(left, right);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics leftStat = left.accept(evaluator, null);
-      Statistics rightStat = right.accept(evaluator, null);
-
-      if (leftStat == null ||
-          rightStat == null ||
-          leftStat.isEmpty() ||
-          rightStat.isEmpty()) {
-        return false;
-      }
-
-      // if either side is ALL null, comparison is evaluated to UNKNOW -> canDrop
-      if (ParquetPredicatesHelper.isAllNulls(leftStat, evaluator.getRowCount()) ||
-          ParquetPredicatesHelper.isAllNulls(rightStat, evaluator.getRowCount())) {
-        return true;
-      }
-
+  private static <C extends Comparable<C>> LogicalExpression createNEPredicate(
+      LogicalExpression left,
+      LogicalExpression right
+  ) {
+    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
       // can drop when there is only one unique value.
-      if ( leftStat.genericGetMin().compareTo(leftStat.genericGetMax()) == 0 &&
-           rightStat.genericGetMin().compareTo(rightStat.genericGetMax()) ==0 &&
-           leftStat.genericGetMax().compareTo(rightStat.genericGetMax()) == 0) {
-        return true;
-      } else {
-        return false;
-      }
+      final C leftMax = leftStat.genericGetMax();
+      final C rightMax = rightStat.genericGetMax();
+      return leftStat.genericGetMin().compareTo(leftMax) == 0 && rightStat.genericGetMin().compareTo(rightMax) == 0 &&
+          leftStat.genericGetMax().compareTo(rightMax) == 0;
+    });
+  }
+
+  public static <C extends Comparable<C>> LogicalExpression createComparisonPredicate(
+      String function,
+      LogicalExpression left,
+      LogicalExpression right
+  ) {
+    switch (function) {
+      case FunctionGenerationHelper.EQ:
+        return ParquetComparisonPredicates.<C>createEqualPredicate(left, right);
+      case FunctionGenerationHelper.GT:
+        return ParquetComparisonPredicates.<C>createGTPredicate(left, right);
+      case FunctionGenerationHelper.GE:
+        return ParquetComparisonPredicates.<C>createGEPredicate(left, right);
+      case FunctionGenerationHelper.LT:
+        return ParquetComparisonPredicates.<C>createLTPredicate(left, right);
+      case FunctionGenerationHelper.LE:
+        return ParquetComparisonPredicates.<C>createLEPredicate(left, right);
+      case FunctionGenerationHelper.NE:
+        return ParquetComparisonPredicates.<C>createNEPredicate(left, right);
+      default:
+        return null;
     }
   }
 }

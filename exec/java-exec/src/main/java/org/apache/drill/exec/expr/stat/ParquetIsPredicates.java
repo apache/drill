@@ -22,207 +22,149 @@ import org.apache.drill.common.expression.LogicalExpressionBase;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.parquet.column.statistics.Statistics;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.BiPredicate;
+
+import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.hasNoNulls;
+import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isAllNulls;
+import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isNullOrEmpty;
 
 /**
  * IS predicates for parquet filter pushdown.
  */
-public class ParquetIsPredicates {
+public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpressionBase
+    implements ParquetFilterPredicate<C> {
 
-  public static abstract class ParquetIsPredicate extends LogicalExpressionBase implements ParquetFilterPredicate {
-    protected final LogicalExpression expr;
+  private final LogicalExpression expr;
+  private final BiPredicate<Statistics<C>, RangeExprEvaluator<C>> predicate;
 
-    public ParquetIsPredicate(LogicalExpression expr) {
-      super(expr.getPosition());
-      this.expr = expr;
+  private ParquetIsPredicates(LogicalExpression expr, BiPredicate<Statistics<C>, RangeExprEvaluator<C>> predicate) {
+    super(expr.getPosition());
+    this.expr = expr;
+    this.predicate = predicate;
+  }
+
+  @Override
+  public Iterator<LogicalExpression> iterator() {
+    final List<LogicalExpression> args = new ArrayList<>();
+    args.add(expr);
+    return args.iterator();
+  }
+
+  @Override
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+    return visitor.visitUnknown(this, value);
+  }
+
+  @Override
+  public boolean canDrop(RangeExprEvaluator<C> evaluator) {
+    Statistics<C> exprStat = expr.accept(evaluator, null);
+    if (isNullOrEmpty(exprStat)) {
+      return false;
     }
 
-    @Override
-    public Iterator<LogicalExpression> iterator() {
-      final List<LogicalExpression> args = new ArrayList<>();
-      args.add(expr);
-      return args.iterator();
-    }
-
-    @Override
-    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
-      return visitor.visitUnknown(this, value);
-    }
+    return predicate.test(exprStat, evaluator);
   }
 
   /**
    * IS NULL predicate.
    */
-  public static class IsNullPredicate extends ParquetIsPredicate {
-    private final boolean isArray;
+  private static <C extends Comparable<C>> LogicalExpression createIsNullPredicate(LogicalExpression expr) {
+    return new ParquetIsPredicates<C>(expr,
+        //if there are no nulls  -> canDrop
+        (exprStat, evaluator) -> hasNoNulls(exprStat)) {
+      private final boolean isArray = isArray(expr);
 
-    public IsNullPredicate(LogicalExpression expr) {
-      super(expr);
-      this.isArray = isArray(expr);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-
-      // for arrays we are not able to define exact number of nulls
-      // [1,2,3] vs [1,2] -> in second case 3 is absent and thus it's null but statistics shows no nulls
-      if (isArray) {
+      private boolean isArray(LogicalExpression expression) {
+        if (expression instanceof TypedFieldExpr) {
+          TypedFieldExpr typedFieldExpr = (TypedFieldExpr) expression;
+          SchemaPath schemaPath = typedFieldExpr.getPath();
+          return schemaPath.isArray();
+        }
         return false;
       }
 
-      Statistics exprStat = expr.accept(evaluator, null);
-
-      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
-        return false;
+      @Override
+      public boolean canDrop(RangeExprEvaluator<C> evaluator) {
+        // for arrays we are not able to define exact number of nulls
+        // [1,2,3] vs [1,2] -> in second case 3 is absent and thus it's null but statistics shows no nulls
+        return !isArray && super.canDrop(evaluator);
       }
-
-      //if there are no nulls  -> canDrop
-      if (!ParquetPredicatesHelper.hasNulls(exprStat)) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    private boolean isArray(LogicalExpression expression) {
-      if (expression instanceof TypedFieldExpr) {
-        TypedFieldExpr typedFieldExpr = (TypedFieldExpr) expression;
-        SchemaPath schemaPath = typedFieldExpr.getPath();
-        return schemaPath.isArray();
-      }
-      return false;
-    }
-
+    };
   }
 
   /**
    * IS NOT NULL predicate.
    */
-  public static class IsNotNullPredicate extends ParquetIsPredicate {
-    public IsNotNullPredicate(LogicalExpression expr) {
-      super(expr);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics exprStat = expr.accept(evaluator, null);
-
-      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
-        return false;
-      }
-
-      //if there are all nulls  -> canDrop
-      if (ParquetPredicatesHelper.isAllNulls(exprStat, evaluator.getRowCount())) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+  private static <C extends Comparable<C>> LogicalExpression createIsNotNullPredicate(LogicalExpression expr) {
+    return new ParquetIsPredicates<C>(expr,
+        //if there are all nulls  -> canDrop
+        (exprStat, evaluator) -> isAllNulls(exprStat, evaluator.getRowCount())
+    );
   }
 
   /**
    * IS TRUE predicate.
    */
-  public static class IsTruePredicate extends ParquetIsPredicate {
-    public IsTruePredicate(LogicalExpression expr) {
-      super(expr);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics exprStat = expr.accept(evaluator, null);
-
-      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
-        return false;
-      }
-
-      //if max value is not true or if there are all nulls  -> canDrop
-      if (exprStat.genericGetMax().compareTo(true) != 0 ||
-          ParquetPredicatesHelper.isAllNulls(exprStat, evaluator.getRowCount())) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+  private static LogicalExpression createIsTruePredicate(LogicalExpression expr) {
+    return new ParquetIsPredicates<Boolean>(expr,
+        //if max value is not true or if there are all nulls  -> canDrop
+        (exprStat, evaluator) -> !exprStat.genericGetMax().equals(Boolean.TRUE) || isAllNulls(exprStat, evaluator.getRowCount())
+    );
   }
 
   /**
    * IS FALSE predicate.
    */
-  public static class IsFalsePredicate extends ParquetIsPredicate {
-    public IsFalsePredicate(LogicalExpression expr) {
-      super(expr);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics exprStat = expr.accept(evaluator, null);
-
-      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
-        return false;
-      }
-
-      //if min value is not false or if there are all nulls  -> canDrop
-      if (exprStat.genericGetMin().compareTo(false) != 0 ||
-          ParquetPredicatesHelper.isAllNulls(exprStat, evaluator.getRowCount())) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+  private static LogicalExpression createIsFalsePredicate(LogicalExpression expr) {
+    return new ParquetIsPredicates<Boolean>(expr,
+        //if min value is not false or if there are all nulls  -> canDrop
+        (exprStat, evaluator) -> !exprStat.genericGetMin().equals(Boolean.FALSE) || isAllNulls(exprStat, evaluator.getRowCount())
+    );
   }
 
   /**
    * IS NOT TRUE predicate.
    */
-  public static class IsNotTruePredicate extends ParquetIsPredicate {
-    public IsNotTruePredicate(LogicalExpression expr) {
-      super(expr);
-    }
-
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics exprStat = expr.accept(evaluator, null);
-
-      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
-        return false;
-      }
-
-      //if min value is not false or if there are no nulls  -> canDrop
-      if (exprStat.genericGetMin().compareTo(false) != 0 && !ParquetPredicatesHelper.hasNulls(exprStat)) {
-        return true;
-      } else {
-        return false;
-      }
-    }
+  private static LogicalExpression createIsNotTruePredicate(LogicalExpression expr) {
+    return new ParquetIsPredicates<Boolean>(expr,
+        //if min value is not false or if there are no nulls  -> canDrop
+        (exprStat, evaluator) -> !exprStat.genericGetMin().equals(Boolean.FALSE) && hasNoNulls(exprStat)
+    );
   }
 
   /**
    * IS NOT FALSE predicate.
    */
-  public static class IsNotFalsePredicate extends ParquetIsPredicate {
-    public IsNotFalsePredicate(LogicalExpression expr) {
-      super(expr);
-    }
+  private static LogicalExpression createIsNotFalsePredicate(LogicalExpression expr) {
+    return new ParquetIsPredicates<Boolean>(expr,
+        //if max value is not true or if there are no nulls  -> canDrop
+        (exprStat, evaluator) -> !exprStat.genericGetMax().equals(Boolean.TRUE) && hasNoNulls(exprStat)
+    );
+  }
 
-    @Override
-    public boolean canDrop(RangeExprEvaluator evaluator) {
-      Statistics exprStat = expr.accept(evaluator, null);
-
-      if (!ParquetPredicatesHelper.hasStats(exprStat)) {
-        return false;
-      }
-
-      //if max value is not true or if there are no nulls  -> canDrop
-      if (exprStat.genericGetMax().compareTo(true) != 0 && !ParquetPredicatesHelper.hasNulls(exprStat)) {
-        return true;
-      } else {
-        return false;
-      }
+  public static <C extends Comparable<C>> LogicalExpression createIsPredicate(String function, LogicalExpression expr) {
+    switch (function) {
+      case FunctionGenerationHelper.IS_NULL:
+        return ParquetIsPredicates.<C>createIsNullPredicate(expr);
+      case FunctionGenerationHelper.IS_NOT_NULL:
+        return ParquetIsPredicates.<C>createIsNotNullPredicate(expr);
+      case FunctionGenerationHelper.IS_TRUE:
+        return createIsTruePredicate(expr);
+      case FunctionGenerationHelper.IS_NOT_TRUE:
+        return createIsNotTruePredicate(expr);
+      case FunctionGenerationHelper.IS_FALSE:
+        return createIsFalsePredicate(expr);
+      case FunctionGenerationHelper.IS_NOT_FALSE:
+        return createIsNotFalsePredicate(expr);
+      default:
+        logger.warn("Unhandled IS function. Function name: {}", function);
+        return null;
     }
   }
 }
