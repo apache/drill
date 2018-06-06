@@ -232,6 +232,7 @@ message QueryProfile {
   optional int64 queueWaitEnd = 19;
   optional double total_cost = 20;
   optional string queue_name = 21 [default = "-"];
+  optional string queryId = 22;
 }
 
 message MajorFragmentProfile {

@@ -2172,6 +2172,18 @@ class QueryProfile : public ::google::protobuf::Message {
   inline ::std::string* release_queue_name();
   inline void set_allocated_queue_name(::std::string* queue_name);
 
+  // optional string queryId = 22;
+  inline bool has_queryid() const;
+  inline void clear_queryid();
+  static const int kQueryIdFieldNumber = 22;
+  inline const ::std::string& queryid() const;
+  inline void set_queryid(const ::std::string& value);
+  inline void set_queryid(const char* value);
+  inline void set_queryid(const char* value, size_t size);
+  inline ::std::string* mutable_queryid();
+  inline ::std::string* release_queryid();
+  inline void set_allocated_queryid(::std::string* queryid);
+
   // @@protoc_insertion_point(class_scope:exec.shared.QueryProfile)
  private:
   inline void set_has_id();
@@ -2214,6 +2226,8 @@ class QueryProfile : public ::google::protobuf::Message {
   inline void clear_has_total_cost();
   inline void set_has_queue_name();
   inline void clear_has_queue_name();
+  inline void set_has_queryid();
+  inline void clear_has_queryid();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -2240,9 +2254,10 @@ class QueryProfile : public ::google::protobuf::Message {
   double total_cost_;
   ::std::string* queue_name_;
   static ::std::string* _default_queue_name_;
+  ::std::string* queryid_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(21 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(22 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -6088,6 +6103,76 @@ inline void QueryProfile::set_allocated_queue_name(::std::string* queue_name) {
   } else {
     clear_has_queue_name();
     queue_name_ = const_cast< ::std::string*>(_default_queue_name_);
+  }
+}
+
+// optional string queryId = 22;
+inline bool QueryProfile::has_queryid() const {
+  return (_has_bits_[0] & 0x00200000u) != 0;
+}
+inline void QueryProfile::set_has_queryid() {
+  _has_bits_[0] |= 0x00200000u;
+}
+inline void QueryProfile::clear_has_queryid() {
+  _has_bits_[0] &= ~0x00200000u;
+}
+inline void QueryProfile::clear_queryid() {
+  if (queryid_ != &::google::protobuf::internal::kEmptyString) {
+    queryid_->clear();
+  }
+  clear_has_queryid();
+}
+inline const ::std::string& QueryProfile::queryid() const {
+  return *queryid_;
+}
+inline void QueryProfile::set_queryid(const ::std::string& value) {
+  set_has_queryid();
+  if (queryid_ == &::google::protobuf::internal::kEmptyString) {
+    queryid_ = new ::std::string;
+  }
+  queryid_->assign(value);
+}
+inline void QueryProfile::set_queryid(const char* value) {
+  set_has_queryid();
+  if (queryid_ == &::google::protobuf::internal::kEmptyString) {
+    queryid_ = new ::std::string;
+  }
+  queryid_->assign(value);
+}
+inline void QueryProfile::set_queryid(const char* value, size_t size) {
+  set_has_queryid();
+  if (queryid_ == &::google::protobuf::internal::kEmptyString) {
+    queryid_ = new ::std::string;
+  }
+  queryid_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryProfile::mutable_queryid() {
+  set_has_queryid();
+  if (queryid_ == &::google::protobuf::internal::kEmptyString) {
+    queryid_ = new ::std::string;
+  }
+  return queryid_;
+}
+inline ::std::string* QueryProfile::release_queryid() {
+  clear_has_queryid();
+  if (queryid_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = queryid_;
+    queryid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryProfile::set_allocated_queryid(::std::string* queryid) {
+  if (queryid_ != &::google::protobuf::internal::kEmptyString) {
+    delete queryid_;
+  }
+  if (queryid) {
+    set_has_queryid();
+    queryid_ = queryid;
+  } else {
+    clear_has_queryid();
+    queryid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
