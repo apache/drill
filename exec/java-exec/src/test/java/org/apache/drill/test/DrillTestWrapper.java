@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -85,6 +86,7 @@ public class DrillTestWrapper {
 
   // Unit test doesn't expect any specific batch count
   public static final int EXPECTED_BATCH_COUNT_NOT_SET = -1;
+  public static final int EXPECTED_NUM_RECORDS_NOT_SET = - 1;
 
   // The motivation behind the TestBuilder was to provide a clean API for test writers. The model is mostly designed to
   // prepare all of the components necessary for running the tests, before the TestWrapper is initialized. There is however
@@ -119,11 +121,13 @@ public class DrillTestWrapper {
   private List<Map<String, Object>> baselineRecords;
 
   private int expectedNumBatches;
+  private int expectedNumRecords;
 
   public DrillTestWrapper(TestBuilder testBuilder, TestServices services, Object query, QueryType queryType,
       String baselineOptionSettingQueries, String testOptionSettingQueries,
       QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
-      String[] baselineColumns, List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
+      String[] baselineColumns, List<Map<String, Object>> baselineRecords, int expectedNumBatches,
+      int expectedNumRecords) {
     this.testBuilder = testBuilder;
     this.services = services;
     this.query = query;
@@ -136,6 +140,13 @@ public class DrillTestWrapper {
     this.baselineColumns = baselineColumns;
     this.baselineRecords = baselineRecords;
     this.expectedNumBatches = expectedNumBatches;
+    this.expectedNumRecords = expectedNumRecords;
+
+    Preconditions.checkArgument(!(baselineRecords != null && !ordered && highPerformanceComparison));
+    Preconditions.checkArgument((baselineRecords != null && expectedNumRecords == DrillTestWrapper.EXPECTED_NUM_RECORDS_NOT_SET) || baselineRecords == null,
+      "Cannot define both baselineRecords and the expectedNumRecords.");
+    Preconditions.checkArgument((baselineQueryType != null && expectedNumRecords == DrillTestWrapper.EXPECTED_NUM_RECORDS_NOT_SET) || baselineQueryType == null,
+      "Cannot define both a baselineQueryType and the expectedNumRecords.");
   }
 
   public void run() throws Exception {
@@ -527,9 +538,14 @@ public class DrillTestWrapper {
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
-        test(baselineOptionSettingQueries);
-        expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
-        addToMaterializedResults(expectedRecords, expected, loader);
+        if (expectedNumRecords != DrillTestWrapper.EXPECTED_NUM_RECORDS_NOT_SET) {
+          Assert.assertEquals(expectedNumRecords, actualRecords.size());
+          return;
+        } else {
+          test(baselineOptionSettingQueries);
+          expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+          addToMaterializedResults(expectedRecords, expected, loader);
+        }
       } else {
         expectedRecords = baselineRecords;
       }
