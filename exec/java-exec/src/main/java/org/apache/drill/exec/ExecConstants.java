@@ -204,6 +204,8 @@ public final class ExecConstants {
   public static final String SERVICE_KEYTAB_LOCATION = SERVICE_LOGIN_PREFIX + ".keytab";
   public static final String KERBEROS_NAME_MAPPING = SERVICE_LOGIN_PREFIX + ".auth_to_local";
 
+  /* Provide resiliency on web server for queries submitted via HTTP */
+  public static final String HTTP_QUERY_FAIL_LOW_HEAP_THRESHOLD = "drill.exec.http.query.fail.low_heap.threshold";
 
   public static final String USER_SSL_ENABLED = "drill.exec.security.user.encryption.ssl.enabled";
   public static final String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
