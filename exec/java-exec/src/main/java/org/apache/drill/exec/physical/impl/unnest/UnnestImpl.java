@@ -103,7 +103,7 @@ public class UnnestImpl implements Unnest {
     innerValueIndex += count;
     return count;
 
-    }
+  }
 
   @Override
   public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing,
