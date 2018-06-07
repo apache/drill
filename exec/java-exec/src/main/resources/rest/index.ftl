@@ -554,7 +554,7 @@
       function computeMemUsage(used, max) {
         let percent = 0;
         if ( max > 0) {
-          let percent = Math.round((100 * used / max), 2);
+          percent = Math.round((100 * used / max), 2);
         }
         let usage   =  bytesInGB(used, 2) + "GB (" + Math.max(0, percent) + "% of "+ bytesInGB(max, 2) +"GB)";
         return usage;
