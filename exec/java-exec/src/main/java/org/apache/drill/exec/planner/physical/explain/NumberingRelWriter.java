@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical.explain;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +32,10 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.Pair;
+import org.apache.drill.exec.planner.physical.CorrelatePrel;
 import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 
 import com.google.common.collect.ImmutableList;
@@ -47,6 +50,7 @@ class NumberingRelWriter implements RelWriter {
   private final SqlExplainLevel detailLevel;
   protected final Spacer spacer = new Spacer();
   private final List<Pair<String, Object>> values = new ArrayList<>();
+  private final Map<String, Prel> registry;
 
   private final Map<Prel, OpId> ids;
   //~ Constructors -----------------------------------------------------------
@@ -55,6 +59,7 @@ class NumberingRelWriter implements RelWriter {
     this.pw = pw;
     this.ids = ids;
     this.detailLevel = detailLevel;
+    this.registry = new HashMap<>();
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -71,7 +76,7 @@ class NumberingRelWriter implements RelWriter {
     RelMetadataQuery mq = RelMetadataQuery.instance();
     if (!mq.isVisibleInExplain(rel, detailLevel)) {
       // render children in place of this, at same level
-      explainInputs(inputs);
+      explainInputs(rel);
       return;
     }
 
@@ -95,6 +100,7 @@ class NumberingRelWriter implements RelWriter {
     s.append(rel.getRelTypeName().replace("Prel", ""));
     if (detailLevel != SqlExplainLevel.NO_ATTRIBUTES) {
       int j = 0;
+      s.append(getDependentSrcOp(rel));
       for (Pair<String, Object> value : values) {
         if (value.right instanceof RelNode) {
           continue;
@@ -125,14 +131,56 @@ class NumberingRelWriter implements RelWriter {
     }
     pw.println(s);
     spacer.add(2);
-    explainInputs(inputs);
+    explainInputs(rel);
     spacer.subtract(2);
   }
 
-  private void explainInputs(List<RelNode> inputs) {
-    for (RelNode input : inputs) {
-      input.explain(this);
+  private String getDependentSrcOp(RelNode rel) {
+    if (rel instanceof UnnestPrel) {
+      return this.getDependentSrcOp((UnnestPrel) rel);
     }
+    return "";
+  }
+
+  private String getDependentSrcOp(UnnestPrel unnest) {
+    Prel parent = this.getRegisteredPrel(unnest.getParentClass());
+    if (parent != null && parent instanceof CorrelatePrel) {
+      OpId id = ids.get(parent);
+      return String.format(" [SrcOp: (%02d-%02d)] ", id.fragmentId, id.opId);
+    }
+    return "";
+  }
+
+  public void register(Prel toRegister) {
+    this.registry.put(toRegister.getClass().getSimpleName(), toRegister);
+  }
+
+  public Prel getRegisteredPrel(Class<?> classname) {
+    return this.registry.get(classname.getSimpleName());
+  }
+
+  public void unRegister(Prel unregister) {
+    this.registry.remove(unregister.getClass().getSimpleName());
+  }
+
+
+  private void explainInputs(RelNode rel) {
+    if (rel instanceof CorrelatePrel) {
+      this.explainInputs((CorrelatePrel) rel);
+    } else {
+      for (RelNode input : rel.getInputs()) {
+        input.explain(this);
+      }
+    }
+  }
+
+  //Correlate is handled differently because explain plan
+  //needs to show relation between Lateral and Unnest operators.
+  private void explainInputs(CorrelatePrel correlate) {
+    correlate.getInput(0).explain(this);
+    this.register(correlate);
+    correlate.getInput(1).explain(this);
+    this.unRegister(correlate);
   }
 
   public final void explain(RelNode rel, List<Pair<String, Object>> valueList) {

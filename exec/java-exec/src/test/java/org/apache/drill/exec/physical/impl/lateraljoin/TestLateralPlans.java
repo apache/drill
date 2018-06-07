@@ -435,4 +435,25 @@ public class TestLateralPlans extends BaseTestQuery {
     String CorrelateUnnest = matcher.group(0);
     return CorrelateUnnest.substring(CorrelateUnnest.lastIndexOf("Scan"));
   }
+
+
+  //The following test is for testing the explain plan contains relation between lateral and corresponding unnest.
+  @Test
+  public void testLateralAndUnnestExplainPlan() throws Exception {
+    String Sql = "select c.* from cp.`lateraljoin/nested-customer.json` c, unnest(c.orders) Orders(ord)";
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+            .setOptionDefault(ExecConstants.ENABLE_UNNEST_LATERAL_KEY, true)
+            .setOptionDefault(ExecConstants.SLICE_TARGET, 1);
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      String explain = client.queryBuilder().sql(Sql).explainText();
+      String srcOp = explain.substring(explain.indexOf("SrcOp"));
+      assertTrue(srcOp != null && srcOp.length() > 0);
+      String correlateFragmentPattern = srcOp.substring(srcOp.indexOf("(")+1, srcOp.indexOf(")"));
+      assertTrue(correlateFragmentPattern != null && correlateFragmentPattern.length() > 0);
+      Matcher matcher = Pattern.compile(correlateFragmentPattern + ".*Correlate", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
+      assertTrue(matcher.find());
+    }
+  }
 }
