@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -173,6 +174,11 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitConvertExpression(ConvertExpression e, ErrorCollector errors) throws RuntimeException {
+    return e.getInput().accept(this, errors);
+  }
+
+  @Override
+  public Boolean visitAnyValueExpression(AnyValueExpression e, ErrorCollector errors) throws RuntimeException {
     return e.getInput().accept(this, errors);
   }
 

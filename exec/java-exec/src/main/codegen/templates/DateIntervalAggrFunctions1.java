@@ -131,7 +131,16 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
 	  <#elseif aggrtype.funcName == "count">
 	    value.value++;
-	  <#else>
+    <#elseif aggrtype.funcName == "any_value">
+      <#if type.outputType?ends_with("Interval")>
+        value.days = in.days;
+        value.months = in.months;
+        value.milliseconds = in.milliseconds;
+      <#elseif type.outputType?ends_with("IntervalDay")>
+        value.days = in.days;
+        value.milliseconds = in.milliseconds;
+      </#if>
+    <#else>
 	  // TODO: throw an error ?
 	  </#if>
 	<#if type.inputType?starts_with("Nullable")>

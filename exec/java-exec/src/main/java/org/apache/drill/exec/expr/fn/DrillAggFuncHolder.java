@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
@@ -44,19 +45,19 @@ import com.sun.codemodel.JVar;
 class DrillAggFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAggFuncHolder.class);
 
-  private String setup() {
+  protected String setup() {
     return meth("setup");
   }
-  private String reset() {
+  protected String reset() {
     return meth("reset", false);
   }
-  private String add() {
+  protected String add() {
     return meth("add");
   }
-  private String output() {
+  protected String output() {
     return meth("output");
   }
-  private String cleanup() {
+  protected String cleanup() {
     return meth("cleanup", false);
   }
 
@@ -78,7 +79,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
   }
 
   @Override
-  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables) {
+  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables, FieldReference fieldReference) {
     if (!g.getMappingSet().isHashAggMapping()) {  //Declare workspace vars for non-hash-aggregation.
         JVar[] workspaceJVars = declareWorkspaceVariables(g);
         generateBody(g, BlockType.SETUP, setup(), null, workspaceJVars, true);
@@ -128,12 +129,20 @@ class DrillAggFuncHolder extends DrillFuncHolder {
   @Override
   public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
                                     JVar[] workspaceJVars, FieldReference fieldReference) {
-    HoldingContainer out = classGenerator.declare(getReturnType(), false);
+    HoldingContainer out = null;
+    JVar internalOutput = null;
+    if (getReturnType().getMinorType() != TypeProtos.MinorType.LATE) {
+      out = classGenerator.declare(getReturnType(), false);
+    }
     JBlock sub = new JBlock();
+    if (getReturnType().getMinorType() != TypeProtos.MinorType.LATE) {
+      internalOutput = sub.decl(JMod.FINAL, classGenerator.getHolderType(getReturnType()), getReturnValue().getName(), JExpr._new(classGenerator.getHolderType(getReturnType())));
+    }
     classGenerator.getEvalBlock().add(sub);
-    JVar internalOutput = sub.decl(JMod.FINAL, classGenerator.getHolderType(getReturnType()), getReturnValue().getName(), JExpr._new(classGenerator.getHolderType(getReturnType())));
     addProtectedBlock(classGenerator, sub, output(), null, workspaceJVars, false);
-    sub.assign(out.getHolder(), internalOutput);
+    if (getReturnType().getMinorType() != TypeProtos.MinorType.LATE) {
+      sub.assign(out.getHolder(), internalOutput);
+    }
     //hash aggregate uses workspace vectors. Initialization is done in "setup" and does not require "reset" block.
     if (!classGenerator.getMappingSet().isHashAggMapping()) {
       generateBody(classGenerator, BlockType.RESET, reset(), null, workspaceJVars, false);

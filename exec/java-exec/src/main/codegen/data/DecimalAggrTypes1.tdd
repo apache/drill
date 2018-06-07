@@ -35,6 +35,12 @@
        {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
        {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
       ]
+   },
+   {className: "AnyValue", funcName: "any_value", types: [
+       {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
+       {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
+       {inputType: "RepeatedVarDecimal", outputType: "RepeatedVarDecimal"}
+      ]
    }
   ]
 }

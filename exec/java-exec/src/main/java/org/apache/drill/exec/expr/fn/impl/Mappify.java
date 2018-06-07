@@ -60,7 +60,7 @@ public class Mappify {
     }
 
     public void eval() {
-      buffer = org.apache.drill.exec.expr.fn.impl.MappifyUtility.mappify(reader, writer, buffer);
+      buffer = org.apache.drill.exec.expr.fn.impl.MappifyUtility.mappify(reader, writer, buffer, "Mappify/kvgen");
     }
   }
 }

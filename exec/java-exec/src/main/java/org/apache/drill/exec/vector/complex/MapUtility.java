@@ -28,14 +28,14 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 public class MapUtility {
-  private final static String TYPE_MISMATCH_ERROR = "Mappify/kvgen does not support heterogeneous value types. All values in the input map must be of the same type. The field [%s] has a differing type [%s].";
+  private final static String TYPE_MISMATCH_ERROR = " does not support heterogeneous value types. All values in the input map must be of the same type. The field [%s] has a differing type [%s].";
 
   /*
    * Function to read a value from the field reader, detect the type, construct the appropriate value holder
    * and use the value holder to write to the Map.
    */
   // TODO : This should be templatized and generated using freemarker
-  public static void writeToMapFromReader(FieldReader fieldReader, BaseWriter.MapWriter mapWriter) {
+  public static void writeToMapFromReader(FieldReader fieldReader, BaseWriter.MapWriter mapWriter, String caller) {
     try {
       MajorType valueMajorType = fieldReader.getType();
       MinorType valueMinorType = valueMajorType.getMinorType();
@@ -228,11 +228,311 @@ public class MapUtility {
           fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).list());
           break;
         default:
-          throw new DrillRuntimeException(String.format("kvgen does not support input of type: %s", valueMinorType));
+          throw new DrillRuntimeException(String.format(caller
+              + " does not support input of type: %s", valueMinorType));
       }
     } catch (ClassCastException e) {
       final MaterializedField field = fieldReader.getField();
-      throw new DrillRuntimeException(String.format(TYPE_MISMATCH_ERROR, field.getName(), field.getType()));
+      throw new DrillRuntimeException(String.format(caller + TYPE_MISMATCH_ERROR, field.getName(), field.getType()));
+    }
+  }
+
+  public static void writeToMapFromReader(FieldReader fieldReader, BaseWriter.MapWriter mapWriter,
+      String fieldName, String caller) {
+    try {
+      MajorType valueMajorType = fieldReader.getType();
+      MinorType valueMinorType = valueMajorType.getMinorType();
+      boolean repeated = false;
+
+      if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
+        repeated = true;
+      }
+
+      switch (valueMinorType) {
+        case TINYINT:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).tinyInt());
+          } else {
+            fieldReader.copyAsValue(mapWriter.tinyInt(fieldName));
+          }
+          break;
+        case SMALLINT:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).smallInt());
+          } else {
+            fieldReader.copyAsValue(mapWriter.smallInt(fieldName));
+          }
+          break;
+        case BIGINT:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).bigInt());
+          } else {
+            fieldReader.copyAsValue(mapWriter.bigInt(fieldName));
+          }
+          break;
+        case INT:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).integer());
+          } else {
+            fieldReader.copyAsValue(mapWriter.integer(fieldName));
+          }
+          break;
+        case UINT1:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt1());
+          } else {
+            fieldReader.copyAsValue(mapWriter.uInt1(fieldName));
+          }
+          break;
+        case UINT2:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt2());
+          } else {
+            fieldReader.copyAsValue(mapWriter.uInt2(fieldName));
+          }
+          break;
+        case UINT4:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt4());
+          } else {
+            fieldReader.copyAsValue(mapWriter.uInt4(fieldName));
+          }
+          break;
+        case UINT8:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt8());
+          } else {
+            fieldReader.copyAsValue(mapWriter.uInt8(fieldName));
+          }
+          break;
+        case DECIMAL9:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal9());
+          } else {
+            fieldReader.copyAsValue(mapWriter.decimal9(fieldName));
+          }
+          break;
+        case DECIMAL18:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal18());
+          } else {
+            fieldReader.copyAsValue(mapWriter.decimal18(fieldName));
+          }
+          break;
+        case DECIMAL28SPARSE:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal28Sparse());
+          } else {
+            fieldReader.copyAsValue(mapWriter.decimal28Sparse(fieldName));
+          }
+          break;
+        case DECIMAL38SPARSE:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal38Sparse());
+          } else {
+            fieldReader.copyAsValue(mapWriter.decimal38Sparse(fieldName));
+          }
+          break;
+        case VARDECIMAL:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).varDecimal(valueMajorType.getScale(), valueMajorType.getPrecision()));
+          } else {
+            fieldReader.copyAsValue(mapWriter.varDecimal(fieldName, valueMajorType.getScale(), valueMajorType.getPrecision()));
+          }
+          break;
+        case DATE:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).date());
+          } else {
+            fieldReader.copyAsValue(mapWriter.date(fieldName));
+          }
+          break;
+        case TIME:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).time());
+          } else {
+            fieldReader.copyAsValue(mapWriter.time(fieldName));
+          }
+          break;
+        case TIMESTAMP:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).timeStamp());
+          } else {
+            fieldReader.copyAsValue(mapWriter.timeStamp(fieldName));
+          }
+          break;
+        case INTERVAL:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).interval());
+          } else {
+            fieldReader.copyAsValue(mapWriter.interval(fieldName));
+          }
+          break;
+        case INTERVALDAY:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).intervalDay());
+          } else {
+            fieldReader.copyAsValue(mapWriter.intervalDay(fieldName));
+          }
+          break;
+        case INTERVALYEAR:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).intervalYear());
+          } else {
+            fieldReader.copyAsValue(mapWriter.intervalYear(fieldName));
+          }
+          break;
+        case FLOAT4:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).float4());
+          } else {
+            fieldReader.copyAsValue(mapWriter.float4(fieldName));
+          }
+          break;
+        case FLOAT8:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).float8());
+          } else {
+            fieldReader.copyAsValue(mapWriter.float8(fieldName));
+          }
+          break;
+        case BIT:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).bit());
+          } else {
+            fieldReader.copyAsValue(mapWriter.bit(fieldName));
+          }
+          break;
+        case VARCHAR:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).varChar());
+          } else {
+            fieldReader.copyAsValue(mapWriter.varChar(fieldName));
+          }
+          break;
+        case VARBINARY:
+          if (repeated) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).varBinary());
+          } else {
+            fieldReader.copyAsValue(mapWriter.varBinary(fieldName));
+          }
+          break;
+        case MAP:
+          if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
+            fieldReader.copyAsValue(mapWriter.list(fieldName).map());
+          } else {
+            fieldReader.copyAsValue(mapWriter.map(fieldName));
+          }
+          break;
+        case LIST:
+          fieldReader.copyAsValue(mapWriter.list(fieldName).list());
+          break;
+        default:
+          throw new DrillRuntimeException(String.format(caller
+              + " does not support input of type: %s", valueMinorType));
+      }
+    } catch (ClassCastException e) {
+      final MaterializedField field = fieldReader.getField();
+      throw new DrillRuntimeException(String.format(caller + TYPE_MISMATCH_ERROR, field.getName(), field.getType()));
+    }
+  }
+
+  public static void writeToListFromReader(FieldReader fieldReader, BaseWriter.ListWriter listWriter, String caller) {
+    try {
+      MajorType valueMajorType = fieldReader.getType();
+      MinorType valueMinorType = valueMajorType.getMinorType();
+      boolean repeated = false;
+
+      if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
+        repeated = true;
+      }
+
+      switch (valueMinorType) {
+        case TINYINT:
+          fieldReader.copyAsValue(listWriter.tinyInt());
+          break;
+        case SMALLINT:
+          fieldReader.copyAsValue(listWriter.smallInt());
+          break;
+        case BIGINT:
+          fieldReader.copyAsValue(listWriter.bigInt());
+          break;
+        case INT:
+          fieldReader.copyAsValue(listWriter.integer());
+          break;
+        case UINT1:
+          fieldReader.copyAsValue(listWriter.uInt1());
+          break;
+        case UINT2:
+          fieldReader.copyAsValue(listWriter.uInt2());
+          break;
+        case UINT4:
+          fieldReader.copyAsValue(listWriter.uInt4());
+          break;
+        case UINT8:
+          fieldReader.copyAsValue(listWriter.uInt8());
+          break;
+        case DECIMAL9:
+          fieldReader.copyAsValue(listWriter.decimal9());
+          break;
+        case DECIMAL18:
+          fieldReader.copyAsValue(listWriter.decimal18());
+          break;
+        case DECIMAL28SPARSE:
+          fieldReader.copyAsValue(listWriter.decimal28Sparse());
+          break;
+        case DECIMAL38SPARSE:
+          fieldReader.copyAsValue(listWriter.decimal38Sparse());
+          break;
+        case VARDECIMAL:
+          fieldReader.copyAsValue(listWriter.varDecimal(valueMajorType.getScale(), valueMajorType.getPrecision()));
+          break;
+        case DATE:
+          fieldReader.copyAsValue(listWriter.date());
+          break;
+        case TIME:
+          fieldReader.copyAsValue(listWriter.time());
+          break;
+        case TIMESTAMP:
+          fieldReader.copyAsValue(listWriter.timeStamp());
+          break;
+        case INTERVAL:
+          fieldReader.copyAsValue(listWriter.interval());
+          break;
+        case INTERVALDAY:
+          fieldReader.copyAsValue(listWriter.intervalDay());
+          break;
+        case INTERVALYEAR:
+          fieldReader.copyAsValue(listWriter.intervalYear());
+          break;
+        case FLOAT4:
+          fieldReader.copyAsValue(listWriter.float4());
+          break;
+        case FLOAT8:
+          fieldReader.copyAsValue(listWriter.float8());
+          break;
+        case BIT:
+          fieldReader.copyAsValue(listWriter.bit());
+          break;
+        case VARCHAR:
+          fieldReader.copyAsValue(listWriter.varChar());
+          break;
+        case VARBINARY:
+          fieldReader.copyAsValue(listWriter.varBinary());
+          break;
+        case MAP:
+          fieldReader.copyAsValue(listWriter.map());
+          break;
+        case LIST:
+          fieldReader.copyAsValue(listWriter.list());
+          break;
+        default:
+          throw new DrillRuntimeException(String.format(caller
+              + " function does not support input of type: %s", valueMinorType));
+      }
+    } catch (ClassCastException e) {
+      final MaterializedField field = fieldReader.getField();
+      throw new DrillRuntimeException(String.format(caller + TYPE_MISMATCH_ERROR, field.getName(), field.getType()));
     }
   }
 }
