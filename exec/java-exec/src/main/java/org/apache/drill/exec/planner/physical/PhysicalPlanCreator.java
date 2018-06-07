@@ -52,11 +52,6 @@ public class PhysicalPlanCreator {
     return context;
   }
 
-//  public int getOperatorId(Prel prel){
-//    OpId id = opIdMap.get(prel);
-//    return id.getAsSingleInt();
-//  }
-
   public PhysicalOperator addMetadata(Prel originalPrel, PhysicalOperator op){
     op.setOperatorId(opIdMap.get(originalPrel).getAsSingleInt());
     op.setCost(originalPrel.estimateRowCount(originalPrel.getCluster().getMetadataQuery()));
