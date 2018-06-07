@@ -66,12 +66,21 @@ public interface PriorityQueue {
    */
   SelectionVector4 getFinalSv4();
 
+  /**
+   * Cleanup the old state of queue and recreate a new one with HyperContainer containing vectors in input container
+   * and the corresponding indexes (in SV4 format) from input SelectionVector4
+   * @param container
+   * @param vector4
+   * @throws SchemaChangeException
+   */
   void resetQueue(VectorContainer container, SelectionVector4 vector4) throws SchemaChangeException;
 
   /**
    * Releases all the memory consumed by the priority queue.
    */
   void cleanup();
+
+  boolean isInitialized();
 
   TemplateClassDefinition<PriorityQueue> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(PriorityQueue.class, PriorityQueueTemplate.class);
 }

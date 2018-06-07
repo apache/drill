@@ -30,7 +30,8 @@ public class GenericSV4Copier extends AbstractSV4Copier {
     int inOffset = inIndex & 0xFFFF;
     int inVector = inIndex >>> 16;
     for ( int i = 0;  i < vvIn.length;  i++ ) {
-      vvOut[i].copyEntry(outIndex, vvIn[i][inVector], inOffset);
+      ValueVector[] vectorsFromIncoming = vvIn[i].getValueVectors();
+      vvOut[i].copyEntry(outIndex, vectorsFromIncoming[inVector], inOffset);
     }
   }
 

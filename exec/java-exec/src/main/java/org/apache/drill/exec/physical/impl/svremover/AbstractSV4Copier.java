@@ -22,10 +22,12 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.ValueVector;
 
 public abstract class AbstractSV4Copier extends AbstractCopier {
-  protected ValueVector[][] vvIn;
+  // Storing VectorWrapper reference instead of ValueVector[]. With EMIT outcome support underlying operator
+  // operator can generate multiple output batches with no schema changes which will change the ValueVector[]
+  // reference but not VectorWrapper reference.
+  protected VectorWrapper<?>[] vvIn;
   private SelectionVector4 sv4;
 
   @Override
@@ -34,14 +36,13 @@ public abstract class AbstractSV4Copier extends AbstractCopier {
     this.sv4 = incoming.getSelectionVector4();
 
     final int count = outgoing.getNumberOfColumns();
-
-    vvIn = new ValueVector[count][];
+    vvIn = new VectorWrapper[count];
 
     {
       int index = 0;
 
       for (VectorWrapper vectorWrapper: incoming) {
-        vvIn[index] = vectorWrapper.getValueVectors();
+        vvIn[index] = vectorWrapper;
         index++;
       }
     }

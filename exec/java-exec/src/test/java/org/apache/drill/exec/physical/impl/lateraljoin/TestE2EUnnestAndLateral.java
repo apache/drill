@@ -70,6 +70,24 @@ public class TestE2EUnnestAndLateral extends BaseTestQuery {
   }
 
   @Test
+  public void testLateral_WithTopNInSubQuery() throws Exception {
+    String Sql = "SELECT customer.c_name, orders.o_id, orders.o_amount " +
+      "FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
+      "(SELECT t.ord.o_id as o_id, t.ord.o_amount as o_amount FROM UNNEST(customer.orders) t(ord) ORDER BY " +
+      "o_amount DESC LIMIT 1) orders";
+
+    testBuilder()
+      .sqlQuery(Sql)
+      .unOrdered()
+      .baselineColumns("c_name", "o_id", "o_amount")
+      .baselineValues("customer1", 3.0,  294.5)
+      .baselineValues("customer2", 10.0,  724.5)
+      .baselineValues("customer3", 23.0,  772.2)
+      .baselineValues("customer4", 32.0,  1030.1)
+      .go();
+  }
+
+  @Test
   public void testOuterApply_WithFilterAndLimitInSubQuery() throws Exception {
     String Sql = "SELECT customer.c_name, customer.c_address, orders.o_id, orders.o_amount " +
       "FROM cp.`lateraljoin/nested-customer.parquet` customer OUTER APPLY " +
@@ -120,6 +138,22 @@ public class TestE2EUnnestAndLateral extends BaseTestQuery {
       "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
       "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord) LIMIT 10) orders";
     test(sql);
+  }
+
+  @Test
+  public void testMultipleBatchesLateral_WithTopNInSubQuery() throws Exception {
+    String sql = "SELECT customer.c_name, orders.o_orderkey, orders.o_totalprice " +
+      "FROM dfs.`lateraljoin/multipleFiles` customer, LATERAL " +
+      "(SELECT t.ord.o_orderkey as o_orderkey, t.ord.o_totalprice as o_totalprice FROM UNNEST(customer.c_orders) t(ord)" +
+      " ORDER BY o_totalprice DESC LIMIT 1) orders";
+
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .baselineColumns("c_name", "o_orderkey", "o_totalprice")
+      .baselineValues("Customer#000951313", (long)47035683, 306996.2)
+      .baselineValues("Customer#000007180", (long)54646821, 367189.55)
+      .go();
   }
 
   @Test
