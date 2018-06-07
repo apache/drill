@@ -285,20 +285,20 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   public void splitAndTransferTo(int startIndex, int length, BitVector target) {
     assert startIndex + length <= valueCount;
-    int firstByte = getByteIndex(startIndex);
-    int byteSize = getSizeFromCount(length);
-    int offset = startIndex % 8;
-    if (offset == 0) {
+    int firstByteIndex = getByteIndex(startIndex);//byte offset of the first src byte
+    int bytesToRead = getSizeFromCount(length); //src bytes to read (including start/end bytes that might not be fully copied)
+    int firstBitOffset = startIndex % 8; //Offset of first src bit within the first src byte
+    if (firstBitOffset == 0) {
       target.clear();
       // slice
       if (target.data != null) {
         target.data.release();
       }
-      target.data = data.slice(firstByte, byteSize);
+      target.data = data.slice(firstByteIndex, bytesToRead);
       target.data.retain(1);
     } else {
       // Copy data
-      // When the first bit starts from the middle of a byte (offset != 0), copy data from src BitVector.
+      // When the first bit starts from the middle of a byte (firstBitOffset != 0), copy data from src BitVector.
       // Each byte in the target is composed by a part in i-th byte, another part in (i+1)-th byte.
       // The last byte copied to target is a bit tricky :
       //   1) if length requires partly byte (length % 8 !=0), copy the remaining bits only.
@@ -306,14 +306,34 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       target.clear();
       target.allocateNew(length);
       // TODO maybe do this one word at a time, rather than byte?
-      for(int i = 0; i < byteSize - 1; i++) {
-        target.data.setByte(i, (((this.data.getByte(firstByte + i) & 0xFF) >>> offset) + (this.data.getByte(firstByte + i + 1) <<  (8 - offset))));
+
+      byte byteI, byteIPlus1 = 0;
+      for(int i = 0; i < bytesToRead - 1; i++) {
+        byteI = this.data.getByte(firstByteIndex + i);
+        byteIPlus1 = this.data.getByte(firstByteIndex + i + 1);
+        // Extract higher-X bits from first byte i and lower-Y bits from byte (i + 1), where X + Y = 8 bits
+        // Lower-Y  bits are the MS bits of the byte to be written (target byte) and Higher-X are the LS bits.
+        // The target bytes are assembled in accordance to little-endian ordering (byte[0] = LS bit, byte[7] = MS bit)
+        target.data.setByte(i, (((byteI & 0xFF) >>> firstBitOffset) + (byteIPlus1 <<  (8 - firstBitOffset))));
       }
+
+      //Copying the last n bits
+
+      //Copy length is not a byte-multiple
       if (length % 8 != 0) {
-        target.data.setByte(byteSize - 1, ((this.data.getByte(firstByte + byteSize - 1) & 0xFF) >>> offset));
+        byte lastButOneByte = 0;
+        byte bitsFromLastButOneByte = 0;
+        // if start is not byte aligned then we have to copy some bits from the last full byte read in the
+        // previous loop
+        if (firstBitOffset != 0) {
+          lastButOneByte = byteIPlus1;
+          bitsFromLastButOneByte = (byte)((lastButOneByte & 0xFF) >>> firstBitOffset);
+        }
+        final int lastByte = this.data.getByte(firstByteIndex + bytesToRead);
+        target.data.setByte(bytesToRead - 1, bitsFromLastButOneByte + (lastByte << (8 - firstBitOffset)));
       } else {
-        target.data.setByte(byteSize - 1,
-            (((this.data.getByte(firstByte + byteSize - 1) & 0xFF) >>> offset) + (this.data.getByte(firstByte + byteSize) <<  (8 - offset))));
+        target.data.setByte(bytesToRead - 1,
+            (((this.data.getByte(firstByteIndex + bytesToRead - 1) & 0xFF) >>> firstBitOffset) + (this.data.getByte(firstByteIndex + bytesToRead) <<  (8 - firstBitOffset))));
       }
     }
     target.getMutator().setValueCount(length);
