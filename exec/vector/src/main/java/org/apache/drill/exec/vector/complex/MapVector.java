@@ -324,6 +324,12 @@ public class MapVector extends AbstractMapVector {
         if (v != null && index < v.getAccessor().getValueCount()) {
           Object value = v.getAccessor().getObject(index);
           if (value != null) {
+            if ((v.getAccessor().getObject(index) instanceof Map
+                    && ((Map) v.getAccessor().getObject(index)).size() == 0)
+                || (v.getAccessor().getObject(index) instanceof List
+                    && ((List) v.getAccessor().getObject(index)).size() == 0)) {
+              continue;
+            }
             vv.put(child, value);
           }
         }
