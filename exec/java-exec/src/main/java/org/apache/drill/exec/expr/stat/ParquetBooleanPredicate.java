@@ -27,10 +27,10 @@ import java.util.List;
 /**
  * Boolean predicates for parquet filter pushdown.
  */
-public abstract class ParquetBooleanPredicates<C extends Comparable<C>> extends BooleanOperator
+public abstract class ParquetBooleanPredicate<C extends Comparable<C>> extends BooleanOperator
     implements ParquetFilterPredicate<C> {
 
-  private ParquetBooleanPredicates(String name, List<LogicalExpression> args, ExpressionPosition pos) {
+  private ParquetBooleanPredicate(String name, List<LogicalExpression> args, ExpressionPosition pos) {
     super(name, args, pos);
   }
 
@@ -45,7 +45,7 @@ public abstract class ParquetBooleanPredicates<C extends Comparable<C>> extends 
       List<LogicalExpression> args,
       ExpressionPosition pos
   ) {
-    return new ParquetBooleanPredicates<C>(name, args, pos) {
+    return new ParquetBooleanPredicate<C>(name, args, pos) {
       @Override
       public boolean canDrop(RangeExprEvaluator<C> evaluator) {
         // "and" : as long as one branch is OK to drop, we can drop it.
@@ -65,7 +65,7 @@ public abstract class ParquetBooleanPredicates<C extends Comparable<C>> extends 
       List<LogicalExpression> args,
       ExpressionPosition pos
   ) {
-    return new ParquetBooleanPredicates<C>(name, args, pos) {
+    return new ParquetBooleanPredicate<C>(name, args, pos) {
       @Override
       public boolean canDrop(RangeExprEvaluator<C> evaluator) {
         for (LogicalExpression child : this) {
@@ -87,9 +87,9 @@ public abstract class ParquetBooleanPredicates<C extends Comparable<C>> extends 
   ) {
     switch (function) {
       case "booleanOr":
-        return ParquetBooleanPredicates.<C>createOrPredicate(name, args, pos);
+        return ParquetBooleanPredicate.<C>createOrPredicate(name, args, pos);
       case "booleanAnd":
-        return ParquetBooleanPredicates.<C>createAndPredicate(name, args, pos);
+        return ParquetBooleanPredicate.<C>createAndPredicate(name, args, pos);
       default:
         logger.warn("Unknown Boolean '{}' predicate.", function);
         return null;
