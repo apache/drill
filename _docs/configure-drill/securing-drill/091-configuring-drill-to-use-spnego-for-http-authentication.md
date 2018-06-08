@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill to use SPNEGO for HTTP Authentication"
-date: 2018-04-05 01:05:13 UTC
+date: 2018-06-08 02:01:22 UTC
 parent: "Securing Drill"
 ---  
 
@@ -8,13 +8,12 @@ Drill 1.13 and later supports the Simple and Protected GSS-API Negotiation mecha
  
 When a client (a web browser or a web client tool, such as curl) requests access to a secured page from the web server (Drillbit), the SPNEGO mechanism uses tokens to perform a handshake that authenticates the client browser and the web server. 
 
-The following browsers were tested with Drill configured to use SPNEGO authentication:
-
-
+The following browsers were tested with Drill configured to use SPNEGO authentication:  
 
 - Firefox  
 - Chrome  
 - Safari  
+- Internet Explorer 
 - Web client tool, such as curl  
 
 An IT administrator configures the web server (Drillbit) to use SPNEGO for authentication. Depending on the system, either the administrator or the user configures the client (web browser or web client tool) to use SPNEGO for authentication. Configuration instructions are presented later in this document.   
@@ -88,9 +87,7 @@ An administrator or user can configure SPNEGO on the client (web browser or clie
 
 The client should use the same web server hostname (as configured in the server-side principal) to access the Drill Web Console. If the server hostname differs, SPNEGO authentication will fail. For example, if the server principal is `"HTTP/example.QA.LAB@QA.LAB”`, the client should use `http://example.QA.LAB:8047` as the Drill Web Console URL.
 
-The following sections provide instructions for configuring the supported client-side browsers: 
-
-**Note:** SPNEGO is not tested on Windows browsers in Drill 1.13.  
+The following sections provide instructions for configuring the supported client-side browsers:   
 
 ###Firefox
 To configure Firefox to use a negotiation dialog, such as SPNEGO to authenticate, complete the following steps:  
@@ -108,6 +105,27 @@ For MacOS or Linux, add the `--auth-server-whitelist` parameter to the `google-c
 
 ###Safari
 No configuration is required for Safari. Safari automatically authenticates using SPNEGO when requested by the server.  
+
+###Internet Explorer  
+
+To configure Internet Explorer to use a negotiation dialog, such as SPNEGO to authenticate, complete the following steps:  
+
+1-Go to Tools > Options > Security > Local Intranet > Sites, and select all options.  
+  
+2-Select Advanced, and add one or both of the following URLs to server: 
+  
+       http://
+       https://  
+
+**Note:** Make sure you use the hostname of the Drillbit in the URL.  
+
+3-Close the Advanced tab, and click OK.  
+
+4-Go to Tools > Options > Advanced > Security (in the checkbox list), and enable the Integrated Windows Authentication option.  
+
+5-Click OK.  
+
+6-Close and reopen IE. You can browse to your SPNEGO protected resource.  
 
 ###REST API
 You can use CURL commands to authenticate using SPNEGO and access secure web resources over REST.

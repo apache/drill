@@ -1,6 +1,6 @@
 ---
 title: "RDBMS Storage Plugin"
-date: 2018-02-08 02:32:56 UTC
+date: 2018-06-08 02:01:23 UTC
 parent: "Connect a Data Source"
 ---
 Apache Drill supports querying a number of RDBMS instances. This allows you to connect your traditional databases to your Drill cluster so you can have a single view of both your relational and NoSQL datasources in a single system. 
@@ -114,5 +114,32 @@ For Postgres, Drill has been tested with Postgres's [9.1-901-1.jdbc4](http://cen
       url:"jdbc:postgresql://1.2.3.4/mydatabase",
       username:"user",
       password:"password"
-    }
+    }  
+
+You may need to qualify a table name with a schema name for Drill to return data. For example, when querying a table named ips, you must issue the query against public.ips, as shown in the following example:  
+
+       0: jdbc:drill:zk=local> use pgdb;          
+       +-------+-----------------------------------+
+       |  ok   |          	summary          	|
+       +-------+-----------------------------------+
+       | true  | Default schema changed to [pgdb]  |
+       +-------+-----------------------------------+
+        
+       0: jdbc:drill:zk=local> show tables;          
+       +---------------+--------------------------+
+       | TABLE_SCHEMA  |        TABLE_NAME    	|
+       +---------------+--------------------------+
+       | pgdb.test 	| ips                  	|
+       | pgdb.test 	| pg_aggregate         	|
+       | pgdb.test 	| pg_am                	| 
+       …  
+
+       0: jdbc:drill:zk=local> select * from public.ips;          
+       +-------+----------+
+       | ipid  | ipv4dot  |
+       +-------+----------+
+       | 1 	| 1.2.3.4  |
+       | 2 	| 1.2.3.5  |
+       +-------+----------+
+
 
