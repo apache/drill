@@ -34,13 +34,13 @@ import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isAllNulls
 /**
  * Comparison predicates for parquet filter pushdown.
  */
-public class ParquetComparisonPredicates<C extends Comparable<C>> extends LogicalExpressionBase
+public class ParquetComparisonPredicate<C extends Comparable<C>> extends LogicalExpressionBase
     implements ParquetFilterPredicate<C> {
   private final LogicalExpression left;
   private final LogicalExpression right;
   private final BiPredicate<Statistics<C>, Statistics<C>> predicate;
 
-  private ParquetComparisonPredicates(
+  private ParquetComparisonPredicate(
       LogicalExpression left,
       LogicalExpression right,
       BiPredicate<Statistics<C>, Statistics<C>> predicate
@@ -109,7 +109,7 @@ public class ParquetComparisonPredicates<C extends Comparable<C>> extends Logica
       LogicalExpression left,
       LogicalExpression right
   ) {
-    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max < right's min, or right's max < left's min
       final C leftMin = leftStat.genericGetMin();
       final C rightMin = rightStat.genericGetMin();
@@ -129,7 +129,7 @@ public class ParquetComparisonPredicates<C extends Comparable<C>> extends Logica
       LogicalExpression left,
       LogicalExpression right
   ) {
-    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max <= right's min.
       final C rightMin = rightStat.genericGetMin();
       return leftStat.genericGetMax().compareTo(rightMin) <= 0;
@@ -143,7 +143,7 @@ public class ParquetComparisonPredicates<C extends Comparable<C>> extends Logica
       LogicalExpression left,
       LogicalExpression right
   ) {
-    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max < right's min.
       final C rightMin = rightStat.genericGetMin();
       return leftStat.genericGetMax().compareTo(rightMin) < 0;
@@ -157,7 +157,7 @@ public class ParquetComparisonPredicates<C extends Comparable<C>> extends Logica
       LogicalExpression left,
       LogicalExpression right
   ) {
-    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when right's max <= left's min.
       final C leftMin = leftStat.genericGetMin();
       return rightStat.genericGetMax().compareTo(leftMin) <= 0;
@@ -170,7 +170,7 @@ public class ParquetComparisonPredicates<C extends Comparable<C>> extends Logica
   private static <C extends Comparable<C>> LogicalExpression createLEPredicate(
       LogicalExpression left, LogicalExpression right
   ) {
-    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when right's max < left's min.
       final C leftMin = leftStat.genericGetMin();
       return rightStat.genericGetMax().compareTo(leftMin) < 0;
@@ -184,7 +184,7 @@ public class ParquetComparisonPredicates<C extends Comparable<C>> extends Logica
       LogicalExpression left,
       LogicalExpression right
   ) {
-    return new ParquetComparisonPredicates<C>(left, right, (leftStat, rightStat) -> {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when there is only one unique value.
       final C leftMax = leftStat.genericGetMax();
       final C rightMax = rightStat.genericGetMax();
@@ -200,17 +200,17 @@ public class ParquetComparisonPredicates<C extends Comparable<C>> extends Logica
   ) {
     switch (function) {
       case FunctionGenerationHelper.EQ:
-        return ParquetComparisonPredicates.<C>createEqualPredicate(left, right);
+        return ParquetComparisonPredicate.<C>createEqualPredicate(left, right);
       case FunctionGenerationHelper.GT:
-        return ParquetComparisonPredicates.<C>createGTPredicate(left, right);
+        return ParquetComparisonPredicate.<C>createGTPredicate(left, right);
       case FunctionGenerationHelper.GE:
-        return ParquetComparisonPredicates.<C>createGEPredicate(left, right);
+        return ParquetComparisonPredicate.<C>createGEPredicate(left, right);
       case FunctionGenerationHelper.LT:
-        return ParquetComparisonPredicates.<C>createLTPredicate(left, right);
+        return ParquetComparisonPredicate.<C>createLTPredicate(left, right);
       case FunctionGenerationHelper.LE:
-        return ParquetComparisonPredicates.<C>createLEPredicate(left, right);
+        return ParquetComparisonPredicate.<C>createLEPredicate(left, right);
       case FunctionGenerationHelper.NE:
-        return ParquetComparisonPredicates.<C>createNEPredicate(left, right);
+        return ParquetComparisonPredicate.<C>createNEPredicate(left, right);
       default:
         return null;
     }

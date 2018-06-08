@@ -40,10 +40,10 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarDecimalHolder;
-import org.apache.drill.exec.expr.stat.ParquetBooleanPredicates;
-import org.apache.drill.exec.expr.stat.ParquetComparisonPredicates;
+import org.apache.drill.exec.expr.stat.ParquetBooleanPredicate;
+import org.apache.drill.exec.expr.stat.ParquetComparisonPredicate;
 import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
-import org.apache.drill.exec.expr.stat.ParquetIsPredicates;
+import org.apache.drill.exec.expr.stat.ParquetIsPredicate;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.slf4j.Logger;
@@ -159,7 +159,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
       } else {
         if (childPredicate instanceof TypedFieldExpr) {
           // Calcite simplifies `= true` expression to field name, wrap it with is true predicate
-          childPredicate = ParquetIsPredicates.createIsPredicate(FunctionGenerationHelper.IS_TRUE, childPredicate);
+          childPredicate = ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, childPredicate);
         }
         childPredicates.add(childPredicate);
       }
@@ -170,7 +170,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     } else if (childPredicates.size() == 1) {
       return childPredicates.get(0); // only one leg is qualified, remove boolean op.
     } else {
-      return ParquetBooleanPredicates.createBooleanPredicate(functionName, op.getName(), childPredicates, op.getPosition());
+      return ParquetBooleanPredicate.createBooleanPredicate(functionName, op.getName(), childPredicates, op.getPosition());
     }
   }
 
@@ -268,7 +268,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
 
     String funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
 
-    return ParquetComparisonPredicates.createComparisonPredicate(funcName, newArgs.get(0), newArgs.get(1));
+    return ParquetComparisonPredicate.createComparisonPredicate(funcName, newArgs.get(0), newArgs.get(1));
   }
 
   private LogicalExpression handleIsFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
@@ -283,7 +283,7 @@ public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression,
     }
     LogicalExpression arg = functionHolderExpression.args.get(0);
 
-    return ParquetIsPredicates.createIsPredicate(funcName, arg.accept(this, value));
+    return ParquetIsPredicate.createIsPredicate(funcName, arg.accept(this, value));
   }
 
   private static boolean isCompareFunction(String funcName) {

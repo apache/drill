@@ -37,13 +37,13 @@ import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isNullOrEm
 /**
  * IS predicates for parquet filter pushdown.
  */
-public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpressionBase
+public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressionBase
     implements ParquetFilterPredicate<C> {
 
   private final LogicalExpression expr;
   private final BiPredicate<Statistics<C>, RangeExprEvaluator<C>> predicate;
 
-  private ParquetIsPredicates(LogicalExpression expr, BiPredicate<Statistics<C>, RangeExprEvaluator<C>> predicate) {
+  private ParquetIsPredicate(LogicalExpression expr, BiPredicate<Statistics<C>, RangeExprEvaluator<C>> predicate) {
     super(expr.getPosition());
     this.expr = expr;
     this.predicate = predicate;
@@ -75,7 +75,7 @@ public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpres
    * IS NULL predicate.
    */
   private static <C extends Comparable<C>> LogicalExpression createIsNullPredicate(LogicalExpression expr) {
-    return new ParquetIsPredicates<C>(expr,
+    return new ParquetIsPredicate<C>(expr,
         //if there are no nulls  -> canDrop
         (exprStat, evaluator) -> hasNoNulls(exprStat)) {
       private final boolean isArray = isArray(expr);
@@ -102,7 +102,7 @@ public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpres
    * IS NOT NULL predicate.
    */
   private static <C extends Comparable<C>> LogicalExpression createIsNotNullPredicate(LogicalExpression expr) {
-    return new ParquetIsPredicates<C>(expr,
+    return new ParquetIsPredicate<C>(expr,
         //if there are all nulls  -> canDrop
         (exprStat, evaluator) -> isAllNulls(exprStat, evaluator.getRowCount())
     );
@@ -112,7 +112,7 @@ public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpres
    * IS TRUE predicate.
    */
   private static LogicalExpression createIsTruePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicates<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr,
         //if max value is not true or if there are all nulls  -> canDrop
         (exprStat, evaluator) -> !exprStat.genericGetMax().equals(Boolean.TRUE) || isAllNulls(exprStat, evaluator.getRowCount())
     );
@@ -122,7 +122,7 @@ public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpres
    * IS FALSE predicate.
    */
   private static LogicalExpression createIsFalsePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicates<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr,
         //if min value is not false or if there are all nulls  -> canDrop
         (exprStat, evaluator) -> !exprStat.genericGetMin().equals(Boolean.FALSE) || isAllNulls(exprStat, evaluator.getRowCount())
     );
@@ -132,7 +132,7 @@ public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpres
    * IS NOT TRUE predicate.
    */
   private static LogicalExpression createIsNotTruePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicates<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr,
         //if min value is not false or if there are no nulls  -> canDrop
         (exprStat, evaluator) -> !exprStat.genericGetMin().equals(Boolean.FALSE) && hasNoNulls(exprStat)
     );
@@ -142,7 +142,7 @@ public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpres
    * IS NOT FALSE predicate.
    */
   private static LogicalExpression createIsNotFalsePredicate(LogicalExpression expr) {
-    return new ParquetIsPredicates<Boolean>(expr,
+    return new ParquetIsPredicate<Boolean>(expr,
         //if max value is not true or if there are no nulls  -> canDrop
         (exprStat, evaluator) -> !exprStat.genericGetMax().equals(Boolean.TRUE) && hasNoNulls(exprStat)
     );
@@ -151,9 +151,9 @@ public class ParquetIsPredicates <C extends Comparable<C>> extends LogicalExpres
   public static <C extends Comparable<C>> LogicalExpression createIsPredicate(String function, LogicalExpression expr) {
     switch (function) {
       case FunctionGenerationHelper.IS_NULL:
-        return ParquetIsPredicates.<C>createIsNullPredicate(expr);
+        return ParquetIsPredicate.<C>createIsNullPredicate(expr);
       case FunctionGenerationHelper.IS_NOT_NULL:
-        return ParquetIsPredicates.<C>createIsNotNullPredicate(expr);
+        return ParquetIsPredicate.<C>createIsNotNullPredicate(expr);
       case FunctionGenerationHelper.IS_TRUE:
         return createIsTruePredicate(expr);
       case FunctionGenerationHelper.IS_NOT_TRUE:
