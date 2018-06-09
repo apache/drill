@@ -58,6 +58,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   private final MongoSchemaFactory schemaFactory;
   private final Cache<MongoCnxnKey, MongoClient> addressClientMap;
   private final MongoClientURI clientURI;
+  private final boolean directConnection;
 
   public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig,
       DrillbitContext context, String name) throws IOException,
@@ -69,6 +70,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
         .expireAfterAccess(24, TimeUnit.HOURS)
         .removalListener(new AddressCloser()).build();
     this.schemaFactory = new MongoSchemaFactory(this, name);
+    directConnection = mongoConfig.isDirectConnection();
   }
 
   @Override
@@ -131,15 +133,38 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     if (client == null) {
       if (credential != null) {
         List<MongoCredential> credentialList = Arrays.asList(credential);
-        client = new MongoClient(addresses, credentialList, clientURI.getOptions());
+        if (!isDirectConnection()) {
+          client = new MongoClient(addresses, credentialList, clientURI.getOptions());
+        } else {
+          client = new MongoClient(serverAddress, credentialList );
+        }
       } else {
-        client = new MongoClient(addresses, clientURI.getOptions());
+        if (!isDirectConnection()) {
+          client = new MongoClient(addresses, clientURI.getOptions());
+        } else {
+          // direct connection must use a single address/node
+          client = new MongoClient(serverAddress);
+        }
       }
+
+      if (isDirectConnection()) {
+        if (addresses.size() > 1) {
+          logger.warn(
+                  "Invalid Configuration: \"direct-connection\" set to true with multiple addresses. {} will be used",
+                  serverAddress.toString() );
+        }
+      }
+
+
       addressClientMap.put(key, client);
       logger.debug("Created connection to {}.", key.toString());
       logger.debug("Number of open connections {}.", addressClientMap.size());
     }
     return client;
+  }
+
+  public boolean isDirectConnection() {
+    return directConnection;
   }
 
   @Override

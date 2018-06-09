@@ -166,7 +166,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private boolean isShardedCluster(MongoClient client) {
     MongoDatabase db = client.getDatabase(scanSpec.getDbName());
-    String msg = db.runCommand(new Document("isMaster", 1)).getString("msg");
+    String msg = db.runCommand(new Document("isMaster", 1), ReadPreference.nearest()).getString("msg");
     return msg == null ? false : msg.equals("isdbgrid");
   }
 
