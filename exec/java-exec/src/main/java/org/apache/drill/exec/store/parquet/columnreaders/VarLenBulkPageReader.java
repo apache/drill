@@ -72,6 +72,7 @@ final class VarLenBulkPageReader {
       this.pageInfo.numPageFieldsRead = pageInfoInput.numPageFieldsRead;
       this.pageInfo.definitionLevels = pageInfoInput.definitionLevels;
       this.pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
+      this.pageInfo.numPageValues = pageInfoInput.numPageValues;
     }
 
     this.columnPrecInfo = columnPrecInfoInput;
@@ -94,6 +95,7 @@ final class VarLenBulkPageReader {
     pageInfo.numPageFieldsRead = pageInfoInput.numPageFieldsRead;
     pageInfo.definitionLevels = pageInfoInput.definitionLevels;
     pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
+    pageInfo.numPageValues = pageInfoInput.numPageValues;
 
     buffer.clear();
   }
