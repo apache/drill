@@ -22,15 +22,16 @@ import org.apache.parquet.column.statistics.Statistics;
 /**
  * Parquet predicates class helper for filter pushdown.
  */
-@SuppressWarnings("rawtypes")
-public class ParquetPredicatesHelper {
+class ParquetPredicatesHelper {
+  private ParquetPredicatesHelper() {
+  }
 
   /**
    * @param stat statistics object
    * @return true if the input stat object has valid statistics; false otherwise
    */
-  public static boolean hasStats(Statistics stat) {
-    return stat != null && !stat.isEmpty();
+  static boolean isNullOrEmpty(Statistics stat) {
+    return stat == null || stat.isEmpty();
   }
 
   /**
@@ -41,7 +42,7 @@ public class ParquetPredicatesHelper {
    * @return True if all rows are null in the parquet file
    *          False if at least one row is not null.
    */
-  public static boolean isAllNulls(Statistics stat, long rowCount) {
+  static boolean isAllNulls(Statistics stat, long rowCount) {
     return stat.getNumNulls() == rowCount;
   }
 
@@ -52,8 +53,8 @@ public class ParquetPredicatesHelper {
    * @return True if the parquet file has nulls
    *          False if the parquet file hasn't nulls.
    */
-  public static boolean hasNulls(Statistics stat) {
-    return stat.getNumNulls() > 0;
+  static boolean hasNoNulls(Statistics stat) {
+    return stat.getNumNulls() == 0;
   }
 
 }

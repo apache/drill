@@ -17,6 +17,6 @@
  */
 package org.apache.drill.exec.expr.stat;
 
-public interface ParquetFilterPredicate {
-  boolean canDrop(RangeExprEvaluator evaluator);
+public interface ParquetFilterPredicate<T extends Comparable<T>> {
+  boolean canDrop(RangeExprEvaluator<T> evaluator);
 }
