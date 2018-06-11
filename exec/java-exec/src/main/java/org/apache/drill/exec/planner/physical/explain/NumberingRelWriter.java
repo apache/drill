@@ -50,7 +50,7 @@ class NumberingRelWriter implements RelWriter {
   private final SqlExplainLevel detailLevel;
   protected final Spacer spacer = new Spacer();
   private final List<Pair<String, Object>> values = new ArrayList<>();
-  private final Map<String, Prel> registry;
+  private final Map<String, Prel> sourceOperatorRegistry;
 
   private final Map<Prel, OpId> ids;
   //~ Constructors -----------------------------------------------------------
@@ -59,7 +59,7 @@ class NumberingRelWriter implements RelWriter {
     this.pw = pw;
     this.ids = ids;
     this.detailLevel = detailLevel;
-    this.registry = new HashMap<>();
+    this.sourceOperatorRegistry = new HashMap<>();
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -67,12 +67,6 @@ class NumberingRelWriter implements RelWriter {
   protected void explain_(
       RelNode rel,
       List<Pair<String, Object>> values) {
-    List<RelNode> inputs = rel.getInputs();
-    if (rel instanceof HashJoinPrel && ((HashJoinPrel) rel).isSwapped()) {
-      HashJoinPrel joinPrel = (HashJoinPrel) rel;
-      inputs = FlatLists.of(joinPrel.getRight(), joinPrel.getLeft());
-    }
-
     RelMetadataQuery mq = RelMetadataQuery.instance();
     if (!mq.isVisibleInExplain(rel, detailLevel)) {
       // render children in place of this, at same level
@@ -146,21 +140,21 @@ class NumberingRelWriter implements RelWriter {
     Prel parent = this.getRegisteredPrel(unnest.getParentClass());
     if (parent != null && parent instanceof CorrelatePrel) {
       OpId id = ids.get(parent);
-      return String.format(" [SrcOp: (%02d-%02d)] ", id.fragmentId, id.opId);
+      return String.format(" [srcOp=%02d-%02d] ", id.fragmentId, id.opId);
     }
     return "";
   }
 
   public void register(Prel toRegister) {
-    this.registry.put(toRegister.getClass().getSimpleName(), toRegister);
+    this.sourceOperatorRegistry.put(toRegister.getClass().getSimpleName(), toRegister);
   }
 
   public Prel getRegisteredPrel(Class<?> classname) {
-    return this.registry.get(classname.getSimpleName());
+    return this.sourceOperatorRegistry.get(classname.getSimpleName());
   }
 
   public void unRegister(Prel unregister) {
-    this.registry.remove(unregister.getClass().getSimpleName());
+    this.sourceOperatorRegistry.remove(unregister.getClass().getSimpleName());
   }
 
 
@@ -168,7 +162,12 @@ class NumberingRelWriter implements RelWriter {
     if (rel instanceof CorrelatePrel) {
       this.explainInputs((CorrelatePrel) rel);
     } else {
-      for (RelNode input : rel.getInputs()) {
+      List<RelNode> inputs = rel.getInputs();
+      if (rel instanceof HashJoinPrel && ((HashJoinPrel) rel).isSwapped()) {
+        HashJoinPrel joinPrel = (HashJoinPrel) rel;
+        inputs = FlatLists.of(joinPrel.getRight(), joinPrel.getLeft());
+      }
+      for (RelNode input : inputs) {
         input.explain(this);
       }
     }

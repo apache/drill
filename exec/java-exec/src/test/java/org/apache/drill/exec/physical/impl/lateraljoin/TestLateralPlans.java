@@ -448,9 +448,9 @@ public class TestLateralPlans extends BaseTestQuery {
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       String explain = client.queryBuilder().sql(Sql).explainText();
-      String srcOp = explain.substring(explain.indexOf("SrcOp"));
+      String srcOp = explain.substring(explain.indexOf("srcOp"));
       assertTrue(srcOp != null && srcOp.length() > 0);
-      String correlateFragmentPattern = srcOp.substring(srcOp.indexOf("(")+1, srcOp.indexOf(")"));
+      String correlateFragmentPattern = srcOp.substring(srcOp.indexOf("=")+1, srcOp.indexOf("]"));
       assertTrue(correlateFragmentPattern != null && correlateFragmentPattern.length() > 0);
       Matcher matcher = Pattern.compile(correlateFragmentPattern + ".*Correlate", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
       assertTrue(matcher.find());
