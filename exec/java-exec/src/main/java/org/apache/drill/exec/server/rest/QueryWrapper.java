@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -43,13 +42,14 @@ import java.util.concurrent.TimeUnit;
 @XmlRootElement
 public class QueryWrapper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWrapper.class);
+  // Heap usage threshold/trigger to provide resiliency on web server for queries submitted via HTTP
+  private static final double HEAP_MEMORY_FAILURE_THRESHOLD = 0.85;
 
   private final String query;
 
   private final String queryType;
 
   private static MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
-  private double heapMemoryFailureThreshold;
 
   @JsonCreator
   public QueryWrapper(@JsonProperty("query") String query, @JsonProperty("queryType") String queryType) {
@@ -78,7 +78,6 @@ public class QueryWrapper {
     // Submit user query to Drillbit work queue.
     final QueryId queryId = workManager.getUserWorker().submitWork(webUserConnection, runQuery);
 
-    heapMemoryFailureThreshold = workManager.getContext().getConfig().getDouble( ExecConstants.HTTP_QUERY_FAIL_LOW_HEAP_THRESHOLD );
     boolean isComplete = false;
     boolean nearlyOutOfHeapSpace = false;
     float usagePercent = getHeapUsage();
@@ -91,7 +90,7 @@ public class QueryWrapper {
       } catch (Exception e) { }
 
       usagePercent = getHeapUsage();
-      if (usagePercent >  heapMemoryFailureThreshold) {
+      if (usagePercent >  HEAP_MEMORY_FAILURE_THRESHOLD) {
         nearlyOutOfHeapSpace = true;
       }
     } while (!isComplete && !nearlyOutOfHeapSpace);
@@ -102,8 +101,9 @@ public class QueryWrapper {
         .addToEventQueue(QueryState.FAILED,
             UserException.resourceError(
                 new Throwable(
-                    "Query submitted through the Web interface was failed due to diminishing free heap memory ("+ Math.floor(((1-usagePercent)*100)) +"% free). "
-                        + "Limit the number of columns or rows returned in the query, or retry using an ODBC/JDBC client."
+                    "There is not enough heap memory to run this query using the web interface. "
+                    + "Please try a query with fewer columns or with a filter or limit condition to limit the data returned. "
+                    + "You can also try an ODBC/JDBC client. "
                     )
                 )
               .build(logger)
