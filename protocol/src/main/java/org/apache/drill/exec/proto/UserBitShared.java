@@ -541,6 +541,10 @@ public final class UserBitShared {
      * <code>HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;</code>
      */
     HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN(43, 43),
+    /**
+     * <code>JDBC_SCAN = 44;</code>
+     */
+    JDBC_SCAN(44, 44),
     ;
 
     /**
@@ -719,6 +723,10 @@ public final class UserBitShared {
      * <code>HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;</code>
      */
     public static final int HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN_VALUE = 43;
+    /**
+     * <code>JDBC_SCAN = 44;</code>
+     */
+    public static final int JDBC_SCAN_VALUE = 44;
 
 
     public final int getNumber() { return value; }
@@ -769,6 +777,7 @@ public final class UserBitShared {
         case 41: return LATERAL_JOIN;
         case 42: return UNNEST;
         case 43: return HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
+        case 44: return JDBC_SCAN;
         default: return null;
       }
     }
@@ -24305,7 +24314,7 @@ public final class UserBitShared {
       "TATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020" +
       "\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022" +
       "\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005" +
-      "\022\032\n\026CANCELLATION_REQUESTED\020\006*\360\006\n\020CoreOpe" +
+      "\022\032\n\026CANCELLATION_REQUESTED\020\006*\377\006\n\020CoreOpe" +
       "ratorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAS" +
       "T_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE" +
       "\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HAS" +
@@ -24327,11 +24336,11 @@ public final class UserBitShared {
       "AN\020$\022\021\n\rPCAP_SUB_SCAN\020%\022\022\n\016KAFKA_SUB_SCA" +
       "N\020&\022\021\n\rKUDU_SUB_SCAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014L" +
       "ATERAL_JOIN\020)\022\n\n\006UNNEST\020*\022,\n(HIVE_DRILL_" +
-      "NATIVE_PARQUET_ROW_GROUP_SCAN\020+*g\n\nSaslS" +
-      "tatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022" +
-      "\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022" +
-      "\017\n\013SASL_FAILED\020\004B.\n\033org.apache.drill.exe" +
-      "c.protoB\rUserBitSharedH\001"
+      "NATIVE_PARQUET_ROW_GROUP_SCAN\020+\022\r\n\tJDBC_" +
+      "SCAN\020,*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016" +
+      "\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014" +
+      "SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.a" +
+      "pache.drill.exec.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

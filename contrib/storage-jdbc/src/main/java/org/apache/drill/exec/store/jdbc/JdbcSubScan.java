@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
+import org.apache.drill.exec.proto.beans.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -52,7 +53,7 @@ public class JdbcSubScan extends AbstractSubScan {
 
   @Override
   public int getOperatorType() {
-    return -1;
+    return CoreOperatorType.JDBC_SCAN.getNumber();
   }
 
   public String getSql() {
