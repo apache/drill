@@ -262,12 +262,14 @@ public abstract class AbstractParquetGroupScan extends AbstractFileGroupScan {
         }
       }
 
-      if (ParquetRGFilterEvaluator.canDrop(filterPredicate, columnStatisticsMap, rowGroup.getRowCount())) {
-        continue;
+      ParquetFilterPredicate.RowsMatch match = ParquetRGFilterEvaluator.matches(filterPredicate, columnStatisticsMap, rowGroup.getRowCount(), parquetTableMetadata, rowGroup.getColumns(), schemaPathsInExpr);
+      if (match == ParquetFilterPredicate.RowsMatch.NONE) {
+        continue; // No row comply to the filter => drop the row group
       }
+      rowGroup.setRowsMatch(match);
 
       qualifiedRGs.add(rowGroup);
-      qualifiedFilePath.add(rowGroup.getPath());  // TODO : optimize when 1 file contains m row groups.
+      qualifiedFilePath.add(rowGroup.getPath());
     }
 
     if (qualifiedRGs.size() == rowGroupInfos.size() ) {

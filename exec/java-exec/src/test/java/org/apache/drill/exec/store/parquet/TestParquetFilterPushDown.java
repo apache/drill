@@ -20,12 +20,17 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.expr.stat.ParquetFilterPredicate.RowsMatch;
+import org.apache.drill.exec.expr.stat.ParquetIsPredicate;
+import org.apache.drill.exec.expr.stat.RangeExprEvaluator;
 import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.column.statistics.BooleanStatistics;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
@@ -36,6 +41,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +64,8 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
     dirTestWatcher.copyResourceToRoot(Paths.get("parquetFilterPush"));
     dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "multirowgroup.parquet"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "multirowgroup2.parquet"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "multirowgroupwithNulls.parquet"));
   }
 
   @AfterClass
@@ -97,73 +106,75 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toFile();
     ParquetMetadata footer = getParquetMetaData(file);
 
-    testParquetRowGroupFilterEval(footer, "intCol = 100", false);
-    testParquetRowGroupFilterEval(footer, "intCol = 0", false);
-    testParquetRowGroupFilterEval(footer, "intCol = 50", false);
+    testParquetRowGroupFilterEval(footer, "intCol = 100", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol = 0", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol = 50", RowsMatch.SOME);
 
-    testParquetRowGroupFilterEval(footer, "intCol = -1", true);
-    testParquetRowGroupFilterEval(footer, "intCol = 101", true);
+    testParquetRowGroupFilterEval(footer, "intCol = -1", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol = 101", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "intCol > 100", true);
-    testParquetRowGroupFilterEval(footer, "intCol > 99", false);
+    testParquetRowGroupFilterEval(footer, "intCol > 100", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol > 99", RowsMatch.SOME);
 
-    testParquetRowGroupFilterEval(footer, "intCol >= 100", false);
-    testParquetRowGroupFilterEval(footer, "intCol >= 101", true);
+    testParquetRowGroupFilterEval(footer, "intCol >= 100", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol >= 101", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "intCol < 100", false);
-    testParquetRowGroupFilterEval(footer, "intCol < 1", false);
-    testParquetRowGroupFilterEval(footer, "intCol < 0", true);
+    testParquetRowGroupFilterEval(footer, "intCol < 100", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol < 1", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol < 0", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "intCol <= 100", false);
-    testParquetRowGroupFilterEval(footer, "intCol <= 1", false);
-    testParquetRowGroupFilterEval(footer, "intCol <= 0", false);
-    testParquetRowGroupFilterEval(footer, "intCol <= -1", true);
+    testParquetRowGroupFilterEval(footer, "intCol <= 100", RowsMatch.ALL);
+    testParquetRowGroupFilterEval(footer, "intCol <= 1", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol <= 0", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol <= -1", RowsMatch.NONE);
 
     // "and"
-    testParquetRowGroupFilterEval(footer, "intCol > 100 and intCol  < 200", true);
-    testParquetRowGroupFilterEval(footer, "intCol > 50 and intCol < 200", false);
-    testParquetRowGroupFilterEval(footer, "intCol > 50 and intCol > 200", true); // essentially, intCol > 200
+    testParquetRowGroupFilterEval(footer, "intCol > 100 and intCol < 200", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol > 50 and intCol < 200", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol > 50 and intCol > 200", RowsMatch.NONE); // essentially, intCol > 200
 
     // "or"
-    testParquetRowGroupFilterEval(footer, "intCol = 150 or intCol = 160", true);
-    testParquetRowGroupFilterEval(footer, "intCol = 50 or intCol = 160", false);
+    testParquetRowGroupFilterEval(footer, "intCol = 150 or intCol = 160", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol = 50 or intCol = 160", RowsMatch.SOME);
 
     //"nonExistCol" does not exist in the table. "AND" with a filter on exist column
-    testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol = 100", true);
-    testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol = 100", true); // since nonExistCol = 100 -> Unknown -> could drop.
-    testParquetRowGroupFilterEval(footer, "nonExistCol = 100 and intCol > 50", true); // since nonExistCol = 100 -> Unknown -> could drop.
-    testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol < 'abc'", true);
-    testParquetRowGroupFilterEval(footer, "nonExistCol < 'abc' and intCol > 100", true); // nonExistCol < 'abc' hit NumberException and is ignored, but intCol >100 will say "drop".
-    testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol < 'abc'", false); // because nonExistCol < 'abc' hit NumberException and is ignored.
+    testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol = 100", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol = 100", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
+    testParquetRowGroupFilterEval(footer, "nonExistCol = 100 and intCol > 50", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
+    testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol < 'abc'", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "nonExistCol < 'abc' and intCol > 100", RowsMatch.NONE); // nonExistCol < 'abc' hit NumberException and is ignored, but intCol >100 will
+    // say "drop".
+    testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol < 'abc'", RowsMatch.SOME); // because nonExistCol < 'abc' hit NumberException and
+    // is ignored.
 
     //"nonExistCol" does not exist in the table. "OR" with a filter on exist column
-    testParquetRowGroupFilterEval(footer, "intCol > 100 or nonExistCol = 100", true); // nonExistCol = 100 -> could drop.
-    testParquetRowGroupFilterEval(footer, "nonExistCol = 100 or intCol > 100", true); // nonExistCol = 100 -> could drop.
-    testParquetRowGroupFilterEval(footer, "intCol > 50 or nonExistCol < 100", false);
-    testParquetRowGroupFilterEval(footer, "nonExistCol < 100 or intCol > 50", false);
+    testParquetRowGroupFilterEval(footer, "intCol > 100 or nonExistCol = 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
+    testParquetRowGroupFilterEval(footer, "nonExistCol = 100 or intCol > 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
+    testParquetRowGroupFilterEval(footer, "intCol > 50 or nonExistCol < 100", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "nonExistCol < 100 or intCol > 50", RowsMatch.SOME);
 
     // cast function on column side (LHS)
-    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 100", false);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 0", false);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 50", false);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 101", true);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = -1", true);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 100", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 0", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 50", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = 101", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as bigint) = -1", RowsMatch.NONE);
 
     // cast function on constant side (RHS)
-    testParquetRowGroupFilterEval(footer, "intCol = cast(100 as bigint)", false);
-    testParquetRowGroupFilterEval(footer, "intCol = cast(0 as bigint)", false);
-    testParquetRowGroupFilterEval(footer, "intCol = cast(50 as bigint)", false);
-    testParquetRowGroupFilterEval(footer, "intCol = cast(101 as bigint)", true);
-    testParquetRowGroupFilterEval(footer, "intCol = cast(-1 as bigint)", true);
+    testParquetRowGroupFilterEval(footer, "intCol = cast(100 as bigint)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol = cast(0 as bigint)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol = cast(50 as bigint)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "intCol = cast(101 as bigint)", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol = cast(-1 as bigint)", RowsMatch.NONE);
 
     // cast into float4/float8
-    testParquetRowGroupFilterEval(footer, "cast(intCol as float4) = cast(101.0 as float4)", true);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as float4) = cast(-1.0 as float4)", true);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as float4) = cast(1.0 as float4)", false);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as float4) = cast(101.0 as float4)", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as float4) = cast(-1.0 as float4)", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as float4) = cast(1.0 as float4)", RowsMatch.SOME);
 
-    testParquetRowGroupFilterEval(footer, "cast(intCol as float8) = 101.0", true);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as float8) = -1.0", true);
-    testParquetRowGroupFilterEval(footer, "cast(intCol as float8) = 1.0", false);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as float8) = 101.0", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as float8) = -1.0", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "cast(intCol as float8) = 1.0", RowsMatch.SOME);
   }
 
   @Test
@@ -176,15 +187,15 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toFile();
     ParquetMetadata footer = getParquetMetaData(file);
 
-    testParquetRowGroupFilterEval(footer, "intCol = 100", true);
-    testParquetRowGroupFilterEval(footer, "intCol = 0", true);
-    testParquetRowGroupFilterEval(footer, "intCol = -100", true);
+    testParquetRowGroupFilterEval(footer, "intCol = 100", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol = 0", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol = -100", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "intCol > 10", true);
-    testParquetRowGroupFilterEval(footer, "intCol >= 10", true);
+    testParquetRowGroupFilterEval(footer, "intCol > 10", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol >= 10", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "intCol < 10", true);
-    testParquetRowGroupFilterEval(footer, "intCol <= 10", true);
+    testParquetRowGroupFilterEval(footer, "intCol < 10", RowsMatch.NONE);
+    testParquetRowGroupFilterEval(footer, "intCol <= 10", RowsMatch.NONE);
   }
 
   @Test
@@ -216,21 +227,21 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   }
 
   private void testDatePredicateAgainstDrillCTASHelper(ParquetMetadata footer) throws Exception{
-    testParquetRowGroupFilterEval(footer, "o_orderdate = cast('1992-01-01' as date)", false);
-    testParquetRowGroupFilterEval(footer, "o_orderdate = cast('1991-12-31' as date)", true);
+    testParquetRowGroupFilterEval(footer, "o_orderdate = cast('1992-01-01' as date)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_orderdate = cast('1991-12-31' as date)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_orderdate >= cast('1991-12-31' as date)", false);
-    testParquetRowGroupFilterEval(footer, "o_orderdate >= cast('1992-01-03' as date)", false);
-    testParquetRowGroupFilterEval(footer, "o_orderdate >= cast('1992-01-04' as date)", true);
+    testParquetRowGroupFilterEval(footer, "o_orderdate >= cast('1991-12-31' as date)", RowsMatch.ALL);
+    testParquetRowGroupFilterEval(footer, "o_orderdate >= cast('1992-01-03' as date)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_orderdate >= cast('1992-01-04' as date)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_orderdate > cast('1992-01-01' as date)", false);
-    testParquetRowGroupFilterEval(footer, "o_orderdate > cast('1992-01-03' as date)", true);
+    testParquetRowGroupFilterEval(footer, "o_orderdate > cast('1992-01-01' as date)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_orderdate > cast('1992-01-03' as date)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_orderdate <= cast('1992-01-01' as date)", false);
-    testParquetRowGroupFilterEval(footer, "o_orderdate <= cast('1991-12-31' as date)", true);
+    testParquetRowGroupFilterEval(footer, "o_orderdate <= cast('1992-01-01' as date)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_orderdate <= cast('1991-12-31' as date)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_orderdate < cast('1992-01-02' as date)", false);
-    testParquetRowGroupFilterEval(footer, "o_orderdate < cast('1992-01-01' as date)", true);
+    testParquetRowGroupFilterEval(footer, "o_orderdate < cast('1992-01-02' as date)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_orderdate < cast('1992-01-01' as date)", RowsMatch.NONE);
   }
 
   @Test
@@ -243,22 +254,96 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toFile();
     ParquetMetadata footer = getParquetMetaData(file);
 
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:30' as timestamp)", false);
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:29' as timestamp)", true);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:30' as timestamp)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:29' as timestamp)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp >= cast('1992-01-01 10:20:29' as timestamp)", false);
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp >= cast('1992-01-03 10:20:30' as timestamp)", false);
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp >= cast('1992-01-03 10:20:31' as timestamp)", true);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp >= cast('1992-01-01 10:20:29' as timestamp)", RowsMatch.ALL);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp >= cast('1992-01-03 10:20:30' as timestamp)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp >= cast('1992-01-03 10:20:31' as timestamp)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp > cast('1992-01-03 10:20:29' as timestamp)", false);
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp > cast('1992-01-03 10:20:30' as timestamp)", true);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp > cast('1992-01-03 10:20:29' as timestamp)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp > cast('1992-01-03 10:20:30' as timestamp)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp <= cast('1992-01-01 10:20:30' as timestamp)", false);
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp <= cast('1992-01-01 10:20:29' as timestamp)", true);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp <= cast('1992-01-01 10:20:30' as timestamp)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp <= cast('1992-01-01 10:20:29' as timestamp)", RowsMatch.NONE);
 
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp < cast('1992-01-01 10:20:31' as timestamp)", false);
-    testParquetRowGroupFilterEval(footer, "o_ordertimestamp < cast('1992-01-01 10:20:30' as timestamp)", true);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp < cast('1992-01-01 10:20:31' as timestamp)", RowsMatch.SOME);
+    testParquetRowGroupFilterEval(footer, "o_ordertimestamp < cast('1992-01-01 10:20:30' as timestamp)", RowsMatch.NONE);
 
+  }
+
+  @Test
+  public void testFilterPruning() throws Exception {
+    // multirowgroup2 is a parquet file with 3 rowgroups inside. One with a=0, another with a=1 and a=2, and the last with a=3 and a=4;
+    // FilterPushDown should be able to prune the filter from the scan operator according to the rowgroup statistics.
+    final String sql = "select * from dfs.`parquet/multirowgroup2.parquet` where ";
+    PlanTestBase.testPlanMatchingPatterns(sql + "a > 1", new String[]{"numRowGroups=2"}); //No filter pruning
+    PlanTestBase.testPlanMatchingPatterns(sql + "a > 2", new String[]{"numRowGroups=1"}, new String[]{"Filter\\("}); // Filter pruning
+
+    PlanTestBase.testPlanMatchingPatterns(sql + "a < 2", new String[]{"numRowGroups=2"}); // No filter pruning
+    PlanTestBase.testPlanMatchingPatterns(sql + "a < 1", new String[]{"numRowGroups=1"}, new String[]{"Filter\\("}); // Filter pruning
+
+    PlanTestBase.testPlanMatchingPatterns(sql + "a >= 2", new String[]{"numRowGroups=2"}); // No filter pruning
+    PlanTestBase.testPlanMatchingPatterns(sql + "a >= 1", new String[]{"numRowGroups=2"}, new String[]{"Filter\\("}); // Filter pruning
+
+    PlanTestBase.testPlanMatchingPatterns(sql + "a <= 1", new String[]{"numRowGroups=2"}); // No filter pruning
+    PlanTestBase.testPlanMatchingPatterns(sql + "a <= 2", new String[]{"numRowGroups=2"}, new String[]{"Filter\\("}); // Filter pruning
+
+    PlanTestBase.testPlanMatchingPatterns(sql + "a > 0 and a < 2", new String[]{"numRowGroups=1"}); // No filter pruning
+    PlanTestBase.testPlanMatchingPatterns(sql + "a > 0 and a < 3", new String[]{"numRowGroups=1"}, new String[]{"Filter\\("}); //Filter pruning
+
+    PlanTestBase.testPlanMatchingPatterns(sql + "a < 1 or a > 1", new String[]{"numRowGroups=3"}); // No filter pruning
+    PlanTestBase.testPlanMatchingPatterns(sql + "a < 1 or a > 2", new String[]{"numRowGroups=2"}, new String[]{"Filter\\("}); //Filter pruning
+  }
+
+  @Test
+  public void testFilterPruningWithNulls() throws Exception {
+    // multirowgroupwithNulls is a parquet file with 4 rowgroups inside and some groups contain null values.
+    // RG1 : [min: 20, max: 29, num_nulls: 0]
+    // RG2 : [min: 31, max: 39, num_nulls: 1]
+    // RG3 : [min: 40, max: 49, num_nulls: 1]
+    // RG4 : [min: 50, max: 59, num_nulls: 0]
+    final String sql = "select a from dfs.`parquet/multirowgroupwithNulls.parquet` where ";
+    // "<" "and" ">" with filter
+    testParquetFilterPruning(sql + "30 < a and 40 > a", 9, 1, null);
+    testParquetFilterPruning(sql + "30 < a and a < 40", 9, 1, null);
+    testParquetFilterPruning(sql + "a > 30 and 40 > a", 9, 1, null);
+    testParquetFilterPruning(sql + "a > 30 and a < 40", 9, 1, null);
+    // "<" "and" ">" with no filter
+    testParquetFilterPruning(sql + "19 < a and 30 > a", 10, 1, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "19 < a and a < 30", 10, 1, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "a > 19 and 30 > a", 10, 1, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "a > 19 and a < 30", 10, 1, new String[]{"Filter\\("});
+    // "<=" "and" ">=" with filter
+    testParquetFilterPruning(sql + "a >= 30 and 39 >= a", 9, 1, null);
+    testParquetFilterPruning(sql + "a >= 30 and a <= 39", 9, 1, null);
+    testParquetFilterPruning(sql + "30 <= a and 39 >= a", 9, 1, null);
+    testParquetFilterPruning(sql + "30 <= a and a <= 39", 9, 1, null);
+    // "<=" "and" ">=" with no filter
+    testParquetFilterPruning(sql + "a >= 20 and a <= 29", 10, 1, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "a >= 20 and 29 >= a", 10, 1, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "20 <= a and a <= 29", 10, 1, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "20 <= a and 29 >= a", 10, 1, new String[]{"Filter\\("});
+    // "<" "or" ">" with filter
+    testParquetFilterPruning(sql + "a < 40 or a > 49", 29, 3, null);
+    testParquetFilterPruning(sql + "a < 40 or 49 < a", 29, 3, null);
+    testParquetFilterPruning(sql + "40 > a or a > 49", 29, 3, null);
+    testParquetFilterPruning(sql + "40 > a or 49 < a", 29, 3, null);
+    // "<" "or" ">" with no filter
+    testParquetFilterPruning(sql + "a < 30 or a > 49", 20, 2, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "a < 30 or 49 < a", 20, 2, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "30 > a or a > 49", 20, 2, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "30 > a or 49 < a", 20, 2, new String[]{"Filter\\("});
+    // "<=" "or" ">=" with filter
+    testParquetFilterPruning(sql + "a <= 39 or a >= 50", 29, 3, null);
+    testParquetFilterPruning(sql + "a <= 39 or 50 <= a", 29, 3, null);
+    testParquetFilterPruning(sql + "39 >= a or a >= 50", 29, 3, null);
+    testParquetFilterPruning(sql + "39 >= a or 50 <= a", 29, 3, null);
+    // "<=" "or" ">=" with no filter
+    testParquetFilterPruning(sql + "a <= 29 or a >= 50", 20, 2, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "a <= 29 or 50 <= a", 20, 2, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "29 >= a or a >= 50", 20, 2, new String[]{"Filter\\("});
+    testParquetFilterPruning(sql + "29 >= a or 50 <= a", 20, 2, new String[]{"Filter\\("});
   }
 
   @Test
@@ -428,6 +513,15 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
     final String queryEqualTrueWithAnd = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = true and unk_col = 'a'";
     testParquetFilterPD(queryEqualTrueWithAnd, 0, 2, false);
+
+    // File ff1.parquet has column with the values: false, null, false.
+    // File tt1.parquet has column with the values: true, null, true.
+    // File ft0.parquet has column with the values: false, true.
+    final String query = "select a from dfs.`parquetFilterPush/tfTbl` where ";
+    testParquetFilterPD(query + "a is true", 3, 2, false);
+    testParquetFilterPD(query + "a is false", 3, 2, false);
+    testParquetFilterPD(query + "a is not true", 5, 1, false);
+    testParquetFilterPD(query + "a is not false", 5, 1, false);
   }
 
   @Test // DRILL-5359
@@ -478,17 +572,88 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     String[] expectedPlan = {"numRowGroups=2"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan);
 
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("cnt")
-      .baselineValues(2L)
-      .go();
+    testBuilder().sqlQuery(query).unOrdered().baselineColumns("cnt").baselineValues(2L).go();
+  }
+
+  @Test // testing min=false, max=true, min/max set, no nulls
+  public void testMinFalseMaxTrue() throws Exception {
+    LogicalExpression le = Mockito.mock(LogicalExpression.class);
+    BooleanStatistics booleanStatistics = Mockito.mock(BooleanStatistics.class);
+    Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
+    RangeExprEvaluator<Boolean> re = Mockito.mock(RangeExprEvaluator.class);
+    Mockito.when(re.getRowCount()).thenReturn(Long.valueOf(2)); // 2 rows
+    Mockito.when(booleanStatistics.isEmpty()).thenReturn(false); // stat is not empty
+    Mockito.when(booleanStatistics.isNumNullsSet()).thenReturn(true); // num_nulls set
+    Mockito. when(booleanStatistics.getNumNulls()).thenReturn(Long.valueOf(0)); // no nulls
+    Mockito. when(booleanStatistics.hasNonNullValue()).thenReturn(true); // min/max set
+    Mockito.when(booleanStatistics.getMin()).thenReturn(false); // min false
+    Mockito.when(booleanStatistics.getMax()).thenReturn(true); // max true
+    ParquetIsPredicate isTrue = (ParquetIsPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
+    assertEquals(RowsMatch.SOME, isTrue.matches(re));
+    ParquetIsPredicate isFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
+    assertEquals(RowsMatch.SOME, isFalse.matches(re));
+    ParquetIsPredicate isNotTrue = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
+    assertEquals(RowsMatch.SOME, isNotTrue.matches(re));
+    ParquetIsPredicate isNotFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
+    assertEquals(RowsMatch.SOME, isNotFalse.matches(re));
+  }
+
+  @Test // testing min=false, max=false, min/max set, no nulls
+  public void testMinFalseMaxFalse() throws Exception {
+    LogicalExpression le = Mockito.mock(LogicalExpression.class);
+    BooleanStatistics booleanStatistics = Mockito.mock(BooleanStatistics.class);
+    Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
+    RangeExprEvaluator<Boolean> re = Mockito.mock(RangeExprEvaluator.class);
+    Mockito.when(re.getRowCount()).thenReturn(Long.valueOf(2)); // 2 rows
+    Mockito.when(booleanStatistics.isEmpty()).thenReturn(false); // stat is not empty
+    Mockito.when(booleanStatistics.isNumNullsSet()).thenReturn(true); // num_nulls set
+    Mockito. when(booleanStatistics.getNumNulls()).thenReturn(Long.valueOf(0)); // no nulls
+    Mockito. when(booleanStatistics.hasNonNullValue()).thenReturn(true); // min/max set
+    Mockito.when(booleanStatistics.getMin()).thenReturn(false); // min false
+    Mockito.when(booleanStatistics.getMax()).thenReturn(false); // max false
+    ParquetIsPredicate isTrue = (ParquetIsPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
+    assertEquals(RowsMatch.NONE, isTrue.matches(re));
+    ParquetIsPredicate isFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
+    assertEquals(RowsMatch.ALL, isFalse.matches(re));
+    ParquetIsPredicate isNotTrue = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
+    assertEquals(RowsMatch.ALL, isNotTrue.matches(re));
+    ParquetIsPredicate isNotFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
+    assertEquals(RowsMatch.NONE, isNotFalse.matches(re));
+  }
+
+  @Test // testing min=true, max=true, min/max set, no nulls
+  public void testMinTrueMaxTrue() throws Exception {
+    LogicalExpression le = Mockito.mock(LogicalExpression.class);
+    BooleanStatistics booleanStatistics = Mockito.mock(BooleanStatistics.class);
+    Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
+    RangeExprEvaluator<Boolean> re = Mockito.mock(RangeExprEvaluator.class);
+    Mockito.when(re.getRowCount()).thenReturn(Long.valueOf(2)); // 2 rows
+    Mockito.when(booleanStatistics.isEmpty()).thenReturn(false); // stat is not empty
+    Mockito.when(booleanStatistics.isNumNullsSet()).thenReturn(true); // num_nulls set
+    Mockito. when(booleanStatistics.getNumNulls()).thenReturn(Long.valueOf(0)); // no nulls
+    Mockito. when(booleanStatistics.hasNonNullValue()).thenReturn(true); // min/max set
+    Mockito.when(booleanStatistics.getMin()).thenReturn(true); // min false
+    Mockito.when(booleanStatistics.getMax()).thenReturn(true); // max true
+    ParquetIsPredicate isTrue = (ParquetIsPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
+    assertEquals(RowsMatch.ALL, isTrue.matches(re));
+    ParquetIsPredicate isFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
+    assertEquals(RowsMatch.NONE, isFalse.matches(re));
+    ParquetIsPredicate isNotTrue = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
+    assertEquals(RowsMatch.NONE, isNotTrue.matches(re));
+    ParquetIsPredicate isNotFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
+    assertEquals(RowsMatch.ALL, isNotFalse.matches(re));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Some test helper functions.
   //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private void testParquetFilterPruning(final String query, int expectedRowCount, int expectedRowgroups, String[] excludedPattern) throws Exception{
+    int actualRowCount = testSql(query);
+    assertEquals(expectedRowCount, actualRowCount);
+    String numRowGroupPattern = "numRowGroups=" + expectedRowgroups;
+    testPlanMatchingPatterns(query, new String[]{numRowGroupPattern}, excludedPattern);
+  }
 
   private void testParquetFilterPD(final String query, int expectedRowCount, int expectedNumFiles, boolean usedMetadataFile) throws Exception{
     int actualRowCount = testSql(query);
@@ -499,13 +664,13 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern});
   }
 
-  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final String exprStr, boolean canDropExpected) throws Exception{
+  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final String exprStr, RowsMatch canDropExpected) throws Exception{
     final LogicalExpression filterExpr = parseExpr(exprStr);
     testParquetRowGroupFilterEval(footer, 0, filterExpr, canDropExpected);
   }
 
-  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final int rowGroupIndex, final LogicalExpression filterExpr, boolean canDropExpected) {
-    boolean canDrop = ParquetRGFilterEvaluator.evalFilter(filterExpr, footer, rowGroupIndex, fragContext.getOptions(), fragContext);
+  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final int rowGroupIndex, final LogicalExpression filterExpr, RowsMatch canDropExpected) {
+    RowsMatch canDrop = ParquetRGFilterEvaluator.evalFilter(filterExpr, footer, rowGroupIndex, fragContext.getOptions(), fragContext);
     Assert.assertEquals(canDropExpected, canDrop);
   }
 
