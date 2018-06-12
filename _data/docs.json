@@ -2637,14 +2637,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Image Metadata Format Plugin", 
+                    "next_url": "/docs/image-metadata-format-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "OpenTSDB Storage Plugin", 
                     "previous_url": "/docs/opentsdb-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/113-kafka-storage-plugin.md", 
                     "title": "Kafka Storage Plugin", 
                     "url": "/docs/kafka-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Kafka Storage Plugin", 
+                    "previous_url": "/docs/kafka-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/114-image-metadata-format-plugin.md", 
+                    "title": "Image Metadata Format Plugin", 
+                    "url": "/docs/image-metadata-format-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -4923,6 +4940,23 @@
             "title": "Identifying Performance Issues", 
             "url": "/docs/identifying-performance-issues/"
         }, 
+        "Image Metadata Format Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ODBC/JDBC Interfaces", 
+            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "Kafka Storage Plugin", 
+            "previous_url": "/docs/kafka-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/114-image-metadata-format-plugin.md", 
+            "title": "Image Metadata Format Plugin", 
+            "url": "/docs/image-metadata-format-plugin/"
+        }, 
         "Install Drill": {
             "breadcrumbs": [], 
             "children": [
@@ -5758,8 +5792,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ODBC/JDBC Interfaces", 
-            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "next_title": "Image Metadata Format Plugin", 
+            "next_url": "/docs/image-metadata-format-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "OpenTSDB Storage Plugin", 
             "previous_url": "/docs/opentsdb-storage-plugin/", 
@@ -7146,8 +7180,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "Kafka Storage Plugin", 
-            "previous_url": "/docs/kafka-storage-plugin/", 
+            "previous_title": "Image Metadata Format Plugin", 
+            "previous_url": "/docs/image-metadata-format-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -16345,14 +16379,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "Image Metadata Format Plugin", 
+                    "next_url": "/docs/image-metadata-format-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "OpenTSDB Storage Plugin", 
                     "previous_url": "/docs/opentsdb-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/113-kafka-storage-plugin.md", 
                     "title": "Kafka Storage Plugin", 
                     "url": "/docs/kafka-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Kafka Storage Plugin", 
+                    "previous_url": "/docs/kafka-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/114-image-metadata-format-plugin.md", 
+                    "title": "Image Metadata Format Plugin", 
+                    "url": "/docs/image-metadata-format-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -16977,8 +17028,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "Kafka Storage Plugin", 
-            "previous_url": "/docs/kafka-storage-plugin/", 
+            "previous_title": "Image Metadata Format Plugin", 
+            "previous_url": "/docs/image-metadata-format-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
