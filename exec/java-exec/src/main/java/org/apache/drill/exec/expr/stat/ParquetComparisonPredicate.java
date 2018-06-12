@@ -26,8 +26,9 @@ import org.apache.parquet.column.statistics.Statistics;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.BiPredicate;
+import java.util.function.BiFunction;
 
+import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.hasNoNulls;
 import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isNullOrEmpty;
 import static org.apache.drill.exec.expr.stat.ParquetPredicatesHelper.isAllNulls;
 
@@ -38,12 +39,13 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
     implements ParquetFilterPredicate<C> {
   private final LogicalExpression left;
   private final LogicalExpression right;
-  private final BiPredicate<Statistics<C>, Statistics<C>> predicate;
+
+  private final BiFunction<Statistics<C>, Statistics<C>, RowsMatch> predicate;
 
   private ParquetComparisonPredicate(
       LogicalExpression left,
       LogicalExpression right,
-      BiPredicate<Statistics<C>, Statistics<C>> predicate
+      BiFunction<Statistics<C>, Statistics<C>, RowsMatch> predicate
   ) {
     super(left.getPosition());
     this.left = left;
@@ -65,7 +67,7 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
   }
 
   /**
-   * Semantics of canDrop() is very similar to what is implemented in Parquet library's
+   * Semantics of matches() is very similar to what is implemented in Parquet library's
    * {@link org.apache.parquet.filter2.statisticslevel.StatisticsFilter} and
    * {@link org.apache.parquet.filter2.predicate.FilterPredicate}
    *
@@ -83,23 +85,29 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
    * where Column1 and Column2 are from same parquet table.
    */
   @Override
-  public boolean canDrop(RangeExprEvaluator<C> evaluator) {
+  public RowsMatch matches(RangeExprEvaluator<C> evaluator) {
     Statistics<C> leftStat = left.accept(evaluator, null);
     if (isNullOrEmpty(leftStat)) {
-      return false;
+      return RowsMatch.SOME;
     }
-
     Statistics<C> rightStat = right.accept(evaluator, null);
     if (isNullOrEmpty(rightStat)) {
-      return false;
+      return RowsMatch.SOME;
     }
-
-    // if either side is ALL null, = is evaluated to UNKNOWN -> canDrop
     if (isAllNulls(leftStat, evaluator.getRowCount()) || isAllNulls(rightStat, evaluator.getRowCount())) {
-      return true;
+      return RowsMatch.NONE;
     }
+    if (!leftStat.hasNonNullValue() || !rightStat.hasNonNullValue()) {
+      return RowsMatch.SOME;
+    }
+    return predicate.apply(leftStat, rightStat);
+  }
 
-    return (leftStat.hasNonNullValue() && rightStat.hasNonNullValue()) && predicate.test(leftStat, rightStat);
+  /**
+   * If one rowgroup contains some null values, change the RowsMatch.ALL into RowsMatch.SOME (null values should be discarded by filter)
+   */
+  private static RowsMatch checkNull(Statistics leftStat, Statistics rightStat) {
+    return !hasNoNulls(leftStat) || !hasNoNulls(rightStat) ? RowsMatch.SOME : RowsMatch.ALL;
   }
 
   /**
@@ -109,12 +117,9 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       LogicalExpression left,
       LogicalExpression right
   ) {
-    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
-      // can drop when left's max < right's min, or right's max < left's min
-      final C leftMin = leftStat.genericGetMin();
-      final C rightMin = rightStat.genericGetMin();
-      return (leftStat.compareMaxToValue(rightMin) < 0) || (rightStat.compareMaxToValue(leftMin) < 0);
-    }) {
+    return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) ->
+      leftStat.compareMaxToValue(rightStat.genericGetMin()) < 0 || rightStat.compareMaxToValue(leftStat.genericGetMin()) < 0 ? RowsMatch.NONE : RowsMatch.SOME
+    ) {
       @Override
       public String toString() {
         return left + " = " + right;
@@ -130,9 +135,10 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       LogicalExpression right
   ) {
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
-      // can drop when left's max <= right's min.
-      final C rightMin = rightStat.genericGetMin();
-      return leftStat.compareMaxToValue(rightMin) <= 0;
+      if (leftStat.compareMaxToValue(rightStat.genericGetMin()) <= 0) {
+        return RowsMatch.NONE;
+      }
+      return leftStat.compareMinToValue(rightStat.genericGetMax()) > 0 ? checkNull(leftStat, rightStat) : RowsMatch.SOME;
     });
   }
 
@@ -144,9 +150,10 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       LogicalExpression right
   ) {
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
-      // can drop when left's max < right's min.
-      final C rightMin = rightStat.genericGetMin();
-      return leftStat.compareMaxToValue(rightMin) < 0;
+      if (leftStat.compareMaxToValue(rightStat.genericGetMin()) < 0) {
+        return RowsMatch.NONE;
+      }
+      return leftStat.compareMinToValue(rightStat.genericGetMax()) >= 0 ? checkNull(leftStat, rightStat) : RowsMatch.SOME;
     });
   }
 
@@ -158,9 +165,10 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       LogicalExpression right
   ) {
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
-      // can drop when right's max <= left's min.
-      final C leftMin = leftStat.genericGetMin();
-      return rightStat.compareMaxToValue(leftMin) <= 0;
+      if (rightStat.compareMaxToValue(leftStat.genericGetMin()) <= 0) {
+        return RowsMatch.NONE;
+      }
+      return leftStat.compareMaxToValue(rightStat.genericGetMin()) < 0 ? checkNull(leftStat, rightStat) : RowsMatch.SOME;
     });
   }
 
@@ -171,9 +179,10 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       LogicalExpression left, LogicalExpression right
   ) {
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
-      // can drop when right's max < left's min.
-      final C leftMin = leftStat.genericGetMin();
-      return rightStat.compareMaxToValue(leftMin) < 0;
+      if (rightStat.compareMaxToValue(leftStat.genericGetMin()) < 0) {
+        return RowsMatch.NONE;
+      }
+      return leftStat.compareMaxToValue(rightStat.genericGetMin()) <= 0 ? checkNull(leftStat, rightStat) : RowsMatch.SOME;
     });
   }
 
@@ -185,11 +194,10 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       LogicalExpression right
   ) {
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
-      // can drop when there is only one unique value.
-      final C leftMax = leftStat.genericGetMax();
-      final C rightMax = rightStat.genericGetMax();
-      return leftStat.compareMinToValue(leftMax) == 0 && rightStat.compareMinToValue(rightMax) == 0 &&
-          leftStat.compareMaxToValue(rightMax) == 0;
+      if (leftStat.compareMaxToValue(rightStat.genericGetMin()) < 0 || rightStat.compareMaxToValue(leftStat.genericGetMin()) < 0) {
+        return checkNull(leftStat, rightStat);
+      }
+      return leftStat.compareMaxToValue(rightStat.genericGetMax()) == 0 && leftStat.compareMinToValue(rightStat.genericGetMin()) == 0 ? RowsMatch.NONE : RowsMatch.SOME;
     });
   }
 

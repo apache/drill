@@ -18,5 +18,16 @@
 package org.apache.drill.exec.expr.stat;
 
 public interface ParquetFilterPredicate<T extends Comparable<T>> {
-  boolean canDrop(RangeExprEvaluator<T> evaluator);
+
+  /**
+   * Define the validity of a row group against a filter
+   * <ul>
+   *   <li>ALL : all rows match the filter (can not drop the row group and can prune the filter)
+   *   <li>NONE : no row matches the filter (can drop the row group)
+   *   <li>SOME : some rows only match the filter or the filter can not be applied (can not drop the row group nor the filter)
+   * </ul>
+   */
+  enum RowsMatch {ALL, NONE, SOME}
+
+  RowsMatch matches(RangeExprEvaluator<T> evaluator);
 }

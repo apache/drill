@@ -29,6 +29,8 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
+import org.apache.drill.exec.expr.stat.ParquetFilterPredicate.RowsMatch;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
@@ -165,12 +167,26 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
       return;
     }
 
-
     RelNode newScan = ScanPrel.create(scan, scan.getTraitSet(), newGroupScan, scan.getRowType());;
 
     if (project != null) {
       newScan = project.copy(project.getTraitSet(), ImmutableList.of(newScan));
     }
+
+    if (newGroupScan instanceof AbstractParquetGroupScan) {
+      RowsMatch matchAll = RowsMatch.ALL;
+      List<RowGroupInfo> rowGroupInfos = ((AbstractParquetGroupScan) newGroupScan).rowGroupInfos;
+      for (RowGroupInfo rowGroup : rowGroupInfos) {
+        if (rowGroup.getRowsMatch() != RowsMatch.ALL) {
+          matchAll = RowsMatch.SOME;
+          break;
+        }
+      }
+      if (matchAll == ParquetFilterPredicate.RowsMatch.ALL) {
+        call.transformTo(newScan);
+      }
+    }
+
     final RelNode newFilter = filter.copy(filter.getTraitSet(), ImmutableList.<RelNode>of(newScan));
     call.transformTo(newFilter);
   }

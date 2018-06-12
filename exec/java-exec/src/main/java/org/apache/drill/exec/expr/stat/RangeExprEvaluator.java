@@ -258,21 +258,28 @@ public class RangeExprEvaluator<T extends Comparable<T>> extends AbstractExprVis
       final ValueHolder minFuncHolder = InterpreterEvaluator.evaluateFunction(interpreter, args1, holderExpr.getName());
       final ValueHolder maxFuncHolder = InterpreterEvaluator.evaluateFunction(interpreter, args2, holderExpr.getName());
 
+      Statistics<T> statistics;
       switch (destType) {
-      //TODO : need handle # of nulls.
-      case INT:
-        return getStatistics( ((IntHolder)minFuncHolder).value, ((IntHolder)maxFuncHolder).value);
-      case BIGINT:
-        return getStatistics( ((BigIntHolder)minFuncHolder).value, ((BigIntHolder)maxFuncHolder).value);
-      case FLOAT4:
-        return getStatistics( ((Float4Holder)minFuncHolder).value, ((Float4Holder)maxFuncHolder).value);
-      case FLOAT8:
-        return getStatistics( ((Float8Holder)minFuncHolder).value, ((Float8Holder)maxFuncHolder).value);
-      case TIMESTAMP:
-        return getStatistics(((TimeStampHolder) minFuncHolder).value, ((TimeStampHolder) maxFuncHolder).value);
-      default:
-        return null;
+        case INT:
+          statistics = getStatistics(((IntHolder) minFuncHolder).value, ((IntHolder) maxFuncHolder).value);
+          break;
+        case BIGINT:
+          statistics = getStatistics(((BigIntHolder) minFuncHolder).value, ((BigIntHolder) maxFuncHolder).value);
+          break;
+        case FLOAT4:
+          statistics = getStatistics(((Float4Holder) minFuncHolder).value, ((Float4Holder) maxFuncHolder).value);
+          break;
+        case FLOAT8:
+          statistics = getStatistics(((Float8Holder) minFuncHolder).value, ((Float8Holder) maxFuncHolder).value);
+          break;
+        case TIMESTAMP:
+          statistics = getStatistics(((TimeStampHolder) minFuncHolder).value, ((TimeStampHolder) maxFuncHolder).value);
+          break;
+        default:
+          return null;
       }
+      statistics.setNumNulls(input.getNumNulls());
+      return statistics;
     } catch (Exception e) {
       throw new DrillRuntimeException("Error in evaluating function of " + holderExpr.getName() );
     }
