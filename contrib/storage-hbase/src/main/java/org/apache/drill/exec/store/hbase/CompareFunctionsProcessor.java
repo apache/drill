@@ -22,6 +22,8 @@ import io.netty.buffer.Unpooled;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -51,6 +53,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {
+
+  // to check that function name starts with convert_from disregarding the case and has encoding after
+  private static final Pattern convertFromPattern = Pattern.compile(String.format("^%s(.+)", ConvertExpression.CONVERT_FROM), Pattern.CASE_INSENSITIVE);
+
   private byte[] value;
   private boolean success;
   private boolean isEqualityFn;
@@ -507,6 +513,17 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
       this.value = ((QuotedString) valueArg).value.getBytes(Charsets.UTF_8);
       this.path = path;
       return true;
+    }
+    return false;
+  }
+
+  @Override
+  public Boolean visitFunctionCall(FunctionCall call, LogicalExpression valueArg) {
+    Matcher matcher = convertFromPattern.matcher(call.getName());
+    if (matcher.find()) {
+      // convert function call to ConvertExpression
+      ConvertExpression convert = new ConvertExpression(ConvertExpression.CONVERT_FROM, matcher.group(1), call.args.get(0), call.getPosition());
+      return visitConvertExpression(convert, valueArg);
     }
     return false;
   }

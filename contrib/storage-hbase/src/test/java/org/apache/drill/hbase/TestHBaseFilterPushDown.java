@@ -780,5 +780,21 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
     runHBaseSQLVerifyCount(sql, 2);
   }
 
+  @Test
+  public void testConvertFromPushDownWithView() throws Exception {
+    test("create view dfs.tmp.pd_view as\n" +
+       "select convert_from(byte_substr(row_key, 1, 8), 'date_epoch_be') as d\n" +
+       "from hbase.`TestTableCompositeDate`");
+
+    String query = "select d from dfs.tmp.pd_view where d > date '2015-06-13' and d < DATE '2015-06-18'";
+    String[] expectedPlan = {
+        "startRow=\\\\x00\\\\x00\\\\x01M\\\\xEF\\]\\\\xA0\\\\x00, " +
+        "stopRow=\\\\x00\\\\x00\\\\x01N\\\\x03\\\\xF7\\\\x10\\\\x00, " +
+        "filter=null"};
+    String[] excludedPlan ={"Filter\\("};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    runHBaseSQLVerifyCount(query, 12);
+  }
 }
 
