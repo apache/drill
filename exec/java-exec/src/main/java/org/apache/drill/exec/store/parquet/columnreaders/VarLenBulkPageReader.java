@@ -66,12 +66,7 @@ final class VarLenBulkPageReader {
     this.buffer.order(ByteOrder.nativeOrder());
 
     if (pageInfoInput != null) {
-      this.pageInfo.pageData = pageInfoInput.pageData;
-      this.pageInfo.pageDataOff = pageInfoInput.pageDataOff;
-      this.pageInfo.pageDataLen = pageInfoInput.pageDataLen;
-      this.pageInfo.numPageFieldsRead = pageInfoInput.numPageFieldsRead;
-      this.pageInfo.definitionLevels = pageInfoInput.definitionLevels;
-      this.pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
+      set(pageInfoInput, false);
     }
 
     this.columnPrecInfo = columnPrecInfoInput;
@@ -87,15 +82,17 @@ final class VarLenBulkPageReader {
     nullableDictionaryReader = new VarLenNullableDictionaryReader(buffer, pageInfo, columnPrecInfo, entry);
   }
 
-  final void set(PageDataInfo pageInfoInput) {
+  final void set(PageDataInfo pageInfoInput, boolean clear) {
     pageInfo.pageData = pageInfoInput.pageData;
     pageInfo.pageDataOff = pageInfoInput.pageDataOff;
     pageInfo.pageDataLen = pageInfoInput.pageDataLen;
     pageInfo.numPageFieldsRead = pageInfoInput.numPageFieldsRead;
     pageInfo.definitionLevels = pageInfoInput.definitionLevels;
     pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
-
-    buffer.clear();
+    pageInfo.numPageValues = pageInfoInput.numPageValues;
+    if (clear) {
+      buffer.clear();
+    }
   }
 
   final VarLenColumnBulkEntry getEntry(int valuesToRead) {

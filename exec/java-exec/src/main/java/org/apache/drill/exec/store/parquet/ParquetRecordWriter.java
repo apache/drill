@@ -54,8 +54,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.bytes.CapacityByteArrayOutputStream;
 import org.apache.parquet.column.ColumnWriteStore;
+import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.impl.ColumnWriteStoreV1;
+import org.apache.parquet.column.values.factory.DefaultV1ValuesWriterFactory;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetColumnChunkPageWriteStore;
 import org.apache.parquet.hadoop.ParquetFileWriter;
@@ -241,8 +243,15 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     // once PARQUET-1006 will be resolved
     pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema, initialSlabSize,
         pageSize, new ParquetDirectByteBufferAllocator(oContext));
-    store = new ColumnWriteStoreV1(pageStore, pageSize, initialPageBufferSize, enableDictionary,
-        writerVersion, new ParquetDirectByteBufferAllocator(oContext));
+    ParquetProperties parquetProperties = ParquetProperties.builder()
+        .withPageSize(pageSize)
+        .withDictionaryEncoding(enableDictionary)
+        .withDictionaryPageSize(initialPageBufferSize)
+        .withWriterVersion(writerVersion)
+        .withAllocator(new ParquetDirectByteBufferAllocator(oContext))
+        .withValuesWriterFactory(new DefaultV1ValuesWriterFactory())
+        .build();
+    store = new ColumnWriteStoreV1(pageStore, parquetProperties);
     MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);
     setUp(schema, consumer);

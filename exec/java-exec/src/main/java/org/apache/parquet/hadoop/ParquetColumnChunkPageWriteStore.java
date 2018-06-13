@@ -17,8 +17,6 @@
  */
 package org.apache.parquet.hadoop;
 
-import static org.apache.parquet.column.statistics.Statistics.getStatsBasedOnType;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
@@ -119,7 +117,7 @@ public class ParquetColumnChunkPageWriteStore implements PageWriteStore, Closeab
       this.path = path;
       this.compressor = compressor;
       this.buf = new CapacityByteArrayOutputStream(initialSlabSize, maxCapacityHint, allocator);
-      this.totalStatistics = getStatsBasedOnType(this.path.getType());
+      this.totalStatistics = Statistics.createStats(this.path.getPrimitiveType());
     }
 
     @Override
@@ -226,11 +224,7 @@ public class ParquetColumnChunkPageWriteStore implements PageWriteStore, Closeab
         writer.writeDictionaryPage(dictionaryPage);
         // tracking the dictionary encoding is handled in writeDictionaryPage
       }
-      List<Encoding> encodings = Lists.newArrayList();
-      encodings.addAll(rlEncodings);
-      encodings.addAll(dlEncodings);
-      encodings.addAll(dataEncodings);
-      writer.writeDataPages(BytesInput.from(buf), uncompressedLength, compressedLength, totalStatistics, encodings);
+      writer.writeDataPages(BytesInput.from(buf), uncompressedLength, compressedLength, totalStatistics, rlEncodings, dlEncodings, dataEncodings);
       writer.endColumn();
       logger.debug(
           String.format(

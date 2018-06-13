@@ -23,6 +23,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.parquet.column.statistics.BooleanStatistics;
 import org.apache.parquet.column.statistics.Statistics;
 
 import java.util.ArrayList;
@@ -114,7 +115,7 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
   private static LogicalExpression createIsTruePredicate(LogicalExpression expr) {
     return new ParquetIsPredicate<Boolean>(expr,
         //if max value is not true or if there are all nulls  -> canDrop
-        (exprStat, evaluator) -> !exprStat.genericGetMax().equals(Boolean.TRUE) || isAllNulls(exprStat, evaluator.getRowCount())
+        (exprStat, evaluator) -> !((BooleanStatistics)exprStat).getMax() || isAllNulls(exprStat, evaluator.getRowCount())
     );
   }
 
@@ -124,7 +125,7 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
   private static LogicalExpression createIsFalsePredicate(LogicalExpression expr) {
     return new ParquetIsPredicate<Boolean>(expr,
         //if min value is not false or if there are all nulls  -> canDrop
-        (exprStat, evaluator) -> !exprStat.genericGetMin().equals(Boolean.FALSE) || isAllNulls(exprStat, evaluator.getRowCount())
+        (exprStat, evaluator) -> ((BooleanStatistics)exprStat).getMin() || isAllNulls(exprStat, evaluator.getRowCount())
     );
   }
 
@@ -134,7 +135,7 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
   private static LogicalExpression createIsNotTruePredicate(LogicalExpression expr) {
     return new ParquetIsPredicate<Boolean>(expr,
         //if min value is not false or if there are no nulls  -> canDrop
-        (exprStat, evaluator) -> !exprStat.genericGetMin().equals(Boolean.FALSE) && hasNoNulls(exprStat)
+        (exprStat, evaluator) -> ((BooleanStatistics)exprStat).getMin() && hasNoNulls(exprStat)
     );
   }
 
@@ -144,7 +145,7 @@ public class ParquetIsPredicate<C extends Comparable<C>> extends LogicalExpressi
   private static LogicalExpression createIsNotFalsePredicate(LogicalExpression expr) {
     return new ParquetIsPredicate<Boolean>(expr,
         //if max value is not true or if there are no nulls  -> canDrop
-        (exprStat, evaluator) -> !exprStat.genericGetMax().equals(Boolean.TRUE) && hasNoNulls(exprStat)
+        (exprStat, evaluator) -> !((BooleanStatistics)exprStat).getMax() && hasNoNulls(exprStat)
     );
   }
 

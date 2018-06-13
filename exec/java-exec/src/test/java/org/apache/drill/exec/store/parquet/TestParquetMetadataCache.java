@@ -30,6 +30,7 @@ import org.apache.drill.test.rowSet.schema.SchemaBuilder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -737,6 +738,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
     }
   }
 
+  @Ignore // Statistics for INTERVAL is not available (see PARQUET-1064)
   @Test // DRILL-4139
   public void testIntervalDayPartitionPruning() throws Exception {
     final String intervalDayPartitionTable = "dfs.tmp.`interval_day_partition`";
@@ -762,6 +764,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
     }
   }
 
+  @Ignore // Statistics for INTERVAL is not available (see PARQUET-1064)
   @Test // DRILL-4139
   public void testIntervalYearPartitionPruning() throws Exception {
     final String intervalYearPartitionTable = "dfs.tmp.`interval_yr_partition`";
@@ -812,6 +815,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
     }
   }
 
+  @Ignore // Statistics for DECIMAL is not available (see PARQUET-1322).
   @Test // DRILL-4139
   public void testDecimalPartitionPruning() throws Exception {
     List<String> ctasQueries = Lists.newArrayList();

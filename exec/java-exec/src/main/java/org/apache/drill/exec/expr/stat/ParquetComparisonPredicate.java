@@ -113,7 +113,7 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       // can drop when left's max < right's min, or right's max < left's min
       final C leftMin = leftStat.genericGetMin();
       final C rightMin = rightStat.genericGetMin();
-      return leftStat.genericGetMax().compareTo(rightMin) < 0 || rightStat.genericGetMax().compareTo(leftMin) < 0;
+      return (leftStat.compareMaxToValue(rightMin) < 0) || (rightStat.compareMaxToValue(leftMin) < 0);
     }) {
       @Override
       public String toString() {
@@ -132,7 +132,7 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max <= right's min.
       final C rightMin = rightStat.genericGetMin();
-      return leftStat.genericGetMax().compareTo(rightMin) <= 0;
+      return leftStat.compareMaxToValue(rightMin) <= 0;
     });
   }
 
@@ -146,7 +146,7 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when left's max < right's min.
       final C rightMin = rightStat.genericGetMin();
-      return leftStat.genericGetMax().compareTo(rightMin) < 0;
+      return leftStat.compareMaxToValue(rightMin) < 0;
     });
   }
 
@@ -160,7 +160,7 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when right's max <= left's min.
       final C leftMin = leftStat.genericGetMin();
-      return rightStat.genericGetMax().compareTo(leftMin) <= 0;
+      return rightStat.compareMaxToValue(leftMin) <= 0;
     });
   }
 
@@ -173,7 +173,7 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
     return new ParquetComparisonPredicate<C>(left, right, (leftStat, rightStat) -> {
       // can drop when right's max < left's min.
       final C leftMin = leftStat.genericGetMin();
-      return rightStat.genericGetMax().compareTo(leftMin) < 0;
+      return rightStat.compareMaxToValue(leftMin) < 0;
     });
   }
 
@@ -188,8 +188,8 @@ public class ParquetComparisonPredicate<C extends Comparable<C>> extends Logical
       // can drop when there is only one unique value.
       final C leftMax = leftStat.genericGetMax();
       final C rightMax = rightStat.genericGetMax();
-      return leftStat.genericGetMin().compareTo(leftMax) == 0 && rightStat.genericGetMin().compareTo(rightMax) == 0 &&
-          leftStat.genericGetMax().compareTo(rightMax) == 0;
+      return leftStat.compareMinToValue(leftMax) == 0 && rightStat.compareMinToValue(rightMax) == 0 &&
+          leftStat.compareMaxToValue(rightMax) == 0;
     });
   }
 
