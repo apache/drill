@@ -1,6 +1,6 @@
 ---
 title: "Image Metadata Format Plugin"
-date: 2018-01-30 18:38:55 UTC
+date: 2018-06-13 18:20:39 UTC
 parent: "Connect a Data Source"
 ---
 
@@ -77,9 +77,9 @@ Retrieving GPS location data from the Exif metadata for the use of GIS functions
        |        lat         |         lon          |
        +--------------------+----------------------+
        | 47.53777313232332  | -122.03510284423795  |
-       +--------------------+----------------------+
-       1 row selected (0.317 seconds)
-       Retrieving the images larger than 640 x 480 pixels
+       +--------------------+----------------------+  
+       
+Retrieving the images larger than 640 x 480 pixels
        
        0: jdbc:drill:zk=local> select FileName, PixelWidth, PixelHeight from dfs.`/images/*.png` where PixelWidth >= 640 and PixelHeight >= 480;
        +--------------------------+-------------+--------------+
