@@ -119,8 +119,7 @@ public class TestSplitAndTransfer {
 
   int getBit(TestBitPattern pattern, int index) {
     if (pattern == TestBitPattern.RANDOM) {
-      final int randomBit = (int) (Math.random() * 2);
-      return randomBit;
+      return (int) (Math.random() * 2);
     }
     return (pattern == TestBitPattern.ALTERNATING) ? (index % 2) : ((pattern == TestBitPattern.ONE) ? 1 : 0);
   }

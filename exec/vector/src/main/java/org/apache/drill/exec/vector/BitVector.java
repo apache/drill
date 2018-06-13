@@ -286,7 +286,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public void splitAndTransferTo(int startIndex, int length, BitVector target) {
     assert startIndex + length <= valueCount;
     int firstByteIndex = getByteIndex(startIndex);//byte offset of the first src byte
-    int bytesToRead = getSizeFromCount(length); //src bytes to read (including start/end bytes that might not be fully copied)
+    int numBytesHoldingSourceBits = getSizeFromCount(length); //src bytes to read (including start/end bytes that might not be fully copied)
     int firstBitOffset = startIndex % 8; //Offset of first src bit within the first src byte
     if (firstBitOffset == 0) {
       target.clear();
@@ -294,7 +294,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       if (target.data != null) {
         target.data.release();
       }
-      target.data = data.slice(firstByteIndex, bytesToRead);
+      target.data = data.slice(firstByteIndex, numBytesHoldingSourceBits);
       target.data.retain(1);
     } else {
       // Copy data
@@ -308,7 +308,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       // TODO maybe do this one word at a time, rather than byte?
 
       byte byteI, byteIPlus1 = 0;
-      for(int i = 0; i < bytesToRead - 1; i++) {
+      for(int i = 0; i < numBytesHoldingSourceBits - 1; i++) {
         byteI = this.data.getByte(firstByteIndex + i);
         byteIPlus1 = this.data.getByte(firstByteIndex + i + 1);
         // Extract higher-X bits from first byte i and lower-Y bits from byte (i + 1), where X + Y = 8 bits
@@ -329,11 +329,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
           lastButOneByte = byteIPlus1;
           bitsFromLastButOneByte = (byte)((lastButOneByte & 0xFF) >>> firstBitOffset);
         }
-        final int lastByte = this.data.getByte(firstByteIndex + bytesToRead);
-        target.data.setByte(bytesToRead - 1, bitsFromLastButOneByte + (lastByte << (8 - firstBitOffset)));
+        final int lastByte = this.data.getByte(firstByteIndex + numBytesHoldingSourceBits);
+        target.data.setByte(numBytesHoldingSourceBits - 1, bitsFromLastButOneByte + (lastByte << (8 - firstBitOffset)));
       } else {
-        target.data.setByte(bytesToRead - 1,
-            (((this.data.getByte(firstByteIndex + bytesToRead - 1) & 0xFF) >>> firstBitOffset) + (this.data.getByte(firstByteIndex + bytesToRead) <<  (8 - firstBitOffset))));
+        target.data.setByte(numBytesHoldingSourceBits - 1,
+            (((this.data.getByte(firstByteIndex + numBytesHoldingSourceBits - 1) & 0xFF) >>> firstBitOffset) + (this.data.getByte(firstByteIndex + numBytesHoldingSourceBits) <<  (8 - firstBitOffset))));
       }
     }
     target.getMutator().setValueCount(length);
