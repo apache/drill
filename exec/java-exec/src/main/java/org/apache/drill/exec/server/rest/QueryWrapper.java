@@ -20,7 +20,10 @@ package org.apache.drill.exec.server.rest;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
+
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -28,17 +31,25 @@ import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
 import org.apache.drill.exec.work.WorkManager;
 
 import javax.xml.bind.annotation.XmlRootElement;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @XmlRootElement
 public class QueryWrapper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWrapper.class);
+  // Heap usage threshold/trigger to provide resiliency on web server for queries submitted via HTTP
+  private static final double HEAP_MEMORY_FAILURE_THRESHOLD = 0.85;
 
   private final String query;
 
   private final String queryType;
+
+  private static MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
 
   @JsonCreator
   public QueryWrapper(@JsonProperty("query") String query, @JsonProperty("queryType") String queryType) {
@@ -59,7 +70,6 @@ public class QueryWrapper {
   }
 
   public QueryResult run(final WorkManager workManager, final WebUserConnection webUserConnection) throws Exception {
-
     final RunQuery runQuery = RunQuery.newBuilder().setType(getType())
         .setPlan(getQuery())
         .setResultsMode(QueryResultsMode.STREAM_FULL)
@@ -68,8 +78,37 @@ public class QueryWrapper {
     // Submit user query to Drillbit work queue.
     final QueryId queryId = workManager.getUserWorker().submitWork(webUserConnection, runQuery);
 
+    boolean isComplete = false;
+    boolean nearlyOutOfHeapSpace = false;
+    float usagePercent = getHeapUsage();
+
     // Wait until the query execution is complete or there is error submitting the query
-    webUserConnection.await();
+    logger.debug("Wait until the query execution is complete or there is error submitting the query");
+    do {
+      try {
+        isComplete = webUserConnection.await(TimeUnit.SECONDS.toMillis(1)); /*periodically timeout to check heap*/
+      } catch (Exception e) { }
+
+      usagePercent = getHeapUsage();
+      if (usagePercent >  HEAP_MEMORY_FAILURE_THRESHOLD) {
+        nearlyOutOfHeapSpace = true;
+      }
+    } while (!isComplete && !nearlyOutOfHeapSpace);
+
+    //Fail if nearly out of heap space
+    if (nearlyOutOfHeapSpace) {
+      workManager.getBee().getForemanForQueryId(queryId)
+        .addToEventQueue(QueryState.FAILED,
+            UserException.resourceError(
+                new Throwable(
+                    "There is not enough heap memory to run this query using the web interface. "
+                    + "Please try a query with fewer columns or with a filter or limit condition to limit the data returned. "
+                    + "You can also try an ODBC/JDBC client. "
+                    )
+                )
+              .build(logger)
+            );
+    }
 
     if (logger.isTraceEnabled()) {
       logger.trace("Query {} is completed ", queryId);
@@ -81,6 +120,11 @@ public class QueryWrapper {
 
     // Return the QueryResult.
     return new QueryResult(queryId, webUserConnection.columns, webUserConnection.results);
+  }
+
+  //Detect possible excess heap
+  private float getHeapUsage() {
+    return (float) memMXBean.getHeapMemoryUsage().getUsed() / memMXBean.getHeapMemoryUsage().getMax();
   }
 
   public static class QueryResult {
