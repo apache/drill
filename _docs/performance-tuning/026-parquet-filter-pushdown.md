@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2018-04-03 23:37:00 UTC
+date: 2018-06-14 22:23:22 UTC
 parent: "Performance Tuning"
 ---
 
@@ -39,20 +39,43 @@ The following table lists the Parquet filter pushdown options with their descrip
 | "planner.store.parquet.rowgroup.filter.pushdown.threshold" | Sets the number of row groups that a table can   have. You can increase the threshold if the filter can prune many row groups.   However, if this setting is too high, the filter evaluation overhead   increases. Base this setting on the data set. Reduce this setting if the   planning time is significant, or you do not see any benefit at runtime. | 10,000    |  
 
 ###Viewing the Query Plan
-Because Drill applies Parquet filter pushdown during the query planning phase, you can view the query execution plan to see if Drill pushes down the filter when a query on a Parquet file contains a filter expression.
- 
-Run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see the execution plan for the query. See [Query Plans]({{site.baseurl}}/docs/query-plans/) for more information. 
+Because Drill applies Parquet filter pushdown during the query planning phase, you can view the query execution plan to see if Drill pushes down the filter when a query on a Parquet file contains a filter expression. You can run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see the execution plan for the query, as shown in the following example.
+
+**Example**
+Starting in Drill 1.14, Drill supports the planner rule, JoinPushTransitivePredicatesRule, which enables Drill to infer filter conditions for join queries and push the filter conditions down to the data source. 
+
+This example shows a query plan where the JoinPushTransitivePredicatesRule is used to push the filter down to each table referenced in the following query:  
+
+       SELECT * FROM dfs.`/tmp/first` t1 JOIN dfs.`/tmp/second` t2  ON t1.`month` = t2.`month` WHERE t2.`month` = 4  
+
+This query performs a join on two tables partitioned by the “month” column. The “first” table has 16 Parquet files, and the “second” table has 7. Issuing the `EXPLAIN PLAN FOR` command, you can see that the query planner applies the filter to both tables, significantly reducing the number of files read by the Scan operator in each table.  
+
+       EXPLAIN PLAN FOR SELECT * FROM dfs.`/tmp/first` t1 JOIN dfs.`/tmp/second` t2  ON t1.`month` = t2.`month` WHERE t2.`month` = 4  
+       
+       DrillProjectRel(**=[$0], **0=[$2])
+         DrillJoinRel(condition=[=($1, $3)], joinType=[inner])
+           DrillScanRel(table=[[dfs, first]], groupscan=[ParquetGroupScan [entries=[ReadEntryWithPath [path=/tmp/first/0_0_9.parquet], ReadEntryWithPath [path=/tmp/first/0_0_10.parquet]], selectionRoot=file:/tmp/first, numFiles=2, numRowGroups=2, usedMetadataFile=false, columns=[`**`]]])
+           DrillScanRel(table=[[dfs, second]], groupscan=[ParquetGroupScan [entries=[ReadEntryWithPath [path=/tmp/second/0_0_5.parquet]], selectionRoot=file:/tmp/second, numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=[`**`]]])
+
+ See [Query Plans]({{site.baseurl}}/docs/query-plans/) for more information. 
 
 ##Support 
 The following table lists the supported and unsupported clauses, operators, data types, function, and scenarios for Parquet filter pushdown:  
 
-**Note:** An asterisk (*) indicates support as of Drill 1.13.  
+**Note:** ^1^ indicates support as of Drill 1.13. ^2^ indicates support as of Drill 1.14.  
 
-|                        | Supported                                                                                                                                                                                                                                | Not Supported                                                                                      |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
-| Clauses                | WHERE, *WITH, HAVING (HAVING is   supported if Drill can pass the filter through GROUP BY.)                                                                                                                                              | -                                                                                               |
-| Operators              | AND, OR, NOT, *IS [NOT] NULL, *IS   [NOT] TRUE, *IS [NOT] FALSE, IN (An IN list is converted to OR if the number   in the IN list is within a certain threshold, for example 20. If greater than   the threshold, pruning cannot occur.) | ITEM (Drill does not push the filter   past the ITEM operator, which is used for complex fields.)  |
-| Comparison   Operators | <>, <, >, <=, >=, =                                                                                                                                                                                                                      | -                                                                                               |
-| Data   Types           | INT, BIGINT, FLOAT, DOUBLE, DATE,   TIMESTAMP, TIME, *BOOLEAN (true, false)                                                                                                                                                              | CHAR, VARCHAR columns, Hive TIMESTAMP                                                              |
-| Function               | CAST is supported among the following   types only: int, bigint, float, double, *date, *timestamp, and *time                                                                                                                             | -                                                                                               |
-| Other                  | Files with multiple row groups                                                                                                                                                                                                           | Joins, Enabled Native Hive reader                                                                  |
+|                      | Supported                                                                                                                                                                                                                                                     | Not Supported                           |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|
+| Clauses              | WHERE,   ^1^WITH, HAVING (HAVING is supported if Drill can pass the filter through GROUP   BY.)                                                                                                                                                                 | -                                       |
+| Operators            | ^2^BETWEEN,   ^2^ITEM, AND, OR, NOT, ^1^IS [NOT] NULL, ^1^IS [NOT] TRUE, ^1^IS [NOT] FALSE, IN (An   IN list is converted to OR if the number in the IN list is within a certain   threshold, for example 20. If greater than the threshold, pruning cannot   occur.) | -                                       |
+| Comparison Operators | <>,   <, >, <=, >=, =                                                                                                                                                                                                                                         | -                                       |
+| Data Types           | INT,   BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, TIME, *BOOLEAN (true, false)                                                                                                                                                                                   | CHAR,   VARCHAR columns, Hive TIMESTAMP |
+| Function             | CAST   is supported among the following types only: int, bigint, float, double,   ^1^date, ^1^timestamp, and ^1^time                                                                                                                                                | -                                       |
+| Other                | ^2^Enabled   ^2^native Hive reader, Files with multiple row groups, Joins                                                                                                                                                                                       | -                                       |
+
+**Note:** Drill cannot infer filter conditions for join queries that have: 
+
+- a dynamic star in the sub-query or queries that include the WITH statement.  
+- several filter predicates with the OR logical operator.  
+- more than one EXISTS operator (instead of JOIN operators).  
+- INNER JOIN and local filtering with a several conditions.                                                                                                    |   
