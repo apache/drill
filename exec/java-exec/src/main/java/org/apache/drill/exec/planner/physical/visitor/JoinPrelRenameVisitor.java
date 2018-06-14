@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.planner.physical.JoinPrel;
@@ -75,16 +76,11 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
   public Prel visitLateral(LateralJoinPrel prel, Void value) throws RuntimeException {
 
     List<RelNode> children = getChildren(prel);
+    List<RelNode> reNamedChildren = new ArrayList<>();
 
-    final int leftCount = prel.getInputSize(0,children.get(0));
-
-    List<RelNode> reNamedChildren = Lists.newArrayList();
-
-    RelNode left = prel.getLateralInput(0, children.get(0));
-    RelNode right = prel.getLateralInput(leftCount, children.get(1));
-
-    reNamedChildren.add(left);
-    reNamedChildren.add(right);
+    for (int i = 0; i < children.size(); i++) {
+      reNamedChildren.add(prel.getLateralInput(i, children.get(i)));
+    }
 
     return preparePrel(prel, reNamedChildren);
   }

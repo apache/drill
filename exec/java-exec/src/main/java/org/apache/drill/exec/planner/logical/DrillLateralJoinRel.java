@@ -50,7 +50,7 @@ public class DrillLateralJoinRel extends DrillLateralJoinRelBase implements Dril
   public LogicalOperator implement(DrillImplementor implementor) {
     final List<String> fields = getRowType().getFieldNames();
     assert DrillJoinRel.isUnique(fields);
-    final int leftCount = getInputSize(0,left);
+    final int leftCount = getInputSize(0);
 
     final LogicalOperator leftOp = DrillJoinRel.implementInput(implementor, 0, 0, left, this);
     final LogicalOperator rightOp = DrillJoinRel.implementInput(implementor, 1, leftCount, right, this);

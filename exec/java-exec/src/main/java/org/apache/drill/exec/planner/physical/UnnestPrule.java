@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.exec.planner.logical.DrillUnnestRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
@@ -34,10 +33,6 @@ public class UnnestPrule extends Prule {
   public void onMatch(RelOptRuleCall call) {
     final DrillUnnestRel unnest = call.rel(0);
     RexNode ref = unnest.getRef();
-    if (ref instanceof RexFieldAccess) {
-      final RexFieldAccess field = (RexFieldAccess)ref;
-      field.getField().getName();
-    }
 
     UnnestPrel unnestPrel = new UnnestPrel(unnest.getCluster(),
         unnest.getTraitSet().plus(Prel.DRILL_PHYSICAL), unnest.getRowType(), ref);

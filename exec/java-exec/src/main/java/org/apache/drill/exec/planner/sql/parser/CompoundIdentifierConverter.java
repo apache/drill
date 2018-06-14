@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
@@ -31,30 +32,68 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.util.SqlVisitor;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 /**
- * Implementation of {@link SqlVisitor} that converts bracketed compound {@link SqlIdentifier} to bracket-less compound
- * {@link SqlIdentifier} (also known as {@link DrillCompoundIdentifier}) to provide ease of use while querying complex
- * types.
+ * Implementation of {@link SqlVisitor} that converts bracketed compound {@link SqlIdentifier}
+ * to bracket-less compound {@link SqlIdentifier} (also known as {@link DrillCompoundIdentifier})
+ * to provide ease of use while querying complex types.
  * <p/>
  * For example, this visitor converts {@code a['b'][4]['c']} to {@code a.b[4].c}
  */
 public class CompoundIdentifierConverter extends SqlShuttle {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompoundIdentifierConverter.class);
+  /**
+   * This map stores the rules that instruct each SqlCall class which data field needs
+   * to be rewritten if that data field is a {@link DrillCompoundIdentifier}.
+   * <p/>
+   * <ul>
+   * <li>Key  : Each rule corresponds to a {@link SqlCall} class;
+   * <li>Value: It is an array of {@link RewriteType}, each being associated with a data field
+   * in that class.
+   * </ul>
+   * <p/>
+   * For example, there are four data fields (query, orderList, offset, fetch)
+   * in {@link SqlOrderBy}. Since only orderList needs to be written,
+   * {@link RewriteType[]} should be {@code arrayOf(D, E, D, D)}.
+   */
+  private static final Map<Class<? extends SqlCall>, RewriteType[]> REWRITE_RULES;
+
+  static {
+    final RewriteType E = RewriteType.ENABLE;
+    final RewriteType D = RewriteType.DISABLE;
+
+    // Every element of the array corresponds to the item in the list
+    // returned by getOperandList() method for concrete SqlCall implementation.
+    REWRITE_RULES = ImmutableMap.<Class<? extends SqlCall>, RewriteType[]>builder()
+        .put(SqlSelect.class, arrayOf(D, E, D, E, E, E, E, E, D, D))
+        .put(SqlCreateTable.class, arrayOf(D, D, D, E, D, D))
+        .put(SqlCreateView.class, arrayOf(D, E, E, D))
+        .put(DrillSqlDescribeTable.class, arrayOf(D, D, E))
+        .put(SqlDropView.class, arrayOf(D, D))
+        .put(SqlShowFiles.class, arrayOf(D))
+        .put(SqlShowSchemas.class, arrayOf(D, D))
+        .put(SqlUseSchema.class, arrayOf(D))
+        .put(SqlJoin.class, arrayOf(D, D, D, D, D, E))
+        .put(SqlOrderBy.class, arrayOf(D, E, D, D))
+        .put(SqlDropTable.class, arrayOf(D, D))
+        .put(SqlRefreshMetadata.class, arrayOf(D))
+        .put(SqlSetOption.class, arrayOf(D, D, D))
+        .put(SqlCreateFunction.class, arrayOf(D))
+        .put(SqlDropFunction.class, arrayOf(D))
+        .build();
+  }
 
   private boolean enableComplex = true;
 
   @Override
   public SqlNode visit(SqlIdentifier id) {
-    if(id instanceof DrillCompoundIdentifier){
-      if(enableComplex){
-        return ((DrillCompoundIdentifier) id).getAsSqlNode();
-      }else{
-        return ((DrillCompoundIdentifier) id).getAsCompoundIdentifier();
+    if (id instanceof DrillCompoundIdentifier) {
+      DrillCompoundIdentifier compoundIdentifier = (DrillCompoundIdentifier) id;
+      if (enableComplex) {
+        return compoundIdentifier.getAsSqlNode();
+      } else {
+        return compoundIdentifier.getAsCompoundIdentifier();
       }
-
-    }else{
+    } else {
       return id;
     }
   }
@@ -64,22 +103,46 @@ public class CompoundIdentifierConverter extends SqlShuttle {
     // Handler creates a new copy of 'call' only if one or more operands
     // change.
     ArgHandler<SqlNode> argHandler = new ComplexExpressionAware(call);
+    boolean localEnableComplex = enableComplex;
+    // for the case of UNNEST call set enableComplex to true
+    // to convert DrillCompoundIdentifier to the item call.
+    if (call.getKind() == SqlKind.UNNEST) {
+      enableComplex = true;
+    }
     call.getOperator().acceptCall(this, call, false, argHandler);
+    enableComplex = localEnableComplex;
     return argHandler.result();
   }
 
+  /**
+   * Constructs array which contains specified parameters.
+   */
+  private static RewriteType[] arrayOf(RewriteType... types) {
+    return types;
+  }
 
-  private class ComplexExpressionAware implements ArgHandler<SqlNode>  {
-    boolean update;
-    SqlNode[] clonedOperands;
-    RewriteType[] rewriteTypes;
+  enum RewriteType {
+    UNCHANGED, DISABLE, ENABLE
+  }
+
+  /**
+   * Argument handler which accepts {@link CompoundIdentifierConverter}
+   * for every operand of {@link SqlCall} and constructs new {@link SqlCall}
+   * if one or more operands changed.
+   */
+  private class ComplexExpressionAware implements ArgHandler<SqlNode> {
+
     private final SqlCall call;
+    private final SqlNode[] clonedOperands;
+    private final RewriteType[] rewriteTypes;
+
+    private boolean update;
 
     public ComplexExpressionAware(SqlCall call) {
       this.call = call;
       this.update = false;
       final List<SqlNode> operands = call.getOperandList();
-      this.clonedOperands = operands.toArray(new SqlNode[operands.size()]);
+      this.clonedOperands = operands.toArray(new SqlNode[0]);
       rewriteTypes = REWRITE_RULES.get(call.getClass());
     }
 
@@ -106,13 +169,13 @@ public class CompoundIdentifierConverter extends SqlShuttle {
       }
 
       boolean localEnableComplex = enableComplex;
-      if(rewriteTypes != null){
-        switch(rewriteTypes[i]){
-        case DISABLE:
-          enableComplex = false;
-          break;
-        case ENABLE:
-          enableComplex = true;
+      if (rewriteTypes != null) {
+        switch (rewriteTypes[i]) {
+          case DISABLE:
+            enableComplex = false;
+            break;
+          case ENABLE:
+            enableComplex = true;
         }
       }
       SqlNode newOperand = operand.accept(CompoundIdentifierConverter.this);
@@ -124,64 +187,4 @@ public class CompoundIdentifierConverter extends SqlShuttle {
       return newOperand;
     }
   }
-
-  static final Map<Class<? extends SqlCall>, RewriteType[]> REWRITE_RULES;
-
-  enum RewriteType {
-    UNCHANGED, DISABLE, ENABLE;
-  }
-
-  static {
-    final RewriteType E =RewriteType.ENABLE;
-    final RewriteType D =RewriteType.DISABLE;
-    final RewriteType U =RewriteType.UNCHANGED;
-
-    /*
-    This map stores the rules that instruct each SqlCall class which data field needs
-    to be rewritten if that data field is a CompoundIdentifier
-
-    Key  : Each rule corresponds to a SqlCall class;
-    value: It is an array of RewriteType, each being associated with a data field
-           in that class.
-
-           For example, there are four data fields (query, orderList, offset, fetch)
-           in org.eigenbase.sql.SqlOrderBy. Since only orderList needs to be written,
-           RewriteType[] should be R(D, E, D, D).
-    */
-    Map<Class<? extends SqlCall>, RewriteType[]> rules = Maps.newHashMap();
-
-  //SqlNodeList keywordList,
-  //SqlNodeList selectList,
-  //SqlNode fromClause,
-  //SqlNode whereClause,
-  //SqlNodeList groupBy,
-  //SqlNode having,
-  //SqlNodeList windowDecls,
-  //SqlNodeList orderBy,
-  //SqlNode offset,
-  //SqlNode fetch,
-    rules.put(SqlSelect.class, R(D, E, D, E, E, E, E, E, D, D));
-    rules.put(SqlCreateTable.class, R(D, D, D, E, D, D));
-    rules.put(SqlCreateView.class, R(D, E, E, D));
-    rules.put(DrillSqlDescribeTable.class, R(D, D, E));
-    rules.put(SqlDropView.class, R(D, D));
-    rules.put(SqlShowFiles.class, R(D));
-    rules.put(SqlShowSchemas.class, R(D, D));
-    rules.put(SqlUseSchema.class, R(D));
-    rules.put(SqlJoin.class, R(D, D, D, D, D, E));
-    rules.put(SqlOrderBy.class, R(D, E, D, D));
-    rules.put(SqlDropTable.class, R(D, D));
-    rules.put(SqlRefreshMetadata.class, R(D));
-    rules.put(SqlSetOption.class, R(D, D, D));
-    rules.put(SqlCreateFunction.class, R(D));
-    rules.put(SqlDropFunction.class, R(D));
-    REWRITE_RULES = ImmutableMap.copyOf(rules);
-  }
-
-  // Each type in the input arguments refers to
-  // each data field in the class
-  private static RewriteType[] R(RewriteType... types){
-    return types;
-  }
-
 }

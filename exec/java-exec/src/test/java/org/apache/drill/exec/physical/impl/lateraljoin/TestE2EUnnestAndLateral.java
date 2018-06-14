@@ -21,6 +21,7 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -164,6 +165,93 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
         "itemNum FROM UNNEST(customer.orders) t(ord) , LATERAL" +
       " (SELECT t1.ord.i_name AS item_name, t1.ord.i_number AS item_num FROM UNNEST(t.ord) AS t1(ord)) AS U2) AS U1";
     test(Sql);
+  }
+
+  @Test
+  public void testUnnestWithItem() throws Exception {
+    String sql = "select u.item from\n" +
+        "cp.`lateraljoin/nested-customer.parquet` c," +
+        "unnest(c.orders['items']) as u(item)\n" +
+        "limit 1";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("item")
+        .baselineValues(
+            TestBuilder.mapOf("i_name", "paper towel",
+                "i_number", 2.0,
+                "i_supplier", "oregan"))
+        .go();
+  }
+
+  @Test
+  public void testUnnestWithFunctionCall() throws Exception {
+    String sql = "select u.ord.o_amount o_amount from\n" +
+        "cp.`lateraljoin/nested-customer.parquet` c," +
+        "unnest(convert_fromjson(convert_tojson(c.orders))) as u(ord)\n" +
+        "limit 1";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("o_amount")
+        .baselineValues(4.5)
+        .go();
+  }
+
+  @Test
+  public void testUnnestWithMap() throws Exception {
+    String sql = "select u.item from\n" +
+        "cp.`lateraljoin/nested-customer.parquet` c," +
+        "unnest(c.orders.items) as u(item)\n" +
+        "limit 1";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("item")
+        .baselineValues(
+            TestBuilder.mapOf("i_name", "paper towel",
+                "i_number", 2.0,
+                "i_supplier", "oregan"))
+        .go();
+  }
+
+  @Test
+  public void testMultiUnnestWithMap() throws Exception {
+    String sql = "select u.item from\n" +
+        "cp.`lateraljoin/nested-customer.parquet` c," +
+        "unnest(c.orders.items) as u(item)," +
+        "unnest(c.orders.items) as u1(item1)\n" +
+        "limit 1";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("item")
+        .baselineValues(
+            TestBuilder.mapOf("i_name", "paper towel",
+                "i_number", 2.0,
+                "i_supplier", "oregan"))
+        .go();
+  }
+
+  @Test
+  public void testSingleUnnestCol() throws Exception {
+    String sql =
+      "select t.orders.o_id as id " +
+      "from (select u.orders from\n" +
+            "cp.`lateraljoin/nested-customer.parquet` c," +
+            "unnest(c.orders) as u(orders)\n" +
+            "limit 1) t";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("id")
+        .baselineValues(1.0)
+        .go();
   }
 
   @Test

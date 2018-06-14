@@ -37,6 +37,7 @@ import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.DrillJoinRule;
 import org.apache.drill.exec.planner.logical.DrillLimitRule;
 import org.apache.drill.exec.planner.logical.DrillMergeProjectRule;
+import org.apache.drill.exec.planner.logical.ProjectComplexRexNodeCorrelateTransposeRule;
 import org.apache.drill.exec.planner.logical.DrillProjectLateralJoinTransposeRule;
 import org.apache.drill.exec.planner.logical.DrillProjectPushIntoLateralJoinRule;
 import org.apache.drill.exec.planner.logical.DrillProjectRule;
@@ -310,6 +311,8 @@ public enum PlannerPhase {
       // RuleInstance.PROJECT_SET_OP_TRANSPOSE_RULE,
       RuleInstance.PROJECT_WINDOW_TRANSPOSE_RULE,
       DrillPushProjectIntoScanRule.INSTANCE,
+
+      ProjectComplexRexNodeCorrelateTransposeRule.INSTANCE,
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.
