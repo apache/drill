@@ -323,17 +323,17 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       if (length % 8 != 0) {
         byte lastButOneByte = 0;
         byte bitsFromLastButOneByte = 0;
-        // if start is not byte aligned then we have to copy some bits from the last full byte read in the
+        // start is not byte aligned so we have to copy some bits from the last full byte read in the
         // previous loop
-        if (firstBitOffset != 0) {
-          lastButOneByte = byteIPlus1;
-          bitsFromLastButOneByte = (byte)((lastButOneByte & 0xFF) >>> firstBitOffset);
-        }
+        lastButOneByte = byteIPlus1;
+        bitsFromLastButOneByte = (byte)((lastButOneByte & 0xFF) >>> firstBitOffset);
+
         final int lastByte = this.data.getByte(firstByteIndex + numBytesHoldingSourceBits);
         target.data.setByte(numBytesHoldingSourceBits - 1, bitsFromLastButOneByte + (lastByte << (8 - firstBitOffset)));
       } else {
         target.data.setByte(numBytesHoldingSourceBits - 1,
-            (((this.data.getByte(firstByteIndex + numBytesHoldingSourceBits - 1) & 0xFF) >>> firstBitOffset) + (this.data.getByte(firstByteIndex + numBytesHoldingSourceBits) <<  (8 - firstBitOffset))));
+            (((this.data.getByte(firstByteIndex + numBytesHoldingSourceBits - 1) & 0xFF) >>> firstBitOffset) +
+                     (this.data.getByte(firstByteIndex + numBytesHoldingSourceBits) <<  (8 - firstBitOffset))));
       }
     }
     target.getMutator().setValueCount(length);
@@ -392,6 +392,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
      * @return 1 if set, otherwise 0
      */
     public final int get(int index) {
+      Preconditions.checkElementIndex(index, valueCount);
       int byteIndex = index >> 3;
       byte b = data.getByte(byteIndex);
       int bitIndex = index & 7;
