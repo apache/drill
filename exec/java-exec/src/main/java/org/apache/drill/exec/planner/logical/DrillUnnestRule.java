@@ -24,6 +24,8 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
 
 public class DrillUnnestRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillUnnestRule();
@@ -38,11 +40,14 @@ public class DrillUnnestRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     final Uncollect uncollect = call.rel(0);
     final LogicalProject project = call.rel(1);
-    final LogicalValues values = call.rel(2);
 
+    RexNode projectedNode = project.getProjects().iterator().next();
+    if (projectedNode.getKind() != SqlKind.FIELD_ACCESS) {
+      return;
+    }
     final RelTraitSet traits = uncollect.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-    DrillUnnestRel unnest = new DrillUnnestRel(uncollect.getCluster(), traits, uncollect.getRowType(),
-        project.getProjects().iterator().next());
+    DrillUnnestRel unnest = new DrillUnnestRel(uncollect.getCluster(),
+        traits, uncollect.getRowType(), projectedNode);
     call.transformTo(unnest);
   }
 }

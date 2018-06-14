@@ -73,7 +73,7 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
         return constructRowType(SqlValidatorUtil.deriveJoinRowType(left.getRowType(),
           right.getRowType(), joinType.toJoinType(),
           getCluster().getTypeFactory(), null,
-          ImmutableList.<RelDataTypeField>of()));
+          ImmutableList.of()));
       case ANTI:
       case SEMI:
         return constructRowType(left.getRowType());
@@ -82,12 +82,19 @@ public abstract class DrillLateralJoinRelBase extends Correlate implements Drill
     }
   }
 
-  public int getInputSize(int offset, RelNode input) {
-    if (this.excludeCorrelateColumn &&
-      offset == 0) {
-      return input.getRowType().getFieldList().size() - 1;
+  /**
+   * Returns number of fields in {@link RelDataType} for
+   * input rel node with specified ordinal considering value of
+   * {@code excludeCorrelateColumn}.
+   *
+   * @param ordinal ordinal of input rel node
+   * @return number of fields in input's {@link RelDataType}
+   */
+  public int getInputSize(int ordinal) {
+    if (this.excludeCorrelateColumn && ordinal == 0) {
+      return getInput(ordinal).getRowType().getFieldList().size() - 1;
     }
-    return input.getRowType().getFieldList().size();
+    return getInput(ordinal).getRowType().getFieldList().size();
   }
 
   public RelDataType constructRowType(RelDataType inputRowType) {

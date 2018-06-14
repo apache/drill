@@ -88,11 +88,12 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
    * Check to make sure that the fields of the inputs are the same as the output field names.
    * If not, insert a project renaming them.
    */
-  public RelNode getLateralInput(int offset, RelNode input) {
+  public RelNode getLateralInput(int ordinal, RelNode input) {
+    int offset = ordinal == 0 ? 0 : getInputSize(0);
     Preconditions.checkArgument(DrillJoinRelBase.uniqueFieldNames(input.getRowType()));
     final List<String> fields = getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
-    final List<String> outputFields = fields.subList(offset, offset + getInputSize(offset, input));
+    final List<String> outputFields = fields.subList(offset, offset + getInputSize(ordinal));
     if (ListUtils.subtract(outputFields, inputFields).size() != 0) {
       // Ensure that input field names are the same as output field names.
       // If there are duplicate field names on left and right, fields will get
