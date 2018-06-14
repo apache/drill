@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2018-06-14 22:23:22 UTC
+date: 2018-06-14 22:36:38 UTC
 parent: "Performance Tuning"
 ---
 
@@ -62,16 +62,16 @@ This query performs a join on two tables partitioned by the “month” column. 
 ##Support 
 The following table lists the supported and unsupported clauses, operators, data types, function, and scenarios for Parquet filter pushdown:  
 
-**Note:** ^1^ indicates support as of Drill 1.13. ^2^ indicates support as of Drill 1.14.  
+**Note:** <sup>1</sup> indicates support as of Drill 1.13. <sup>2</sup> indicates support as of Drill 1.14.  
 
 |                      | Supported                                                                                                                                                                                                                                                     | Not Supported                           |
 |----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|
-| Clauses              | WHERE,   ^1^WITH, HAVING (HAVING is supported if Drill can pass the filter through GROUP   BY.)                                                                                                                                                                 | -                                       |
-| Operators            | ^2^BETWEEN,   ^2^ITEM, AND, OR, NOT, ^1^IS [NOT] NULL, ^1^IS [NOT] TRUE, ^1^IS [NOT] FALSE, IN (An   IN list is converted to OR if the number in the IN list is within a certain   threshold, for example 20. If greater than the threshold, pruning cannot   occur.) | -                                       |
+| Clauses              | WHERE,   <sup>1</sup>WITH, HAVING (HAVING is supported if Drill can pass the filter through GROUP   BY.)                                                                                                                                                                 | -                                       |
+| Operators            | <sup>2</sup>BETWEEN,   <sup>2</sup>ITEM, AND, OR, NOT, <sup>1</sup>IS [NOT] NULL, <sup>1</sup>IS [NOT] TRUE, <sup>1</sup>IS [NOT] FALSE, IN (An   IN list is converted to OR if the number in the IN list is within a certain   threshold, for example 20. If greater than the threshold, pruning cannot   occur.) | -                                       |
 | Comparison Operators | <>,   <, >, <=, >=, =                                                                                                                                                                                                                                         | -                                       |
-| Data Types           | INT,   BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, TIME, *BOOLEAN (true, false)                                                                                                                                                                                   | CHAR,   VARCHAR columns, Hive TIMESTAMP |
-| Function             | CAST   is supported among the following types only: int, bigint, float, double,   ^1^date, ^1^timestamp, and ^1^time                                                                                                                                                | -                                       |
-| Other                | ^2^Enabled   ^2^native Hive reader, Files with multiple row groups, Joins                                                                                                                                                                                       | -                                       |
+| Data Types           | INT,   BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, TIME, <sup>1</sup>BOOLEAN (true, false)                                                                                                                                                                                   | CHAR,   VARCHAR columns, Hive TIMESTAMP |
+| Function             | CAST   is supported among the following types only: int, bigint, float, double,   <sup>1</sup>date, <sup>1</sup>timestamp, and <sup>1</sup>time                                                                                                                                                | -                                       |
+| Other                | <sup>2</sup>Enabled   native Hive reader, Files with multiple row groups, <sup>2</sup>Joins                                                                                                                                                                                       | -                                       |
 
 **Note:** Drill cannot infer filter conditions for join queries that have: 
 
