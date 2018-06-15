@@ -93,6 +93,12 @@ public class TestSplitAndTransfer {
 
   @Test
   public void testBitVectorUnalignedStart() throws Exception {
+
+    testBitVectorImpl(24, new int[][] {{5, 17}}, TestBitPattern.ONE);
+    testBitVectorImpl(24, new int[][] {{5, 17}}, TestBitPattern.ZERO);
+    testBitVectorImpl(24, new int[][] {{5, 17}}, TestBitPattern.ALTERNATING);
+    testBitVectorImpl(24, new int[][] {{5, 17}}, TestBitPattern.RANDOM);
+
     testBitVectorImpl(3443, new int[][] {{0, 2047}, {2047, 1396}}, TestBitPattern.ZERO);
     testBitVectorImpl(3443, new int[][] {{0, 2047}, {2047, 1396}}, TestBitPattern.ONE);
     testBitVectorImpl(3443, new int[][] {{0, 2047}, {2047, 1396}}, TestBitPattern.ALTERNATING);
@@ -106,6 +112,12 @@ public class TestSplitAndTransfer {
 
   @Test
   public void testBitVectorAlignedStart() throws Exception {
+
+    testBitVectorImpl(24, new int[][] {{0, 17}}, TestBitPattern.ONE);
+    testBitVectorImpl(24, new int[][] {{0, 17}}, TestBitPattern.ZERO);
+    testBitVectorImpl(24, new int[][] {{0, 17}}, TestBitPattern.ALTERNATING);
+    testBitVectorImpl(24, new int[][] {{0, 17}}, TestBitPattern.RANDOM);
+
     testBitVectorImpl(3444, new int[][] {{0, 2048}, {2048, 1396}}, TestBitPattern.ZERO);
     testBitVectorImpl(3444, new int[][] {{0, 2048}, {2048, 1396}}, TestBitPattern.ONE);
     testBitVectorImpl(3444, new int[][] {{0, 2048}, {2048, 1396}}, TestBitPattern.ALTERNATING);
@@ -129,14 +141,21 @@ public class TestSplitAndTransfer {
     final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
     final MaterializedField field = MaterializedField.create("field", Types.optional(MinorType.BIT));
     final BitVector bitVector = new BitVector(field, allocator);
-    bitVector.allocateNew(valueCount);
+    bitVector.allocateNew(valueCount  + 8); // extra byte at the end that gets filled with junk
     final int[] compareArray = new int[valueCount];
 
+    int testBitValue = 0 ;
     final BitVector.Mutator mutator = bitVector.getMutator();
     for (int i = 0; i < valueCount; i ++) {
-      int testBitValue = getBit(pattern, i);
+      testBitValue = getBit(pattern, i);
       mutator.set(i, testBitValue);
       compareArray[i] = testBitValue;
+    }
+
+    // write some junk value at the end to catch
+    // off-by-one out-of-bound reads
+    for (int j = valueCount; j < valueCount + 8; j++) {
+      mutator.set(j, ~testBitValue); // fill with compliment of testBit
     }
     mutator.setValueCount(valueCount);
 

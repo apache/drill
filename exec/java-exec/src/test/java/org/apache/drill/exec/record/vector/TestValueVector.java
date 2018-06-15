@@ -548,6 +548,7 @@ the interface to load has changed
       m.set(1, 0);
       m.set(100, 0);
       m.set(1022, 1);
+      m.setValueCount(1023);
 
       final BitVector.Accessor accessor = vector.getAccessor();
       assertEquals(1, accessor.get(0));
@@ -560,17 +561,20 @@ the interface to load has changed
       m.set(0, 1);
       m.set(1, 0);
       m.set(1, 0);
+      m.setValueCount(2);
       assertEquals(1, accessor.get(0));
       assertEquals(0, accessor.get(1));
 
       // test toggling the values
       m.set(0, 0);
       m.set(1, 1);
+      m.setValueCount(2);
       assertEquals(0, accessor.get(0));
       assertEquals(1, accessor.get(1));
 
       // Ensure unallocated space returns 0
-      assertEquals(0, accessor.get(3));
+      // Not a valid check since bounds checking is enabled
+     //assertEquals(0, accessor.get(3));
     }
   }
 
