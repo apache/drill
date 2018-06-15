@@ -30,7 +30,7 @@ public class CatastrophicFailure {
    * Exit the VM as we hit a catastrophic failure.
    * @param e
    *          The Throwable that occurred
-   * @param name
+   * @param message
    *          A descriptive message
    * @param code
    *          An error code to exit the JVM with.
