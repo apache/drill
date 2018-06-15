@@ -32,7 +32,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.Pair;
-import org.apache.drill.exec.planner.physical.CorrelatePrel;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.HashJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
@@ -138,7 +138,7 @@ class NumberingRelWriter implements RelWriter {
 
   private String getDependentSrcOp(UnnestPrel unnest) {
     Prel parent = this.getRegisteredPrel(unnest.getParentClass());
-    if (parent != null && parent instanceof CorrelatePrel) {
+    if (parent != null && parent instanceof LateralJoinPrel) {
       OpId id = ids.get(parent);
       return String.format(" [srcOp=%02d-%02d] ", id.fragmentId, id.opId);
     }
@@ -159,8 +159,8 @@ class NumberingRelWriter implements RelWriter {
 
 
   private void explainInputs(RelNode rel) {
-    if (rel instanceof CorrelatePrel) {
-      this.explainInputs((CorrelatePrel) rel);
+    if (rel instanceof LateralJoinPrel) {
+      this.explainInputs((LateralJoinPrel) rel);
     } else {
       List<RelNode> inputs = rel.getInputs();
       if (rel instanceof HashJoinPrel && ((HashJoinPrel) rel).isSwapped()) {
@@ -173,13 +173,13 @@ class NumberingRelWriter implements RelWriter {
     }
   }
 
-  //Correlate is handled differently because explain plan
+  //Lateral is handled differently because explain plan
   //needs to show relation between Lateral and Unnest operators.
-  private void explainInputs(CorrelatePrel correlate) {
-    correlate.getInput(0).explain(this);
-    this.register(correlate);
-    correlate.getInput(1).explain(this);
-    this.unRegister(correlate);
+  private void explainInputs(LateralJoinPrel lateralJoinPrel) {
+    lateralJoinPrel.getInput(0).explain(this);
+    this.register(lateralJoinPrel);
+    lateralJoinPrel.getInput(1).explain(this);
+    this.unRegister(lateralJoinPrel);
   }
 
   public final void explain(RelNode rel, List<Pair<String, Object>> valueList) {
