@@ -394,7 +394,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
      * @return 1 if set, otherwise 0
      */
     public final int get(int index) {
-      Preconditions.checkElementIndex(index, valueCount);
       int byteIndex = index >> 3;
       byte b = data.getByte(byteIndex);
       int bitIndex = index & 7;
