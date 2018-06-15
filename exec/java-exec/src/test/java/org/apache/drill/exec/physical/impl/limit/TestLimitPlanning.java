@@ -29,4 +29,11 @@ public class TestLimitPlanning extends PlanTestBase {
 
     PlanTestBase.testPlanMatchingPatterns(query, new String[]{".*Sort\\(.*"}, new String[]{".*TopN\\(.*"});
   }
+
+  @Test
+  public void offsetMoreThanTotalRowsWithoutFetch() throws Exception {
+    String query = "select full_name from cp.`employee.json` offset 1156";
+    // Should not raise an assert
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{".*Limit\\(offset=\\[1156\\]\\).*"});
+  }
 }
