@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2018-06-14 22:36:38 UTC
+date: 2018-06-15 18:30:17 UTC
 parent: "Performance Tuning"
 ---
 
@@ -41,7 +41,8 @@ The following table lists the Parquet filter pushdown options with their descrip
 ###Viewing the Query Plan
 Because Drill applies Parquet filter pushdown during the query planning phase, you can view the query execution plan to see if Drill pushes down the filter when a query on a Parquet file contains a filter expression. You can run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see the execution plan for the query, as shown in the following example.
 
-**Example**
+**Example**  
+
 Starting in Drill 1.14, Drill supports the planner rule, JoinPushTransitivePredicatesRule, which enables Drill to infer filter conditions for join queries and push the filter conditions down to the data source. 
 
 This example shows a query plan where the JoinPushTransitivePredicatesRule is used to push the filter down to each table referenced in the following query:  
@@ -78,4 +79,4 @@ The following table lists the supported and unsupported clauses, operators, data
 - a dynamic star in the sub-query or queries that include the WITH statement.  
 - several filter predicates with the OR logical operator.  
 - more than one EXISTS operator (instead of JOIN operators).  
-- INNER JOIN and local filtering with a several conditions.                                                                                                    |   
+- INNER JOIN and local filtering with a several conditions.      

@@ -1,6 +1,6 @@
 ---
 title: "Configuring Web Console and REST API Security"
-date: 2017-08-07 19:02:44 UTC
+date: 2018-06-15 18:30:16 UTC
 parent: "Securing Drill"
 ---
 Drill 1.5 extends [Drill user security]({{site.baseurl}}/docs/configuring-user-security/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
@@ -19,7 +19,7 @@ Drill generates a self-signed certificate that works with SSL for HTTPS access t
 
 ## Setting Up a Custom SSL Configuration
 
-As cluster administrator, you can set the following SSL configuration parameters in the `conf/drill-override.conf` file, as described in the [Java product documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html/#Customization):
+As cluster administrator, you can set the following SSL configuration parameters in the `conf/drill-override.conf` file, as described in the [Java product documentation](https://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html#Customization):
 
 * javax.net.ssl.keyStore  
   Path to the application's certificate and private key in the Java keystore file.  
