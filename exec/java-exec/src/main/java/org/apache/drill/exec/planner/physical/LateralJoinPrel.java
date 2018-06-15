@@ -32,7 +32,7 @@ import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.LateralJoinPOP;
-import org.apache.drill.exec.planner.common.DrillCorrelateRelBase;
+import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
@@ -41,18 +41,18 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public class CorrelatePrel extends DrillCorrelateRelBase implements Prel {
+public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
 
 
-  protected CorrelatePrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
-                              CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
+  protected LateralJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
+                            CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
     super(cluster, traits, left, right, correlationId, requiredColumns, semiJoinType);
   }
   @Override
   public Correlate copy(RelTraitSet traitSet,
                         RelNode left, RelNode right, CorrelationId correlationId,
                         ImmutableBitSet requiredColumns, SemiJoinType joinType) {
-    return new CorrelatePrel(this.getCluster(), this.getTraitSet(), left, right, correlationId, requiredColumns,
+    return new LateralJoinPrel(this.getCluster(), this.getTraitSet(), left, right, correlationId, requiredColumns,
         this.getJoinType());
   }
 
@@ -72,7 +72,7 @@ public class CorrelatePrel extends DrillCorrelateRelBase implements Prel {
    * Check to make sure that the fields of the inputs are the same as the output field names.
    * If not, insert a project renaming them.
    */
-  public RelNode getCorrelateInput(int offset, RelNode input) {
+  public RelNode getLateralInput(int offset, RelNode input) {
     Preconditions.checkArgument(DrillJoinRelBase.uniqueFieldNames(input.getRowType()));
     final List<String> fields = getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
@@ -106,7 +106,7 @@ public class CorrelatePrel extends DrillCorrelateRelBase implements Prel {
 
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> visitor, X value) throws E {
-    return visitor.visitCorrelate(this, value);
+    return visitor.visitLateral(this, value);
   }
 
   @Override

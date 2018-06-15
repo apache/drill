@@ -26,15 +26,15 @@ import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.exec.planner.common.DrillCorrelateRelBase;
+import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
 
 import java.util.List;
 
 
-public class DrillCorrelateRel extends DrillCorrelateRelBase implements DrillRel {
+public class DrillLateralJoinRel extends DrillLateralJoinRelBase implements DrillRel {
 
-  protected DrillCorrelateRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
-                              CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
+  protected DrillLateralJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
+                                CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
     super(cluster, traits, left, right, correlationId, requiredColumns, semiJoinType);
   }
 
@@ -42,7 +42,7 @@ public class DrillCorrelateRel extends DrillCorrelateRelBase implements DrillRel
   public Correlate copy(RelTraitSet traitSet,
         RelNode left, RelNode right, CorrelationId correlationId,
         ImmutableBitSet requiredColumns, SemiJoinType joinType) {
-    return new DrillCorrelateRel(this.getCluster(), this.getTraitSet(), left, right, correlationId, requiredColumns,
+    return new DrillLateralJoinRel(this.getCluster(), this.getTraitSet(), left, right, correlationId, requiredColumns,
         this.getJoinType());
   }
 

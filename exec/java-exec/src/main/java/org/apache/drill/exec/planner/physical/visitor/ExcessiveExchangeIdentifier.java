@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.physical.visitor;
 import java.util.Collections;
 import java.util.List;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
-import org.apache.drill.exec.planner.physical.CorrelatePrel;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
@@ -32,7 +32,7 @@ import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, ExcessiveExchangeIdentifier.MajorFragmentStat, RuntimeException> {
   private final long targetSliceSize;
-  private CorrelatePrel topMostLateralJoin = null;
+  private LateralJoinPrel topMostLateralJoin = null;
 
   public ExcessiveExchangeIdentifier(long targetSliceSize) {
     this.targetSliceSize = targetSliceSize;
@@ -83,7 +83,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   }
 
   @Override
-  public Prel visitCorrelate(CorrelatePrel prel, MajorFragmentStat s) throws RuntimeException {
+  public Prel visitLateral(LateralJoinPrel prel, MajorFragmentStat s) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
     s.add(prel);
 

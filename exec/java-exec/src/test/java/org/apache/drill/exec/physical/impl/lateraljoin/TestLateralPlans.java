@@ -79,7 +79,7 @@ public class TestLateralPlans extends BaseTestQuery {
     String query = "select t.c_name, t2.ord.o_shop as o_shop from cp.`lateraljoin/nested-customer.json` t,"
         + " unnest(t.orders) t2(ord) where t.c_name='customer1' AND t2.ord.o_shop='Meno Park 1st' ";
 
-    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"Correlate(.*[\n\r])+.*Filter(.*[\n\r])+.*Scan(.*[\n\r])+.*Filter"},
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{"LateralJoin(.*[\n\r])+.*Filter(.*[\n\r])+.*Scan(.*[\n\r])+.*Filter"},
         new String[]{});
 
     testBuilder()
@@ -430,7 +430,7 @@ public class TestLateralPlans extends BaseTestQuery {
   }
 
   private String getRightChildOfLateral(String explain) throws Exception {
-    Matcher matcher = Pattern.compile("Correlate.*Unnest", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
+    Matcher matcher = Pattern.compile("LateralJoin.*Unnest", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
     assertTrue (matcher.find());
     String CorrelateUnnest = matcher.group(0);
     return CorrelateUnnest.substring(CorrelateUnnest.lastIndexOf("Scan"));
@@ -452,7 +452,7 @@ public class TestLateralPlans extends BaseTestQuery {
       assertTrue(srcOp != null && srcOp.length() > 0);
       String correlateFragmentPattern = srcOp.substring(srcOp.indexOf("=")+1, srcOp.indexOf("]"));
       assertTrue(correlateFragmentPattern != null && correlateFragmentPattern.length() > 0);
-      Matcher matcher = Pattern.compile(correlateFragmentPattern + ".*Correlate", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
+      Matcher matcher = Pattern.compile(correlateFragmentPattern + ".*LateralJoin", Pattern.MULTILINE | Pattern.DOTALL).matcher(explain);
       assertTrue(matcher.find());
     }
   }
