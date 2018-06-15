@@ -215,12 +215,10 @@ public class SpilledRuns {
     }
     RuntimeException ex = null;
     try {
-      if (spilledRuns != null) {
-        BatchGroup.closeAll(spilledRuns);
-        spilledRuns.clear();
-      }
+      BatchGroup.closeAll(spilledRuns);
+      spilledRuns.clear();
     } catch (RuntimeException e) {
-      ex = (ex == null) ? e : ex;
+      ex = e;
     }
     try {
       copierHolder.close();
