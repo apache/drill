@@ -24,16 +24,11 @@ import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.physical.impl.BaseTestOpBatchEmitOutcome;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.test.rowSet.HyperRowSetImpl;
 import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
@@ -46,69 +41,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTopNEmitOutcome.class);
 
   /**
-   * Verifies count of column in the received batch is same as expected count of columns.
-   * @param batch - Incoming record batch
-   * @param expectedColCount - Expected count of columns in the record batch
-   */
-  private void verifyColumnCount(VectorAccessible batch, int expectedColCount) {
-    List<String> columns = Lists.newArrayList();
-    SelectionVector4 sv4 = batch.getSelectionVector4();
-    for (VectorWrapper<?> vw : batch) {
-      if (sv4 != null) {
-        columns.add(vw.getValueVectors()[0].getField().getName());
-      } else {
-        columns.add(vw.getValueVector().getField().getName());
-      }
-    }
-    assertEquals(String.format("Actual number of columns: %d is different than expected count: %d",
-      columns.size(), expectedColCount), columns.size(), expectedColCount);
-  }
-
-  /**
-   * Verifies the data received in incoming record batch with the expected data stored inside the expected batch.
-   * Assumes input record batch has associated sv4 with it.
-   * @param batch - incoming record batch
-   * @param sv4 - associated sv4 with incoming record batch
-   * @param expectedBatch - expected record batch with expected data
-   */
-  private void verifyBaseline(VectorAccessible batch, SelectionVector4 sv4, VectorContainer expectedBatch) {
-    assertTrue(sv4 != null);
-    List<String> columns = Lists.newArrayList();
-    for (VectorWrapper<?> vw : batch) {
-      columns.add(vw.getValueVectors()[0].getField().getName());
-    }
-
-    for (int j = 0; j < sv4.getCount(); j++) {
-      List<String> eValue = new ArrayList<>(columns.size());
-      List<String> value = new ArrayList<>(columns.size());
-
-      for (VectorWrapper<?> vw : batch) {
-        Object o = vw.getValueVectors()[sv4.get(j) >>> 16].getAccessor().getObject(sv4.get(j) & 65535);
-        decodeAndAddValue(o, value);
-      }
-
-      for (VectorWrapper<?> vw : expectedBatch) {
-        Object e = vw.getValueVector().getAccessor().getObject(j);
-        decodeAndAddValue(e, eValue);
-      }
-      assertTrue("Some of expected value didn't matches with actual value",eValue.equals(value));
-    }
-  }
-
-  private void decodeAndAddValue(Object currentValue, List<String> listToAdd) {
-    if (currentValue == null) {
-      listToAdd.add("null");
-    } else if (currentValue instanceof byte[]) {
-      listToAdd.add(new String((byte[]) currentValue));
-    } else {
-      listToAdd.add(currentValue.toString());
-    }
-  }
-
-  /**
    * Verifies that if TopNBatch receives empty batches with OK_NEW_SCHEMA and EMIT outcome then it correctly produces
    * empty batches as output. First empty batch will be with OK_NEW_SCHEMA and second will be with EMIT outcome.
-   * @throws Exception
    */
   @Test
   public void testTopNEmptyBatchEmitOutcome() {
@@ -139,7 +73,6 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * Verifies that if TopNBatch receives a RecordBatch with EMIT outcome post build schema phase then it produces
    * output for those input batch correctly. The first output batch will always be returned with OK_NEW_SCHEMA
    * outcome followed by EMIT with empty batch. The test verifies the output order with the expected baseline.
-   * @throws Exception
    */
   @Test
   public void testTopNNonEmptyBatchEmitOutcome() {
@@ -177,8 +110,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(3, outputRecordCount);
 
     // verify results
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+    RowSet actualRowSet = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet).verify(actualRowSet);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     outputRecordCount += topNBatch.getRecordCount();
@@ -230,8 +163,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(3, outputRecordCount);
 
     // verify results
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+    RowSet actualRowSet = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet).verify(actualRowSet);
 
     // Release memory for row sets
     nonEmptyInputRowSet2.clear();
@@ -285,8 +218,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(3, outputRecordCount);
 
     // verify results
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+    RowSet actualRowSet = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet).verify(actualRowSet);
 
     // Release memory for row sets
     nonEmptyInputRowSet2.clear();
@@ -299,8 +232,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * buildSchema phase followed by an empty batch with EMIT outcome. For this combination it produces output for the
    * record received so far along with EMIT outcome. Then it receives second non-empty batch with OK outcome and
    * produces output for it differently. The test validates that for each output received the order of the records are
-   * correct.
-   * @throws Exception
+   * correct
    */
   @Test
   public void testTopNResetsAfterFirstEmitOutcome() {
@@ -342,8 +274,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(1, topNBatch.getRecordCount());
 
     // verify results with baseline
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet1.container());
+    RowSet actualRowSet1 = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet1).verify(actualRowSet1);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
@@ -353,8 +285,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(2, topNBatch.getRecordCount());
 
     // verify results with baseline
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet2.container());
+    RowSet actualRowSet2 = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet2).verify(actualRowSet2);
 
     // Release memory for row sets
     nonEmptyInputRowSet2.clear();
@@ -365,7 +297,6 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
   /**
    * Verifies TopNBatch correctness for the case where it receives non-empty batch in build schema phase followed by
    * empty batchs with OK and EMIT outcomes.
-   * @throws Exception
    */
   @Test
   public void testTopN_NonEmptyFirst_EmptyOKEmitOutcome() {
@@ -398,8 +329,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(1, topNBatch.getRecordCount());
 
     // verify results with baseline
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet1.container());
+    RowSet actualRowSet1 = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet1).verify(actualRowSet1);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
@@ -414,8 +345,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * buildSchema phase followed by an empty batch with EMIT outcome. For this combination it produces output for the
    * record received so far along with EMIT outcome. Then it receives second non-empty batch with OK outcome and
    * produces output for it differently. The test validates that for each output received the order of the records are
-   * correct.
-   * @throws Exception
+   * correct
    */
   @Test
   public void testTopNMultipleOutputBatchWithLowerLimits() {
@@ -456,8 +386,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(1, topNBatch.getRecordCount());
 
     // verify results with baseline
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet1.container());
+    RowSet actualRowSet1 = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet1).verify(actualRowSet1);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
@@ -467,8 +397,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertEquals(1, topNBatch.getRecordCount());
 
     // verify results with baseline
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet2.container());
+    RowSet actualRowSet2 = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet2).verify(actualRowSet2);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.NONE);
 
@@ -520,7 +450,7 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   @Test
-  public void testTopNMultipleInputToSingleOutputBatch() throws Exception {
+  public void testTopNMultipleInputToSingleOutputBatch() {
 
     final RowSet.SingleRowSet nonEmptyInputRowSet2 = operatorFixture.rowSetBuilder(inputSchema)
       .addRow(2, 20, "item2")
@@ -553,8 +483,9 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     assertEquals(2, topNBatch.getRecordCount());
 
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+    // Verify results
+    RowSet actualRowSet = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet).verify(actualRowSet);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
@@ -613,16 +544,16 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     assertEquals(2, topNBatch.getRecordCount());
 
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet1.container());
+    RowSet actualRowSet1 = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet1).verify(actualRowSet1);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(0, topNBatch.getRecordCount());
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.EMIT);
     assertEquals(2, topNBatch.getRecordCount());
 
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet2.container());
+    RowSet actualRowSet2 = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet2).verify(actualRowSet2);
 
     nonEmptyInputRowSet2.clear();
     nonEmptyInputRowSet3.clear();
@@ -680,8 +611,8 @@ public class TestTopNEmitOutcome extends BaseTestOpBatchEmitOutcome {
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
     assertEquals(4, topNBatch.getRecordCount());
 
-    verifyColumnCount(topNBatch, inputSchema.size());
-    verifyBaseline(topNBatch, topNBatch.getSelectionVector4(), expectedRowSet.container());
+    RowSet actualRowSet = HyperRowSetImpl.fromContainer(topNBatch.getContainer(), topNBatch.getSelectionVector4());
+    new RowSetComparison(expectedRowSet).verify(actualRowSet);
 
     assertTrue(topNBatch.next() == RecordBatch.IterOutcome.NONE);
 
