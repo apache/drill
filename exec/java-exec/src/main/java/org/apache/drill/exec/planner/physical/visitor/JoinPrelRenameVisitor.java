@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.physical.visitor;
 import java.util.List;
 
 import org.apache.drill.exec.planner.physical.JoinPrel;
-import org.apache.drill.exec.planner.physical.CorrelatePrel;
+import org.apache.drill.exec.planner.physical.LateralJoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.calcite.rel.RelNode;
 
@@ -72,7 +72,7 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
 
   //TODO: consolidate this code with join column renaming.
   @Override
-  public Prel visitCorrelate(CorrelatePrel prel, Void value) throws RuntimeException {
+  public Prel visitLateral(LateralJoinPrel prel, Void value) throws RuntimeException {
 
     List<RelNode> children = getChildren(prel);
 
@@ -80,8 +80,8 @@ public class JoinPrelRenameVisitor extends BasePrelVisitor<Prel, Void, RuntimeEx
 
     List<RelNode> reNamedChildren = Lists.newArrayList();
 
-    RelNode left = prel.getCorrelateInput(0, children.get(0));
-    RelNode right = prel.getCorrelateInput(leftCount, children.get(1));
+    RelNode left = prel.getLateralInput(0, children.get(0));
+    RelNode right = prel.getLateralInput(leftCount, children.get(1));
 
     reNamedChildren.add(left);
     reNamedChildren.add(right);
