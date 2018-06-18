@@ -141,7 +141,6 @@ public class TestTpchPlanning extends PlanningBase {
   }
 
   @Test
-  @Ignore // DRILL-519
   public void tpch21() throws Exception {
     testSqlPlanFromFile("queries/tpch/21.sql");
   }
