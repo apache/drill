@@ -93,41 +93,82 @@ $(window).on('load',(function () {
     }
 
     // parse the short physical plan into a dagreeD3 structure
-    function parseplan (planstring) {
+    function parseplan (planstring, implicitSrcMap) {
         var g = new dagreD3.Digraph();
-        var ps = $.map(planstring.trim().split("\n"), function (s) {
-            return [/^([0-9-]+)( *)([a-zA-Z]*)/.exec(s).slice(1)];
-        });
+        //Produce 2D array (3 x M): [[0:majorMinor] [1:] [2:opName]]
+        let opPlanArray = planstring.trim().split("\n");
+        var operatorRegex = new RegExp("^([0-9-]+)( *)([a-zA-Z]*)");
+        //Regex to capture source operator 
+        var srcOpRegex = new RegExp("srcOp=[0-9-]+");
+        var opTuple = $.map(opPlanArray, 
+            function (lineStr) { 
+              //Tokenize via Regex
+              let opToken = operatorRegex.exec(lineStr).slice(1);
+              //Extract Implicit Source via Regex
+              let implicitSrc = srcOpRegex.exec(lineStr);
+              let srcOp = null;
+              let tgtOp = opToken[0];
+              if (implicitSrc != null) {
+                srcOp = implicitSrc.toString().split("=")[1];
+                implicitSrcMap[tgtOp]=srcOp;
+              }
+              return [opToken];
+            });
 
-        // nodes
-        for (var i = 0; i < ps.length; i++) {
-            g.addNode(ps[i][0], {
-                label: ps[i][2] + " " + ps[i][0],
-                fragment: parseInt(ps[i][0].split("-")[0])
+
+        // parse, build & inject nodes
+        for (var i = 0; i < opTuple.length; i++) {
+            let majorMinor = opTuple[i][0];
+            let majorId = parseInt(majorMinor.split("-")[0]);
+            let opName = opTuple[i][2];
+            g.addNode(majorMinor, {
+                label: opName + " " + majorMinor,
+                fragment: majorId
             });
         }
 
-        // edges
-        var st = [ps[0]];
-        for (var i = 1; i < ps.length; i++) {
-            var top = st.pop();
-            while (top[1].length >= ps[i][1].length)
-                top = st.pop();
+        // Define edges by traversing graph from root node (Screen)
+        var nodeStack = [opTuple[0]]; //Add Root
+        for (var i = 1; i < opTuple.length; i++) {
+            let top = nodeStack.pop();
+            let currItem = opTuple[i];
+            let stackTopIndent = top[1].length;
+            let currItemIndent = currItem[1].length; //Since tokenizing gives indent size at index 1
+            //Compare top-of-stack indent with current iterItem indent
+            while (stackTopIndent >= currItemIndent) {
+                top = nodeStack.pop();
+                stackTopIndent = top[1].length;
+            }
 
-            g.addEdge(null, ps[i][0], top[0]);
+            //Found parent
+            //Add edge if Implicit src exists
+            //Refer: https://dagrejs.github.io/project/dagre-d3/latest/demo/style-attrs.html / https://github.com/d3/d3-shape#curves
+            if (implicitSrcMap[currItem[0]] != null) {
+                //Note: Order matters because it affects layout (currently: BT)
+                //Ref: //https://github.com/dagrejs/dagre/issues/116
+                g.addEdge(null, currItem[0], implicitSrcMap[currItem[0]], {
+                    style: "fill:none; stroke:gray; stroke-width:3px; stroke-dasharray: 5,5;marker-end:none"
+                });
+                
+            }
+            //Adding edge
+            g.addEdge(null, currItem[0], top[0]);
 
-            if (ps[i][1].length != top[1].length)
-                st.push(top);
-            if (ps[i][1].length >= top[1].length)
-                st.push(ps[i]);
+            if (currItemIndent != stackTopIndent)
+                nodeStack.push(top);
+            if (currItemIndent >= stackTopIndent)
+                nodeStack.push(currItem);
         }
+
         return g;
     }
 
     // graph a "planstring" into the d3 svg handle "svg"
     function buildplangraph (svg, planstring) {
         var padding = 20;
-        var graph = parseplan(planstring);
+        //Map for implicit links
+        var implicitSrcMap = {}; //Populated by parseplan()
+        var graph = parseplan(planstring, implicitSrcMap);
 
         var renderer = new dagreD3.Renderer();
         renderer.zoom(function () {return function (graph, root) {}});
