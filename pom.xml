@@ -166,18 +166,6 @@
     </repository>
 
     <repository>
-      <id>dremio-releases</id>
-      <name>Dremio Drill Third Party Artifacts</name>
-      <url>http://repo.dremio.com/release/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-
-    <repository>
       <id>mapr-drill-thirdparty</id>
       <name>MapR Drill Third Party Artifacts</name>
       <url>http://repository.mapr.com/nexus/content/repositories/drill/</url>
