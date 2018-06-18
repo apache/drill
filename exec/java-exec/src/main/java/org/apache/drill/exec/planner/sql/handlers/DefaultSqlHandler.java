@@ -55,6 +55,7 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
+import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelConversionException;
@@ -78,6 +79,7 @@ import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.cost.DrillDefaultRelMetadataProvider;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.PreProcessLogicalRel;
@@ -658,10 +660,16 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return typedSqlNode;
   }
 
-  private RelNode convertToRel(SqlNode node) throws RelConversionException {
+  private RelNode convertToRel(SqlNode node) {
     final RelNode convertedNode = config.getConverter().toRel(node).rel;
     log("INITIAL", convertedNode, logger, null);
-    return transform(PlannerType.HEP, PlannerPhase.WINDOW_REWRITE, convertedNode);
+    RelNode transformedNode = transform(PlannerType.HEP,
+        PlannerPhase.SUBQUERY_REWRITE, convertedNode);
+
+    RelNode decorrelatedNode = RelDecorrelator.decorrelateQuery(transformedNode,
+        DrillRelFactories.LOGICAL_BUILDER.create(transformedNode.getCluster(), null));
+
+    return transform(PlannerType.HEP, PlannerPhase.WINDOW_REWRITE, decorrelatedNode);
   }
 
   private RelNode preprocessNode(RelNode rel) throws SqlUnsupportedException {

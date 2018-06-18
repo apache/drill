@@ -1,0 +1,62 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http:# www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{
+types: [
+    {inputType: "Bit", outputType: "NullableBit", runningType: "Bit", major: "primitive"},
+    {inputType: "TinyInt", outputType: "NullableTinyInt", runningType: "TinyInt", major: "primitive"},
+    {inputType: "NullableTinyInt", outputType: "NullableTinyInt", runningType: "TinyInt", major: "primitive"},
+    {inputType: "UInt1", outputType: "NullableUInt1", runningType: "UInt1", major: "primitive"},
+    {inputType: "NullableUInt1", outputType: "NullableUInt1", runningType: "UInt1", major: "primitive"},
+    {inputType: "UInt2", outputType: "NullableUInt2", runningType: "UInt2", major: "primitive"},
+    {inputType: "NullableUInt2", outputType: "NullableUInt2", runningType: "UInt2", major: "primitive"},
+    {inputType: "SmallInt", outputType: "NullableSmallInt", runningType: "SmallInt", major: "primitive"},
+    {inputType: "NullableSmallInt", outputType: "NullableSmallInt", runningType: "SmallInt", major: "primitive"},
+    {inputType: "UInt4", outputType: "NullableUInt4", runningType: "UInt4", major: "primitive"},
+    {inputType: "NullableUInt4", outputType: "NullableUInt4", runningType: "UInt4", major: "primitive"},
+    {inputType: "UInt8", outputType: "NullableUInt8", runningType: "UInt8", major: "primitive"},
+    {inputType: "NullableUInt8", outputType: "NullableUInt8", runningType: "UInt8", major: "primitive"},
+    {inputType: "Int", outputType: "NullableInt", runningType: "Int", major: "primitive"},
+    {inputType: "BigInt", outputType: "NullableBigInt", runningType: "BigInt", major: "primitive"},
+    {inputType: "NullableBit", outputType: "NullableBit", runningType: "Bit", major: "primitive"},
+    {inputType: "NullableInt", outputType: "NullableInt", runningType: "Int", major: "primitive"},
+    {inputType: "NullableBigInt", outputType: "NullableBigInt", runningType: "BigInt", major: "primitive"},
+    {inputType: "Float4", outputType: "NullableFloat4", runningType: "Float4", major: "primitive"},
+    {inputType: "Float8", outputType: "NullableFloat8", runningType: "Float8", major: "primitive"},
+    {inputType: "NullableFloat4", outputType: "NullableFloat4", runningType: "Float4", major: "primitive"},
+    {inputType: "NullableFloat8", outputType: "NullableFloat8", runningType: "Float8", major: "primitive"},
+    {inputType: "Date", outputType: "NullableDate", runningType: "Date", major: "primitive"},
+    {inputType: "NullableDate", outputType: "NullableDate", runningType: "Date", major: "primitive"},
+    {inputType: "TimeStamp", outputType: "NullableTimeStamp", runningType: "TimeStamp", major: "primitive"},
+    {inputType: "NullableTimeStamp", outputType: "NullableTimeStamp", runningType: "TimeStamp", major: "primitive"},
+    {inputType: "Time", outputType: "NullableTime", runningType: "Time", major: "primitive"},
+    {inputType: "NullableTime", outputType: "NullableTime", runningType: "Time", major: "primitive"},
+    {inputType: "IntervalDay", outputType: "NullableIntervalDay", runningType: "IntervalDay", major: "IntervalDay"},
+    {inputType: "NullableIntervalDay", outputType: "NullableIntervalDay", runningType: "IntervalDay", major: "IntervalDay"},
+    {inputType: "IntervalYear", outputType: "NullableIntervalYear", runningType: "IntervalYear", major: "primitive"},
+    {inputType: "NullableIntervalYear", outputType: "NullableIntervalYear", runningType: "IntervalYear", major: "primitive"},
+    {inputType: "Interval", outputType: "NullableInterval", runningType: "Interval", major: "Interval"},
+    {inputType: "NullableInterval", outputType: "NullableInterval", runningType: "Interval", major: "Interval"},
+    {inputType: "VarDecimal", outputType: "NullableVarDecimal", runningType: "VarDecimal", major: "VarDecimal"},
+    {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal", runningType: "VarDecimal", major: "VarDecimal"},
+    {inputType: "VarChar", outputType: "NullableVarChar", runningType: "VarChar", major: "bytes"},
+    {inputType: "NullableVarChar", outputType: "NullableVarChar", runningType: "VarChar", major: "bytes"},
+    {inputType: "Var16Char", outputType: "NullableVar16Char", runningType: "Var16Char", major: "bytes"},
+    {inputType: "NullableVar16Char", outputType: "NullableVar16Char", runningType: "Var16Char", major: "bytes"},
+    {inputType: "VarBinary", outputType: "NullableVarBinary", runningType: "VarBinary", major: "bytes"},
+    {inputType: "NullableVarBinary", outputType: "NullableVarBinary", runningType: "VarBinary", major: "bytes"}
+   ]
+}
