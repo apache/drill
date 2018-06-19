@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
 import org.apache.drill.exec.server.options.OptionValidator;
@@ -440,7 +441,7 @@ public final class ExecConstants {
    * DEFAULT: 2048 MB
    */
   public static final String MAX_QUERY_MEMORY_PER_NODE_KEY = "planner.memory.max_query_memory_per_node";
-  public static final LongValidator MAX_QUERY_MEMORY_PER_NODE = new RangeLongValidator(MAX_QUERY_MEMORY_PER_NODE_KEY, 1024 * 1024, Long.MAX_VALUE);
+  public static final LongValidator MAX_QUERY_MEMORY_PER_NODE = new RangeLongValidator(MAX_QUERY_MEMORY_PER_NODE_KEY, 1024 * 1024, DrillConfig.getMaxDirectMemory());
 
   /**
    * Alternative way to compute per-query-per-node memory as a percent
