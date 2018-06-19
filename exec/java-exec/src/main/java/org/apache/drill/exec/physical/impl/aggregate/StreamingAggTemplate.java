@@ -25,26 +25,49 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+
 public abstract class StreamingAggTemplate implements StreamingAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggregator.class);
   private static final boolean EXTRA_DEBUG = false;
   private static final int OUTPUT_BATCH_SIZE = 32*1024;
 
+  // lastOutcome is set ONLY if the lastOutcome was NONE or STOP
   private IterOutcome lastOutcome = null;
+
+  // First batch after build schema phase
   private boolean first = true;
+  private boolean firstBatchForSchema = true; // true if the current batch came in with an OK_NEW_SCHEMA.
+  private boolean firstBatchForDataSet = true; // true if the current batch is the first batch in a data set
+
   private boolean newSchema = false;
-  private int previousIndex = -1;
+
+  // End of all data
+  private boolean done = false;
+
+  // index in the incoming (sv4/sv2/vector)
   private int underlyingIndex = 0;
-  private int currentIndex;
+  // The indexes below refer to the actual record indexes in input batch
+  // (i.e if a selection vector the sv4/sv2 entry has been dereferenced or if a vector then the record index itself)
+  private int previousIndex = -1;  // the last index that has been processed. Initialized to -1 every time a new
+                                   // aggregate group begins (including every time a new data set begins)
+  private int currentIndex; // current index being processed
   /**
    * Number of records added to the current aggregation group.
    */
   private long addedRecordCount = 0;
+  // There are two outcomes from the aggregator. One is the aggregator's outcome defined in
+  // StreamingAggregator.AggOutcome. The other is the outcome from the last call to incoming.next
   private IterOutcome outcome;
+  // Number of aggregation groups added into the output batch
   private int outputCount = 0;
   private RecordBatch incoming;
+  // the Streaming Agg Batch that this aggregator belongs to
   private StreamingAggBatch outgoing;
-  private boolean done = false;
+
   private OperatorContext context;
 
 
@@ -73,45 +96,67 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   }
 
   @Override
-  public AggOutcome doWork() {
-    if (done) {
+  public AggOutcome doWork(IterOutcome outerOutcome) {
+    if (done || outerOutcome == NONE) {
       outcome = IterOutcome.NONE;
       return AggOutcome.CLEANUP_AND_RETURN;
     }
-    try { // outside loop to ensure that first is set to false after the first run.
+
+    try { // outside block to ensure that first is set to false after the first run.
       outputCount = 0;
       // allocate outgoing since either this is the first time or if a subsequent time we would
       // have sent the previous outgoing batch to downstream operator
       allocateOutgoing();
 
-      if (first) {
+      if (firstBatchForDataSet) {
         this.currentIndex = incoming.getRecordCount() == 0 ? 0 : this.getVectorIndex(underlyingIndex);
 
-        // consume empty batches until we get one with data.
-        if (incoming.getRecordCount() == 0) {
-          outer: while (true) {
-            IterOutcome out = outgoing.next(0, incoming);
-            switch (out) {
-            case OK_NEW_SCHEMA:
-            case OK:
-              if (incoming.getRecordCount() == 0) {
-                continue;
-              } else {
-                currentIndex = this.getVectorIndex(underlyingIndex);
-                break outer;
-              }
-            case OUT_OF_MEMORY:
-              outcome = out;
-              return AggOutcome.RETURN_OUTCOME;
-            case NONE:
-              out = IterOutcome.OK_NEW_SCHEMA;
-            case STOP:
-            default:
-              lastOutcome = out;
-              outcome = out;
-              done = true;
-              return AggOutcome.CLEANUP_AND_RETURN;
-            }
+        if (outerOutcome == OK_NEW_SCHEMA) {
+          firstBatchForSchema = true;
+        }
+        // consume empty batches until we get one with data (unless we got an EMIT). If we got an emit
+        // then this is the first batch, it was empty and we also got an emit.
+        if (incoming.getRecordCount() == 0 ) {
+          if (outerOutcome != EMIT) {
+            outer:
+            while (true) {
+              IterOutcome out = outgoing.next(0, incoming);
+              switch (out) {
+                case OK_NEW_SCHEMA:
+                  //lastOutcome = out;
+                  firstBatchForSchema = true;
+                case OK:
+                  if (incoming.getRecordCount() == 0) {
+                    continue;
+                  } else {
+                    currentIndex = this.getVectorIndex(underlyingIndex);
+                    break outer;
+                  }
+                case OUT_OF_MEMORY:
+                  outcome = out;
+                  return AggOutcome.RETURN_OUTCOME;
+                case EMIT:
+                  if (incoming.getRecordCount() == 0) {
+                    // When we see an EMIT we let the  agg record batch know that it should either
+                    // send out an EMIT or an OK_NEW_SCHEMA, followed by an EMIT. To do that we simply return
+                    // RETURN_AND_RESET with the outcome so the record batch can take care of it.
+                    return setOkAndReturnEmit();
+                  } else {
+                    break outer;
+                  }
+
+                case NONE:
+                  out = IterOutcome.OK_NEW_SCHEMA;
+                case STOP:
+                default:
+                  lastOutcome = out;
+                  outcome = out;
+                  done = true;
+                  return AggOutcome.CLEANUP_AND_RETURN;
+              } // switch (outcome)
+            } // while empty batches are seen
+          } else {
+            return setOkAndReturnEmit();
           }
         }
       }
@@ -121,49 +166,24 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         return AggOutcome.UPDATE_AGGREGATOR;
       }
 
-      if (lastOutcome != null) {
+      // if the previous iteration has an outcome that was terminal, don't do anything.
+      if (lastOutcome != null /*&& lastOutcome != IterOutcome.OK_NEW_SCHEMA*/) {
         outcome = lastOutcome;
         return AggOutcome.CLEANUP_AND_RETURN;
       }
 
       outside: while(true) {
-      // loop through existing records, adding as necessary.
-        for (; underlyingIndex < incoming.getRecordCount(); incIndex()) {
-          if (EXTRA_DEBUG) {
-            logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
-          }
-          if (previousIndex == -1) {
-            if (EXTRA_DEBUG) {
-              logger.debug("Adding the initial row's keys and values.");
-            }
-            addRecordInc(currentIndex);
-          }
-          else if (isSame( previousIndex, currentIndex )) {
-            if (EXTRA_DEBUG) {
-              logger.debug("Values were found the same, adding.");
-            }
-            addRecordInc(currentIndex);
-          } else {
-            if (EXTRA_DEBUG) {
-              logger.debug("Values were different, outputting previous batch.");
-            }
-            if(!outputToBatch(previousIndex)) {
-              // There is still space in outgoing container, so proceed to the next input.
-              if (EXTRA_DEBUG) {
-                logger.debug("Output successful.");
-              }
-              addRecordInc(currentIndex);
-            } else {
-              if (EXTRA_DEBUG) {
-                logger.debug("Output container has reached its capacity. Flushing it.");
-              }
-
-              // Update the indices to set the state for processing next record in incoming batch in subsequent doWork calls.
-              previousIndex = -1;
-              return setOkAndReturn();
-            }
-          }
-          previousIndex = currentIndex;
+        // loop through existing records, adding as necessary.
+        if(!processRemainingRecordsInBatch()) {
+          // output batch is full. Return.
+          return setOkAndReturn();
+        }
+        // if the current batch came with an EMIT, we're done
+        if(outerOutcome == EMIT) {
+          // output the last record
+          outputToBatch(previousIndex);
+          resetIndex();
+          return setOkAndReturnEmit();
         }
 
         /**
@@ -189,83 +209,122 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               logger.debug("Received IterOutcome of {}", out);
             }
             switch (out) {
-            case NONE:
-              done = true;
-              lastOutcome = out;
-              if (first && addedRecordCount == 0) {
-                return setOkAndReturn();
-              } else if (addedRecordCount > 0) {
-                outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
-                // (output container full or not) as we are not going to insert any more records.
+              case NONE:
+                done = true;
+                lastOutcome = out;
+                if (firstBatchForDataSet && addedRecordCount == 0) {
+                  return setOkAndReturn();
+                } else if (addedRecordCount > 0) {
+                  outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
+                  // (output container full or not) as we are not going to insert any more records.
+                  if (EXTRA_DEBUG) {
+                    logger.debug("Received no more batches, returning.");
+                  }
+                  return setOkAndReturn();
+                } else {
+                  // not first batch and record Count == 0
+                  outcome = out;
+                  return AggOutcome.CLEANUP_AND_RETURN;
+                }
+                // EMIT is handled like OK, except that we do not loop back to process the
+                // next incoming batch; we return instead
+              case EMIT:
+                if (incoming.getRecordCount() == 0) {
+                  if (addedRecordCount > 0) {
+                    outputToBatchPrev(previous, previousIndex, outputCount);
+                  }
+                } else {
+                  resetIndex();
+                  if (previousIndex != -1 && isSamePrev(previousIndex, previous, currentIndex)) {
+                    if (EXTRA_DEBUG) {
+                      logger.debug("New value was same as last value of previous batch, adding.");
+                    }
+                    addRecordInc(currentIndex);
+                    previousIndex = currentIndex;
+                    incIndex();
+                    if (EXTRA_DEBUG) {
+                      logger.debug("Continuing outside");
+                    }
+                  } else { // not the same
+                    if (EXTRA_DEBUG) {
+                      logger.debug("This is not the same as the previous, add record and continue outside.");
+                    }
+                    if (addedRecordCount > 0) {
+                      if (outputToBatchPrev(previous, previousIndex, outputCount)) {
+                        if (EXTRA_DEBUG) {
+                          logger.debug("Output container is full. flushing it.");
+                        }
+                        return setOkAndReturnEmit();
+                      }
+                    }
+                    // important to set the previous index to -1 since we start a new group
+                    previousIndex = -1;
+                  }
+                  processRemainingRecordsInBatch();
+                  outputToBatch(previousIndex); // currentIndex has been reset to int_max so use previous index.
+                }
+                resetIndex();
+                return setOkAndReturnEmit();
+
+              case NOT_YET:
+                this.outcome = out;
+                return AggOutcome.RETURN_OUTCOME;
+
+              case OK_NEW_SCHEMA:
+                firstBatchForSchema = true;
+                //lastOutcome = out;
                 if (EXTRA_DEBUG) {
-                  logger.debug("Received no more batches, returning.");
+                  logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
                 }
-                return setOkAndReturn();
-              } else {
-                if (first && out == IterOutcome.OK) {
-                  out = IterOutcome.OK_NEW_SCHEMA;
+                if (addedRecordCount > 0) {
+                  outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
+                  // (output container full or not) as we are not going to insert anymore records.
+                  if (EXTRA_DEBUG) {
+                    logger.debug("Wrote out end of previous batch, returning.");
+                  }
+                  newSchema = true;
+                  return setOkAndReturn();
                 }
+                cleanup();
+                return AggOutcome.UPDATE_AGGREGATOR;
+              case OK:
+                resetIndex();
+                if (incoming.getRecordCount() == 0) {
+                  continue;
+                } else {
+                  if (previousIndex != -1 && isSamePrev(previousIndex, previous, currentIndex)) {
+                    if (EXTRA_DEBUG) {
+                      logger.debug("New value was same as last value of previous batch, adding.");
+                    }
+                    addRecordInc(currentIndex);
+                    previousIndex = currentIndex;
+                    incIndex();
+                    if (EXTRA_DEBUG) {
+                      logger.debug("Continuing outside");
+                    }
+                    continue outside;
+                  } else { // not the same
+                    if (EXTRA_DEBUG) {
+                      logger.debug("This is not the same as the previous, add record and continue outside.");
+                    }
+                    if (addedRecordCount > 0) {
+                      if (outputToBatchPrev(previous, previousIndex, outputCount)) {
+                        if (EXTRA_DEBUG) {
+                          logger.debug("Output container is full. flushing it.");
+                        }
+                        previousIndex = -1;
+                        return setOkAndReturn();
+                      }
+                    }
+                    previousIndex = -1;
+                    continue outside;
+                  }
+                }
+              case STOP:
+              default:
+                lastOutcome = out;
                 outcome = out;
                 return AggOutcome.CLEANUP_AND_RETURN;
-              }
-
-            case NOT_YET:
-              this.outcome = out;
-              return AggOutcome.RETURN_OUTCOME;
-
-            case OK_NEW_SCHEMA:
-              if (EXTRA_DEBUG) {
-                logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
-              }
-              if (addedRecordCount > 0) {
-                outputToBatchPrev(previous, previousIndex, outputCount); // No need to check the return value
-                // (output container full or not) as we are not going to insert anymore records.
-                if (EXTRA_DEBUG) {
-                  logger.debug("Wrote out end of previous batch, returning.");
-                }
-                newSchema = true;
-                return setOkAndReturn();
-              }
-              cleanup();
-              return AggOutcome.UPDATE_AGGREGATOR;
-            case OK:
-              resetIndex();
-              if (incoming.getRecordCount() == 0) {
-                continue;
-              } else {
-                if (previousIndex != -1 && isSamePrev(previousIndex , previous, currentIndex)) {
-                  if (EXTRA_DEBUG) {
-                    logger.debug("New value was same as last value of previous batch, adding.");
-                  }
-                  addRecordInc(currentIndex);
-                  previousIndex = currentIndex;
-                  incIndex();
-                  if (EXTRA_DEBUG) {
-                    logger.debug("Continuing outside");
-                  }
-                  continue outside;
-                } else { // not the same
-                  if (EXTRA_DEBUG) {
-                    logger.debug("This is not the same as the previous, add record and continue outside.");
-                  }
-                  if (addedRecordCount > 0) {
-                    if (outputToBatchPrev(previous, previousIndex, outputCount)) {
-                      if (EXTRA_DEBUG) {
-                        logger.debug("Output container is full. flushing it.");
-                      }
-                      previousIndex = -1;
-                      return setOkAndReturn();
-                    }
-                  }
-                  previousIndex = -1;
-                  continue outside;
-                }
-              }
-            case STOP:
-            default:
-              lastOutcome = out;
-              outcome = out;
-              return AggOutcome.CLEANUP_AND_RETURN;
             }
           }
         } finally {
@@ -277,10 +336,61 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
       }
     } finally {
       if (first) {
-        first = !first;
+        first = false;
       }
     }
 
+  }
+
+  @Override
+  public boolean isDone() {
+    return done;
+  }
+
+  /**
+   * Process the remaining records in the batch. Returns false if not all records are processed (if the output
+   * container gets full), true otherwise.
+   * @return  Boolean indicating all records were processed
+   */
+  private boolean processRemainingRecordsInBatch() {
+    for (; underlyingIndex < incoming.getRecordCount(); incIndex()) {
+      if (EXTRA_DEBUG) {
+        logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
+      }
+      if (previousIndex == -1) {
+        if (EXTRA_DEBUG) {
+          logger.debug("Adding the initial row's keys and values.");
+        }
+        addRecordInc(currentIndex);
+      }
+      else if (isSame( previousIndex, currentIndex )) {
+        if (EXTRA_DEBUG) {
+          logger.debug("Values were found the same, adding.");
+        }
+        addRecordInc(currentIndex);
+      } else {
+        if (EXTRA_DEBUG) {
+          logger.debug("Values were different, outputting previous batch.");
+        }
+        if(!outputToBatch(previousIndex)) {
+          // There is still space in outgoing container, so proceed to the next input.
+          if (EXTRA_DEBUG) {
+            logger.debug("Output successful.");
+          }
+          addRecordInc(currentIndex);
+        } else {
+          if (EXTRA_DEBUG) {
+            logger.debug("Output container has reached its capacity. Flushing it.");
+          }
+
+          // Update the indices to set the state for processing next record in incoming batch in subsequent doWork calls.
+          previousIndex = -1;
+          return false;
+        }
+      }
+      previousIndex = currentIndex;
+    }
+    return true;
   }
 
   private final void incIndex() {
@@ -297,16 +407,49 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     incIndex();
   }
 
+  /**
+   * Set the outcome to OK (or OK_NEW_SCHEMA) and return the AggOutcome parameter
+   *
+   * @return outcome
+   */
   private final AggOutcome setOkAndReturn() {
-    if (first) {
-      this.outcome = IterOutcome.OK_NEW_SCHEMA;
+    IterOutcome outcomeToReturn;
+    firstBatchForDataSet = false;
+    if (firstBatchForSchema) {
+      outcomeToReturn = OK_NEW_SCHEMA;
+      firstBatchForSchema = false;
     } else {
-      this.outcome = IterOutcome.OK;
+      outcomeToReturn = OK;
     }
+    this.outcome = outcomeToReturn;
+
     for (VectorWrapper<?> v : outgoing) {
       v.getValueVector().getMutator().setValueCount(outputCount);
     }
     return AggOutcome.RETURN_OUTCOME;
+  }
+
+  /**
+   * setOkAndReturn (as above) if the iter outcome was EMIT
+   *
+   * @return outcome
+   */
+  private final AggOutcome setOkAndReturnEmit() {
+    IterOutcome outcomeToReturn;
+    firstBatchForDataSet = true;
+    previousIndex = -1;
+    if (firstBatchForSchema) {
+      outcomeToReturn = OK_NEW_SCHEMA;
+      firstBatchForSchema = false;
+    } else {
+      outcomeToReturn = EMIT;
+    }
+    this.outcome = outcomeToReturn;
+
+    for (VectorWrapper<?> v : outgoing) {
+      v.getValueVector().getMutator().setValueCount(outputCount);
+    }
+    return AggOutcome.RETURN_AND_RESET;
   }
 
   // Returns output container status after insertion of the given record. Caller must check the return value if it

@@ -67,15 +67,49 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JVar;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+
 public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatch.class);
 
   private StreamingAggregator aggregator;
   private final RecordBatch incoming;
   private List<BaseWriter.ComplexWriter> complexWriters;
-  private boolean done = false;
-  private boolean first = true;
-  private int recordCount = 0;
+  //
+  // Streaming agg can be in (a) a normal pipeline or (b) it may be in a pipeline that is part of a subquery involving
+  // lateral and unnest. In case(a), the aggregator proceeds normally until it sees a group change or a NONE. If a
+  // group has changed, the aggregated data is sent downstream and the aggregation continues with the next group. If
+  // a NONE is seen, the aggregator completes, sends data downstream and cleans up.
+  // In case (b), the aggregator behaves similar to case(a) if a group change or NONE is observed. However it will
+  // also encounter a new state EMIT, every time unnest processes a new row. In this case the aggregator must complete the
+  // aggregation, send out the results, AND reset to receive more data. To make the treatment of these two cases
+  // similar, we define the aggregation operation in terms of data sets.
+  //   Data Set = The set of data that the aggregator is currently aggregating. In a normal query, the entire data is
+  //   a single data set. In the case of a Lateral subquery, every row processed by unnest is a data set.  There can,
+  //   therefore, be one or more data sets in an aggregation.
+  //   Data Sets may have multiple batches and may contain one or more empty batches. A data set may consist entirely
+  //   of empty batches.
+  //   Schema may change across Data Sets.
+  //   A corner case is the case of a Data Set having many empty batches in the beginning. Such a data set may see a
+  //   schema change once the first non-empty batch is received.
+  //   Schema change within a Data Set is not supported.
+  //
+  //   We will define some states for internal management
+  //
+  private boolean done = false;  // END of all data
+  private boolean first = true;  // Beginning of new data set. True during the build schema phase. False once the first
+                                 // call to inner next is made.
+  private boolean sendEmit = false; // In the case where we see an OK_NEW_SCHEMA along with the end of a data set
+                                    // we send out a batch with OK_NEW_SCHEMA first, then in the next iteration,
+                                    // we send out an emopty batch with EMIT.
+  private IterOutcome lastKnownOutcome = OK; // keep track of the outcome from the previous call to incoming.next
+  private boolean firstBatchForSchema = true; // true if the current batch came in with an OK_NEW_SCHEMA
+  private boolean firstBatchForDataSet = true; // true if the current batch is the first batch in a data set
+  private int recordCount = 0;  // number of records output in the current data set
+
   private BatchSchema incomingSchema;
 
   /*
@@ -154,83 +188,174 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   public IterOutcome innerNext() {
 
     // if a special batch has been sent, we have no data in the incoming so exit early
-    if (specialBatchSent) {
-      return IterOutcome.NONE;
+    if ( done || specialBatchSent) {
+      return NONE;
+    }
+
+    // We sent an OK_NEW_SCHEMA and also encountered the end of a data set. So we need to send
+    // an EMIT with an empty batch now
+    if (sendEmit) {
+      sendEmit = false;
+      firstBatchForDataSet = true;
+      recordCount = 0;
+      return EMIT;
     }
 
     // this is only called on the first batch. Beyond this, the aggregator manages batches.
     if (aggregator == null || first) {
-      IterOutcome outcome;
       if (first && incoming.getRecordCount() > 0) {
         first = false;
-        outcome = IterOutcome.OK_NEW_SCHEMA;
+        lastKnownOutcome = OK_NEW_SCHEMA;
       } else {
-        outcome = next(incoming);
+        lastKnownOutcome = next(incoming);
       }
-      logger.debug("Next outcome of {}", outcome);
-      switch (outcome) {
-      case NONE:
-        if (first && popConfig.getKeys().size() == 0) {
-          // if we have a straight aggregate and empty input batch, we need to handle it in a different way
-          constructSpecialBatch();
-          first = false;
-          // set state to indicate the fact that we have sent a special batch and input is empty
-          specialBatchSent = true;
-          return IterOutcome.OK;
+      logger.debug("Next outcome of {}", lastKnownOutcome);
+      switch (lastKnownOutcome) {
+        case NONE:
+          if (firstBatchForDataSet && popConfig.getKeys().size() == 0) {
+            // if we have a straight aggregate and empty input batch, we need to handle it in a different way
+            constructSpecialBatch();
+            // set state to indicate the fact that we have sent a special batch and input is empty
+            specialBatchSent = true;
+            // If outcome is NONE then we send the special batch in the first iteration and the NONE
+            // outcome in the next iteration. If outcome is EMIT, we can send the special
+            // batch and the EMIT outcome at the same time.
+            return getFinalOutcome();
+          }
+          // else fall thru
+        case OUT_OF_MEMORY:
+        case NOT_YET:
+        case STOP:
+          return lastKnownOutcome;
+        case OK_NEW_SCHEMA:
+          if (!createAggregator()) {
+            done = true;
+            return IterOutcome.STOP;
+          }
+          break;
+        case EMIT:
+          // if we get an EMIT with an empty batch as the first (and therefore only) batch
+          // we have to do the special handling
+          if (firstBatchForDataSet && popConfig.getKeys().size() == 0 && incoming.getRecordCount() == 0) {
+            constructSpecialBatch();
+            // set state to indicate the fact that we have sent a special batch and input is empty
+            specialBatchSent = true;
+            firstBatchForDataSet = true; // reset on the next iteration
+            // If outcome is NONE then we send the special batch in the first iteration and the NONE
+            // outcome in the next iteration. If outcome is EMIT, we can send the special
+            // batch and the EMIT outcome at the same time.
+            return getFinalOutcome();
+          }
+          // else fall thru
+        case OK:
+          break;
+        default:
+          throw new IllegalStateException(String.format("unknown outcome %s", lastKnownOutcome));
+      }
+    } else {
+      if ( lastKnownOutcome != NONE && firstBatchForDataSet && !aggregator.isDone()) {
+        lastKnownOutcome = incoming.next();
+        if (!first ) {
+          //Setup needs to be called again. During setup, generated code saves a reference to the vectors
+          // pointed to by the incoming batch so that the dereferencing of the vector wrappers to get to
+          // the vectors  does not have to be done at each call to eval. However, after an EMIT is seen,
+          // the vectors are replaced and the reference to the old vectors is no longer valid
+          try {
+            aggregator.setup(oContext, incoming, this);
+          } catch (SchemaChangeException e) {
+            UserException.Builder exceptionBuilder = UserException.functionError(e)
+                .message("A Schema change exception occured in calling setup() in generated code.");
+            throw exceptionBuilder.build(logger);
+          }
         }
-      case OUT_OF_MEMORY:
-      case NOT_YET:
-      case STOP:
-        return outcome;
-      case OK_NEW_SCHEMA:
-        if (!createAggregator()) {
-          done = true;
-          return IterOutcome.STOP;
-        }
-        break;
-      case OK:
-        break;
-      default:
-        throw new IllegalStateException(String.format("unknown outcome %s", outcome));
+      }
+      // We sent an EMIT in the previous iteration, so we must be starting a new data set
+      if (firstBatchForDataSet) {
+        done = false;
+        sendEmit = false;
+        specialBatchSent = false;
+        firstBatchForDataSet = false;
       }
     }
-    AggOutcome out = aggregator.doWork();
+    AggOutcome aggOutcome = aggregator.doWork(lastKnownOutcome);
     recordCount = aggregator.getOutputCount();
-    logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
-    switch (out) {
-    case CLEANUP_AND_RETURN:
-      if (!first) {
-        container.zeroVectors();
-      }
-      done = true;
-      ExternalSortBatch.releaseBatches(incoming);
-      // fall through
-    case RETURN_OUTCOME:
-      IterOutcome outcome = aggregator.getOutcome();
-      // In case of complex writer expression, vectors would be added to batch run-time.
-      // We have to re-build the schema.
-      if (complexWriters != null) {
-        container.buildSchema(SelectionVectorMode.NONE);
-      }
-      if (outcome == IterOutcome.NONE && first) {
-        first = false;
+    container.setRecordCount(recordCount);
+    logger.debug("Aggregator response {}, records {}", aggOutcome, aggregator.getOutputCount());
+    // overwrite the outcome variable since we no longer need to remember the first batch outcome
+    lastKnownOutcome = aggregator.getOutcome();
+    switch (aggOutcome) {
+      case CLEANUP_AND_RETURN:
+        if (!first) {
+          container.zeroVectors();
+        }
         done = true;
-        return IterOutcome.OK_NEW_SCHEMA;
-      } else if (outcome == IterOutcome.OK && first) {
-        outcome = IterOutcome.OK_NEW_SCHEMA;
-      } else if (outcome != IterOutcome.OUT_OF_MEMORY) {
-        first = false;
-      }
-      return outcome;
-    case UPDATE_AGGREGATOR:
-      context.getExecutorState().fail(UserException.unsupportedError()
-        .message(SchemaChangeException.schemaChanged("Streaming aggregate does not support schema changes", incomingSchema, incoming.getSchema()).getMessage())
-        .build(logger));
-      close();
-      killIncoming(false);
-      return IterOutcome.STOP;
-    default:
-      throw new IllegalStateException(String.format("Unknown state %s.", out));
+        ExternalSortBatch.releaseBatches(incoming);
+        return lastKnownOutcome;
+      case RETURN_AND_RESET:
+        //WE could have got a string of batches, all empty, until we hit an emit
+        if (firstBatchForDataSet && popConfig.getKeys().size() == 0 && recordCount == 0) {
+          // if we have a straight aggregate and empty input batch, we need to handle it in a different way
+          constructSpecialBatch();
+          // set state to indicate the fact that we have sent a special batch and input is empty
+          specialBatchSent = true;
+          // If outcome is NONE then we send the special batch in the first iteration and the NONE
+          // outcome in the next iteration. If outcome is EMIT, we can send the special
+          // batch and the EMIT outcome at the same time.
+          return getFinalOutcome();
+        }
+        firstBatchForDataSet = true;
+        if(first) {
+          first = false;
+        }
+        if(lastKnownOutcome == OK_NEW_SCHEMA) {
+          sendEmit = true;
+        }
+        // Release external sort batches after EMIT is seen
+        ExternalSortBatch.releaseBatches(incoming);
+        return lastKnownOutcome;
+      case RETURN_OUTCOME:
+        // In case of complex writer expression, vectors would be added to batch run-time.
+        // We have to re-build the schema.
+        if (complexWriters != null) {
+          container.buildSchema(SelectionVectorMode.NONE);
+        }
+        if (lastKnownOutcome == IterOutcome.NONE ) {
+          // we will set the 'done' flag in the next call to innerNext and use the lastKnownOutcome
+          // to determine whether we should set the flag or not.
+          // This is so that if someone calls getRecordCount in between calls to innerNext, we will
+          // return the correct record count (if the done flag is set, we will return 0).
+          if (first) {
+            first = false;
+            return OK_NEW_SCHEMA;
+          } else {
+            return OK;
+          }
+        } else if (lastKnownOutcome == OK && first) {
+          lastKnownOutcome = OK_NEW_SCHEMA;
+        } else if (lastKnownOutcome != IterOutcome.OUT_OF_MEMORY) {
+          first = false;
+        }
+        return lastKnownOutcome;
+      case UPDATE_AGGREGATOR:
+        // We could get this either between data sets or within a data set.
+        // If the former, we can handle the change and so need to update the aggregator and
+        // continue. If the latter, we cannot (currently) handle the schema change, so throw
+        // and exception
+        // This case is not tested since there are no unit tests for this and there is no support
+        // from the sort operator for this case
+        if (lastKnownOutcome == EMIT) {
+          createAggregator();
+          return OK_NEW_SCHEMA;
+        } else {
+          context.getExecutorState().fail(UserException.unsupportedError().message(SchemaChangeException
+              .schemaChanged("Streaming aggregate does not support schema changes", incomingSchema,
+                  incoming.getSchema()).getMessage()).build(logger));
+          close();
+          killIncoming(false);
+          return IterOutcome.STOP;
+        }
+      default:
+        throw new IllegalStateException(String.format("Unknown state %s.", aggOutcome));
     }
   }
 
@@ -309,7 +434,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-    //cg.getCodeGenerator().saveCodeForDebugging(true);
+    //  cg.getCodeGenerator().saveCodeForDebugging(true);
     container.clear();
 
     LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().size()];
@@ -494,6 +619,25 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     default:
       throw new IllegalStateException();
     }
+  }
+
+  private IterOutcome getFinalOutcome() {
+    IterOutcome outcomeToReturn;
+
+    if (firstBatchForDataSet) {
+      firstBatchForDataSet = false;
+    }
+    if (firstBatchForSchema) {
+      outcomeToReturn = OK_NEW_SCHEMA;
+      firstBatchForSchema = false;
+    } else if (lastKnownOutcome == EMIT) {
+      firstBatchForDataSet = true;
+      outcomeToReturn = EMIT;
+    } else {
+      // get the outcome to return before calling refresh since that resets the lastKnowOutcome to OK
+      outcomeToReturn = (recordCount == 0) ? NONE : OK;
+    }
+    return outcomeToReturn;
   }
 
   @Override
