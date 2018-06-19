@@ -1,101 +1,141 @@
 ---
 title: "S3 Storage Plugin"
-date: 2018-02-08 02:32:56 UTC
+date: 2018-06-19 02:04:08 UTC
 parent: "Connect a Data Source"
 ---
 Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries.
 
 ## Connecting Drill to S3
 
-Starting with version 1.3.0, Drill has the ability to query files stored on Amazon's S3 cloud storage using the S3a library. This is important, because S3a adds support for files bigger than 5 gigabytes (these were unsupported using Drill's previous S3n interface).
+Drill has the ability to query files stored on Amazon's S3 cloud storage using the HDFS s3a library. The HDFS s3a library adds support for files larger than 5 gigabytes (these were unsupported using the older HDFS s3n library).
 
-There are two simple steps to follow: (1) provide your AWS credentials (2) configure S3 storage plugin with S3 bucket
+To connect Drill to S3:  
 
-**(1) AWS credentials**
+- Provide your AWS credentials.  
+- Configure the S3 storage plugin with an S3 bucket.  
 
-To enable Drill's S3a support, edit the file conf/core-site.xml in your Drill install directory, replacing the text ENTER_YOUR_ACESSKEY and ENTER_YOUR_SECRETKEY with your AWS credentials.
+For additional information, you can refer to the [HDFS S3 documentation](https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/index.html).   
 
-```
-<configuration>
+**Note:** Drill does not use HDFS 3.x, therefore Drill does not support AWS temporary credentials, as described in the s3a documentation.
 
-  <property>
-    <name>fs.s3a.access.key</name>
-    <value>ENTER_YOUR_ACCESSKEY</value>
-  </property>
 
-  <property>
-    <name>fs.s3a.secret.key</name>
-    <value>ENTER_YOUR_SECRETKEY</value>
-  </property>
+###Providing AWS Credentials  
 
-</configuration>
-```
+Define the AWS credentials (access keys) in the core-site.xml file or as storage plugin configuration properties in the S3 storage plugin configuration in the Drill Web UI. However, configuring credentials in the S3 storage plugin in not very secure, but sufficient for use on a single machine, such as a laptop.  
 
-**(2) Configure S3 Storage Plugin**
+**Configuring Access Keys in core-site.xml**
 
-Enable S3 storage plugin if you already have one configured or you can add a new plugin by following these steps:
+To configure the access keys in the core-site.xml file, navigate to the `$DRILL_HOME/conf` or `$DRILL_SITE` directory, and rename the core-site-example.xml file to core-site.xml. Replace the text `ENTER_YOUR_ACESSKEY` and `ENTER_YOUR_SECRETKEY` with your AWS credentials and also include the endpoint, as shown in the following example:   
 
-1. Point your browser to http://<host>:8047 and select the 'Storage' tab. (Note: on a single machine system, you'll need to run drill-embedded before you can access the web console site)
-2. Duplicate the 'dfs' plugin. To do this, hit 'Update' next to 'dfs,' and then copy the JSON text that appears.
-3. Create a new storage plugin, and paste in the 'dfs' text.
-4. Replace -- file:/// with s3a://your.bucketname.
-5. Name your new plugin, say s3-\<bucketname\>
+       <configuration>
+           <property>
+               <name>fs.s3a.access.key</name>
+               <value>ACCESS-KEY</value>
+           </property>
+           <property>
+               <name>fs.s3a.secret.key</name>
+               <value>SECRET-KEY</value>
+           </property>
+           <property>
+               <name>fs.s3a.endpoint</name>
+               <value>s3.REGION.amazonaws.com</value>
+           </property>
+       </configuration>   
 
-You should now be able to talk to data stored on S3 using the S3a library.
+**Note:** When you rename the file, Hadoop support breaks if `$HADOOP_HOME` was in the path because Drill pulls in the Drill core-site.xml file instead of the Hadoop core-site.xml file. In this situation, make the changes in the Hadoop core-site.xml file. Do not create a core-site.xml file for Drill.  
 
-**Example S3 Storage Plugin**
+**Configuring Access Keys in the S3 Storage Plugin** 
+   
+If you choose to configure the access keys in the S3 plugin, include the access keys and the endpoint in the S3 storage plugin configuration, as shown in the following example:  
 
-```
-{
-  "type": "file",
-  "enabled": true,
-  "connection": "s3a://apache.drill.cloud.bigdata/",
-  "workspaces": {
-    "root": {
-      "location": "/",
-      "writable": false,
-      "defaultInputFormat": null
-    },
-    "tmp": {
-      "location": "/tmp",
-      "writable": true,
-      "defaultInputFormat": null
+         "connection": "s3a://<bucket-name>/",
+         "config": {
+           "fs.s3a.access.key": "<key>",
+           "fs.s3a.secret.key": "<key>",
+           "fs.s3a.endpoint": "s3.us-west-1.amazonaws.com"
+         },  
+
+**Note:** General instructions for configuring the S3 storage plugin are provided in the next section of this document.   
+
+###Configuring the S3 Storage Plugin
+
+The Storage page in the Drill Web UI provides an S3 storage plugin that you configure to connect Drill to the S3 distributed file system registered in core-site.xml. Once configured, you can query the files stored in S3. To configure the S3 storage plugin, log in to the Drill Web UI and then update the S3 configuration, as described in the following steps:   
+
+1- To access the Drill Web UI, enter the following URL in the address bar of your web browser:  
+
+       http://<drill-hostname>:8047  
+  
+       //The drill-hostname is a node on which Drill is running.  
+
+2-To configure the S3 storage plugin, complete the following steps:  
+
+   a. Click on the Storage page.  
+   b. Find the S3 option on the page and then click **Update** next to the option.  
+   c. Configure the S3 storage plugin, specifying the bucket in the "connection" property, as shown in the following example:  
+
+**Note:** The "config" section with the access key and endpoint properties are included in the following configuration as an example. Do not include the "config" section in your S3 configuration if you used core-site.xml to store your access keys.   
+
+       {
+	"type": "file",
+	"enabled": true,
+	"connection": "s3a://bucket-name/",
+	"config": {
+		"fs.s3a.access.key": "<key>",
+		"fs.s3a.secret.key": "<key>",
+		"fs.s3a.endpoint": "s3.us-west-1.amazonaws.com"
+	},
+	"workspaces": {
+		"root": {
+			"location": "/user/robot/drill",
+			"writable": true,
+			"defaultInputFormat": null
+		},
+		"tmp": {
+			"location": "/tmp",
+			"writable": true,
+			"defaultInputFormat": null
+		}
+	},
+	"formats": {
+		"psv": {
+			"type": "text",
+			"extensions": [
+				"tbl"
+			],
+			"delimiter": "|"
+		},
+		"csv": {
+			"type": "text",
+			"extensions": [
+				"csv"
+			],
+			"delimiter": ","
+		    }
+	    }
     }
-  },
-  "formats": {
-    "psv": {
-      "type": "text",
-      "extensions": [
-        "tbl"
-      ],
-      "delimiter": "|"
-    },
-    "csv": {
-      "type": "text",
-      "extensions": [
-        "csv"
-      ],
-      "delimiter": ","
-    },
-    ....
-    
-  }
-}
-```
+          
+         
+4-Click **Update** to save the configuration.  
+5-Navigate back to the Storage page.  
+6-On the Storage page, click **Enable** next to the S3 option.  
+	
+Drill should now be able to use the HDFS s3a library to access data in S3. 
+
+
 ## Quering Parquet Format Files On S3 
 
-Drill uses Hadoop FileSystem for reading S3 input files, which in the end uses Apache HttpClient. HttpClient has a default limit of four simultaneous requests, and it puts the subsequent S3 requests in the queue. A Drill query with large number of columns or a Select * query, on Parquet formatted files ends up issuing many S3 requests and can fail with ConnectionPoolTimeoutException.   
+Drill uses the Hadoop distributed file system (HDFS) for reading S3 input files, which ultimately uses the Apache HttpClient. The HttpClient has a default limit of four simultaneous requests, and it puts the subsequent S3 requests in the queue. A Drill query with large number of columns or a Select * query, on Parquet formatted files ends up issuing many S3 requests and can fail with ConnectionPoolTimeoutException.   
 
-Fortunately, as a part of S3a implementation in Hadoop 2.7.1, HttpClient's required limit parameter is extracted out in a config and can be raised to avoid ConnectionPoolTimeoutException. This is how you can set this parameter in conf/core-site.xml file in your Drill install directory:
+Fortunately, as a part of S3a implementation in Hadoop 2.7.1, HttpClient's required limit parameter is extracted out in a config and can be raised to avoid ConnectionPoolTimeoutException. This is how you can set this parameter in core-site.xml:
 
-```
-<configuration>
-  ...
-  
-  <property>
-    <name>fs.s3a.connection.maximum</name>
-    <value>100</value>
-  </property>
 
-</configuration>
-```
+       <configuration>
+         ...
+         
+         <property>
+           <name>fs.s3a.connection.maximum</name>
+           <value>100</value>
+         </property>
+       
+       </configuration>
+
