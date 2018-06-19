@@ -27,8 +27,30 @@ public interface StreamingAggregator {
 
   public static TemplateClassDefinition<StreamingAggregator> TEMPLATE_DEFINITION = new TemplateClassDefinition<StreamingAggregator>(StreamingAggregator.class, StreamingAggTemplate.class);
 
+
+  /**
+   * The Aggregator can return one of the following outcomes:
+   * <p>
+   * <b>RETURN_OUTCOME:</b> The aggregation has seen a change in the group and should send data downstream. If
+   * complex writers are involved, then rebuild schema.
+   * <p>
+   * <b>CLEANUP_AND_RETURN:</b> End of all data. Return the data downstream, and cleanup.
+   * <p>
+   * <b>UPDATE_AGGREGATOR:</b> A schema change was encountered. The aggregator's generated  code and (possibly)
+   * container need to be updated
+   * <p>
+   * <b>RETURN_AND_RESET:</b> If the aggregator encounters an EMIT, then that implies the end of a data set but
+   * not of all the data. Return the data (aggregated so far) downstream, reset the internal state variables and
+   * come back for the next data set.
+   * <p>
+   * @see org.apache.drill.exec.physical.impl.aggregate.HashAggregator.AggOutcome HashAggregator.AggOutcome
+   */
   public static enum AggOutcome {
-    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR;
+    RETURN_OUTCOME,
+    CLEANUP_AND_RETURN,
+    UPDATE_AGGREGATOR,
+    RETURN_AND_RESET
+    ;
   }
 
   public abstract void setup(OperatorContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException;
@@ -37,7 +59,11 @@ public interface StreamingAggregator {
 
   public abstract int getOutputCount();
 
-  public abstract AggOutcome doWork();
+  // do the work. Also pass in the Iteroutcome of the batch already read in case it might be an EMIT. If the
+  // outerOutcome is EMIT, we need to do the work without reading any more batches.
+  public abstract AggOutcome doWork(IterOutcome outerOutcome);
+
+  public abstract boolean isDone();
 
   public abstract void cleanup();
 

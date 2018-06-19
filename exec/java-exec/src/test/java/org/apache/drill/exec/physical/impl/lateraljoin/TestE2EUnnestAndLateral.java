@@ -394,4 +394,47 @@ public class TestE2EUnnestAndLateral extends ClusterTest {
       .baselineValues("dd",222L)
       .build().run();
   }
+
+  @Test
+  public void testMultipleBatchesLateral_WithStreamingAgg() throws Exception {
+    String sql = "SELECT t2.maxprice FROM (SELECT customer.c_orders AS c_orders FROM "
+        + "dfs.`lateraljoin/multipleFiles/` customer) t1, LATERAL (SELECT CAST(MAX(t.ord.o_totalprice)"
+        + " AS int) AS maxprice FROM UNNEST(t1.c_orders) t(ord) GROUP BY t.ord.o_orderstatus) t2";
+
+    testBuilder()
+        .optionSettingQueriesForTestQuery("alter session set `%s` = true",
+            PlannerSettings.STREAMAGG.getOptionName())
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("maxprice")
+        .baselineValues(367190)
+        .baselineValues(316347)
+        .baselineValues(146610)
+        .baselineValues(306996)
+        .baselineValues(235695)
+        .baselineValues(177819)
+        .build().run();
+  }
+
+  @Test
+  public void testLateral_StreamingAgg_with_nulls() throws Exception {
+    String sql = "SELECT key, t3.dsls FROM cp.`lateraljoin/with_nulls.json` t LEFT OUTER "
+        + "JOIN LATERAL (SELECT DISTINCT t2.sls AS dsls FROM UNNEST(t.sales) t2(sls)) t3 ON TRUE";
+
+    testBuilder()
+        .optionSettingQueriesForTestQuery("alter session set `%s` = true",
+            PlannerSettings.STREAMAGG.getOptionName())
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("key","dsls")
+        .baselineValues("aa",null)
+        .baselineValues("bb",100L)
+        .baselineValues("bb",200L)
+        .baselineValues("bb",300L)
+        .baselineValues("bb",400L)
+        .baselineValues("cc",null)
+        .baselineValues("dd",111L)
+        .baselineValues("dd",222L)
+        .build().run();
+  }
 }
