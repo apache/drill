@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2018-03-15 17:08:44 UTC
+date: 2018-06-20 01:48:01 UTC
 parent: "Query Plans and Tuning"
 --- 
 
@@ -37,7 +37,7 @@ The drill-override.conf file, located in the /conf directory, contains options t
 
 The following list describes the spill to disk configuration options:  
 
-- **drill.exe.spill.fs**  
+- **drill.exec.spill.fs**  
 Introduced in Drill 1.11. The default file system on the local machine into which the Sort, Hash Aggregate, and Hash Join operators spill data. You can configure this option so that data spills into a distributed file system, such as hdfs. For example, "hdfs:///". The default setting is "file:///".
 - **drill.exec.spill.directories**  
 Introduced in Drill 1.11. The list of directories into which the Sort, Hash Aggregate, and Hash Join operators spill data. The list must be an array with directories separated by a comma, for example ["/fs1/drill/spill" , "/fs2/drill/spill" , "/fs3/drill/spill"]. The default setting is ["/tmp/drill/spill"].  
