@@ -32,10 +32,10 @@ public abstract class VarLengthColumn<V extends ValueVector> extends ColumnReade
 
   Binary currDictVal;
 
-  VarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+  VarLengthColumn(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
                   SchemaElement schemaElement) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
         usingDictionary = true;
       }

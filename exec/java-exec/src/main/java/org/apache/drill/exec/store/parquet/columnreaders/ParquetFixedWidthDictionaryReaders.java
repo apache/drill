@@ -42,10 +42,10 @@ public class ParquetFixedWidthDictionaryReaders {
   private static final double BITS_COUNT_IN_BYTE_DOUBLE_VALUE = 8.0;
 
   static class DictionaryIntReader extends FixedByteAlignedReader<IntVector> {
-    DictionaryIntReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryIntReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                                 ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, IntVector v,
                                 SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -67,10 +67,10 @@ public class ParquetFixedWidthDictionaryReaders {
    * This class uses for reading unsigned integer fields.
    */
   static class DictionaryUInt4Reader extends FixedByteAlignedReader<UInt4Vector> {
-    DictionaryUInt4Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryUInt4Reader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                         ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, UInt4Vector v,
                         SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -99,10 +99,10 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   static class DictionaryFixedBinaryReader extends FixedByteAlignedReader<VarBinaryVector> {
-    DictionaryFixedBinaryReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryFixedBinaryReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                         ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarBinaryVector v,
                         SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -141,10 +141,10 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   static class DictionaryTimeReader extends FixedByteAlignedReader<TimeVector> {
-    DictionaryTimeReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryTimeReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                         ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, TimeVector v,
                         SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -163,10 +163,10 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   static class DictionaryBigIntReader extends FixedByteAlignedReader<BigIntVector> {
-    DictionaryBigIntReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryBigIntReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, BigIntVector v,
                                    SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -198,10 +198,10 @@ public class ParquetFixedWidthDictionaryReaders {
    * This class uses for reading unsigned BigInt fields.
    */
   static class DictionaryUInt8Reader extends FixedByteAlignedReader<UInt8Vector> {
-    DictionaryUInt8Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryUInt8Reader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, UInt8Vector v,
                            SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -231,10 +231,10 @@ public class ParquetFixedWidthDictionaryReaders {
 
   static class DictionaryVarDecimalReader extends FixedByteAlignedReader<VarDecimalVector> {
 
-    DictionaryVarDecimalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryVarDecimalReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
         ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarDecimalVector v,
         SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -288,10 +288,10 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   static class DictionaryTimeStampReader extends FixedByteAlignedReader<TimeStampVector> {
-    DictionaryTimeStampReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryTimeStampReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, TimeStampVector v,
                            SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -312,10 +312,10 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   static class DictionaryBinaryAsTimeStampReader extends FixedByteAlignedReader<TimeStampVector> {
-    DictionaryBinaryAsTimeStampReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryBinaryAsTimeStampReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                               ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, TimeStampVector v,
                               SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -337,10 +337,10 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   static class DictionaryFloat4Reader extends FixedByteAlignedReader<Float4Vector> {
-    DictionaryFloat4Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryFloat4Reader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, Float4Vector v,
                                    SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
@@ -356,10 +356,10 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   static class DictionaryFloat8Reader extends FixedByteAlignedReader<Float8Vector> {
-    DictionaryFloat8Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+    DictionaryFloat8Reader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, Float8Vector v,
                                    SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     // this method is called by its superclass during a read loop
