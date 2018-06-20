@@ -1050,8 +1050,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Contribute to Drill", 
-            "next_url": "/docs/contribute-to-drill/", 
+            "next_title": "Useful Information for Drill Developers", 
+            "next_url": "/docs/useful-information-for-drill-developers/", 
             "parent": "Develop Drill", 
             "previous_title": "Develop Drill", 
             "previous_url": "/docs/develop-drill/", 
@@ -2765,8 +2765,8 @@
             "next_title": "Apache Drill Contribution Guidelines", 
             "next_url": "/docs/apache-drill-contribution-guidelines/", 
             "parent": "Developer Information", 
-            "previous_title": "Compiling Drill from Source", 
-            "previous_url": "/docs/compiling-drill-from-source/", 
+            "previous_title": "Useful Information for Drill Developers", 
+            "previous_url": "/docs/useful-information-for-drill-developers/", 
             "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
             "title": "Contribute to Drill", 
             "url": "/docs/contribute-to-drill/"
@@ -3635,14 +3635,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Contribute to Drill", 
-                    "next_url": "/docs/contribute-to-drill/", 
+                    "next_title": "Useful Information for Drill Developers", 
+                    "next_url": "/docs/useful-information-for-drill-developers/", 
                     "parent": "Develop Drill", 
                     "previous_title": "Develop Drill", 
                     "previous_url": "/docs/develop-drill/", 
                     "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                     "title": "Compiling Drill from Source", 
                     "url": "/docs/compiling-drill-from-source/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Develop Drill", 
+                            "url": "/docs/develop-drill/"
+                        }, 
+                        {
+                            "title": "Developer Information", 
+                            "url": "/docs/developer-information/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Contribute to Drill", 
+                    "next_url": "/docs/contribute-to-drill/", 
+                    "parent": "Develop Drill", 
+                    "previous_title": "Compiling Drill from Source", 
+                    "previous_url": "/docs/compiling-drill-from-source/", 
+                    "relative_path": "_docs/developer-information/develop-drill/011-useful-information-for-drill-developers.md", 
+                    "title": "Useful Information for Drill Developers", 
+                    "url": "/docs/useful-information-for-drill-developers/"
                 }
             ], 
             "next_title": "Compiling Drill from Source", 
@@ -3758,14 +3779,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Contribute to Drill", 
-                            "next_url": "/docs/contribute-to-drill/", 
+                            "next_title": "Useful Information for Drill Developers", 
+                            "next_url": "/docs/useful-information-for-drill-developers/", 
                             "parent": "Develop Drill", 
                             "previous_title": "Develop Drill", 
                             "previous_url": "/docs/develop-drill/", 
                             "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                             "title": "Compiling Drill from Source", 
                             "url": "/docs/compiling-drill-from-source/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Develop Drill", 
+                                    "url": "/docs/develop-drill/"
+                                }, 
+                                {
+                                    "title": "Developer Information", 
+                                    "url": "/docs/developer-information/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Contribute to Drill", 
+                            "next_url": "/docs/contribute-to-drill/", 
+                            "parent": "Develop Drill", 
+                            "previous_title": "Compiling Drill from Source", 
+                            "previous_url": "/docs/compiling-drill-from-source/", 
+                            "relative_path": "_docs/developer-information/develop-drill/011-useful-information-for-drill-developers.md", 
+                            "title": "Useful Information for Drill Developers", 
+                            "url": "/docs/useful-information-for-drill-developers/"
                         }
                     ], 
                     "next_title": "Compiling Drill from Source", 
@@ -3831,8 +3873,8 @@
                     "next_title": "Apache Drill Contribution Guidelines", 
                     "next_url": "/docs/apache-drill-contribution-guidelines/", 
                     "parent": "Developer Information", 
-                    "previous_title": "Compiling Drill from Source", 
-                    "previous_url": "/docs/compiling-drill-from-source/", 
+                    "previous_title": "Useful Information for Drill Developers", 
+                    "previous_url": "/docs/useful-information-for-drill-developers/", 
                     "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
                     "title": "Contribute to Drill", 
                     "url": "/docs/contribute-to-drill/"
@@ -13831,6 +13873,27 @@
             "title": "Use Postman to Run SQL Queries on Drill Data Sources", 
             "url": "/docs/use-postman-to-run-sql-queries-on-drill-data-sources/"
         }, 
+        "Useful Information for Drill Developers": {
+            "breadcrumbs": [
+                {
+                    "title": "Develop Drill", 
+                    "url": "/docs/develop-drill/"
+                }, 
+                {
+                    "title": "Developer Information", 
+                    "url": "/docs/developer-information/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Contribute to Drill", 
+            "next_url": "/docs/contribute-to-drill/", 
+            "parent": "Develop Drill", 
+            "previous_title": "Compiling Drill from Source", 
+            "previous_url": "/docs/compiling-drill-from-source/", 
+            "relative_path": "_docs/developer-information/develop-drill/011-useful-information-for-drill-developers.md", 
+            "title": "Useful Information for Drill Developers", 
+            "url": "/docs/useful-information-for-drill-developers/"
+        }, 
         "Useful Research": {
             "breadcrumbs": [
                 {
@@ -19792,14 +19855,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Contribute to Drill", 
-                            "next_url": "/docs/contribute-to-drill/", 
+                            "next_title": "Useful Information for Drill Developers", 
+                            "next_url": "/docs/useful-information-for-drill-developers/", 
                             "parent": "Develop Drill", 
                             "previous_title": "Develop Drill", 
                             "previous_url": "/docs/develop-drill/", 
                             "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                             "title": "Compiling Drill from Source", 
                             "url": "/docs/compiling-drill-from-source/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Develop Drill", 
+                                    "url": "/docs/develop-drill/"
+                                }, 
+                                {
+                                    "title": "Developer Information", 
+                                    "url": "/docs/developer-information/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Contribute to Drill", 
+                            "next_url": "/docs/contribute-to-drill/", 
+                            "parent": "Develop Drill", 
+                            "previous_title": "Compiling Drill from Source", 
+                            "previous_url": "/docs/compiling-drill-from-source/", 
+                            "relative_path": "_docs/developer-information/develop-drill/011-useful-information-for-drill-developers.md", 
+                            "title": "Useful Information for Drill Developers", 
+                            "url": "/docs/useful-information-for-drill-developers/"
                         }
                     ], 
                     "next_title": "Compiling Drill from Source", 
@@ -19865,8 +19949,8 @@
                     "next_title": "Apache Drill Contribution Guidelines", 
                     "next_url": "/docs/apache-drill-contribution-guidelines/", 
                     "parent": "Developer Information", 
-                    "previous_title": "Compiling Drill from Source", 
-                    "previous_url": "/docs/compiling-drill-from-source/", 
+                    "previous_title": "Useful Information for Drill Developers", 
+                    "previous_url": "/docs/useful-information-for-drill-developers/", 
                     "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
                     "title": "Contribute to Drill", 
                     "url": "/docs/contribute-to-drill/"
