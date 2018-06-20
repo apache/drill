@@ -1,6 +1,6 @@
 ---
 title: "MapR-DB Format"
-date: 2018-01-30 18:38:55 UTC
+date: 2018-06-20 02:45:30 UTC
 parent: "Connect a Data Source"
 ---
 
@@ -14,6 +14,8 @@ Instead of including the name of a file, you include the table name in the query
 
 **Example**  
 
-       SELECT * FROM mfs.`/users/max/mytable`;  
+       SELECT * FROM mfs.`/users/max/mytable`;   
+
+**Note:** Starting in Drill 1.14, the MapR Drill installation package includes a hive-maprdb-json-handler, which enables you to create a Hive external table from a MapR-DB JSON table and then query the table from the Hive schema. The hive-maprdb-json-handler is not included in the Apache Drill installation package.
 
 
