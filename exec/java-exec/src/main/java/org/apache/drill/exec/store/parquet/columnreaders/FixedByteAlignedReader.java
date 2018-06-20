@@ -38,9 +38,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
   protected DrillBuf bytebuf;
 
 
-  FixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+  FixedByteAlignedReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                          boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
   // this method is called by its superclass during a read loop
@@ -67,9 +67,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     // TODO - replace this with fixed binary type in drill
     VariableWidthVector castedVector;
 
-    FixedBinaryReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+    FixedBinaryReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                     VariableWidthVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, true, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, true, v, schemaElement);
       castedVector = v;
     }
 
@@ -91,9 +91,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
     protected int dataTypeLengthInBytes;
 
-    ConvertedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+    ConvertedReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                            boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     @Override
@@ -115,9 +115,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
   public static class DateReader extends ConvertedReader<DateVector> {
 
     private final DateVector.Mutator mutator;
-    DateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+    DateReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                     boolean fixedLength, DateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       mutator = v.getMutator();
     }
 
@@ -141,9 +141,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
     private final DateVector.Mutator mutator;
 
-    CorruptDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+    CorruptDateReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                       boolean fixedLength, DateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       mutator = v.getMutator();
     }
 
@@ -171,9 +171,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
     private final DateVector.Mutator mutator;
 
-    CorruptionDetectingDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+    CorruptionDetectingDateReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                                   boolean fixedLength, DateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       mutator = v.getMutator();
     }
 
@@ -197,9 +197,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
   public static class VarDecimalReader extends ConvertedReader<VarDecimalVector> {
 
-    VarDecimalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+    VarDecimalReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
         boolean fixedLength, VarDecimalVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     @Override
@@ -220,9 +220,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
   }
 
   public static class IntervalReader extends ConvertedReader<IntervalVector> {
-    IntervalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+    IntervalReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                    boolean fixedLength, IntervalVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     @Override

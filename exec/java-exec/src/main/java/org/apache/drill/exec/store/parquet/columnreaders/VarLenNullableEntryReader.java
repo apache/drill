@@ -21,16 +21,18 @@ import java.nio.ByteBuffer;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
+import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
 
 /** Handles variable data types. */
-final class VarLenNullableEntryReader extends VarLenAbstractEntryReader {
+final class VarLenNullableEntryReader extends VarLenAbstractPageEntryReader {
 
   VarLenNullableEntryReader(ByteBuffer buffer,
       PageDataInfo pageInfo,
       ColumnPrecisionInfo columnPrecInfo,
-      VarLenColumnBulkEntry entry) {
+      VarLenColumnBulkEntry entry,
+      VarLenColumnBulkInputCallback containerCallback) {
 
-    super(buffer, pageInfo, columnPrecInfo, entry);
+    super(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
   }
 
   /** {@inheritDoc} */
@@ -140,6 +142,12 @@ final class VarLenNullableEntryReader extends VarLenAbstractEntryReader {
       if (remainingPageData() < (4 + dataLen)) {
         final String message = String.format("Invalid Parquet page metadata; cannot process advertised page count..");
         throw new DrillRuntimeException(message);
+      }
+
+      // Is there enough memory to handle this large value?
+      if (batchMemoryConstraintsReached(1, 4, dataLen)) {
+        entry.set(0, 0, 0, 0); // no data to be consumed
+        return entry;
       }
 
       // Register the length
