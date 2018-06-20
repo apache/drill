@@ -530,7 +530,7 @@ public class HiveUtilities {
   }
 
   /**
-   * This method checks whether the table is transactional and set necessary properties in {@link JobConf}.
+   * This method checks whether the table is transactional and set necessary properties in {@link JobConf}.<br>
    * If schema evolution properties aren't set in job conf for the input format, method sets the column names
    * and types from table/partition properties or storage descriptor.
    *
@@ -557,8 +557,12 @@ public class HiveUtilities {
       colTypes = job.get(serdeConstants.LIST_COLUMN_TYPES);
 
       if (colNames == null || colTypes == null) {
-        colNames = sd.getCols().stream().map(FieldSchema::getName).collect(Collectors.joining(","));
-        colTypes = sd.getCols().stream().map(FieldSchema::getType).collect(Collectors.joining(","));
+        colNames = sd.getCols().stream()
+            .map(FieldSchema::getName)
+            .collect(Collectors.joining(","));
+        colTypes = sd.getCols().stream()
+            .map(FieldSchema::getType)
+            .collect(Collectors.joining(","));
       }
 
       job.set(IOConstants.SCHEMA_EVOLUTION_COLUMNS, colNames);
@@ -568,11 +572,12 @@ public class HiveUtilities {
 
   /**
    * Rule is matched when all of the following match:
-   * 1) GroupScan in given DrillScalRel is an {@link HiveScan}
-   * 2) {@link HiveScan} is not already rewritten using Drill's native readers
-   * 3) InputFormat in table metadata and all partitions metadata contains the same value {@param tableInputFormatClass}
-   * 4) No error occurred while checking for the above conditions. An error is logged as warning.
-   *
+   * <ul>
+   * <li>GroupScan in given DrillScalRel is an {@link HiveScan}</li>
+   * <li> {@link HiveScan} is not already rewritten using Drill's native readers</li>
+   * <li> InputFormat in table metadata and all partitions metadata contains the same value {@param tableInputFormatClass}</li>
+   * <li> No error occurred while checking for the above conditions. An error is logged as warning.</li>
+   *</ul>
    * @param call rule call
    * @return True if the rule can be applied. False otherwise
    */
@@ -591,7 +596,7 @@ public class HiveUtilities {
       return false;
     }
 
-    final Class<? extends InputFormat<?,?>> tableInputFormat = getInputFormatFromSD(
+    final Class<? extends InputFormat<?, ?>> tableInputFormat = getInputFormatFromSD(
         HiveUtilities.getTableMetadata(hiveTable), hiveScan.getHiveReadEntry(), hiveTable.getSd(), hiveConf);
     if (tableInputFormat == null || !tableInputFormat.equals(tableInputFormatClass)) {
       return false;
@@ -629,6 +634,7 @@ public class HiveUtilities {
 
   /**
    * Get the input format from given {@link StorageDescriptor}
+   *
    * @param properties table properties
    * @param hiveReadEntry hive read entry
    * @param sd storage descriptor
@@ -654,7 +660,7 @@ public class HiveUtilities {
   }
 
   /**
-   * This method allows to cehck whether the Hive Table contains
+   * This method allows to check whether the Hive Table contains
    * <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-ComplexTypes">
    * Hive Complex Types</a><p>
    * TODO: Need to implement it, DRILL-3290. Appropriate (new or existed) Drill types should be selected.

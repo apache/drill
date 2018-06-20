@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.mapr.db;
 
+import java.io.IOException;
+
 import com.mapr.fs.MapRFileStatus;
 import com.mapr.fs.tables.TableProperties;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -28,10 +30,9 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.mapr.TableFormatMatcher;
 import org.apache.drill.exec.store.mapr.TableFormatPlugin;
+
 import org.apache.drill.exec.store.mapr.db.binary.MapRDBBinaryTable;
 import org.apache.hadoop.fs.Path;
-
-import java.io.IOException;
 
 public class MapRDBFormatMatcher extends TableFormatMatcher {
 

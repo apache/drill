@@ -111,7 +111,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
         Hive does not always give correct costing (i.e. for external tables Hive does not have number of rows
         and we calculate them approximately). On the contrary, Drill calculates number of rows exactly
         and thus Hive Scan can be chosen instead of Drill native scan because costings allegedly lower for Hive.
-        To ensure Drill native scan we'll be chosen, reduce Hive scan importance to 0.
+        To ensure Drill native scan will be chosen, reduce Hive scan importance to 0.
        */
       call.getPlanner().setImportance(hiveScanRel, 0.0);
     } catch (final Exception e) {

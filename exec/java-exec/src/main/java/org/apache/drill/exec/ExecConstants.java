@@ -204,7 +204,6 @@ public final class ExecConstants {
   public static final String SERVICE_KEYTAB_LOCATION = SERVICE_LOGIN_PREFIX + ".keytab";
   public static final String KERBEROS_NAME_MAPPING = SERVICE_LOGIN_PREFIX + ".auth_to_local";
 
-
   public static final String USER_SSL_ENABLED = "drill.exec.security.user.encryption.ssl.enabled";
   public static final String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
   public static final String BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.bit.encryption.sasl.max_wrapped_size";
@@ -387,7 +386,12 @@ public final class ExecConstants {
 
   // TODO: We need to add a feature that enables storage plugins to add their own options. Currently we have to declare
   // in core which is not right. Move this option and above two mongo plugin related options once we have the feature.
-  public static final String HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER = "store.hive.parquet.optimize_scan_with_native_readers";
+  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  public static final String HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS = "store.hive.optimize_scan_with_native_readers";
+  @Deprecated // TODO: DRILL-6527. It should be removed starting from next Drill 1.15.0 release
+  public static final OptionValidator HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR =
+      new BooleanValidator(HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS);
+  public static final String HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER = "store.hive.parquet.optimize_scan_with_native_reader";
   public static final OptionValidator HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER_VALIDATOR =
       new BooleanValidator(HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER);
   public static final String HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER = "store.hive.maprdb_json.optimize_scan_with_native_reader";

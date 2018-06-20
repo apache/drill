@@ -23,6 +23,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -37,7 +38,6 @@ import org.ojai.DocumentConstants;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.drill.exec.store.hive.HiveUtilities.nativeReadersRuleMatches;
@@ -75,7 +75,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
     } catch (ClassNotFoundException e) {
       throw UserException.resourceError(e)
           .message("Current Drill build is not designed for working with Hive MapR-DB tables. " +
-              "Please disable \"store.hive.maprdb_json.optimize_scan_with_native_reader\" option")
+              "Please disable \"%s\" option", ExecConstants.HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER)
           .build(logger);
     }
   }
@@ -83,21 +83,23 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
   @Override
   public void onMatch(RelOptRuleCall call) {
     try {
-      final DrillScanRel hiveScanRel = call.rel(0);
+      DrillScanRel hiveScanRel = call.rel(0);
 
-      final HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
-      final HiveReadEntry hiveReadEntry = hiveScan.getHiveReadEntry();
-      final HiveMetadataProvider hiveMetadataProvider = new HiveMetadataProvider(hiveScan.getUserName(), hiveReadEntry, hiveScan.getStoragePlugin().getHiveConf());
+      HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
+      HiveReadEntry hiveReadEntry = hiveScan.getHiveReadEntry();
+      HiveMetadataProvider hiveMetadataProvider = new HiveMetadataProvider(hiveScan.getUserName(), hiveReadEntry,
+          hiveScan.getStoragePlugin().getHiveConf());
       if (hiveMetadataProvider.getInputSplits(hiveReadEntry).isEmpty()) {
         // table is empty, use original scan
         return;
       }
 
       if (hiveScan.getHiveReadEntry().getTable().isSetPartitionKeys()) {
-        logger.warn("Hive MapR-DB JSON Handler doesn't support table partitioning. The table should be updated");
+        logger.warn("Hive MapR-DB JSON Handler doesn't support table partitioning. Consider recreating table without " +
+            "partitions");
       }
 
-      final DrillScanRel nativeScanRel = createNativeScanRel(hiveScanRel);
+      DrillScanRel nativeScanRel = createNativeScanRel(hiveScanRel);
       call.transformTo(nativeScanRel);
 
       /*
@@ -105,7 +107,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
         Hive does not always give correct costing (i.e. for external tables Hive does not have number of rows
         and we calculate them approximately). On the contrary, Drill calculates number of rows exactly
         and thus Hive Scan can be chosen instead of Drill native scan because costings allegedly lower for Hive.
-        To ensure Drill native scan we'll be chosen, reduce Hive scan importance to 0.
+        To ensure Drill MapR-DB Json scan will be chosen, reduce Hive scan importance to 0.
        */
       call.getPlanner().setImportance(hiveScanRel, 0.0);
     } catch (final Exception e) {
@@ -117,13 +119,10 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
    * Helper method which creates a DrillScanRel with native Drill HiveScan.
    */
   private DrillScanRel createNativeScanRel(final DrillScanRel hiveScanRel) throws Exception {
-    final RelDataTypeFactory typeFactory = hiveScanRel.getCluster().getTypeFactory();
-    final HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
+    RelDataTypeFactory typeFactory = hiveScanRel.getCluster().getTypeFactory();
+    HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
     Map<String, String> parameters = hiveScan.getHiveReadEntry().getHiveTableWrapper().getParameters();
 
-    // Drill constructs own ConditionImpl. To use Hive's one consider: MapRDBJsonSplit inputSplit =
-    // (MapRDBJsonSplit) hiveMetadataProvider.getInputSplits(hiveReadEntry).get(0).getInputSplits().get(0);
-    // ConditionImpl condition = inputSplit.getTableSplit().getTableSplitInt().getCondition();
     JsonScanSpec scanSpec = new JsonScanSpec(parameters.get(MAPRDB_TABLE_NAME), null);
     MapRDBFormatPlugin mapRDBFormatPlugin = new MapRDBFormatPlugin(
         "hive-maprdb",
@@ -135,7 +134,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
     List<SchemaPath> hiveScanCols = hiveScanRel.getColumns().stream()
         .map(colNameSchemaPath -> replaceOverriddenSchemaPath(parameters, colNameSchemaPath))
         .collect(Collectors.toList());
-    final JsonTableGroupScan nariveMapRDBScan =
+    JsonTableGroupScan nariveMapRDBScan =
         new JsonTableGroupScan(
             hiveScan.getUserName(),
             hiveScan.getStoragePlugin(),
@@ -150,7 +149,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
     List<RelDataType> nativeScanColTypes = hiveScanRel.getRowType().getFieldList().stream()
         .map(RelDataTypeField::getType)
         .collect(Collectors.toList());
-    final RelDataType nativeScanRowType = typeFactory.createStructType(nativeScanColTypes, nativeScanColNames);
+    RelDataType nativeScanRowType = typeFactory.createStructType(nativeScanColTypes, nativeScanColNames);
 
     return new DrillScanRel(
         hiveScanRel.getCluster(),
@@ -166,10 +165,10 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
    *
    * @param parameters Hive table properties
    * @param colName Hive column name
-   * @return original column name
+   * @return original column name, null if colName is absent
    */
   private String replaceOverriddenColumnId(Map<String, String> parameters, String colName) {
-    return Objects.equals(colName, parameters.get(MAPRDB_COLUMN_ID)) ? ID_KEY : colName;
+    return colName != null && colName.equals(parameters.get(MAPRDB_COLUMN_ID)) ? ID_KEY : colName;
   }
 
   /**
@@ -181,10 +180,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
    */
   private SchemaPath replaceOverriddenSchemaPath(Map<String, String> parameters, SchemaPath colNameSchemaPath) {
     String hiveColumnName = colNameSchemaPath.getRootSegmentPath();
-    if (hiveColumnName.equals(parameters.get(MAPRDB_COLUMN_ID))) {
-      return SchemaPath.getSimplePath(ID_KEY);
-    } else {
-      return colNameSchemaPath;
-    }
+    return hiveColumnName != null && hiveColumnName.equals(parameters.get(MAPRDB_COLUMN_ID))
+        ? SchemaPath.getSimplePath(ID_KEY) : colNameSchemaPath;
   }
 }

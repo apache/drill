@@ -171,7 +171,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
     OptionManager options = optimizerRulesContext.getPlannerSettings().getOptions();
     // TODO: Remove implicit using of convert_fromTIMESTAMP_IMPALA function
     // once "store.parquet.reader.int96_as_timestamp" will be true by default
-    if (options.getBoolean(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER)) {
+    if (options.getBoolean(ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS) ||
+        options.getBoolean(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER)) {
       ruleBuilder.add(ConvertHiveParquetScanToDrillParquetScan.INSTANCE);
     }
     if (options.getBoolean(ExecConstants.HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER)) {
