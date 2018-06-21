@@ -58,8 +58,8 @@ public class FunctionAttributes {
     return template.outputWidthCalculatorType();
   }
 
-  public int variableOutoputSizeEstimate() {
-    return  template.variableOutputSizeEstimate();
+  public int variableOutputSizeEstimate() {
+    return  template.outputSizeEstimate();
   }
 
   public NullHandling getNullHandling() {

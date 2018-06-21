@@ -105,8 +105,8 @@ public class OutputWidthVisitor extends AbstractExecExprVisitor<OutputWidthExpre
         final DrillFuncHolder holder = ((DrillFuncHolderExpr) holderExpr).getHolder();
 
         // If the user has provided a size estimate, use it
-        int estimate = holder.variableOuputSizeEstimate();
-        if (estimate != FunctionTemplate.VARIABLE_OUTPUT_SIZE_ESTIMATE_DEFAULT) {
+        int estimate = holder.variableOutputSizeEstimate();
+        if (estimate != FunctionTemplate.OUTPUT_SIZE_ESTIMATE_DEFAULT) {
             return new FixedLenExpr(estimate);
         }
         // Use the calculator provided by the user or use the default
@@ -124,7 +124,7 @@ public class OutputWidthVisitor extends AbstractExecExprVisitor<OutputWidthExpre
 
     /**
      * Records a variable width write expression. This will be converted to a {@link FixedLenExpr} expression by walking
-     * the tree of expression attached to the write expression .
+     * the tree of expression attached to the write expression.
      * @param writeExpr
      * @param state
      * @return
@@ -135,7 +135,7 @@ public class OutputWidthVisitor extends AbstractExecExprVisitor<OutputWidthExpre
                                                                  OutputWidthVisitorState state) throws RuntimeException {
         TypedFieldId fieldId = writeExpr.getFieldId();
         ProjectMemoryManager manager = state.getManager();
-        OutputWidthExpression outputExpr = null;
+        OutputWidthExpression outputExpr;
         if (manager.isFixedWidth(fieldId)) {
             outputExpr = getFixedLenExpr(fieldId.getFinalType());
         } else {

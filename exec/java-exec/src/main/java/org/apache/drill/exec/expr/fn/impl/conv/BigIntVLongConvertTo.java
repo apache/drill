@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 
 @FunctionTemplate(name = "convert_toBIGINT_HADOOPV", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                  variableOutputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_HADOOPV_LENGTH)
+                  outputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_HADOOPV_LENGTH)
 public class BigIntVLongConvertTo implements DrillSimpleFunc {
 
   @Param BigIntHolder in;

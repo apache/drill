@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 
 @FunctionTemplate(name = "convert_toBIGINT", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                  variableOutputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_BIGINT_LENGTH)
+                  outputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_BIGINT_LENGTH)
 public class BigIntConvertTo implements DrillSimpleFunc {
 
   @Param BigIntHolder in;

@@ -94,7 +94,7 @@ public @interface FunctionTemplate {
    * This enum will be used to estimate the average size of the output
    * produced by a function that produces variable length output
    */
-  public enum OutputWidthCalculatorType {
+  enum OutputWidthCalculatorType {
     DEFAULT(OutputWidthCalculators.DefaultOutputWidthCalculator.INSTANCE),
     CLONE(OutputWidthCalculators.CloneOutputWidthCalculator.INSTANCE),
     CONCAT(OutputWidthCalculators.ConcatOutputWidthCalculator.INSTANCE),
@@ -119,8 +119,8 @@ public @interface FunctionTemplate {
 
   OutputWidthCalculatorType outputWidthCalculatorType() default OutputWidthCalculatorType.DEFAULT;
 
-  int VARIABLE_OUTPUT_SIZE_ESTIMATE_DEFAULT = -1;
-  int variableOutputSizeEstimate() default VARIABLE_OUTPUT_SIZE_ESTIMATE_DEFAULT;
+  int OUTPUT_SIZE_ESTIMATE_DEFAULT = -1;
+  int outputSizeEstimate() default OUTPUT_SIZE_ESTIMATE_DEFAULT;
 
   enum NullHandling {
     /**

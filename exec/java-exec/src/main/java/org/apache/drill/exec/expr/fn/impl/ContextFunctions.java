@@ -34,7 +34,7 @@ public class ContextFunctions {
    * Implement "user", "session_user" or "system_user" function. Returns the username of the user connected to Drillbit.
    */
   @FunctionTemplate(names = {"user", "session_user", "system_user"}, scope = FunctionTemplate.FunctionScope.SIMPLE,
-          isNiladic = true, variableOutputSizeEstimate = OutputSizeEstimateConstants.USER_NAME_LENGTH)
+          isNiladic = true, outputSizeEstimate = OutputSizeEstimateConstants.USER_NAME_LENGTH)
   public static class User implements DrillSimpleFunc {
     @Output VarCharHolder out;
     @Inject ContextInformation contextInfo;
@@ -61,7 +61,7 @@ public class ContextFunctions {
    * Implement "current_schema" function. Returns the default schema in current session.
    */
   @FunctionTemplate(name = "current_schema", scope = FunctionTemplate.FunctionScope.SIMPLE, isNiladic = true,
-                    variableOutputSizeEstimate = OutputSizeEstimateConstants.SCHEMA_LENGTH)
+                    outputSizeEstimate = OutputSizeEstimateConstants.SCHEMA_LENGTH)
   public static class CurrentSchema implements DrillSimpleFunc {
     @Output VarCharHolder out;
     @Inject ContextInformation contextInfo;
@@ -88,7 +88,7 @@ public class ContextFunctions {
    * Implement "session_id" function. Returns the unique id of the current session.
    */
   @FunctionTemplate(name = "session_id", scope = FunctionTemplate.FunctionScope.SIMPLE, isNiladic = true,
-                    variableOutputSizeEstimate = OutputSizeEstimateConstants.USER_ID_LENGTH)
+                    outputSizeEstimate = OutputSizeEstimateConstants.USER_ID_LENGTH)
   public static class SessionId implements DrillSimpleFunc {
     @Output VarCharHolder out;
     @Inject ContextInformation contextInfo;

@@ -271,7 +271,7 @@ public class DateTypeFunctions {
     }
 
     @FunctionTemplate(name = "timeofday", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true,
-                      variableOutputSizeEstimate = OutputSizeEstimateConstants.DATE_TIME_LENGTH)
+                      outputSizeEstimate = OutputSizeEstimateConstants.DATE_TIME_LENGTH)
     public static class TimeOfDay implements DrillSimpleFunc {
         @Inject DrillBuf buffer;
         @Output VarCharHolder out;

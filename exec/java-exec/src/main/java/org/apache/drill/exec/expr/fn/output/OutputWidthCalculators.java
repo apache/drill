@@ -34,7 +34,7 @@ public class OutputWidthCalculators {
 
     private static int adjustOutputWidth(int outputSize, String prefix) {
         if (outputSize > Types.MAX_VARCHAR_LENGTH || outputSize < 0 /*overflow*/) {
-            logger.warn(prefix + "Output size for expressions is too large, setting to MAX_VARCHAR_LENGTH");
+            logger.warn(prefix + " Output size for expressions is too large, setting to MAX_VARCHAR_LENGTH");
             outputSize = Types.MAX_VARCHAR_LENGTH;
         }
         return outputSize;
@@ -86,7 +86,7 @@ public class OutputWidthCalculators {
                 throw new IllegalArgumentException();
             }
             outputSize = args.get(0).getWidth();
-            outputSize = adjustOutputWidth(outputSize, "CloneOutputWidthCalculator");
+            outputSize = adjustOutputWidth(outputSize, "CloneOutputWidthCalculator:");
             return outputSize;
         }
     }
@@ -105,7 +105,7 @@ public class OutputWidthCalculators {
          */
         @Override
         public int getOutputWidth(List<FixedLenExpr> args) {
-            //KM_TBD: Read value from options?
+            //TODO: Read value from options?
             int outputSize = adjustOutputWidth(50, "DefaultOutputWidthCalculator:");
             return outputSize;
         }

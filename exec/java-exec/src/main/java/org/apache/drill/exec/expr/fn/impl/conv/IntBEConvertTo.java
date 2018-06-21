@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 
 @FunctionTemplate(name = "convert_toINT_BE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                  variableOutputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_INT_LENGTH)
+                  outputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_INT_LENGTH)
 public class IntBEConvertTo implements DrillSimpleFunc {
 
   @Param IntHolder in;

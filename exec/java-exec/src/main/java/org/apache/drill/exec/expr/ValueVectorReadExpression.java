@@ -80,10 +80,6 @@ public class ValueVectorReadExpression implements LogicalExpression {
     return visitor.visitUnknown(this, value);
   }
 
-  public <T, V, E extends Exception> T accept(AbstractExecExprVisitor<T, V, E> visitor, V value) throws E {
-    return visitor.visitValueVectorReadExpression(this, value);
-  }
-
   public TypedFieldId getFieldId() {
     return fieldId;
   }

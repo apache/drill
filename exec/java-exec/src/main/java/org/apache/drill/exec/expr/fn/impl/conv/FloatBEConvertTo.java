@@ -31,7 +31,7 @@ import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 import javax.inject.Inject;
 
 @FunctionTemplate(name = "convert_toFLOAT_BE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                  variableOutputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_FLOAT_LENGTH)
+                  outputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_FLOAT_LENGTH)
 public class FloatBEConvertTo implements DrillSimpleFunc {
 
   @Param Float4Holder in;

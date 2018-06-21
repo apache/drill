@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 
 @FunctionTemplate(name = "convert_toTIMESTAMP_EPOCH_BE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-variableOutputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_TIMESTAMP_EPOCH_LENGTH)
+outputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_TIMESTAMP_EPOCH_LENGTH)
 public class TimeStampEpochBEConvertTo implements DrillSimpleFunc {
 
   @Param TimeStampHolder in;

@@ -33,7 +33,7 @@ import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
 
 @FunctionTemplate(names = {"convert_toTINYINT", "convert_toTINYINT_BE"},
   scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-        variableOutputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_TINYINT_LENGTH)
+        outputSizeEstimate = OutputSizeEstimateConstants.CONVERT_TO_TINYINT_LENGTH)
 public class TinyIntConvertTo implements DrillSimpleFunc {
 
   @Param TinyIntHolder in;

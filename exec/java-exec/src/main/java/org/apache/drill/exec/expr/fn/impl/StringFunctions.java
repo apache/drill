@@ -1646,7 +1646,7 @@ public class StringFunctions{
   * Returns the char corresponding to ASCII code input.
   */
   @FunctionTemplate(name = "chr", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
-                    variableOutputSizeEstimate = OutputSizeEstimateConstants.CHAR_LENGTH)
+                    outputSizeEstimate = OutputSizeEstimateConstants.CHAR_LENGTH)
   public static class AsciiToChar implements DrillSimpleFunc {
     @Param  IntHolder in;
     @Output VarCharHolder out;

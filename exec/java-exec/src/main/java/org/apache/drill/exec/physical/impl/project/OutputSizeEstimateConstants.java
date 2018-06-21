@@ -38,9 +38,9 @@ public class OutputSizeEstimateConstants {
 
     public static final int CHAR_LENGTH = 1;
 
-    //KM_TBD Make this a user config?
+    //TODO Make this a user config?
     public static final int NON_DRILL_FUNCTION_OUTPUT_SIZE_ESTIMATE = 50;
 
-    //KM_TBD Make this a user config?
+    //TODO Make this a user config?
     public static final int COMPLEX_FIELD_ESTIMATE = 50;
 }
