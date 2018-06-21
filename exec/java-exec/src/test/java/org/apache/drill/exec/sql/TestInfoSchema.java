@@ -383,9 +383,15 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void describePartialSchema() throws Exception {
+    test("use dfs");
+    test("describe schema tmp");
+  }
+
+  @Test
   public void describeSchemaOutput() throws Exception {
     final List<QueryDataBatch> result = testSqlWithResults("describe schema dfs.tmp");
-    assertTrue(result.size() == 1);
+    assertEquals(1, result.size());
     final QueryDataBatch batch = result.get(0);
     final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
     loader.load(batch.getHeader().getDef(), batch.getData());
