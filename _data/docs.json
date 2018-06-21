@@ -3109,14 +3109,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Date/Time Functions and Arithmetic", 
-            "next_url": "/docs/date-time-functions-and-arithmetic/", 
+            "next_title": "Data Type Functions", 
+            "next_url": "/docs/data-type-functions/", 
             "parent": "SQL Functions", 
             "previous_title": "Math and Trig", 
             "previous_url": "/docs/math-and-trig/", 
             "relative_path": "_docs/sql-reference/sql-functions/020-data-type-conversion.md", 
             "title": "Data Type Conversion", 
             "url": "/docs/data-type-conversion/"
+        }, 
+        "Data Type Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Functions", 
+                    "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Date/Time Functions and Arithmetic", 
+            "next_url": "/docs/date-time-functions-and-arithmetic/", 
+            "parent": "SQL Functions", 
+            "previous_title": "Data Type Conversion", 
+            "previous_url": "/docs/data-type-conversion/", 
+            "relative_path": "_docs/sql-reference/sql-functions/021-data-type-functions.md", 
+            "title": "Data Type Functions", 
+            "url": "/docs/data-type-functions/"
         }, 
         "Data Types": {
             "breadcrumbs": [
@@ -3235,8 +3256,8 @@
             "next_title": "String Manipulation", 
             "next_url": "/docs/string-manipulation/", 
             "parent": "SQL Functions", 
-            "previous_title": "Data Type Conversion", 
-            "previous_url": "/docs/data-type-conversion/", 
+            "previous_title": "Data Type Functions", 
+            "previous_url": "/docs/data-type-functions/", 
             "relative_path": "_docs/sql-reference/sql-functions/030-date-time-functions-and-arithmetic.md", 
             "title": "Date/Time Functions and Arithmetic", 
             "url": "/docs/date-time-functions-and-arithmetic/"
@@ -11027,8 +11048,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Date/Time Functions and Arithmetic", 
-                    "next_url": "/docs/date-time-functions-and-arithmetic/", 
+                    "next_title": "Data Type Functions", 
+                    "next_url": "/docs/data-type-functions/", 
                     "parent": "SQL Functions", 
                     "previous_title": "Math and Trig", 
                     "previous_url": "/docs/math-and-trig/", 
@@ -11048,11 +11069,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "String Manipulation", 
-                    "next_url": "/docs/string-manipulation/", 
+                    "next_title": "Date/Time Functions and Arithmetic", 
+                    "next_url": "/docs/date-time-functions-and-arithmetic/", 
                     "parent": "SQL Functions", 
                     "previous_title": "Data Type Conversion", 
                     "previous_url": "/docs/data-type-conversion/", 
+                    "relative_path": "_docs/sql-reference/sql-functions/021-data-type-functions.md", 
+                    "title": "Data Type Functions", 
+                    "url": "/docs/data-type-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Functions", 
+                            "url": "/docs/sql-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "String Manipulation", 
+                    "next_url": "/docs/string-manipulation/", 
+                    "parent": "SQL Functions", 
+                    "previous_title": "Data Type Functions", 
+                    "previous_url": "/docs/data-type-functions/", 
                     "relative_path": "_docs/sql-reference/sql-functions/030-date-time-functions-and-arithmetic.md", 
                     "title": "Date/Time Functions and Arithmetic", 
                     "url": "/docs/date-time-functions-and-arithmetic/"
@@ -11327,8 +11369,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Date/Time Functions and Arithmetic", 
-                            "next_url": "/docs/date-time-functions-and-arithmetic/", 
+                            "next_title": "Data Type Functions", 
+                            "next_url": "/docs/data-type-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Math and Trig", 
                             "previous_url": "/docs/math-and-trig/", 
@@ -11348,11 +11390,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "String Manipulation", 
-                            "next_url": "/docs/string-manipulation/", 
+                            "next_title": "Date/Time Functions and Arithmetic", 
+                            "next_url": "/docs/date-time-functions-and-arithmetic/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Data Type Conversion", 
                             "previous_url": "/docs/data-type-conversion/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/021-data-type-functions.md", 
+                            "title": "Data Type Functions", 
+                            "url": "/docs/data-type-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "String Manipulation", 
+                            "next_url": "/docs/string-manipulation/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "Data Type Functions", 
+                            "previous_url": "/docs/data-type-functions/", 
                             "relative_path": "_docs/sql-reference/sql-functions/030-date-time-functions-and-arithmetic.md", 
                             "title": "Date/Time Functions and Arithmetic", 
                             "url": "/docs/date-time-functions-and-arithmetic/"
@@ -18314,8 +18377,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Date/Time Functions and Arithmetic", 
-                            "next_url": "/docs/date-time-functions-and-arithmetic/", 
+                            "next_title": "Data Type Functions", 
+                            "next_url": "/docs/data-type-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Math and Trig", 
                             "previous_url": "/docs/math-and-trig/", 
@@ -18335,11 +18398,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "String Manipulation", 
-                            "next_url": "/docs/string-manipulation/", 
+                            "next_title": "Date/Time Functions and Arithmetic", 
+                            "next_url": "/docs/date-time-functions-and-arithmetic/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Data Type Conversion", 
                             "previous_url": "/docs/data-type-conversion/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/021-data-type-functions.md", 
+                            "title": "Data Type Functions", 
+                            "url": "/docs/data-type-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "String Manipulation", 
+                            "next_url": "/docs/string-manipulation/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "Data Type Functions", 
+                            "previous_url": "/docs/data-type-functions/", 
                             "relative_path": "_docs/sql-reference/sql-functions/030-date-time-functions-and-arithmetic.md", 
                             "title": "Date/Time Functions and Arithmetic", 
                             "url": "/docs/date-time-functions-and-arithmetic/"
