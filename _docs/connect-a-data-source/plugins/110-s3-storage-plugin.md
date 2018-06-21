@@ -1,11 +1,17 @@
 ---
 title: "S3 Storage Plugin"
-date: 2018-06-21 23:25:26 UTC
+date: 2018-06-21 23:39:47 UTC
 parent: "Connect a Data Source"
 ---
-Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries. Drill has the ability to query files stored on Amazon's S3 cloud storage using the HDFS s3a library. The HDFS s3a library adds support for files larger than 5 gigabytes (these were unsupported using the older HDFS s3n library).
+Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries. 
 
-To connect Drill to S3, you must provide your AWS credentials, and configure the S3 storage plugin with an S3 bucket.  
+Drill has the ability to query files stored on Amazon's S3 cloud storage using the HDFS s3a library. The HDFS s3a library adds support for files larger than 5 gigabytes (these were unsupported using the older HDFS s3n library).
+
+To connect Drill to S3:  
+
+
+- Provide your AWS credentials.   
+- Configure the S3 storage plugin with an S3 bucket name.  
 
 For additional information, refer to the [HDFS S3 documentation](https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/index.html).   
 
@@ -18,7 +24,7 @@ Your environment determines where you provide your AWS credentials. You can defi
 
 - Directly in the S3 storage plugin. Note that this method is the least secure, but sufficient for use on a single machine, such as a laptop.  
 - In a non-Hadoop environment, you can use the Drill-specific core-site.xml file to provide the AWS credentials.  
-- In a Hadoop environment, you can use the existing S3 configuration for Hadoop. The S3 access keys should already be defined. All you need to do is [configure the S3 storage plugin]({{site.baseurl}}/docs/s3-storage-plugin/#configuring-the-s3-storage-plugin).  
+- In a Hadoop environment, you can use the existing S3 configuration for Hadoop. The AWS credentials should already be defined. All you need to do is [configure the S3 storage plugin]({{site.baseurl}}/docs/s3-storage-plugin/#configuring-the-s3-storage-plugin).  
 
 ### Defining Access Keys in the S3 Storage Plugin  
 
@@ -51,19 +57,19 @@ The Storage page in the Drill Web UI provides an S3 storage plugin that you conf
 
 To configure the S3 storage plugin, log in to the Drill Web UI and then update the S3 configuration with the bucket name, as described in the following steps:   
 
-1- To access the Drill Web UI, enter the following URL in the address bar of your web browser:  
+1\. To access the Drill Web UI, enter the following URL in the address bar of your web browser:  
 
        http://<drill-hostname>:8047  
   
        //The drill-hostname is a node on which Drill is running.  
 
-2-To configure the S3 storage plugin in Drill, complete the following steps:  
+2\. To configure the S3 storage plugin in Drill, complete the following steps:  
 
-   a. Click on the **Storage** page.  
-   b. Find the S3 option on the page and then click **Update** next to the option.  
-   c. Configure the S3 storage plugin, specifying the bucket in the `"connection"` property, as shown in the following example:  
+   a\. Click on the **Storage** page.  
+   b\. Find the S3 option on the page and then click **Update** next to the option.  
+   c\. Configure the S3 storage plugin, specifying the bucket in the `"connection"` property, as shown in the following example:  
 
-**Note:** The `"config"` block in the following S3 storage plugin configuration contains the access key and endpoint properties required if you want to define your AWS credentials in the storage plugin configuration. Do not include the `"config"` block in your S3 storage plugin configuration if you defined your AWS credentials in the core-site.xml file.   
+**Note:** The `"config"` block in the following S3 storage plugin configuration contains the access key and endpoint properties required if you want to define your AWS credentials here. Do not include the `"config"` block in your S3 storage plugin configuration if you defined your AWS credentials in the core-site.xml file.   
 
        {
 	"type": "file",
