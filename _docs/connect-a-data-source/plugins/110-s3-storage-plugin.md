@@ -1,31 +1,32 @@
 ---
 title: "S3 Storage Plugin"
-date: 2018-06-19 02:04:08 UTC
+date: 2018-06-21 23:25:26 UTC
 parent: "Connect a Data Source"
 ---
-Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries.
+Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries. Drill has the ability to query files stored on Amazon's S3 cloud storage using the HDFS s3a library. The HDFS s3a library adds support for files larger than 5 gigabytes (these were unsupported using the older HDFS s3n library).
 
-## Connecting Drill to S3
+To connect Drill to S3, you must provide your AWS credentials, and configure the S3 storage plugin with an S3 bucket.  
 
-Drill has the ability to query files stored on Amazon's S3 cloud storage using the HDFS s3a library. The HDFS s3a library adds support for files larger than 5 gigabytes (these were unsupported using the older HDFS s3n library).
-
-To connect Drill to S3:  
-
-- Provide your AWS credentials.  
-- Configure the S3 storage plugin with an S3 bucket.  
-
-For additional information, you can refer to the [HDFS S3 documentation](https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/index.html).   
+For additional information, refer to the [HDFS S3 documentation](https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/index.html).   
 
 **Note:** Drill does not use HDFS 3.x, therefore Drill does not support AWS temporary credentials, as described in the s3a documentation.
 
 
-###Providing AWS Credentials  
+## Providing AWS Credentials  
 
-Define the AWS credentials (access keys) in the core-site.xml file or as storage plugin configuration properties in the S3 storage plugin configuration in the Drill Web UI. However, configuring credentials in the S3 storage plugin in not very secure, but sufficient for use on a single machine, such as a laptop.  
+Your environment determines where you provide your AWS credentials. You can define your AWS credentials one of three ways:  
 
-**Configuring Access Keys in core-site.xml**
+- Directly in the S3 storage plugin. Note that this method is the least secure, but sufficient for use on a single machine, such as a laptop.  
+- In a non-Hadoop environment, you can use the Drill-specific core-site.xml file to provide the AWS credentials.  
+- In a Hadoop environment, you can use the existing S3 configuration for Hadoop. The S3 access keys should already be defined. All you need to do is [configure the S3 storage plugin]({{site.baseurl}}/docs/s3-storage-plugin/#configuring-the-s3-storage-plugin).  
 
-To configure the access keys in the core-site.xml file, navigate to the `$DRILL_HOME/conf` or `$DRILL_SITE` directory, and rename the core-site-example.xml file to core-site.xml. Replace the text `ENTER_YOUR_ACESSKEY` and `ENTER_YOUR_SECRETKEY` with your AWS credentials and also include the endpoint, as shown in the following example:   
+### Defining Access Keys in the S3 Storage Plugin  
+
+Refer to [Configuring the S3 Storage Plugin]({{site.baseurl}}/docs/s3-storage-plugin/#configuring-the-s3-storage-plugin). 
+
+### Defining Access Keys in the Drill core-site.xml File
+
+To configure the access keys in Drill's core-site.xml file, navigate to the `$DRILL_HOME/conf` or `$DRILL_SITE` directory, and rename the core-site-example.xml file to core-site.xml. Replace the text `ENTER_YOUR_ACESSKEY` and `ENTER_YOUR_SECRETKEY` with your AWS credentials and also include the endpoint, as shown in the following example:   
 
        <configuration>
            <property>
@@ -44,22 +45,11 @@ To configure the access keys in the core-site.xml file, navigate to the `$DRILL_
 
 **Note:** When you rename the file, Hadoop support breaks if `$HADOOP_HOME` was in the path because Drill pulls in the Drill core-site.xml file instead of the Hadoop core-site.xml file. In this situation, make the changes in the Hadoop core-site.xml file. Do not create a core-site.xml file for Drill.  
 
-**Configuring Access Keys in the S3 Storage Plugin** 
-   
-If you choose to configure the access keys in the S3 plugin, include the access keys and the endpoint in the S3 storage plugin configuration, as shown in the following example:  
+## Configuring the S3 Storage Plugin
 
-         "connection": "s3a://<bucket-name>/",
-         "config": {
-           "fs.s3a.access.key": "<key>",
-           "fs.s3a.secret.key": "<key>",
-           "fs.s3a.endpoint": "s3.us-west-1.amazonaws.com"
-         },  
+The Storage page in the Drill Web UI provides an S3 storage plugin that you configure to connect Drill to the S3 distributed file system registered in core-site.xml. If you did not define your AWS credentials in the core-site.xml file, you can define them in the storage plugin configuration.   
 
-**Note:** General instructions for configuring the S3 storage plugin are provided in the next section of this document.   
-
-###Configuring the S3 Storage Plugin
-
-The Storage page in the Drill Web UI provides an S3 storage plugin that you configure to connect Drill to the S3 distributed file system registered in core-site.xml. Once configured, you can query the files stored in S3. To configure the S3 storage plugin, log in to the Drill Web UI and then update the S3 configuration, as described in the following steps:   
+To configure the S3 storage plugin, log in to the Drill Web UI and then update the S3 configuration with the bucket name, as described in the following steps:   
 
 1- To access the Drill Web UI, enter the following URL in the address bar of your web browser:  
 
@@ -67,13 +57,13 @@ The Storage page in the Drill Web UI provides an S3 storage plugin that you conf
   
        //The drill-hostname is a node on which Drill is running.  
 
-2-To configure the S3 storage plugin, complete the following steps:  
+2-To configure the S3 storage plugin in Drill, complete the following steps:  
 
-   a. Click on the Storage page.  
+   a. Click on the **Storage** page.  
    b. Find the S3 option on the page and then click **Update** next to the option.  
-   c. Configure the S3 storage plugin, specifying the bucket in the "connection" property, as shown in the following example:  
+   c. Configure the S3 storage plugin, specifying the bucket in the `"connection"` property, as shown in the following example:  
 
-**Note:** The "config" section with the access key and endpoint properties are included in the following configuration as an example. Do not include the "config" section in your S3 configuration if you used core-site.xml to store your access keys.   
+**Note:** The `"config"` block in the following S3 storage plugin configuration contains the access key and endpoint properties required if you want to define your AWS credentials in the storage plugin configuration. Do not include the `"config"` block in your S3 storage plugin configuration if you defined your AWS credentials in the core-site.xml file.   
 
        {
 	"type": "file",
@@ -116,10 +106,10 @@ The Storage page in the Drill Web UI provides an S3 storage plugin that you conf
           
          
 4-Click **Update** to save the configuration.  
-5-Navigate back to the Storage page.  
-6-On the Storage page, click **Enable** next to the S3 option.  
+5-Navigate back to the **Storage** page.  
+6-On the **Storage** page, click **Enable** next to the S3 option.  
 	
-Drill should now be able to use the HDFS s3a library to access data in S3. 
+Drill should now be able to use the HDFS s3a library to access data in S3.
 
 
 ## Quering Parquet Format Files On S3 
