@@ -76,7 +76,8 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
     HTPPD_LOG_SUB_SCAN(51),
     IMAGE_SUB_SCAN(52),
     SEQUENCE_SUB_SCAN(53),
-    PARTITION_LIMIT(54);
+    PARTITION_LIMIT(54),
+    PCAPNG_SUB_SCAN(55);
     
     public final int number;
     
@@ -149,6 +150,7 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
             case 52: return IMAGE_SUB_SCAN;
             case 53: return SEQUENCE_SUB_SCAN;
             case 54: return PARTITION_LIMIT;
+            case 55: return PCAPNG_SUB_SCAN;
             default: return null;
         }
     }

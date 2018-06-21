@@ -534,6 +534,11 @@
       <artifactId>metadata-extractor</artifactId>
       <version>2.11.0</version>
     </dependency>
+    <dependency>
+      <groupId>fr.bmartel</groupId>
+      <artifactId>pcapngdecoder</artifactId>
+      <version>1.2</version>
+    </dependency>
   </dependencies>
 
   <profiles>

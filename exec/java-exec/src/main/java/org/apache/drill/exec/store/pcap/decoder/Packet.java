@@ -42,18 +42,18 @@ public class Packet {
   private long timestamp;
   private int originalLength;
 
-  private byte[] raw;
+  protected byte[] raw;
 
   // index into the raw data where the current ethernet packet starts
   private int etherOffset;
   // index into the raw data where the current IP packet starts. Should be just after etherOffset
-  private int ipOffset;
+  protected int ipOffset;
 
   private int packetLength;
-  private int etherProtocol;
-  private int protocol;
+  protected int etherProtocol;
+  protected int protocol;
 
-  private boolean isRoutingV6;
+  protected boolean isRoutingV6;
 
   @SuppressWarnings("WeakerAccess")
   public boolean readPcap(final InputStream in, final boolean byteOrder, final int maxLength) throws IOException {
@@ -379,7 +379,7 @@ public class Packet {
     return (getByte(raw, ipOffset) & 0xf) * 4;
   }
 
-  private int ipVersion() {
+  protected int ipVersion() {
     return getByte(raw, ipOffset) >>> 4;
   }
 
@@ -409,12 +409,12 @@ public class Packet {
     // everything is decoded lazily
   }
 
-  private int processIpV4Packet() {
+  protected int processIpV4Packet() {
     validateIpV4Packet();
     return getByte(raw, ipOffset + 9);
   }
 
-  private int processIpV6Packet() {
+  protected int processIpV6Packet() {
     Preconditions.checkState(ipVersion() == 6, "Should have seen IP version 6, got %d", ipVersion());
     int headerLength = 40;
     int nextHeader = raw[ipOffset + 6] & 0xff;
