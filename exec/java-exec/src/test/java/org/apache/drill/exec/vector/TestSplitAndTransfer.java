@@ -167,7 +167,7 @@ public class TestSplitAndTransfer {
       final int start = startLength[0];
       final int length = startLength[1];
       tp.splitAndTransfer(start, length);
-      newBitVector.getMutator().setValueCount(length);
+      assertEquals(newBitVector.getAccessor().getValueCount(), length);
       for (int i = 0; i < length; i++) {
         final int expectedValue = compareArray[start + i];
         assertEquals(expectedValue, accessor.get(i));

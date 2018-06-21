@@ -573,8 +573,7 @@ the interface to load has changed
       assertEquals(1, accessor.get(1));
 
       // Ensure unallocated space returns 0
-      // Not a valid check since bounds checking is enabled
-     //assertEquals(0, accessor.get(3));
+      assertEquals(0, accessor.get(3));
     }
   }
 
