@@ -74,9 +74,9 @@ public class LocalPersistentStoreArchiver {
       int numToArchive = Math.min(excessCount, archivalRate);
       logger.info("Found {} excess profiles. For now, will attempt archiving {} profiles to {}", excessCount
           , numToArchive, archivePath);
+      int archivedCount = 0;
       try {
         if (fs.isDirectory(archivePath)) {
-          int archivedCount = 0;
           archiveWatch.reset().start(); //Clocking
           while (!pendingArchivalSet.isEmpty()) {
             String toArchive = pendingArchivalSet.removeOldest() + DRILL_SYS_FILE_SUFFIX;
@@ -94,7 +94,7 @@ public class LocalPersistentStoreArchiver {
           logger.error("Unable to archive {} profiles to {}", pendingArchivalSet.size(), archivePath.toString());
         }
       } catch (IOException e) {
-        e.printStackTrace();
+        logger.error("Unable to archive profiles to {} ({} successful) due to {}", archivePath.toString(), archivedCount, e.getLocalizedMessage());
       }
     }
     //Clean up

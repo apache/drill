@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -186,6 +187,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     return fs;
   }
 
+  //Get an iterator based on the current state of the contents on the FileSystem
   @Override
   public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
     try (Closeable lock = profileStoreLock.open()) {
@@ -203,14 +205,16 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
           }
         }
 
-        Collections.sort(files, new Comparator<FileStatus>() {
+        //Sort files
+        List<FileStatus> sortedFiles = files.stream().sorted(
+            new Comparator<FileStatus>() {
           @Override
           public int compare(FileStatus fs1, FileStatus fs2) {
             return fs1.getPath().getName().compareTo(fs2.getPath().getName());
           }
-        });
+        }).collect(Collectors.toList());
 
-        return Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), fileStatusTransformer).iterator();
+        return Iterables.transform(Iterables.limit(Iterables.skip(sortedFiles, skip), take), fileStatusTransformer).iterator();
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -338,7 +342,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try (InputStream is = fs.open(path)) {
       return config.getSerializer().deserialize(IOUtils.toByteArray(is));
     } catch (IOException e) {
-      throw new RuntimeException("Unable to deserialize \"" + path + "\"", e);
+      throw new RuntimeException("Unable to deserialize \"" + path + "\" (Profile might be archived)", e);
     }
   }
 
