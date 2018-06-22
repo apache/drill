@@ -55,7 +55,7 @@ public class HiveTableWrapper {
   @JsonProperty
   public List<FieldSchemaWrapper> partitionKeys;
   @JsonProperty
-  public Map<String,String> parameters;
+  public Map<String, String> parameters;
   @JsonProperty
   public String viewOriginalText;
   @JsonProperty
@@ -127,6 +127,11 @@ public class HiveTableWrapper {
   @JsonIgnore
   public HiveTableWithColumnCache getTable() {
     return table;
+  }
+
+  @JsonIgnore
+  public Map<String, String> getParameters() {
+    return parameters;
   }
 
   @Override

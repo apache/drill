@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.logical;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -40,22 +39,14 @@ import org.apache.drill.exec.store.hive.HiveDrillNativeParquetScan;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
-import org.apache.drill.exec.store.hive.HiveTableWithColumnCache;
-import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
-import org.apache.drill.exec.store.hive.HiveUtilities;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.apache.hadoop.mapred.InputFormat;
-import org.apache.hadoop.mapred.JobConf;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+
+import static org.apache.drill.exec.store.hive.HiveUtilities.nativeReadersRuleMatches;
 
 /**
  * Convert Hive scan to use Drill's native parquet reader instead of Hive's native reader. It also adds a
@@ -78,94 +69,11 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   }
 
   /**
-   * Rule is matched when all of the following match:
-   * 1) GroupScan in given DrillScalRel is an {@link HiveScan}
-   * 2) {@link HiveScan} is not already rewritten using Drill's native readers
-   * 3) InputFormat in Hive table metadata and all partitions metadata contains the same value
-   *    {@link MapredParquetInputFormat}
-   * 4) No error occurred while checking for the above conditions. An error is logged as warning.
-   *
-   * @param call rule call
-   * @return True if the rule can be applied. False otherwise
+   * {@see org.apache.drill.exec.store.hive.HiveUtilities#nativeReadersRuleMatches}
    */
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final DrillScanRel scanRel = call.rel(0);
-
-    if (!(scanRel.getGroupScan() instanceof HiveScan) || ((HiveScan) scanRel.getGroupScan()).isNativeReader()) {
-      return false;
-    }
-
-    final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
-    final HiveConf hiveConf = hiveScan.getHiveConf();
-    final HiveTableWithColumnCache hiveTable = hiveScan.getHiveReadEntry().getTable();
-
-    if (containsUnsupportedDataTypes(hiveTable)) {
-      return false;
-    }
-
-    final Class<? extends InputFormat<?,?>> tableInputFormat =
-        getInputFormatFromSD(HiveUtilities.getTableMetadata(hiveTable), hiveScan.getHiveReadEntry(), hiveTable.getSd(),
-            hiveConf);
-    if (tableInputFormat == null || !tableInputFormat.equals(MapredParquetInputFormat.class)) {
-      return false;
-    }
-
-    final List<HivePartitionWrapper> partitions = hiveScan.getHiveReadEntry().getHivePartitionWrappers();
-    if (partitions == null) {
-      return true;
-    }
-
-    final List<FieldSchema> tableSchema = hiveTable.getSd().getCols();
-    // Make sure all partitions have the same input format as the table input format
-    for (HivePartitionWrapper partition : partitions) {
-      final StorageDescriptor partitionSD = partition.getPartition().getSd();
-      Class<? extends InputFormat<?, ?>> inputFormat = getInputFormatFromSD(
-          HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.getHiveReadEntry(), partitionSD,
-          hiveConf);
-      if (inputFormat == null || !inputFormat.equals(tableInputFormat)) {
-        return false;
-      }
-
-      // Make sure the schema of the table and schema of the partition matches. If not return false. Schema changes
-      // between table and partition can happen when table schema is altered using ALTER statements after some
-      // partitions are already created. Currently native reader conversion doesn't handle schema changes between
-      // partition and table. Hive has extensive list of convert methods to convert from one type to rest of the
-      // possible types. Drill doesn't have the similar set of methods yet.
-      if (!partitionSD.getCols().equals(tableSchema)) {
-        logger.debug("Partitions schema is different from table schema. Currently native reader conversion can't " +
-            "handle schema difference between partitions and table");
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Get the input format from given {@link StorageDescriptor}
-   * @param properties table properties
-   * @param hiveReadEntry hive read entry
-   * @param sd storage descriptor
-   * @return {@link InputFormat} class or null if a failure has occurred. Failure is logged as warning.
-   */
-  private Class<? extends InputFormat<?, ?>> getInputFormatFromSD(final Properties properties,
-      final HiveReadEntry hiveReadEntry, final StorageDescriptor sd, final HiveConf hiveConf) {
-    final Table hiveTable = hiveReadEntry.getTable();
-    try {
-      final String inputFormatName = sd.getInputFormat();
-      if (!Strings.isNullOrEmpty(inputFormatName)) {
-        return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName);
-      }
-
-      final JobConf job = new JobConf(hiveConf);
-      HiveUtilities.addConfToJob(job, properties);
-      return HiveUtilities.getInputFormatClass(job, sd, hiveTable);
-    } catch (final Exception e) {
-      logger.warn("Failed to get InputFormat class from Hive table '{}.{}'. StorageDescriptor [{}]",
-          hiveTable.getDbName(), hiveTable.getTableName(), sd.toString(), e);
-      return null;
-    }
+    return nativeReadersRuleMatches(call, MapredParquetInputFormat.class);
   }
 
   @Override
@@ -203,7 +111,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
         Hive does not always give correct costing (i.e. for external tables Hive does not have number of rows
         and we calculate them approximately). On the contrary, Drill calculates number of rows exactly
         and thus Hive Scan can be chosen instead of Drill native scan because costings allegedly lower for Hive.
-        To ensure Drill native scan we'll be chosen, reduce Hive scan importance to 0.
+        To ensure Drill native scan will be chosen, reduce Hive scan importance to 0.
        */
       call.getPlanner().setImportance(hiveScanRel, 0.0);
     } catch (final Exception e) {
@@ -340,19 +248,5 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     }
 
     return rb.makeCast(outputType, inputRef);
-  }
-
-  private boolean containsUnsupportedDataTypes(final Table hiveTable) {
-    for (FieldSchema hiveField : hiveTable.getSd().getCols()) {
-      final Category category = TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType()).getCategory();
-      if (category == Category.MAP ||
-          category == Category.STRUCT ||
-          category == Category.UNION ||
-          category == Category.LIST) {
-        logger.debug("Hive table contains unsupported data type: {}", category);
-        return true;
-      }
-    }
-    return false;
   }
 }

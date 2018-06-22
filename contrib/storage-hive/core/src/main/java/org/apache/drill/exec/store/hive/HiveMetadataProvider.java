@@ -375,7 +375,7 @@ public class HiveMetadataProvider {
     }
 
     /**
-     * @return collection of unique locations where inout splits are stored
+     * @return collection of unique locations where input splits are stored
      */
     public Collection<String> getLocations() throws IOException {
       Set<String> locations = new HashSet<>();

@@ -142,6 +142,11 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.apache.drill.contrib</groupId>
+      <artifactId>drill-format-mapr</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
