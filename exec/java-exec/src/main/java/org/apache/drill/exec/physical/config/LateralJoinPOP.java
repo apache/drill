@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -34,6 +35,9 @@ import java.util.List;
 public class LateralJoinPOP extends AbstractJoinPop {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LateralJoinPOP.class);
 
+  @JsonProperty("excludedColumns")
+  private List<SchemaPath> excludedColumns;
+
   @JsonProperty("unnestForLateralJoin")
   private UnnestPOP unnestForLateralJoin;
 
@@ -41,19 +45,21 @@ public class LateralJoinPOP extends AbstractJoinPop {
   public LateralJoinPOP(
       @JsonProperty("left") PhysicalOperator left,
       @JsonProperty("right") PhysicalOperator right,
-      @JsonProperty("joinType") JoinRelType joinType) {
+      @JsonProperty("joinType") JoinRelType joinType,
+      @JsonProperty("excludedColumns") List<SchemaPath> excludedColumns) {
     super(left, right, joinType, null, null);
     Preconditions.checkArgument(joinType != JoinRelType.FULL,
       "Full outer join is currently not supported with Lateral Join");
     Preconditions.checkArgument(joinType != JoinRelType.RIGHT,
       "Right join is currently not supported with Lateral Join");
+    this.excludedColumns = excludedColumns;
   }
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.size() == 2,
       "Lateral join should have two physical operators");
-    LateralJoinPOP newPOP =  new LateralJoinPOP(children.get(0), children.get(1), joinType);
+    LateralJoinPOP newPOP =  new LateralJoinPOP(children.get(0), children.get(1), joinType, this.excludedColumns);
     newPOP.unnestForLateralJoin = this.unnestForLateralJoin;
     return newPOP;
   }
@@ -61,6 +67,11 @@ public class LateralJoinPOP extends AbstractJoinPop {
   @JsonProperty("unnestForLateralJoin")
   public UnnestPOP getUnnestForLateralJoin() {
     return this.unnestForLateralJoin;
+  }
+
+  @JsonProperty("excludedColumns")
+  public List<SchemaPath> getExcludedColumns() {
+    return this.excludedColumns;
   }
 
   public void setUnnestForLateralJoin(UnnestPOP unnest) {
