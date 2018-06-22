@@ -19,7 +19,6 @@ package org.apache.drill.exec.impersonation;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.config.DrillConfig;
@@ -122,22 +121,16 @@ public class BaseTestImpersonation extends PlanTestBase {
     updateTestCluster(1, DrillConfig.create(props));
   }
 
-  protected static void addMiniDfsBasedStorage(final Map<String, WorkspaceConfig> workspaces)
-      throws Exception {
+  protected static void addMiniDfsBasedStorage(final Map<String, WorkspaceConfig> workspaces) throws Exception {
     // Create a HDFS based storage plugin based on local storage plugin and add it to plugin registry (connection string
     // for mini dfs is varies for each run).
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    final FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getConfig();
+    StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getConfig();
 
-    final FileSystemConfig miniDfsPluginConfig = new FileSystemConfig();
-    miniDfsPluginConfig.connection = dfsConf.get(FileSystem.FS_DEFAULT_NAME_KEY);
+    String connection = dfsConf.get(FileSystem.FS_DEFAULT_NAME_KEY);
+    createAndAddWorkspace("tmp", "/tmp", (short) 0777, processUser, processUser, workspaces);
 
-    createAndAddWorkspace("tmp", "/tmp", (short)0777, processUser, processUser, workspaces);
-
-    miniDfsPluginConfig.workspaces = workspaces;
-    miniDfsPluginConfig.formats = ImmutableMap.copyOf(lfsPluginConfig.formats);
-    miniDfsPluginConfig.setEnabled(true);
-
+    FileSystemConfig miniDfsPluginConfig = new FileSystemConfig(connection, null, workspaces, lfsPluginConfig.getFormats());
     pluginRegistry.createOrUpdate(MINIDFS_STORAGE_PLUGIN_NAME, miniDfsPluginConfig, true);
   }
 
@@ -150,7 +143,7 @@ public class BaseTestImpersonation extends PlanTestBase {
     workspaces.put(name, ws);
   }
 
-  protected static void stopMiniDfsCluster() throws Exception {
+  protected static void stopMiniDfsCluster() {
     if (dfsCluster != null) {
       dfsCluster.shutdown();
       dfsCluster = null;

@@ -20,8 +20,11 @@ package org.apache.drill.exec.store.dfs;
 import static org.apache.drill.exec.store.dfs.FileSystemSchemaFactory.DEFAULT_WS_NAME;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -44,8 +47,6 @@ import org.apache.hadoop.fs.FileSystem;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * A Storage engine associated with a Hadoop FileSystem Implementation. Examples include HDFS, MapRFS, QuantacastFileSystem,
@@ -62,42 +63,38 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   private final Configuration fsConf;
   private final LogicalPlanPersistence lpPersistance;
 
-  public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name)
-      throws ExecutionSetupException{
+  public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     super(context, name);
     this.config = config;
     this.lpPersistance = context.getLpPersistence();
 
     try {
-
       fsConf = new Configuration();
-      if (config.config != null) {
-        for (String s : config.config.keySet()) {
-          fsConf.set(s, config.config.get(s));
-        }
-      }
-      fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.connection);
+      Optional.ofNullable(config.getConfig())
+          .ifPresent(c -> c.forEach(fsConf::set));
+
+      fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getConnection());
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
 
       formatCreator = newFormatCreator(config, context, fsConf);
-      List<FormatMatcher> matchers = Lists.newArrayList();
-      formatPluginsByConfig = Maps.newHashMap();
+      List<FormatMatcher> matchers = new ArrayList<>();
+      formatPluginsByConfig = new HashMap<>();
       for (FormatPlugin p : formatCreator.getConfiguredFormatPlugins()) {
         matchers.add(p.getMatcher());
         formatPluginsByConfig.put(p.getConfig(), p);
       }
 
-      final boolean noWorkspace = config.workspaces == null || config.workspaces.isEmpty();
-      List<WorkspaceSchemaFactory> factories = Lists.newArrayList();
+      boolean noWorkspace = config.getWorkspaces() == null || config.getWorkspaces().isEmpty();
+      List<WorkspaceSchemaFactory> factories = new ArrayList<>();
       if (!noWorkspace) {
-        for (Map.Entry<String, WorkspaceConfig> space : config.workspaces.entrySet()) {
+        for (Map.Entry<String, WorkspaceConfig> space : config.getWorkspaces().entrySet()) {
           factories.add(new WorkspaceSchemaFactory(this, space.getKey(), name, space.getValue(), matchers, context.getLpPersistence(), context.getClasspathScan()));
         }
       }
 
       // if the "default" workspace is not given add one.
-      if (noWorkspace || !config.workspaces.containsKey(DEFAULT_WS_NAME)) {
+      if (noWorkspace || !config.getWorkspaces().containsKey(DEFAULT_WS_NAME)) {
         factories.add(new WorkspaceSchemaFactory(this, DEFAULT_WS_NAME, name, WorkspaceConfig.DEFAULT, matchers, context.getLpPersistence(), context.getClasspathScan()));
       }
 
