@@ -420,7 +420,7 @@ public class TestInfoSchema extends BaseTestQuery {
     assertEquals("file", configMap.get("type"));
 
     final FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs").getConfig();
-    final String tmpSchemaLocation = testConfig.workspaces.get("tmp").getLocation();
+    final String tmpSchemaLocation = testConfig.getWorkspaces().get("tmp").getLocation();
     assertEquals(tmpSchemaLocation, configMap.get("location"));
 
     batch.release();

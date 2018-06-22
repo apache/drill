@@ -18,11 +18,13 @@
 package org.apache.drill.exec.util;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -68,21 +70,27 @@ public class StoragePluginTestUtils {
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
 
-    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
+    Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
+    Optional.ofNullable(pluginConfig.getWorkspaces())
+      .ifPresent(newWorkspaces::putAll);
 
     if (schemas.length == 0) {
       schemas = new String[]{TMP_SCHEMA};
     }
 
-    for (String schema: schemas) {
-      WorkspaceConfig workspaceConfig = pluginConfig.workspaces.get(schema);
-      String inputFormat = workspaceConfig == null ? null: workspaceConfig.getDefaultInputFormat();
+    for (String schema : schemas) {
+      WorkspaceConfig workspaceConfig = newWorkspaces.get(schema);
+      String inputFormat = workspaceConfig == null ? null : workspaceConfig.getDefaultInputFormat();
       WorkspaceConfig newWorkspaceConfig = new WorkspaceConfig(tmpDirPath.getAbsolutePath(), true, inputFormat, false);
-      workspaces.put(schema, newWorkspaceConfig);
+      newWorkspaces.put(schema, newWorkspaceConfig);
     }
 
-    pluginConfig.workspaces.putAll(workspaces);
-    pluginRegistry.createOrUpdate(pluginName, pluginConfig, true);
+    FileSystemConfig newPluginConfig = new FileSystemConfig(
+        pluginConfig.getConnection(),
+        pluginConfig.getConfig(),
+        newWorkspaces,
+        pluginConfig.getFormats());
+    pluginRegistry.createOrUpdate(pluginName, newPluginConfig, true);
   }
 
   public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
@@ -94,32 +102,42 @@ public class StoragePluginTestUtils {
     FileSystemPlugin fileSystemPlugin = (FileSystemPlugin) pluginRegistry.getPlugin(storagePlugin);
     FileSystemConfig fileSystemConfig = (FileSystemConfig) fileSystemPlugin.getConfig();
 
+    Map<String, FormatPluginConfig> newFormats = new HashMap<>();
+    Optional.ofNullable(fileSystemConfig.getFormats())
+      .ifPresent(newFormats::putAll);
+
     TextFormatPlugin.TextFormatConfig textConfig = new TextFormatPlugin.TextFormatConfig();
     textConfig.extensions = ImmutableList.of("txt");
     textConfig.fieldDelimiter = '\u0000';
-    fileSystemConfig.formats.put("txt", textConfig);
+    newFormats.put("txt", textConfig);
 
     TextFormatPlugin.TextFormatConfig ssvConfig = new TextFormatPlugin.TextFormatConfig();
     ssvConfig.extensions = ImmutableList.of("ssv");
     ssvConfig.fieldDelimiter = ' ';
-    fileSystemConfig.formats.put("ssv", ssvConfig);
+    newFormats.put("ssv", ssvConfig);
 
     TextFormatPlugin.TextFormatConfig psvConfig = new TextFormatPlugin.TextFormatConfig();
     psvConfig.extensions = ImmutableList.of("tbl");
     psvConfig.fieldDelimiter = '|';
-    fileSystemConfig.formats.put("psv", psvConfig);
+    newFormats.put("psv", psvConfig);
 
     SequenceFileFormatConfig seqConfig = new SequenceFileFormatConfig();
     seqConfig.extensions = ImmutableList.of("seq");
-    fileSystemConfig.formats.put("sequencefile", seqConfig);
+    newFormats.put("sequencefile", seqConfig);
 
     TextFormatPlugin.TextFormatConfig csvhtestConfig = new TextFormatPlugin.TextFormatConfig();
     csvhtestConfig.extensions = ImmutableList.of("csvh-test");
     csvhtestConfig.fieldDelimiter = ',';
     csvhtestConfig.extractHeader = true;
     csvhtestConfig.skipFirstLine = true;
-    fileSystemConfig.formats.put("csvh-test", csvhtestConfig);
+    newFormats.put("csvh-test", csvhtestConfig);
 
-    pluginRegistry.createOrUpdate(storagePlugin, fileSystemConfig, true);
+    FileSystemConfig newFileSystemConfig = new FileSystemConfig(
+        fileSystemConfig.getConnection(),
+        fileSystemConfig.getConfig(),
+        fileSystemConfig.getWorkspaces(),
+        newFormats);
+
+    pluginRegistry.createOrUpdate(storagePlugin, newFileSystemConfig, true);
   }
 }

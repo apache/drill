@@ -32,7 +32,10 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
@@ -52,8 +55,18 @@ public class TestCTTAS extends BaseTestQuery {
     File tmp2 = dirTestWatcher.makeSubDir(Paths.get("tmp2"));
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getConfig();
-    pluginConfig.workspaces.put(temp2_wk, new WorkspaceConfig(tmp2.getAbsolutePath(), true, null, false));
-    pluginRegistry.createOrUpdate(DFS_PLUGIN_NAME, pluginConfig, true);
+
+    Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
+    Optional.ofNullable(pluginConfig.getWorkspaces())
+      .ifPresent(newWorkspaces::putAll);
+    newWorkspaces.put(temp2_wk, new WorkspaceConfig(tmp2.getAbsolutePath(), true, null, false));
+
+    FileSystemConfig newPluginConfig = new FileSystemConfig(
+        pluginConfig.getConnection(),
+        pluginConfig.getConfig(),
+        newWorkspaces,
+        pluginConfig.getFormats());
+    pluginRegistry.createOrUpdate(DFS_PLUGIN_NAME, newPluginConfig, true);
   }
 
   @Test
