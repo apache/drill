@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.type.RelDataType;
@@ -30,6 +31,8 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.commons.collections.ListUtils;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.LateralJoinPOP;
 import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
@@ -38,21 +41,23 @@ import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
 
 
-  protected LateralJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
+  protected LateralJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, boolean excludeCorrelateCol,
                             CorrelationId correlationId, ImmutableBitSet requiredColumns, SemiJoinType semiJoinType) {
-    super(cluster, traits, left, right, correlationId, requiredColumns, semiJoinType);
+    super(cluster, traits, left, right, excludeCorrelateCol, correlationId, requiredColumns, semiJoinType);
   }
+
   @Override
   public Correlate copy(RelTraitSet traitSet,
                         RelNode left, RelNode right, CorrelationId correlationId,
                         ImmutableBitSet requiredColumns, SemiJoinType joinType) {
-    return new LateralJoinPrel(this.getCluster(), this.getTraitSet(), left, right, correlationId, requiredColumns,
+    return new LateralJoinPrel(this.getCluster(), this.getTraitSet(), left, right, this.excludeCorrelateColumn, correlationId, requiredColumns,
         this.getJoinType());
   }
 
@@ -63,9 +68,18 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
     PhysicalOperator rightPop = ((Prel)right).getPhysicalOperator(creator);
 
     SemiJoinType jtype = this.getJoinType();
-
-    LateralJoinPOP ljoin = new LateralJoinPOP(leftPop, rightPop, jtype.toJoinType());
+    List<SchemaPath> excludedColumns = new ArrayList<>();
+    excludedColumns.add(getColumn());
+    LateralJoinPOP ljoin = new LateralJoinPOP(leftPop, rightPop, jtype.toJoinType(), excludedColumns);
     return creator.addMetadata(this, ljoin);
+  }
+
+  private SchemaPath getColumn() {
+    if (this.excludeCorrelateColumn) {
+      int index = this.getRequiredColumns().asList().get(0);
+      return  SchemaPath.getSimplePath(this.getInput(0).getRowType().getFieldNames().get(index));
+    }
+    return null;
   }
 
   /**
@@ -76,8 +90,8 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
     Preconditions.checkArgument(DrillJoinRelBase.uniqueFieldNames(input.getRowType()));
     final List<String> fields = getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
-    final List<String> outputFields = fields.subList(offset, offset + inputFields.size());
-    if (!outputFields.equals(inputFields)) {
+    final List<String> outputFields = fields.subList(offset, offset + getInputSize(offset, input));
+    if (ListUtils.subtract(outputFields, inputFields).size() != 0) {
       // Ensure that input field names are the same as output field names.
       // If there are duplicate field names on left and right, fields will get
       // lost.
@@ -103,6 +117,12 @@ public class LateralJoinPrel extends DrillLateralJoinRelBase implements Prel {
 
     return proj;
   }
+
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    return super.explainTerms(pw).item("correlate Column: ", this.excludeCorrelateColumn ? this.getColumn() : "None");
+  }
+
 
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> visitor, X value) throws E {
