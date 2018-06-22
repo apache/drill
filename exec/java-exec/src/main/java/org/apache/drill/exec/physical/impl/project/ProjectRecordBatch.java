@@ -160,9 +160,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
     int incomingRecordCount = incoming.getRecordCount();
 
-    if (logger.isTraceEnabled()) {
-      logger.trace("doWork(): incoming rc " + incomingRecordCount + " incoming " + incoming + ", project " + this);
-    }
+    logger.trace("doWork(): incoming rc {}, incoming {}, Project {}", incomingRecordCount, incoming, this);
     //calculate the output row count
     memoryManager.update();
 
@@ -210,12 +208,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           }
           incomingRecordCount = incoming.getRecordCount();
           memoryManager.update();
-          if (logger.isTraceEnabled()) {
-            logger.trace("doWork():[1] memMgr RC " + memoryManager.getOutputRowCount()
-                    + ", incoming rc " + incomingRecordCount + " incoming " + incoming
-                    + ", project " + this);
-          }
-
+          logger.trace("doWork():[1] memMgr RC {}, incoming rc {},  incoming {}, Project {}",
+                       memoryManager.getOutputRowCount(), incomingRecordCount, incoming, this);
         }
       }
     }
@@ -231,11 +225,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
 
     int maxOuputRecordCount = memoryManager.getOutputRowCount();
-    if (logger.isTraceEnabled()) {
-      logger.trace("doWork():[2] memMgr RC " + memoryManager.getOutputRowCount()
-              + ", incoming rc " + incomingRecordCount + " incoming " + incoming
-              + ", project " + this);
-    }
+    logger.trace("doWork():[2] memMgr RC {}, incoming rc {}, incoming {}, project {}",
+                 memoryManager.getOutputRowCount(), incomingRecordCount, incoming, this);
+
     if (!doAlloc(maxOuputRecordCount)) {
       outOfMemory = true;
       return IterOutcome.OUT_OF_MEMORY;
@@ -243,9 +235,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     long projectStartTime = System.currentTimeMillis();
     final int outputRecords = projector.projectRecords(this.incoming,0, maxOuputRecordCount, 0);
     long projectEndTime = System.currentTimeMillis();
-    if (logger.isTraceEnabled()) {
-      logger.trace("doWork(): projection: " + " records " + outputRecords + ", time " + (projectEndTime - projectStartTime) + " ms");
-    }
+    logger.trace("doWork(): projection: records {}, time {} ms", outputRecords, (projectEndTime - projectStartTime));
+
 
     if (outputRecords < incomingRecordCount) {
       setValueCount(outputRecords);
@@ -266,9 +257,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     memoryManager.updateOutgoingStats(outputRecords);
-    if (logger.isDebugEnabled()) {
-      logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(this));
-    }
+    logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(this));
+
     // Get the final outcome based on hasRemainder since that will determine if all the incoming records were
     // consumed in current output batch or not
     return getFinalOutcome(hasRemainder);
@@ -283,18 +273,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       outOfMemory = true;
       return;
     }
-    if (logger.isTraceEnabled()) {
-      logger.trace("handleRemainder: remaining RC " + remainingRecordCount + " toProcess " + recordsToProcess
-              + " remainder index " + remainderIndex + " incoming " + incoming + " project " + this);
-    }
+
+    logger.trace("handleRemainder: remaining RC {}, toProcess {}, remainder index {}, incoming {}, Project {}",
+                 remainingRecordCount, recordsToProcess, remainderIndex, incoming, this);
 
     long projectStartTime = System.currentTimeMillis();
     final int projRecords = projector.projectRecords(this.incoming, remainderIndex, recordsToProcess, 0);
     long projectEndTime = System.currentTimeMillis();
 
-    if (logger.isTraceEnabled()) {
-      logger.trace("handleRemainder: projection: " + "records " + projRecords + ", time " + (projectEndTime - projectStartTime) + " ms");
-    }
+    logger.trace("handleRemainder: projection: " + "records {}, time {} ms", projRecords,(projectEndTime - projectStartTime));
 
     if (projRecords < remainingRecordCount) {
       setValueCount(projRecords);
@@ -316,9 +303,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     memoryManager.updateOutgoingStats(projRecords);
-    if (logger.isDebugEnabled()) {
-      logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(this));
-    }
+    logger.debug("BATCH_STATS, outgoing: {}", new RecordBatchSizer(this));
   }
 
   public void addComplexWriter(final ComplexWriter writer) {
@@ -588,9 +573,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     long setupNewSchemaEndTime = System.currentTimeMillis();
-    if (logger.isTraceEnabled()) {
-      logger.trace("setupNewSchemaFromInput: time " + (setupNewSchemaEndTime - setupNewSchemaStartTime) + " ms" + ", proj " + this + " incoming " + incomingBatch);
-    }
+      logger.trace("setupNewSchemaFromInput: time {}  ms, Project {}, incoming {}",
+                  (setupNewSchemaEndTime - setupNewSchemaStartTime), this, incomingBatch);
   }
 
   @Override

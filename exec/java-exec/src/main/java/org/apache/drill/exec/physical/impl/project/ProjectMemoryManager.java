@@ -134,9 +134,7 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
     public ProjectMemoryManager(int configuredOutputSize) {
         super(configuredOutputSize);
         outputColumnSizes = new HashMap<>();
-        if (logger.isDebugEnabled()) {
-          logger.debug("BATCH_STATS, configuredOutputSize: {}", configuredOutputSize);
-        }
+        logger.debug("BATCH_STATS, configuredOutputSize: {}", configuredOutputSize);
     }
 
     public boolean isComplex(MajorType majorType) {
@@ -300,17 +298,11 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
         }
         setOutputRowCount(outPutRowCount);
         long updateEndTime = System.currentTimeMillis();
-        if (logger.isTraceEnabled()) {
-            logger.trace("update() : Output RC " + outPutRowCount + ", BatchSizer RC " + batchSizer.rowCount()
-                    + ", incoming RC " + incomingBatch.getRecordCount() + " width " + rowWidth
-                    + ", total fixed width " + totalFixedWidthColumnWidth
-                    + ", total variable width " + totalVariableColumnWidth
-                    + ", total complex width " + totalComplexColumnWidth
-                    + ", batchSizer time " + (batchSizerEndTime - updateStartTime) + " ms"
-                    + ", update time " + (updateEndTime - updateStartTime) + " ms"
-                    + ", manager " + this
-                    + ", incoming " + incomingBatch);
-        }
+        logger.trace("update() : Output RC {}, BatchSizer RC {}, incoming RC {}, width {}, total fixed width {}"
+                    + ", total variable width {}, total complex width {}, batchSizer time {} ms, update time {}  ms"
+                    + ", manager {}, incoming {}",outPutRowCount, batchSizer.rowCount(), incomingBatch.getRecordCount(),
+                    totalFixedWidthColumnWidth, totalVariableColumnWidth, totalComplexColumnWidth,
+                    (batchSizerEndTime - updateStartTime),(updateEndTime - updateStartTime), this, incomingBatch);
 
         logger.debug("BATCH_STATS, incoming: {}", getRecordBatchSizer());
         updateIncomingStats();
