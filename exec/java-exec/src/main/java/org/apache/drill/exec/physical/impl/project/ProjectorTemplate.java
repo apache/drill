@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
-import java.util.List;
-
-import javax.inject.Named;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -29,7 +26,8 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-import com.google.common.collect.ImmutableList;
+import javax.inject.Named;
+import java.util.List;
 
 public abstract class ProjectorTemplate implements Projector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectorTemplate.class);
@@ -43,7 +41,9 @@ public abstract class ProjectorTemplate implements Projector {
   }
 
   @Override
-  public final int projectRecords(int startIndex, final int recordCount, int firstOutputIndex) {
+  public final int projectRecords(RecordBatch incomingRecordBatch, int startIndex, final int recordCount,
+                                  int firstOutputIndex) {
+    assert incomingRecordBatch != this; // mixed up incoming and outgoing batches?
     switch (svMode) {
     case FOUR_BYTE:
       throw new UnsupportedOperationException();
@@ -69,7 +69,8 @@ public abstract class ProjectorTemplate implements Projector {
           throw new UnsupportedOperationException(e);
         }
       }
-      if (i < startIndex + recordCount || startIndex > 0) {
+      final int totalBatchRecordCount = incomingRecordBatch.getRecordCount();
+      if (startIndex + recordCount < totalBatchRecordCount || startIndex > 0 ) {
         for (TransferPair t : transfers) {
           t.splitAndTransfer(startIndex, i - startIndex);
         }

@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.Map;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -42,6 +43,8 @@ import org.apache.drill.exec.vector.VariableWidthVector;
 
 import com.google.common.collect.Sets;
 import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
+import org.bouncycastle.util.Strings;
+
 import static org.apache.drill.exec.vector.AllocationHelper.STD_REPETITION_FACTOR;
 
 /**
@@ -202,30 +205,7 @@ public class RecordBatchSizer {
      * For repeated column, we assume repetition of 10.
      */
     public int getStdNetSizePerEntry() {
-      int stdNetSize;
-      try {
-        stdNetSize = TypeHelper.getSize(metadata.getType());
-      } catch (Exception e) {
-        stdNetSize = 0;
-      }
-
-      if (isOptional) {
-        stdNetSize += BIT_VECTOR_WIDTH;
-      }
-
-      if (isRepeated) {
-        stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
-      }
-
-      for (ColumnSize columnSize : children.values()) {
-        stdNetSize += columnSize.getStdNetSizePerEntry();
-      }
-
-      if (isRepeatedList()) {
-        stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
-      }
-
-      return stdNetSize;
+      return getStdNetSizePerEntryCommon(metadata.getType(), isOptional, isRepeated, isRepeatedList(), children);
     }
 
     /**
@@ -598,8 +578,61 @@ public class RecordBatchSizer {
 
   }
 
+   public static int getStdNetSizePerEntryCommon(TypeProtos.MajorType majorType, boolean isOptional, boolean isRepeated,
+                                                 boolean isRepeatedList, Map<String, ColumnSize> children) {
+    int stdNetSize;
+    try {
+      stdNetSize = TypeHelper.getSize(majorType);
+    } catch (Exception e) {
+      stdNetSize = 0;
+    }
+
+    if (isOptional) {
+      stdNetSize += BIT_VECTOR_WIDTH;
+    }
+
+    if (isRepeated) {
+      stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
+    }
+
+    if (children != null) {
+      for (ColumnSize columnSize : children.values()) {
+        stdNetSize += columnSize.getStdNetSizePerEntry();
+      }
+    }
+
+    if (isRepeatedList) {
+      stdNetSize = (stdNetSize * STD_REPETITION_FACTOR) + OFFSET_VECTOR_WIDTH;
+    }
+
+    return stdNetSize;
+  }
+
+  private ColumnSize getComplexColumn(String path) {
+    String[] segments = Strings.split(path, '.');
+    Map<String, ColumnSize> map = columnSizes;
+    return getComplexColumnImpl(segments, 0, map);
+  }
+
+  private ColumnSize getComplexColumnImpl(String[] segments, int level, Map<String, ColumnSize> map) {
+    ColumnSize result = map.get(segments[level]);
+    if (result == null || level == segments.length - 1) {
+      return result;
+    }
+    map = result.getChildren();
+    if (map == null) {
+      return null;
+    }
+    return getComplexColumnImpl(segments, level + 1, map);
+  }
+
   public ColumnSize getColumn(String name) {
-    return columnSizes.get(name);
+    final RecordBatchSizer.ColumnSize columnSize =  columnSizes.get(name);
+    if (columnSize != null) {
+      return columnSize;
+    } else {
+      return getComplexColumn(name);
+    }
   }
 
   // This keeps information for only top level columns. Information for nested
